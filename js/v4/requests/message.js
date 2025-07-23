@@ -38,7 +38,7 @@ export default class Message {
         }
 
         if (this.isMagicAction(method)) {
-            // If the action is a magic action and it already exists then remove the 
+            // If the action is a magic action and it already exists then remove the
             // old action so there aren't any duplicate actions in the request...
             // @todo: Should this happen now? What if the same action is called, but it has a different context?
             this.findAndRemoveAction(method)
@@ -52,7 +52,7 @@ export default class Message {
 
             this.context = {}
 
-            // We need to store the resolver, so we can call all of the 
+            // We need to store the resolver, so we can call all of the
             // magic action resolvers when the message is finished...
             this.resolvers.push(resolve)
 
@@ -67,6 +67,36 @@ export default class Message {
         })
 
         this.context = {}
+    }
+
+    getHighestPriorityType(actionTypes) {
+        let rankedTypes = [
+            'user',
+            'island',
+            'refresh',
+            'poll',
+        ]
+
+        // Find all action types that are in our ranked list
+        let validActionTypes = actionTypes.filter(type => rankedTypes.includes(type))
+
+        if (validActionTypes.length === 0) {
+            return null
+        }
+
+        // Find the highest priority type (lowest index in rankedTypes)
+        let highestPriorityType = validActionTypes.reduce((highest, current) => {
+            let highestIndex = rankedTypes.indexOf(highest)
+            let currentIndex = rankedTypes.indexOf(current)
+            return currentIndex < highestIndex ? current : highest
+        })
+
+        return highestPriorityType
+    }
+
+    type() {
+        let actionTypes = this.actions.map(i => i.context.type ?? 'user')
+        return this.getHighestPriorityType(actionTypes)
     }
 
     magicActions () {
@@ -89,10 +119,49 @@ export default class Message {
         this.actions = this.actions.filter(i => i.method !== method)
     }
 
-    cancelIfItShouldBeCancelled() {
-        if (this.isSucceeded()) return
+    processCancellations(newRequest) {
+        Array.from(newRequest.messages).forEach(newMessage => {
+            if (this.component.id !== newMessage.component.id) return
 
-        this.cancel()
+            let existingMessageType = this.type()
+            let newMessageType = newMessage.type()
+
+            // If both messages are polls, then cancel the new one which lets the existing one finish...
+            if (existingMessageType === 'poll' && newMessageType === 'poll') {
+                return newRequest.cancelMessage(newMessage)
+            }
+
+            // If both messages are islands, then only cancel if they are for the same island...
+            if (existingMessageType === 'island' && newMessageType === 'island') {
+                let existingIslandName = Array.from(this.actions).find(i => i.context.type === 'island')?.context.island.name
+                let newIslandName = Array.from(newMessage.actions).find(i => i.context.type === 'island')?.context.island.name
+
+                if (existingIslandName === newIslandName) {
+                    return this.request.cancelMessage(this)
+                }
+            }
+
+            // If one of the messages is an island, but not both, then don't cancel it...
+            if (existingMessageType === 'island' || newMessageType === 'island') {
+                return
+            }
+
+            // If both messages are the same type, then cancel the existing one and start the new one...
+            if (existingMessageType === newMessageType) {
+                return this.request.cancelMessage(this)
+            }
+
+            // If they are different types, compare them and cancel the less important one...
+            let higherPriorityType = this.getHighestPriorityType([existingMessageType, newMessageType])
+
+            if (higherPriorityType === newMessageType) {
+                // New message has higher priority, cancel the existing one
+                return this.request.cancelMessage(this)
+            } else {
+                // Existing message has higher priority, cancel the new one
+                return newRequest.cancelMessage(newMessage)
+            }
+        })
     }
 
     buffer() {
@@ -240,6 +309,8 @@ export default class Message {
     }
 
     cancel() {
+        if (this.isSucceeded()) return
+
         this.status = 'cancelled'
 
         this.interceptors.forEach(i => i.onCancel())

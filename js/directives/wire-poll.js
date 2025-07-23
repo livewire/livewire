@@ -1,11 +1,12 @@
 import { directive, getDirectives } from "@/directives"
 import Alpine from 'alpinejs'
+import messageBroker from './../v4/requests/messageBroker'
 
 directive('poll', ({ el, directive, component }) => {
     let interval = extractDurationFrom(directive.modifiers, 2000)
 
     let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-        triggerComponentRequest(el, directive, component)
+        triggerComponentRequest(el, directive, component, messageBroker)
     }, interval)
 
     start()
@@ -17,7 +18,17 @@ directive('poll', ({ el, directive, component }) => {
     stopWhen(() => theElementIsDisconnected(el))
 })
 
-function triggerComponentRequest(el, directive, component) {
+function triggerComponentRequest(el, directive, component, messageBroker) {
+    if (window.livewireV4) {
+        messageBroker.addContext(component, 'type', 'poll')
+
+        Alpine.evaluate(el,
+            directive.expression ? '$wire.' + directive.expression : '$wire.$sync()'
+        )
+
+        return
+    }
+
     Alpine.evaluate(el,
         directive.expression ? '$wire.' + directive.expression : '$wire.$commit()'
     )

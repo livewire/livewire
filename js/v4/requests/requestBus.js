@@ -9,7 +9,7 @@ class RequestBus {
     }
 
     add(request) {
-        this.cancelRequestsThatShouldBeCancelled(request.shouldCancel())
+        this.cancelRequestsThatShouldBeCancelled(request)
 
         this.requests.add(request)
 
@@ -20,11 +20,9 @@ class RequestBus {
         this.requests.delete(request)
     }
 
-    cancelRequestsThatShouldBeCancelled(shouldCancel) {
-        this.requests.forEach(request => {
-            if (shouldCancel(request)) {
-                request.cancel()
-            }
+    cancelRequestsThatShouldBeCancelled(newRequest) {
+        this.requests.forEach(existingRequest => {
+            newRequest.processCancellations(existingRequest)
         })
     }
 }

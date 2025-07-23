@@ -4624,6 +4624,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           });
           this.context = {};
         }
+        getHighestPriorityType(actionTypes) {
+          let rankedTypes = [
+            "user",
+            "island",
+            "refresh",
+            "poll"
+          ];
+          let validActionTypes = actionTypes.filter((type) => rankedTypes.includes(type));
+          if (validActionTypes.length === 0) {
+            return null;
+          }
+          let highestPriorityType = validActionTypes.reduce((highest, current) => {
+            let highestIndex = rankedTypes.indexOf(highest);
+            let currentIndex = rankedTypes.indexOf(current);
+            return currentIndex < highestIndex ? current : highest;
+          });
+          return highestPriorityType;
+        }
+        type() {
+          let actionTypes = this.actions.map((i) => i.context.type ?? "user");
+          return this.getHighestPriorityType(actionTypes);
+        }
         magicActions() {
           return [
             "$refresh",
@@ -4640,10 +4662,35 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         findAndRemoveAction(method) {
           this.actions = this.actions.filter((i) => i.method !== method);
         }
-        cancelIfItShouldBeCancelled() {
-          if (this.isSucceeded())
-            return;
-          this.cancel();
+        processCancellations(newRequest) {
+          Array.from(newRequest.messages).forEach((newMessage) => {
+            if (this.component.id !== newMessage.component.id)
+              return;
+            let existingMessageType = this.type();
+            let newMessageType = newMessage.type();
+            if (existingMessageType === "poll" && newMessageType === "poll") {
+              return newRequest.cancelMessage(newMessage);
+            }
+            if (existingMessageType === "island" && newMessageType === "island") {
+              let existingIslandName = Array.from(this.actions).find((i) => i.context.type === "island")?.context.island.name;
+              let newIslandName = Array.from(newMessage.actions).find((i) => i.context.type === "island")?.context.island.name;
+              if (existingIslandName === newIslandName) {
+                return this.request.cancelMessage(this);
+              }
+            }
+            if (existingMessageType === "island" || newMessageType === "island") {
+              return;
+            }
+            if (existingMessageType === newMessageType) {
+              return this.request.cancelMessage(this);
+            }
+            let higherPriorityType = this.getHighestPriorityType([existingMessageType, newMessageType]);
+            if (higherPriorityType === newMessageType) {
+              return this.request.cancelMessage(this);
+            } else {
+              return newRequest.cancelMessage(newMessage);
+            }
+          });
         }
         buffer() {
           this.status = "buffering";
@@ -4743,6 +4790,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           this.failCallbacks.forEach((i) => i());
         }
         cancel() {
+          if (this.isSucceeded())
+            return;
           this.status = "cancelled";
           this.interceptors.forEach((i) => i.onCancel());
         }
@@ -4783,18 +4832,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           console.log("v4 requests enabled");
         }
         add(request) {
-          this.cancelRequestsThatShouldBeCancelled(request.shouldCancel());
+          this.cancelRequestsThatShouldBeCancelled(request);
           this.requests.add(request);
           request.send();
         }
         remove(request) {
           this.requests.delete(request);
         }
-        cancelRequestsThatShouldBeCancelled(shouldCancel) {
-          this.requests.forEach((request) => {
-            if (shouldCancel(request)) {
-              request.cancel();
-            }
+        cancelRequestsThatShouldBeCancelled(newRequest) {
+          this.requests.forEach((existingRequest) => {
+            newRequest.processCancellations(existingRequest);
           });
         }
       };
@@ -4821,9 +4868,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         isCancelled() {
           return this.controller.signal.aborted;
-        }
-        cancelIfItShouldBeCancelled() {
-          console.error("cancelIfItShouldBeCancelled must be implemented");
         }
         shouldCancel() {
           console.error("shouldCancel must be implemented");
@@ -4871,10 +4915,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         isEmpty() {
           return this.messages.size === 0;
         }
-        shouldCancel() {
-          return (request) => {
-            return request.constructor.name === MessageRequest.name && Array.from(request.messages).some((message) => this.hasMessageFor(message.component));
-          };
+        processCancellations(existingRequest) {
+          if (existingRequest.constructor.name !== MessageRequest.name)
+            return;
+          Array.from(existingRequest.messages).forEach((existingMessage) => {
+            existingMessage.processCancellations(this);
+          });
+        }
+        cancelMessage(message) {
+          message.cancel();
+          this.deleteMessage(message);
+          if (this.messages.size === 0) {
+            this.cancel();
+          }
         }
         async send() {
           let payload = {
@@ -4958,7 +5011,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         cancel() {
           this.messages.forEach((message) => {
-            message.cancelIfItShouldBeCancelled();
+            message.cancel();
           });
           super.cancel();
         }
@@ -6539,6 +6592,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let island = wireIslands.get(el) ?? closestIsland(component, el);
         if (!island)
           return;
+        messageBroker_default.addContext(component, "type", "island");
         messageBroker_default.addContext(component, "island", { name: island.name, mode: island.mode });
       });
       directive2("island", ({ el, directive: directive3 }) => {
@@ -9214,13 +9268,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       super();
       this.uri = uri;
     }
-    shouldCancel() {
-      return (request) => {
-        return [
-          PageRequest.name,
-          MessageRequest.name
-        ].includes(request.constructor.name);
-      };
+    processCancellations(existingRequest) {
+      let requestTypesToCancel = [
+        PageRequest.name,
+        MessageRequest.name
+      ];
+      if (requestTypesToCancel.includes(existingRequest.constructor.name)) {
+        existingRequest.cancel();
+      }
     }
     async send() {
       let options = {
@@ -11999,10 +12054,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/directives/wire-poll.js
   init_directives();
   init_module_esm();
+  init_messageBroker();
   directive2("poll", ({ el, directive: directive3, component }) => {
     let interval = extractDurationFrom(directive3.modifiers, 2e3);
     let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-      triggerComponentRequest(el, directive3, component);
+      triggerComponentRequest(el, directive3, component, messageBroker_default);
     }, interval);
     start3();
     throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive3));
@@ -12011,7 +12067,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     pauseWhile(() => livewireIsOffline());
     stopWhen(() => theElementIsDisconnected(el));
   });
-  function triggerComponentRequest(el, directive3, component) {
+  function triggerComponentRequest(el, directive3, component, messageBroker) {
+    if (window.livewireV4) {
+      messageBroker.addContext(component, "type", "poll");
+      module_default.evaluate(el, directive3.expression ? "$wire." + directive3.expression : "$wire.$sync()");
+      return;
+    }
     module_default.evaluate(el, directive3.expression ? "$wire." + directive3.expression : "$wire.$commit()");
   }
   function poll(callback, interval = 2e3) {

@@ -10,6 +10,7 @@ interceptorRegistry.add(({el, directive, component}) => {
 
     if (! island) return
 
+    messageBroker.addContext(component, 'type', 'island')
     messageBroker.addContext(component, 'island', {name: island.name, mode: island.mode})
 })
 
