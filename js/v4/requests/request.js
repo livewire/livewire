@@ -19,10 +19,6 @@ export default class Request {
         return this.controller.signal.aborted
     }
 
-    shouldCancel() {
-        console.error('shouldCancel must be implemented')
-    }
-
     async send() {
         console.error('send must be implemented')
     }
