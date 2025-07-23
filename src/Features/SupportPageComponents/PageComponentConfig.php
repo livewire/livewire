@@ -17,8 +17,27 @@ class PageComponentConfig
         public $slotOrSection = 'slot',
         public $params = [],
     ) {
-        $this->view = $view ?: config('livewire.layout');
+        $this->view = $view ?: $this->getLayoutFromConfig();
         $this->viewContext = new ViewContext;
+    }
+
+    function getLayoutFromConfig()
+    {
+        $layout = config('livewire.layout');
+
+        if (is_callable($layout)) {
+            return $layout(request());
+        }
+
+        if(is_array($layout)) {
+            foreach ($layout as $key => $value) {
+                if (request()->is($key)) {
+                    return $value;
+                }
+            }
+        }
+
+        return $layout;
     }
 
     function mergeParams($toMerge)
