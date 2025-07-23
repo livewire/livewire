@@ -221,9 +221,9 @@ class LivewireManager
         );
     }
 
-    function visit($name)
+    function visit($name, $args = [])
     {
-        return DuskTestable::create($name, $params = [], $this->queryParamsForTesting);
+        return \Pest\Browser\Api\Livewire::test($name, $args);
     }
 
     function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
@@ -254,6 +254,11 @@ class LivewireManager
     function getPersistentMiddleware()
     {
         return app(PersistentMiddleware::class)->getPersistentMiddleware();
+    }
+
+    function zap()
+    {
+        return app('livewire.zap');
     }
 
     function flushState()
