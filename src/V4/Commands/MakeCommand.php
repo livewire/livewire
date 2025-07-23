@@ -293,9 +293,40 @@ class MakeCommand extends GeneratorCommand
         );
 
         if ($parsed->hasScripts()) {
+            $source = $parsed->getScriptSource();
+
+            // Remove leading line break
+            $source = ltrim($source, "\r\n");
+
+            // Detect and remove common indentation
+            $lines = explode("\n", $source);
+            if (!empty($lines)) {
+                // Find the indentation of the first non-empty line
+                $firstLineIndent = 0;
+                foreach ($lines as $line) {
+                    if (trim($line) !== '') {
+                        $firstLineIndent = strlen($line) - strlen(ltrim($line));
+                        break;
+                    }
+                }
+
+                // Remove that amount of indentation from all lines
+                if ($firstLineIndent > 0) {
+                    $lines = array_map(function($line) use ($firstLineIndent) {
+                        // Only remove indentation if the line has at least that much whitespace
+                        if (strlen($line) >= $firstLineIndent && substr($line, 0, $firstLineIndent) === str_repeat(' ', $firstLineIndent)) {
+                            return substr($line, $firstLineIndent);
+                        }
+                        return $line;
+                    }, $lines);
+                }
+
+                $source = implode("\n", $lines);
+            }
+
             file_put_contents(
                 $jsPath,
-                $parsed->getScriptSource()
+                $source
             );
         }
 
