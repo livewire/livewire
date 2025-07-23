@@ -263,7 +263,7 @@ export default class Message {
 
         this.finishTarget({ snapshot: parsedSnapshot, effects })
 
-        this.interceptors.forEach(i => i.onSuccess(response))
+        this.interceptors.forEach(i => i.onSuccess({ response }))
 
         this.succeedCallbacks.forEach(i => i(response))
 
@@ -293,7 +293,7 @@ export default class Message {
 
         this.status = 'errored'
 
-        this.interceptors.forEach(i => i.onError(e))
+        this.interceptors.forEach(i => i.onError({ e }))
     }
 
     fail(response, content) {
@@ -303,7 +303,7 @@ export default class Message {
 
         this.respond()
 
-        this.interceptors.forEach(i => i.onError(response, content))
+        this.interceptors.forEach(i => i.onFailure({ response, content }))
 
         this.failCallbacks.forEach(i => i())
     }

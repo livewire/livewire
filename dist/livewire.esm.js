@@ -5392,7 +5392,7 @@ var init_message = __esm({
         }
         let parsedSnapshot = JSON.parse(snapshot);
         this.finishTarget({ snapshot: parsedSnapshot, effects });
-        this.interceptors.forEach((i) => i.onSuccess(response));
+        this.interceptors.forEach((i) => i.onSuccess({ response }));
         this.succeedCallbacks.forEach((i) => i(response));
         let html = effects["html"];
         if (!html)
@@ -5412,14 +5412,14 @@ var init_message = __esm({
         if (this.isCancelled())
           return;
         this.status = "errored";
-        this.interceptors.forEach((i) => i.onError(e));
+        this.interceptors.forEach((i) => i.onError({ e }));
       }
       fail(response, content) {
         if (this.isCancelled())
           return;
         this.status = "failed";
         this.respond();
-        this.interceptors.forEach((i) => i.onError(response, content));
+        this.interceptors.forEach((i) => i.onFailure({ response, content }));
         this.failCallbacks.forEach((i) => i());
       }
       cancel() {
@@ -5501,9 +5501,6 @@ var init_request2 = __esm({
       }
       isCancelled() {
         return this.controller.signal.aborted;
-      }
-      shouldCancel() {
-        console.error("shouldCancel must be implemented");
       }
       async send() {
         console.error("send must be implemented");

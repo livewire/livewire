@@ -272,7 +272,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             'init-throwAnError',
             'beforeSend-throwAnError',
             'afterSend-throwAnError',
-            'error-throwAnError',
+            'failure-throwAnError',
         ])
         ;
     }
