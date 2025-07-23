@@ -6635,6 +6635,7 @@ var init_directives = __esm({
         this.rawName = this.raw = rawName;
         this.el = el;
         this.eventContext;
+        this.wire;
         this.value = value;
         this.modifiers = modifiers;
         this.expression = this.el.getAttribute(this.rawName);
@@ -6659,13 +6660,13 @@ var init_directives = __esm({
         let slicedLength = 0;
         while (methodAndParamString) {
           method = methodAndParamString[1];
-          let func = new Function("$event", `return (function () {
+          let func = new Function("$event", "$wire", `return (function () {
                 for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
                     p[k] = arguments[k];
                 }
                 return [].concat(p);
             })(${methodAndParamString[2]})`);
-          params = func(this.eventContext);
+          params = func(this.eventContext, this.wire);
           methods.push({ method, params });
           slicedLength += methodAndParamString[0].length;
           methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex);
@@ -12393,6 +12394,7 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   let cleanupBinding = import_alpinejs12.default.bind(el, {
     [attribute](e) {
       directive2.eventContext = e;
+      directive2.wire = component.$wire;
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
           interceptorRegistry_default.fire(el, directive2, component);

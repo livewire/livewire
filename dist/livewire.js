@@ -6002,6 +6002,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           this.rawName = this.raw = rawName;
           this.el = el;
           this.eventContext;
+          this.wire;
           this.value = value;
           this.modifiers = modifiers;
           this.expression = this.el.getAttribute(this.rawName);
@@ -6026,13 +6027,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let slicedLength = 0;
           while (methodAndParamString) {
             method = methodAndParamString[1];
-            let func = new Function("$event", `return (function () {
+            let func = new Function("$event", "$wire", `return (function () {
                 for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
                     p[k] = arguments[k];
                 }
                 return [].concat(p);
             })(${methodAndParamString[2]})`);
-            params = func(this.eventContext);
+            params = func(this.eventContext, this.wire);
             methods.push({ method, params });
             slicedLength += methodAndParamString[0].length;
             methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex);
@@ -11508,6 +11509,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let cleanupBinding = module_default.bind(el, {
       [attribute](e) {
         directive3.eventContext = e;
+        directive3.wire = component.$wire;
         let execute = () => {
           callAndClearComponentDebounces(component, () => {
             interceptorRegistry_default.fire(el, directive3, component);
