@@ -8,6 +8,13 @@ use Illuminate\Support\Facades\Artisan;
 
 class MakeCommandUnitTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        \Livewire\LivewireManager::$v4 = false;
+
+        parent::setUp();
+    }
+
     public function test_component_is_created_by_make_command()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);
