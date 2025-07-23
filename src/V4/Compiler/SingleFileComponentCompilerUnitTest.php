@@ -284,7 +284,7 @@ new class extends Livewire\Component {
         $this->assertStringContainsString('public $count = 0;', $classContent);
         $this->assertStringContainsString('public function increment()', $classContent);
         $this->assertStringContainsString('public function render()', $classContent);
-        $this->assertStringContainsString("return view('{$result->viewName}');", $classContent);
+        $this->assertStringContainsString("return app('view')->file('{$result->viewPath}');", $classContent);
     }
 
     public function test_generated_view_file_contains_correct_content()
