@@ -115,9 +115,9 @@ class LivewireManager
         return app(HandleComponents::class)->findSynth($keyOrTarget, $component);
     }
 
-    function update($snapshot, $diff, $calls, $updateContext)
+    function update($snapshot, $diff, $calls)
     {
-        return app(HandleComponents::class)->update($snapshot, $diff, $calls, $updateContext);
+        return app(HandleComponents::class)->update($snapshot, $diff, $calls);
     }
 
     function updateProperty($component, $path, $value)

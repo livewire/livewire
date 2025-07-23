@@ -213,9 +213,10 @@ wireProperty('$call', (component) => async (method, ...params) => {
 })
 
 wireProperty('$island', (component) => async (name, mode = null) => {
-    messageBroker.addContext(component, 'islands', {name, mode})
-
-    return await component.$wire.$refresh(mode)
+    return messageBroker.addAction(component, '$refresh', [], {
+        type: 'island',
+        island: { name, mode },
+    })
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {

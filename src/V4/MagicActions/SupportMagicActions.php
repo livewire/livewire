@@ -16,7 +16,7 @@ class SupportMagicActions extends ComponentHook
 
     public function boot()
     {
-        on('call', function ($root, $method, $params, $context, $returnEarly) {
+        on('call', function ($component, $method, $params, $componentContext, $returnEarly, $context) {
             if (! in_array($method, self::$magicActions)) {
                 return;
             }

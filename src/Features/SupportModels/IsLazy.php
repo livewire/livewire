@@ -34,6 +34,10 @@ trait IsLazy {
     }
 
     public function makeLazyProxy($class, $meta, $callback) {
+        if (PHP_VERSION_ID < 80400) {
+            return $callback();
+        }
+
         $reflector = new \ReflectionClass($class);
 
         $lazyModel = $reflector->newLazyProxy($callback);

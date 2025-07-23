@@ -162,7 +162,7 @@ class HandleComponents extends Mechanism
         return $newHtml;
     }
 
-    public function update($snapshot, $updates, $calls, $updateContext)
+    public function update($snapshot, $updates, $calls)
     {
         $data = $snapshot['data'];
         $memo = $snapshot['memo'];
@@ -173,8 +173,6 @@ class HandleComponents extends Mechanism
         $this->pushOntoComponentStack($component);
 
         trigger('hydrate', $component, $memo, $context);
-
-        trigger('context', $component, $updateContext);
 
         $this->updateProperties($component, $updates, $data, $context);
         if (config('app.debug')) trigger('profile', 'hydrate', $component->getId(), [$start, microtime(true)]);
@@ -535,14 +533,14 @@ class HandleComponents extends Mechanism
         }
     }
 
-    protected function callMethods($root, $calls, $context)
+    protected function callMethods($root, $calls, $componentContext)
     {
         $returns = [];
 
         foreach ($calls as $idx => $call) {
             $method = $call['method'];
             $params = $call['params'];
-
+            $context = $call['context'] ?? [];
 
             $earlyReturnCalled = false;
             $earlyReturn = null;
@@ -551,7 +549,7 @@ class HandleComponents extends Mechanism
                 $earlyReturn = $return;
             };
 
-            $finish = trigger('call', $root, $method, $params, $context, $returnEarly);
+            $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $context);
 
             if ($earlyReturnCalled) {
                 $returns[] = $finish($earlyReturn);
@@ -578,7 +576,7 @@ class HandleComponents extends Mechanism
             $returns[] = $finish($return);
         }
 
-        $context->addEffect('returns', $returns);
+        $componentContext->addEffect('returns', $returns);
     }
 
     public function findSynth($keyOrTarget, $component): ?Synth
