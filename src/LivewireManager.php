@@ -19,6 +19,8 @@ class LivewireManager
 {
     protected LivewireServiceProvider $provider;
 
+    public static $v4 = true;
+
     function setProvider(LivewireServiceProvider $provider)
     {
         $this->provider = $provider;

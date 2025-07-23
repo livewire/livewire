@@ -12,7 +12,7 @@ export function fetchHtml(destination, callback, errorCallback) {
 }
 
 export function performFetch(uri, callback, errorCallback) {
-    if (requestBus.booted) {
+    if (window.livewireV4) {
         return performFetchV4(uri, callback, errorCallback)
     }
 
