@@ -31,7 +31,6 @@ class SupportIslands extends ComponentHook
         $this->component->setIslands($islands);
     }
 
-    // @todo: decide where it would be better to have a hook that runs once after all the calls have happened but before rendering of the component starts...
     function call($method, $params, $returnEarly, $context, $componentContext)
     {
         if (! isset($context['island'])) return;

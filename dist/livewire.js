@@ -4307,7 +4307,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let island = component.islands[key2];
       let mode = island.mode;
       let render = island.render;
-      if (["skip", "once"].includes(render)) {
+      if (["bypass", "skip", "once"].includes(render)) {
         skipUntil((node) => isEndMarker2(node));
       } else if (mode === "prepend") {
         let sibling = toEl.nextSibling;

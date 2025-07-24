@@ -73,7 +73,7 @@ export function skipIslandContents(component, el, toEl, skipUntil) {
         let mode = island.mode
         let render = island.render
 
-        if (['skip', 'once'].includes(render)) {
+        if (['bypass', 'skip', 'once'].includes(render)) {
             skipUntil(node => isEndMarker(node))
         } else if (mode === 'prepend') {
             // Collect all siblings until end marker
