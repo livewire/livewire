@@ -17,6 +17,7 @@ class Island implements \Stringable, Htmlable, Jsonable
         public string $render = 'once',
         public bool $defer = false,
         public bool $lazy = false,
+        public ?string $poll = null,
         public ?string $placeholder = null,
     ) {}
 
@@ -55,6 +56,7 @@ class Island implements \Stringable, Htmlable, Jsonable
             'key' => $this->key,
             'mode' => $this->mode,
             'render' => $render,
+            'poll' => $this->poll,
         ];
     }
 

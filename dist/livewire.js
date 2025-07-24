@@ -12144,6 +12144,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   init_directives();
   init_module_esm();
   init_messageBroker();
+  init_hooks();
   directive2("poll", ({ el, directive: directive3, component }) => {
     let interval = extractDurationFrom(directive3.modifiers, 2e3);
     let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
@@ -12155,6 +12156,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     pauseWhile(() => theDirectiveIsOffTheElement(el));
     pauseWhile(() => livewireIsOffline());
     stopWhen(() => theElementIsDisconnected(el));
+  });
+  on2("component.init", ({ component }) => {
+    if (!window.livewireV4)
+      return;
+    let islands = component.islands;
+    if (!islands || Object.keys(islands).length === 0)
+      return;
+    Object.values(islands).forEach((island) => {
+      if (!island.poll)
+        return;
+      let interval = extractDurationFrom([island.poll], 2e3);
+      let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+        component.$wire.$island(island.name);
+      }, interval);
+      start3();
+      pauseWhile(() => livewireIsOffline());
+      stopWhen(() => theElementIsDisconnected(component.el));
+    });
   });
   function triggerComponentRequest(el, directive3, component, messageBroker) {
     if (window.livewireV4) {

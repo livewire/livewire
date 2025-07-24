@@ -1,6 +1,7 @@
 import { directive, getDirectives } from "@/directives"
 import Alpine from 'alpinejs'
 import messageBroker from './../v4/requests/messageBroker'
+import { on } from '@/hooks'
 
 directive('poll', ({ el, directive, component }) => {
     let interval = extractDurationFrom(directive.modifiers, 2000)
@@ -16,6 +17,29 @@ directive('poll', ({ el, directive, component }) => {
     pauseWhile(() => theDirectiveIsOffTheElement(el))
     pauseWhile(() => livewireIsOffline())
     stopWhen(() => theElementIsDisconnected(el))
+})
+
+on('component.init', ({ component }) => {
+    if (! window.livewireV4) return
+
+    let islands = component.islands
+
+    if (! islands || Object.keys(islands).length === 0) return
+
+    Object.values(islands).forEach(island => {
+        if (!island.poll) return
+
+        let interval = extractDurationFrom([island.poll], 2000)
+
+        let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+            component.$wire.$island(island.name)
+        }, interval)
+
+        start()
+
+        pauseWhile(() => livewireIsOffline())
+        stopWhen(() => theElementIsDisconnected(component.el))
+    })
 })
 
 function triggerComponentRequest(el, directive, component, messageBroker) {

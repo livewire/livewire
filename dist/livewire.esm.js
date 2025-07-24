@@ -13029,6 +13029,7 @@ directive("init", ({ el, directive: directive2 }) => {
 init_directives();
 var import_alpinejs18 = __toESM(require_module_cjs());
 init_messageBroker();
+init_hooks();
 directive("poll", ({ el, directive: directive2, component }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
   let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
@@ -13040,6 +13041,24 @@ directive("poll", ({ el, directive: directive2, component }) => {
   pauseWhile(() => theDirectiveIsOffTheElement(el));
   pauseWhile(() => livewireIsOffline());
   stopWhen(() => theElementIsDisconnected(el));
+});
+on("component.init", ({ component }) => {
+  if (!window.livewireV4)
+    return;
+  let islands = component.islands;
+  if (!islands || Object.keys(islands).length === 0)
+    return;
+  Object.values(islands).forEach((island) => {
+    if (!island.poll)
+      return;
+    let interval = extractDurationFrom([island.poll], 2e3);
+    let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+      component.$wire.$island(island.name);
+    }, interval);
+    start2();
+    pauseWhile(() => livewireIsOffline());
+    stopWhen(() => theElementIsDisconnected(component.el));
+  });
 });
 function triggerComponentRequest(el, directive2, component, messageBroker) {
   if (window.livewireV4) {

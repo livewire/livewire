@@ -26,7 +26,7 @@ class SupportIslands extends ComponentHook
 
         if (! isset($memo['islands'])) return;
 
-        $islands = collect($memo['islands'])->map(fn ($island) => $this->component->island(name: $island['name'], key: $island['key'], mode: $island['mode'], render: $island['render']))->toArray();
+        $islands = collect($memo['islands'])->map(fn ($island) => $this->component->island(name: $island['name'], key: $island['key'], mode: $island['mode'], render: $island['render'], poll: $island['poll']))->toArray();
 
         $this->component->setIslands($islands);
     }
