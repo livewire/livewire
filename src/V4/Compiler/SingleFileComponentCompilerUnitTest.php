@@ -453,7 +453,7 @@ new class extends Livewire\Component {
 }';
         $bladeContent1 = '<div>Count: {{ $count }}</div>';
 
-        File::put($componentDir . '/counter.livewire.php', $livewireContent1);
+        File::put($componentDir . '/counter.php', $livewireContent1);
         File::put($componentDir . '/counter.blade.php', $bladeContent1);
 
         // First compilation
@@ -474,7 +474,7 @@ new class extends Livewire\Component {
 }';
 
         sleep(1); // Ensure different timestamp
-        File::put($componentDir . '/counter.livewire.php', $livewireContent2);
+        File::put($componentDir . '/counter.php', $livewireContent2);
 
         // Second compilation
         $result2 = $this->compiler->compileMultiFileComponent($componentDir);
@@ -909,7 +909,7 @@ $notAClass = "invalid";
         $componentDir = $this->tempPath . '/counter';
         File::makeDirectory($componentDir);
 
-        $classPath = $componentDir . '/counter.livewire.php';
+        $classPath = $componentDir . '/counter.php';
         $viewPath = $componentDir . '/counter.blade.php';
         $scriptPath = $componentDir . '/counter.js';
         File::put($classPath, $componentClassContent);

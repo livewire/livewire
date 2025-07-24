@@ -91,7 +91,7 @@ class MakeCommand extends GeneratorCommand
         );
 
         $classPath = $this->viewPath(
-            $directory.'/'.$name.'.livewire.php'
+            $directory.'/'.$name.'.php'
         );
 
         $viewPath = $this->viewPath(

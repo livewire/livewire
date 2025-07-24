@@ -105,7 +105,7 @@ class ComponentViewPathResolver extends Mechanism
         $directoryCandidate = $basePath . '/' . $path;
         if (is_dir($directoryCandidate)) {
             $componentName = basename($path);
-            $livewireFile = $directoryCandidate . '/' . $componentName . '.livewire.php';
+            $livewireFile = $directoryCandidate . '/' . $componentName . '.php';
             $bladeFile = $directoryCandidate . '/' . $componentName . '.blade.php';
 
             // Check if both required multi-file component files exist

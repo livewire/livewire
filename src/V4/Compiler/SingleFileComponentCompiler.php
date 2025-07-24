@@ -102,7 +102,7 @@ class SingleFileComponentCompiler extends Mechanism
         $componentName = basename($directory);
 
         // Define the expected file paths
-        $livewireFilePath = $directory . '/' . $componentName . '.livewire.php';
+        $livewireFilePath = $directory . '/' . $componentName . '.php';
         $bladeFilePath = $directory . '/' . $componentName . '.blade.php';
         $jsFilePath = $directory . '/' . $componentName . '.js';
 
