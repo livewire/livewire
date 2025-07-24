@@ -278,4 +278,99 @@ class BrowserTest extends \Tests\BrowserTestCase
         ])
         ;
     }
+
+    public function test_an_interceptor_can_cancel_a_message_request()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    sleep(1);
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="slowRequest" dusk="slow-request">Slow Request</button>
+                </div>
+
+                @script
+                <script>
+                    window.intercepts = []
+
+                    this.intercept(({ request, directive }) => {
+                        window.intercepts.push(`init-${directive.method}`)
+
+                        setTimeout(() => request.cancel(), 200)
+
+                        request.beforeSend(() => {
+                            window.intercepts.push(`beforeSend-${directive.method}`)
+                        })
+
+                        request.afterSend(() => {
+                            window.intercepts.push(`afterSend-${directive.method}`)
+                        })
+
+                        request.beforeResponse(() => {
+                            window.intercepts.push(`beforeResponse-${directive.method}`)
+                        })
+
+                        request.afterResponse(() => {
+                            window.intercepts.push(`afterResponse-${directive.method}`)
+                        })
+
+                        request.beforeRender(() => {
+                            window.intercepts.push(`beforeRender-${directive.method}`)
+                        })
+
+                        request.afterRender(() => {
+                            window.intercepts.push(`afterRender-${directive.method}`)
+                        })
+
+                        request.beforeMorph(() => {
+                            window.intercepts.push(`beforeMorph-${directive.method}`)
+                        })
+
+                        request.afterMorph(() => {
+                            window.intercepts.push(`afterMorph-${directive.method}`)
+                        })
+
+                        request.onError(() => {
+                            window.intercepts.push(`error-${directive.method}`)
+                        })
+
+                        request.onFailure(() => {
+                            window.intercepts.push(`failure-${directive.method}`)
+                        })
+
+                        request.onSuccess(() => {
+                            window.intercepts.push(`success-${directive.method}`)
+                        })
+
+                        request.onCancel(() => {
+                            window.intercepts.push(`cancel-${directive.method}`)
+                        })
+
+                        return () => {
+                            window.intercepts.push(`returned-${directive.method}`)
+                        }
+                    })
+                </script>
+                @endscript
+                HTML; }
+            }
+        ])
+        ->waitForLivewireToLoad()
+        ->assertScript('window.intercepts.length', 0)
+
+        // The interceptor has a timeout set to cancel the request after 200ms...
+        ->waitForLivewire()->click('@slow-request')
+        ->assertScript('window.intercepts.length', 5)
+        ->assertScript('window.intercepts', [
+            'init-slowRequest',
+            'beforeSend-slowRequest',
+            'afterSend-slowRequest',
+            'cancel-slowRequest',
+            'returned-slowRequest',
+        ])
+        ;
+    }
 }
