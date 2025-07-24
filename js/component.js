@@ -48,6 +48,10 @@ export class Component {
         this.processEffects(this.effects)
     }
 
+    intercept(action, callback = null) {
+        return this.$wire.$intercept(action, callback)
+    }
+
     mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
         let snapshot = JSON.parse(snapshotEncoded)
 

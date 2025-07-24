@@ -182,7 +182,7 @@ wireProperty('$intercept', (component) => (action, callback = null) => {
         action = null
     }
 
-    interceptorRegistry.add(callback, component, action)
+    return interceptorRegistry.add(callback, component, action)
 })
 
 wireProperty('$errors', (component) => getErrorsObject(component))
