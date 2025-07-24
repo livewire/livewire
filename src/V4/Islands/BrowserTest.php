@@ -1181,4 +1181,40 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@island', '4')
             ;
     }
+
+    public function test_an_island_can_be_bypassed_by_the_component_when_the_component_re_renders()
+    {
+        // Need to use a table here, because if the island contents that are being re-rendered by the component have a placeholer div, 
+        // then the div will be hoisted out of the table by the browser, which was causing the island contents to disappear...
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        <button wire:click="$refresh" dusk="refresh-component">Refresh</button>
+
+                        <table dusk="island">
+                            @island('foo')
+                                @foreach(range(1, 3) as $i)
+                                    <tr>
+                                        <td>Island content {{ $i }}</td>
+                                    </tr>
+                                @endforeach
+                            @endisland
+                        </table>
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@island', 'Island content 1')
+        ->assertSeeIn('@island', 'Island content 2')
+        ->assertSeeIn('@island', 'Island content 3')
+
+        ->waitForLivewire()->click('@refresh-component')
+        ->assertSeeIn('@island', 'Island content 1')
+        ->assertSeeIn('@island', 'Island content 2')
+        ->assertSeeIn('@island', 'Island content 3')
+        ;
+    }
 }
