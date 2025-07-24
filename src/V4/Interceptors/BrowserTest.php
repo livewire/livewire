@@ -239,7 +239,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         // Wait for a moment, then trigger another request which should cancel the slow request...
         ->pause(100)
         ->waitForLivewire()->click('@refresh')
-        ->assertScript('window.intercepts.length', 15)
+        ->assertScript('window.intercepts.length', 16)
         // The below results are the combination of the slow request and the refresh request...
         ->assertScript('window.intercepts', [
             'init-slowRequest',
@@ -248,6 +248,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             'init-$refresh',
             'beforeSend-$refresh',
             'cancel-slowRequest',
+            'returned-slowRequest',
             'afterSend-$refresh',
             'beforeResponse-$refresh',
             'afterResponse-$refresh',
@@ -267,12 +268,13 @@ class BrowserTest extends \Tests\BrowserTestCase
         // Trigger the error request...
         ->waitForLivewire()->click('@throw-error')
 
-        ->assertScript('window.intercepts.length', 4)
+        ->assertScript('window.intercepts.length', 5)
         ->assertScript('window.intercepts', [
             'init-throwAnError',
             'beforeSend-throwAnError',
             'afterSend-throwAnError',
             'failure-throwAnError',
+            'returned-throwAnError',
         ])
         ;
     }
