@@ -11592,7 +11592,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         directive3.wire = component.$wire;
         let execute = () => {
           callAndClearComponentDebounces(component, () => {
-            interceptorRegistry_default.fire(el, directive3, component);
+            window.livewireV4 && interceptorRegistry_default.fire(el, directive3, component);
             module_default.evaluate(el, "await $wire." + directive3.expression, { scope: { $event: e } });
           });
         };
@@ -11845,7 +11845,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           isLoading = true;
           startLoading();
         });
-        return () => {
+        let cleanup2 = () => {
           if (!isLoading)
             return;
           if (!loadingStack2.has(el))
@@ -11857,6 +11857,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             loadingStack2.set(el, loadingStack2.get(el) - 1);
           }
         };
+        request.onSuccess(cleanup2);
+        request.onFailure(cleanup2);
+        request.onError(cleanup2);
+        request.onCancel(cleanup2);
       });
     }
     return on2("commit", ({ component: iComponent, commit: payload, respond }) => {
@@ -12044,6 +12048,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   init_store();
   init_utils();
   init_module_esm();
+  init_interceptorRegistry();
   directive2("model", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
     component = closestComponent(el);
     let { expression, modifiers } = directive3;
@@ -12060,7 +12065,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
     let onBlur = modifiers.includes("blur");
     let isDebounced = modifiers.includes("debounce");
-    let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit() : () => component.$wire.$commit();
+    let update = () => {
+      window.livewireV4 && interceptorRegistry_default.fire(el, directive3, component);
+      expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
+    };
     let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce2(update, 150) : update;
     module_default.bind(el, {
       ["@change"]() {

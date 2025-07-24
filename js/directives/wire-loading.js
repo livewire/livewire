@@ -110,7 +110,7 @@ function whenTargetsArePartOfRequest(component, el, targets, loadingStack, inver
                 startLoading()
             })
 
-            return () => {
+            let cleanup = () => {
                 if (! isLoading) return
 
                 if (!loadingStack.has(el)) return
@@ -123,6 +123,11 @@ function whenTargetsArePartOfRequest(component, el, targets, loadingStack, inver
                     loadingStack.set(el, loadingStack.get(el) - 1)
                 }
             }
+
+            request.onSuccess(cleanup)
+            request.onFailure(cleanup)
+            request.onError(cleanup)
+            request.onCancel(cleanup)
         })
     }
 

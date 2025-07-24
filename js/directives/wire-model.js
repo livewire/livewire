@@ -3,6 +3,7 @@ import { handleFileUpload } from '@/features/supportFileUploads'
 import { closestComponent } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
+import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
 
 directive('model', ({ el, directive, component, cleanup }) => {
     // @todo: will need to probaby do this further upstream i just don't want to bog down the entire lifecycle right now...
@@ -30,9 +31,13 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let isDebounced = modifiers.includes('debounce')
 
     // Trigger a network request (only if .live or .lazy is added to wire:model)...
-    let update = expression.startsWith('$parent')
-        ? () => component.$wire.$parent.$commit()
-        : () => component.$wire.$commit()
+    let update = () => {
+        window.livewireV4 && interceptorRegistry.fire(el, directive, component)
+
+        expression.startsWith('$parent')
+            ? component.$wire.$parent.$commit()
+            : component.$wire.$commit()
+    }
 
     // If a plain wire:model is added to a text input, debounce the
     // trigerring of network requests.

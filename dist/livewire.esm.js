@@ -12477,7 +12477,7 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
       directive2.wire = component.$wire;
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          interceptorRegistry_default.fire(el, directive2, component);
+          window.livewireV4 && interceptorRegistry_default.fire(el, directive2, component);
           import_alpinejs12.default.evaluate(el, "await $wire." + directive2.expression, { scope: { $event: e } });
         });
       };
@@ -12730,7 +12730,7 @@ function whenTargetsArePartOfRequest(component, el, targets, loadingStack2, inve
         isLoading = true;
         startLoading();
       });
-      return () => {
+      let cleanup = () => {
         if (!isLoading)
           return;
         if (!loadingStack2.has(el))
@@ -12742,6 +12742,10 @@ function whenTargetsArePartOfRequest(component, el, targets, loadingStack2, inve
           loadingStack2.set(el, loadingStack2.get(el) - 1);
         }
       };
+      request.onSuccess(cleanup);
+      request.onFailure(cleanup);
+      request.onError(cleanup);
+      request.onCancel(cleanup);
     });
   }
   return on("commit", ({ component: iComponent, commit: payload, respond }) => {
@@ -12929,6 +12933,7 @@ init_supportFileUploads();
 init_store();
 init_utils();
 var import_alpinejs16 = __toESM(require_module_cjs());
+init_interceptorRegistry();
 directive("model", ({ el, directive: directive2, component, cleanup }) => {
   component = closestComponent(el);
   let { expression, modifiers } = directive2;
@@ -12945,7 +12950,10 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
   let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
   let onBlur = modifiers.includes("blur");
   let isDebounced = modifiers.includes("debounce");
-  let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit() : () => component.$wire.$commit();
+  let update = () => {
+    window.livewireV4 && interceptorRegistry_default.fire(el, directive2, component);
+    expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
+  };
   let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
   import_alpinejs16.default.bind(el, {
     ["@change"]() {
