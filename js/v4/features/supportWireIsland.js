@@ -14,7 +14,7 @@ interceptorRegistry.add(({el, directive, component}) => {
     messageBroker.addContext(component, 'island', {name: island.name, mode: island.mode})
 })
 
-directive('island', ({ el, directive }) => {
+directive('island', ({ el, directive, cleanup }) => {
     let name = directive.expression ?? 'default'
 
     let mode = null
@@ -30,5 +30,9 @@ directive('island', ({ el, directive }) => {
     wireIslands.set(el, {
         name,
         mode,
+    })
+
+    cleanup(() => {
+        wireIslands.delete(el)
     })
 })

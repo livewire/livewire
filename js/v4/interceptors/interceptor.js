@@ -7,11 +7,20 @@ class Interceptor {
     afterRender = () => {}
     beforeMorph = () => {}
     afterMorph = () => {}
+    beforeMorphIsland = () => {}
+    afterMorphIsland = () => {}
     onError = () => {}
     onFailure = () => {}
     onSuccess = () => {}
     onCancel = () => {}
-    cancel = () => {}
+
+    // If cancel is called before a message is prepared, then this flag
+    // instructs the message to cancel itself when it is loaded...
+    hasBeenCancelled = false
+
+    cancel = () => {
+        this.hasBeenCancelled = true
+    }
 
     constructor(callback, action) {
         this.callback = callback
@@ -29,11 +38,15 @@ class Interceptor {
             afterRender: (callback) => this.afterRender = callback,
             beforeMorph: (callback) => this.beforeMorph = callback,
             afterMorph: (callback) => this.afterMorph = callback,
+            beforeMorphIsland: (callback) => this.beforeMorphIsland = callback,
+            afterMorphIsland: (callback) => this.afterMorphIsland = callback,
 
             onError: (callback) => this.onError = callback,
             onFailure: (callback) => this.onFailure = callback,
             onSuccess: (callback) => this.onSuccess = callback,
             onCancel: (callback) => this.onCancel = callback,
+
+            cancel: () => this.cancel()
         }
 
         let returned = this.callback({el, directive, component, request})

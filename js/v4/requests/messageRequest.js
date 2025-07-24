@@ -37,8 +37,6 @@ export default class MessageRequest extends Request {
     }
 
     cancelMessage(message) {
-        message.cancel()
-
         this.deleteMessage(message)
 
         if (this.messages.size === 0) {

@@ -18,23 +18,6 @@ export function streamIsland(component, key, content) {
     renderIsland(component, key, content)
 }
 
-on('effect', ({ component, effects }) => {
-    let islands = effects.islands || []
-
-    islands.forEach(island => {
-        let { key, content, mode } = island
-
-        // Wrapping this in a double queueMicrotask. The first one puts it after all
-        // other "effect" hooks, and the second one puts it after all reactive
-        // Alpine effects (that are processed via flushJobs in scheduler).
-        queueMicrotask(() => {
-            queueMicrotask(() => {
-                renderIsland(component, key, content, mode)
-            })
-        })
-    })
-})
-
 export function renderIsland(component, key, content, mode = null) {
     let island = component.islands[key]
     mode ??= island.mode

@@ -5058,17 +5058,6 @@ var init_supportIslands = __esm({
       let component = findComponent(id);
       streamIsland(component, key, content);
     });
-    on("effect", ({ component, effects }) => {
-      let islands = effects.islands || [];
-      islands.forEach((island) => {
-        let { key: key2, content, mode } = island;
-        queueMicrotask(() => {
-          queueMicrotask(() => {
-            renderIsland(component, key2, content, mode);
-          });
-        });
-      });
-    });
   }
 });
 
@@ -5208,6 +5197,7 @@ var init_message = __esm({
   "js/v4/requests/message.js"() {
     init_hooks();
     init_morph();
+    init_supportIslands();
     Message = class {
       updates = {};
       actions = [];
@@ -5226,6 +5216,8 @@ var init_message = __esm({
         this.component = component;
       }
       addInterceptor(interceptor) {
+        if (interceptor.hasBeenCancelled)
+          return this.cancel();
         interceptor.cancel = () => this.cancel();
         this.interceptors.add(interceptor);
       }
@@ -5302,26 +5294,26 @@ var init_message = __esm({
           let existingMessageType = this.type();
           let newMessageType = newMessage.type();
           if (existingMessageType === "poll" && newMessageType === "poll") {
-            return newRequest.cancelMessage(newMessage);
+            return newMessage.cancel();
           }
           if (existingMessageType === "island" && newMessageType === "island") {
             let existingIslandName = Array.from(this.actions).find((i) => i.context.type === "island")?.context.island.name;
             let newIslandName = Array.from(newMessage.actions).find((i) => i.context.type === "island")?.context.island.name;
             if (existingIslandName === newIslandName) {
-              return this.request.cancelMessage(this);
+              return this.cancel();
             }
           }
           if (existingMessageType === "island" || newMessageType === "island") {
             return;
           }
           if (existingMessageType === newMessageType) {
-            return this.request.cancelMessage(this);
+            return this.cancel();
           }
           let higherPriorityType = this.getHighestPriorityType([existingMessageType, newMessageType]);
           if (higherPriorityType === newMessageType) {
-            return this.request.cancelMessage(this);
+            return this.cancel();
           } else {
-            return newRequest.cancelMessage(newMessage);
+            return newMessage.cancel();
           }
         });
       }
@@ -5395,13 +5387,29 @@ var init_message = __esm({
         this.interceptors.forEach((i) => i.onSuccess({ response }));
         this.succeedCallbacks.forEach((i) => i(response));
         let html = effects["html"];
-        if (!html)
+        let islands = effects["islands"];
+        if (!html && !islands) {
+          setTimeout(() => {
+            this.interceptors.forEach((i) => i.returned());
+          });
           return;
+        }
         this.interceptors.forEach((i) => i.beforeRender({ component: this.component }));
         queueMicrotask(() => {
-          this.interceptors.forEach((i) => i.beforeMorph({ component: this.component, el: this.component.el, html }));
-          morph(this.component, this.component.el, html);
-          this.interceptors.forEach((i) => i.afterMorph({ component: this.component, el: this.component.el, html }));
+          if (html) {
+            this.interceptors.forEach((i) => i.beforeMorph({ component: this.component, el: this.component.el, html }));
+            morph(this.component, this.component.el, html);
+            this.interceptors.forEach((i) => i.afterMorph({ component: this.component, el: this.component.el, html }));
+          }
+          if (islands) {
+            islands.forEach((islandPayload) => {
+              let { key: key2, content, mode } = islandPayload;
+              let island = this.component.islands[key2];
+              this.interceptors.forEach((i) => i.beforeMorphIsland({ component: this.component, island, content }));
+              renderIsland(this.component, key2, content, mode);
+              this.interceptors.forEach((i) => i.afterMorphIsland({ component: this.component, island, content }));
+            });
+          }
           setTimeout(() => {
             this.interceptors.forEach((i) => i.afterRender({ component: this.component }));
             this.interceptors.forEach((i) => i.returned());
@@ -5412,7 +5420,9 @@ var init_message = __esm({
         if (this.isCancelled())
           return;
         this.status = "errored";
+        this.respond();
         this.interceptors.forEach((i) => i.onError({ e }));
+        this.interceptors.forEach((i) => i.returned());
       }
       fail(response, content) {
         if (this.isCancelled())
@@ -5421,12 +5431,16 @@ var init_message = __esm({
         this.respond();
         this.interceptors.forEach((i) => i.onFailure({ response, content }));
         this.failCallbacks.forEach((i) => i());
+        this.interceptors.forEach((i) => i.returned());
       }
       cancel() {
         if (this.isSucceeded())
           return;
         this.status = "cancelled";
+        this.request?.cancelMessage(this);
+        this.respond();
         this.interceptors.forEach((i) => i.onCancel());
+        this.interceptors.forEach((i) => i.returned());
       }
       isBuffering() {
         return this.status === "buffering";
@@ -5553,7 +5567,6 @@ var init_messageRequest = __esm({
         });
       }
       cancelMessage(message) {
-        message.cancel();
         this.deleteMessage(message);
         if (this.messages.size === 0) {
           this.cancel();
@@ -5728,7 +5741,7 @@ var init_messageBroker = __esm({
         this.bufferMessageForFiveMs(message);
       }
       bufferMessageForFiveMs(message) {
-        if (message.isBuffering())
+        if (message.isBuffering() || message.isCancelled())
           return;
         message.buffer();
         setTimeout(() => {
@@ -5742,6 +5755,8 @@ var init_messageBroker = __esm({
         if (messages.size === 0)
           return;
         messages.forEach((message) => {
+          if (message.isCancelled())
+            return;
           message.prepare();
         });
         let requests = this.corraleMessagesIntoRequests(messages);
@@ -5993,6 +6008,10 @@ var init_interceptor = __esm({
       };
       afterMorph = () => {
       };
+      beforeMorphIsland = () => {
+      };
+      afterMorphIsland = () => {
+      };
       onError = () => {
       };
       onFailure = () => {
@@ -6001,7 +6020,9 @@ var init_interceptor = __esm({
       };
       onCancel = () => {
       };
+      hasBeenCancelled = false;
       cancel = () => {
+        this.hasBeenCancelled = true;
       };
       constructor(callback, action) {
         this.callback = callback;
@@ -6019,10 +6040,13 @@ var init_interceptor = __esm({
           afterRender: (callback) => this.afterRender = callback,
           beforeMorph: (callback) => this.beforeMorph = callback,
           afterMorph: (callback) => this.afterMorph = callback,
+          beforeMorphIsland: (callback) => this.beforeMorphIsland = callback,
+          afterMorphIsland: (callback) => this.afterMorphIsland = callback,
           onError: (callback) => this.onError = callback,
           onFailure: (callback) => this.onFailure = callback,
           onSuccess: (callback) => this.onSuccess = callback,
-          onCancel: (callback) => this.onCancel = callback
+          onCancel: (callback) => this.onCancel = callback,
+          cancel: () => this.cancel()
         };
         let returned = this.callback({ el, directive: directive2, component, request });
         if (returned && typeof returned === "function") {
@@ -6050,7 +6074,9 @@ var init_interceptorRegistry = __esm({
         let interceptorData = { callback, method };
         if (component === null) {
           this.globalInterceptors.add(interceptorData);
-          return;
+          return () => {
+            this.globalInterceptors.delete(interceptorData);
+          };
         }
         let interceptors = this.componentInterceptors.get(component);
         if (!interceptors) {
@@ -6058,6 +6084,9 @@ var init_interceptorRegistry = __esm({
           this.componentInterceptors.set(component, interceptors);
         }
         interceptors.add(interceptorData);
+        return () => {
+          interceptors.delete(interceptorData);
+        };
       }
       fire(el, directive2, component) {
         let method = directive2.method;
@@ -6247,7 +6276,7 @@ var init_wire = __esm({
         callback = action;
         action = null;
       }
-      interceptorRegistry_default.add(callback, component, action);
+      return interceptorRegistry_default.add(callback, component, action);
     });
     wireProperty("$errors", (component) => getErrorsObject(component));
     wireProperty("$paginator", (component) => {
@@ -6380,6 +6409,9 @@ var init_component = __esm({
         this.$wire = generateWireObject(this, this.reactive);
         this.cleanups = [];
         this.processEffects(this.effects);
+      }
+      intercept(action, callback = null) {
+        return this.$wire.$intercept(action, callback);
       }
       mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
         let snapshot = JSON.parse(snapshotEncoded);
@@ -10459,7 +10491,7 @@ var init_supportWireIsland = __esm({
       messageBroker_default.addContext(component, "type", "island");
       messageBroker_default.addContext(component, "island", { name: island.name, mode: island.mode });
     });
-    directive("island", ({ el, directive: directive2 }) => {
+    directive("island", ({ el, directive: directive2, cleanup }) => {
       let name = directive2.expression ?? "default";
       let mode = null;
       if (directive2.modifiers.includes("append")) {
@@ -10472,6 +10504,9 @@ var init_supportWireIsland = __esm({
       wireIslands.set(el, {
         name,
         mode
+      });
+      cleanup(() => {
+        wireIslands.delete(el);
       });
     });
   }
@@ -12449,7 +12484,7 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
       directive2.wire = component.$wire;
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          interceptorRegistry_default.fire(el, directive2, component);
+          window.livewireV4 && interceptorRegistry_default.fire(el, directive2, component);
           import_alpinejs12.default.evaluate(el, "await $wire." + directive2.expression, { scope: { $event: e } });
         });
       };
@@ -12619,10 +12654,12 @@ directive("offline", ({ el, directive: directive2, cleanup }) => {
 init_directives();
 init_hooks();
 init_utils();
+init_supportIslands();
+var loadingStack = /* @__PURE__ */ new WeakMap();
 directive("loading", ({ el, directive: directive2, component, cleanup }) => {
   let { targets, inverted } = getTargets(el);
   let [delay, abortDelay] = applyDelay(directive2);
-  let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
+  let cleanupA = whenTargetsArePartOfRequest(component, el, targets, loadingStack, inverted, [
     () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
     () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
   ]);
@@ -12673,7 +12710,51 @@ function applyDelay(directive2) {
     }
   ];
 }
-function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
+function whenTargetsArePartOfRequest(component, el, targets, loadingStack2, inverted, [startLoading, endLoading]) {
+  if (window.livewireV4) {
+    return component.intercept(({ request }) => {
+      let isLoading = false;
+      request.beforeSend(({ component: requestComponent, payload }) => {
+        if (requestComponent !== component)
+          return;
+        let island = closestIsland(component, el);
+        let shouldLoad = shouldLoadAsComponentOrIslandsMatch(payload, island);
+        if (!shouldLoad)
+          return;
+        if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
+          if (loadingStack2.has(el)) {
+            loadingStack2.delete(el);
+            endLoading();
+            isLoading = false;
+          }
+          return;
+        }
+        if (!loadingStack2.has(el)) {
+          loadingStack2.set(el, 0);
+        } else {
+          loadingStack2.set(el, loadingStack2.get(el) + 1);
+        }
+        isLoading = true;
+        startLoading();
+      });
+      let cleanup = () => {
+        if (!isLoading)
+          return;
+        if (!loadingStack2.has(el))
+          return;
+        if (loadingStack2.get(el) === 0) {
+          loadingStack2.delete(el);
+          endLoading();
+        } else {
+          loadingStack2.set(el, loadingStack2.get(el) - 1);
+        }
+      };
+      request.onSuccess(cleanup);
+      request.onFailure(cleanup);
+      request.onError(cleanup);
+      request.onCancel(cleanup);
+    });
+  }
   return on("commit", ({ component: iComponent, commit: payload, respond }) => {
     if (iComponent !== component)
       return;
@@ -12736,6 +12817,13 @@ function containsTargets(payload, targets) {
     if (calls.map((i) => i.method).includes(target))
       return true;
   });
+}
+function shouldLoadAsComponentOrIslandsMatch(payload, island) {
+  let payloadIslands = Array.from(payload.calls).map((i) => i.context.island?.name).filter((name) => name !== void 0);
+  if (island === null) {
+    return payloadIslands.length === 0;
+  }
+  return payloadIslands.includes(island.name);
 }
 function getTargets(el) {
   let directives = getDirectives(el);
@@ -12852,6 +12940,7 @@ init_supportFileUploads();
 init_store();
 init_utils();
 var import_alpinejs16 = __toESM(require_module_cjs());
+init_interceptorRegistry();
 directive("model", ({ el, directive: directive2, component, cleanup }) => {
   component = closestComponent(el);
   let { expression, modifiers } = directive2;
@@ -12868,7 +12957,10 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
   let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
   let onBlur = modifiers.includes("blur");
   let isDebounced = modifiers.includes("debounce");
-  let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit() : () => component.$wire.$commit();
+  let update = () => {
+    window.livewireV4 && interceptorRegistry_default.fire(el, directive2, component);
+    expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
+  };
   let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
   import_alpinejs16.default.bind(el, {
     ["@change"]() {

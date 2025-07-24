@@ -22,7 +22,7 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
 
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
-                    interceptorRegistry.fire(el, directive, component)
+                    window.livewireV4 && interceptorRegistry.fire(el, directive, component)
 
                     Alpine.evaluate(el, 'await $wire.'+directive.expression, { scope: { $event: e }})
                 })

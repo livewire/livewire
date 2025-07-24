@@ -15,7 +15,9 @@ class InterceptorRegistry {
         if (component === null) {
             this.globalInterceptors.add(interceptorData)
 
-            return
+            return () => {
+                this.globalInterceptors.delete(interceptorData)
+            }
         }
 
         let interceptors = this.componentInterceptors.get(component)
@@ -27,6 +29,10 @@ class InterceptorRegistry {
         }
 
         interceptors.add(interceptorData)
+
+        return () => {
+            interceptors.delete(interceptorData)
+        }
     }
 
     fire(el, directive, component) {

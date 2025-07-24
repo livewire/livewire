@@ -1,5 +1,6 @@
 import { trigger } from '@/hooks'
 import { morph } from '@/morph'
+import { renderIsland } from '@/features/supportIslands'
 
 export default class Message {
     updates = {}
@@ -21,6 +22,8 @@ export default class Message {
     }
 
     addInterceptor(interceptor) {
+        if (interceptor.hasBeenCancelled) return this.cancel()
+
         interceptor.cancel = () => this.cancel()
 
         this.interceptors.add(interceptor)
@@ -128,7 +131,7 @@ export default class Message {
 
             // If both messages are polls, then cancel the new one which lets the existing one finish...
             if (existingMessageType === 'poll' && newMessageType === 'poll') {
-                return newRequest.cancelMessage(newMessage)
+                return newMessage.cancel()
             }
 
             // If both messages are islands, then only cancel if they are for the same island...
@@ -137,7 +140,7 @@ export default class Message {
                 let newIslandName = Array.from(newMessage.actions).find(i => i.context.type === 'island')?.context.island.name
 
                 if (existingIslandName === newIslandName) {
-                    return this.request.cancelMessage(this)
+                    return this.cancel()
                 }
             }
 
@@ -148,7 +151,7 @@ export default class Message {
 
             // If both messages are the same type, then cancel the existing one and start the new one...
             if (existingMessageType === newMessageType) {
-                return this.request.cancelMessage(this)
+                return this.cancel()
             }
 
             // If they are different types, compare them and cancel the less important one...
@@ -156,10 +159,10 @@ export default class Message {
 
             if (higherPriorityType === newMessageType) {
                 // New message has higher priority, cancel the existing one
-                return this.request.cancelMessage(this)
+                return this.cancel()
             } else {
                 // Existing message has higher priority, cancel the new one
-                return newRequest.cancelMessage(newMessage)
+                return newMessage.cancel()
             }
         })
     }
@@ -269,16 +272,40 @@ export default class Message {
 
         let html = effects['html']
 
-        if (! html) return
+        let islands = effects['islands']
+
+        if (! html && ! islands) {
+            setTimeout(() => {
+                this.interceptors.forEach(i => i.returned())
+            })
+
+            return
+        }
 
         this.interceptors.forEach(i => i.beforeRender({ component: this.component }))
 
         queueMicrotask(() => {
-            this.interceptors.forEach(i => i.beforeMorph({ component: this.component, el: this.component.el, html }))
+            if (html) {
+                this.interceptors.forEach(i => i.beforeMorph({ component: this.component, el: this.component.el, html }))
 
-            morph(this.component, this.component.el, html)
+                morph(this.component, this.component.el, html)
 
-            this.interceptors.forEach(i => i.afterMorph({ component: this.component, el: this.component.el, html }))
+                this.interceptors.forEach(i => i.afterMorph({ component: this.component, el: this.component.el, html }))
+            }
+
+            if (islands) {
+                islands.forEach(islandPayload => {
+                    let { key, content, mode } = islandPayload
+
+                    let island = this.component.islands[key]
+
+                    this.interceptors.forEach(i => i.beforeMorphIsland({ component: this.component, island, content }))
+
+                    renderIsland(this.component, key, content, mode)
+
+                    this.interceptors.forEach(i => i.afterMorphIsland({ component: this.component, island, content }))
+                })
+            }
 
             setTimeout(() => {
                 this.interceptors.forEach(i => i.afterRender({ component: this.component }))
@@ -293,7 +320,11 @@ export default class Message {
 
         this.status = 'errored'
 
+        this.respond()
+
         this.interceptors.forEach(i => i.onError({ e }))
+        
+        this.interceptors.forEach(i => i.returned())
     }
 
     fail(response, content) {
@@ -306,6 +337,8 @@ export default class Message {
         this.interceptors.forEach(i => i.onFailure({ response, content }))
 
         this.failCallbacks.forEach(i => i())
+        
+        this.interceptors.forEach(i => i.returned())
     }
 
     cancel() {
@@ -313,10 +346,13 @@ export default class Message {
 
         this.status = 'cancelled'
 
-        this.interceptors.forEach(i => i.onCancel())
+        this.request?.cancelMessage(this)
 
-        // @todo: Get this working with `wire:loading`...
-        // this.respond()
+        this.respond()
+
+        this.interceptors.forEach(i => i.onCancel())
+        
+        this.interceptors.forEach(i => i.returned())
     }
 
     isBuffering() {
