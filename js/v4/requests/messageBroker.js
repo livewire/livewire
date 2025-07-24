@@ -46,7 +46,7 @@ class MessageBroker {
     }
 
     bufferMessageForFiveMs(message) {
-        if (message.isBuffering()) return
+        if (message.isBuffering() || message.isCancelled()) return
 
         message.buffer()
 
@@ -67,6 +67,8 @@ class MessageBroker {
         if (messages.size === 0) return
 
         messages.forEach(message => {
+            if (message.isCancelled()) return
+            
             message.prepare()
         })
 

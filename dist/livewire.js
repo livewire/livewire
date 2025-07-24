@@ -4583,6 +4583,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           this.component = component;
         }
         addInterceptor(interceptor2) {
+          if (interceptor2.hasBeenCancelled)
+            return this.cancel();
           interceptor2.cancel = () => this.cancel();
           this.interceptors.add(interceptor2);
         }
@@ -4659,26 +4661,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             let existingMessageType = this.type();
             let newMessageType = newMessage.type();
             if (existingMessageType === "poll" && newMessageType === "poll") {
-              return newRequest.cancelMessage(newMessage);
+              return newMessage.cancel();
             }
             if (existingMessageType === "island" && newMessageType === "island") {
               let existingIslandName = Array.from(this.actions).find((i) => i.context.type === "island")?.context.island.name;
               let newIslandName = Array.from(newMessage.actions).find((i) => i.context.type === "island")?.context.island.name;
               if (existingIslandName === newIslandName) {
-                return this.request.cancelMessage(this);
+                return this.cancel();
               }
             }
             if (existingMessageType === "island" || newMessageType === "island") {
               return;
             }
             if (existingMessageType === newMessageType) {
-              return this.request.cancelMessage(this);
+              return this.cancel();
             }
             let higherPriorityType = this.getHighestPriorityType([existingMessageType, newMessageType]);
             if (higherPriorityType === newMessageType) {
-              return this.request.cancelMessage(this);
+              return this.cancel();
             } else {
-              return newRequest.cancelMessage(newMessage);
+              return newMessage.cancel();
             }
           });
         }
@@ -4802,6 +4804,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           if (this.isSucceeded())
             return;
           this.status = "cancelled";
+          this.request?.cancelMessage(this);
           this.respond();
           this.interceptors.forEach((i) => i.onCancel());
           this.interceptors.forEach((i) => i.returned());
@@ -4931,7 +4934,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           });
         }
         cancelMessage(message) {
-          message.cancel();
           this.deleteMessage(message);
           if (this.messages.size === 0) {
             this.cancel();
@@ -5106,7 +5108,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           this.bufferMessageForFiveMs(message);
         }
         bufferMessageForFiveMs(message) {
-          if (message.isBuffering())
+          if (message.isBuffering() || message.isCancelled())
             return;
           message.buffer();
           setTimeout(() => {
@@ -5120,6 +5122,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           if (messages.size === 0)
             return;
           messages.forEach((message) => {
+            if (message.isCancelled())
+              return;
             message.prepare();
           });
           let requests = this.corraleMessagesIntoRequests(messages);
@@ -5383,7 +5387,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         };
         onCancel = () => {
         };
+        hasBeenCancelled = false;
         cancel = () => {
+          this.hasBeenCancelled = true;
         };
         constructor(callback, action) {
           this.callback = callback;
@@ -5406,7 +5412,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             onError: (callback) => this.onError = callback,
             onFailure: (callback) => this.onFailure = callback,
             onSuccess: (callback) => this.onSuccess = callback,
-            onCancel: (callback) => this.onCancel = callback
+            onCancel: (callback) => this.onCancel = callback,
+            cancel: () => this.cancel()
           };
           let returned = this.callback({ el, directive: directive3, component, request });
           if (returned && typeof returned === "function") {

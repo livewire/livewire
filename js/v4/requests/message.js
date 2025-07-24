@@ -22,6 +22,8 @@ export default class Message {
     }
 
     addInterceptor(interceptor) {
+        if (interceptor.hasBeenCancelled) return this.cancel()
+
         interceptor.cancel = () => this.cancel()
 
         this.interceptors.add(interceptor)
@@ -129,7 +131,7 @@ export default class Message {
 
             // If both messages are polls, then cancel the new one which lets the existing one finish...
             if (existingMessageType === 'poll' && newMessageType === 'poll') {
-                return newRequest.cancelMessage(newMessage)
+                return newMessage.cancel()
             }
 
             // If both messages are islands, then only cancel if they are for the same island...
@@ -138,7 +140,7 @@ export default class Message {
                 let newIslandName = Array.from(newMessage.actions).find(i => i.context.type === 'island')?.context.island.name
 
                 if (existingIslandName === newIslandName) {
-                    return this.request.cancelMessage(this)
+                    return this.cancel()
                 }
             }
 
@@ -149,7 +151,7 @@ export default class Message {
 
             // If both messages are the same type, then cancel the existing one and start the new one...
             if (existingMessageType === newMessageType) {
-                return this.request.cancelMessage(this)
+                return this.cancel()
             }
 
             // If they are different types, compare them and cancel the less important one...
@@ -157,10 +159,10 @@ export default class Message {
 
             if (higherPriorityType === newMessageType) {
                 // New message has higher priority, cancel the existing one
-                return this.request.cancelMessage(this)
+                return this.cancel()
             } else {
                 // Existing message has higher priority, cancel the new one
-                return newRequest.cancelMessage(newMessage)
+                return newMessage.cancel()
             }
         })
     }
@@ -343,6 +345,8 @@ export default class Message {
         if (this.isSucceeded()) return
 
         this.status = 'cancelled'
+
+        this.request?.cancelMessage(this)
 
         this.respond()
 
