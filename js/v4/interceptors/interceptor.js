@@ -7,6 +7,8 @@ class Interceptor {
     afterRender = () => {}
     beforeMorph = () => {}
     afterMorph = () => {}
+    beforeMorphIsland = () => {}
+    afterMorphIsland = () => {}
     onError = () => {}
     onFailure = () => {}
     onSuccess = () => {}
@@ -29,6 +31,8 @@ class Interceptor {
             afterRender: (callback) => this.afterRender = callback,
             beforeMorph: (callback) => this.beforeMorph = callback,
             afterMorph: (callback) => this.afterMorph = callback,
+            beforeMorphIsland: (callback) => this.beforeMorphIsland = callback,
+            afterMorphIsland: (callback) => this.afterMorphIsland = callback,
 
             onError: (callback) => this.onError = callback,
             onFailure: (callback) => this.onFailure = callback,
