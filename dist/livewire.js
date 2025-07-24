@@ -6546,6 +6546,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "js/v4/features/supportDataLoading.js"() {
       init_interceptorRegistry();
       interceptorRegistry_default.add(({ el, directive: directive3, component, request }) => {
+        if (directive3.value === "poll")
+          return;
         el.setAttribute("data-loading", "true");
         request.afterResponse(() => {
           el.removeAttribute("data-loading");
@@ -12143,6 +12145,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/directives/wire-poll.js
   init_directives();
   init_module_esm();
+  init_interceptorRegistry();
   init_messageBroker();
   init_hooks();
   directive2("poll", ({ el, directive: directive3, component }) => {
@@ -12177,6 +12180,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function triggerComponentRequest(el, directive3, component, messageBroker) {
     if (window.livewireV4) {
+      interceptorRegistry_default.fire(el, directive3, component);
       messageBroker.addContext(component, "type", "poll");
       module_default.evaluate(el, directive3.expression ? "$wire." + directive3.expression : "$wire.$sync()");
       return;

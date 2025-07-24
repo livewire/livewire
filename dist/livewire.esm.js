@@ -10412,6 +10412,8 @@ var init_supportDataLoading = __esm({
   "js/v4/features/supportDataLoading.js"() {
     init_interceptorRegistry();
     interceptorRegistry_default.add(({ el, directive: directive2, component, request }) => {
+      if (directive2.value === "poll")
+        return;
       el.setAttribute("data-loading", "true");
       request.afterResponse(() => {
         el.removeAttribute("data-loading");
@@ -13028,6 +13030,7 @@ directive("init", ({ el, directive: directive2 }) => {
 // js/directives/wire-poll.js
 init_directives();
 var import_alpinejs18 = __toESM(require_module_cjs());
+init_interceptorRegistry();
 init_messageBroker();
 init_hooks();
 directive("poll", ({ el, directive: directive2, component }) => {
@@ -13062,6 +13065,7 @@ on("component.init", ({ component }) => {
 });
 function triggerComponentRequest(el, directive2, component, messageBroker) {
   if (window.livewireV4) {
+    interceptorRegistry_default.fire(el, directive2, component);
     messageBroker.addContext(component, "type", "poll");
     import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$sync()");
     return;

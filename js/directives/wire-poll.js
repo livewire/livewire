@@ -1,6 +1,7 @@
 import { directive, getDirectives } from "@/directives"
 import Alpine from 'alpinejs'
-import messageBroker from './../v4/requests/messageBroker'
+import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
+import messageBroker from '@/v4/requests/messageBroker'
 import { on } from '@/hooks'
 
 directive('poll', ({ el, directive, component }) => {
@@ -44,6 +45,7 @@ on('component.init', ({ component }) => {
 
 function triggerComponentRequest(el, directive, component, messageBroker) {
     if (window.livewireV4) {
+        interceptorRegistry.fire(el, directive, component)
         messageBroker.addContext(component, 'type', 'poll')
 
         Alpine.evaluate(el,
