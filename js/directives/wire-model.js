@@ -34,7 +34,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let update = () => {
         if (window.livewireV4) {
             component.addActionContext({
-                type: 'user',
+                // type: 'user',
                 el,
                 directive,
             })

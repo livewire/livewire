@@ -22,7 +22,7 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
                     component.addActionContext({
-                        type: 'user',
+                        // type: 'user',
                         el,
                         directive,
                     })

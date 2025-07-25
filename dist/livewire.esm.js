@@ -10519,7 +10519,6 @@ var init_supportWireIntersect = __esm({
               directive2.eventContext = e;
               let component = el.closest("[wire\\:id]")?.__livewire;
               component.addActionContext({
-                type: "user",
                 el,
                 directive: directive2
               });
@@ -12544,7 +12543,6 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
           component.addActionContext({
-            type: "user",
             el,
             directive: directive2
           });
@@ -13023,7 +13021,6 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
   let update = () => {
     if (window.livewireV4) {
       component.addActionContext({
-        type: "user",
         el,
         directive: directive2
       });

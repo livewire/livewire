@@ -6652,7 +6652,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 directive3.eventContext = e;
                 let component = el.closest("[wire\\:id]")?.__livewire;
                 component.addActionContext({
-                  type: "user",
                   el,
                   directive: directive3
                 });
@@ -11659,7 +11658,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let execute = () => {
           callAndClearComponentDebounces(component, () => {
             component.addActionContext({
-              type: "user",
               el,
               directive: directive3
             });
@@ -12138,7 +12136,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let update = () => {
       if (window.livewireV4) {
         component.addActionContext({
-          type: "user",
           el,
           directive: directive3
         });
