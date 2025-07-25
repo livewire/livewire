@@ -23,13 +23,15 @@ class Interceptor {
     }
 
     constructor(callback, action) {
-        this.callback = callback
-        this.action = action
-        this.returned = () => {}
+        let request = this.requestObject()
+
+        let returned = callback({ action, component: action.component, request, el: action.el, directive: action.directive })
+
+        this.returned = (returned && typeof returned === 'function') ? returned : () => {}
     }
 
-    init(el, directive, component) {
-        let request = {
+    requestObject() {
+        return {
             beforeSend: (callback) => this.beforeSend = callback,
             afterSend: (callback) => this.afterSend = callback,
             beforeResponse: (callback) => this.beforeResponse = callback,
@@ -47,12 +49,6 @@ class Interceptor {
             onCancel: (callback) => this.onCancel = callback,
 
             cancel: () => this.cancel()
-        }
-
-        let returned = this.callback({el, directive, component, request})
-
-        if (returned && typeof returned === 'function') {
-            this.returned = returned
         }
     }
 }

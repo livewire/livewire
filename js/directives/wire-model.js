@@ -3,7 +3,7 @@ import { handleFileUpload } from '@/features/supportFileUploads'
 import { closestComponent } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
-import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
+import Action from '@/v4/requests/action'
 
 directive('model', ({ el, directive, component, cleanup }) => {
     // @todo: will need to probaby do this further upstream i just don't want to bog down the entire lifecycle right now...
@@ -32,7 +32,21 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Trigger a network request (only if .live or .lazy is added to wire:model)...
     let update = () => {
-        window.livewireV4 && interceptorRegistry.fire(el, directive, component)
+        if (window.livewireV4) {
+            let actionComponent = expression.startsWith('$parent') ? component.$parent : component
+
+            let action = new Action(actionComponent, '$commit', [], el, directive)
+
+            action.addContext({
+                type: 'user',
+                el,
+                directive,
+            })
+
+            action.fire()
+
+            return
+        }
 
         expression.startsWith('$parent')
             ? component.$wire.$parent.$commit()

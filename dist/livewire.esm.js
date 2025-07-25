@@ -5221,8 +5221,13 @@ var init_message = __esm({
         interceptor.cancel = () => this.cancel();
         this.interceptors.add(interceptor);
       }
-      addContext(key2, value) {
-        this.context[key2] = value;
+      addContext(context) {
+        this.context = { ...this.context, ...context };
+      }
+      pullContext() {
+        let context = this.context;
+        this.context = {};
+        return context;
       }
       addAction(method, params, context, resolve) {
         if (!this.isMagicAction(method)) {
@@ -5725,9 +5730,13 @@ var init_messageBroker = __esm({
         let message = this.getMessage(component);
         message.addInterceptor(interceptor);
       }
-      addContext(component, key2, value) {
+      addContext(component, context) {
         let message = this.getMessage(component);
-        message.addContext(key2, value);
+        message.addContext(context);
+      }
+      pullContext(component) {
+        let message = this.getMessage(component);
+        return message.pullContext();
       }
       addAction(component, method, params = [], context = {}) {
         let message = this.getMessage(component);
@@ -6025,12 +6034,9 @@ var init_interceptor = __esm({
         this.hasBeenCancelled = true;
       };
       constructor(callback, action) {
-        this.callback = callback;
-        this.action = action;
-        this.returned = () => {
-        };
+        this.init(callback, action);
       }
-      init(el, directive2, component) {
+      init(initialCallback, action) {
         let request = {
           beforeSend: (callback) => this.beforeSend = callback,
           afterSend: (callback) => this.afterSend = callback,
@@ -6048,9 +6054,12 @@ var init_interceptor = __esm({
           onCancel: (callback) => this.onCancel = callback,
           cancel: () => this.cancel()
         };
-        let returned = this.callback({ el, directive: directive2, component, request });
+        let returned = initialCallback({ action, component: action.component, request, el: action.el, directive: action.directive });
         if (returned && typeof returned === "function") {
           this.returned = returned;
+        } else {
+          this.returned = () => {
+          };
         }
       }
     };
@@ -6088,21 +6097,18 @@ var init_interceptorRegistry = __esm({
           interceptors.delete(interceptorData);
         };
       }
-      fire(el, directive2, component) {
-        let method = directive2.method;
+      fire(action) {
         for (let interceptorData of this.globalInterceptors) {
-          let interceptor = new interceptor_default(interceptorData.callback, interceptorData.method);
-          interceptor.init(el, directive2, component);
-          messageBroker_default.addInterceptor(interceptor, component);
+          let interceptor = new interceptor_default(interceptorData.callback, action);
+          messageBroker_default.addInterceptor(interceptor, action.component);
         }
-        let componentInterceptors = this.componentInterceptors.get(component);
+        let componentInterceptors = this.componentInterceptors.get(action.component);
         if (!componentInterceptors)
           return;
         for (let interceptorData of componentInterceptors) {
-          if (interceptorData.method === method || interceptorData.method === null) {
-            let interceptor = new interceptor_default(interceptorData.callback, interceptorData.method);
-            interceptor.init(el, directive2, component);
-            messageBroker_default.addInterceptor(interceptor, component);
+          if (interceptorData.method === action.method || interceptorData.method === null) {
+            let interceptor = new interceptor_default(interceptorData.callback, action);
+            messageBroker_default.addInterceptor(interceptor, action.component);
           }
         }
       }
@@ -6121,6 +6127,42 @@ function findRef(component, ref) {
 }
 var init_supportRefs = __esm({
   "js/v4/features/supportRefs.js"() {
+  }
+});
+
+// js/v4/requests/action.js
+var Action;
+var init_action = __esm({
+  "js/v4/requests/action.js"() {
+    init_interceptorRegistry();
+    init_messageBroker();
+    Action = class {
+      context = {};
+      constructor(component, method, params = [], el = null, directive2 = null) {
+        this.component = component;
+        this.method = method;
+        this.params = params;
+        this.el = el;
+        this.directive = directive2;
+      }
+      addContext(context) {
+        this.context = { ...this.context, ...context };
+      }
+      fire() {
+        let context = messageBroker_default.pullContext(this.component);
+        if (context.el) {
+          this.el = context.el;
+          delete context.el;
+        }
+        if (context.directive) {
+          this.directive = context.directive;
+          delete context.directive;
+        }
+        this.addContext(context);
+        interceptorRegistry_default.fire(this);
+        return messageBroker_default.addAction(this.component, this.method, this.params, this.context);
+      }
+    };
   }
 });
 
@@ -6184,6 +6226,7 @@ var init_wire = __esm({
     init_supportPaginators();
     init_interceptorRegistry();
     init_supportRefs();
+    init_action();
     properties = {};
     aliases = {
       "on": "$on",
@@ -6271,12 +6314,12 @@ var init_wire = __esm({
         }
       });
     });
-    wireProperty("$intercept", (component) => (action, callback = null) => {
+    wireProperty("$intercept", (component) => (method, callback = null) => {
       if (callback === null) {
-        callback = action;
-        action = null;
+        callback = method;
+        method = null;
       }
-      return interceptorRegistry_default.add(callback, component, action);
+      return interceptorRegistry_default.add(callback, component, method);
     });
     wireProperty("$errors", (component) => getErrorsObject(component));
     wireProperty("$paginator", (component) => {
@@ -6301,10 +6344,12 @@ var init_wire = __esm({
       return await component.$wire[method](...params);
     });
     wireProperty("$island", (component) => async (name, mode = null) => {
-      return messageBroker_default.addAction(component, "$refresh", [], {
+      let action = new Action(component, "$refresh");
+      action.addContext({
         type: "island",
         island: { name, mode }
       });
+      return action.fire();
     });
     wireProperty("$entangle", (component) => (name, live = false) => {
       return generateEntangleFunction(component)(name, live);
@@ -6321,13 +6366,15 @@ var init_wire = __esm({
     });
     wireProperty("$refresh", (component) => async () => {
       if (window.livewireV4) {
-        return messageBroker_default.addAction(component, "$refresh");
+        let action = new Action(component, "$refresh");
+        return action.fire();
       }
       return component.$wire.$commit();
     });
     wireProperty("$commit", (component) => async () => {
       if (window.livewireV4) {
-        return messageBroker_default.addAction(component, "$sync");
+        let action = new Action(component, "$commit");
+        return action.fire();
       }
       return await requestCommit(component);
     });
@@ -6370,7 +6417,8 @@ var init_wire = __esm({
         }
       }
       if (window.livewireV4) {
-        return messageBroker_default.addAction(component, property, params);
+        let action = new Action(component, property, params);
+        return action.fire();
       }
       return await requestCall(component, property, params);
     });
@@ -6385,6 +6433,7 @@ var init_component = __esm({
     init_wire();
     init_store();
     init_hooks();
+    init_messageBroker();
     Component = class {
       constructor(el) {
         if (el.__livewire)
@@ -6409,6 +6458,9 @@ var init_component = __esm({
         this.$wire = generateWireObject(this, this.reactive);
         this.cleanups = [];
         this.processEffects(this.effects);
+      }
+      addActionContext(context) {
+        messageBroker_default.addContext(this, context);
       }
       intercept(action, callback = null) {
         return this.$wire.$intercept(action, callback);
@@ -10411,8 +10463,10 @@ var init_requests = __esm({
 var init_supportDataLoading = __esm({
   "js/v4/features/supportDataLoading.js"() {
     init_interceptorRegistry();
-    interceptorRegistry_default.add(({ el, directive: directive2, component, request }) => {
-      if (directive2.value === "poll")
+    interceptorRegistry_default.add(({ action, component, request, el, directive: directive2 }) => {
+      if (!el)
+        return;
+      if (action.type === "poll")
         return;
       el.setAttribute("data-loading", "true");
       request.afterResponse(() => {
@@ -10429,7 +10483,7 @@ var init_supportDataLoading = __esm({
 var init_supportPreserveScroll = __esm({
   "js/v4/features/supportPreserveScroll.js"() {
     init_interceptorRegistry();
-    interceptorRegistry_default.add(({ el, directive: directive2, component, request }) => {
+    interceptorRegistry_default.add(({ action, component, request, el, directive: directive2 }) => {
       if (!directive2 || !directive2.modifiers.includes("preserve-scroll"))
         return;
       let oldHeight;
@@ -10453,7 +10507,6 @@ var import_alpinejs21;
 var init_supportWireIntersect = __esm({
   "js/v4/features/supportWireIntersect.js"() {
     import_alpinejs21 = __toESM(require_module_cjs());
-    init_interceptorRegistry();
     init_directives();
     import_alpinejs21.default.interceptInit((el) => {
       for (let i = 0; i < el.attributes.length; i++) {
@@ -10467,7 +10520,11 @@ var init_supportWireIntersect = __esm({
             ["x-intersect" + modifierString](e) {
               directive2.eventContext = e;
               let component = el.closest("[wire\\:id]")?.__livewire;
-              interceptorRegistry_default.fire(el, directive2, component);
+              component.addActionContext({
+                type: "user",
+                el,
+                directive: directive2
+              });
               evaluator();
             }
           });
@@ -10483,15 +10540,18 @@ var init_supportWireIsland = __esm({
   "js/v4/features/supportWireIsland.js"() {
     init_directives();
     init_interceptorRegistry();
-    init_messageBroker();
     init_supportIslands();
     wireIslands = /* @__PURE__ */ new WeakMap();
-    interceptorRegistry_default.add(({ el, directive: directive2, component }) => {
+    interceptorRegistry_default.add(({ action, component, request, el, directive: directive2 }) => {
+      if (!el)
+        return;
       let island = wireIslands.get(el) ?? closestIsland(component, el);
       if (!island)
         return;
-      messageBroker_default.addContext(component, "type", "island");
-      messageBroker_default.addContext(component, "island", { name: island.name, mode: island.mode });
+      component.addActionContext({
+        type: "island",
+        island: { name: island.name, mode: island.mode }
+      });
     });
     directive("island", ({ el, directive: directive2, cleanup }) => {
       let name = directive2.expression ?? "default";
@@ -12470,7 +12530,6 @@ function callAndClearComponentDebounces(component, callback) {
 init_directives();
 init_hooks();
 var import_alpinejs12 = __toESM(require_module_cjs());
-init_interceptorRegistry();
 on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive2.value))
     return;
@@ -12486,7 +12545,11 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
       directive2.wire = component.$wire;
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          window.livewireV4 && interceptorRegistry_default.fire(el, directive2, component);
+          component.addActionContext({
+            type: "user",
+            el,
+            directive: directive2
+          });
           import_alpinejs12.default.evaluate(el, "await $wire." + directive2.expression, { scope: { $event: e } });
         });
       };
@@ -12942,7 +13005,7 @@ init_supportFileUploads();
 init_store();
 init_utils();
 var import_alpinejs16 = __toESM(require_module_cjs());
-init_interceptorRegistry();
+init_action();
 directive("model", ({ el, directive: directive2, component, cleanup }) => {
   component = closestComponent(el);
   let { expression, modifiers } = directive2;
@@ -12960,7 +13023,17 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
   let onBlur = modifiers.includes("blur");
   let isDebounced = modifiers.includes("debounce");
   let update = () => {
-    window.livewireV4 && interceptorRegistry_default.fire(el, directive2, component);
+    if (window.livewireV4) {
+      let actionComponent = expression.startsWith("$parent") ? component.$parent : component;
+      let action = new Action(actionComponent, "$commit", [], el, directive2);
+      action.addContext({
+        type: "user",
+        el,
+        directive: directive2
+      });
+      action.fire();
+      return;
+    }
     expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
   };
   let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
@@ -13030,13 +13103,12 @@ directive("init", ({ el, directive: directive2 }) => {
 // js/directives/wire-poll.js
 init_directives();
 var import_alpinejs18 = __toESM(require_module_cjs());
-init_interceptorRegistry();
-init_messageBroker();
 init_hooks();
+init_action();
 directive("poll", ({ el, directive: directive2, component }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
   let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-    triggerComponentRequest(el, directive2, component, messageBroker_default);
+    triggerComponentRequest(el, directive2, component);
   }, interval);
   start2();
   throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive2));
@@ -13056,18 +13128,26 @@ on("component.init", ({ component }) => {
       return;
     let interval = extractDurationFrom([island.poll], 2e3);
     let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-      component.$wire.$island(island.name);
+      let action = new Action(component, "$refresh");
+      action.addContext({
+        type: "island",
+        island: { name: island.name }
+      });
+      action.fire();
     }, interval);
     start2();
     pauseWhile(() => livewireIsOffline());
     stopWhen(() => theElementIsDisconnected(component.el));
   });
 });
-function triggerComponentRequest(el, directive2, component, messageBroker) {
+function triggerComponentRequest(el, directive2, component) {
   if (window.livewireV4) {
-    interceptorRegistry_default.fire(el, directive2, component);
-    messageBroker.addContext(component, "type", "poll");
-    import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$sync()");
+    component.addActionContext({
+      type: "poll",
+      el,
+      directive: directive2
+    });
+    import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$refresh()");
     return;
   }
   import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
