@@ -12,6 +12,7 @@ class SupportMagicActions extends ComponentHook
         '$refresh',
         '$set',
         '$sync',
+        '$commit',
     ];
 
     public function boot()
