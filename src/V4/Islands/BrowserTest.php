@@ -1272,7 +1272,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                         <div wire:loading dusk="component-loading">Component loading</div>
 
                         @island
-                            <div wire:poll.250ms dusk="island-count">Island count: {{ $count }}</div>
+                            <div wire:poll.500ms dusk="island-count">Island count: {{ $count }}</div>
                             <div wire:loading dusk="island-loading">Island loading</div>
                         @endisland
                     </div>
@@ -1294,9 +1294,9 @@ class BrowserTest extends \Tests\BrowserTestCase
         
         // Wait for the poll to have finished...
         ->waitForText('Island count: 1')
-        ->pause(20)
         ->assertSeeIn('@component-count', 'Component count: 0')
         ->assertSeeIn('@island-count', 'Island count: 1')
+        ->waitUntilMissingText('Island loading')
         ->assertMissing('@component-loading')
         ->assertMissing('@island-loading')
 
@@ -1307,9 +1307,9 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // Wait for the poll to have finished...
         ->waitForText('Island count: 2')
-        ->pause(20)
         ->assertSeeIn('@component-count', 'Component count: 0')
         ->assertSeeIn('@island-count', 'Island count: 2')
+        ->waitUntilMissingText('Island loading')
         ->assertMissing('@component-loading')
         ->assertMissing('@island-loading')
         ;
@@ -1368,7 +1368,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                         <div dusk="component-count">Component count: {{ $count }}</div>
                         <div wire:loading dusk="component-loading">Component loading</div>
 
-                        @island (poll: '250ms')
+                        @island (poll: '500ms')
                             <div dusk="island-count">Island count: {{ $count }}</div>
                             <div wire:loading dusk="island-loading">Island loading</div>
                         @endisland
@@ -1391,9 +1391,9 @@ class BrowserTest extends \Tests\BrowserTestCase
         
         // Wait for the poll to have finished...
         ->waitForText('Island count: 1')
-        ->pause(20)
         ->assertSeeIn('@component-count', 'Component count: 0')
         ->assertSeeIn('@island-count', 'Island count: 1')
+        ->waitUntilMissingText('Island loading')
         ->assertMissing('@component-loading')
         ->assertMissing('@island-loading')
 
@@ -1404,9 +1404,9 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // Wait for the poll to have finished...
         ->waitForText('Island count: 2')
-        ->pause(20)
         ->assertSeeIn('@component-count', 'Component count: 0')
         ->assertSeeIn('@island-count', 'Island count: 2')
+        ->waitUntilMissingText('Island loading')
         ->assertMissing('@component-loading')
         ->assertMissing('@island-loading')
         ;
