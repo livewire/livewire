@@ -30,7 +30,7 @@ class SingleFileComponentCompiler extends Mechanism
         $this->viewsDirectory = $this->cacheDirectory . '/views';
         $this->scriptsDirectory = $this->cacheDirectory . '/scripts';
         $this->metadataDirectory = $this->cacheDirectory . '/metadata';
-        $this->supportedExtensions = $supportedExtensions ?: ['.livewire.php'];
+        $this->supportedExtensions = $supportedExtensions ?: ['.livewire.php', '.blade.php'];
 
         $this->ensureDirectoriesExist();
         $this->ensureCacheDirectoryIsGitIgnored();
@@ -99,7 +99,9 @@ class SingleFileComponentCompiler extends Mechanism
         }
 
         // Get the component name from the directory
-        $componentName = basename($directory);
+        $directoryName = basename($directory);
+        // For directories with ⚡, use the base name without ⚡ for the files inside
+        $componentName = str_contains($directoryName, '⚡') ? str_replace('⚡', '', $directoryName) : $directoryName;
 
         // Define the expected file paths
         $livewireFilePath = $directory . '/' . $componentName . '.php';
@@ -353,8 +355,22 @@ class SingleFileComponentCompiler extends Mechanism
             return $parsed;
         }
 
-        $viewFilePath = str_replace('.livewire.php', '.blade.php', $viewPath);
-        $scriptFilePath = str_replace('.livewire.php', '.js', $viewPath);
+        // Handle external view/script loading based on file extension
+        if (str_ends_with($viewPath, '.livewire.php')) {
+            $viewFilePath = str_replace('.livewire.php', '.blade.php', $viewPath);
+            $scriptFilePath = str_replace('.livewire.php', '.js', $viewPath);
+        } else if (str_ends_with($viewPath, '.blade.php') && str_contains($viewPath, '⚡')) {
+            // For ⚡ blade files, try to find accompanying view/script files
+            // Remove ⚡ to find the base name, then look for .blade.php and .js files
+            $basePathWithoutEmoji = str_replace('⚡', '', $viewPath);
+            $basePathWithoutExtension = substr($basePathWithoutEmoji, 0, -strlen('.blade.php'));
+            $viewFilePath = $basePathWithoutExtension . '.blade.php';
+            $scriptFilePath = $basePathWithoutExtension . '.js';
+        } else {
+            // Fallback for other cases
+            $viewFilePath = $viewPath;
+            $scriptFilePath = preg_replace('/\.(livewire\.php|blade\.php)$/', '.js', $viewPath);
+        }
 
         if (! file_exists($viewFilePath)) {
             return $parsed;
@@ -1102,6 +1118,9 @@ namespace {$namespace};
                 break;
             }
         }
+        
+        // Strip ⚡ from the component name
+        $basename = str_replace('⚡', '', $basename);
 
         return str_replace([' ', '_'], '-', $basename);
     }

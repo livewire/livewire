@@ -29,6 +29,8 @@ class PlaceholderCompiler extends ComponentHook
         ];
 
         $this->viewName = str_replace($extensions, '', basename($currentPath));
+        // Strip ⚡ from the view name to ensure clean component names
+        $this->viewName = str_replace('⚡', '', $this->viewName);
 
         $content = $this->compilePlaceholders($content);
 

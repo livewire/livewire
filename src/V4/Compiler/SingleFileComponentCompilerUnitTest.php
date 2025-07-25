@@ -653,6 +653,8 @@ new class extends Livewire\Component {
     {
         $basename = basename($viewPath);
         $basename = str_replace(['.livewire.php'], '', $basename);
+        // Strip ⚡ from the component name
+        $basename = str_replace('⚡', '', $basename);
         return str_replace([' ', '_'], '-', $basename);
     }
 
