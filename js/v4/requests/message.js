@@ -115,6 +115,7 @@ export default class Message {
             '$refresh',
             '$set',
             '$sync',
+            '$commit',
         ]
     }
 

@@ -5280,7 +5280,8 @@ var init_message = __esm({
         return [
           "$refresh",
           "$set",
-          "$sync"
+          "$sync",
+          "$commit"
         ];
       }
       isMagicAction(method) {
@@ -13021,15 +13022,11 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
   let isDebounced = modifiers.includes("debounce");
   let update = () => {
     if (window.livewireV4) {
-      let actionComponent = expression.startsWith("$parent") ? component.$parent : component;
-      let action = new Action(actionComponent, "$commit", [], el, directive2);
-      action.addContext({
+      component.addActionContext({
         type: "user",
         el,
         directive: directive2
       });
-      action.fire();
-      return;
     }
     expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
   };
