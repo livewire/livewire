@@ -12,7 +12,8 @@ interceptorRegistry.add(({ action, component, request, el, directive }) => {
     if (! island) return
 
     action.addContext({
-        type: 'island',
+        // @todo: We should remove island types completely, but for now we have this hack...
+        type: action.context.type ?? 'island',
         island: {name: island.name, mode: island.mode},
     })
 })

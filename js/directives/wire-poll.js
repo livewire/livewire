@@ -35,7 +35,7 @@ on('component.init', ({ component }) => {
             let action = new Action(component, '$refresh')
 
             action.addContext({
-                type: 'island',
+                type: 'poll',
                 island: { name: island.name },
             })
 

@@ -10546,7 +10546,7 @@ var init_supportWireIsland = __esm({
       if (!island)
         return;
       action.addContext({
-        type: "island",
+        type: action.context.type ?? "island",
         island: { name: island.name, mode: island.mode }
       });
     });
@@ -13127,7 +13127,7 @@ on("component.init", ({ component }) => {
     let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
       let action = new Action(component, "$refresh");
       action.addContext({
-        type: "island",
+        type: "poll",
         island: { name: island.name }
       });
       action.fire();

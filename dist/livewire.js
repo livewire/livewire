@@ -6679,7 +6679,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (!island)
           return;
         action.addContext({
-          type: "island",
+          type: action.context.type ?? "island",
           island: { name: island.name, mode: island.mode }
         });
       });
@@ -12242,7 +12242,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
         let action = new Action(component, "$refresh");
         action.addContext({
-          type: "island",
+          type: "poll",
           island: { name: island.name }
         });
         action.fire();
