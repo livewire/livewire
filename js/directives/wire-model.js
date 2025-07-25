@@ -33,19 +33,11 @@ directive('model', ({ el, directive, component, cleanup }) => {
     // Trigger a network request (only if .live or .lazy is added to wire:model)...
     let update = () => {
         if (window.livewireV4) {
-            let actionComponent = expression.startsWith('$parent') ? component.$parent : component
-
-            let action = new Action(actionComponent, '$commit', [], el, directive)
-
-            action.addContext({
+            component.addActionContext({
                 type: 'user',
                 el,
                 directive,
             })
-
-            action.fire()
-
-            return
         }
 
         expression.startsWith('$parent')
