@@ -11,6 +11,7 @@ import { getErrorsObject } from './v4/features/supportErrors'
 import { getPaginatorObject } from './v4/features/supportPaginators'
 import interceptorRegistry from './v4/interceptors/interceptorRegistry'
 import { findRef } from './v4/features/supportRefs'
+import Action from './v4/requests/action'
 
 let properties = {}
 let fallback
@@ -152,7 +153,9 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
         if (window.livewireV4) {
             component.queueUpdate(property, value)
 
-            return messageBroker.addAction(component, '$set')
+            let action = new Action(component, '$set')
+
+            return action.fire()
         }
 
         component.queueUpdate(property, value)
@@ -176,13 +179,13 @@ wireProperty('$ref', (component) => {
     })
 })
 
-wireProperty('$intercept', (component) => (action, callback = null) => {
+wireProperty('$intercept', (component) => (method, callback = null) => {
     if (callback === null) {
-        callback = action
-        action = null
+        callback = method
+        method = null
     }
 
-    return interceptorRegistry.add(callback, component, action)
+    return interceptorRegistry.add(callback, component, method)
 })
 
 wireProperty('$errors', (component) => getErrorsObject(component))
@@ -213,10 +216,14 @@ wireProperty('$call', (component) => async (method, ...params) => {
 })
 
 wireProperty('$island', (component) => async (name, mode = null) => {
-    return messageBroker.addAction(component, '$refresh', [], {
+    let action = new Action(component, '$refresh')
+
+    action.addContext({
         type: 'island',
         island: { name, mode },
     })
+
+    return action.fire()
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {
@@ -239,14 +246,18 @@ wireProperty('$watch', (component) => (path, callback) => {
 
 wireProperty('$refresh', (component) => async () => {
     if (window.livewireV4) {
-        return messageBroker.addAction(component, '$refresh')
+        let action = new Action(component, '$refresh')
+
+        return action.fire()
     }
 
     return component.$wire.$commit()
 })
 wireProperty('$commit', (component) => async () => {
     if (window.livewireV4) {
-        return messageBroker.addAction(component, '$sync')
+        let action = new Action(component, '$commit')
+
+        return action.fire()
     }
 
     return await requestCommit(component)
@@ -321,7 +332,9 @@ wireFallback((component) => (property) => async (...params) => {
     }
 
     if (window.livewireV4) {
-        return messageBroker.addAction(component, property, params)
+        let action = new Action(component, property, params)
+
+        return action.fire()
     }
 
     return await requestCall(component, property, params)

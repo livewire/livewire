@@ -1217,4 +1217,198 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@island', 'Island content 3')
         ;
     }
+
+    public function test_wire_poll_works_inside_an_island()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function hydrate() {
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <div dusk="component-count">Component count: {{ $count }}</div>
+
+                        @island
+                            <div wire:poll.250ms dusk="island-count">Island count: {{ $count }}</div>
+                        @endisland
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 0')
+
+        // Wait for a poll to have happened...
+        ->pause(300)
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 1')
+
+        ->pause(250)
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 2')
+        ;
+    }
+
+    public function test_wire_poll_and_wire_loading_works_inside_an_island()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function hydrate() {
+                    $this->count++;
+                    usleep(200 * 1000); // 200ms
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <div dusk="component-count">Component count: {{ $count }}</div>
+                        <div wire:loading dusk="component-loading">Component loading</div>
+
+                        @island
+                            <div wire:poll.500ms dusk="island-count">Island count: {{ $count }}</div>
+                            <div wire:loading dusk="island-loading">Island loading</div>
+                        @endisland
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 0')
+        ->assertMissing('@component-loading')
+        ->assertMissing('@island-loading')
+
+
+        // Wait for a poll to have started...
+        ->waitForText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertSeeIn('@island-loading', 'Island loading')
+        
+        // Wait for the poll to have finished...
+        ->waitForText('Island count: 1')
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 1')
+        ->waitUntilMissingText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertMissing('@island-loading')
+
+        // Wait for the poll to have started...
+        ->waitForText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertSeeIn('@island-loading', 'Island loading')
+
+        // Wait for the poll to have finished...
+        ->waitForText('Island count: 2')
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 2')
+        ->waitUntilMissingText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertMissing('@island-loading')
+        ;
+    }
+
+    public function test_an_island_can_accept_a_poll_parameter()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function hydrate() {
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <div dusk="component-count">Component count: {{ $count }}</div>
+
+                        @island (poll: '250ms')
+                            <div dusk="island-count">Island count: {{ $count }}</div>
+                        @endisland
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 0')
+
+        // Wait for a poll to have happened...
+        ->pause(300)
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 1')
+
+        ->pause(250)
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 2')
+        ;
+    }
+
+    public function test_island_poll_parameter_works_with_wire_loading_inside_an_island()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function hydrate() {
+                    $this->count++;
+                    usleep(200 * 1000); // 200ms
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <div dusk="component-count">Component count: {{ $count }}</div>
+                        <div wire:loading dusk="component-loading">Component loading</div>
+
+                        @island (poll: '500ms')
+                            <div dusk="island-count">Island count: {{ $count }}</div>
+                            <div wire:loading dusk="island-loading">Island loading</div>
+                        @endisland
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 0')
+        ->assertMissing('@component-loading')
+        ->assertMissing('@island-loading')
+
+
+        // Wait for a poll to have started...
+        ->waitForText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertSeeIn('@island-loading', 'Island loading')
+        
+        // Wait for the poll to have finished...
+        ->waitForText('Island count: 1')
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 1')
+        ->waitUntilMissingText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertMissing('@island-loading')
+
+        // Wait for the poll to have started...
+        ->waitForText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertSeeIn('@island-loading', 'Island loading')
+
+        // Wait for the poll to have finished...
+        ->waitForText('Island count: 2')
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 2')
+        ->waitUntilMissingText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertMissing('@island-loading')
+        ;
+    }
 }

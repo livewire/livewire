@@ -36,7 +36,7 @@ class Test extends TestCase
                 ->assertSeeIn('@totalNumberUpdates', 3)
                 ->assertSeeIn('@updatesList', 'syncInput - name')
                 ->assertSeeIn('@updatesList', 'syncInput - is_active')
-                ->assertSeeIn('@updatesList', 'callMethod - $sync')
+                ->assertSeeIn('@updatesList', 'callMethod - $commit')
             ;
         });
     }

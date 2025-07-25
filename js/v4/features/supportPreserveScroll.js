@@ -1,6 +1,6 @@
 import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
 
-interceptorRegistry.add(({el, directive, component, request}) => {
+interceptorRegistry.add(({ action, component, request, el, directive }) => {
     if (! directive || ! directive.modifiers.includes('preserve-scroll')) return
 
     let oldHeight

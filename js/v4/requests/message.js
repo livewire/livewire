@@ -29,8 +29,16 @@ export default class Message {
         this.interceptors.add(interceptor)
     }
 
-    addContext(key, value) {
-        this.context[key] = value
+    addContext(context) {
+        this.context = {...this.context, ...context}
+    }
+
+    pullContext() {
+        let context = this.context
+
+        this.context = {}
+
+        return context
     }
 
     addAction(method, params, context, resolve) {
@@ -49,7 +57,7 @@ export default class Message {
             this.actions.push({
                 method: method,
                 params: params,
-                context: {...this.context, ...context},
+                context: context,
                 handleReturn: () => {},
             })
 
@@ -107,6 +115,7 @@ export default class Message {
             '$refresh',
             '$set',
             '$sync',
+            '$commit',
         ]
     }
 

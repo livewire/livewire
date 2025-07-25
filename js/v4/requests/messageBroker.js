@@ -23,10 +23,16 @@ class MessageBroker {
         message.addInterceptor(interceptor)
     }
 
-    addContext(component, key, value) {
+    addContext(component, context) {
         let message = this.getMessage(component)
 
-        message.addContext(key, value)
+        message.addContext(context)
+    }
+
+    pullContext(component) {
+        let message = this.getMessage(component)
+        
+        return message.pullContext()
     }
 
     addAction(component, method, params = [], context = {}) {

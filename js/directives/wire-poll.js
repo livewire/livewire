@@ -1,14 +1,13 @@
 import { directive, getDirectives } from "@/directives"
 import Alpine from 'alpinejs'
-import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
-import messageBroker from '@/v4/requests/messageBroker'
 import { on } from '@/hooks'
+import Action from '@/v4/requests/action'
 
 directive('poll', ({ el, directive, component }) => {
     let interval = extractDurationFrom(directive.modifiers, 2000)
 
     let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-        triggerComponentRequest(el, directive, component, messageBroker)
+        triggerComponentRequest(el, directive, component)
     }, interval)
 
     start()
@@ -33,7 +32,14 @@ on('component.init', ({ component }) => {
         let interval = extractDurationFrom([island.poll], 2000)
 
         let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-            component.$wire.$island(island.name)
+            let action = new Action(component, '$refresh')
+
+            action.addContext({
+                type: 'poll',
+                island: { name: island.name },
+            })
+
+            action.fire()
         }, interval)
 
         start()
@@ -43,13 +49,16 @@ on('component.init', ({ component }) => {
     })
 })
 
-function triggerComponentRequest(el, directive, component, messageBroker) {
+function triggerComponentRequest(el, directive, component) {
     if (window.livewireV4) {
-        interceptorRegistry.fire(el, directive, component)
-        messageBroker.addContext(component, 'type', 'poll')
+        component.addActionContext({
+            type: 'poll',
+            el,
+            directive,
+        })
 
         Alpine.evaluate(el,
-            directive.expression ? '$wire.' + directive.expression : '$wire.$sync()'
+            directive.expression ? '$wire.' + directive.expression : '$wire.$refresh()'
         )
 
         return

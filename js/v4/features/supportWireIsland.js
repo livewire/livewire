@@ -1,17 +1,21 @@
 import { directive } from "@/directives"
 import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
-import messageBroker from '@/v4/requests/messageBroker.js'
 import { closestIsland } from '@/features/supportIslands.js'
 
 let wireIslands = new WeakMap
 
-interceptorRegistry.add(({el, directive, component}) => {
+interceptorRegistry.add(({ action, component, request, el, directive }) => {
+    if (! el) return
+
     let island = wireIslands.get(el) ?? closestIsland(component, el)
 
     if (! island) return
 
-    messageBroker.addContext(component, 'type', 'island')
-    messageBroker.addContext(component, 'island', {name: island.name, mode: island.mode})
+    action.addContext({
+        // @todo: We should remove island types completely, but for now we have this hack...
+        type: action.context.type ?? 'island',
+        island: {name: island.name, mode: island.mode},
+    })
 })
 
 directive('island', ({ el, directive, cleanup }) => {
