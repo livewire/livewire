@@ -76,4 +76,26 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertAttribute('@refresh', 'data-loading', 'true')
         ;
     }
+
+    public function test_data_loading_attribute_is_not_added_to_poll_directives()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function hydrate() {
+                    usleep(250 * 1000); // 250ms
+                }
+                public function render() { return <<<'HTML'
+                <div wire:poll.500ms dusk="container">
+                    <div wire:loading dusk="loading">Loading...</div>
+                </div>
+                HTML; }
+            }
+        ])
+        ->waitForLivewireToLoad()
+        ->assertAttributeMissing('@container', 'data-loading')
+
+        ->waitForText('Loading...')
+        ->assertAttributeMissing('@container', 'data-loading')
+        ;
+    }
 }

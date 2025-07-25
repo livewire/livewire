@@ -6598,7 +6598,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       interceptorRegistry_default.add(({ action, component, request, el, directive: directive3 }) => {
         if (!el)
           return;
-        if (action.type === "poll")
+        if (action.context.type === "poll")
           return;
         el.setAttribute("data-loading", "true");
         request.afterResponse(() => {

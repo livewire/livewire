@@ -4,7 +4,7 @@ interceptorRegistry.add(({ action, component, request, el, directive }) => {
     if (! el) return
 
     // Don't add data-loading to poll directives...
-    if (action.type === 'poll') return
+    if (action.context.type === 'poll') return
 
     el.setAttribute('data-loading', 'true')
 
