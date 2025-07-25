@@ -153,7 +153,9 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
         if (window.livewireV4) {
             component.queueUpdate(property, value)
 
-            return messageBroker.addAction(component, '$set')
+            let action = new Action(component, '$set')
+
+            return action.fire()
         }
 
         component.queueUpdate(property, value)

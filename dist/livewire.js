@@ -4605,7 +4605,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             this.actions.push({
               method,
               params,
-              context: { ...this.context, ...context },
+              context,
               handleReturn: () => {
               }
             });
@@ -5401,10 +5401,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           this.hasBeenCancelled = true;
         };
         constructor(callback, action) {
-          this.init(callback, action);
+          let request = this.requestObject();
+          let returned = callback({ action, component: action.component, request, el: action.el, directive: action.directive });
+          this.returned = returned && typeof returned === "function" ? returned : () => {
+          };
         }
-        init(initialCallback, action) {
-          let request = {
+        requestObject() {
+          return {
             beforeSend: (callback) => this.beforeSend = callback,
             afterSend: (callback) => this.afterSend = callback,
             beforeResponse: (callback) => this.beforeResponse = callback,
@@ -5421,13 +5424,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             onCancel: (callback) => this.onCancel = callback,
             cancel: () => this.cancel()
           };
-          let returned = initialCallback({ action, component: action.component, request, el: action.el, directive: action.directive });
-          if (returned && typeof returned === "function") {
-            this.returned = returned;
-          } else {
-            this.returned = () => {
-            };
-          }
         }
       };
       interceptor_default = Interceptor;
@@ -5663,7 +5659,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (live) {
           if (window.livewireV4) {
             component.queueUpdate(property, value);
-            return messageBroker_default.addAction(component, "$set");
+            let action = new Action(component, "$set");
+            return action.fire();
           }
           component.queueUpdate(property, value);
           return await requestCommit(component);
@@ -6681,7 +6678,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let island = wireIslands.get(el) ?? closestIsland(component, el);
         if (!island)
           return;
-        component.addActionContext({
+        action.addContext({
           type: "island",
           island: { name: island.name, mode: island.mode }
         });
