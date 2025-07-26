@@ -71,7 +71,9 @@ class EloquentModelSynth extends Synth
         } else {
             $model = $this->loadModel($meta);
         }
-
+        if (!$model) {
+            throw new ModelNotFoundException();
+        }
         if (isset($meta['relations'])) {
             foreach($meta['relations'] as $relationKey) {
                 if (! isset($data[$relationKey])) continue;
