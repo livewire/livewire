@@ -219,7 +219,6 @@ wireProperty('$island', (component) => async (name, mode = null) => {
     let action = new Action(component, '$refresh')
 
     action.addContext({
-        type: 'island',
         island: { name, mode },
     })
 

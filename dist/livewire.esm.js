@@ -5224,40 +5224,42 @@ var init_message = __esm({
       addContext(context) {
         this.context = { ...this.context, ...context };
       }
+      getContainer() {
+        let isIsland = false;
+        let isComponent = false;
+        for (let action of this.actions) {
+          if (action.getContainer() === "island") {
+            isIsland = true;
+          } else {
+            isComponent = true;
+          }
+          if (isIsland && isComponent) {
+            return "mixed";
+          }
+        }
+        return isIsland ? "island" : "component";
+      }
       pullContext() {
         let context = this.context;
         this.context = {};
         return context;
       }
-      addAction(method, params, context, resolve) {
-        if (!this.isMagicAction(method)) {
+      addAction(action, resolve) {
+        if (!this.isMagicAction(action.method)) {
           this.removeAllMagicActions();
         }
-        if (this.isMagicAction(method)) {
-          this.findAndRemoveAction(method);
-          this.actions.push({
-            method,
-            params,
-            context,
-            handleReturn: () => {
-            }
-          });
-          this.context = {};
+        if (this.isMagicAction(action.method)) {
+          this.findAndRemoveAction(action.method);
+          this.actions.push(action);
           this.resolvers.push(resolve);
           return;
         }
-        this.actions.push({
-          method,
-          params,
-          context: { ...this.context, ...context },
-          handleReturn: resolve
-        });
-        this.context = {};
+        action.handleReturn = resolve;
+        this.actions.push(action);
       }
       getHighestPriorityType(actionTypes) {
         let rankedTypes = [
           "user",
-          "island",
           "refresh",
           "poll"
         ];
@@ -5297,30 +5299,34 @@ var init_message = __esm({
         Array.from(newRequest.messages).forEach((newMessage) => {
           if (this.component.id !== newMessage.component.id)
             return;
-          let existingMessageType = this.type();
-          let newMessageType = newMessage.type();
-          if (existingMessageType === "poll" && newMessageType === "poll") {
-            return newMessage.cancel();
-          }
-          if (existingMessageType === "island" && newMessageType === "island") {
-            let existingIslandName = Array.from(this.actions).find((i) => i.context.type === "island")?.context.island.name;
-            let newIslandName = Array.from(newMessage.actions).find((i) => i.context.type === "island")?.context.island.name;
-            if (existingIslandName === newIslandName) {
-              return this.cancel();
-            }
-          }
-          if (existingMessageType === "island" || newMessageType === "island") {
+          let existingMessageContainer = this.getContainer();
+          let newMessageContainer = newMessage.getContainer();
+          if (existingMessageContainer === "island" && newMessageContainer === "component" || existingMessageContainer === "component" && newMessageContainer === "island") {
             return;
           }
-          if (existingMessageType === newMessageType) {
-            return this.cancel();
-          }
-          let higherPriorityType = this.getHighestPriorityType([existingMessageType, newMessageType]);
-          if (higherPriorityType === newMessageType) {
-            return this.cancel();
-          } else {
-            return newMessage.cancel();
-          }
+          this.actions.forEach((existingAction) => {
+            newMessage.actions.forEach((newAction) => {
+              let existingActionContainer = existingAction.getContainer();
+              let newActionContainer = newAction.getContainer();
+              if (existingActionContainer === "island" && newActionContainer === "component" || existingActionContainer === "component" && newActionContainer === "island") {
+                return;
+              }
+              if (existingActionContainer === "island" && newActionContainer === "island") {
+                if (existingAction.context.island.name !== newAction.context.island.name) {
+                  return;
+                }
+              }
+              let existingActionType = existingAction.context.type ?? "user";
+              let newActionType = newAction.context.type ?? "user";
+              if (existingActionType === "poll" && newActionType === "poll") {
+                return newMessage.cancel();
+              }
+              if (existingActionType === "user" && newActionType === "poll") {
+                return newMessage.cancel();
+              }
+              return this.cancel();
+            });
+          });
         });
       }
       buffer() {
@@ -5739,10 +5745,10 @@ var init_messageBroker = __esm({
         let message = this.getMessage(component);
         return message.pullContext();
       }
-      addAction(component, method, params = [], context = {}) {
-        let message = this.getMessage(component);
+      addAction(action) {
+        let message = this.getMessage(action.component);
         let promise = new Promise((resolve) => {
-          message.addAction(method, params, context, resolve);
+          message.addAction(action, resolve);
         });
         this.send(message);
         return promise;
@@ -6135,6 +6141,8 @@ var init_action = __esm({
     init_messageBroker();
     Action = class {
       context = {};
+      handleReturn = () => {
+      };
       constructor(component, method, params = [], el = null, directive2 = null) {
         this.component = component;
         this.method = method;
@@ -6157,7 +6165,10 @@ var init_action = __esm({
         }
         this.addContext(context);
         interceptorRegistry_default.fire(this);
-        return messageBroker_default.addAction(this.component, this.method, this.params, this.context);
+        return messageBroker_default.addAction(this);
+      }
+      getContainer() {
+        return "island" in this.context ? "island" : "component";
       }
     };
   }
@@ -6344,7 +6355,6 @@ var init_wire = __esm({
     wireProperty("$island", (component) => async (name, mode = null) => {
       let action = new Action(component, "$refresh");
       action.addContext({
-        type: "island",
         island: { name, mode }
       });
       return action.fire();
@@ -10546,7 +10556,6 @@ var init_supportWireIsland = __esm({
       if (!island)
         return;
       action.addContext({
-        type: action.context.type ?? "island",
         island: { name: island.name, mode: island.mode }
       });
     });

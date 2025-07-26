@@ -3,6 +3,7 @@ import messageBroker from '@/v4/requests/messageBroker.js'
 
 export default class Action {
     context = {}
+    handleReturn = () => {}
 
     constructor(component, method, params = [], el = null, directive = null) {
         this.component = component
@@ -35,6 +36,10 @@ export default class Action {
 
         interceptorRegistry.fire(this)
 
-        return messageBroker.addAction(this.component, this.method, this.params, this.context)
+        return messageBroker.addAction(this)
+    }
+
+    getContainer() {
+        return 'island' in this.context ? 'island' : 'component'
     }
 }

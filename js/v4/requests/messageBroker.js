@@ -35,11 +35,11 @@ class MessageBroker {
         return message.pullContext()
     }
 
-    addAction(component, method, params = [], context = {}) {
-        let message = this.getMessage(component)
+    addAction(action) {
+        let message = this.getMessage(action.component)
 
         let promise = new Promise((resolve) => {
-            message.addAction(method, params, context, resolve)
+            message.addAction(action, resolve)
         })
 
         this.send(message)

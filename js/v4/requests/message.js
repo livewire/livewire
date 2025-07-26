@@ -33,6 +33,25 @@ export default class Message {
         this.context = {...this.context, ...context}
     }
 
+    getContainer() {
+        let isIsland = false
+        let isComponent = false
+
+        for (let action of this.actions) {
+            if (action.getContainer() === 'island') {
+                isIsland = true
+            } else {
+                isComponent = true
+            }
+
+            if (isIsland && isComponent) {
+                return 'mixed'
+            }
+        }
+
+        return isIsland ? 'island' : 'component'
+    }
+
     pullContext() {
         let context = this.context
 
@@ -41,27 +60,20 @@ export default class Message {
         return context
     }
 
-    addAction(method, params, context, resolve) {
+    addAction(action, resolve) {
         // If the action isn't a magic action then it supersedes any magic actions.
         // Remove them so there aren't any unnecessary actions in the request...
-        if (! this.isMagicAction(method)) {
+        if (! this.isMagicAction(action.method)) {
             this.removeAllMagicActions()
         }
 
-        if (this.isMagicAction(method)) {
+        if (this.isMagicAction(action.method)) {
             // If the action is a magic action and it already exists then remove the
             // old action so there aren't any duplicate actions in the request...
             // @todo: Should this happen now? What if the same action is called, but it has a different context?
-            this.findAndRemoveAction(method)
+            this.findAndRemoveAction(action.method)
 
-            this.actions.push({
-                method: method,
-                params: params,
-                context: context,
-                handleReturn: () => {},
-            })
-
-            this.context = {}
+            this.actions.push(action)
 
             // We need to store the resolver, so we can call all of the
             // magic action resolvers when the message is finished...
@@ -70,20 +82,14 @@ export default class Message {
             return
         }
 
-        this.actions.push({
-            method: method,
-            params: params,
-            context: {...this.context, ...context},
-            handleReturn: resolve,
-        })
+        action.handleReturn = resolve
 
-        this.context = {}
+        this.actions.push(action)
     }
 
     getHighestPriorityType(actionTypes) {
         let rankedTypes = [
             'user',
-            'island',
             'refresh',
             'poll',
         ]
@@ -135,44 +141,57 @@ export default class Message {
         Array.from(newRequest.messages).forEach(newMessage => {
             if (this.component.id !== newMessage.component.id) return
 
-            let existingMessageType = this.type()
-            let newMessageType = newMessage.type()
+            let existingMessageContainer = this.getContainer()
+            let newMessageContainer = newMessage.getContainer()
 
-            // If both messages are polls, then cancel the new one which lets the existing one finish...
-            if (existingMessageType === 'poll' && newMessageType === 'poll') {
-                return newMessage.cancel()
-            }
-
-            // If both messages are islands, then only cancel if they are for the same island...
-            if (existingMessageType === 'island' && newMessageType === 'island') {
-                let existingIslandName = Array.from(this.actions).find(i => i.context.type === 'island')?.context.island.name
-                let newIslandName = Array.from(newMessage.actions).find(i => i.context.type === 'island')?.context.island.name
-
-                if (existingIslandName === newIslandName) {
-                    return this.cancel()
-                }
-            }
-
-            // If one of the messages is an island, but not both, then don't cancel it...
-            if (existingMessageType === 'island' || newMessageType === 'island') {
+            // If the containers are different, then just return...
+            if (
+                (existingMessageContainer === 'island' && newMessageContainer === 'component')
+                || (existingMessageContainer === 'component' && newMessageContainer === 'island')
+            ) {
                 return
             }
 
-            // If both messages are the same type, then cancel the existing one and start the new one...
-            if (existingMessageType === newMessageType) {
-                return this.cancel()
-            }
+            this.actions.forEach(existingAction => {
+                newMessage.actions.forEach(newAction => {
+                    let existingActionContainer = existingAction.getContainer()
+                    let newActionContainer = newAction.getContainer()
 
-            // If they are different types, compare them and cancel the less important one...
-            let higherPriorityType = this.getHighestPriorityType([existingMessageType, newMessageType])
+                    // If the actions containers are different, then just return...
+                    if (
+                        (existingActionContainer === 'island' && newActionContainer === 'component')
+                        || (existingActionContainer === 'component' && newActionContainer === 'island')
+                    ) {
+                        return
+                    }
 
-            if (higherPriorityType === newMessageType) {
-                // New message has higher priority, cancel the existing one
-                return this.cancel()
-            } else {
-                // Existing message has higher priority, cancel the new one
-                return newMessage.cancel()
-            }
+                    // If the action containers are both island, then we need to check if the islands are the same...
+                    if (existingActionContainer === 'island' && newActionContainer === 'island') {
+                        // If the islands are different, then just return...
+                        if (existingAction.context.island.name !== newAction.context.island.name) {
+                            return
+                        }
+                    }
+
+                    let existingActionType = existingAction.context.type ?? 'user'
+                    let newActionType = newAction.context.type ?? 'user'
+
+                    // If both actions are polls we need to cancel the new one to let 
+                    // the old one finish so we don't end up in a polling loop...
+                    if (existingActionType === 'poll' && newActionType === 'poll') {
+                        return newMessage.cancel()
+                    }
+
+                    // If the existing action is a user action and the new action is a poll,
+                    // then cancel the new one, as user actions are more important...
+                    if (existingActionType === 'user' && newActionType === 'poll') {
+                        return newMessage.cancel()
+                    }
+
+                    // Otherwise we can cancel the existing request and let the new one run...
+                    return this.cancel()
+                })
+            })
         })
     }
 
