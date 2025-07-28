@@ -225,23 +225,6 @@ new class extends Livewire\Component {
         $this->compiler->compile($viewPath);
     }
 
-    public function test_throws_exception_for_invalid_php_block_content()
-    {
-        $componentContent = '@php
-echo "This is not a class";
-@endphp
-
-<div>Invalid content</div>';
-
-        $viewPath = $this->tempPath . '/invalid.livewire.php';
-        File::put($viewPath, $componentContent);
-
-        $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Invalid component: @php block must contain a class definition');
-
-        $this->compiler->compile($viewPath);
-    }
-
     public function test_can_parse_external_component_with_class_suffix()
     {
         $componentContent = '@php(new App\Livewire\Counter::class)
@@ -848,23 +831,6 @@ class Counter extends Livewire\Component {
 
         $this->assertStringContainsString('public $count = 0;', $classContent);
         $this->assertStringContainsString('public function increment()', $classContent);
-    }
-
-    public function test_extract_class_body_throws_exception_for_invalid_content()
-    {
-        $componentContent = '@php
-$notAClass = "invalid";
-@endphp
-
-<div>Invalid</div>';
-
-        $viewPath = $this->tempPath . '/invalid.livewire.php';
-        File::put($viewPath, $componentContent);
-
-        // We need to manually trigger the parseComponent since the validation happens there
-        $this->expectException(ParseException::class);
-
-        $this->compiler->compile($viewPath);
     }
 
     public function test_ensures_cache_directories_exist()
@@ -2284,5 +2250,82 @@ new #[Layout(\'layouts.blog\')] class extends Livewire\Component {
         // Check that properties are preserved
         $this->assertStringContainsString('public User $author;', $classContent);
         $this->assertStringContainsString('public Post $post;', $classContent);
+    }
+
+    public function test_preserves_runtime_php_blocks_without_class_definition()
+    {
+        $componentContent = '<?php
+new #[Layout(\'layouts.app\')] class extends Livewire\Component {
+    //
+}
+?>
+
+<div>
+     @foreach (range(1, 5) as $item)
+        @php
+            $i = $item++;
+        @endphp
+
+        <p>i: {{ $i }} </p>
+    @endforeach
+</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+
+        $this->assertTrue(file_exists($result->viewPath));
+
+        $content = file_get_contents($result->viewPath);
+
+        $this->assertStringContainsString('@foreach (range(1, 5) as $item)', $content);
+        $this->assertStringContainsString('@php', $content);
+        $this->assertStringContainsString('$i = $item++;',$content);
+        $this->assertStringContainsString('@endphp', $content);
+        $this->assertStringContainsString('<p>i: {{ $i }} </p>', $content);
+    }
+
+    public function test_preserves_all_runtime_php_blocks_and_extracts_class_from_first_php_block()
+    {
+        $componentContent = '
+@php
+new class extends Livewire\Component {
+    //
+}
+@endphp
+
+<div>
+    @php
+        $i = 0;
+    @endphp
+
+    <p>i: {{ $i }} </p>
+
+    @php
+        $j = 1;
+    @endphp
+
+    <p>j: {{ $j }} </p>
+</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+
+        $this->assertTrue(file_exists($result->viewPath));
+
+        $content = file_get_contents($result->viewPath);
+
+        $this->assertStringContainsString('@php', $content);
+        $this->assertStringContainsString('$i = 0;', $content);
+        $this->assertStringContainsString('<p>i: {{ $i }} </p>', $content);
+        $this->assertStringContainsString('$j = 1;', $content);
+        $this->assertStringContainsString('<p>j: {{ $j }} </p>', $content);
     }
 }
