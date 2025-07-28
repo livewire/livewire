@@ -273,29 +273,41 @@ class SingleFileComponentCompiler extends Mechanism
         }
 
         // Handle inline class: @php ... @endphp
-        if (preg_match('/@php\s*(.*?)\s*@endphp/s', $content, $matches)) {
-            $frontmatter = trim($matches[1]);
-            // Use the modified $content (after layout removal) for the view content
-            $viewContent = preg_replace('/@php\s*.*?\s*@endphp/s', '', $content);
+        if (preg_match_all('/@php\s*(.*?)\s*@endphp/s', $content, $matches, PREG_OFFSET_CAPTURE)) {
+            $phpBlocks = $matches[1];
 
-            // Validate that frontmatter contains a class definition...
-            if (!str_contains($frontmatter, 'new class') && !str_contains($frontmatter, 'class ')) {
-                throw new ParseException("Invalid component: @php block must contain a class definition");
+            $frontmatter = null;
+            $viewContent = $content;
+
+            foreach ($phpBlocks as $index => [$phpCode, $offset]) {
+                $isValidClass = preg_match('/new\s+class\s*\(/', $phpCode) || preg_match('/new\s+class\s*\{/', $phpCode) || preg_match('/class\s+[A-Za-z0-9_\\\\]+/', $phpCode);
+
+                if ($isValidClass && $frontmatter === null) {
+                    $frontmatter = trim($phpCode);
+
+                    $viewContent = substr_replace(
+                        $viewContent,
+                        '',
+                        $matches[0][$index][1],
+                        strlen($matches[0][$index][0])
+                    );
+                }
             }
 
-            // Extract scripts from view content and clean it
-            $scripts = $this->extractScripts($viewContent);
-            $cleanViewContent = $this->removeScripts($viewContent);
+            if ($frontmatter !== null) {
+                $scripts = $this->extractScripts($viewContent);
+                $cleanViewContent = $this->removeScripts($viewContent);
 
-            return new ParsedComponent(
-                $frontmatter,
-                trim($cleanViewContent),
-                false,
-                null,
-                $layoutTemplate,
-                $layoutData,
-                $scripts,
-            );
+                return new ParsedComponent(
+                    $frontmatter,
+                    trim($cleanViewContent),
+                    false,
+                    null,
+                    $layoutTemplate,
+                    $layoutData,
+                    $scripts,
+                );
+            }
         }
 
         // Handle external class reference with traditional PHP tags: < ?php(new App\Livewire\SomeClass) ? >
