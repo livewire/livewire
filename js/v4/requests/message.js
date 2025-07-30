@@ -122,6 +122,7 @@ export default class Message {
             '$set',
             '$sync',
             '$commit',
+            '$clone',
         ]
     }
 
@@ -176,7 +177,7 @@ export default class Message {
                     let existingActionType = existingAction.context.type ?? 'user'
                     let newActionType = newAction.context.type ?? 'user'
 
-                    // If both actions are polls we need to cancel the new one to let 
+                    // If both actions are polls we need to cancel the new one to let
                     // the old one finish so we don't end up in a polling loop...
                     if (existingActionType === 'poll' && newActionType === 'poll') {
                         return newMessage.cancel()
@@ -351,7 +352,7 @@ export default class Message {
         this.respond()
 
         this.interceptors.forEach(i => i.onError({ e }))
-        
+
         this.interceptors.forEach(i => i.returned())
     }
 
@@ -365,7 +366,7 @@ export default class Message {
         this.interceptors.forEach(i => i.onFailure({ response, content }))
 
         this.failCallbacks.forEach(i => i())
-        
+
         this.interceptors.forEach(i => i.returned())
     }
 
@@ -379,7 +380,7 @@ export default class Message {
         this.respond()
 
         this.interceptors.forEach(i => i.onCancel())
-        
+
         this.interceptors.forEach(i => i.returned())
     }
 
