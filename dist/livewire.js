@@ -6466,138 +6466,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
-  // js/v4/features/supportPropsAndModelablesV4.js
-  function getRequestsMessages(requests) {
-    let messages = [];
-    requests.forEach((request) => {
-      request.messages.forEach((message) => {
-        messages.push(message);
-      });
-    });
-    return messages;
-  }
-  function colocateRequestsByComponent(requests, component, foreignComponent) {
-    let request = findRequestWithComponent(requests, component);
-    let foreignRequest = findRequestWithComponent(requests, foreignComponent);
-    let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
-    foreignRequest.deleteMessage(foreignMessage);
-    request.addMessage(foreignMessage);
-    requests.forEach((request2) => {
-      if (request2.isEmpty())
-        requests.delete(request2);
-    });
-  }
-  function findRequestWithComponent(requests, component) {
-    return Array.from(requests).find((request) => request.hasMessageFor(component));
-  }
-  function getDeepChildrenWithBindings2(component, callback) {
-    getDeepChildren2(component, (child) => {
-      if (hasReactiveProps2(child) || hasWireModelableBindings2(child)) {
-        callback(child);
-      }
-    });
-  }
-  function hasReactiveProps2(component) {
-    let meta = component.snapshot.memo;
-    let props = meta.props;
-    return !!props;
-  }
-  function hasWireModelableBindings2(component) {
-    let meta = component.snapshot.memo;
-    let bindings = meta.bindings;
-    return !!bindings;
-  }
-  function getDeepChildren2(component, callback) {
-    component.children.forEach((child) => {
-      callback(child);
-      getDeepChildren2(child, callback);
-    });
-  }
-  var init_supportPropsAndModelablesV4 = __esm({
-    "js/v4/features/supportPropsAndModelablesV4.js"() {
-      init_hooks();
-      on2("message.pooling", ({ messages }) => {
-        messages.forEach((message) => {
-          let component = message.component;
-          getDeepChildrenWithBindings2(component, (child) => {
-            child.$wire.$commit();
-          });
-        });
-      });
-      on2("message.pooled", ({ requests }) => {
-        let messages = getRequestsMessages(requests);
-        messages.forEach((message) => {
-          let component = message.component;
-          getDeepChildrenWithBindings2(component, (child) => {
-            colocateRequestsByComponent(requests, component, child);
-          });
-        });
-      });
-    }
-  });
-
-  // js/v4/features/supportIsolatingV4.js
-  var componentsThatAreIsolated2;
-  var init_supportIsolatingV4 = __esm({
-    "js/v4/features/supportIsolatingV4.js"() {
-      init_hooks();
-      componentsThatAreIsolated2 = /* @__PURE__ */ new WeakSet();
-      on2("component.init", ({ component }) => {
-        let memo = component.snapshot.memo;
-        if (memo.isolate !== true)
-          return;
-        componentsThatAreIsolated2.add(component);
-      });
-      on2("message.pooling", ({ messages }) => {
-        messages.forEach((message) => {
-          if (!componentsThatAreIsolated2.has(message.component))
-            return;
-          message.isolate = true;
-        });
-      });
-    }
-  });
-
-  // js/v4/features/supportLazyLoadingV4.js
-  var componentsThatWantToBeBundled2, componentsThatAreLazy2;
-  var init_supportLazyLoadingV4 = __esm({
-    "js/v4/features/supportLazyLoadingV4.js"() {
-      init_hooks();
-      componentsThatWantToBeBundled2 = /* @__PURE__ */ new WeakSet();
-      componentsThatAreLazy2 = /* @__PURE__ */ new WeakSet();
-      on2("component.init", ({ component }) => {
-        let memo = component.snapshot.memo;
-        if (memo.lazyLoaded === void 0)
-          return;
-        componentsThatAreLazy2.add(component);
-        if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-          componentsThatWantToBeBundled2.add(component);
-        }
-      });
-      on2("message.pooling", ({ messages }) => {
-        messages.forEach((message) => {
-          if (!componentsThatAreLazy2.has(message.component))
-            return;
-          if (componentsThatWantToBeBundled2.has(message.component)) {
-            message.isolate = false;
-            componentsThatWantToBeBundled2.delete(message.component);
-          } else {
-            message.isolate = true;
-          }
-          componentsThatAreLazy2.delete(message.component);
-        });
-      });
-    }
-  });
-
   // js/v4/requests/index.js
   var init_requests = __esm({
     "js/v4/requests/index.js"() {
       init_requestBus();
-      init_supportPropsAndModelablesV4();
-      init_supportIsolatingV4();
-      init_supportLazyLoadingV4();
       requestBus_default.boot();
+    }
+  });
+
+  // js/v4/interceptors/index.js
+  var init_interceptors = __esm({
+    "js/v4/interceptors/index.js"() {
+      init_interceptorRegistry();
     }
   });
 
@@ -6728,10 +6608,127 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
-  // js/v4/interceptors/index.js
-  var init_interceptors = __esm({
-    "js/v4/interceptors/index.js"() {
-      init_interceptorRegistry();
+  // js/v4/features/supportPropsAndModelablesV4.js
+  function getRequestsMessages(requests) {
+    let messages = [];
+    requests.forEach((request) => {
+      request.messages.forEach((message) => {
+        messages.push(message);
+      });
+    });
+    return messages;
+  }
+  function colocateRequestsByComponent(requests, component, foreignComponent) {
+    let request = findRequestWithComponent(requests, component);
+    let foreignRequest = findRequestWithComponent(requests, foreignComponent);
+    let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
+    foreignRequest.deleteMessage(foreignMessage);
+    request.addMessage(foreignMessage);
+    requests.forEach((request2) => {
+      if (request2.isEmpty())
+        requests.delete(request2);
+    });
+  }
+  function findRequestWithComponent(requests, component) {
+    return Array.from(requests).find((request) => request.hasMessageFor(component));
+  }
+  function getDeepChildrenWithBindings2(component, callback) {
+    getDeepChildren2(component, (child) => {
+      if (hasReactiveProps2(child) || hasWireModelableBindings2(child)) {
+        callback(child);
+      }
+    });
+  }
+  function hasReactiveProps2(component) {
+    let meta = component.snapshot.memo;
+    let props = meta.props;
+    return !!props;
+  }
+  function hasWireModelableBindings2(component) {
+    let meta = component.snapshot.memo;
+    let bindings = meta.bindings;
+    return !!bindings;
+  }
+  function getDeepChildren2(component, callback) {
+    component.children.forEach((child) => {
+      callback(child);
+      getDeepChildren2(child, callback);
+    });
+  }
+  var init_supportPropsAndModelablesV4 = __esm({
+    "js/v4/features/supportPropsAndModelablesV4.js"() {
+      init_hooks();
+      on2("message.pooling", ({ messages }) => {
+        messages.forEach((message) => {
+          let component = message.component;
+          getDeepChildrenWithBindings2(component, (child) => {
+            child.$wire.$commit();
+          });
+        });
+      });
+      on2("message.pooled", ({ requests }) => {
+        let messages = getRequestsMessages(requests);
+        messages.forEach((message) => {
+          let component = message.component;
+          getDeepChildrenWithBindings2(component, (child) => {
+            colocateRequestsByComponent(requests, component, child);
+          });
+        });
+      });
+    }
+  });
+
+  // js/v4/features/supportIsolatingV4.js
+  var componentsThatAreIsolated2;
+  var init_supportIsolatingV4 = __esm({
+    "js/v4/features/supportIsolatingV4.js"() {
+      init_hooks();
+      componentsThatAreIsolated2 = /* @__PURE__ */ new WeakSet();
+      on2("component.init", ({ component }) => {
+        let memo = component.snapshot.memo;
+        if (memo.isolate !== true)
+          return;
+        componentsThatAreIsolated2.add(component);
+      });
+      on2("message.pooling", ({ messages }) => {
+        messages.forEach((message) => {
+          if (!componentsThatAreIsolated2.has(message.component))
+            return;
+          message.isolate = true;
+        });
+      });
+    }
+  });
+
+  // js/v4/features/supportLazyLoadingV4.js
+  var componentsThatWantToBeBundled2, componentsThatAreLazy2;
+  var init_supportLazyLoadingV4 = __esm({
+    "js/v4/features/supportLazyLoadingV4.js"() {
+      init_hooks();
+      componentsThatWantToBeBundled2 = /* @__PURE__ */ new WeakSet();
+      componentsThatAreLazy2 = /* @__PURE__ */ new WeakSet();
+      on2("component.init", ({ component }) => {
+        let memo = component.snapshot.memo;
+        if (memo.lazyLoaded === void 0)
+          return;
+        componentsThatAreLazy2.add(component);
+        if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
+          componentsThatWantToBeBundled2.add(component);
+        }
+      });
+      on2("message.pooling", ({ messages }) => {
+        messages.forEach((message) => {
+          if (!componentsThatAreLazy2.has(message.component))
+            return;
+          if (componentsThatWantToBeBundled2.has(message.component)) {
+            message.isolate = false;
+            componentsThatWantToBeBundled2.delete(message.component);
+          } else {
+            message.isolate = true;
+          }
+          componentsThatAreLazy2.delete(message.component);
+        });
+      });
     }
   });
 
@@ -6740,13 +6737,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var init_v4 = __esm({
     "js/v4/index.js"() {
       init_requests();
+      init_interceptors();
       init_supportDataLoading();
       init_supportPaginators();
       init_supportPreserveScroll();
       init_supportWireIntersect();
       init_supportWireIsland();
       init_supportJsModules();
-      init_interceptors();
+      init_supportPropsAndModelablesV4();
+      init_supportIsolatingV4();
+      init_supportLazyLoadingV4();
     }
   });
 
