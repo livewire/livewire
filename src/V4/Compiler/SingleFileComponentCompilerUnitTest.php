@@ -3,7 +3,6 @@
 namespace Livewire\V4\Compiler;
 
 use Livewire\V4\Compiler\Exceptions\CompilationException;
-use Livewire\V4\Compiler\Exceptions\ParseException;
 use Livewire\V4\Compiler\Exceptions\InvalidComponentException;
 use Illuminate\Support\Facades\File;
 
@@ -204,6 +203,72 @@ new class extends Livewire\Component {
         $this->assertStringNotContainsString('<div>Island content</div>', $compiledViewPathContent);
     }
 
+    public function test_can_compile_component_but_does_not_remove_php_tags_from_view_content()
+    {
+        $componentContent = '<?php
+new class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+?>
+
+<div>
+    <?php $doubleCount = $count * 2; ?>
+    Count: {{ $count }}
+    <button wire:click="increment">Increment</button>
+</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertStringContainsString('Counter_', $result->className);
+        $this->assertStringContainsString('livewire-compiled::counter_', $result->viewName);
+        $this->assertTrue(file_exists($result->classPath));
+        $this->assertTrue(file_exists($result->viewPath));
+        $this->assertStringContainsString('<?php $doubleCount = $count * 2; ?>', File::get($result->viewPath));
+    }
+
+    public function test_can_compile_component_but_does_not_remove_php_blocks_from_view_content()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
+
+<div>
+    @php $doubleCount = $count * 2; @endphp
+    Count: {{ $count }}
+    <button wire:click="increment">Increment</button>
+</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertStringContainsString('Counter_', $result->className);
+        $this->assertStringContainsString('livewire-compiled::counter_', $result->viewName);
+        $this->assertTrue(file_exists($result->classPath));
+        $this->assertTrue(file_exists($result->viewPath));
+        $this->assertStringContainsString('@php $doubleCount = $count * 2; @endphp', File::get($result->viewPath));
+    }
+
     public function test_throws_exception_for_missing_view_file()
     {
         $this->expectException(CompilationException::class);
@@ -220,7 +285,7 @@ new class extends Livewire\Component {
         File::put($viewPath, $componentContent);
 
         $this->expectException(InvalidComponentException::class);
-        $this->expectExceptionMessage('Component must contain either @php(new ClassName) or @php...@endphp block');
+        $this->expectExceptionMessage('Component must contain either <?php(new ClassName) or <?php...?> block');
 
         $this->compiler->compile($viewPath);
     }
@@ -236,8 +301,8 @@ echo "This is not a class";
         $viewPath = $this->tempPath . '/invalid.livewire.php';
         File::put($viewPath, $componentContent);
 
-        $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Invalid component: @php block must contain a class definition');
+        $this->expectException(InvalidComponentException::class);
+        $this->expectExceptionMessage('Component must contain either <?php(new ClassName) or <?php...?> block');
 
         $this->compiler->compile($viewPath);
     }
@@ -864,7 +929,7 @@ $notAClass = "invalid";
         File::put($viewPath, $componentContent);
 
         // We need to manually trigger the parseComponent since the validation happens there
-        $this->expectException(ParseException::class);
+        $this->expectException(InvalidComponentException::class);
 
         $this->compiler->compile($viewPath);
     }

@@ -251,13 +251,13 @@ class SingleFileComponentCompiler extends Mechanism
                 $layoutData = $this->parseLayoutData($layoutMatches[2]);
             }
             // Remove the layout directive from content for further processing
-            $content = preg_replace('/@layout\s*\([^)]+\)\s*/', '', $content);
+            $content = preg_replace('/@layout\s*\([^)]+\)\s*/', '', $content, limit: 1);
         }
 
         // Handle external class reference: @php(new App\Livewire\SomeClass)
         if (preg_match('/@php\s*\(\s*new\s+([A-Za-z0-9\\\\]+)(?:::class)?\s*\)/s', $content, $matches)) {
             $externalClass = $matches[1];
-            $viewContent = preg_replace('/@php\s*\([^)]+\)/s', '', $content);
+            $viewContent = preg_replace('/@php\s*\([^)]+\)/s', '', $content, limit: 1);
 
             // Extract scripts from view content and clean it
             $scripts = $this->extractScripts($viewContent);
@@ -277,33 +277,31 @@ class SingleFileComponentCompiler extends Mechanism
         // Handle inline class: @php ... @endphp
         if (preg_match('/@php\s*(.*?)\s*@endphp/s', $content, $matches)) {
             $frontmatter = trim($matches[1]);
-            // Use the modified $content (after layout removal) for the view content
-            $viewContent = preg_replace('/@php\s*.*?\s*@endphp/s', '', $content);
-
             // Validate that frontmatter contains a class definition...
-            if (!str_contains($frontmatter, 'new class') && !str_contains($frontmatter, 'class ')) {
-                throw new ParseException("Invalid component: @php block must contain a class definition");
+            if (str_contains($frontmatter, 'new class') || str_contains($frontmatter, 'class ')) {
+                // Use the modified $content (after layout removal) for the view content
+                $viewContent = preg_replace('/@php\s*.*?\s*@endphp/s', '', $content, limit: 1);
+
+                // Extract scripts from view content and clean it
+                $scripts = $this->extractScripts($viewContent);
+                $cleanViewContent = $this->removeScripts($viewContent);
+
+                return new ParsedComponent(
+                    $frontmatter,
+                    trim($cleanViewContent),
+                    false,
+                    null,
+                    $layoutTemplate,
+                    $layoutData,
+                    $scripts,
+                );
             }
-
-            // Extract scripts from view content and clean it
-            $scripts = $this->extractScripts($viewContent);
-            $cleanViewContent = $this->removeScripts($viewContent);
-
-            return new ParsedComponent(
-                $frontmatter,
-                trim($cleanViewContent),
-                false,
-                null,
-                $layoutTemplate,
-                $layoutData,
-                $scripts,
-            );
         }
 
         // Handle external class reference with traditional PHP tags: < ?php(new App\Livewire\SomeClass) ? >
         if (preg_match('/<\?php\s*\(\s*new\s+([A-Za-z0-9\\\\]+)(?:::class)?\s*\)\s*\?>/s', $content, $matches)) {
             $externalClass = $matches[1];
-            $viewContent = preg_replace('/<\?php\s*\([^)]+\)\s*\?>/s', '', $content);
+            $viewContent = preg_replace('/<\?php\s*\([^)]+\)\s*\?>/s', '', $content, limit: 1);
 
             // Extract scripts from view content and clean it
             $scripts = $this->extractScripts($viewContent);
@@ -323,30 +321,29 @@ class SingleFileComponentCompiler extends Mechanism
         // Handle inline class with traditional PHP tags: < ?php ... ? >
         if (preg_match('/<\?php\s*(.*?)\s*\?>/s', $content, $matches)) {
             $frontmatter = trim($matches[1]);
-            // Use the modified $content (after layout removal) for the view content
-            $viewContent = preg_replace('/<\?php\s*.*?\s*\?>/s', '', $content);
 
             // Validate that frontmatter contains a class definition...
-            if (!str_contains($frontmatter, 'new class') && !str_contains($frontmatter, 'class ')) {
-                throw new ParseException("Invalid component: <"."?php block must contain a class definition");
+            if (str_contains($frontmatter, 'new class') || str_contains($frontmatter, 'class ')) {
+                // Use the modified $content (after layout removal) for the view content
+                $viewContent = preg_replace('/<\?php\s*.*?\s*\?>/s', '', $content, limit: 1);
+
+                // Extract scripts from view content and clean it
+                $scripts = $this->extractScripts($viewContent);
+                $cleanViewContent = $this->removeScripts($viewContent);
+
+                return new ParsedComponent(
+                    $frontmatter,
+                    trim($cleanViewContent),
+                    false,
+                    null,
+                    $layoutTemplate,
+                    $layoutData,
+                    $scripts,
+                );
             }
-
-            // Extract scripts from view content and clean it
-            $scripts = $this->extractScripts($viewContent);
-            $cleanViewContent = $this->removeScripts($viewContent);
-
-            return new ParsedComponent(
-                $frontmatter,
-                trim($cleanViewContent),
-                false,
-                null,
-                $layoutTemplate,
-                $layoutData,
-                $scripts,
-            );
         }
 
-        throw new InvalidComponentException("Component must contain either @php(new ClassName) or @php...@endphp block");
+        throw new InvalidComponentException("Component must contain either <?php(new ClassName) or <?php...?> block");
     }
 
     protected function loadExternalViewAndScriptIfRequired(string $viewPath, ParsedComponent $parsed): ParsedComponent
