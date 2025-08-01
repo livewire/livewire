@@ -1457,25 +1457,17 @@ new class extends Livewire\Component {
     public function test_can_compile_component_with_traditional_php_tags()
     {
         $componentContent = '<?php
-
-use App\Models\Product;
-
 new class extends Livewire\Component {
-    public Product $product;
-    public $quantity = 1;
+    public $count = 0;
 
-    public function addToCart()
+    public function increment()
     {
-        // Add to cart logic
+        $this->count++;
     }
 }
 ?>
 
-<div>
-    <h1>{{ $product->name }}</h1>
-    <p>Quantity: {{ $quantity }}</p>
-    <button wire:click="addToCart">Add to Cart</button>
-</div>';
+<div>Count: {{ $count }}</div>';
 
         $viewPath = $this->tempPath . '/product.livewire.php';
         File::put($viewPath, $componentContent);
@@ -1489,19 +1481,19 @@ new class extends Livewire\Component {
 
         $classContent = File::get($result->classPath);
 
-        // Check that use statements are preserved
-        $this->assertStringContainsString('use App\Models\Product;', $classContent);
+        // Should work fine without use statements
+        $this->assertStringContainsString('namespace Livewire\Compiled;', $classContent);
+        $this->assertStringContainsString('extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
 
-        // Check that class properties and methods are preserved
-        $this->assertStringContainsString('public Product $product;', $classContent);
-        $this->assertStringContainsString('public $quantity = 1;', $classContent);
-        $this->assertStringContainsString('public function addToCart()', $classContent);
+        // Should not have any use statements
+        $this->assertStringNotContainsString('use ', $classContent);
 
         // Check that view content doesn't contain PHP tags
         $viewContent = File::get($result->viewPath);
         $this->assertStringNotContainsString('<?php', $viewContent);
         $this->assertStringNotContainsString('?>', $viewContent);
-        $this->assertStringContainsString('<h1>{{ $product->name }}</h1>', $viewContent);
+        $this->assertStringContainsString('<div>Count: {{ $count }}</div>', $viewContent);
     }
 
     public function test_can_compile_external_component_with_traditional_php_tags()
@@ -1946,6 +1938,63 @@ new class extends Livewire\Component {
         }
 
         $this->assertEquals(3, $traitUsageCount);
+    }
+
+    public function test_can_compile_component_with_use_statements_and_they_are_available_in_the_view()
+    {
+        $componentContent = '<?php
+
+use App\Models\Product;
+
+new class extends Livewire\Component {
+    public Product $product;
+    public $quantity = 1;
+
+    public function addToCart()
+    {
+        // Add to cart logic
+    }
+}
+?>
+
+<div>
+    <h1>{{ $product->name }}</h1>
+    <p>Quantity: {{ $quantity }}</p>
+    <button wire:click="addToCart">Add to Cart</button>
+</div>';
+
+        $viewPath = $this->tempPath . '/product.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+        $this->assertTrue(file_exists($result->viewPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that use statements are preserved
+        $this->assertStringContainsString('use App\Models\Product;', $classContent);
+
+        // Check that class properties and methods are preserved
+        $this->assertStringContainsString('public Product $product;', $classContent);
+        $this->assertStringContainsString('public $quantity = 1;', $classContent);
+        $this->assertStringContainsString('public function addToCart()', $classContent);
+
+        // Check that view content contains the use statements
+        $viewContent = File::get($result->viewPath);
+        $this->assertEquals(<<<'HTML'
+        <?php
+        use App\Models\Product;
+        ?>
+        <div>
+            <h1>{{ $product->name }}</h1>
+            <p>Quantity: {{ $quantity }}</p>
+            <button wire:click="addToCart">Add to Cart</button>
+        </div>
+        HTML, $viewContent);
     }
 
     public function test_can_compile_component_with_class_level_attributes_compact_syntax()

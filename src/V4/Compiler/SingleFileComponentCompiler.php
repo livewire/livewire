@@ -724,6 +724,17 @@ namespace {$namespace};
             $processedViewContent = $this->transformComputedPropertyReferences($processedViewContent, $parsed->frontmatter);
         }
 
+        // Prepend any use statements to the view content if there are any
+        $preClassCode = $this->extractPreClassCode($parsed->frontmatter);
+        if (!empty($preClassCode)) {
+            $processedViewContent = <<<HTML
+            <?php
+            {$preClassCode}
+            ?>
+            {$processedViewContent}
+            HTML;
+        }
+
         File::put($result->viewPath, $processedViewContent);
 
         // This is a fix for a gnarly issue: blade's compiler uses filemtimes to determine if a compiled view has become expired.
