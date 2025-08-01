@@ -34,9 +34,7 @@ class IslandsCompiler extends ComponentHook
         // Strip ⚡ from the view name to ensure clean component names
         $this->viewName = str_replace('⚡', '', $this->viewName);
 
-        $content = $this->compileIslands($content);
-
-        return $content;
+        return $this->compileIslands($content);
     }
 
     function compileIslands($content)
