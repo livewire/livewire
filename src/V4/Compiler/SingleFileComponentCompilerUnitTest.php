@@ -60,7 +60,7 @@ new class extends Livewire\Component {
 
         $this->assertInstanceOf(CompilationResult::class, $result);
         $this->assertFalse($result->isExternal);
-        $this->assertStringContainsString('Livewire\\Compiled\\Counter_', $result->className);
+        $this->assertStringContainsString('Counter_', $result->className);
         $this->assertStringContainsString('livewire-compiled::counter_', $result->viewName);
         $this->assertTrue(file_exists($result->classPath));
         $this->assertTrue(file_exists($result->viewPath));
@@ -279,7 +279,7 @@ new class extends Livewire\Component {
 
         $classContent = File::get($result->classPath);
 
-        $this->assertStringContainsString('namespace Livewire\Compiled;', $classContent);
+        $this->assertStringNotContainsString('namespace', $classContent);
         $this->assertStringContainsString('extends \\Livewire\\Component', $classContent);
         $this->assertStringContainsString('public $count = 0;', $classContent);
         $this->assertStringContainsString('public function increment()', $classContent);
@@ -922,7 +922,7 @@ $notAClass = "invalid";
 
         $this->assertInstanceOf(CompilationResult::class, $result);
         $this->assertFalse($result->isExternal);
-        $this->assertStringContainsString('Livewire\\Compiled\\Counter_', $result->className);
+        $this->assertStringContainsString('Counter_', $result->className);
         $this->assertStringContainsString('livewire-compiled::counter_', $result->viewName);
         $this->assertTrue(file_exists($result->classPath));
         $this->assertTrue(file_exists($result->viewPath));
@@ -985,7 +985,7 @@ $notAClass = "invalid";
 
         $this->assertInstanceOf(CompilationResult::class, $result);
         $this->assertFalse($result->isExternal);
-        $this->assertStringContainsString('Livewire\\Compiled\\Counter_', $result->className);
+        $this->assertStringContainsString('Counter_', $result->className);
         $this->assertStringContainsString('livewire-compiled::counter_', $result->viewName);
         $this->assertTrue(file_exists($result->classPath));
         $this->assertTrue(file_exists($result->viewPath));
@@ -1418,7 +1418,7 @@ new class extends Livewire\Component {
         $classContent = File::get($result->classPath);
 
         // Should work fine without use statements
-        $this->assertStringContainsString('namespace Livewire\Compiled;', $classContent);
+        $this->assertStringNotContainsString('namespace', $classContent);
         $this->assertStringContainsString('extends \\Livewire\\Component', $classContent);
         $this->assertStringContainsString('public $count = 0;', $classContent);
 
@@ -1482,7 +1482,7 @@ new class extends Livewire\Component {
         $classContent = File::get($result->classPath);
 
         // Should work fine without use statements
-        $this->assertStringContainsString('namespace Livewire\Compiled;', $classContent);
+        $this->assertStringNotContainsString('namespace', $classContent);
         $this->assertStringContainsString('extends \\Livewire\\Component', $classContent);
         $this->assertStringContainsString('public $count = 0;', $classContent);
 
@@ -1868,7 +1868,7 @@ new class extends Livewire\Component {
         $this->assertEquals(1, substr_count($classContent, 'use WithPagination;'));
 
         // Check that the class structure is correct
-        $this->assertStringContainsString('namespace Livewire\Compiled;', $classContent);
+        $this->assertStringNotContainsString('namespace', $classContent);
         $this->assertStringContainsString('extends \\Livewire\\Component', $classContent);
         $this->assertStringContainsString('public $search = "";', $classContent);
     }
@@ -2285,7 +2285,7 @@ new class extends Livewire\Component {
         $this->assertStringContainsString('public $sessionData = [];', $classContent);
 
         // Verify structure is correct
-        $this->assertStringContainsString('namespace Livewire\Compiled;', $classContent);
+        $this->assertStringNotContainsString('namespace', $classContent);
         $this->assertStringContainsString('extends \\Livewire\\Component', $classContent);
     }
 

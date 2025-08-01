@@ -669,8 +669,6 @@ class SingleFileComponentCompiler extends Mechanism
 
         $classContent = "<?php
 
-namespace {$namespace};
-
 {$preClassSection}{$layoutAttribute}{$classAttributesSection}class {$className} extends \\Livewire\\Component
 {
 {$classBody}
@@ -1049,7 +1047,7 @@ namespace {$namespace};
     {
         $name = $this->getComponentNameFromPath($viewPath);
         $className = str_replace(['-', '.'], '', ucwords($name, '-.'));
-        return "Livewire\\Compiled\\{$className}_{$hash}";
+        return "{$className}_{$hash}";
     }
 
     protected function generateViewName(string $viewPath, string $hash): string
