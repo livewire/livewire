@@ -202,6 +202,35 @@ public function posts()
 }
 ```
 
+If you want the cache to be remembered forever, you may set a `forever` parameter:
+
+```php
+use Livewire\Attributes\Computed;
+use App\Models\Post;
+
+#[Computed(cache: true, key: 'homepage-posts', forever: true)]
+public function posts()
+{
+    return Post::all();
+}
+```
+
+> [!info] The seconds parameter will not be used
+> For the cache function `rememberForever` or `forever` no seconds parameter is used.
+
+If you want to use the [flexible cache](https://laravel.com/docs/12.x/cache#swr), you may set an array to the `seconds` parameter with the `cache` parameter set to `true`:
+
+```php
+use Livewire\Attributes\Computed;
+use App\Models\Post;
+
+#[Computed(cache: true, seconds: [5, 10])]
+public function posts()
+{
+    return Post::all();
+}
+```
+
 ## When to use computed properties?
 
 In addition to offering performance advantages, there are a few other scenarios where computed properties are helpful.
