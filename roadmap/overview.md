@@ -2,7 +2,7 @@
 Livewire 4 is a new version of Livewire focused on making livewire faster, more stable, and more intuitive.
 
 ## V4 Checklist
-- [ ] Blaze
+- [x] Blaze
 - [ ] Livewire::route()
 - [ ] Interceptors
 - [ ] data-loading
