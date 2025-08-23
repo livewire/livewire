@@ -113,6 +113,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportStreaming\SupportStreaming::class,
             Features\SupportNavigate\SupportNavigate::class,
             Features\SupportEntangle\SupportEntangle::class,
+            Features\SupportRouting\SupportRouting::class,
             Features\SupportLocales\SupportLocales::class,
             Features\SupportTesting\SupportTesting::class,
             Features\SupportModels\SupportModels::class,

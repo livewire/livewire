@@ -26,7 +26,6 @@ class IntegrateV4
 
     public function __invoke()
     {
-        $this->supportRoutingMacro();
         $this->supportSingleFileComponents();
         $this->supportWireTagSyntax();
         $this->supportTailwindMacro();
@@ -37,17 +36,6 @@ class IntegrateV4
         \Illuminate\Console\Application::starting(fn (\Illuminate\Console\Application $artisan) => $artisan->resolveCommands([
             \Livewire\V4\Compiler\Commands\LivewireClearCommand::class,
         ]));
-    }
-
-    protected function supportRoutingMacro()
-    {
-        Route::macro('livewire', function ($uri, $view) {
-            if (class_exists($view)) {
-                return Route::get($uri, $view);
-            }
-
-            return app('livewire')->route($uri, $view);
-        });
     }
 
     protected function supportSingleFileComponents()

@@ -245,7 +245,7 @@ Further reading:
 When a Livewire component is loaded on a page containing route-level [Authorization Middleware](https://laravel.com/docs/authorization#via-middleware), like so:
 
 ```php
-Route::get('/post/{post}', App\Livewire\UpdatePost::class)
+Route::livewire('/post/{post}', App\Livewire\UpdatePost::class)
     ->middleware('can:update,post'); // [tl! highlight]
 ```
 
@@ -256,7 +256,7 @@ Persistent middleware protects you from scenarios where the authorization rules 
 Here's a more in-depth example of such a scenario:
 
 ```php
-Route::get('/post/{post}', App\Livewire\UpdatePost::class)
+Route::livewire('/post/{post}', App\Livewire\UpdatePost::class)
     ->middleware('can:update,post'); // [tl! highlight]
 ```
 

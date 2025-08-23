@@ -232,13 +232,13 @@ Now, if there are ten `Revenue` components on the same page, when the page loads
 You may want to lazy load full-page Livewire components. You can do this by calling `->lazy()` on the route like so:
 
 ```php
-Route::get('/dashboard', \App\Livewire\Dashboard::class)->lazy();
+Route::livewire('/dashboard', \App\Livewire\Dashboard::class)->lazy();
 ```
 
 Or alternatively, if there is a component that is lazy-loaded by default, and you would like to opt-out of lazy-loading, you can use the following `enabled: false` parameter:
 
 ```php
-Route::get('/dashboard', \App\Livewire\Dashboard::class)->lazy(enabled: false);
+Route::livewire('/dashboard', \App\Livewire\Dashboard::class)->lazy(enabled: false);
 ```
 
 ## Default placeholder view
@@ -278,4 +278,3 @@ class DashboardTest extends TestCase
 ```
 
 Now, when the dashboard component is rendered for this test, it will skip rendering the `placeholder()` and instead render the full component as if lazy loading wasn't applied at all.
-
