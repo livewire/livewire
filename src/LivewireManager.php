@@ -76,16 +76,6 @@ class LivewireManager
         return app('livewire.resolver')->namespace($namespace, $path);
     }
 
-    function route($uri, $component)
-    {
-        return \Illuminate\Support\Facades\Route::get($uri, function () use ($component) {
-            return app()->call([
-                app(LivewireManager::class)->new($component),
-                '__invoke',
-            ]);
-        });
-    }
-
     function mount($name, $params = [], $key = null, $slots = [])
     {
         return app(HandleComponents::class)->mount($name, $params, $key, $slots);

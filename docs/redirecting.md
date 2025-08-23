@@ -45,7 +45,7 @@ As you can see, when the `save` action is triggered, a redirect will also be tri
 
 In case you want to redirect to a page using its route name you can use the `redirectRoute`.
 
-For example, if you have a page with the route named `'profile'` like this: 
+For example, if you have a page with the route named `'profile'` like this:
 
 ```php
     Route::get('/user/profile', function () {
@@ -82,7 +82,7 @@ For example, if you are using a Livewire component as a full-page component for 
 ```php
 use App\Livewire\ShowPosts;
 
-Route::get('/posts', ShowPosts::class);
+Route::livewire('/posts', ShowPosts::class);
 ```
 
 You can redirect to the component by providing the component name to the `redirect()` method:

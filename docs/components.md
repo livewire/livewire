@@ -392,14 +392,14 @@ This is effectively the same as assigning `$title` inside a `mount()` method.
 
 Livewire allows you to assign components directly to a route in your Laravel application. These are called "full-page components". You can use them to build standalone pages with logic and views, fully encapsulated within a Livewire component.
 
-To create a full-page component, define a route in your `routes/web.php` file and use the `Route::get()` method to map the component directly to a specific URL. For example, let's imagine you want to render the `CreatePost` component at the dedicated route: `/posts/create`.
+To create a full-page component, define a route in your `routes/web.php` file and use the `Route::livewire()` method to map the component directly to a specific URL. For example, let's imagine you want to render the `CreatePost` component at the dedicated route: `/posts/create`.
 
 You can accomplish this by adding the following line to your `routes/web.php` file:
 
 ```php
 use App\Livewire\CreatePost;
 
-Route::get('/posts/create', CreatePost::class);
+Route::livewire('/posts/create', CreatePost::class);
 ```
 
 Now, when you visit the `/posts/create` path in your browser, the `CreatePost` component will be rendered as a full-page component.
@@ -631,7 +631,7 @@ To demonstrate, first, define a route with a parameter in your `routes/web.php` 
 ```php
 use App\Livewire\ShowPost;
 
-Route::get('/posts/{id}', ShowPost::class);
+Route::livewire('/posts/{id}', ShowPost::class);
 ```
 
 Here, we've defined a route with an `id` parameter which represents a post's ID.
@@ -673,7 +673,7 @@ After defining a route with a model parameter in your `routes/web.php` file:
 ```php
 use App\Livewire\ShowPost;
 
-Route::get('/posts/{post}', ShowPost::class);
+Route::livewire('/posts/{post}', ShowPost::class);
 ```
 
 You can now accept the route model parameter through the `mount()` method of your component:
