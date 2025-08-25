@@ -8,8 +8,9 @@ They're a tidy alternative, but conceptually similar, to using something like cl
 Here are a list of use-cases:
 
 - Dispatching an event on a specific element
-- Streaming content to a specific element
 - Targeting a Livewire component using `$refs`
+- Accessing DOM elements within a component from JavaScript
+- Streaming content to a specific element
 
 Let's walk through each of these.
 
@@ -35,9 +36,9 @@ new class extends Livewire\Component {
 };
 ?>
 
-<dialog wire:model="isOpen">
+<div wire:show="isOpen">
     {{ $slot }}
-</dialog>
+</div>
 ```
 
 By adding `wire:ref` to the component tag, you now dispatch the _close_ event directly to it using the `ref:` parameter:
@@ -75,7 +76,7 @@ Similar to Livewire's `$parent` magic, the `$refs` magic allows you target anoth
     <!-- ... -->
 
     <livewire:modal wire:ref="modal">
-        <button wire:click="$refs.modal.close">Close</button>
+        <button wire:click="$refs.modal.close()">Close</button>
 
         <!-- ... -->
     </livewire:modal>
@@ -93,7 +94,7 @@ Consider an example that aims to handle the closing of the modal purely in JavaS
     <livewire:modal wire:ref="modal">
         <!-- ... -->
 
-        <button wire:click="save">Save</button>
+        <button wire:click="save()">Save</button>
     </livewire:modal>
 </div>
 
@@ -102,6 +103,28 @@ Consider an example that aims to handle the closing of the modal purely in JavaS
         request.onSuccess(() => {
             this.$refs.modal.close()
         })
+    })
+</script>
+```
+
+## Accessing DOM elements
+
+When you add `wire:ref` to a plain HTML element, you can access the underlying DOM element using the `.el` property. This is useful for direct DOM manipulation without triggering a full component re-render.
+
+Consider a character counter that updates in real-time:
+
+```php
+<div>
+    <textarea wire:model="message" wire:ref="message"></textarea>
+
+    Characters: <span wire:ref="count">0</span>
+
+    <!-- ... -->
+</div>
+
+<script>
+    this.$refs['message'].el.addEventListener('input', (e) => {
+        this.$refs['count'].el.textContent = e.target.value.length`
     })
 </script>
 ```
@@ -121,7 +144,7 @@ new class extends Livewire\Component {
     public function ask()
     {
         Ai::ask($this->question, function ($chunk) {
-            $this->ref('answer')->stream($chunk);
+            $this->stream($chunk, ref: 'answer');
         });
 
         $this->reset('question');
