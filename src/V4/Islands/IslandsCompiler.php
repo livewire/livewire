@@ -111,9 +111,9 @@ class IslandsCompiler extends ComponentHook
             return null;
         }
 
-        $directiveContent = isset($matches[0][0]) ? $matches[0][0] : null;
-        $directiveOffset = isset($matches[0][1]) ? $matches[0][1] : null;
-        $params = isset($matches[1][0]) ? $matches[1][0] : null;
+        $directiveContent = $matches[0][0] ?? null;
+        $directiveOffset = $matches[0][1] ?? null;
+        $params = $matches[1][0] ?? null;
 
         $precedingContent = substr($content, 0, $directiveOffset);
         $remainingContent = substr($content, $directiveOffset + strlen($directiveContent));
