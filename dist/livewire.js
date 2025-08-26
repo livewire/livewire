@@ -6051,6 +6051,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function dispatchSelf(component, name, params) {
     dispatchEvent(component.el, name, params, false);
   }
+  function dispatchEl(component, selector, name, params) {
+    let targets = component.el.querySelectorAll(selector);
+    targets.forEach((target) => {
+      dispatchEvent(target, name, params, false);
+    });
+  }
   function dispatchTo(componentName, name, params) {
     let targets = componentsByName(componentName);
     targets.forEach((target) => {
@@ -11129,14 +11135,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   function dispatchEvents(component, dispatches) {
-    dispatches.forEach(({ name, params = {}, self = false, to, ref }) => {
+    dispatches.forEach(({ name, params = {}, self = false, component: componentName, ref, el }) => {
       console.log(ref);
       if (self)
         dispatchSelf(component, name, params);
-      else if (to)
-        dispatchTo(to, name, params);
+      else if (componentName)
+        dispatchTo(componentName, name, params);
       else if (ref)
         dispatchRef(component, ref, name, params);
+      else if (el)
+        dispatchEl(component, el, name, params);
       else
         dispatch3(component, name, params);
     });
@@ -11476,39 +11484,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportStreaming.js
-  init_store();
+  init_supportRefs();
   init_utils();
-  init_directives();
+  init_store();
   init_hooks();
   on2("stream", (payload) => {
-    if (payload.type !== "update")
-      return;
-    let { id, key: key2, value, mode } = payload;
-    if (!hasComponent(id))
-      return;
+    let { id, name, el, ref, content, mode } = payload;
     let component = findComponent(id);
-    if (mode === "append") {
-      component.$wire.set(key2, component.$wire.get(key2) + value, false);
-    } else {
-      component.$wire.set(key2, value, false);
-    }
-  });
-  directive2("stream", ({ el, directive: directive3, cleanup: cleanup2 }) => {
-    let { expression, modifiers } = directive3;
-    let off = on2("stream", (payload) => {
-      payload.type = payload.type || "html";
-      if (payload.type !== "html")
-        return;
-      let { name, content, mode } = payload;
-      if (name !== expression)
-        return;
-      if (modifiers.includes("replace") || mode === "replace") {
-        el.innerHTML = content;
+    let targetEl = null;
+    if (name) {
+      replaceEl = component.el.querySelector(`[wire\\:stream.replace="${name}"]`);
+      if (replaceEl) {
+        targetEl = replaceEl;
+        mode = "replace";
       } else {
-        el.insertAdjacentHTML("beforeend", content);
+        targetEl = component.el.querySelector(`[wire\\:stream="${name}"]`);
       }
-    });
-    cleanup2(off);
+    } else if (ref) {
+      targetEl = findRefEl(component, ref);
+    } else if (el) {
+      targetEl = component.el.querySelector(el);
+    }
+    if (!targetEl)
+      return;
+    if (mode === "replace") {
+      targetEl.innerHTML = content;
+    } else {
+      targetEl.insertAdjacentHTML("beforeend", content);
+    }
   });
   on2("request", ({ respond }) => {
     respond((mutableObject) => {

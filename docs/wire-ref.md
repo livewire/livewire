@@ -51,8 +51,7 @@ new class extends Livewire\Component {
     {
         //
 
-        $this->dispatch('close', ref: 'modal');
-        // todo: add dispatch to: as a named parameter.
+        $this->dispatch('close')->to(ref: 'modal');
     }
 };
 ?>
@@ -77,15 +76,7 @@ Similar to Livewire's `$parent` magic, the `$refs` magic allows you target anoth
     <!-- ... -->
 
     <livewire:modal wire:ref="modal">
-        <button wire:click="$refs.modal.close()">Close</button>
-
-        <button wire:click="$refs.modal.()">Close</button>
-
         <button wire:click="$refs.modal.dispatch('close')">Close</button>
-
-        <button wire:click="$parent.dispatch('close')">Close</button>
-
-        <button wire:click="$dispatchRef('modal', 'close')">Close</button>
 
         <!-- ... -->
     </livewire:modal>
@@ -153,7 +144,7 @@ new class extends Livewire\Component {
     public function ask()
     {
         Ai::ask($this->question, function ($chunk) {
-            $this->stream($chunk, ref: 'answer');
+            $this->stream($chunk)->to(ref: 'answer');
         });
 
         $this->reset('question');
