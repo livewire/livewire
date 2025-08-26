@@ -5,8 +5,8 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [x] Blaze
 - [x] Route::livewire()
 - [x] wire:ref
-- [ ] CSP-safe
 - [ ] Support wire:model on dialog and popover elements
+- [ ] CSP-safe
 - [ ] Interceptors
 - [ ] data-loading
 - [ ] Slots
