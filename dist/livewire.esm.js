@@ -12021,7 +12021,6 @@ on("effect", ({ component, effects }) => {
 });
 function dispatchEvents(component, dispatches) {
   dispatches.forEach(({ name, params = {}, self: self2 = false, component: componentName, ref, el }) => {
-    console.log(ref);
     if (self2)
       dispatchSelf(component, name, params);
     else if (componentName)

@@ -11136,7 +11136,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function dispatchEvents(component, dispatches) {
     dispatches.forEach(({ name, params = {}, self = false, component: componentName, ref, el }) => {
-      console.log(ref);
       if (self)
         dispatchSelf(component, name, params);
       else if (componentName)

@@ -18,8 +18,6 @@ on('effect', ({ component, effects }) => {
 
 function dispatchEvents(component, dispatches) {
     dispatches.forEach(({ name, params = {}, self = false, component: componentName, ref, el }) => {
-        console.log(ref);
-
         if (self) dispatchSelf(component, name, params)
         else if (componentName) dispatchTo(componentName, name, params)
         else if (ref) dispatchRef(component, ref, name, params)
