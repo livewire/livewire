@@ -3639,7 +3639,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
       let keyModifiers = modifiers.filter((i) => {
-        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
+        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
       });
       if (keyModifiers.includes("debounce")) {
         let debounceIndex = keyModifiers.indexOf("debounce");
@@ -6122,14 +6122,38 @@ var init_interceptorRegistry = __esm({
 });
 
 // js/v4/features/supportRefs.js
-function findRef(component, ref) {
-  let refEl = component.el.querySelector(`[wire\\:ref="${ref}"]`);
+function findRef(component, name) {
+  let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`);
   if (!refEl)
-    return console.error(`Ref "${ref}" not found in component "${component.id}"`);
-  return refEl.__livewire?.$wire;
+    return console.error(`Ref "${name}" not found in component "${component.id}"`);
+  let $wire = refEl.__livewire?.$wire;
+  return new Proxy({
+    el: refEl,
+    dispatch(eventName, params) {
+      dispatchRef(component, name, eventName, params);
+    }
+  }, {
+    get(target, property) {
+      if (property in target)
+        return target[property];
+      if (!$wire)
+        return console.error(`Ref "${name}" is not a component`);
+      return $wire[property];
+    },
+    set(target, property, value) {
+      if (!$wire)
+        return console.error(`Ref "${name}" is not a component`);
+      $wire[property] = value;
+      return true;
+    }
+  });
+}
+function findRefEl(component, name) {
+  return findRef(component, name).el;
 }
 var init_supportRefs = __esm({
   "js/v4/features/supportRefs.js"() {
+    init_events();
   }
 });
 
@@ -6182,6 +6206,7 @@ function wireFallback(callback) {
   fallback = callback;
 }
 function generateWireObject(component, state) {
+  let isScoped = false;
   return new Proxy({}, {
     get(target, property) {
       if (property === "__instance")
@@ -6243,9 +6268,7 @@ var init_wire = __esm({
       "js": "$js",
       "get": "$get",
       "set": "$set",
-      "ref": "$ref",
-      "refs": "$ref",
-      "$refs": "$ref",
+      "refs": "$refs",
       "call": "$call",
       "hook": "$hook",
       "watch": "$watch",
@@ -6258,7 +6281,6 @@ var init_wire = __esm({
       "intercept": "$intercept",
       "paginator": "$paginator",
       "dispatchTo": "$dispatchTo",
-      "dispatchRef": "$dispatchRef",
       "dispatchSelf": "$dispatchSelf",
       "removeUpload": "$removeUpload",
       "cancelUpload": "$cancelUpload",
@@ -6312,7 +6334,7 @@ var init_wire = __esm({
       }
       return Promise.resolve();
     });
-    wireProperty("$ref", (component) => {
+    wireProperty("$refs", (component) => {
       let fn = (name) => findRef(component, name);
       return new Proxy(fn, {
         get(target, property) {
@@ -6400,7 +6422,6 @@ var init_wire = __esm({
     wireProperty("$dispatch", (component) => (...params) => dispatch2(component, ...params));
     wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
     wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
-    wireProperty("$dispatchRef", (component) => (...params) => dispatchRef(component, ...params));
     wireProperty("$upload", (component) => (...params) => upload(component, ...params));
     wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
     wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
@@ -6670,10 +6691,8 @@ function dispatchTo(componentName, name, params) {
   });
 }
 function dispatchRef(component, ref, name, params) {
-  let target = findRef(component, ref);
-  if (!target)
-    return;
-  dispatchEvent(target.__instance.el, name, params, false);
+  let el = findRefEl(component, ref);
+  dispatchEvent(el, name, params, false);
 }
 function listen2(component, name, callback) {
   component.el.addEventListener(name, (e) => {
@@ -11996,6 +12015,7 @@ on("effect", ({ component, effects }) => {
 });
 function dispatchEvents(component, dispatches) {
   dispatches.forEach(({ name, params = {}, self: self2 = false, to, ref }) => {
+    console.log(ref);
     if (self2)
       dispatchSelf(component, name, params);
     else if (to)

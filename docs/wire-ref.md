@@ -7,7 +7,7 @@ They're a tidy alternative, but conceptually similar, to using something like cl
 
 Here are a list of use-cases:
 
-- Dispatching an event on a specific element
+- Dispatching an event to a specific component
 - Targeting a Livewire component using `$refs`
 - Accessing DOM elements within a component from JavaScript
 - Streaming content to a specific element
@@ -52,6 +52,7 @@ new class extends Livewire\Component {
         //
 
         $this->dispatch('close', ref: 'modal');
+        // todo: add dispatch to: as a named parameter.
     }
 };
 ?>
@@ -77,6 +78,14 @@ Similar to Livewire's `$parent` magic, the `$refs` magic allows you target anoth
 
     <livewire:modal wire:ref="modal">
         <button wire:click="$refs.modal.close()">Close</button>
+
+        <button wire:click="$refs.modal.()">Close</button>
+
+        <button wire:click="$refs.modal.dispatch('close')">Close</button>
+
+        <button wire:click="$parent.dispatch('close')">Close</button>
+
+        <button wire:click="$dispatchRef('modal', 'close')">Close</button>
 
         <!-- ... -->
     </livewire:modal>

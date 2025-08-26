@@ -16,6 +16,24 @@ class Event
     {
         $this->name = $name;
         $this->params = $params;
+
+        if (isset($params['ref'])) {
+            $this->ref($params['ref']);
+
+            unset($params['ref']);
+        }
+
+        if (isset($params['self'])) {
+            $this->self();
+
+            unset($params['self']);
+        }
+
+        if (isset($params['to'])) {
+            $this->component($params['to']);
+
+            unset($params['to']);
+        }
     }
 
     public function self()
