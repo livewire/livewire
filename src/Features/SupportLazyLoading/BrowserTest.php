@@ -2,7 +2,9 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
+use Livewire\Attributes\On;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -287,6 +289,59 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_it_executes_mount_on_lazy_component_that_listens_for_events()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return Blade::render(<<<HTML
+            <div x-data="{display: false}">
+                <div x-bind:style="! display && {display: 'none'}">
+                    <livewire:child lazy />
+                </div>
+                <button @click="Livewire.dispatch('foo')" dusk="button"></button>
+                <button @click="display = true" dusk="show"></button>
+            </div>
+            HTML); }
+        }, 'child' => new class extends Component {
+            public $message = 'Hello from property';
+
+            public function mount()
+            {
+                $this->message = 'Hello from mount!';
+            }
+
+            function render()
+            {
+                return Blade::render(<<<'HTML'
+                <div id="child">
+                    {{ $message }}
+                </div>
+                HTML, ['message' => $this->message]);
+            }
+
+            public function placeholder()
+            {
+                return Blade::render(<<<'HTML'
+                <div>
+                    loading
+                </div>
+                HTML);
+            }
+
+            #[On('foo')]
+            function onFoo()
+            {
+                // something
+            }
+        }])
+            ->assertDontSee('loading') // because component has display: none (so that x-intersect doesn't trigger)
+            ->click('@button') // Trigger the event
+            ->assertDontSee('loading') // because component still has display: none
+            ->click('@show') // Show component
+            ->assertSee('loading') // now we should actually see the lazy component placeholder
+            ->waitFor('#child') // wait for the lazy component to load because we previously removed the display: none
+            ->assertSee('Hello from mount!') // We should see the $message set from the mount method
+            ;
+    }
 }
 
 class Page extends Component {
