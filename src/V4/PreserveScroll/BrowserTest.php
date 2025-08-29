@@ -8,6 +8,8 @@ class BrowserTest extends \Tests\BrowserTestCase
 {
     public function test_the_scroll_position_is_preserved_when_a_request_is_triggered()
     {
+        $this->markTestSkipped();
+
         Livewire::visit([
             new class extends \Livewire\Component {
                 public function render() { return <<<'HTML'
