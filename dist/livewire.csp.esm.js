@@ -448,9 +448,9 @@ var init_supportFileUploads = __esm({
   }
 });
 
-// node_modules/alpinejs/dist/module.cjs.js
+// node_modules/@alpinejs/csp/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -3361,6 +3361,41 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       bind: bind2
     };
     var alpine_default = Alpine24;
+    function cspEvaluator(el, expression) {
+      let dataStack = generateDataStack(el);
+      if (typeof expression === "function") {
+        return generateEvaluatorFromFunction(dataStack, expression);
+      }
+      let evaluator = generateEvaluator(el, expression, dataStack);
+      return tryCatch.bind(null, el, expression, evaluator);
+    }
+    function generateDataStack(el) {
+      let overriddenMagics = {};
+      injectMagics(overriddenMagics, el);
+      return [overriddenMagics, ...closestDataStack(el)];
+    }
+    function generateEvaluator(el, expression, dataStack) {
+      return (receiver = () => {
+      }, { scope: scope2 = {}, params = [] } = {}) => {
+        let completeScope = mergeProxies([scope2, ...dataStack]);
+        let evaluatedExpression = expression.split(".").reduce((currentScope, currentExpression) => {
+          if (currentScope[currentExpression] === void 0) {
+            throwExpressionError(el, expression);
+          }
+          return currentScope[currentExpression];
+        }, completeScope);
+        runIfTypeOfFunction(receiver, evaluatedExpression, completeScope, params);
+      };
+    }
+    function throwExpressionError(el, expression) {
+      console.warn(`Alpine Error: Alpine is unable to interpret the following expression using the CSP-friendly build:
+
+"${expression}"
+
+Read more about the Alpine's CSP-friendly build restrictions here: https://alpinejs.dev/advanced/csp
+
+`, el);
+    }
     var import_reactivity10 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
@@ -4255,7 +4290,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function warnMissingPluginDirective(name, directiveName, slug) {
       directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
-    alpine_default.setEvaluator(normalEvaluator);
+    alpine_default.setEvaluator(cspEvaluator);
     alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
     var src_default = alpine_default;
     var module_default = src_default;
@@ -10584,7 +10619,7 @@ var init_v4 = __esm({
   }
 });
 
-// js/index.js
+// js/csp.js
 init_events();
 init_store();
 
@@ -11766,7 +11801,7 @@ function ensureLivewireScriptIsntMisplaced() {
   }
 }
 
-// js/index.js
+// js/csp.js
 init_hooks();
 init_directives();
 var import_alpinejs22 = __toESM(require_module_cjs());
@@ -13239,7 +13274,7 @@ import_alpinejs20.default.interceptInit((el) => {
   }
 });
 
-// js/index.js
+// js/csp.js
 var Livewire2 = {
   directive,
   dispatchTo,
@@ -13298,4 +13333,4 @@ focus-trap/dist/focus-trap.js:
   * @license MIT, https://github.com/focus-trap/focus-trap/blob/master/LICENSE
   *)
 */
-//# sourceMappingURL=livewire.esm.js.map
+//# sourceMappingURL=livewire.csp.esm.js.map
