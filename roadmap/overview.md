@@ -4,15 +4,18 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 ## V4 Checklist
 - [x] Blaze
 - [x] Route::livewire()
+- [x] wire:ref
+- [ ] Support wire:model on dialog and popover elements
+- [ ] CSP-safe
 - [ ] Interceptors
 - [ ] data-loading
-- [ ] wire:ref
 - [ ] Slots
 - [ ] Attributes
 - [ ] Getters/setter properties
 - [ ] Multi-file components
 - [ ] Single file components
 - [ ] Islands
+- [ ] Streaming
 - [ ] Make command
 - [ ] Convert commands to Prompts
 
