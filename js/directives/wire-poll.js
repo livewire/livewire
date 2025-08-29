@@ -1,7 +1,7 @@
 import { directive, getDirectives } from "@/directives"
-import Alpine from 'alpinejs'
 import { on } from '@/hooks'
 import Action from '@/v4/requests/action'
+import { evaluateActionExpression } from '../evaluator'
 
 directive('poll', ({ el, directive, component }) => {
     let interval = extractDurationFrom(directive.modifiers, 2000)
@@ -57,16 +57,16 @@ function triggerComponentRequest(el, directive, component) {
             directive,
         })
 
-        Alpine.evaluate(el,
-            directive.expression ? '$wire.' + directive.expression : '$wire.$refresh()'
-        )
+        let fullMethod = directive.expression ?? '$refresh'
+
+        evaluateActionExpression(component, el, fullMethod)
 
         return
     }
 
-    Alpine.evaluate(el,
-        directive.expression ? '$wire.' + directive.expression : '$wire.$commit()'
-    )
+    let fullMethod = directive.expression ?? '$commit'
+
+    evaluateActionExpression(component, el, fullMethod)
 }
 
 function poll(callback, interval = 2000) {

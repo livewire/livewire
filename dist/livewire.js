@@ -6466,6 +6466,45 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
+  // js/evaluator.js
+  function evaluateExpression(component, el, expression, options = {}) {
+    options = {
+      ...{
+        scope: {
+          $wire: component.$wire
+        },
+        context: component.$wire,
+        ...options.scope,
+        ...options.context
+      },
+      ...options
+    };
+    return module_default.evaluate(el, expression, options);
+  }
+  function evaluateActionExpression(component, el, expression, options = {}) {
+    let negated = false;
+    if (expression.startsWith("!")) {
+      negated = true;
+      expression = expression.slice(1).trim();
+    }
+    let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`;
+    return module_default.evaluate(el, contextualExpression, options);
+  }
+  function evaluateActionExpressionWithoutComponentScope(el, expression, options = {}) {
+    let negated = false;
+    if (expression.startsWith("!")) {
+      negated = true;
+      expression = expression.slice(1).trim();
+    }
+    let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`;
+    return module_default.evaluate(el, contextualExpression, options);
+  }
+  var init_evaluator = __esm({
+    "js/evaluator.js"() {
+      init_module_esm();
+    }
+  });
+
   // js/v4/requests/index.js
   var init_requests = __esm({
     "js/v4/requests/index.js"() {
@@ -6529,14 +6568,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "js/v4/features/supportWireIntersect.js"() {
       init_module_esm();
       init_directives();
+      init_evaluator();
       module_default.interceptInit((el) => {
         for (let i = 0; i < el.attributes.length; i++) {
           if (el.attributes[i].name.startsWith("wire:intersect")) {
             let { name, value } = el.attributes[i];
             let directive3 = extractDirective(el, name);
             let modifierString = name.split("wire:intersect")[1];
-            let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-            let evaluator = module_default.evaluateLater(el, expression);
+            let expression = value.trim();
             module_default.bind(el, {
               ["x-intersect" + modifierString](e) {
                 directive3.eventContext = e;
@@ -6545,7 +6584,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                   el,
                   directive: directive3
                 });
-                evaluator();
+                evaluateActionExpression(component, el, expression);
               }
             });
           }
@@ -10916,6 +10955,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/supportScriptsAndAssets.js
   init_hooks();
   init_module_esm();
+  init_evaluator();
   var executedScripts = /* @__PURE__ */ new WeakMap();
   var executedAssets = /* @__PURE__ */ new Set();
   on2("payload.intercept", async ({ assets }) => {
@@ -10944,10 +10984,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key2, () => {
           let scriptContent = extractScriptTagContent(content);
           module_default.dontAutoEvaluateFunctions(() => {
-            module_default.evaluate(component.el, scriptContent, {
-              context: component.$wire,
+            evaluateExpression(component, component.el, scriptContent, {
               scope: {
-                "$wire": component.$wire,
                 "$js": component.$wire.$js
               }
             });
@@ -11022,6 +11060,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportJsEvaluation.js
+  init_evaluator();
   init_store();
   init_wire();
   init_hooks();
@@ -11036,14 +11075,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (js) {
       Object.entries(js).forEach(([method, body]) => {
         overrideMethod(component, method, () => {
-          module_default.evaluate(component.el, body);
+          evaluateExpression(component, component.el, body);
         });
       });
     }
     if (xjs) {
       xjs.forEach(({ expression, params }) => {
         params = Object.values(params);
-        module_default.evaluate(component.el, expression, { scope: component.jsActions, params });
+        evaluateExpression(component, component.el, expression, { scope: component.jsActions, params });
       });
     }
   });
@@ -11618,6 +11657,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   init_directives();
   init_hooks();
   init_module_esm();
+  init_evaluator();
   on2("directive.init", ({ el, directive: directive3, cleanup: cleanup2, component }) => {
     if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive3.value))
       return;
@@ -11637,7 +11677,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               el,
               directive: directive3
             });
-            module_default.evaluate(el, "await $wire." + directive3.expression, { scope: { $event: e } });
+            evaluateActionExpression(component, el, directive3.expression, { scope: { $event: e } });
           });
         };
         if (el.__livewire_confirm) {
@@ -12176,17 +12216,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire-init.js
   init_directives();
-  init_module_esm();
-  directive2("init", ({ el, directive: directive3 }) => {
+  init_evaluator();
+  directive2("init", ({ component, el, directive: directive3 }) => {
     let fullMethod = directive3.expression ?? "$refresh";
-    module_default.evaluate(el, `$wire.${fullMethod}`);
+    evaluateActionExpression(component, el, fullMethod);
   });
 
   // js/directives/wire-poll.js
   init_directives();
-  init_module_esm();
   init_hooks();
   init_action();
+  init_evaluator();
   directive2("poll", ({ el, directive: directive3, component }) => {
     let interval = extractDurationFrom(directive3.modifiers, 2e3);
     let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
@@ -12229,10 +12269,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el,
         directive: directive3
       });
-      module_default.evaluate(el, directive3.expression ? "$wire." + directive3.expression : "$wire.$refresh()");
+      let fullMethod2 = directive3.expression ?? "$refresh";
+      evaluateActionExpression(component, el, fullMethod2);
       return;
     }
-    module_default.evaluate(el, directive3.expression ? "$wire." + directive3.expression : "$wire.$commit()");
+    let fullMethod = directive3.expression ?? "$commit";
+    evaluateActionExpression(component, el, fullMethod);
   }
   function poll(callback, interval = 2e3) {
     let pauseConditions = [];
@@ -12321,16 +12363,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire-show.js
+  init_evaluator();
   init_module_esm();
   module_default.interceptInit((el) => {
     for (let i = 0; i < el.attributes.length; i++) {
       if (el.attributes[i].name.startsWith("wire:show")) {
         let { name, value } = el.attributes[i];
         let modifierString = name.split("wire:show")[1];
-        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+        let expression = value.trim();
         module_default.bind(el, {
           ["x-show" + modifierString]() {
-            return module_default.evaluate(el, expression);
+            return evaluateActionExpressionWithoutComponentScope(el, expression);
           }
         });
       }
@@ -12339,15 +12382,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire-text.js
   init_module_esm();
+  init_evaluator();
   module_default.interceptInit((el) => {
     for (let i = 0; i < el.attributes.length; i++) {
       if (el.attributes[i].name.startsWith("wire:text")) {
         let { name, value } = el.attributes[i];
         let modifierString = name.split("wire:text")[1];
-        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+        let expression = value.trim();
         module_default.bind(el, {
           ["x-text" + modifierString]() {
-            return module_default.evaluate(el, expression);
+            return evaluateActionExpressionWithoutComponentScope(el, expression);
           }
         });
       }

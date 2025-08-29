@@ -3295,7 +3295,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
         return obj;
       }
-      var Alpine24 = {
+      var Alpine23 = {
         get reactive() {
           return reactive;
         },
@@ -3361,7 +3361,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         data,
         bind: bind2
       };
-      var alpine_default = Alpine24;
+      var alpine_default = Alpine23;
       function cspEvaluator(el, expression) {
         let dataStack = generateDataStack(el);
         if (typeof expression === "function") {
@@ -7135,6 +7135,46 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     }
   });
 
+  // js/evaluator.js
+  function evaluateExpression(component, el, expression, options = {}) {
+    options = {
+      ...{
+        scope: {
+          $wire: component.$wire
+        },
+        context: component.$wire,
+        ...options.scope,
+        ...options.context
+      },
+      ...options
+    };
+    return import_alpinejs7.default.evaluate(el, expression, options);
+  }
+  function evaluateActionExpression(component, el, expression, options = {}) {
+    let negated = false;
+    if (expression.startsWith("!")) {
+      negated = true;
+      expression = expression.slice(1).trim();
+    }
+    let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`;
+    return import_alpinejs7.default.evaluate(el, contextualExpression, options);
+  }
+  function evaluateActionExpressionWithoutComponentScope(el, expression, options = {}) {
+    let negated = false;
+    if (expression.startsWith("!")) {
+      negated = true;
+      expression = expression.slice(1).trim();
+    }
+    let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`;
+    return import_alpinejs7.default.evaluate(el, contextualExpression, options);
+  }
+  var import_alpinejs7;
+  var init_evaluator = __esm({
+    "js/evaluator.js"() {
+      import_alpinejs7 = __toESM(require_module_cjs());
+    }
+  });
+
   // js/v4/requests/index.js
   var init_requests = __esm({
     "js/v4/requests/index.js"() {
@@ -7194,20 +7234,20 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   });
 
   // js/v4/features/supportWireIntersect.js
-  var import_alpinejs21;
+  var import_alpinejs20;
   var init_supportWireIntersect = __esm({
     "js/v4/features/supportWireIntersect.js"() {
-      import_alpinejs21 = __toESM(require_module_cjs());
+      import_alpinejs20 = __toESM(require_module_cjs());
       init_directives();
-      import_alpinejs21.default.interceptInit((el) => {
+      init_evaluator();
+      import_alpinejs20.default.interceptInit((el) => {
         for (let i = 0; i < el.attributes.length; i++) {
           if (el.attributes[i].name.startsWith("wire:intersect")) {
             let { name, value } = el.attributes[i];
             let directive2 = extractDirective(el, name);
             let modifierString = name.split("wire:intersect")[1];
-            let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-            let evaluator = import_alpinejs21.default.evaluateLater(el, expression);
-            import_alpinejs21.default.bind(el, {
+            let expression = value.trim();
+            import_alpinejs20.default.bind(el, {
               ["x-intersect" + modifierString](e) {
                 directive2.eventContext = e;
                 let component = el.closest("[wire\\:id]")?.__livewire;
@@ -7215,7 +7255,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
                   el,
                   directive: directive2
                 });
-                evaluator();
+                evaluateActionExpression(component, el, expression);
               }
             });
           }
@@ -7430,8 +7470,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   init_hooks();
 
   // node_modules/@alpinejs/collapse/dist/module.esm.js
-  function src_default(Alpine24) {
-    Alpine24.directive("collapse", collapse);
+  function src_default(Alpine23) {
+    Alpine23.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
       if (!modifiers.includes("min"))
         return;
@@ -7451,7 +7491,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       if (!el._x_isShown)
         el.style.overflow = "hidden";
       let setFunction = (el2, styles) => {
-        let revertFunction = Alpine24.setStyles(el2, styles);
+        let revertFunction = Alpine23.setStyles(el2, styles);
         return styles.height ? () => {
         } : revertFunction;
       };
@@ -7474,7 +7514,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
           if (current === full) {
             current = floor2;
           }
-          Alpine24.transition(el, Alpine24.setStyles, {
+          Alpine23.transition(el, Alpine23.setStyles, {
             during: transitionStyles,
             start: { height: current + "px" },
             end: { height: full + "px" }
@@ -7488,7 +7528,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         }, after = () => {
         }) {
           let full = el.getBoundingClientRect().height;
-          Alpine24.transition(el, setFunction, {
+          Alpine23.transition(el, setFunction, {
             during: transitionStyles,
             start: { height: full + "px" },
             end: { height: floor2 + "px" }
@@ -8271,14 +8311,14 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     trap.updateContainerElements(elements);
     return trap;
   };
-  function src_default2(Alpine24) {
+  function src_default2(Alpine23) {
     let lastFocused;
     let currentFocused;
     window.addEventListener("focusin", () => {
       lastFocused = currentFocused;
       currentFocused = document.activeElement;
     });
-    Alpine24.magic("focus", (el) => {
+    Alpine23.magic("focus", (el) => {
       let within = el;
       return {
         __noscroll: false,
@@ -8382,7 +8422,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         }
       };
     });
-    Alpine24.directive("trap", Alpine24.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup }) => {
+    Alpine23.directive("trap", Alpine23.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup }) => {
       let evaluator = evaluateLater(expression);
       let oldValue = false;
       let options = {
@@ -8473,7 +8513,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   var module_default2 = src_default2;
 
   // node_modules/@alpinejs/persist/dist/module.esm.js
-  function src_default3(Alpine24) {
+  function src_default3(Alpine23) {
     let persist = () => {
       let alias;
       let storage;
@@ -8488,11 +8528,11 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
           setItem: dummy.set.bind(dummy)
         };
       }
-      return Alpine24.interceptor((initialValue, getter, setter, path, key2) => {
+      return Alpine23.interceptor((initialValue, getter, setter, path, key2) => {
         let lookup = alias || `_x_${path}`;
         let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
         setter(initial);
-        Alpine24.effect(() => {
+        Alpine23.effect(() => {
           let value = getter();
           storageSet(lookup, value, storage);
           setter(value);
@@ -8508,12 +8548,12 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         };
       });
     };
-    Object.defineProperty(Alpine24, "$persist", { get: () => persist() });
-    Alpine24.magic("persist", persist);
-    Alpine24.persist = (key2, { get, set }, storage = localStorage) => {
+    Object.defineProperty(Alpine23, "$persist", { get: () => persist() });
+    Alpine23.magic("persist", persist);
+    Alpine23.persist = (key2, { get, set }, storage = localStorage) => {
       let initial = storageHas(key2, storage) ? storageGet(key2, storage) : get();
       set(initial);
-      Alpine24.effect(() => {
+      Alpine23.effect(() => {
         let value = get();
         storageSet(key2, value, storage);
         set(value);
@@ -8535,8 +8575,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   var module_default3 = src_default3;
 
   // node_modules/@alpinejs/intersect/dist/module.esm.js
-  function src_default4(Alpine24) {
-    Alpine24.directive("intersect", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
+  function src_default4(Alpine23) {
+    Alpine23.directive("intersect", Alpine23.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
       let evaluate2 = evaluateLater(expression);
       let options = {
         rootMargin: getRootMargin(modifiers),
@@ -8590,8 +8630,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   var module_default4 = src_default4;
 
   // node_modules/@alpinejs/resize/dist/module.esm.js
-  function src_default5(Alpine24) {
-    Alpine24.directive("resize", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
+  function src_default5(Alpine23) {
+    Alpine23.directive("resize", Alpine23.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
       let evaluator = evaluateLater(expression);
       let evaluate2 = (width, height) => {
         evaluator(() => {
@@ -9808,20 +9848,20 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       platform: platformWithCache
     });
   };
-  function src_default6(Alpine24) {
-    Alpine24.magic("anchor", (el) => {
+  function src_default6(Alpine23) {
+    Alpine23.magic("anchor", (el) => {
       if (!el._x_anchor)
         throw "Alpine: No x-anchor directive found on element using $anchor...";
       return el._x_anchor;
     });
-    Alpine24.interceptClone((from, to) => {
+    Alpine23.interceptClone((from, to) => {
       if (from && from._x_anchor && !to._x_anchor) {
         to._x_anchor = from._x_anchor;
       }
     });
-    Alpine24.directive("anchor", Alpine24.skipDuringClone((el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
+    Alpine23.directive("anchor", Alpine23.skipDuringClone((el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
       let { placement, offsetValue, unstyled } = getOptions(modifiers);
-      el._x_anchor = Alpine24.reactive({ x: 0, y: 0 });
+      el._x_anchor = Alpine23.reactive({ x: 0, y: 0 });
       let reference = evaluate2(expression);
       if (!reference)
         throw "Alpine: no element provided to x-anchor...";
@@ -10562,8 +10602,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   var showProgressBar = true;
   var restoreScroll = true;
   var autofocus = false;
-  function navigate_default(Alpine24) {
-    Alpine24.navigate = (url, options = {}) => {
+  function navigate_default(Alpine23) {
+    Alpine23.navigate = (url, options = {}) => {
       let { preserveScroll = false } = options;
       let destination = createUrlObjectFromString(url);
       let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
@@ -10575,11 +10615,11 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         return;
       navigateTo(destination, { preserveScroll });
     };
-    Alpine24.navigate.disableProgressBar = () => {
+    Alpine23.navigate.disableProgressBar = () => {
       showProgressBar = false;
     };
-    Alpine24.addInitSelector(() => `[${Alpine24.prefixed("navigate")}]`);
-    Alpine24.directive("navigate", (el, { modifiers }) => {
+    Alpine23.addInitSelector(() => `[${Alpine23.prefixed("navigate")}]`);
+    Alpine23.directive("navigate", (el, { modifiers }) => {
       let shouldPrefetchOnHover = modifiers.includes("hover");
       let preserveScroll = modifiers.includes("preserve-scroll");
       shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
@@ -10620,7 +10660,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
-        preventAlpineFromPickingUpDomChanges(Alpine24, (andAfterAllThis) => {
+        preventAlpineFromPickingUpDomChanges(Alpine23, (andAfterAllThis) => {
           enablePersist && storePersistantElementsForLater((persistedEl) => {
             packUpPersistedTeleports(persistedEl);
             packUpPersistedPopovers(persistedEl);
@@ -10642,7 +10682,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
                 setTimeout(() => {
                   autofocus && autofocusElementsWithTheAutofocusAttribute();
                 });
-                nowInitializeAlpineOnTheNewPage(Alpine24);
+                nowInitializeAlpineOnTheNewPage(Alpine23);
                 fireEventForOtherLibrariesToHookInto("alpine:navigated");
                 showProgressBar && finishAndHideProgressBar();
               });
@@ -10677,7 +10717,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       storeScrollInformationInHtmlBeforeNavigatingAway();
       fireEventForOtherLibrariesToHookInto("alpine:navigating");
       updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
-      preventAlpineFromPickingUpDomChanges(Alpine24, (andAfterAllThis) => {
+      preventAlpineFromPickingUpDomChanges(Alpine23, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
           packUpPersistedPopovers(persistedEl);
@@ -10692,7 +10732,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
           restoreScrollPositionOrScrollToTop();
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
-            nowInitializeAlpineOnTheNewPage(Alpine24);
+            nowInitializeAlpineOnTheNewPage(Alpine23);
             fireEventForOtherLibrariesToHookInto("alpine:navigated");
           });
         });
@@ -10707,10 +10747,10 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       fetchHtml(fromDestination, callback, errorCallback);
     });
   }
-  function preventAlpineFromPickingUpDomChanges(Alpine24, callback) {
-    Alpine24.stopObservingMutations();
+  function preventAlpineFromPickingUpDomChanges(Alpine23, callback) {
+    Alpine23.stopObservingMutations();
     callback((afterAllThis) => {
-      Alpine24.startObservingMutations();
+      Alpine23.startObservingMutations();
       queueMicrotask(() => {
         afterAllThis();
       });
@@ -10725,8 +10765,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     document.dispatchEvent(event);
     return event.defaultPrevented;
   }
-  function nowInitializeAlpineOnTheNewPage(Alpine24) {
-    Alpine24.initTree(document.body, void 0, (el, skip) => {
+  function nowInitializeAlpineOnTheNewPage(Alpine23) {
+    Alpine23.initTree(document.body, void 0, (el, skip) => {
       if (el._x_wasPersisted)
         skip();
     });
@@ -10750,8 +10790,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
 
   // js/plugins/history/index.js
   init_utils();
-  function history2(Alpine24) {
-    Alpine24.magic("queryString", (el, { interceptor }) => {
+  function history2(Alpine23) {
+    Alpine23.magic("queryString", (el, { interceptor }) => {
       let alias;
       let alwaysShow = false;
       let usePush = false;
@@ -10760,9 +10800,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         let { initial, replace: replace2, push: push2, pop } = track(queryKey, initialSeedValue, alwaysShow);
         setter(initial);
         if (!usePush) {
-          Alpine24.effect(() => replace2(getter()));
+          Alpine23.effect(() => replace2(getter()));
         } else {
-          Alpine24.effect(() => push2(getter()));
+          Alpine23.effect(() => push2(getter()));
           pop(async (newValue) => {
             setter(newValue);
             let tillTheEndOfTheMicrotaskQueue = () => Promise.resolve();
@@ -10785,7 +10825,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         };
       });
     });
-    Alpine24.history = { track };
+    Alpine23.history = { track };
   }
   function track(name, initialSeedValue, alwaysShow = false, except = null) {
     let { has, get, set, remove } = queryStringUtils();
@@ -11304,14 +11344,14 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     to.setAttribute("id", fromId);
     to.id = fromId;
   }
-  function src_default7(Alpine24) {
-    Alpine24.morph = morph2;
+  function src_default7(Alpine23) {
+    Alpine23.morph = morph2;
   }
   var module_default7 = src_default7;
 
   // node_modules/@alpinejs/mask/dist/module.esm.js
-  function src_default8(Alpine24) {
-    Alpine24.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
+  function src_default8(Alpine23) {
+    Alpine23.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
       let templateFn = () => expression;
       let lastInputValue = "";
       queueMicrotask(() => {
@@ -11320,7 +11360,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
           effect(() => {
             templateFn = (input) => {
               let result;
-              Alpine24.dontAutoEvaluateFunctions(() => {
+              Alpine23.dontAutoEvaluateFunctions(() => {
                 evaluator((value2) => {
                   result = typeof value2 === "function" ? value2(input) : value2;
                 }, { scope: {
@@ -11554,7 +11594,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   // js/csp.js
   init_hooks();
   init_directives();
-  var import_alpinejs22 = __toESM(require_module_cjs());
+  var import_alpinejs21 = __toESM(require_module_cjs());
   init_interceptorRegistry();
 
   // js/features/supportListeners.js
@@ -11585,7 +11625,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
 
   // js/features/supportScriptsAndAssets.js
   init_hooks();
-  var import_alpinejs7 = __toESM(require_module_cjs());
+  var import_alpinejs8 = __toESM(require_module_cjs());
+  init_evaluator();
   var executedScripts = /* @__PURE__ */ new WeakMap();
   var executedAssets = /* @__PURE__ */ new Set();
   on("payload.intercept", async ({ assets }) => {
@@ -11613,11 +11654,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       Object.entries(scripts).forEach(([key2, content]) => {
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key2, () => {
           let scriptContent = extractScriptTagContent(content);
-          import_alpinejs7.default.dontAutoEvaluateFunctions(() => {
-            import_alpinejs7.default.evaluate(component.el, scriptContent, {
-              context: component.$wire,
+          import_alpinejs8.default.dontAutoEvaluateFunctions(() => {
+            evaluateExpression(component, component.el, scriptContent, {
               scope: {
-                "$wire": component.$wire,
                 "$js": component.$wire.$js
               }
             });
@@ -11692,11 +11731,12 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }
 
   // js/features/supportJsEvaluation.js
+  init_evaluator();
   init_store();
   init_wire();
   init_hooks();
-  var import_alpinejs8 = __toESM(require_module_cjs());
-  import_alpinejs8.default.magic("js", (el) => {
+  var import_alpinejs9 = __toESM(require_module_cjs());
+  import_alpinejs9.default.magic("js", (el) => {
     let component = closestComponent(el);
     return component.$wire.js;
   });
@@ -11706,14 +11746,14 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     if (js) {
       Object.entries(js).forEach(([method, body]) => {
         overrideMethod(component, method, () => {
-          import_alpinejs8.default.evaluate(component.el, body);
+          evaluateExpression(component, component.el, body);
         });
       });
     }
     if (xjs) {
       xjs.forEach(({ expression, params }) => {
         params = Object.values(params);
-        import_alpinejs8.default.evaluate(component.el, expression, { scope: component.jsActions, params });
+        evaluateExpression(component, component.el, expression, { scope: component.jsActions, params });
       });
     }
   });
@@ -11763,7 +11803,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   init_directives();
   init_hooks();
   init_utils();
-  var import_alpinejs9 = __toESM(require_module_cjs());
+  var import_alpinejs10 = __toESM(require_module_cjs());
   var cleanups = new Bag();
   on("directive.init", ({ el, directive: directive2, cleanup, component }) => setTimeout(() => {
     if (directive2.value !== "submit")
@@ -11782,7 +11822,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   });
   function disableForm(formEl) {
     let undos = [];
-    import_alpinejs9.default.walk(formEl, (el, skip) => {
+    import_alpinejs10.default.walk(formEl, (el, skip) => {
       if (!formEl.contains(el))
         return;
       if (el.hasAttribute("wire:ignore"))
@@ -11963,7 +12003,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   // js/features/supportQueryString.js
   init_hooks();
   init_utils();
-  var import_alpinejs10 = __toESM(require_module_cjs());
+  var import_alpinejs11 = __toESM(require_module_cjs());
   on("effect", ({ component, effects, cleanup }) => {
     let queryString = effects["url"];
     if (!queryString)
@@ -11975,10 +12015,10 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
       let { replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow, except);
       if (use === "replace") {
-        let effectReference = import_alpinejs10.default.effect(() => {
+        let effectReference = import_alpinejs11.default.effect(() => {
           replace2(dataGet(component.reactive, name));
         });
-        cleanup(() => import_alpinejs10.default.release(effectReference));
+        cleanup(() => import_alpinejs11.default.release(effectReference));
       } else if (use === "push") {
         let forgetCommitHandler = on("commit", ({ component: commitComponent, succeed }) => {
           if (component !== commitComponent)
@@ -12234,21 +12274,21 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   // js/directives/wire-transition.js
   init_directives();
   init_hooks();
-  var import_alpinejs11 = __toESM(require_module_cjs());
+  var import_alpinejs12 = __toESM(require_module_cjs());
   on("morph.added", ({ el }) => {
     el.__addedByMorph = true;
   });
   directive("transition", ({ el, directive: directive2, component, cleanup }) => {
     for (let i = 0; i < el.attributes.length; i++) {
       if (el.attributes[i].name.startsWith("wire:show")) {
-        import_alpinejs11.default.bind(el, {
+        import_alpinejs12.default.bind(el, {
           [directive2.rawName.replace("wire:transition", "x-transition")]: directive2.expression
         });
         return;
       }
     }
-    let visibility = import_alpinejs11.default.reactive({ state: el.__addedByMorph ? false : true });
-    import_alpinejs11.default.bind(el, {
+    let visibility = import_alpinejs12.default.reactive({ state: el.__addedByMorph ? false : true });
+    import_alpinejs12.default.bind(el, {
       [directive2.rawName.replace("wire:", "x-")]: "",
       "x-show"() {
         return visibility.state;
@@ -12287,7 +12327,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   // js/directives/wire-wildcard.js
   init_directives();
   init_hooks();
-  var import_alpinejs12 = __toESM(require_module_cjs());
+  var import_alpinejs13 = __toESM(require_module_cjs());
+  init_evaluator();
   on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
     if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive2.value))
       return;
@@ -12297,7 +12338,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
       attribute = attribute + ".prevent";
     }
-    let cleanupBinding = import_alpinejs12.default.bind(el, {
+    let cleanupBinding = import_alpinejs13.default.bind(el, {
       [attribute](e) {
         directive2.eventContext = e;
         directive2.wire = component.$wire;
@@ -12307,7 +12348,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
               el,
               directive: directive2
             });
-            import_alpinejs12.default.evaluate(el, "await $wire." + directive2.expression, { scope: { $event: e } });
+            evaluateActionExpression(component, el, directive2.expression, { scope: { $event: e } });
           });
         };
         if (el.__livewire_confirm) {
@@ -12325,23 +12366,23 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   });
 
   // js/directives/wire-navigate.js
-  var import_alpinejs13 = __toESM(require_module_cjs());
-  import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate]`);
-  import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-  import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
-  import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
-  import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
-  import_alpinejs13.default.interceptInit(import_alpinejs13.default.skipDuringClone((el) => {
+  var import_alpinejs14 = __toESM(require_module_cjs());
+  import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate]`);
+  import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
+  import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
+  import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
+  import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
+  import_alpinejs14.default.interceptInit(import_alpinejs14.default.skipDuringClone((el) => {
     if (el.hasAttribute("wire:navigate")) {
-      import_alpinejs13.default.bind(el, { ["x-navigate"]: true });
+      import_alpinejs14.default.bind(el, { ["x-navigate"]: true });
     } else if (el.hasAttribute("wire:navigate.hover")) {
-      import_alpinejs13.default.bind(el, { ["x-navigate.hover"]: true });
+      import_alpinejs14.default.bind(el, { ["x-navigate.hover"]: true });
     } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
-      import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
+      import_alpinejs14.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
     } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
-      import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
+      import_alpinejs14.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
     } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
-      import_alpinejs13.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
+      import_alpinejs14.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
     }
   }));
   document.addEventListener("alpine:navigating", () => {
@@ -12382,8 +12423,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
 
   // js/directives/wire-current.js
   init_directives();
-  var import_alpinejs14 = __toESM(require_module_cjs());
-  import_alpinejs14.default.addInitSelector(() => `[wire\\:current]`);
+  var import_alpinejs15 = __toESM(require_module_cjs());
+  import_alpinejs15.default.addInitSelector(() => `[wire\\:current]`);
   var onPageChanges = /* @__PURE__ */ new Map();
   document.addEventListener("livewire:navigated", () => {
     onPageChanges.forEach((i) => i(new URL(window.location.href)));
@@ -12698,10 +12739,10 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   });
 
   // js/directives/wire-cloak.js
-  var import_alpinejs15 = __toESM(require_module_cjs());
-  import_alpinejs15.default.interceptInit((el) => {
+  var import_alpinejs16 = __toESM(require_module_cjs());
+  import_alpinejs16.default.interceptInit((el) => {
     if (el.hasAttribute("wire:cloak")) {
-      import_alpinejs15.default.mutateDom(() => el.removeAttribute("wire:cloak"));
+      import_alpinejs16.default.mutateDom(() => el.removeAttribute("wire:cloak"));
     }
   });
 
@@ -12761,7 +12802,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   init_supportFileUploads();
   init_store();
   init_utils();
-  var import_alpinejs16 = __toESM(require_module_cjs());
+  var import_alpinejs17 = __toESM(require_module_cjs());
   init_action();
   directive("model", ({ el, directive: directive2, component, cleanup }) => {
     component = closestComponent(el);
@@ -12789,7 +12830,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
     };
     let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
-    import_alpinejs16.default.bind(el, {
+    import_alpinejs17.default.bind(el, {
       ["@change"]() {
         isLazy && update();
       },
@@ -12846,17 +12887,17 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
 
   // js/directives/wire-init.js
   init_directives();
-  var import_alpinejs17 = __toESM(require_module_cjs());
-  directive("init", ({ el, directive: directive2 }) => {
+  init_evaluator();
+  directive("init", ({ component, el, directive: directive2 }) => {
     let fullMethod = directive2.expression ?? "$refresh";
-    import_alpinejs17.default.evaluate(el, `$wire.${fullMethod}`);
+    evaluateActionExpression(component, el, fullMethod);
   });
 
   // js/directives/wire-poll.js
   init_directives();
-  var import_alpinejs18 = __toESM(require_module_cjs());
   init_hooks();
   init_action();
+  init_evaluator();
   directive("poll", ({ el, directive: directive2, component }) => {
     let interval = extractDurationFrom(directive2.modifiers, 2e3);
     let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
@@ -12899,10 +12940,12 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         el,
         directive: directive2
       });
-      import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$refresh()");
+      let fullMethod2 = directive2.expression ?? "$refresh";
+      evaluateActionExpression(component, el, fullMethod2);
       return;
     }
-    import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
+    let fullMethod = directive2.expression ?? "$commit";
+    evaluateActionExpression(component, el, fullMethod);
   }
   function poll(callback, interval = 2e3) {
     let pauseConditions = [];
@@ -12991,16 +13034,17 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }
 
   // js/directives/wire-show.js
-  var import_alpinejs19 = __toESM(require_module_cjs());
-  import_alpinejs19.default.interceptInit((el) => {
+  init_evaluator();
+  var import_alpinejs18 = __toESM(require_module_cjs());
+  import_alpinejs18.default.interceptInit((el) => {
     for (let i = 0; i < el.attributes.length; i++) {
       if (el.attributes[i].name.startsWith("wire:show")) {
         let { name, value } = el.attributes[i];
         let modifierString = name.split("wire:show")[1];
-        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-        import_alpinejs19.default.bind(el, {
+        let expression = value.trim();
+        import_alpinejs18.default.bind(el, {
           ["x-show" + modifierString]() {
-            return import_alpinejs19.default.evaluate(el, expression);
+            return evaluateActionExpressionWithoutComponentScope(el, expression);
           }
         });
       }
@@ -13008,16 +13052,17 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   });
 
   // js/directives/wire-text.js
-  var import_alpinejs20 = __toESM(require_module_cjs());
-  import_alpinejs20.default.interceptInit((el) => {
+  var import_alpinejs19 = __toESM(require_module_cjs());
+  init_evaluator();
+  import_alpinejs19.default.interceptInit((el) => {
     for (let i = 0; i < el.attributes.length; i++) {
       if (el.attributes[i].name.startsWith("wire:text")) {
         let { name, value } = el.attributes[i];
         let modifierString = name.split("wire:text")[1];
-        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-        import_alpinejs20.default.bind(el, {
+        let expression = value.trim();
+        import_alpinejs19.default.bind(el, {
           ["x-text" + modifierString]() {
-            return import_alpinejs20.default.evaluate(el, expression);
+            return evaluateActionExpressionWithoutComponentScope(el, expression);
           }
         });
       }
@@ -13040,7 +13085,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     dispatch: dispatchGlobal,
     on: on2,
     get navigate() {
-      return import_alpinejs22.default.navigate;
+      return import_alpinejs21.default.navigate;
     }
   };
   var warnAboutMultipleInstancesOf = (entity) => console.warn(`Detected multiple instances of ${entity} running`);
@@ -13052,7 +13097,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     Promise.resolve().then(() => init_v4());
   }
   window.Livewire = Livewire2;
-  window.Alpine = import_alpinejs22.default;
+  window.Alpine = import_alpinejs21.default;
   if (window.livewireScriptConfig === void 0) {
     window.Alpine.__fromLivewire = true;
     document.addEventListener("DOMContentLoaded", () => {

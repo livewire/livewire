@@ -1,3 +1,4 @@
+import { evaluateExpression } from '../evaluator'
 import { closestComponent } from '@/store'
 import { overrideMethod } from '@/$wire'
 import { on } from '@/hooks'
@@ -16,7 +17,7 @@ on('effect', ({ component, effects }) => {
     if (js) {
         Object.entries(js).forEach(([method, body]) => {
             overrideMethod(component, method, () => {
-                Alpine.evaluate(component.el, body)
+                evaluateExpression(component, component.el, body)
             })
         })
     }
@@ -25,7 +26,7 @@ on('effect', ({ component, effects }) => {
         xjs.forEach(({ expression, params }) => {
             params = Object.values(params)
 
-            Alpine.evaluate(component.el, expression, { scope: component.jsActions, params })
+            evaluateExpression(component, component.el, expression, { scope: component.jsActions, params })
         })
     }
 })
