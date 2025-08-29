@@ -208,7 +208,7 @@ export function getNonce() {
         return nonce
     }
 
-    const elWithNonce = document.querySelector('style[data-livewire-style][nonce]')
+    let elWithNonce = document.querySelector('style[data-livewire-style][nonce]')
 
     if (elWithNonce) {
         nonce = elWithNonce.nonce
@@ -234,4 +234,47 @@ export function splitDumpFromContent(content) {
     let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s)
 
     return [dump, content.replace(dump, '')]
+}
+
+export function extractMethodsAndParamsFromRawExpression(expression) {
+    if (! expression || typeof expression !== 'string') return []
+
+    function parseMethod(expr) {
+        if (! expr) return null
+
+        let match = expr.match(/^([^(]+)(?:\(([^)]*)\))?$/)
+
+        if (! match) return null
+
+        let method = match[1].trim()
+        let params = match[2] ? match[2].split(',').map(p => {
+            p = p.trim()
+            if (p.startsWith('"') && p.endsWith('"')) return p.slice(1, -1)
+            if (p.startsWith("'") && p.endsWith("'")) return p.slice(1, -1)
+            let num = Number(p)
+            return isNaN(num) ? p : num
+        }) : []
+
+        return { method, params }
+    }
+
+    let results = []
+    let current = ''
+    let parens = 0
+
+    for (let i = 0; i < expression.length; i++) {
+        let char = expression[i]
+        if (char === '(') parens++
+        if (char === ')') parens--
+        if (char === ',' && parens === 0) {
+            results.push(parseMethod(current.trim()))
+            current = ''
+        } else {
+            current += char
+        }
+    }
+
+    results.push(parseMethod(current.trim()))
+
+    return results.filter(Boolean)
 }

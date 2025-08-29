@@ -3,13 +3,15 @@
     "name": "laravel-livewire",
     "scripts": {
         "build": "node ./scripts/build.js",
-        "watch": "node ./scripts/build.js --watch"
+        "watch": "node ./scripts/build.js --watch",
+        "test": "vitest run"
     },
     "author": "Caleb Porzio",
     "license": "MIT",
     "devDependencies": {
         "brotli-size": "^4.0.0",
-        "esbuild": "^0.14.49"
+        "esbuild": "^0.14.49",
+        "vitest": "^3.2.4"
     },
     "dependencies": {
         "@alpinejs/anchor": "^3.14.9",

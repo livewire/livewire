@@ -140,6 +140,46 @@ function splitDumpFromContent(content) {
   let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
   return [dump, content.replace(dump, "")];
 }
+function extractMethodsAndParamsFromRawExpression(expression) {
+  if (!expression || typeof expression !== "string")
+    return [];
+  function parseMethod(expr) {
+    if (!expr)
+      return null;
+    const match = expr.match(/^([^(]+)(?:\(([^)]*)\))?$/);
+    if (!match)
+      return null;
+    const method = match[1].trim();
+    const params = match[2] ? match[2].split(",").map((p) => {
+      p = p.trim();
+      if (p.startsWith('"') && p.endsWith('"'))
+        return p.slice(1, -1);
+      if (p.startsWith("'") && p.endsWith("'"))
+        return p.slice(1, -1);
+      const num = Number(p);
+      return isNaN(num) ? p : num;
+    }) : [];
+    return { method, params };
+  }
+  const results = [];
+  let current = "";
+  let parens = 0;
+  for (let i = 0; i < expression.length; i++) {
+    const char = expression[i];
+    if (char === "(")
+      parens++;
+    if (char === ")")
+      parens--;
+    if (char === "," && parens === 0) {
+      results.push(parseMethod(current.trim()));
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  results.push(parseMethod(current.trim()));
+  return results.filter(Boolean);
+}
 var Bag, WeakBag, nonce;
 var init_utils = __esm({
   "js/utils.js"() {
@@ -6785,6 +6825,7 @@ var customDirectiveNames, DirectiveManager, Directive;
 var init_directives = __esm({
   "js/directives.js"() {
     init_hooks();
+    init_utils();
     customDirectiveNames = /* @__PURE__ */ new Set();
     DirectiveManager = class {
       constructor(el) {
@@ -6829,29 +6870,7 @@ var init_directives = __esm({
         return methods[0].params;
       }
       parseOutMethodsAndParams(rawMethod) {
-        let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
-        let method = rawMethod;
-        let params = [];
-        let methodAndParamString = method.match(methodRegex);
-        let methods = [];
-        let slicedLength = 0;
-        while (methodAndParamString) {
-          method = methodAndParamString[1];
-          let func = new Function("$event", "$wire", `return (function () {
-                for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
-                    p[k] = arguments[k];
-                }
-                return [].concat(p);
-            })(${methodAndParamString[2]})`);
-          params = func(this.eventContext, this.wire);
-          methods.push({ method, params });
-          slicedLength += methodAndParamString[0].length;
-          methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex);
-        }
-        if (methods.length === 0) {
-          methods.push({ method, params });
-        }
-        return methods;
+        return extractMethodsAndParamsFromRawExpression(rawMethod);
       }
     };
   }

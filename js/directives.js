@@ -1,4 +1,5 @@
 import { on } from './hooks'
+import { extractMethodsAndParamsFromRawExpression } from './utils'
 
 let customDirectiveNames = new Set
 
@@ -108,42 +109,6 @@ export class Directive {
     }
 
     parseOutMethodsAndParams(rawMethod) {
-        // regex selects first method it encounters including possible commas indicating more methods
-        let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
-
-        let method = rawMethod
-        let params = []
-        let methodAndParamString = method.match(methodRegex)
-
-        let methods = [];
-        let slicedLength = 0;
-        // If there's a method and params, we need to parse them out.
-        // If there's multiple methods, parse them one at a time.
-        while (methodAndParamString) {
-            method = methodAndParamString[1]
-
-            // Use a function that returns it's arguments to parse and eval all params
-            // This "$event" is for use inside the livewire event handler.
-            let func = new Function('$event', '$wire', `return (function () {
-                for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
-                    p[k] = arguments[k];
-                }
-                return [].concat(p);
-            })(${methodAndParamString[2]})`)
-
-            params = func(this.eventContext, this.wire)
-
-            methods.push({ method, params })
-            slicedLength += methodAndParamString[0].length;
-
-            // remove all parsed functions from rawMethod string.
-            methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex)
-        }
-
-        if(methods.length === 0) {
-            methods.push({ method, params })
-        }
-
-        return methods;
+        return extractMethodsAndParamsFromRawExpression(rawMethod)
     }
 }
