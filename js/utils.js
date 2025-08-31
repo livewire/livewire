@@ -236,45 +236,119 @@ export function splitDumpFromContent(content) {
     return [dump, content.replace(dump, '')]
 }
 
-export function extractMethodsAndParamsFromRawExpression(expression) {
-    if (! expression || typeof expression !== 'string') return []
+function parseParameters(paramStr) {
+    if (!paramStr.trim()) return []
 
-    function parseMethod(expr) {
-        if (! expr) return null
-
-        let match = expr.match(/^([^(]+)(?:\(([^)]*)\))?$/)
-
-        if (! match) return null
-
-        let method = match[1].trim()
-        let params = match[2] ? match[2].split(',').map(p => {
-            p = p.trim()
-            if (p.startsWith('"') && p.endsWith('"')) return p.slice(1, -1)
-            if (p.startsWith("'") && p.endsWith("'")) return p.slice(1, -1)
-            let num = Number(p)
-            return isNaN(num) ? p : num
-        }) : []
-
-        return { method, params }
-    }
-
-    let results = []
+    let params = []
     let current = ''
-    let parens = 0
+    let depth = 0
+    let inString = false
+    let stringChar = null
 
-    for (let i = 0; i < expression.length; i++) {
-        let char = expression[i]
-        if (char === '(') parens++
-        if (char === ')') parens--
-        if (char === ',' && parens === 0) {
-            results.push(parseMethod(current.trim()))
+    for (let i = 0; i < paramStr.length; i++) {
+        let char = paramStr[i]
+
+        if (!inString && (char === '"' || char === "'")) {
+            inString = true
+            stringChar = char
+            current += char
+        } else if (inString && char === stringChar) {
+            inString = false
+            stringChar = null
+            current += char
+        } else if (!inString && char === '{') {
+            depth++
+            current += char
+        } else if (!inString && char === '}') {
+            depth--
+            current += char
+        } else if (!inString && char === ',' && depth === 0) {
+            params.push(parseParameter(current.trim()))
             current = ''
         } else {
             current += char
         }
     }
 
-    results.push(parseMethod(current.trim()))
+    if (current.trim()) {
+        params.push(parseParameter(current.trim()))
+    }
 
-    return results.filter(Boolean)
+    return params
+}
+
+function parseParameter(param) {
+    param = param.trim()
+
+    // Handle quoted strings
+    if ((param.startsWith('"') && param.endsWith('"')) ||
+        (param.startsWith("'") && param.endsWith("'"))) {
+        return param.slice(1, -1)
+    }
+
+    // Handle object literals
+    if (param.startsWith('{') && param.endsWith('}')) {
+        return parseObjectLiteral(param)
+    }
+
+    // Handle numbers
+    let num = Number(param)
+    if (!isNaN(num)) return num
+
+    // Return as string if nothing else matches
+    return param
+}
+
+function parseObjectLiteral(objStr) {
+    // Remove outer braces
+    let content = objStr.slice(1, -1).trim()
+    if (!content) return {}
+
+    let obj = {}
+    let current = ''
+    let depth = 0
+    let inString = false
+    let stringChar = null
+    let key = null
+    let expectingValue = false
+
+    for (let i = 0; i < content.length; i++) {
+        let char = content[i]
+
+        if (!inString && (char === '"' || char === "'")) {
+            inString = true
+            stringChar = char
+            current += char
+        } else if (inString && char === stringChar) {
+            inString = false
+            stringChar = null
+            current += char
+        } else if (!inString && char === '{') {
+            depth++
+            current += char
+        } else if (!inString && char === '}') {
+            depth--
+            current += char
+        } else if (!inString && char === ':' && depth === 0) {
+            key = parseParameter(current.trim())
+            current = ''
+            expectingValue = true
+        } else if (!inString && char === ',' && depth === 0) {
+            if (key !== null) {
+                obj[key] = parseParameter(current.trim())
+                key = null
+                expectingValue = false
+            }
+            current = ''
+        } else {
+            current += char
+        }
+    }
+
+    // Handle the last key-value pair
+    if (key !== null && current.trim()) {
+        obj[key] = parseParameter(current.trim())
+    }
+
+    return obj
 }

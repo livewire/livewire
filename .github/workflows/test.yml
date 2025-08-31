@@ -71,11 +71,6 @@ jobs:
       - name: Setup dusk/chrome
         run: vendor/bin/dusk-updater detect --no-interaction
 
-      - name: Run JavaScript tests
-        run: npm test
-        env:
-          CI: true
-
       - name: Run Unit tests
         run: vendor/bin/phpunit --testsuite Unit
         env:

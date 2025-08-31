@@ -1,5 +1,4 @@
 import { on } from './hooks'
-import { extractMethodsAndParamsFromRawExpression } from './utils'
 
 let customDirectiveNames = new Set
 
@@ -95,20 +94,57 @@ export class Directive {
     get method() {
         const  methods  = this.parseOutMethodsAndParams(this.expression)
 
-        return methods[0].method;
+        return methods[0].method
     }
 
     get methods() {
-        return this.parseOutMethodsAndParams(this.expression);
+        return this.parseOutMethodsAndParams(this.expression)
     }
 
     get params() {
         const  methods  = this.parseOutMethodsAndParams(this.expression)
 
-        return methods[0].params;
+        return methods[0].params
     }
 
     parseOutMethodsAndParams(rawMethod) {
-        return extractMethodsAndParamsFromRawExpression(rawMethod)
+        let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s
+
+        let method = rawMethod
+        let params = []
+        let methodAndParamString = method.match(methodRegex)
+
+        let methods = []
+        let slicedLength = 0
+
+        while (methodAndParamString) {
+            method = methodAndParamString[1]
+
+            function argumentsToArray() {
+                for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
+                    p[k] = arguments[k]
+                }
+                return [].concat(p)
+            }
+
+            let params = Alpine.evaluate(
+                document,
+                'argumentsToArray(' + methodAndParamString[2] + ')',
+                {
+                    scope: { argumentsToArray },
+                },
+            )
+
+            methods.push({ method, params })
+            slicedLength += methodAndParamString[0].length
+
+            methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex)
+        }
+
+        if (methods.length === 0) {
+            methods.push({ method, params })
+        }
+
+        return methods
     }
 }
