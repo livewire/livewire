@@ -43,12 +43,6 @@ jobs:
           tools: composer:v2
           coverage: none
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
       - name: Get composer cache directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
@@ -64,9 +58,6 @@ jobs:
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
           composer update --prefer-stable --no-interaction
-
-      - name: Install NPM dependencies
-        run: npm ci
 
       - name: Setup dusk/chrome
         run: vendor/bin/dusk-updater detect --no-interaction
