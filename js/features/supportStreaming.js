@@ -1,45 +1,37 @@
-import { findComponent, hasComponent } from '@/store'
+import { findRefEl } from '@/v4/features/supportRefs'
 import { contentIsFromDump } from '@/utils'
-import { directive } from '@/directives'
+import { findComponent } from '@/store'
 import { on, trigger } from '@/hooks'
 
 on('stream', (payload) => {
-    if (payload.type !== 'update') return
-
-    let { id, key, value, mode } = payload
-
-    if (! hasComponent(id)) return
+    let { id, name, el, ref, content, mode } = payload
 
     let component = findComponent(id)
 
-    if (mode === 'append') {
-        component.$wire.set(key, component.$wire.get(key) + value, false)
-    } else {
-        component.$wire.set(key, value, false)
-    }
-})
+    let targetEl = null
 
-directive('stream', ({el, directive, cleanup }) => {
-    let { expression, modifiers } = directive
+    if (name) {
+        replaceEl = component.el.querySelector(`[wire\\:stream.replace="${name}"]`)
 
-    let off = on('stream', (payload) => {
-        // Default type is "html" becasue that was the original stream feature...
-        payload.type = payload.type || 'html'
-
-        if (payload.type !== 'html') return
-
-        let { name, content, mode } = payload
-
-        if (name !== expression) return
-
-        if (modifiers.includes('replace') || mode === 'replace') {
-            el.innerHTML = content
+        if (replaceEl) {
+            targetEl = replaceEl
+            mode = 'replace'
         } else {
-            el.insertAdjacentHTML('beforeend', content)
+            targetEl = component.el.querySelector(`[wire\\:stream="${name}"]`)
         }
-    })
+    } else if (ref) {
+        targetEl = findRefEl(component, ref)
+    } else if (el) {
+        targetEl = component.el.querySelector(el)
+    }
 
-    cleanup(off)
+    if (! targetEl) return // Noop...
+
+    if (mode === 'replace') {
+        targetEl.innerHTML = content
+    } else {
+        targetEl.insertAdjacentHTML('beforeend', content)
+    }
 })
 
 on('request', ({ respond }) => {

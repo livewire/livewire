@@ -8,11 +8,18 @@ class SupportStreaming extends ComponentHook
 {
     protected static $response;
 
-    public function stream($name, $content, $replace = false)
+    public function stream($content, $replace = false, $name = null, $el = null, $ref = null)
     {
         static::ensureStreamResponseStarted();
 
-        static::streamContent(['name' => $name, 'content' => $content, 'replace' => $replace]);
+        static::streamContent([
+            'id' => $this->component->getId(),
+            'content' => $content,
+            'mode' => $replace ? 'replace' : 'default',
+            'name' => $name,
+            'el' => $el,
+            'ref' => $ref,
+        ]);
     }
 
     public static function ensureStreamResponseStarted()
