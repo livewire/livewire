@@ -12,7 +12,9 @@ class SupportConsoleCommands extends ComponentHook
         if (! app()->runningInConsole()) return;
 
         static::commands([
-            Commands\MakeLivewireCommand::class, // make:livewire
+            \Livewire\LivewireManager::$v4
+                ? \Livewire\V4\Commands\MakeCommand::class
+                : Commands\MakeLivewireCommand::class,      // make:livewire
             Commands\MakeCommand::class,         // livewire:make
             Commands\FormCommand::class,         // livewire:form
             Commands\AttributeCommand::class,    // livewire:attribute

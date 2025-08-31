@@ -6,6 +6,12 @@ import { requestCommit, requestCall } from '@/request'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
+import messageBroker from './v4/requests/messageBroker'
+import { getErrorsObject } from './v4/features/supportErrors'
+import { getPaginatorObject } from './v4/features/supportPaginators'
+import interceptorRegistry from './v4/interceptors/interceptorRegistry'
+import { findRef } from './v4/features/supportRefs'
+import Action from './v4/requests/action'
 
 let properties = {}
 let fallback
@@ -27,15 +33,18 @@ let aliases = {
     'js': '$js',
     'get': '$get',
     'set': '$set',
-    'ref': '$ref',
+    'refs': '$refs',
     'call': '$call',
     'hook': '$hook',
-    'stop': '$stop',
     'watch': '$watch',
     'commit': '$commit',
+    'errors': '$errors',
+    'island': '$island',
     'upload': '$upload',
     'entangle': '$entangle',
     'dispatch': '$dispatch',
+    'intercept': '$intercept',
+    'paginator': '$paginator',
     'dispatchTo': '$dispatchTo',
     'dispatchSelf': '$dispatchSelf',
     'removeUpload': '$removeUpload',
@@ -44,6 +53,8 @@ let aliases = {
 }
 
 export function generateWireObject(component, state) {
+    let isScoped = false
+
     return new Proxy({}, {
         get(target, property) {
             if (property === '__instance') return component
@@ -136,6 +147,14 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     // If "live", send a request, queueing the property update to happen first
     // on the server, then trickle back down to the client and get merged...
     if (live) {
+        if (window.livewireV4) {
+            component.queueUpdate(property, value)
+
+            let action = new Action(component, '$set')
+
+            return action.fire()
+        }
+
         component.queueUpdate(property, value)
 
         return await requestCommit(component)
@@ -144,16 +163,64 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     return Promise.resolve()
 })
 
-wireProperty('$ref', (component) => (name) => {
-    let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`)
+wireProperty('$refs', (component) => {
+    let fn = (name) => findRef(component, name)
 
-    if (! refEl) throw `Ref "${name}" not found`
+    return new Proxy(fn, {
+        get(target, property) {
+            if (property in target) {
+                return target[property]
+            }
 
-    return refEl.__livewire?.$wire
+            return fn(property)
+        }
+    })
+})
+
+wireProperty('$intercept', (component) => (method, callback = null) => {
+    if (callback === null) {
+        callback = method
+        method = null
+    }
+
+    return interceptorRegistry.add(callback, component, method)
+})
+
+wireProperty('$errors', (component) => getErrorsObject(component))
+
+wireProperty('$paginator', (component) => {
+    let fn = (name = 'page') => getPaginatorObject(component, name)
+
+    let defaultPaginator = fn()
+
+    for (let key of Object.keys(defaultPaginator)) {
+        let value = defaultPaginator[key]
+
+        if (typeof value === 'function') {
+            fn[key] = (...args) => defaultPaginator[key](...args)
+        } else {
+            Object.defineProperty(fn, key, {
+                get: () => defaultPaginator[key],
+                set: val => { defaultPaginator[key] = val },
+            })
+        }
+    }
+
+    return fn
 })
 
 wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
+})
+
+wireProperty('$island', (component) => async (name, mode = null) => {
+    let action = new Action(component, '$refresh')
+
+    action.addContext({
+        island: { name, mode },
+    })
+
+    return action.fire()
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {
@@ -174,10 +241,23 @@ wireProperty('$watch', (component) => (path, callback) => {
     component.addCleanup(unwatch)
 })
 
-wireProperty('$refresh', (component) => component.$wire.$commit)
-wireProperty('$commit', (component) => async () => await requestCommit(component))
-wireProperty('$stop', (component) => () => {
-    window.controller.abort()
+wireProperty('$refresh', (component) => async () => {
+    if (window.livewireV4) {
+        let action = new Action(component, '$refresh')
+
+        return action.fire()
+    }
+
+    return component.$wire.$commit()
+})
+wireProperty('$commit', (component) => async () => {
+    if (window.livewireV4) {
+        let action = new Action(component, '$commit')
+
+        return action.fire()
+    }
+
+    return await requestCommit(component)
 })
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
@@ -245,6 +325,12 @@ wireFallback((component) => (property) => async (...params) => {
         if (typeof overrides[property] === 'function') {
             return overrides[property](params)
         }
+    }
+
+    if (window.livewireV4) {
+        let action = new Action(component, property, params)
+
+        return action.fire()
     }
 
     return await requestCall(component, property, params)

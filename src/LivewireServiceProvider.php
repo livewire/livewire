@@ -113,14 +113,21 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportStreaming\SupportStreaming::class,
             Features\SupportNavigate\SupportNavigate::class,
             Features\SupportEntangle\SupportEntangle::class,
+            Features\SupportWireRef\SupportWireRef::class,
+            Features\SupportRouting\SupportRouting::class,
             Features\SupportLocales\SupportLocales::class,
             Features\SupportTesting\SupportTesting::class,
             Features\SupportModels\SupportModels::class,
             Features\SupportEvents\SupportEvents::class,
-            \Livewire\V4\Partials\SupportPartials::class,
+            // Islands should be before placeholders otherwise the island placeholders will be compiled as component placeholders...
+            \Livewire\V4\Islands\SupportIslands::class,
+            \Livewire\V4\Placeholders\SupportPlaceholders::class,
             \Livewire\V4\Slots\SupportSlots::class,
             \Livewire\V4\HtmlAttributes\SupportsHtmlAttributes::class,
+            \Livewire\V4\JsModules\SupportJsModules::class,
             \Livewire\V4\WithMethod\SupportWithMethod::class,
+            \Livewire\V4\MagicActions\SupportMagicActions::class,
+            \Livewire\V4\Paginators\SupportPaginators::class,
 
             // Some features we want to have priority over others...
             Features\SupportLifecycleHooks\SupportLifecycleHooks::class,

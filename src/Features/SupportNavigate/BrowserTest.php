@@ -39,6 +39,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('parent-component', ParentComponent::class);
             Livewire::component('child-component', ChildComponent::class);
             Livewire::component('script-component', ScriptComponent::class);
+            Livewire::component('page-with-redirect-to-external-page', PageWithRedirectToExternalPage::class);
+            Livewire::component('page-with-redirect-to-internal-which-has-external-link', PageWithRedirectToInternalWhichHasExternalLinkPage::class);
 
             Livewire::component('nav-bar-component', NavBarComponent::class);
 
@@ -94,6 +96,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             HTML));
 
             Route::get('/page-with-alpine-for-loop', PageWithAlpineForLoop::class);
+            Route::get('/page-with-redirect-to-internal-which-has-external-link', PageWithRedirectToInternalWhichHasExternalLinkPage::class)->middleware('web');
+            Route::get('/page-with-redirect-to-external-page', PageWithRedirectToExternalPage::class)->middleware('web');
             Route::get('/script-component', ScriptComponent::class);
 
             Route::get('/first-noscript', FirstNoscriptPage::class)->middleware('web');
@@ -254,10 +258,12 @@ class BrowserTest extends \Tests\BrowserTestCase
             $browser
                 ->visit('/first-hide-progress')
                 ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertConsoleLogHasNoErrors()
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first')
                 ->click('@link.to.third')
                 ->pause(500)
+                ->assertScript('return window._lw_dusk_test')
                 ->assertMissing('#nprogress')
                 ->waitForText('Done loading...');
         });
@@ -555,7 +561,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         $this->browse(function ($browser) {
             $browser
                 ->visit('/first-scroll')
-                ->tinker()
+                // ->tinker()
                 ->assertVisible('@first-target')
                 ->assertNotInViewPort('@first-target')
                 ->scrollTo('@first-target')
@@ -1185,6 +1191,25 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_an_error_with_fetch_such_as_a_backend_redirect_to_an_external_site_does_not_break_livewire_and_progress_bar_is_removed()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/page-with-redirect-to-internal-which-has-external-link')
+                ->waitForLivewireToLoad()
+                ->tap(fn ($b) => $b->script('window._lw_dusk_navigated_started = false; document.addEventListener("livewire:navigate", () => { window._lw_dusk_navigated_started = true })'))
+                ->click('@link')
+                ->assertScript('return window._lw_dusk_navigated_started')
+
+                // We can't listen for a navigate request, as it will fail, so just pause for a bit and make sure the progress bar is removed...
+                ->pause(300)
+                ->waitUntilMissing('#nprogress')
+                ->assertPathIs('/page-with-redirect-to-internal-which-has-external-link')
+                ->waitForLivewire()->click('@refresh')
+            ;
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -1581,6 +1606,38 @@ class PageWithAlpineForLoop extends Component
                     <p x-text="value"></p>
                 </template>
             </div>
+        </div>
+        HTML;
+    }
+}
+
+class PageWithRedirectToInternalWhichHasExternalLinkPage extends Component
+{
+    #[Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-redirect-to-internal-which-has-external-link">
+            <a href="/page-with-redirect-to-external-page" wire:navigate dusk="link">Go to other component</a>
+            <button type="button" wire:click="$refresh" dusk="refresh">Refresh</button>
+        </div>
+        HTML;
+    }
+}
+
+class PageWithRedirectToExternalPage extends Component
+{
+    public function mount()
+    {
+        $this->redirect('https://www.google.com');
+    }
+
+    #[Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-redirect-to-external-page">
+            Test
         </div>
         HTML;
     }

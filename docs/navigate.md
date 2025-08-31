@@ -14,11 +14,11 @@ use App\Livewire\Dashboard;
 use App\Livewire\ShowPosts;
 use App\Livewire\ShowUsers;
 
-Route::get('/', Dashboard::class);
+Route::livewire('/', Dashboard::class);
 
-Route::get('/posts', ShowPosts::class);
+Route::livewire('/posts', ShowPosts::class);
 
-Route::get('/users', ShowUsers::class);
+Route::livewire('/users', ShowUsers::class);
 ```
 
 By adding `wire:navigate` to each link in a navigation menu on each page, Livewire will prevent the standard handling of the link click and replace it with its own, faster version:

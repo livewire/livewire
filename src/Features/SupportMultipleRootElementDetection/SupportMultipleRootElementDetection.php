@@ -10,7 +10,8 @@ class SupportMultipleRootElementDetection extends ComponentHook
 {
     static function provide() {
         on('mount', function ($component) {
-            if (! config('app.debug')) return;
+            // @todo: disabling this for v4 demos because it slows down demos with large amounts of html...
+            if (\Livewire\LivewireManager::$v4 || ! config('app.debug')) return;
 
             return function ($html) use ($component) {
                 (new static)->warnAgainstMoreThanOneRootElement($component, $html);

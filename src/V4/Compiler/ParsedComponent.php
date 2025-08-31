@@ -10,7 +10,7 @@ class ParsedComponent
     public ?string $externalClass;
     public ?string $layoutTemplate;
     public ?array $layoutData;
-    public array $inlinePartials;
+    public array $scripts;
 
     public function __construct(
         string $frontmatter,
@@ -19,7 +19,7 @@ class ParsedComponent
         ?string $externalClass = null,
         ?string $layoutTemplate = null,
         ?array $layoutData = null,
-        array $inlinePartials = []
+        array $scripts = [],
     ) {
         $this->frontmatter = $frontmatter;
         $this->viewContent = $viewContent;
@@ -27,7 +27,7 @@ class ParsedComponent
         $this->externalClass = $externalClass;
         $this->layoutTemplate = $layoutTemplate;
         $this->layoutData = $layoutData;
-        $this->inlinePartials = $inlinePartials;
+        $this->scripts = $scripts;
     }
 
     public function hasInlineClass(): bool
@@ -54,8 +54,35 @@ class ParsedComponent
         return !empty($this->layoutTemplate);
     }
 
-    public function hasInlinePartials(): bool
+    public function hasScripts(): bool
     {
-        return !empty($this->inlinePartials);
+        return !empty($this->scripts);
+    }
+
+    public function getClassSource(): string
+    {
+        return <<<PHP
+        <?php
+
+        {$this->frontmatter}
+        PHP;
+    }
+
+    public function getViewSource(): string
+    {
+        return <<<HTML
+        {$this->viewContent}
+        HTML;
+    }
+
+    public function getScriptSource(): string
+    {
+        if (empty($this->scripts)) throw new \Exception('No scripts found');
+
+        $script = $this->scripts[0];
+
+        $fullTag = $script['fullTag'];
+
+        return str($fullTag)->between('<script>', '</script>')->toString();
     }
 }

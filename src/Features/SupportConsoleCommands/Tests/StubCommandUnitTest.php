@@ -7,6 +7,13 @@ use Illuminate\Support\Facades\Artisan;
 
 class StubCommandUnitTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        \Livewire\LivewireManager::$v4 = false;
+
+        parent::setUp();
+    }
+
     public function test_default_view_stub_is_created()
     {
         Artisan::call('livewire:stubs');

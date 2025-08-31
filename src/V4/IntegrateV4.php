@@ -2,10 +2,13 @@
 
 namespace Livewire\V4;
 
-use Illuminate\Support\Facades\Blade;
+use Livewire\V4\Tailwind\Merge;
+use Livewire\V4\Slots\SupportSlots;
 use Livewire\V4\Registry\ComponentViewPathResolver;
 use Livewire\V4\Compiler\SingleFileComponentCompiler;
-use Livewire\V4\Slots\SupportSlots;
+use Illuminate\View\ComponentAttributeBag;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Blade;
 
 class IntegrateV4
 {
@@ -14,8 +17,6 @@ class IntegrateV4
 
     public function __construct()
     {
-        $supportedExtensions = ['.blade.php', '.wire.php'];
-
         app()->alias(ComponentViewPathResolver::class, 'livewire.resolver');
         app()->singleton(ComponentViewPathResolver::class);
         $this->finder = app('livewire.resolver');
@@ -27,16 +28,24 @@ class IntegrateV4
     {
         $this->supportSingleFileComponents();
         $this->supportWireTagSyntax();
+        $this->supportTailwindMacro();
         $this->registerSlotDirectives();
         $this->registerSlotsSupport();
+        $this->hookIntoViewClear();
+
+        \Illuminate\Console\Application::starting(fn (\Illuminate\Console\Application $artisan) => $artisan->resolveCommands([
+            \Livewire\V4\Compiler\Commands\LivewireClearCommand::class,
+        ]));
     }
 
     protected function supportSingleFileComponents()
     {
-        app('view')->addNamespace('livewire-compiled', storage_path('framework/livewire/views'));
+        // Register namespace for compiled Livewire components
+        app('view')->addNamespace('livewire-compiled', storage_path('framework/views/livewire/views'));
 
         app('view')->addNamespace('pages', resource_path('views/pages'));
         app('view')->addNamespace('layouts', resource_path('views/layouts'));
+        app('blade.compiler')->anonymousComponentPath(resource_path('views/layouts'), 'layouts');
 
         app('livewire')->namespace('pages', resource_path('views/pages'));
 
@@ -44,7 +53,14 @@ class IntegrateV4
         app('livewire')->resolveMissingComponent(function ($componentName) {
             $viewPath = $this->finder->resolve($componentName);
 
-            $result = $this->compiler->compile($viewPath);
+            // Detect if this is a multi-file component (directory) or single-file component
+            if (is_dir($viewPath)) {
+                // Multi-file component - use directory compilation
+                $result = $this->compiler->compileMultiFileComponent($viewPath);
+            } else {
+                // Single-file component - use standard compilation
+                $result = $this->compiler->compile($viewPath);
+            }
 
             $className = $result->className;
 
@@ -64,8 +80,21 @@ class IntegrateV4
 
     protected function supportWireTagSyntax()
     {
-        app('blade.compiler')->precompiler(function ($string) {
+        app('blade.compiler')->prepareStringsForCompilationUsing(function ($string) {
             return app(WireTagCompiler::class)($string);
+        });
+    }
+
+    protected function supportTailwindMacro()
+    {
+        ComponentAttributeBag::macro('tailwind', function ($weakClasses) {
+            $strongClasses = $this->attributes['class'] ?? '';
+
+            $weakClasses = is_array($weakClasses) ? implode(' ', $weakClasses) : $weakClasses;
+
+            $this->attributes['class'] = app(Merge::class)->merge($weakClasses, $strongClasses);
+
+            return $this;
         });
     }
 
@@ -100,4 +129,62 @@ class IntegrateV4
     {
         // app('livewire')->componentHook(SupportSlots::class);
     }
+
+    protected function hookIntoViewClear()
+    {
+        // Hook into Laravel's view:clear command to also clear Livewire compiled files
+        if (app()->runningInConsole()) {
+            app('events')->listen(\Illuminate\Console\Events\CommandFinished::class, function ($event) {
+                if ($event->command === 'view:clear' && $event->exitCode === 0) {
+                    $this->clearLivewireCompiledFiles($event->output);
+                }
+            });
+        }
+    }
+
+    protected function clearLivewireCompiledFiles($output = null)
+    {
+        try {
+            $cacheDirectory = storage_path('framework/views/livewire');
+
+            if (is_dir($cacheDirectory)) {
+                // Count files before clearing for informative output
+                $totalFiles = 0;
+                foreach (['classes', 'views', 'scripts', 'metadata'] as $subdir) {
+                    $path = $cacheDirectory . '/' . $subdir;
+                    if (is_dir($path)) {
+                        $totalFiles += count(glob($path . '/*'));
+                    }
+                }
+
+                // Use the same cleanup approach as our clear command
+                \Illuminate\Support\Facades\File::deleteDirectory($cacheDirectory);
+
+                // Recreate the directory structure
+                \Illuminate\Support\Facades\File::makeDirectory($cacheDirectory . '/classes', 0755, true);
+                \Illuminate\Support\Facades\File::makeDirectory($cacheDirectory . '/views', 0755, true);
+                \Illuminate\Support\Facades\File::makeDirectory($cacheDirectory . '/scripts', 0755, true);
+                \Illuminate\Support\Facades\File::makeDirectory($cacheDirectory . '/metadata', 0755, true);
+
+                // Recreate .gitignore
+                \Illuminate\Support\Facades\File::put($cacheDirectory . '/.gitignore', "*\n!.gitignore");
+
+                // Output success message if we have access to output
+                if ($output && method_exists($output, 'writeln')) {
+                    if ($totalFiles > 0) {
+                        $output->writeln("<info>Livewire compiled files cleared ({$totalFiles} files removed).</info>");
+                    } else {
+                        $output->writeln("<info>Livewire compiled files directory cleared.</info>");
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently fail to avoid breaking view:clear if there's an issue
+            // But we can log it if output is available
+            if ($output && method_exists($output, 'writeln')) {
+                $output->writeln("<comment>Note: Could not clear Livewire compiled files.</comment>");
+            }
+        }
+    }
+
 }

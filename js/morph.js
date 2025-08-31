@@ -2,6 +2,7 @@ import { trigger } from "@/hooks"
 import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
 import { skipSlotContents } from "./features/supportSlots"
+import { skipIslandContents } from "./features/supportIslands"
 
 export function morph(component, el, html) {
     let wrapperTag = el.parentElement
@@ -35,12 +36,34 @@ export function morph(component, el, html) {
 
     trigger('morph', { el, toEl: to, component })
 
+    // Let's first do a lookup of all the child components to see if the component already
+    // exists and if so we'll clone it and replace the child component with the clone.
+    // This is to ensure that components don't loose state even if there might be a
+    // `wire:key` missing from elements within a loop around the component...
+    let existingComponentsMap = {}
+
+    el.querySelectorAll('[wire\\:id]').forEach(component => {
+        existingComponentsMap[component.getAttribute('wire:id')] = component
+    })
+
+    to.querySelectorAll('[wire\\:id]').forEach(child => {
+        // If the child has a `wire:snapshot` it means it's new, so we don't need to find it...
+        if (child.hasAttribute('wire:snapshot')) return
+
+        let wireId = child.getAttribute('wire:id')
+        let existingComponent = existingComponentsMap[wireId]
+
+        if (existingComponent) {
+            child.replaceWith(existingComponent.cloneNode(true))
+        }
+    })
+
     Alpine.morph(el, to, getMorphConfig(component))
 
     trigger('morphed', { el, component })
 }
 
-export function morphPartial(component, startNode, endNode, toHTML) {
+export function morphIsland(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement
     let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
 
@@ -64,17 +87,18 @@ export function morphPartial(component, startNode, endNode, toHTML) {
         parentProviderWrapper.__livewire = parentComponent
     }
 
-    trigger('partial.morph', { startNode, endNode, component })
+    trigger('island.morph', { startNode, endNode, component })
 
     Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
 
-    trigger('partial.morphed', { startNode, endNode, component })
+    trigger('island.morphed', { startNode, endNode, component })
 }
 
 function getMorphConfig(component) {
     return {
         updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
             skipSlotContents(el, toEl, skipUntil)
+            skipIslandContents(component, el, toEl, skipUntil)
 
             if (isntElement(el)) return
 

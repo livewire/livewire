@@ -1,4 +1,5 @@
 import { componentsByName } from "@/store"
+import { findRefEl } from "./v4/features/supportRefs"
 
 export function dispatch(component, name, params) {
     dispatchEvent(component.el, name, params)
@@ -12,12 +13,26 @@ export function dispatchSelf(component, name, params) {
     dispatchEvent(component.el, name, params, false)
 }
 
+export function dispatchEl(component, selector, name, params) {
+    let targets = component.el.querySelectorAll(selector)
+
+    targets.forEach(target => {
+        dispatchEvent(target, name, params, false)
+    })
+}
+
 export function dispatchTo(componentName, name, params) {
     let targets = componentsByName(componentName)
 
     targets.forEach(target => {
         dispatchEvent(target.el, name, params, false)
     })
+}
+
+export function dispatchRef(component, ref, name, params) {
+    let el = findRefEl(component, ref)
+
+    dispatchEvent(el, name, params, false)
 }
 
 export function listen(component, name, callback) {

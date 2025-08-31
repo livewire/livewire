@@ -61,8 +61,8 @@ class ComponentHookRegistry
             return static::proxyCallToHooks($component, 'callUpdate')($propertyName, $fullPath, $newValue);
         });
 
-        on('call', function ($component, $method, $params, $addEffect, $earlyReturn) {
-            return static::proxyCallToHooks($component, 'callCall')($method, $params, $earlyReturn);
+        on('call', function ($component, $method, $params, $componentContext, $earlyReturn, $context) {
+            return static::proxyCallToHooks($component, 'callCall')($method, $params, $earlyReturn, $context, $componentContext);
         });
 
         on('render', function ($component, $view, $data) {

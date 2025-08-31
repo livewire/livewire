@@ -2,6 +2,7 @@ import { callAndClearComponentDebounces } from '@/debounce'
 import { customDirectiveHasBeenRegistered } from '@/directives'
 import { on } from '@/hooks'
 import Alpine from 'alpinejs'
+import { evaluateActionExpression } from '../evaluator'
 
 on('directive.init', ({ el, directive, cleanup, component }) => {
     if (['snapshot', 'effects', 'model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'target', 'dirty'].includes(directive.value)) return
@@ -16,10 +17,18 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
 
     let cleanupBinding = Alpine.bind(el, {
         [attribute](e) {
+            directive.eventContext = e
+            directive.wire = component.$wire
+
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
-                    // Forward these calls directly to $wire. Let them handle firing the request.
-                    Alpine.evaluate(el, '$wire.'+directive.expression, { scope: { $event: e }})
+                    component.addActionContext({
+                        // type: 'user',
+                        el,
+                        directive,
+                    })
+
+                    evaluateActionExpression(component, el, directive.expression, { scope: { $event: e } })
                 })
             }
 

@@ -1,11 +1,13 @@
 import { directive, getDirectives } from "@/directives"
-import Alpine from 'alpinejs'
+import { on } from '@/hooks'
+import Action from '@/v4/requests/action'
+import { evaluateActionExpression } from '../evaluator'
 
-directive('poll', ({ el, directive }) => {
+directive('poll', ({ el, directive, component }) => {
     let interval = extractDurationFrom(directive.modifiers, 2000)
 
     let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-        triggerComponentRequest(el, directive)
+        triggerComponentRequest(el, directive, component)
     }, interval)
 
     start()
@@ -17,10 +19,54 @@ directive('poll', ({ el, directive }) => {
     stopWhen(() => theElementIsDisconnected(el))
 })
 
-function triggerComponentRequest(el, directive) {
-    Alpine.evaluate(el,
-        directive.expression ? '$wire.' + directive.expression : '$wire.$commit()'
-    )
+on('component.init', ({ component }) => {
+    if (! window.livewireV4) return
+
+    let islands = component.islands
+
+    if (! islands || Object.keys(islands).length === 0) return
+
+    Object.values(islands).forEach(island => {
+        if (!island.poll) return
+
+        let interval = extractDurationFrom([island.poll], 2000)
+
+        let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+            let action = new Action(component, '$refresh')
+
+            action.addContext({
+                type: 'poll',
+                island: { name: island.name },
+            })
+
+            action.fire()
+        }, interval)
+
+        start()
+
+        pauseWhile(() => livewireIsOffline())
+        stopWhen(() => theElementIsDisconnected(component.el))
+    })
+})
+
+function triggerComponentRequest(el, directive, component) {
+    if (window.livewireV4) {
+        component.addActionContext({
+            type: 'poll',
+            el,
+            directive,
+        })
+
+        let fullMethod = directive.expression ? directive.expression : '$refresh'
+
+        evaluateActionExpression(component, el, fullMethod)
+
+        return
+    }
+
+    let fullMethod = directive.expression ? directive.expression : '$commit'
+
+    evaluateActionExpression(component, el, fullMethod)
 }
 
 function poll(callback, interval = 2000) {

@@ -83,7 +83,7 @@ class SupportCompiledWireKeys extends ComponentHook
             'key' => null,
         ];
     }
-    
+
     public static function startLoop($index) {
         static::$currentLoop['index'] = $index;
     }
@@ -117,9 +117,9 @@ class SupportCompiledWireKeys extends ComponentHook
     public static function generateKey($deterministicBladeKey, $key = null)
     {
         $finalKey = $deterministicBladeKey;
-        
+
         $loops = array_merge(static::$loopStack, [static::$currentLoop]);
-        
+
         foreach ($loops as $loop) {
             if (isset($loop['key']) || isset($loop['index'])) {
                 $finalKey .= isset($loop['key'])

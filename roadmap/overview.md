@@ -1,29 +1,42 @@
 
 Livewire 4 is a new version of Livewire focused on making livewire faster, more stable, and more intuitive.
 
-## Pre-beta
-- [x] [Add single file components](single-file-components.md)
-- [x] [Add tailwind merge](tailwind-merge.md)
-- [x] [Support for slots](component-slots.md)
-- [x] [Support for attributes](component-attributes.md)
-- [x] [Add streaming improvements](streaming.md)
-- [x] [Livewire::route() for pages](livewire-route.md)
-- [x] [Add partials](partials.md)
-- [x] [Naked @script tags](naked-scripts.md)
-- [x] [Set `this` to `$wire` for `<scripts>`](this-wire.md)
-- [x] [Add `wire:ref`](wire-ref.md)
-- [ ] [Add js interceptors](interceptors.md)
-- [ ] [Add with() method](add-with-method.md)
-- [ ] [Blade component code folding](code-folding.md)
+## V4 Checklist
+- [x] Blaze
+- [x] Route::livewire()
+- [x] wire:ref
+- [ ] Support wire:model on dialog and popover elements
+- [ ] CSP-safe
+- [ ] Interceptors
+- [ ] data-loading
+- [ ] Slots
+- [ ] Attributes
+- [ ] Getters/setter properties
+- [ ] Multi-file components
+- [ ] Single file components
+- [ ] Islands
+- [ ] Streaming
+- [ ] Make command
+- [ ] Convert commands to Prompts
+
+### Deliverables for each feature:
+- [ ] Tests
+- [ ] Benchmarks
+- [ ] Refactored code
+- [ ] Docs
+
+## Potential extras
+- [ ] [Add tailwind merge](tailwind-merge.md)
+- [ ] [Add streaming improvements](streaming.md)
+- [ ] [Naked @script tags](naked-scripts.md)
+- [ ] [Set `this` to `$wire` for `<scripts>`](this-wire.md)
+- [ ] [Add `wire:submit.clear`](wire-submit-dot-clear.md)
 - [ ] [Add `bootstrap/livewire.php` configuration file](configuration.md)
 - [ ] [Add `artisan livewire:install` command](install-command.md)
-- [ ] [Convert commands to laravel prompts](use-prompts.md)
 - [ ] [Support multiple file uploads in S3](multiple-file-uploads-s3.md)
-- [x] [Fix component not found error](no-component-not-found.md)
-- [x] [Smart `wire:key`s](smart-keys.md)
-- [x] [Release tokens](release-tokens.md)
-
-## Post-beta
+- [ ] [Fix component not found error](no-component-not-found.md)
+- [ ] [Smart `wire:key`s](smart-keys.md)
+- [ ] [Release tokens](release-tokens.md)
 - [ ] [wire:navigate fixes](fix-wire-navigate.md)
 - [ ] [Remove $this-> demand for computed properties](remove-this-arrow-for-computeds.md)
 - [ ] [Dispatch from mount()](dispatch-from-mount.md)
@@ -42,18 +55,13 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [ ] [Mutable updating hook](mutable-update-hook.md)
 - [ ] [Explicit hydrate/dehydrate methods](hydration-control.md)
 - [ ] [wire:submit with sending form data](wire-submit-form-data.md)
-
-## Ill-defined
-* (laracon) [wire:loading / data-loading stuff?]
-* (laracon) [bailable/async/parralel requests]
-* (laracon) [static methods]
-* (laracon) [Sunset Volt](sunset-volt.md)
-* [scoped polling]
-* [access to original request]
+- [ ] [Fix array update hook calls and values](array-update-hook.md)
+- [ ] [Plan for Volt messaging now that it's kinda baked in]
+* [ ] [Static methods]
+* [ ] [access to original request object]
 * [Story: some story for repeating fields]
 * [Story: some story for better toasts and modals]
 * [Story: property assignment type-error]
-* [#[Expose] actions]
 * [Add server-sent events support some way somehow](sse.md)
 
 ## Breaking changes

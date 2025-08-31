@@ -1,6 +1,6 @@
-import { on } from '@/hooks'
-import { morphPartial } from '@/morph'
 import { findComponent } from '@/store'
+import { morphIsland } from '@/morph'
+import { on } from '@/hooks'
 
 on('effect', ({ component, effects }) => {
     let slots = effects.slots
@@ -28,8 +28,8 @@ on('effect', ({ component, effects }) => {
 
                         let strippedContent = stripSlotComments(content, fullName)
 
-                        // Use morphPartial to replace the content between slot markers
-                        morphPartial(childComponent, startNode, endNode, strippedContent)
+                        // Use morphIsland to replace the content between slot markers
+                        morphIsland(childComponent, startNode, endNode, strippedContent)
                     })
                 })
             })
@@ -115,14 +115,44 @@ export function extractSlotData(el) {
 }
 
 export function checkPreviousSiblingForSlotStartMarker(el) {
-    let node = el.previousSibling
+    function searchInPreviousSiblings(node) {
+        let sibling = node.previousSibling
 
-    while (node) {
-        if (isStartMarker(node)) {
-            return node
+        while (sibling) {
+            if (isEndMarker(sibling)) {
+                return null
+            }
+
+            if (isStartMarker(sibling)) {
+                return sibling
+            }
+            sibling = sibling.previousSibling
         }
-        node = node.previousSibling
+
+        return null
     }
 
-    return null
+    function searchRecursively(currentEl) {
+        // First check previous siblings of current element
+        let found = searchInPreviousSiblings(currentEl)
+        if (found !== null) {
+            return found
+        }
+
+        // If nothing found and we have a parent, check if parent is another Livewire component
+        let parent = currentEl.parentElement
+        if (!parent) {
+            return null
+        }
+
+        // Stop if we encounter another Livewire component
+        if (parent.hasAttribute && parent.hasAttribute('wire:id')) {
+            return null
+        }
+
+        // Recursively search up the tree
+        return searchRecursively(parent)
+    }
+
+    return searchRecursively(el)
 }
