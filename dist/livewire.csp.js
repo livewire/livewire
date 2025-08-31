@@ -8049,7 +8049,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
       directive("island", ({ el, directive: directive2, cleanup }) => {
-        let name = directive2.expression ?? "default";
+        let name = directive2.expression ? directive2.expression : "default";
         let mode = null;
         if (directive2.modifiers.includes("append")) {
           mode = "append";
@@ -8226,7 +8226,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
-  // js/csp.js
+  // js/index.js
   init_events();
   init_store();
 
@@ -12390,7 +12390,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
-  // js/csp.js
+  // js/index.js
   init_hooks();
   init_directives();
   var import_alpinejs21 = __toESM(require_module_cjs());
@@ -13688,7 +13688,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   init_directives();
   init_evaluator();
   directive("init", ({ component, el, directive: directive2 }) => {
-    let fullMethod = directive2.expression ?? "$refresh";
+    let fullMethod = directive2.expression ? directive2.expression : "$refresh";
     evaluateActionExpression(component, el, fullMethod);
   });
 
@@ -13739,11 +13739,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el,
         directive: directive2
       });
-      let fullMethod2 = directive2.expression ?? "$refresh";
+      let fullMethod2 = directive2.expression ? directive2.expression : "$refresh";
       evaluateActionExpression(component, el, fullMethod2);
       return;
     }
-    let fullMethod = directive2.expression ?? "$commit";
+    let fullMethod = directive2.expression ? directive2.expression : "$commit";
     evaluateActionExpression(component, el, fullMethod);
   }
   function poll(callback, interval = 2e3) {
@@ -13868,7 +13868,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
-  // js/csp.js
+  // js/index.js
   var Livewire2 = {
     directive,
     dispatchTo,
@@ -13892,9 +13892,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     warnAboutMultipleInstancesOf("Livewire");
   if (window.Alpine)
     warnAboutMultipleInstancesOf("Alpine");
-  if (window.livewireV4) {
-    Promise.resolve().then(() => init_v4());
-  }
+  window.livewireV4 = true;
+  Promise.resolve().then(() => init_v4());
   window.Livewire = Livewire2;
   window.Alpine = import_alpinejs21.default;
   if (window.livewireScriptConfig === void 0) {

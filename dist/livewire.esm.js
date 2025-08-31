@@ -10410,7 +10410,7 @@ var init_supportWireIsland = __esm({
       });
     });
     directive("island", ({ el, directive: directive2, cleanup }) => {
-      let name = directive2.expression ?? "default";
+      let name = directive2.expression ? directive2.expression : "default";
       let mode = null;
       if (directive2.modifiers.includes("append")) {
         mode = "append";
@@ -13130,7 +13130,7 @@ function debounce(func, wait) {
 init_directives();
 init_evaluator();
 directive("init", ({ component, el, directive: directive2 }) => {
-  let fullMethod = directive2.expression ?? "$refresh";
+  let fullMethod = directive2.expression ? directive2.expression : "$refresh";
   evaluateActionExpression(component, el, fullMethod);
 });
 
@@ -13181,11 +13181,11 @@ function triggerComponentRequest(el, directive2, component) {
       el,
       directive: directive2
     });
-    let fullMethod2 = directive2.expression ?? "$refresh";
+    let fullMethod2 = directive2.expression ? directive2.expression : "$refresh";
     evaluateActionExpression(component, el, fullMethod2);
     return;
   }
-  let fullMethod = directive2.expression ?? "$commit";
+  let fullMethod = directive2.expression ? directive2.expression : "$commit";
   evaluateActionExpression(component, el, fullMethod);
 }
 function poll(callback, interval = 2e3) {

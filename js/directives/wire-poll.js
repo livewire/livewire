@@ -57,14 +57,14 @@ function triggerComponentRequest(el, directive, component) {
             directive,
         })
 
-        let fullMethod = directive.expression ?? '$refresh'
+        let fullMethod = directive.expression ? directive.expression : '$refresh'
 
         evaluateActionExpression(component, el, fullMethod)
 
         return
     }
 
-    let fullMethod = directive.expression ?? '$commit'
+    let fullMethod = directive.expression ? directive.expression : '$commit'
 
     evaluateActionExpression(component, el, fullMethod)
 }

@@ -22,7 +22,7 @@ build({
 })
 
 build({
-    entryPoints: [`js/csp.js`],
+    entryPoints: [`js/index.js`],
     outfile: `dist/livewire.csp.js`,
     bundle: true,
     platform: 'browser',
@@ -42,7 +42,7 @@ build({
 
 build({
     format: 'esm',
-    entryPoints: [`js/csp.js`],
+    entryPoints: [`js/index.js`],
     outfile: `dist/livewire.csp.esm.js`,
     sourcemap: 'linked',
     bundle: true,
@@ -73,7 +73,7 @@ build({
 
 // Build a minified version.
 build({
-    entryPoints: [`js/csp.js`],
+    entryPoints: [`js/index.js`],
     outfile: `dist/livewire.csp.min.js`,
     sourcemap: 'linked',
     bundle: true,

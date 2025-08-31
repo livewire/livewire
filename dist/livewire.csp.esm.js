@@ -11192,7 +11192,7 @@ var init_supportWireIsland = __esm({
       });
     });
     directive("island", ({ el, directive: directive2, cleanup }) => {
-      let name = directive2.expression ?? "default";
+      let name = directive2.expression ? directive2.expression : "default";
       let mode = null;
       if (directive2.modifiers.includes("append")) {
         mode = "append";
@@ -11369,7 +11369,7 @@ var init_v4 = __esm({
   }
 });
 
-// js/csp.js
+// js/index.js
 init_events();
 init_store();
 
@@ -12614,7 +12614,7 @@ function ensureLivewireScriptIsntMisplaced() {
   }
 }
 
-// js/csp.js
+// js/index.js
 init_hooks();
 init_directives();
 var import_alpinejs21 = __toESM(require_module_cjs());
@@ -13912,7 +13912,7 @@ function debounce(func, wait) {
 init_directives();
 init_evaluator();
 directive("init", ({ component, el, directive: directive2 }) => {
-  let fullMethod = directive2.expression ?? "$refresh";
+  let fullMethod = directive2.expression ? directive2.expression : "$refresh";
   evaluateActionExpression(component, el, fullMethod);
 });
 
@@ -13963,11 +13963,11 @@ function triggerComponentRequest(el, directive2, component) {
       el,
       directive: directive2
     });
-    let fullMethod2 = directive2.expression ?? "$refresh";
+    let fullMethod2 = directive2.expression ? directive2.expression : "$refresh";
     evaluateActionExpression(component, el, fullMethod2);
     return;
   }
-  let fullMethod = directive2.expression ?? "$commit";
+  let fullMethod = directive2.expression ? directive2.expression : "$commit";
   evaluateActionExpression(component, el, fullMethod);
 }
 function poll(callback, interval = 2e3) {
@@ -14092,7 +14092,7 @@ import_alpinejs19.default.interceptInit((el) => {
   }
 });
 
-// js/csp.js
+// js/index.js
 var Livewire2 = {
   directive,
   dispatchTo,
@@ -14116,9 +14116,8 @@ if (window.Livewire)
   warnAboutMultipleInstancesOf("Livewire");
 if (window.Alpine)
   warnAboutMultipleInstancesOf("Alpine");
-if (window.livewireV4) {
-  Promise.resolve().then(() => init_v4());
-}
+window.livewireV4 = true;
+Promise.resolve().then(() => init_v4());
 window.Livewire = Livewire2;
 window.Alpine = import_alpinejs21.default;
 if (window.livewireScriptConfig === void 0) {

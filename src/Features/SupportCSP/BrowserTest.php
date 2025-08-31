@@ -15,6 +15,33 @@ class BrowserTest extends BrowserTestCase
         };
     }
 
+    public function test_complex_expression_is_invalid_with_csp()
+    {
+        Livewire::visit(new class extends Component {
+            public $count = 0;
+
+            public function setCount($count)
+            {
+                $this->count = $count;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <span dusk="count">{{ $count }}</span>
+                    <button dusk="set-count" wire:click="setCount($wire.count + (() => 1)())">+</button>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSee('0')
+            ->assertConsoleLogHasNoErrors()
+            ->click('@set-count')
+            ->assertConsoleLogHasErrors()
+        ;
+    }
+
     public function test_basic_counter_component_works_with_csp()
     {
         Livewire::visit(new class extends Component {

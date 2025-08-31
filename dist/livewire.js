@@ -6631,7 +6631,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
       directive2("island", ({ el, directive: directive3, cleanup: cleanup2 }) => {
-        let name = directive3.expression ?? "default";
+        let name = directive3.expression ? directive3.expression : "default";
         let mode = null;
         if (directive3.modifiers.includes("append")) {
           mode = "append";
@@ -12270,7 +12270,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   init_directives();
   init_evaluator();
   directive2("init", ({ component, el, directive: directive3 }) => {
-    let fullMethod = directive3.expression ?? "$refresh";
+    let fullMethod = directive3.expression ? directive3.expression : "$refresh";
     evaluateActionExpression(component, el, fullMethod);
   });
 
@@ -12321,11 +12321,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el,
         directive: directive3
       });
-      let fullMethod2 = directive3.expression ?? "$refresh";
+      let fullMethod2 = directive3.expression ? directive3.expression : "$refresh";
       evaluateActionExpression(component, el, fullMethod2);
       return;
     }
-    let fullMethod = directive3.expression ?? "$commit";
+    let fullMethod = directive3.expression ? directive3.expression : "$commit";
     evaluateActionExpression(component, el, fullMethod);
   }
   function poll(callback, interval = 2e3) {

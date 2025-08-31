@@ -17,7 +17,7 @@ interceptorRegistry.add(({ action, component, request, el, directive }) => {
 })
 
 directive('island', ({ el, directive, cleanup }) => {
-    let name = directive.expression ?? 'default'
+    let name = directive.expression ? directive.expression : 'default'
 
     let mode = null
 
