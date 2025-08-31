@@ -183,4 +183,17 @@ return [
     */
 
     'release_token' => 'a',
+
+    /*
+    |---------------------------------------------------------------------------
+    | CSP Safe
+    |---------------------------------------------------------------------------
+    |
+    | This config is used to determine if Livewire will use the CSP-safe version
+    | of Alpine in its bundle. This is useful for applications that are using
+    | strict Content Security Policy (CSP) to protect against XSS attacks.
+    |
+    */
+
+    'csp_safe' => false,
 ];

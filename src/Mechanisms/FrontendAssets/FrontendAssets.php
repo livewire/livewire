@@ -26,6 +26,7 @@ class FrontendAssets extends Mechanism
         });
 
         Route::get('/livewire/livewire.min.js.map', [static::class, 'maps']);
+        Route::get('/livewire/livewire.csp.min.js.map', [static::class, 'cspMaps']);
 
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
         Blade::directive('livewireScriptConfig', [static::class, 'livewireScriptConfig']);
@@ -77,16 +78,29 @@ class FrontendAssets extends Mechanism
 
     public function returnJavaScriptAsFile()
     {
-        return Utils::pretendResponseIsFile(
-            config('app.debug')
-                ? __DIR__.'/../../../dist/livewire.js'
-                : __DIR__.'/../../../dist/livewire.min.js'
-        );
+        $isCsp = app('livewire')->isCspSafe();
+
+        if (config('app.debug')) {
+            $file = $isCsp ? 'livewire.csp.js' : 'livewire.js';
+        } else {
+            $file = $isCsp ? 'livewire.csp.min.js' : 'livewire.min.js';
+        }
+
+        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/'.$file);
     }
 
     public function maps()
     {
-        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.min.js.map');
+        $file = app('livewire')->isCspSafe()
+            ? 'livewire.csp.min.js.map'
+            : 'livewire.min.js.map';
+
+        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/'.$file);
+    }
+
+    public function cspMaps()
+    {
+        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.csp.min.js.map');
     }
 
     /**
@@ -200,10 +214,8 @@ class FrontendAssets extends Mechanism
             app(static::class)->scriptTagAttributes,
         );
 
-        $v4Script = \Livewire\LivewireManager::$v4 ? '<script>window.livewireV4 = true</script>' : '';
-
         return <<<HTML
-        {$assetWarning}{$v4Script}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
+        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 
@@ -239,7 +251,13 @@ class FrontendAssets extends Mechanism
         $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
         $versionedFileName = $publishedManifest['/livewire.js'];
 
-        $fileName = config('app.debug') ? '/livewire.js' : '/livewire.min.js';
+        $isCsp = app('livewire')->isCspSafe();
+
+        if (config('app.debug')) {
+            $fileName = $isCsp ? '/livewire.csp.js' : '/livewire.js';
+        } else {
+            $fileName = $isCsp ? '/livewire.csp.min.js' : '/livewire.min.js';
+        }
 
         $versionedFileName = "{$fileName}?id={$versionedFileName}";
 

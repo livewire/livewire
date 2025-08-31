@@ -2,6 +2,7 @@ import { callAndClearComponentDebounces } from '@/debounce'
 import { customDirectiveHasBeenRegistered } from '@/directives'
 import { on } from '@/hooks'
 import Alpine from 'alpinejs'
+import { evaluateActionExpression } from '../evaluator'
 
 on('directive.init', ({ el, directive, cleanup, component }) => {
     if (['snapshot', 'effects', 'model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'target', 'dirty'].includes(directive.value)) return
@@ -27,7 +28,7 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
                         directive,
                     })
 
-                    Alpine.evaluate(el, 'await $wire.'+directive.expression, { scope: { $event: e }})
+                    evaluateActionExpression(component, el, directive.expression, { scope: { $event: e } })
                 })
             }
 

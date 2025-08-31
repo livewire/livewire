@@ -295,4 +295,9 @@ class LivewireManager
 
         return request()->method();
     }
+
+    function isCspSafe()
+    {
+        return config('livewire.csp_safe', false);
+    }
 }

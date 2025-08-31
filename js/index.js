@@ -31,10 +31,10 @@ let warnAboutMultipleInstancesOf = entity => console.warn(`Detected multiple ins
 if (window.Livewire) warnAboutMultipleInstancesOf('Livewire')
 if (window.Alpine) warnAboutMultipleInstancesOf('Alpine')
 
-// Register v4 changes...
-if (window.livewireV4) {
-    import('./v4')
-}
+// Todo: Remove this once we're ready to release v4...
+window.livewireV4 = true
+
+import('./v4')
 
 // Register features...
 import './features/index'

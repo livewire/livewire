@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs'
 import { extractDirective } from '@/directives'
+import { evaluateActionExpression } from '../../evaluator'
 
 Alpine.interceptInit(el => {
     for (let i = 0; i < el.attributes.length; i++) {
@@ -10,11 +11,7 @@ Alpine.interceptInit(el => {
 
             let modifierString = name.split('wire:intersect')[1]
 
-            let expression = value.startsWith('!')
-                ? '!$wire.' + value.slice(1).trim()
-                : '$wire.' + value.trim()
-
-            let evaluator = Alpine.evaluateLater(el, expression)
+            let expression = value.trim()
 
             Alpine.bind(el, {
                 ['x-intersect' + modifierString](e) {
@@ -29,7 +26,7 @@ Alpine.interceptInit(el => {
                         directive,
                     })
 
-                    evaluator()
+                    evaluateActionExpression(component, el, expression)
                 }
             })
         }
