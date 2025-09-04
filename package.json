@@ -14,12 +14,13 @@
     "dependencies": {
         "@alpinejs/anchor": "^3.14.9",
         "@alpinejs/collapse": "^3.14.9",
+        "@alpinejs/csp": "^3.14.9",
         "@alpinejs/focus": "^3.14.9",
         "@alpinejs/intersect": "^3.14.9",
-        "@alpinejs/resize": "^3.14.9",
         "@alpinejs/mask": "^3.14.9",
         "@alpinejs/morph": "^3.14.9",
         "@alpinejs/persist": "^3.14.9",
+        "@alpinejs/resize": "^3.14.9",
         "@vue/reactivity": "^3.2.45",
         "alpinejs": "^3.14.9",
         "nprogress": "^0.2.0"

@@ -55,7 +55,7 @@ class LoadBalancerCompatibilityUnitTest extends \Tests\TestCase
         </div>
         HTML);
 
-        $this->assertStringContainsString('lw-540987236-0', $contentsA);
-        $this->assertStringContainsString('lw-540987236-0', $contentsB);
+        $this->assertStringContainsString('lw-4143999038-0', $contentsA);
+        $this->assertStringContainsString('lw-4143999038-0', $contentsB);
     }
 }

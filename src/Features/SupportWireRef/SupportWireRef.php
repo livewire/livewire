@@ -1,23 +1,23 @@
 <?php
 
-namespace Livewire\V4\Refs;
+namespace Livewire\Features\SupportWireRef;
 
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
 
-class SupportRefs extends ComponentHook
+class SupportWireRef extends ComponentHook
 {
     public function mount($params)
     {
         if (isset($params['wire:ref'])) {
-            $this->component->withRef($params['wire:ref']);
+            $this->storeSet('ref', $params['wire:ref']);
         }
     }
 
     public function dehydrate($context)
     {
-        if ($this->component->hasRef()) {
-            $context->addMemo('ref', $this->component->getRef());
+        if ($this->storeHas('ref')) {
+            $context->addMemo('ref', $this->storeGet('ref'));
         }
     }
 
@@ -27,13 +27,13 @@ class SupportRefs extends ComponentHook
 
         if (! $ref) return;
 
-        $this->component->withRef($ref);
+        $this->storeSet('ref', $ref);
     }
 
     public function render($view, $data)
     {
         return function ($html, $replaceHtml) {
-            $ref = $this->component->getRef();
+            $ref = $this->storeGet('ref');
 
             if (! $ref) return;
 

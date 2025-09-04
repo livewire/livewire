@@ -19,10 +19,6 @@ abstract class ComponentHook
         if (method_exists($this, 'mount')) $this->mount(...$params);
     }
 
-    function callContext(...$params) {
-        if (method_exists($this, 'context')) $this->context(...$params);
-    }
-
     function callHydrate(...$params) {
         if (method_exists($this, 'hydrate')) $this->hydrate(...$params);
     }
@@ -39,10 +35,10 @@ abstract class ComponentHook
         };
     }
 
-    function callCall($method, $params, $returnEarly, $context) {
+    function callCall($method, $params, $returnEarly, $context, $componentContext) {
         $callbacks = [];
 
-        if (method_exists($this, 'call')) $callbacks[] = $this->call($method, $params, $returnEarly, $context);
+        if (method_exists($this, 'call')) $callbacks[] = $this->call($method, $params, $returnEarly, $context, $componentContext);
 
         return function (...$params) use ($callbacks) {
             foreach ($callbacks as $callback) {

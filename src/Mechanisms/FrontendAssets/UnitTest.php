@@ -11,6 +11,13 @@ use function Livewire\trigger;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        \Livewire\LivewireManager::$v4 = false;
+
+        parent::setUp();
+    }
+
     public function test_styles()
     {
         $assets = app(FrontendAssets::class);

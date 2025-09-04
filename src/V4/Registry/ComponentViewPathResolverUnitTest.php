@@ -171,4 +171,21 @@ class ComponentViewPathResolverUnitTest extends \Tests\TestCase
         // Should resolve to the aliased path, not the default one...
         $this->assertEquals($aliasedPath, $resolved);
     }
+
+    public function test_resolves_multi_file_component_directory()
+    {
+        // Create a multi-file component directory with both .php and .blade.php files
+        File::makeDirectory($this->tempPath . '/components/multi-component', 0755, true);
+
+        $livewireFile = $this->tempPath . '/components/multi-component/multi-component.php';
+        $bladeFile = $this->tempPath . '/components/multi-component/multi-component.blade.php';
+
+        File::put($livewireFile, 'new class extends Livewire\Component { public $count = 0; }');
+        File::put($bladeFile, '<div>Count: {{ $count }}</div>');
+
+        $resolved = $this->resolver->resolve('multi-component');
+
+        // Should resolve to the directory path for multi-file components
+        $this->assertEquals($this->tempPath . '/components/multi-component', $resolved);
+    }
 }

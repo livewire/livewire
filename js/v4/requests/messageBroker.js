@@ -23,17 +23,23 @@ class MessageBroker {
         message.addInterceptor(interceptor)
     }
 
-    addContext(component, key, value) {
+    addContext(component, context) {
         let message = this.getMessage(component)
 
-        message.addContext(key, value)
+        message.addContext(context)
     }
 
-    addAction(component, method, params = []) {
+    pullContext(component) {
         let message = this.getMessage(component)
+        
+        return message.pullContext()
+    }
+
+    addAction(action) {
+        let message = this.getMessage(action.component)
 
         let promise = new Promise((resolve) => {
-            message.addAction(method, params, resolve)
+            message.addAction(action, resolve)
         })
 
         this.send(message)
@@ -46,7 +52,7 @@ class MessageBroker {
     }
 
     bufferMessageForFiveMs(message) {
-        if (message.isBuffering()) return
+        if (message.isBuffering() || message.isCancelled()) return
 
         message.buffer()
 
@@ -67,6 +73,8 @@ class MessageBroker {
         if (messages.size === 0) return
 
         messages.forEach(message => {
+            if (message.isCancelled()) return
+            
             message.prepare()
         })
 

@@ -28,10 +28,19 @@ export default class MessageRequest extends Request {
         return this.messages.size === 0
     }
 
-    shouldCancel() {
-        return request => {
-            return request.constructor.name === MessageRequest.name
-                && Array.from(request.messages).some(message => this.hasMessageFor(message.component))
+    processCancellations(existingRequest) {
+        if (existingRequest.constructor.name !== MessageRequest.name) return
+
+        Array.from(existingRequest.messages).forEach(existingMessage => {
+            existingMessage.processCancellations(this)
+        })
+    }
+
+    cancelMessage(message) {
+        this.deleteMessage(message)
+
+        if (this.messages.size === 0) {
+            this.cancel()
         }
     }
 
@@ -153,7 +162,7 @@ export default class MessageRequest extends Request {
 
     cancel() {
         this.messages.forEach(message => {
-            message.cancelIfItShouldBeCancelled()
+            message.cancel()
         })
 
         super.cancel()

@@ -6,11 +6,20 @@ class SkippedIsland
 {
     public function __construct(
         public string $key,
+        public string $name,
+        public ?string $placeholder = null,
     ) {}
 
     public function render()
     {
-        return "<!--[if ISLAND:{$this->key}]><![endif]-->"
+        $placeholderContent = '';
+
+        if (view()->exists($this->placeholder)) {
+            $placeholderContent = view($this->placeholder)->render();
+        }
+
+        return "<!--[if ISLAND:{$this->key}:placeholder]><![endif]-->"
+            . "<div>{$placeholderContent}</div>"
             . "<!--[if ENDISLAND:{$this->key}]><![endif]-->";
     }
 }

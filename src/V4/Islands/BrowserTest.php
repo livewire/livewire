@@ -236,17 +236,19 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function render() { return <<<'HTML'
                 <div>
-                    @island(defer: true)
-                        <div dusk="island">
-                            <p>Island content</p>
-                        </div>
-                    @endisland
+                    <div dusk="island-container">
+                        @island(defer: true)
+                            <div dusk="island">
+                                <p>Island content</p>
+                            </div>
+                        @endisland
+                    </div>
                 </div>
                 HTML; }
         })
         ->waitForLivewireToLoad()
         ->assertMissing('@island')
-        ->assertSee('Loading...')
+        ->assertSeeNothingIn('@island-container')
 
         // Wait for the island to be hydrated...
         ->pause(500)
@@ -270,18 +272,18 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div style="height: 100vh">Long content to push the island off the page...</div>
 
                     <div dusk="island-container">
-                    @island(lazy: true)
-                        <div dusk="island">
-                            <p>Island content</p>
-                        </div>
-                    @endisland
+                        @island(lazy: true)
+                            <div dusk="island">
+                                <p>Island content</p>
+                            </div>
+                        @endisland
                     </div>
                 </div>
                 HTML; }
         })
         ->waitForLivewireToLoad()
         ->assertMissing('@island')
-        ->assertSee('Loading...')
+        ->assertSeeNothingIn('@island-container')
         ->waitForNoLivewire()
 
         // Wait for the island to be hydrated if it was going to, but it shouldn't...
@@ -290,7 +292,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertDontSee('Island content')
 
         ->scrollIntoView('@island-container')
-        ->assertSeeIn('@island-container', 'Loading...')
+        ->assertSeeNothingIn('@island-container')
 
         ->pause(500)
 
@@ -859,6 +861,58 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_a_deferred_inline_island_with_mode_append_replaces_placeholder_but_still_appends_new_content()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function incrementCount()
+                {
+                    $this->count++;
+                }
+
+                public function hydrate()
+                {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <div dusk="island">
+                        @island('foo', defer: true, mode: 'append')
+                            @placeholder
+                                <p>Directive based placeholder!</p>
+                            @endplaceholder
+
+                            <p>Island content {{ $count }}</p>
+                        @endisland
+                    </div>
+
+                    <button wire:click="incrementCount" wire:island="foo" dusk="increment-count-button">Increment count</button>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@island', 'Directive based placeholder!')
+        ->assertDontSeeIn('@island', 'Island content')
+
+        // Wait for the island to be hydrated...
+        ->pause(500)
+
+        ->waitForText('Island content')
+        ->assertDontSeeIn('@island', 'Directive based placeholder!')
+        ->assertSeeIn('@island', 'Island content 0')
+        ->assertDontSeeIn('@island', 'Island content 1')
+
+        ->waitForLivewire()->click('@increment-count-button')
+        ->assertDontSeeIn('@island', 'Directive based placeholder!')
+        ->assertSeeIn('@island', 'Island content 0')
+        ->assertSeeIn('@island', 'Island content 1')
+        ;
+    }
+
     public function test_a_lazy_inline_island_can_be_passed_a_placeholder_parameter()
     {
         Livewire::visit(
@@ -922,6 +976,439 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         ->waitForText('Island content')
         ->assertSeeIn('@island', 'Island content')
+        ;
+    }
+
+    public function test_a_lazy_inline_island_with_mode_append_replaces_placeholder_but_still_appends_new_content()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function incrementCount()
+                {
+                    $this->count++;
+                }
+
+                public function hydrate()
+                {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <div dusk="island">
+                        @island('foo', lazy: true, mode: 'append')
+                            @placeholder
+                                <p>Directive based placeholder!</p>
+                            @endplaceholder
+
+                            <p>Island content {{ $count }}</p>
+                        @endisland
+                    </div>
+
+                    <button wire:click="incrementCount" wire:island="foo" dusk="increment-count-button">Increment count</button>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@island', 'Directive based placeholder!')
+        ->assertDontSeeIn('@island', 'Island content')
+
+        // Wait for the island to be hydrated...
+        ->pause(500)
+
+        ->waitForText('Island content')
+        ->assertDontSeeIn('@island', 'Directive based placeholder!')
+        ->assertSeeIn('@island', 'Island content 0')
+        ->assertDontSeeIn('@island', 'Island content 1')
+
+        ->waitForLivewire()->click('@increment-count-button')
+        ->assertDontSeeIn('@island', 'Directive based placeholder!')
+        ->assertSeeIn('@island', 'Island content 0')
+        ->assertSeeIn('@island', 'Island content 1')
+        ;
+    }
+
+    public function test_a_skipped_inline_island_can_be_passed_a_placeholder_parameter()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        @island('foo', render: 'skip', placeholder: 'Custom placeholder!')
+                            <div dusk="island">
+                                <p>Island content</p>
+                            </div>
+                        @endisland
+
+                        <button wire:click="$refresh" wire:island="foo" dusk="refresh-foo">Refresh</button>
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertMissing('@island')
+        ->assertSee('Custom placeholder!')
+
+        ->waitForLivewire()->click('@refresh-foo')
+
+        ->waitForText('Island content')
+        ->assertSeeIn('@island', 'Island content')
+        ;
+    }
+
+    public function test_a_skipped_inline_island_can_have_a_placeholder_directive()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        @island('foo', render: 'skip')
+                            @placeholder
+                                <p>Directive based placeholder!</p>
+                            @endplaceholder
+
+                            <div dusk="island">
+                                <p>Island content</p>
+                            </div>
+                        @endisland
+
+                        <button wire:click="$refresh" wire:island="foo" dusk="refresh-foo">Refresh</button>
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertMissing('@island')
+        ->assertSee('Directive based placeholder!')
+
+        ->waitForLivewire()->click('@refresh-foo')
+
+        ->waitForText('Island content')
+        ->assertSeeIn('@island', 'Island content')
+        ;
+    }
+
+    public function test_a_skipped_inline_island_with_mode_append_replaces_placeholder_but_still_appends_new_content()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function incrementCount()
+                {
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <div dusk="island">
+                        @island('foo', render: 'skip', mode: 'append')
+                            @placeholder
+                                <p>Directive based placeholder!</p>
+                            @endplaceholder
+
+                            <p>Island content {{ $count }}</p>
+                        @endisland
+                    </div>
+
+                    <button wire:click="$refresh" wire:island="foo" dusk="refresh-foo">Refresh</button>
+                    <button wire:click="incrementCount" wire:island="foo" dusk="increment-count-button">Increment count</button>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@island', 'Directive based placeholder!')
+        ->assertDontSeeIn('@island', 'Island content')
+
+        ->waitForLivewire()->click('@refresh-foo')
+
+        ->waitForText('Island content')
+        ->assertDontSeeIn('@island', 'Directive based placeholder!')
+        ->assertSeeIn('@island', 'Island content 0')
+        ->assertDontSeeIn('@island', 'Island content 1')
+
+        ->waitForLivewire()->click('@increment-count-button')
+        ->assertDontSeeIn('@island', 'Directive based placeholder!')
+        ->assertSeeIn('@island', 'Island content 0')
+        ->assertSeeIn('@island', 'Island content 1')
+        ;
+    }
+
+    public function test_an_island_mode_can_be_temporarily_changed_using_the_wire_island_directive_modifiers()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function incrementCount()
+                {
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <div dusk="island">
+                        @island('foo', mode: 'append'){{ $count }}@endisland
+                    </div>
+
+                    <button wire:click="incrementCount" wire:island="foo" dusk="default-increment-button">Default</button>
+                    <button wire:click="incrementCount" wire:island.prepend="foo" dusk="prepend-increment-button">Prepend</button>
+                    <button wire:click="incrementCount" wire:island.append="foo" dusk="append-increment-button">Append</button>
+                    <button wire:click="incrementCount" wire:island.replace="foo" dusk="replace-increment-button">Replace</button>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->assertSeeIn('@island', '0')
+
+            ->waitForLivewire()->click('@default-increment-button')
+            ->assertSeeIn('@island', '01')
+
+            ->waitForLivewire()->click('@prepend-increment-button')
+            ->assertSeeIn('@island', '201')
+
+            ->waitForLivewire()->click('@append-increment-button')
+            ->assertSeeIn('@island', '2013')
+
+            ->waitForLivewire()->click('@replace-increment-button')
+            ->assertSeeIn('@island', '4')
+            ;
+    }
+
+    public function test_an_island_can_be_bypassed_by_the_component_when_the_component_re_renders()
+    {
+        // Need to use a table here, because if the island contents that are being re-rendered by the component have a placeholer div, 
+        // then the div will be hoisted out of the table by the browser, which was causing the island contents to disappear...
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        <button wire:click="$refresh" dusk="refresh-component">Refresh</button>
+
+                        <table dusk="island">
+                            @island('foo')
+                                @foreach(range(1, 3) as $i)
+                                    <tr>
+                                        <td>Island content {{ $i }}</td>
+                                    </tr>
+                                @endforeach
+                            @endisland
+                        </table>
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@island', 'Island content 1')
+        ->assertSeeIn('@island', 'Island content 2')
+        ->assertSeeIn('@island', 'Island content 3')
+
+        ->waitForLivewire()->click('@refresh-component')
+        ->assertSeeIn('@island', 'Island content 1')
+        ->assertSeeIn('@island', 'Island content 2')
+        ->assertSeeIn('@island', 'Island content 3')
+        ;
+    }
+
+    public function test_wire_poll_works_inside_an_island()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function hydrate() {
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <div dusk="component-count">Component count: {{ $count }}</div>
+
+                        @island
+                            <div wire:poll.250ms dusk="island-count">Island count: {{ $count }}</div>
+                        @endisland
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 0')
+
+        // Wait for a poll to have happened...
+        ->pause(300)
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 1')
+
+        ->pause(250)
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 2')
+        ;
+    }
+
+    public function test_wire_poll_and_wire_loading_works_inside_an_island()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function hydrate() {
+                    $this->count++;
+                    usleep(200 * 1000); // 200ms
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <div dusk="component-count">Component count: {{ $count }}</div>
+                        <div wire:loading dusk="component-loading">Component loading</div>
+
+                        @island
+                            <div wire:poll.500ms dusk="island-count">Island count: {{ $count }}</div>
+                            <div wire:loading dusk="island-loading">Island loading</div>
+                        @endisland
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 0')
+        ->assertMissing('@component-loading')
+        ->assertMissing('@island-loading')
+
+
+        // Wait for a poll to have started...
+        ->waitForText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertSeeIn('@island-loading', 'Island loading')
+        
+        // Wait for the poll to have finished...
+        ->waitForText('Island count: 1')
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 1')
+        ->waitUntilMissingText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertMissing('@island-loading')
+
+        // Wait for the poll to have started...
+        ->waitForText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertSeeIn('@island-loading', 'Island loading')
+
+        // Wait for the poll to have finished...
+        ->waitForText('Island count: 2')
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 2')
+        ->waitUntilMissingText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertMissing('@island-loading')
+        ;
+    }
+
+    public function test_an_island_can_accept_a_poll_parameter()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function hydrate() {
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <div dusk="component-count">Component count: {{ $count }}</div>
+
+                        @island (poll: '250ms')
+                            <div dusk="island-count">Island count: {{ $count }}</div>
+                        @endisland
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 0')
+
+        // Wait for a poll to have happened...
+        ->pause(300)
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 1')
+
+        ->pause(250)
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 2')
+        ;
+    }
+
+    public function test_island_poll_parameter_works_with_wire_loading_inside_an_island()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function hydrate() {
+                    $this->count++;
+                    usleep(200 * 1000); // 200ms
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <div dusk="component-count">Component count: {{ $count }}</div>
+                        <div wire:loading dusk="component-loading">Component loading</div>
+
+                        @island (poll: '500ms')
+                            <div dusk="island-count">Island count: {{ $count }}</div>
+                            <div wire:loading dusk="island-loading">Island loading</div>
+                        @endisland
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 0')
+        ->assertMissing('@component-loading')
+        ->assertMissing('@island-loading')
+
+
+        // Wait for a poll to have started...
+        ->waitForText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertSeeIn('@island-loading', 'Island loading')
+        
+        // Wait for the poll to have finished...
+        ->waitForText('Island count: 1')
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 1')
+        ->waitUntilMissingText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertMissing('@island-loading')
+
+        // Wait for the poll to have started...
+        ->waitForText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertSeeIn('@island-loading', 'Island loading')
+
+        // Wait for the poll to have finished...
+        ->waitForText('Island count: 2')
+        ->assertSeeIn('@component-count', 'Component count: 0')
+        ->assertSeeIn('@island-count', 'Island count: 2')
+        ->waitUntilMissingText('Island loading')
+        ->assertMissing('@component-loading')
+        ->assertMissing('@island-loading')
         ;
     }
 }

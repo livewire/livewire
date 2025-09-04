@@ -2,6 +2,7 @@ import { dataSet, deepClone, diff, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { closestComponent, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
+import messageBroker from '@/v4/requests/messageBroker.js'
 
 export class Component {
     constructor(el) {
@@ -46,6 +47,14 @@ export class Component {
 
         // Effects will be processed after every request, but we'll also handle them on initialization.
         this.processEffects(this.effects)
+    }
+
+    addActionContext(context) {
+        messageBroker.addContext(this, context)
+    }
+
+    intercept(action, callback = null) {
+        return this.$wire.$intercept(action, callback)
     }
 
     mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {

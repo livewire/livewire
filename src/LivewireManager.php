@@ -19,6 +19,8 @@ class LivewireManager
 {
     protected LivewireServiceProvider $provider;
 
+    public static $v4 = true;
+
     function setProvider(LivewireServiceProvider $provider)
     {
         $this->provider = $provider;
@@ -74,16 +76,6 @@ class LivewireManager
         return app('livewire.resolver')->namespace($namespace, $path);
     }
 
-    function route($uri, $component)
-    {
-        return \Illuminate\Support\Facades\Route::get($uri, function () use ($component) {
-            return app()->call([
-                app(LivewireManager::class)->new($component),
-                '__invoke',
-            ]);
-        });
-    }
-
     function mount($name, $params = [], $key = null, $slots = [])
     {
         return app(HandleComponents::class)->mount($name, $params, $key, $slots);
@@ -113,9 +105,9 @@ class LivewireManager
         return app(HandleComponents::class)->findSynth($keyOrTarget, $component);
     }
 
-    function update($snapshot, $diff, $calls, $updateContext)
+    function update($snapshot, $diff, $calls)
     {
-        return app(HandleComponents::class)->update($snapshot, $diff, $calls, $updateContext);
+        return app(HandleComponents::class)->update($snapshot, $diff, $calls);
     }
 
     function updateProperty($component, $path, $value)
@@ -219,8 +211,17 @@ class LivewireManager
         );
     }
 
-    function visit($name)
+    function visit($name, $args = [])
     {
+        // @todo: Remove this once Laracon US 2025 is over...
+        if (class_exists(\Livewire\V4\PestLivewireOverride::class) && class_exists(\Pest\Browser\Api\TestableLivewire::class)) {
+            return \Livewire\V4\PestLivewireOverride::test($name, $args);
+        }
+
+        if (class_exists(\Pest\Browser\Api\Livewire::class)) {
+            return \Pest\Browser\Api\Livewire::test($name, $args);
+        }
+
         return DuskTestable::create($name, $params = [], $this->queryParamsForTesting);
     }
 
@@ -252,6 +253,11 @@ class LivewireManager
     function getPersistentMiddleware()
     {
         return app(PersistentMiddleware::class)->getPersistentMiddleware();
+    }
+
+    function zap()
+    {
+        return app('livewire.zap');
     }
 
     function flushState()
@@ -288,5 +294,10 @@ class LivewireManager
         }
 
         return request()->method();
+    }
+
+    function isCspSafe()
+    {
+        return config('livewire.csp_safe', false);
     }
 }

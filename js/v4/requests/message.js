@@ -1,5 +1,6 @@
 import { trigger } from '@/hooks'
 import { morph } from '@/morph'
+import { renderIsland } from '@/features/supportIslands'
 
 export default class Message {
     updates = {}
@@ -21,51 +22,98 @@ export default class Message {
     }
 
     addInterceptor(interceptor) {
+        if (interceptor.hasBeenCancelled) return this.cancel()
+
         interceptor.cancel = () => this.cancel()
 
         this.interceptors.add(interceptor)
     }
 
-    addContext(key, value) {
-        if (! this.context[key]) {
-            this.context[key] = []
-        }
-
-        if (this.context[key].includes(value)) return
-
-        this.context[key].push(value)
+    addContext(context) {
+        this.context = {...this.context, ...context}
     }
 
-    addAction(method, params, resolve) {
+    getContainer() {
+        let isIsland = false
+        let isComponent = false
+
+        for (let action of this.actions) {
+            if (action.getContainer() === 'island') {
+                isIsland = true
+            } else {
+                isComponent = true
+            }
+
+            if (isIsland && isComponent) {
+                return 'mixed'
+            }
+        }
+
+        return isIsland ? 'island' : 'component'
+    }
+
+    pullContext() {
+        let context = this.context
+
+        this.context = {}
+
+        return context
+    }
+
+    addAction(action, resolve) {
         // If the action isn't a magic action then it supersedes any magic actions.
         // Remove them so there aren't any unnecessary actions in the request...
-        if (! this.isMagicAction(method)) {
+        if (! this.isMagicAction(action.method)) {
             this.removeAllMagicActions()
         }
 
-        if (this.isMagicAction(method)) {
-            // If the action is a magic action and it already exists then remove the 
+        if (this.isMagicAction(action.method)) {
+            // If the action is a magic action and it already exists then remove the
             // old action so there aren't any duplicate actions in the request...
-            this.findAndRemoveAction(method)
+            // @todo: Should this happen now? What if the same action is called, but it has a different context?
+            this.findAndRemoveAction(action.method)
 
-            this.actions.push({
-                method: method,
-                params: params,
-                handleReturn: () => {},
-            })
+            this.actions.push(action)
 
-            // We need to store the resolver, so we can call all of the 
+            // We need to store the resolver, so we can call all of the
             // magic action resolvers when the message is finished...
             this.resolvers.push(resolve)
 
             return
         }
 
-        this.actions.push({
-            method: method,
-            params: params,
-            handleReturn: resolve,
+        action.handleReturn = resolve
+
+        this.actions.push(action)
+    }
+
+    getHighestPriorityType(actionTypes) {
+        let rankedTypes = [
+            'user',
+            'refresh',
+            'poll',
+        ]
+
+        // Find all action types that are in our ranked list
+        let validActionTypes = actionTypes.filter(type => rankedTypes.includes(type))
+
+        if (validActionTypes.length === 0) {
+            return null
+        }
+
+        // Find the highest priority type (lowest index in rankedTypes)
+        let highestPriorityType = validActionTypes.reduce((highest, current) => {
+            let highestIndex = rankedTypes.indexOf(highest)
+            let currentIndex = rankedTypes.indexOf(current)
+            return currentIndex < highestIndex ? current : highest
         })
+
+        return highestPriorityType
+    }
+
+    type() {
+        let actionTypes = this.actions.map(i => i.context.type ?? 'user')
+        return this.getHighestPriorityType(actionTypes)
     }
 
     magicActions () {
@@ -73,6 +121,7 @@ export default class Message {
             '$refresh',
             '$set',
             '$sync',
+            '$commit',
         ]
     }
 
@@ -88,10 +137,62 @@ export default class Message {
         this.actions = this.actions.filter(i => i.method !== method)
     }
 
-    cancelIfItShouldBeCancelled() {
-        if (this.isSucceeded()) return
+    processCancellations(newRequest) {
+        Array.from(newRequest.messages).forEach(newMessage => {
+            if (this.component.id !== newMessage.component.id) return
 
-        this.cancel()
+            let existingMessageContainer = this.getContainer()
+            let newMessageContainer = newMessage.getContainer()
+
+            // If the containers are different, then just return...
+            if (
+                (existingMessageContainer === 'island' && newMessageContainer === 'component')
+                || (existingMessageContainer === 'component' && newMessageContainer === 'island')
+            ) {
+                return
+            }
+
+            this.actions.forEach(existingAction => {
+                newMessage.actions.forEach(newAction => {
+                    let existingActionContainer = existingAction.getContainer()
+                    let newActionContainer = newAction.getContainer()
+
+                    // If the actions containers are different, then just return...
+                    if (
+                        (existingActionContainer === 'island' && newActionContainer === 'component')
+                        || (existingActionContainer === 'component' && newActionContainer === 'island')
+                    ) {
+                        return
+                    }
+
+                    // If the action containers are both island, then we need to check if the islands are the same...
+                    if (existingActionContainer === 'island' && newActionContainer === 'island') {
+                        // If the islands are different, then just return...
+                        if (existingAction.context.island.name !== newAction.context.island.name) {
+                            return
+                        }
+                    }
+
+                    let existingActionType = existingAction.context.type ?? 'user'
+                    let newActionType = newAction.context.type ?? 'user'
+
+                    // If both actions are polls we need to cancel the new one to let 
+                    // the old one finish so we don't end up in a polling loop...
+                    if (existingActionType === 'poll' && newActionType === 'poll') {
+                        return newMessage.cancel()
+                    }
+
+                    // If the existing action is a user action and the new action is a poll,
+                    // then cancel the new one, as user actions are more important...
+                    if (existingActionType === 'user' && newActionType === 'poll') {
+                        return newMessage.cancel()
+                    }
+
+                    // Otherwise we can cancel the existing request and let the new one run...
+                    return this.cancel()
+                })
+            })
+        })
     }
 
     buffer() {
@@ -114,8 +215,8 @@ export default class Message {
             calls: this.actions.map(i => ({
                 method: i.method,
                 params: i.params,
+                context: i.context,
             })),
-            context: this.context,
         }
 
         // Allow other areas of the codebase to hook into the lifecycle
@@ -193,25 +294,51 @@ export default class Message {
 
         this.finishTarget({ snapshot: parsedSnapshot, effects })
 
-        this.interceptors.forEach(i => i.onSuccess(response))
+        this.interceptors.forEach(i => i.onSuccess({ response }))
 
         this.succeedCallbacks.forEach(i => i(response))
 
         let html = effects['html']
 
-        if (! html) return
+        let islands = effects['islands']
+
+        if (! html && ! islands) {
+            setTimeout(() => {
+                this.interceptors.forEach(i => i.returned())
+            })
+
+            return
+        }
 
         this.interceptors.forEach(i => i.beforeRender({ component: this.component }))
 
         queueMicrotask(() => {
-            this.interceptors.forEach(i => i.beforeMorph({ component: this.component, el: this.component.el, html }))
+            if (html) {
+                this.interceptors.forEach(i => i.beforeMorph({ component: this.component, el: this.component.el, html }))
 
-            morph(this.component, this.component.el, html)
+                morph(this.component, this.component.el, html)
 
-            this.interceptors.forEach(i => i.afterMorph({ component: this.component, el: this.component.el, html }))
+                this.interceptors.forEach(i => i.afterMorph({ component: this.component, el: this.component.el, html }))
+            }
+
+            if (islands) {
+                islands.forEach(islandPayload => {
+                    let { key, content, mode } = islandPayload
+
+                    let island = this.component.islands[key]
+
+                    this.interceptors.forEach(i => i.beforeMorphIsland({ component: this.component, island, content }))
+
+                    renderIsland(this.component, key, content, mode)
+
+                    this.interceptors.forEach(i => i.afterMorphIsland({ component: this.component, island, content }))
+                })
+            }
 
             setTimeout(() => {
                 this.interceptors.forEach(i => i.afterRender({ component: this.component }))
+
+                this.interceptors.forEach(i => i.returned())
             })
         })
     }
@@ -221,7 +348,11 @@ export default class Message {
 
         this.status = 'errored'
 
-        this.interceptors.forEach(i => i.onError(e))
+        this.respond()
+
+        this.interceptors.forEach(i => i.onError({ e }))
+        
+        this.interceptors.forEach(i => i.returned())
     }
 
     fail(response, content) {
@@ -231,18 +362,25 @@ export default class Message {
 
         this.respond()
 
-        this.interceptors.forEach(i => i.onError(response, content))
+        this.interceptors.forEach(i => i.onFailure({ response, content }))
 
         this.failCallbacks.forEach(i => i())
+        
+        this.interceptors.forEach(i => i.returned())
     }
 
     cancel() {
+        if (this.isSucceeded()) return
+
         this.status = 'cancelled'
 
-        this.interceptors.forEach(i => i.onCancel())
+        this.request?.cancelMessage(this)
 
-        // @todo: Get this working with `wire:loading`...
-        // this.respond()
+        this.respond()
+
+        this.interceptors.forEach(i => i.onCancel())
+        
+        this.interceptors.forEach(i => i.returned())
     }
 
     isBuffering() {

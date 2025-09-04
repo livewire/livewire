@@ -5,6 +5,8 @@ namespace Livewire\V4\Compiler;
 use Livewire\V4\Compiler\Exceptions\InvalidComponentException;
 use Livewire\V4\Compiler\Exceptions\CompilationException;
 use Livewire\V4\Compiler\Exceptions\ParseException;
+use Livewire\V4\Placeholders\PlaceholderCompiler;
+use Livewire\V4\Islands\IslandsCompiler;
 use Illuminate\Support\Facades\File;
 use Livewire\Mechanisms\Mechanism;
 
@@ -14,7 +16,12 @@ class SingleFileComponentCompiler extends Mechanism
     protected string $classesDirectory;
     protected string $viewsDirectory;
     protected string $scriptsDirectory;
+    protected string $metadataDirectory;
     protected array $supportedExtensions;
+
+    // In-memory cache for same-request optimizations
+    private static array $compilationCache = [];
+    private static array $metadataCache = [];
 
     public function __construct(?string $cacheDirectory = null, ?array $supportedExtensions = null)
     {
@@ -22,7 +29,8 @@ class SingleFileComponentCompiler extends Mechanism
         $this->classesDirectory = $this->cacheDirectory . '/classes';
         $this->viewsDirectory = $this->cacheDirectory . '/views';
         $this->scriptsDirectory = $this->cacheDirectory . '/scripts';
-        $this->supportedExtensions = $supportedExtensions ?: ['.livewire.php'];
+        $this->metadataDirectory = $this->cacheDirectory . '/metadata';
+        $this->supportedExtensions = $supportedExtensions ?: ['.livewire.php', '.blade.php'];
 
         $this->ensureDirectoriesExist();
         $this->ensureCacheDirectoryIsGitIgnored();
@@ -39,13 +47,25 @@ class SingleFileComponentCompiler extends Mechanism
             throw new CompilationException("View file not found: [{$viewPath}]");
         }
 
-        $content = File::get($viewPath);
-        $hash = $this->generateHash($viewPath, $content);
+        // Check in-memory cache first (same-request optimization)
+        $sourceModTime = filemtime($viewPath);
+        $memoryCacheKey = $viewPath . '_' . $sourceModTime;
+
+        if (isset(self::$compilationCache[$memoryCacheKey])) {
+            return self::$compilationCache[$memoryCacheKey];
+        }
+
+        $hash = $this->generateHash($viewPath, $sourceModTime);
 
         // Check if already compiled and up to date...
-        if ($this->isCompiled($viewPath, $hash)) {
-            return $this->getExistingCompilationResult($viewPath, $hash);
+        if ($this->isCompiled($viewPath, $hash, $sourceModTime)) {
+            $result = $this->getExistingCompilationResult($viewPath, $hash);
+            self::$compilationCache[$memoryCacheKey] = $result;
+            return $result;
         }
+
+        // Need to compile - read content only now
+        $content = File::get($viewPath);
 
         // Parse the component...
         $parsed = $this->parseComponent($content);
@@ -54,8 +74,20 @@ class SingleFileComponentCompiler extends Mechanism
         // Generate compilation result...
         $result = $this->generateCompilationResult($viewPath, $parsed, $hash);
 
-        // Generate files...
+        // Compile islands...
+        $islandsCompiler = new IslandsCompiler($this->cacheDirectory);
+        $parsed->viewContent = $islandsCompiler->compile($parsed->viewContent, $viewPath);
+
+        // Compile placeholder...
+        $placeholderCompiler = new PlaceholderCompiler($this->cacheDirectory);
+        $parsed->viewContent = $placeholderCompiler->compile($parsed->viewContent, $viewPath);
+
+        // Generate files and metadata...
         $this->generateFiles($result, $parsed);
+        $this->storeCompilationMetadata($result, $parsed, [$viewPath], [$sourceModTime]);
+
+        // Cache in memory for this request
+        self::$compilationCache[$memoryCacheKey] = $result;
 
         return $result;
     }
@@ -67,10 +99,12 @@ class SingleFileComponentCompiler extends Mechanism
         }
 
         // Get the component name from the directory
-        $componentName = basename($directory);
+        $directoryName = basename($directory);
+        // For directories with ⚡, use the base name without ⚡ for the files inside
+        $componentName = str_contains($directoryName, '⚡') ? str_replace('⚡', '', $directoryName) : $directoryName;
 
         // Define the expected file paths
-        $livewireFilePath = $directory . '/' . $componentName . '.livewire.php';
+        $livewireFilePath = $directory . '/' . $componentName . '.php';
         $bladeFilePath = $directory . '/' . $componentName . '.blade.php';
         $jsFilePath = $directory . '/' . $componentName . '.js';
 
@@ -83,30 +117,42 @@ class SingleFileComponentCompiler extends Mechanism
             throw new CompilationException("Blade file not found: [{$bladeFilePath}]");
         }
 
-        // Read the contents of the required files
+        // Collect source files and their modification times
+        $sourceFiles = [$livewireFilePath, $bladeFilePath];
+        $sourceModTimes = [filemtime($livewireFilePath), filemtime($bladeFilePath)];
+
+        if (file_exists($jsFilePath)) {
+            $sourceFiles[] = $jsFilePath;
+            $sourceModTimes[] = filemtime($jsFilePath);
+        }
+
+        // Check in-memory cache first
+        $latestModTime = max($sourceModTimes);
+        $memoryCacheKey = $directory . '_' . $latestModTime;
+
+        if (isset(self::$compilationCache[$memoryCacheKey])) {
+            return self::$compilationCache[$memoryCacheKey];
+        }
+
+        $hash = $this->generateMultiFileHash($directory, $sourceModTimes);
+
+        // Check if already compiled and up to date...
+        if ($this->isMultiFileCompiled($directory, $hash, $sourceFiles, $sourceModTimes)) {
+            $result = $this->getExistingMultiFileCompilationResult($directory, $hash);
+            self::$compilationCache[$memoryCacheKey] = $result;
+            return $result;
+        }
+
+        // Need to compile - read contents only now
         $livewireContent = File::get($livewireFilePath);
         $bladeContent = File::get($bladeFilePath);
-
-        // Read JS file content if it exists
-        $jsContent = '';
-        if (file_exists($jsFilePath)) {
-            $jsContent = File::get($jsFilePath);
-        }
+        $jsContent = file_exists($jsFilePath) ? File::get($jsFilePath) : '';
 
         // Remove PHP opening tags from livewire content if present
         $livewireContent = preg_replace('/^<\?php\s*/', '', trim($livewireContent));
 
         // Concatenate the contents to simulate a single file component
-        // Format: @php frontmatter @endphp blade_content
         $content = "@php\n" . $livewireContent . "\n@endphp\n" . $bladeContent;
-
-        // Generate hash based on the directory path and combined content
-        $hash = $this->generateMultiFileHash($directory, $livewireContent, $bladeContent, $jsContent);
-
-        // Check if already compiled and up to date...
-        if ($this->isMultiFileCompiled($directory, $hash)) {
-            return $this->getExistingMultiFileCompilationResult($directory, $hash);
-        }
 
         // Parse the component using the concatenated content...
         $parsed = $this->parseComponent($content);
@@ -119,44 +165,75 @@ class SingleFileComponentCompiler extends Mechanism
         // Generate compilation result using the directory as the "view path"...
         $result = $this->generateMultiFileCompilationResult($directory, $parsed, $hash);
 
-        // Generate files...
+        // Compile islands...
+        $islandsCompiler = new IslandsCompiler($this->cacheDirectory);
+        $parsed->viewContent = $islandsCompiler->compile($parsed->viewContent, $directory);
+
+        // Compile placeholder...
+        $placeholderCompiler = new PlaceholderCompiler($this->cacheDirectory);
+        $parsed->viewContent = $placeholderCompiler->compile($parsed->viewContent, $directory);
+
+        // Generate files and metadata...
         $this->generateFiles($result, $parsed);
+        $this->storeCompilationMetadata($result, $parsed, $sourceFiles, $sourceModTimes);
+
+        // Cache in memory for this request
+        self::$compilationCache[$memoryCacheKey] = $result;
 
         return $result;
     }
 
-    public function isCompiled(string $viewPath, ?string $hash = null): bool
+    public function isCompiled(string $viewPath, ?string $hash = null, ?int $sourceModTime = null): bool
     {
-        $originalViewLastModified = File::lastModified($viewPath);
-
         if ($hash === null) {
-            $content = File::get($viewPath);
-            $hash = $this->generateHash($viewPath, $content);
+            $sourceModTime = $sourceModTime ?? filemtime($viewPath);
+            $hash = $this->generateHash($viewPath, $sourceModTime);
         }
 
-        $className = $this->generateClassName($viewPath, $hash);
-        $classPath = $this->getClassPath($className);
-        $viewName = $this->generateViewName($viewPath, $hash);
-        $viewPath = $this->getViewPath($viewName);
+        $metadataPath = $this->getMetadataPath($viewPath, $hash);
 
-        try {
-            $classLastModified = File::lastModified($classPath);
-            $viewLastModified = File::lastModified($viewPath);
+        // Check if metadata file exists
+        if (! file_exists($metadataPath)) {
+            return false;
+        }
 
-            return $originalViewLastModified <= $classLastModified && $originalViewLastModified <= $viewLastModified;
-        } catch (\ErrorException $exception) {
-            if (! File::exists($classPath) || ! File::exists($viewPath)) {
+        // Load metadata from cache or file
+        $metadata = $this->loadCompilationMetadata($metadataPath);
+        if (! $metadata) {
+            return false;
+        }
+
+        // Check if any source files have been modified
+        foreach ($metadata['sourceFiles'] as $index => $sourceFile) {
+            if (! file_exists($sourceFile)) {
                 return false;
             }
 
-            throw $exception;
+            $currentModTime = filemtime($sourceFile);
+            $cachedModTime = $metadata['sourceModTimes'][$index];
+
+            if ($currentModTime > $cachedModTime) {
+                return false;
+            }
         }
+
+        // Check if compiled files still exist
+        if (! file_exists($metadata['classPath']) || ! file_exists($metadata['viewPath'])) {
+            return false;
+        }
+
+        // If has scripts, check script file exists
+        if ($metadata['hasScripts'] && ! file_exists($metadata['scriptPath'])) {
+            return false;
+        }
+
+        return true;
     }
 
     public function getCompiledPath(string $viewPath): string
     {
-        $content = File::get($viewPath);
-        $hash = $this->generateHash($viewPath, $content);
+        $sourceModTime = filemtime($viewPath);
+        $hash = $this->generateHash($viewPath, $sourceModTime);
         $className = $this->generateClassName($viewPath, $hash);
         return $this->getClassPath($className);
     }
@@ -174,13 +251,13 @@ class SingleFileComponentCompiler extends Mechanism
                 $layoutData = $this->parseLayoutData($layoutMatches[2]);
             }
             // Remove the layout directive from content for further processing
-            $content = preg_replace('/@layout\s*\([^)]+\)\s*/', '', $content);
+            $content = preg_replace('/@layout\s*\([^)]+\)\s*/', '', $content, limit: 1);
         }
 
         // Handle external class reference: @php(new App\Livewire\SomeClass)
         if (preg_match('/@php\s*\(\s*new\s+([A-Za-z0-9\\\\]+)(?:::class)?\s*\)/s', $content, $matches)) {
             $externalClass = $matches[1];
-            $viewContent = preg_replace('/@php\s*\([^)]+\)/s', '', $content);
+            $viewContent = preg_replace('/@php\s*\([^)]+\)/s', '', $content, limit: 1);
 
             // Extract scripts from view content and clean it
             $scripts = $this->extractScripts($viewContent);
@@ -200,33 +277,31 @@ class SingleFileComponentCompiler extends Mechanism
         // Handle inline class: @php ... @endphp
         if (preg_match('/@php\s*(.*?)\s*@endphp/s', $content, $matches)) {
             $frontmatter = trim($matches[1]);
-            // Use the modified $content (after layout removal) for the view content
-            $viewContent = preg_replace('/@php\s*.*?\s*@endphp/s', '', $content);
-
             // Validate that frontmatter contains a class definition...
-            if (!str_contains($frontmatter, 'new class') && !str_contains($frontmatter, 'class ')) {
-                throw new ParseException("Invalid component: @php block must contain a class definition");
+            if (str_contains($frontmatter, 'new class') || str_contains($frontmatter, 'class ')) {
+                // Use the modified $content (after layout removal) for the view content
+                $viewContent = preg_replace('/@php\s*.*?\s*@endphp/s', '', $content, limit: 1);
+
+                // Extract scripts from view content and clean it
+                $scripts = $this->extractScripts($viewContent);
+                $cleanViewContent = $this->removeScripts($viewContent);
+
+                return new ParsedComponent(
+                    $frontmatter,
+                    trim($cleanViewContent),
+                    false,
+                    null,
+                    $layoutTemplate,
+                    $layoutData,
+                    $scripts,
+                );
             }
-
-            // Extract scripts from view content and clean it
-            $scripts = $this->extractScripts($viewContent);
-            $cleanViewContent = $this->removeScripts($viewContent);
-
-            return new ParsedComponent(
-                $frontmatter,
-                trim($cleanViewContent),
-                false,
-                null,
-                $layoutTemplate,
-                $layoutData,
-                $scripts,
-            );
         }
 
         // Handle external class reference with traditional PHP tags: < ?php(new App\Livewire\SomeClass) ? >
         if (preg_match('/<\?php\s*\(\s*new\s+([A-Za-z0-9\\\\]+)(?:::class)?\s*\)\s*\?>/s', $content, $matches)) {
             $externalClass = $matches[1];
-            $viewContent = preg_replace('/<\?php\s*\([^)]+\)\s*\?>/s', '', $content);
+            $viewContent = preg_replace('/<\?php\s*\([^)]+\)\s*\?>/s', '', $content, limit: 1);
 
             // Extract scripts from view content and clean it
             $scripts = $this->extractScripts($viewContent);
@@ -246,30 +321,29 @@ class SingleFileComponentCompiler extends Mechanism
         // Handle inline class with traditional PHP tags: < ?php ... ? >
         if (preg_match('/<\?php\s*(.*?)\s*\?>/s', $content, $matches)) {
             $frontmatter = trim($matches[1]);
-            // Use the modified $content (after layout removal) for the view content
-            $viewContent = preg_replace('/<\?php\s*.*?\s*\?>/s', '', $content);
 
             // Validate that frontmatter contains a class definition...
-            if (!str_contains($frontmatter, 'new class') && !str_contains($frontmatter, 'class ')) {
-                throw new ParseException("Invalid component: <"."?php block must contain a class definition");
+            if (str_contains($frontmatter, 'new class') || str_contains($frontmatter, 'class ')) {
+                // Use the modified $content (after layout removal) for the view content
+                $viewContent = preg_replace('/<\?php\s*.*?\s*\?>/s', '', $content, limit: 1);
+
+                // Extract scripts from view content and clean it
+                $scripts = $this->extractScripts($viewContent);
+                $cleanViewContent = $this->removeScripts($viewContent);
+
+                return new ParsedComponent(
+                    $frontmatter,
+                    trim($cleanViewContent),
+                    false,
+                    null,
+                    $layoutTemplate,
+                    $layoutData,
+                    $scripts,
+                );
             }
-
-            // Extract scripts from view content and clean it
-            $scripts = $this->extractScripts($viewContent);
-            $cleanViewContent = $this->removeScripts($viewContent);
-
-            return new ParsedComponent(
-                $frontmatter,
-                trim($cleanViewContent),
-                false,
-                null,
-                $layoutTemplate,
-                $layoutData,
-                $scripts,
-            );
         }
 
-        throw new InvalidComponentException("Component must contain either @php(new ClassName) or @php...@endphp block");
+        throw new InvalidComponentException("Component must contain either <?php(new ClassName) or <?php...?> block");
     }
 
     protected function loadExternalViewAndScriptIfRequired(string $viewPath, ParsedComponent $parsed): ParsedComponent
@@ -278,8 +352,22 @@ class SingleFileComponentCompiler extends Mechanism
             return $parsed;
         }
 
-        $viewFilePath = str_replace('.livewire.php', '.blade.php', $viewPath);
-        $scriptFilePath = str_replace('.livewire.php', '.js', $viewPath);
+        // Handle external view/script loading based on file extension
+        if (str_ends_with($viewPath, '.livewire.php')) {
+            $viewFilePath = str_replace('.livewire.php', '.blade.php', $viewPath);
+            $scriptFilePath = str_replace('.livewire.php', '.js', $viewPath);
+        } else if (str_ends_with($viewPath, '.blade.php') && str_contains($viewPath, '⚡')) {
+            // For ⚡ blade files, try to find accompanying view/script files
+            // Remove ⚡ to find the base name, then look for .blade.php and .js files
+            $basePathWithoutEmoji = str_replace('⚡', '', $viewPath);
+            $basePathWithoutExtension = substr($basePathWithoutEmoji, 0, -strlen('.blade.php'));
+            $viewFilePath = $basePathWithoutExtension . '.blade.php';
+            $scriptFilePath = $basePathWithoutExtension . '.js';
+        } else {
+            // Fallback for other cases
+            $viewFilePath = $viewPath;
+            $scriptFilePath = preg_replace('/\.(livewire\.php|blade\.php)$/', '.js', $viewPath);
+        }
 
         if (! file_exists($viewFilePath)) {
             return $parsed;
@@ -546,6 +634,8 @@ class SingleFileComponentCompiler extends Mechanism
         $layoutAttribute = '';
         if ($parsed->hasLayout()) {
             $layoutAttribute = $this->generateLayoutAttribute($parsed->layoutTemplate, $parsed->layoutData);
+        } else if (view()->exists('layouts::app')) { // Provide a default layout attribute...
+            $layoutAttribute = $this->generateLayoutAttribute('layouts::app', []);
         }
 
         // Build the pre-class code section (imports, constants, etc.)
@@ -566,18 +656,21 @@ class SingleFileComponentCompiler extends Mechanism
             $jsModuleSourceMethod = $this->generateJsModuleSourceMethod($parsed->scripts, $result->scriptPath);
         }
 
-        $classContent = "<?php
+        // Escape the view path for PHP string literal
+        $escapedViewPath = addcslashes($result->viewPath, "'\\");
 
-namespace {$namespace};
+        $renderMethod = "    public function render()
+    {
+        return app('view')->file('{$result->viewPath}');
+    }";
+
+        $classContent = "<?php
 
 {$preClassSection}{$layoutAttribute}{$classAttributesSection}class {$className} extends \\Livewire\\Component
 {
 {$classBody}
 {$jsModuleSourceMethod}
-    public function render()
-    {
-        return view('{$viewName}');
-    }
+{$renderMethod}
 }
 ";
 
@@ -626,7 +719,28 @@ namespace {$namespace};
             $processedViewContent = $this->transformComputedPropertyReferences($processedViewContent, $parsed->frontmatter);
         }
 
+        // Prepend any use statements to the view content if there are any
+        $preClassCode = $this->extractPreClassCode($parsed->frontmatter);
+        if (!empty($preClassCode)) {
+            $processedViewContent = <<<HTML
+            <?php
+            {$preClassCode}
+            ?>
+            {$processedViewContent}
+            HTML;
+        }
+
         File::put($result->viewPath, $processedViewContent);
+
+        // This is a fix for a gnarly issue: blade's compiler uses filemtimes to determine if a compiled view has become expired.
+        // AND it's comparison includes equals like this: $path >= $cachedPath
+        // AND file_put_contents won't update the filemtime if the contents are the same
+        // THEREFORE because we are creating a blade file at the same "second" that it is compiled
+        // both the source file and the cached file's filemtime's match, therefore it become's in a perpetual state
+        // of always being expired. So we mutate the source file to be one second behind so that the cached
+        // view file is one second ahead. Phew. this one took a minute to find lol.
+        $original = filemtime($result->viewPath);
+        touch($result->viewPath, $original - 1);
     }
 
     /**
@@ -638,6 +752,11 @@ namespace {$namespace};
 
         // Don't process if there are no script tags
         if (!str_contains($viewContent, '<script')) {
+            return $scripts;
+        }
+
+        // Skip script extraction if @script directives are present (backward compatibility)
+        if (str_contains($viewContent, '@script')) {
             return $scripts;
         }
 
@@ -673,6 +792,11 @@ namespace {$namespace};
     {
         // Don't process if there are no script tags
         if (!str_contains($viewContent, '<script')) {
+            return $viewContent;
+        }
+
+        // Skip script removal if @script directives are present (backward compatibility)
+        if (str_contains($viewContent, '@script')) {
             return $viewContent;
         }
 
@@ -862,65 +986,65 @@ namespace {$namespace};
         throw new ParseException("Could not extract class body from frontmatter");
     }
 
-    protected function generateHash(string $viewPath, string $content): string
+    protected function generateHash(string $viewPath, int $sourceModTime): string
     {
-        // The v1 is a cache version number, the same as how Laravel handles it...
-        return hash('xxh128', 'v1'.$viewPath);
+        // Use path-only hash like Blade - consistent filename regardless of content changes
+        return hash('xxh128', 'v3' . $viewPath);
     }
 
-    protected function generateMultiFileHash(string $directory, string $livewireContent, string $bladeContent, string $jsContent = ''): string
+    protected function generateMultiFileHash(string $directory, array $sourceModTimes): string
     {
-        // Include directory path in hash like the original method, plus a version identifier
-        return hash('xxh128', 'v1'.$directory.$livewireContent.$bladeContent.$jsContent);
+        // Use directory path only - consistent filename regardless of content changes
+        return hash('xxh128', 'v3' . $directory);
     }
 
-    protected function isMultiFileCompiled(string $directory, string $hash): bool
+    protected function isMultiFileCompiled(string $directory, string $hash, array $sourceFiles, array $sourceModTimes): bool
     {
-        $componentName = basename($directory);
-        $livewireFilePath = $directory . '/' . $componentName . '.livewire.php';
-        $bladeFilePath = $directory . '/' . $componentName . '.blade.php';
-        $jsFilePath = $directory . '/' . $componentName . '.js';
+        $metadataPath = $this->getMetadataPath($directory, $hash);
 
-        if (! file_exists($livewireFilePath) || ! file_exists($bladeFilePath)) {
+        // Check if metadata file exists
+        if (! file_exists($metadataPath)) {
             return false;
         }
 
-        // Get the latest modification time from source files
-        $livewireLastModified = File::lastModified($livewireFilePath);
-        $bladeLastModified = File::lastModified($bladeFilePath);
-        $sourceLastModified = max($livewireLastModified, $bladeLastModified);
-
-        // Include JS file modification time if it exists
-        if (file_exists($jsFilePath)) {
-            $jsLastModified = File::lastModified($jsFilePath);
-            $sourceLastModified = max($sourceLastModified, $jsLastModified);
+        // Load metadata from cache or file
+        $metadata = $this->loadCompilationMetadata($metadataPath);
+        if (! $metadata) {
+            return false;
         }
 
-        // Check if compiled files exist and are newer than source files
-        $className = $this->generateClassName($directory, $hash);
-        $classPath = $this->getClassPath($className);
-        $viewName = $this->generateViewName($directory, $hash);
-        $viewPath = $this->getViewPath($viewName);
-
-        try {
-            $classLastModified = File::lastModified($classPath);
-            $viewLastModified = File::lastModified($viewPath);
-
-            return $sourceLastModified <= $classLastModified && $sourceLastModified <= $viewLastModified;
-        } catch (\ErrorException $exception) {
-            if (! File::exists($classPath) || ! File::exists($viewPath)) {
+        // Check if any source files have been modified
+        foreach ($sourceFiles as $index => $sourceFile) {
+            if (! file_exists($sourceFile)) {
                 return false;
             }
 
-            throw $exception;
+            $currentModTime = filemtime($sourceFile);
+            $cachedModTime = $metadata['sourceModTimes'][$index];
+
+            if ($currentModTime > $cachedModTime) {
+                return false;
+            }
         }
+
+        // Check if compiled files still exist
+        if (! file_exists($metadata['classPath']) || ! file_exists($metadata['viewPath'])) {
+            return false;
+        }
+
+        // If has scripts, check script file exists
+        if ($metadata['hasScripts'] && ! file_exists($metadata['scriptPath'])) {
+            return false;
+        }
+
+        return true;
     }
 
     protected function generateClassName(string $viewPath, string $hash): string
     {
         $name = $this->getComponentNameFromPath($viewPath);
         $className = str_replace(['-', '.'], '', ucwords($name, '-.'));
-        return "Livewire\\Compiled\\{$className}_{$hash}";
+        return "{$className}_{$hash}";
     }
 
     protected function generateViewName(string $viewPath, string $hash): string
@@ -956,42 +1080,36 @@ namespace {$namespace};
 
     protected function getExistingMultiFileCompilationResult(string $directory, string $hash): CompilationResult
     {
-        $componentName = basename($directory);
-        $livewireFilePath = $directory . '/' . $componentName . '.livewire.php';
-        $bladeFilePath = $directory . '/' . $componentName . '.blade.php';
-        $jsFilePath = $directory . '/' . $componentName . '.js';
+        $metadataPath = $this->getMetadataPath($directory, $hash);
+        $metadata = $this->loadCompilationMetadata($metadataPath);
 
-        $livewireContent = File::get($livewireFilePath);
-        $bladeContent = File::get($bladeFilePath);
-
-        // Read JS file content if it exists
-        $jsContent = '';
-        if (file_exists($jsFilePath)) {
-            $jsContent = File::get($jsFilePath);
-        }
-
-        // Remove PHP opening tags from livewire content if present
-        $livewireContent = preg_replace('/^<\?php\s*/', '', trim($livewireContent));
-
-        $content = "@php\n" . $livewireContent . "\n@endphp\n" . $bladeContent;
-
-        $parsed = $this->parseComponent($content);
-
-        // Add dedicated JS file content to the parsed scripts if it exists
-        if (!empty($jsContent)) {
-            $parsed = $this->addDedicatedJsContent($parsed, $jsContent);
-        }
-
-        return $this->generateMultiFileCompilationResult($directory, $parsed, $hash);
+        return new CompilationResult(
+            className: $metadata['className'],
+            classPath: $metadata['classPath'],
+            viewName: $metadata['viewName'],
+            viewPath: $metadata['viewPath'],
+            isExternal: $metadata['isExternal'],
+            externalClass: $metadata['externalClass'],
+            hash: $metadata['hash'],
+            scriptPath: $metadata['scriptPath'] ?? null,
+        );
     }
 
     protected function getExistingCompilationResult(string $viewPath, string $hash): CompilationResult
     {
-        $content = File::get($viewPath);
-        $parsed = $this->parseComponent($content);
-        $parsed = $this->loadExternalViewAndScriptIfRequired($viewPath, $parsed);
+        $metadataPath = $this->getMetadataPath($viewPath, $hash);
+        $metadata = $this->loadCompilationMetadata($metadataPath);
 
-        return $this->generateCompilationResult($viewPath, $parsed, $hash);
+        return new CompilationResult(
+            className: $metadata['className'],
+            classPath: $metadata['classPath'],
+            viewName: $metadata['viewName'],
+            viewPath: $metadata['viewPath'],
+            isExternal: $metadata['isExternal'],
+            externalClass: $metadata['externalClass'],
+            hash: $metadata['hash'],
+            scriptPath: $metadata['scriptPath'] ?? null,
+        );
     }
 
     protected function getComponentNameFromPath(string $viewPath): string
@@ -1006,6 +1124,9 @@ namespace {$namespace};
                 break;
             }
         }
+        
+        // Strip ⚡ from the component name
+        $basename = str_replace('⚡', '', $basename);
 
         return str_replace([' ', '_'], '-', $basename);
     }
@@ -1027,6 +1148,7 @@ namespace {$namespace};
         File::ensureDirectoryExists($this->classesDirectory);
         File::ensureDirectoryExists($this->viewsDirectory);
         File::ensureDirectoryExists($this->scriptsDirectory);
+        File::ensureDirectoryExists($this->metadataDirectory);
     }
 
     protected function ensureCacheDirectoryIsGitIgnored(): void
@@ -1086,5 +1208,74 @@ namespace {$namespace};
             $parsed->layoutData,
             $scripts,
         );
+    }
+
+    // === METADATA CACHE METHODS ===
+
+    protected function getMetadataPath(string $pathOrDirectory, string $hash): string
+    {
+        $name = $this->getComponentNameFromPath($pathOrDirectory);
+        return $this->metadataDirectory . '/' . $name . '_' . $hash . '.json';
+    }
+
+    protected function storeCompilationMetadata(CompilationResult $result, ParsedComponent $parsed, array $sourceFiles, array $sourceModTimes): void
+    {
+        $metadataPath = $this->getMetadataPath($sourceFiles[0], $result->hash);
+
+        $metadata = [
+            'version' => 'v3',
+            'compiledAt' => time(),
+            'sourceFiles' => $sourceFiles,
+            'sourceModTimes' => $sourceModTimes,
+            'className' => $result->className,
+            'classPath' => $result->classPath,
+            'viewName' => $result->viewName,
+            'viewPath' => $result->viewPath,
+            'isExternal' => $result->isExternal,
+            'externalClass' => $result->externalClass,
+            'hash' => $result->hash,
+            'hasScripts' => $parsed->hasScripts(),
+            'scriptPath' => $result->scriptPath,
+        ];
+
+        File::put($metadataPath, json_encode($metadata, JSON_PRETTY_PRINT));
+
+        // Cache in memory for this request
+        self::$metadataCache[$metadataPath] = $metadata;
+    }
+
+    protected function loadCompilationMetadata(string $metadataPath): ?array
+    {
+        // Check memory cache first
+        if (isset(self::$metadataCache[$metadataPath])) {
+            return self::$metadataCache[$metadataPath];
+        }
+
+        if (! file_exists($metadataPath)) {
+            return null;
+        }
+
+        try {
+            $metadata = json_decode(File::get($metadataPath), true);
+
+            if (! is_array($metadata) || ! isset($metadata['version']) || ! in_array($metadata['version'], ['v2', 'v3'])) {
+                // Invalid or old version metadata
+                return null;
+            }
+
+            // Cache in memory for this request
+            self::$metadataCache[$metadataPath] = $metadata;
+
+            return $metadata;
+        } catch (\Exception $e) {
+            // Corrupted metadata file
+            return null;
+        }
+    }
+
+    public static function clearMemoryCache(): void
+    {
+        self::$compilationCache = [];
+        self::$metadataCache = [];
     }
 }

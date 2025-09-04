@@ -1,9 +1,8 @@
 import { directive } from "@/directives"
-import Alpine from 'alpinejs'
+import { evaluateActionExpression } from '../evaluator'
 
-directive('init', ({ el, directive }) => {
-    let fullMethod = directive.expression ?? '$refresh'
+directive('init', ({ component, el, directive }) => {
+    let fullMethod = directive.expression ? directive.expression : '$refresh'
 
-    Alpine.evaluate(el, `$wire.${fullMethod}`)
+    evaluateActionExpression(component, el, fullMethod)
 })
-

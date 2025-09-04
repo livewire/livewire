@@ -15,7 +15,9 @@ class InterceptorRegistry {
         if (component === null) {
             this.globalInterceptors.add(interceptorData)
 
-            return
+            return () => {
+                this.globalInterceptors.delete(interceptorData)
+            }
         }
 
         let interceptors = this.componentInterceptors.get(component)
@@ -27,30 +29,28 @@ class InterceptorRegistry {
         }
 
         interceptors.add(interceptorData)
+
+        return () => {
+            interceptors.delete(interceptorData)
+        }
     }
 
-    fire(el, directive, component) {
-        let method = directive.method
-
+    fire(action) {
         for (let interceptorData of this.globalInterceptors) {
-            let interceptor = new Interceptor(interceptorData.callback, interceptorData.method)
+            let interceptor = new Interceptor(interceptorData.callback, action)
 
-            interceptor.init(el, directive, component)
-
-            MessageBroker.addInterceptor(interceptor, component)
+            MessageBroker.addInterceptor(interceptor, action.component)
         }
 
-        let componentInterceptors = this.componentInterceptors.get(component)
+        let componentInterceptors = this.componentInterceptors.get(action.component)
 
         if (!componentInterceptors) return
 
         for (let interceptorData of componentInterceptors) {
-            if (interceptorData.method === method || interceptorData.method === null) {
-                let interceptor = new Interceptor(interceptorData.callback, interceptorData.method)
+            if (interceptorData.method === action.method || interceptorData.method === null) {
+                let interceptor = new Interceptor(interceptorData.callback, action)
 
-                interceptor.init(el, directive, component)
-
-                MessageBroker.addInterceptor(interceptor, component)
+                MessageBroker.addInterceptor(interceptor, action.component)
             }
         }
     }

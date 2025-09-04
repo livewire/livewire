@@ -17,8 +17,8 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
     public static function provide()
     {
         on('flush-state', function () {
-            static::$shouldInjectConditionalMarkers = false;
-            static::$shouldInjectLoopMarkers = false;
+            static::$shouldInjectConditionalMarkers = config('livewire.inject_morph_markers', true);
+            static::$shouldInjectLoopMarkers = config('livewire.inject_morph_markers', true);
         });
 
         static::$shouldInjectConditionalMarkers = config('livewire.inject_morph_markers', true);

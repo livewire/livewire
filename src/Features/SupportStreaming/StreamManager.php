@@ -2,61 +2,44 @@
 
 namespace Livewire\Features\SupportStreaming;
 
-use Livewire\Component;
-
 class StreamManager
 {
-    public function __construct(public Component $component) {}
+    protected $component;
 
-    public function update($dataKey, $value = null, $mode = 'replace')
+    protected $hook;
+
+    protected $name;
+
+    protected $el;
+
+    protected $ref;
+
+    protected $content;
+
+    protected $replace;
+
+    public function __construct($component, $hook)
     {
-        SupportStreaming::ensureStreamResponseStarted();
-
-        $value = $value ?? $this->component->getPropertyValue($dataKey);
-
-        $id = $this->component->id();
-
-        SupportStreaming::streamContent([
-            'type' => 'update',
-            'id' => $id,
-            'key' => $dataKey,
-            'value' => $value,
-            'mode' => $mode,
-        ]);
+        $this->component = $component;
+        $this->hook = $hook;
     }
 
-    public function html($name, $content, $mode = 'replace')
+    public function content($content, $replace = false)
     {
-        SupportStreaming::ensureStreamResponseStarted();
+        $this->content = $content;
+        $this->replace = $replace;
 
-        $id = $this->component->id();
-
-        SupportStreaming::streamContent([
-            'type' => 'html',
-            'id' => $id,
-            'name' => $name,
-            'content' => $content,
-            'mode' => $mode,
-        ]);
+        return $this;
     }
 
-    public function island($name, $view, $data = [], $mode = 'replace')
+    public function to($name = null, $el = null, $ref = null)
     {
-        SupportStreaming::ensureStreamResponseStarted();
+        $this->name = $name;
+        $this->el = $el;
+        $this->ref = $ref;
 
-        $id = $this->component->id();
+        $this->hook->stream($this->content, $this->replace, $this->name, $this->el, $this->ref);
 
-        $island = $this->component->island($name, $view, $data);
-
-        // @todo: This is a hack to pop the island off the component's islands array...
-        $this->component->popLastIsland();
-
-        SupportStreaming::streamContent([
-            'type' => 'island',
-            'id' => $id,
-            'name' => $name,
-            'content' => $island->render(),
-            'mode' => $mode,
-        ]);
+        return $this;
     }
 }

@@ -84,6 +84,7 @@ export class Directive {
         this.rawName = this.raw = rawName
         this.el = el
         this.eventContext
+        this.wire
 
         this.value = value
         this.modifiers = modifiers
@@ -93,56 +94,57 @@ export class Directive {
     get method() {
         const  methods  = this.parseOutMethodsAndParams(this.expression)
 
-        return methods[0].method;
+        return methods[0].method
     }
 
     get methods() {
-        return this.parseOutMethodsAndParams(this.expression);
+        return this.parseOutMethodsAndParams(this.expression)
     }
 
     get params() {
         const  methods  = this.parseOutMethodsAndParams(this.expression)
 
-        return methods[0].params;
+        return methods[0].params
     }
 
     parseOutMethodsAndParams(rawMethod) {
-        // regex selects first method it encounters including possible commas indicating more methods
-        let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
+        let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s
 
         let method = rawMethod
         let params = []
         let methodAndParamString = method.match(methodRegex)
 
-        let methods = [];
-        let slicedLength = 0;
-        // If there's a method and params, we need to parse them out.
-        // If there's multiple methods, parse them one at a time.
+        let methods = []
+        let slicedLength = 0
+
         while (methodAndParamString) {
             method = methodAndParamString[1]
 
-            // Use a function that returns it's arguments to parse and eval all params
-            // This "$event" is for use inside the livewire event handler.
-            let func = new Function('$event', `return (function () {
+            function argumentsToArray() {
                 for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
-                    p[k] = arguments[k];
+                    p[k] = arguments[k]
                 }
-                return [].concat(p);
-            })(${methodAndParamString[2]})`)
+                return [].concat(p)
+            }
 
-            params = func(this.eventContext)
+            let params = Alpine.evaluate(
+                document,
+                'argumentsToArray(' + methodAndParamString[2] + ')',
+                {
+                    scope: { argumentsToArray },
+                },
+            )
 
             methods.push({ method, params })
-            slicedLength += methodAndParamString[0].length;
+            slicedLength += methodAndParamString[0].length
 
-            // remove all parsed functions from rawMethod string.
             methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex)
         }
 
-        if(methods.length === 0) {
+        if (methods.length === 0) {
             methods.push({ method, params })
         }
 
-        return methods;
+        return methods
     }
 }

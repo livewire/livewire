@@ -10,29 +10,33 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         Livewire::visit([
             new class extends \Livewire\Component {
-                public function render() { return <<<'HTML'
-                <div>
-                    <button wire:click="$refresh" dusk="refresh">Refresh</button>
-                    <livewire:child />
-                </div>
-                @script
-                <script>
-                    window.intercepts = []
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$refresh" dusk="refresh">Refresh</button>
+                        <livewire:child />
+                    </div>
+                    @script
+                    <script>
+                        window.intercepts = []
 
-                    Livewire.intercept(() => {
-                        window.intercepts.push('intercept')
-                        console.log('intercept', window.intercepts)
-                    })
-                </script>
-                @endscript
-                HTML; }
+                        Livewire.intercept(() => {
+                            window.intercepts.push('intercept')
+                            console.log('intercept', window.intercepts)
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
             },
             'child' => new class extends \Livewire\Component {
-                public function render() { return <<<'HTML'
-                <div>
-                    <button wire:click="$refresh" dusk="child-refresh">Child Refresh</button>
-                </div>
-                HTML; }
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$refresh" dusk="child-refresh">Child Refresh</button>
+                    </div>
+                    HTML;
+                }
             }
         ])
         ->waitForLivewireToLoad()
@@ -50,29 +54,33 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         Livewire::visit([
             new class extends \Livewire\Component {
-                public function render() { return <<<'HTML'
-                <div>
-                    <button wire:click="$refresh" dusk="refresh">Refresh</button>
-                    <livewire:child />
-                </div>
-                @script
-                <script>
-                    window.intercepts = []
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$refresh" dusk="refresh">Refresh</button>
+                        <livewire:child />
+                    </div>
+                    @script
+                    <script>
+                        window.intercepts = []
 
-                    this.intercept(() => {
-                        window.intercepts.push('intercept')
-                        console.log('intercept', window.intercepts)
-                    })
-                </script>
-                @endscript
-                HTML; }
+                        this.intercept(() => {
+                            window.intercepts.push('intercept')
+                            console.log('intercept', window.intercepts)
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
             },
             'child' => new class extends \Livewire\Component {
-                public function render() { return <<<'HTML'
-                <div>
-                    <button wire:click="$refresh" dusk="child-refresh">Child Refresh</button>
-                </div>
-                HTML; }
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$refresh" dusk="child-refresh">Child Refresh</button>
+                    </div>
+                    HTML;
+                }
             }
         ])
         ->waitForLivewireToLoad()
@@ -94,22 +102,24 @@ class BrowserTest extends \Tests\BrowserTestCase
             new class extends \Livewire\Component {
                 public function doSomething() {}
 
-                public function render() { return <<<'HTML'
-                <div>
-                    <button wire:click="$refresh" dusk="refresh">Refresh</button>
-                    <button wire:click="doSomething" dusk="do-something">Do Something</button>
-                </div>
-                @script
-                <script>
-                    window.intercepts = []
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$refresh" dusk="refresh">Refresh</button>
+                        <button wire:click="doSomething" dusk="do-something">Do Something</button>
+                    </div>
+                    @script
+                    <script>
+                        window.intercepts = []
 
-                    this.intercept('doSomething', () => {
-                        window.intercepts.push('intercept')
-                        console.log('intercept', window.intercepts)
-                    })
-                </script>
-                @endscript
-                HTML; }
+                        this.intercept('doSomething', () => {
+                            window.intercepts.push('intercept')
+                            console.log('intercept', window.intercepts)
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
             }
         ])
         ->waitForLivewireToLoad()
@@ -138,70 +148,76 @@ class BrowserTest extends \Tests\BrowserTestCase
                     throw new \Exception('Test error');
                 }
 
-                public function render() { return <<<'HTML'
-                <div>
-                    <button wire:click="$refresh" dusk="refresh">Refresh</button>
-                    <button wire:click="slowRequest" dusk="slow-request">Slow Request</button>
-                    <button wire:click="throwAnError" dusk="throw-error">Throw Error</button>
-                </div>
-                @script
-                <script>
-                    window.intercepts = []
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$refresh" dusk="refresh">Refresh</button>
+                        <button wire:click="slowRequest" dusk="slow-request">Slow Request</button>
+                        <button wire:click="throwAnError" dusk="throw-error">Throw Error</button>
+                    </div>
+                    @script
+                    <script>
+                        window.intercepts = []
 
-                    this.intercept(({ request, directive }) => {
-                        window.intercepts.push(`init-${directive.method}`)
+                        this.intercept(({ request, directive }) => {
+                            window.intercepts.push(`init-${directive.method}`)
 
-                        request.beforeSend(() => {
-                            window.intercepts.push(`beforeSend-${directive.method}`)
+                            request.beforeSend(() => {
+                                window.intercepts.push(`beforeSend-${directive.method}`)
+                            })
+
+                            request.afterSend(() => {
+                                window.intercepts.push(`afterSend-${directive.method}`)
+                            })
+
+                            request.beforeResponse(() => {
+                                window.intercepts.push(`beforeResponse-${directive.method}`)
+                            })
+
+                            request.afterResponse(() => {
+                                window.intercepts.push(`afterResponse-${directive.method}`)
+                            })
+
+                            request.beforeRender(() => {
+                                window.intercepts.push(`beforeRender-${directive.method}`)
+                            })
+
+                            request.afterRender(() => {
+                                window.intercepts.push(`afterRender-${directive.method}`)
+                            })
+
+                            request.beforeMorph(() => {
+                                window.intercepts.push(`beforeMorph-${directive.method}`)
+                            })
+
+                            request.afterMorph(() => {
+                                window.intercepts.push(`afterMorph-${directive.method}`)
+                            })
+
+                            request.onError(() => {
+                                window.intercepts.push(`error-${directive.method}`)
+                            })
+
+                            request.onFailure(() => {
+                                window.intercepts.push(`failure-${directive.method}`)
+                            })
+
+                            request.onSuccess(() => {
+                                window.intercepts.push(`success-${directive.method}`)
+                            })
+
+                            request.onCancel(() => {
+                                window.intercepts.push(`cancel-${directive.method}`)
+                            })
+
+                            return () => {
+                                window.intercepts.push(`returned-${directive.method}`)
+                            }
                         })
-
-                        request.afterSend(() => {
-                            window.intercepts.push(`afterSend-${directive.method}`)
-                        })
-
-                        request.beforeResponse(() => {
-                            window.intercepts.push(`beforeResponse-${directive.method}`)
-                        })
-
-                        request.afterResponse(() => {
-                            window.intercepts.push(`afterResponse-${directive.method}`)
-                        })
-
-                        request.beforeRender(() => {
-                            window.intercepts.push(`beforeRender-${directive.method}`)
-                        })
-
-                        request.afterRender(() => {
-                            window.intercepts.push(`afterRender-${directive.method}`)
-                        })
-
-                        request.beforeMorph(() => {
-                            window.intercepts.push(`beforeMorph-${directive.method}`)
-                        })
-
-                        request.afterMorph(() => {
-                            window.intercepts.push(`afterMorph-${directive.method}`)
-                        })
-
-                        request.onError(() => {
-                            window.intercepts.push(`error-${directive.method}`)
-                        })
-
-                        request.onFailure(() => {
-                            window.intercepts.push(`failure-${directive.method}`)
-                        })
-
-                        request.onSuccess(() => {
-                            window.intercepts.push(`success-${directive.method}`)
-                        })
-
-                        request.onCancel(() => {
-                            window.intercepts.push(`cancel-${directive.method}`)
-                        })
-                    })
-                </script>
-                @endscript
-                HTML; }
+                    </script>
+                    @endscript
+                    HTML;
+                }
             }
         ])
         ->waitForLivewireToLoad()
@@ -209,7 +225,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // The interceptor should not be triggered when the component is refreshed...
         ->waitForLivewire()->click('@refresh')
-        ->assertScript('window.intercepts.length', 10)
+        ->assertScript('window.intercepts.length', 11)
         ->assertScript('window.intercepts', [
             'init-$refresh',
             'beforeSend-$refresh',
@@ -220,7 +236,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             'beforeRender-$refresh',
             'beforeMorph-$refresh',
             'afterMorph-$refresh',
-            'afterRender-$refresh'
+            'afterRender-$refresh',
+            'returned-$refresh'
         ])
 
         // Reset...
@@ -234,7 +251,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         // Wait for a moment, then trigger another request which should cancel the slow request...
         ->pause(100)
         ->waitForLivewire()->click('@refresh')
-        ->assertScript('window.intercepts.length', 14)
+        ->assertScript('window.intercepts.length', 16)
         // The below results are the combination of the slow request and the refresh request...
         ->assertScript('window.intercepts', [
             'init-slowRequest',
@@ -243,6 +260,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             'init-$refresh',
             'beforeSend-$refresh',
             'cancel-slowRequest',
+            'returned-slowRequest',
             'afterSend-$refresh',
             'beforeResponse-$refresh',
             'afterResponse-$refresh',
@@ -250,7 +268,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             'beforeRender-$refresh',
             'beforeMorph-$refresh',
             'afterMorph-$refresh',
-            'afterRender-$refresh'
+            'afterRender-$refresh',
+            'returned-$refresh',
         ])
 
         // Reset...
@@ -261,12 +280,110 @@ class BrowserTest extends \Tests\BrowserTestCase
         // Trigger the error request...
         ->waitForLivewire()->click('@throw-error')
 
-        ->assertScript('window.intercepts.length', 4)
+        ->assertScript('window.intercepts.length', 5)
         ->assertScript('window.intercepts', [
             'init-throwAnError',
             'beforeSend-throwAnError',
             'afterSend-throwAnError',
-            'error-throwAnError',
+            'failure-throwAnError',
+            'returned-throwAnError',
+        ])
+        ;
+    }
+
+    public function test_an_interceptor_can_cancel_a_message_request()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    sleep(1);
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="slowRequest" dusk="slow-request">Slow Request</button>
+                    </div>
+
+                    @script
+                    <script>
+                        window.intercepts = []
+
+                        this.intercept(({ request, directive }) => {
+                            window.intercepts.push(`init-${directive.method}`)
+
+                            setTimeout(() => request.cancel(), 200)
+
+                            request.beforeSend(() => {
+                                window.intercepts.push(`beforeSend-${directive.method}`)
+                            })
+
+                            request.afterSend(() => {
+                                window.intercepts.push(`afterSend-${directive.method}`)
+                            })
+
+                            request.beforeResponse(() => {
+                                window.intercepts.push(`beforeResponse-${directive.method}`)
+                            })
+
+                            request.afterResponse(() => {
+                                window.intercepts.push(`afterResponse-${directive.method}`)
+                            })
+
+                            request.beforeRender(() => {
+                                window.intercepts.push(`beforeRender-${directive.method}`)
+                            })
+
+                            request.afterRender(() => {
+                                window.intercepts.push(`afterRender-${directive.method}`)
+                            })
+
+                            request.beforeMorph(() => {
+                                window.intercepts.push(`beforeMorph-${directive.method}`)
+                            })
+
+                            request.afterMorph(() => {
+                                window.intercepts.push(`afterMorph-${directive.method}`)
+                            })
+
+                            request.onError(() => {
+                                window.intercepts.push(`error-${directive.method}`)
+                            })
+
+                            request.onFailure(() => {
+                                window.intercepts.push(`failure-${directive.method}`)
+                            })
+
+                            request.onSuccess(() => {
+                                window.intercepts.push(`success-${directive.method}`)
+                            })
+
+                            request.onCancel(() => {
+                                window.intercepts.push(`cancel-${directive.method}`)
+                            })
+
+                            return () => {
+                                window.intercepts.push(`returned-${directive.method}`)
+                            }
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+        ->assertScript('window.intercepts.length', 0)
+
+        // The interceptor has a timeout set to cancel the request after 200ms...
+        ->waitForLivewire()->click('@slow-request')
+        ->assertScript('window.intercepts.length', 5)
+        ->assertScript('window.intercepts', [
+            'init-slowRequest',
+            'beforeSend-slowRequest',
+            'afterSend-slowRequest',
+            'cancel-slowRequest',
+            'returned-slowRequest',
         ])
         ;
     }

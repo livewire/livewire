@@ -1,29 +1,40 @@
 import { directive } from "@/directives"
 import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
-import messageBroker from '@/v4/requests/messageBroker.js'
-import { closestIslandName } from '@/features/supportIslands.js'
+import { closestIsland } from '@/features/supportIslands.js'
 
 let wireIslands = new WeakMap
 
-interceptorRegistry.add(({el, directive, component}) => {
-    let name = wireIslands.get(el)?.name ?? closestIslandName(component, el)
+interceptorRegistry.add(({ action, component, request, el, directive }) => {
+    if (! el) return
 
-    if (! name) return
+    let island = wireIslands.get(el) ?? closestIsland(component, el)
 
-    messageBroker.addContext(component, 'islands', name)
+    if (! island) return
+
+    action.addContext({
+        island: {name: island.name, mode: island.mode},
+    })
 })
 
-directive('island', ({ el, directive }) => {
-    let name = directive.expression ?? 'default'
+directive('island', ({ el, directive, cleanup }) => {
+    let name = directive.expression ? directive.expression : 'default'
 
-    let mode = directive.modifiers.includes('append')
-        ? 'append'
-        : (directive.modifiers.includes('prepend')
-            ? 'prepend'
-            : 'replace')
+    let mode = null
+
+    if (directive.modifiers.includes('append')) {
+        mode = 'append'
+    } else if (directive.modifiers.includes('prepend')) {
+        mode = 'prepend'
+    } else if (directive.modifiers.includes('replace')) {
+        mode = 'replace'
+    }
 
     wireIslands.set(el, {
         name,
         mode,
+    })
+
+    cleanup(() => {
+        wireIslands.delete(el)
     })
 })

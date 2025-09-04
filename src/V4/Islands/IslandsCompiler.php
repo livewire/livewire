@@ -31,6 +31,8 @@ class IslandsCompiler extends ComponentHook
         ];
 
         $this->viewName = str_replace($extensions, '', basename($currentPath));
+        // Strip ⚡ from the view name to ensure clean component names
+        $this->viewName = str_replace('⚡', '', $this->viewName);
 
         $content = $this->compileIslands($content);
 
@@ -102,7 +104,7 @@ class IslandsCompiler extends ComponentHook
 
     function findDirective($content)
     {
-        $pattern = '/@island(?:\((.*?)\))?|@endisland/s';
+        $pattern = '/@island\s*(?:\((.*?)\))?|@endisland/s';
         preg_match($pattern, $content, $matches, PREG_OFFSET_CAPTURE);
 
         if (! $matches) {

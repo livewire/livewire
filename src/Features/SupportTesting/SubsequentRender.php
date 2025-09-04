@@ -9,14 +9,14 @@ class SubsequentRender extends Render
         protected ComponentState $lastState,
     ) {}
 
-    static function make($requestBroker, $lastState, $calls = [], $updates = [], $context = [], $cookies = [])
+    static function make($requestBroker, $lastState, $calls = [], $updates = [], $cookies = [])
     {
         $instance = new static($requestBroker, $lastState);
 
-        return $instance->makeSubsequentRequest($calls, $updates, $context, $cookies);
+        return $instance->makeSubsequentRequest($calls, $updates, $cookies);
     }
 
-    function makeSubsequentRequest($calls = [], $updates = [], $context = [], $cookies = []) {
+    function makeSubsequentRequest($calls = [], $updates = [], $cookies = []) {
         $uri = app('livewire')->getUpdateUri();
 
         $encodedSnapshot = json_encode($this->lastState->getSnapshot());
@@ -27,7 +27,6 @@ class SubsequentRender extends Render
                     'snapshot' => $encodedSnapshot,
                     'calls' => $calls,
                     'updates' => $updates,
-                    'context' => $context,
                 ],
             ],
         ];

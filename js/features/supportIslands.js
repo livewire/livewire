@@ -18,26 +18,9 @@ export function streamIsland(component, key, content) {
     renderIsland(component, key, content)
 }
 
-on('effect', ({ component, effects }) => {
-    let islands = effects.islands || []
-
-    islands.forEach(island => {
-        let { key, content } = island
-
-        // Wrapping this in a double queueMicrotask. The first one puts it after all
-        // other "effect" hooks, and the second one puts it after all reactive
-        // Alpine effects (that are processed via flushJobs in scheduler).
-        queueMicrotask(() => {
-            queueMicrotask(() => {
-                renderIsland(component, key, content)
-            })
-        })
-    })
-})
-
-export function renderIsland(component, key, content) {
+export function renderIsland(component, key, content, mode = null) {
     let island = component.islands[key]
-    let mode = island.mode
+    mode ??= island.mode
 
     let { startNode, endNode } = findIslandComments(component.el, key)
 
@@ -47,6 +30,14 @@ export function renderIsland(component, key, content) {
 
     let parentElement = startNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
+
+    // If the start node is a placeholder marker, we need to replace the island regardless of the mode....
+    if (isPlaceholderMarker(startNode)) {
+        mode = 'replace'
+
+        // Remove the placeholder marker from the start node...
+        startNode.textContent = startNode.textContent.replace(':placeholder', '')
+    }
 
     if (mode === 'append') {
         let container = document.createElement(parentElementTag)
@@ -82,7 +73,7 @@ export function skipIslandContents(component, el, toEl, skipUntil) {
         let mode = island.mode
         let render = island.render
 
-        if (['skip', 'once'].includes(render)) {
+        if (['bypass', 'skip', 'once'].includes(render)) {
             skipUntil(node => isEndMarker(node))
         } else if (mode === 'prepend') {
             // Collect all siblings until end marker
@@ -124,7 +115,7 @@ export function skipIslandContents(component, el, toEl, skipUntil) {
     }
 }
 
-export function closestIslandName(component, el) {
+export function closestIsland(component, el) {
     let current = el;
 
     while (current) {
@@ -144,7 +135,7 @@ export function closestIslandName(component, el) {
                 } else {
                     let key = extractIslandKey(sibling)
 
-                    return component.islands[key].name
+                    return component.islands[key]
                 }
             }
 
@@ -172,14 +163,18 @@ function isEndMarker(el) {
 }
 
 function extractIslandKey(el) {
-    let key = el.textContent.match(/\[if ISLAND:([\w-]+)\]/)?.[1]
+    let key = el.textContent.match(/\[if ISLAND:([\w-]+)(?::placeholder)?\]/)?.[1]
 
     return key
 }
 
+function isPlaceholderMarker(el) {
+    return el.nodeType === 8 && el.textContent.match(/\[if ISLAND:[\w-]+:placeholder\]/)
+}
+
 function stripIslandComments(content, key) {
     // Remove the start and end comment markers
-    let startComment = new RegExp(`<!--\\[if ISLAND:${key}\\]><\\!\\[endif\\]-->`)
+    let startComment = new RegExp(`<!--\\[if ISLAND:${key}(:placeholder)?\\]><\\!\\[endif\\]-->`)
     let endComment = new RegExp(`<!--\\[if ENDISLAND:${key}\\]><\\!\\[endif\\]-->`)
 
     // Strip out the comments from the content
@@ -203,7 +198,7 @@ function findIslandComments(rootEl, key) {
         // Check all child nodes (including text and comment nodes)
         Array.from(el.childNodes).forEach(node => {
             if (node.nodeType === Node.COMMENT_NODE) {
-                if (node.textContent.match(new RegExp(`\\[if ISLAND:${key}\\]><\\!\\[endif\\]`))) {
+                if (node.textContent.match(new RegExp(`\\[if ISLAND:${key}(:placeholder)?\\]><\\!\\[endif\\]`))) {
                     startNode = node
                 }
 

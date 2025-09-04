@@ -10,12 +10,14 @@ export default class PageRequest extends Request {
         this.uri = uri
     }
 
-    shouldCancel() {
-        return request => {
-            return [
-                PageRequest.name,
-                MessageRequest.name,
-            ].includes(request.constructor.name)
+    processCancellations(existingRequest) {
+        let requestTypesToCancel = [
+            PageRequest.name,
+            MessageRequest.name,
+        ]
+
+        if (requestTypesToCancel.includes(existingRequest.constructor.name)) {
+            existingRequest.cancel()
         }
     }
 

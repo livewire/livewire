@@ -129,6 +129,9 @@ class BladeStyleCompiler extends Mechanism
                 break;
             }
         }
+        
+        // Strip ⚡ from the component name
+        $basename = str_replace('⚡', '', $basename);
 
         return str_replace([' ', '_'], '-', $basename);
     }

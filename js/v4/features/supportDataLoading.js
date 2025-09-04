@@ -1,6 +1,11 @@
 import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
 
-interceptorRegistry.add(({el, directive, component, request}) => {
+interceptorRegistry.add(({ action, component, request, el, directive }) => {
+    if (! el) return
+
+    // Don't add data-loading to poll directives...
+    if (action.context.type === 'poll') return
+
     el.setAttribute('data-loading', 'true')
 
     request.afterResponse(() => {

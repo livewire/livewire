@@ -3,7 +3,6 @@
 namespace Livewire;
 
 use Livewire\V4\Slots\HandlesSlots;
-use Livewire\V4\Refs\HandlesRefs;
 use Livewire\V4\Paginators\HandlesPaginators;
 use Livewire\V4\Islands\HandlesIslands;
 use Livewire\V4\HtmlAttributes\HandlesHtmlAttributes;
@@ -43,7 +42,6 @@ abstract class Component
     use HandlesDisablingBackButtonCache;
     use HandlesSlots;
     use HandlesHtmlAttributes;
-    use HandlesRefs;
     use HandlesPaginators;
     use HandleJsModules;
 

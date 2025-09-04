@@ -7,6 +7,13 @@ use Illuminate\Support\Facades\Artisan;
 
 class DeleteCommandUnitTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        \Livewire\LivewireManager::$v4 = false;
+
+        parent::setUp();
+    }
+
     public function test_component_is_removed_by_delete_command()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);

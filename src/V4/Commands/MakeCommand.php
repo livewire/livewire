@@ -58,8 +58,16 @@ class MakeCommand extends GeneratorCommand
      */
     protected function writeSingleFileComponent()
     {
+        // Add ⚡ prefix to the component filename
+        $view = str_replace('.', '/', $this->getView());
+        $segments = explode('/', $view);
+        $componentName = array_pop($segments);
+        $componentName = '⚡' . $componentName;
+        $segments[] = $componentName;
+        $view = implode('/', $segments);
+        
         $path = $this->viewPath(
-            str_replace('.', '/', $this->getView()).'.livewire.php'
+            $view.'.blade.php'
         );
 
         if (! $this->files->isDirectory(dirname($path))) {
@@ -83,15 +91,27 @@ class MakeCommand extends GeneratorCommand
     protected function writeMultiFileComponent()
     {
         $directory = str_replace('.', '/', $this->getView());
+        
+        // Add ⚡ prefix to the directory name
+        $segments = explode('/', $directory);
+        $componentDirName = array_pop($segments);
+        $componentDirName = '⚡' . $componentDirName;
+        $segments[] = $componentDirName;
+        $directory = implode('/', $segments);
 
-        $name = str($directory)->afterLast('/')->toString();
+        // Component name (without ⚡ for the files inside)
+        $name = str($componentDirName)->replaceFirst('⚡', '')->toString();
 
+        // Check for single file component with ⚡ prefix
+        // Build the path for the single-file component (e.g., components/⚡counter.blade.php)
+        $sfcDirectory = implode('/', array_slice($segments, 0, -1));
+        $sfcFilename = '⚡' . $name . '.blade.php';
         $sfcPath = $this->viewPath(
-            $directory.'.livewire.php'
+            ($sfcDirectory ? $sfcDirectory . '/' : '') . $sfcFilename
         );
 
         $classPath = $this->viewPath(
-            $directory.'/'.$name.'.livewire.php'
+            $directory.'/'.$name.'.php'
         );
 
         $viewPath = $this->viewPath(
@@ -293,9 +313,40 @@ class MakeCommand extends GeneratorCommand
         );
 
         if ($parsed->hasScripts()) {
+            $source = $parsed->getScriptSource();
+
+            // Remove leading line break
+            $source = ltrim($source, "\r\n");
+
+            // Detect and remove common indentation
+            $lines = explode("\n", $source);
+            if (!empty($lines)) {
+                // Find the indentation of the first non-empty line
+                $firstLineIndent = 0;
+                foreach ($lines as $line) {
+                    if (trim($line) !== '') {
+                        $firstLineIndent = strlen($line) - strlen(ltrim($line));
+                        break;
+                    }
+                }
+
+                // Remove that amount of indentation from all lines
+                if ($firstLineIndent > 0) {
+                    $lines = array_map(function($line) use ($firstLineIndent) {
+                        // Only remove indentation if the line has at least that much whitespace
+                        if (strlen($line) >= $firstLineIndent && substr($line, 0, $firstLineIndent) === str_repeat(' ', $firstLineIndent)) {
+                            return substr($line, $firstLineIndent);
+                        }
+                        return $line;
+                    }, $lines);
+                }
+
+                $source = implode("\n", $lines);
+            }
+
             file_put_contents(
                 $jsPath,
-                $parsed->getScriptSource()
+                $source
             );
         }
 

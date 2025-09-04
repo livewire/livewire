@@ -94,6 +94,25 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
             [
                 <<< HTML
                 <div>
+                    @island ('bob')
+                        <div>bob island</div>
+                    @endisland
+                </div>
+                HTML,
+                <<< HTML
+                <div>
+                    @island('bob', key: 'basic_island_bob_0', view: 'livewire-compiled::basic_island_bob_0')
+                </div>
+                HTML,
+                [
+                    'basic_island_bob_0.blade.php' => <<< HTML
+                    <div>bob island</div>
+                    HTML,
+                ]
+            ],
+            [
+                <<< HTML
+                <div>
                     @island('bob', view: 'islands::test-view')
                 </div>
                 HTML,

@@ -5,12 +5,8 @@ namespace Livewire\V4\Islands;
 use Illuminate\Support\Facades\Blade;
 use Livewire\ComponentHook;
 
-use function Livewire\on;
-
 class SupportIslands extends ComponentHook
 {
-    protected static $islands = [];
-
     static function provide()
     {
         Blade::precompiler(function ($content) {
@@ -22,17 +18,6 @@ class SupportIslands extends ComponentHook
         Blade::directive('island', function ($expression) {
             return "<?php if (isset(\$__livewire)) echo \$__livewire->island({$expression}); ?>";
         });
-
-        on('flush-state', function () {
-            static::$islands = [];
-        });
-    }
-
-    function context($context)
-    {
-        if (! isset($context['islands'])) return;
-
-        static::$islands[$this->component->getId()] = $context['islands'];
     }
 
     function hydrate($memo)
@@ -41,38 +26,40 @@ class SupportIslands extends ComponentHook
 
         if (! isset($memo['islands'])) return;
 
-        $islands = collect($memo['islands'])->map(fn ($island) => $this->component->island(name: $island['name'], key: $island['key'], mode: $island['mode'], render: $island['render']))->toArray();
+        $islands = collect($memo['islands'])->map(fn ($island) => $this->component->island(name: $island['name'], key: $island['key'], mode: $island['mode'], render: $island['render'], poll: $island['poll']))->toArray();
 
         $this->component->setIslands($islands);
     }
 
-    // @todo: decide where it would be better to have a hook that runs once after all the calls have happened but before rendering of the component starts...
-    function call($method, $params, $returnEarly, $context)
+    function call($method, $params, $returnEarly, $context, $componentContext)
     {
-        // if context contains islands, then we should loop through and render them...
-        return function (...$params) use ($context) {
-            if (! isset(static::$islands[$this->component->getId()])) return;
+        if (! isset($context['island'])) return;
 
+        // if context contains an island, then we should render it...
+        return function (...$params) use ($context, $componentContext) {
             if (! $islands = $this->component->getIslands()) return;
+
+            $islandToRender = [
+                'name' => $context['island']['name'],
+                // Mode is optional, so we need to check if it's set...
+                'mode' => $context['island']['mode'] ?? null,
+            ];
 
             $this->component->skipRender();
 
-            $islandsToRender = static::$islands[$this->component->getId()];
-
             $islandRenders = collect($islands)
-                ->filter(fn($island) => in_array($island->name, $islandsToRender))
+                ->filter(fn($island) => $island->name === $islandToRender['name'])
                 ->map(fn($island) => [
                     'name' => $island->name,
                     'key' => $island->key,
+                    'mode' => $islandToRender['mode'],
                     'content' => $island->toHtml(),
                 ])
                 ->values()
                 ->toArray();
 
-            $context->addEffect('islands', $islandRenders);
-
-            // This ensures that if there are multiple calls, that this is only called once per request...
-            unset(static::$islands[$this->component->getId()]);
+            // @todo: Confirm if this works adding multiple islands effects...
+            $componentContext->addEffect('islands', $islandRenders);
         };
     }
 
