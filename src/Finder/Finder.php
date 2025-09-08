@@ -45,6 +45,17 @@ class Finder
 
     public function addComponent($name = null, $className = null, $viewPath = null): void
     {
+        // Support $name being used a single argument for class-based components...
+        if ($name !== null && $className === null && $viewPath === null) {
+            $className = $name;
+            $name = 'lw' . crc32(trim($className, '\\'));
+        }
+
+        // Support $className being used a single named argument for class-based components...
+        if ($name === null && $className !== null && $viewPath === null) {
+            $name = 'lw' . crc32(trim($className, '\\'));
+        }
+
         if ($name == null && $className === null && $viewPath !== null) {
             throw new \Exception('You must provide a name when registering a single/multi-file component');
         }
@@ -52,10 +63,6 @@ class Finder
         if ($name) {
             if ($className !== null) $this->classComponents[$name] = trim($className, '\\');
             elseif ($viewPath !== null) $this->viewComponents[$name] = $viewPath;
-        } else {
-            if ($className !== null) {
-                $this->classComponents[crc32(trim($className, '\\'))] = trim($className, '\\');
-            }
         }
     }
 
@@ -123,15 +130,16 @@ class Finder
                 'singleFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath . '.blade.php'
             ];
 
-            foreach ($paths as $path) {
-                if (! is_dir($path) && file_exists($path)) {
-                    $this->singleFileComponentPathCache[$name] = $path;
-                    return $path;
+            foreach ($paths as $filePath) {
+                if (! is_dir($filePath) && file_exists($filePath)) {
+                    $this->singleFileComponentPathCache[$name] = $filePath;
+                    return $filePath;
                 }
             }
         }
 
         $this->singleFileComponentPathCache[$name] = $path;
+
         return $path;
     }
 
@@ -166,7 +174,7 @@ class Finder
             $trailingPath = str_replace('.', '/', $lastSegment);
             $leadingPath = $leadingSegments ? str_replace('.', '/', $leadingSegments) . '/' : '';
 
-            $paths = [
+            $dirs = [
                 'multiFile' => $location . '/' . $leadingPath . $trailingPath,
                 'multiFileWithZap' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath,
                 'multiFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index',
@@ -175,19 +183,21 @@ class Finder
                 'multiFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath,
             ];
 
-            foreach ($paths as $path) {
-                if (is_dir($path)) {
-                    $this->multiFileComponentPathCache[$name] = $path;
-                    return $path;
+            foreach ($dirs as $dir) {
+                if (is_dir($dir)) {
+                    $this->multiFileComponentPathCache[$name] = $dir;
+
+                    return $dir;
                 }
             }
         }
 
         $this->multiFileComponentPathCache[$name] = $path;
+
         return $path;
     }
 
-    public function normalizeName($nameComponentOrClass): string
+    public function normalizeName($nameComponentOrClass): ?string
     {
         // Create a cache key that works for both strings and objects
         $cacheKey = is_object($nameComponentOrClass) ? get_class($nameComponentOrClass) : $nameComponentOrClass;
@@ -203,7 +213,7 @@ class Finder
             $name = $nameComponentOrClass->getName();
 
             if (! $name) {
-                throw new \Exception('Component must have a name to be normalized');
+                return null;
             }
 
             $this->normalizedNameCache[$cacheKey] = $name;

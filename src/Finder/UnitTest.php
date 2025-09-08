@@ -14,30 +14,30 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addComponent('test-component', FinderTestComponent::class);
+        $finder->addComponent('test-component', FinderTestClassComponent::class);
 
-        $name = $finder->normalizeName(FinderTestComponent::class);
+        $name = $finder->normalizeName(FinderTestClassComponent::class);
 
         $this->assertEquals('test-component', $name);
 
         $class = $finder->resolveClassName('test-component');
 
-        $this->assertEquals(FinderTestComponent::class, $class);
+        $this->assertEquals(FinderTestClassComponent::class, $class);
     }
 
     public function test_can_add_and_resolve_unnamed_class_component()
     {
         $finder = new Finder();
 
-        $finder->addComponent(className: FinderTestComponent::class);
+        $finder->addComponent(className: FinderTestClassComponent::class);
 
-        $name = $finder->normalizeName(FinderTestComponent::class);
+        $name = $finder->normalizeName(FinderTestClassComponent::class);
 
-        $this->assertEquals(crc32(FinderTestComponent::class), $name);
+        $this->assertEquals('lw' . crc32(FinderTestClassComponent::class), $name);
 
         $class = $finder->resolveClassName($name);
 
-        $this->assertEquals(FinderTestComponent::class, $class);
+        $this->assertEquals(FinderTestClassComponent::class, $class);
     }
 
     public function test_can_add_and_resolve_location_class_component()
@@ -309,13 +309,5 @@ class UnitTest extends \Tests\TestCase
         $nonExistent2 = $finder->resolveClassName('non-existent-component');
         $this->assertEquals($nonExistent1, $nonExistent2);
         $this->assertNull($nonExistent1);
-    }
-}
-
-class FinderTestComponent extends Component
-{
-    public function render()
-    {
-        return '<div>Test Component</div>';
     }
 }

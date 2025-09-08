@@ -3,7 +3,7 @@
 namespace Livewire\Factory;
 
 use Livewire\Exceptions\ComponentNotFoundException;
-use Livewire\Compiler\Parser\CompilerEngine;
+use Livewire\Compiler\CompilerEngine;
 use Livewire\Finder\Finder;
 use Livewire\Component;
 
@@ -11,7 +11,7 @@ class Factory
 {
     public function __construct(
         protected Finder $finder,
-        protected CompilerEngine $compilerEngine,
+        protected CompilerEngine $engine,
     ) {}
 
     public function create($name, $id = null)
@@ -22,21 +22,24 @@ class Factory
 
         $name = $this->finder->normalizeName($name);
 
-        $class = $this->finder->resolveClassName($name);
+        if ($name) {
+            $class = $this->finder->resolveClassName($name);
 
-        if (! $class) {
-            $path = $this->finder->resolveSingleFileComponentPath($name);
-
-            if ($path) {
-                $class = $this->engine->compileSingleFileComponent($path);
-            } else {
+            if (! $class) {
                 $path = $this->finder->resolveMultiFileComponentPath($name);
 
                 if ($path) {
                     $class = $this->engine->compileMultiFileComponent($path);
+                } else {
+                    $path = $this->finder->resolveSingleFileComponentPath($name);
+
+                    if ($path) {
+                        $class = $this->engine->compileSingleFileComponent($path);
+                    }
                 }
             }
         }
+
 
         if (! $class || ! class_exists($class) || ! is_subclass_of($class, Component::class)) {
             throw new ComponentNotFoundException(
