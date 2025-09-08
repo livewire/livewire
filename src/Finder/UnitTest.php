@@ -279,6 +279,37 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals(__DIR__ . '/fixtures/⚡︎multi-file-zap-component', $path);
     }
+
+    public function test_memoization_caches_results_within_request()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(viewPath: __DIR__ . '/fixtures');
+
+        // First call - should populate cache
+        $name1 = $finder->normalizeName('finder-test-single-file-component');
+        $class1 = $finder->resolveClassName('finder-test-single-file-component');
+        $singlePath1 = $finder->resolveSingleFileComponentPath('finder-test-single-file-component');
+        $multiPath1 = $finder->resolveMultiFileComponentPath('multi-file-test-component');
+
+        // Second call - should use cache (results should be identical)
+        $name2 = $finder->normalizeName('finder-test-single-file-component');
+        $class2 = $finder->resolveClassName('finder-test-single-file-component');
+        $singlePath2 = $finder->resolveSingleFileComponentPath('finder-test-single-file-component');
+        $multiPath2 = $finder->resolveMultiFileComponentPath('multi-file-test-component');
+
+        // Results should be identical, proving memoization is working
+        $this->assertEquals($name1, $name2);
+        $this->assertEquals($class1, $class2);
+        $this->assertEquals($singlePath1, $singlePath2);
+        $this->assertEquals($multiPath1, $multiPath2);
+
+        // Test that null results are also cached
+        $nonExistent1 = $finder->resolveClassName('non-existent-component');
+        $nonExistent2 = $finder->resolveClassName('non-existent-component');
+        $this->assertEquals($nonExistent1, $nonExistent2);
+        $this->assertNull($nonExistent1);
+    }
 }
 
 class FinderTestComponent extends Component

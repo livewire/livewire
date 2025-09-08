@@ -2,7 +2,6 @@
 
 namespace Livewire\Finder;
 
-use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Component;
 
 class Finder
@@ -16,6 +15,15 @@ class Finder
     protected $classComponents = [];
 
     protected $viewComponents = [];
+
+    // Memoization caches
+    protected $classNameCache = [];
+
+    protected $singleFileComponentPathCache = [];
+
+    protected $multiFileComponentPathCache = [];
+
+    protected $normalizedNameCache = [];
 
     public function __construct()
     {
@@ -53,26 +61,44 @@ class Finder
 
     public function resolveClassName($name): ?string
     {
-        if (isset($this->classComponents[$name])) return $this->classComponents[$name];
+        // Check memoization cache first
+        if (isset($this->classNameCache[$name])) {
+            return $this->classNameCache[$name];
+        }
+
+        if (isset($this->classComponents[$name])) {
+            $this->classNameCache[$name] = $this->classComponents[$name];
+            return $this->classComponents[$name];
+        }
 
         $class = $this->generateClassFromName($name, $this->classNamespaces);
 
         if (! class_exists($class)) {
+            $this->classNameCache[$name] = null;
             return null;
         }
 
+        $this->classNameCache[$name] = $class;
         return $class;
     }
 
     public function resolveSingleFileComponentPath($name): ?string
     {
+        // Check memoization cache first
+        if (isset($this->singleFileComponentPathCache[$name])) {
+            return $this->singleFileComponentPathCache[$name];
+        }
+
         $path = null;
 
         // Check if the component is explicitly registered...
         if (isset($this->viewComponents[$name])) {
             $path = $this->viewComponents[$name];
 
-            if (! is_dir($path) && file_exists($path)) return $path;
+            if (! is_dir($path) && file_exists($path)) {
+                $this->singleFileComponentPathCache[$name] = $path;
+                return $path;
+            }
         }
 
         // Check for a component inside locations...
@@ -98,22 +124,34 @@ class Finder
             ];
 
             foreach ($paths as $path) {
-                if (! is_dir($path) && file_exists($path)) return $path;
+                if (! is_dir($path) && file_exists($path)) {
+                    $this->singleFileComponentPathCache[$name] = $path;
+                    return $path;
+                }
             }
         }
 
+        $this->singleFileComponentPathCache[$name] = $path;
         return $path;
     }
 
     public function resolveMultiFileComponentPath($name): ?string
     {
+        // Check memoization cache first
+        if (isset($this->multiFileComponentPathCache[$name])) {
+            return $this->multiFileComponentPathCache[$name];
+        }
+
         $path = null;
 
         // Check if the component is explicitly registered...
         if (isset($this->viewComponents[$name])) {
             $path = $this->viewComponents[$name];
 
-            if (is_dir($path)) return $path;
+            if (is_dir($path)) {
+                $this->multiFileComponentPathCache[$name] = $path;
+                return $path;
+            }
         }
 
         // Check for a multi-file component inside locations...
@@ -138,15 +176,27 @@ class Finder
             ];
 
             foreach ($paths as $path) {
-                if (is_dir($path)) return $path;
+                if (is_dir($path)) {
+                    $this->multiFileComponentPathCache[$name] = $path;
+                    return $path;
+                }
             }
         }
 
+        $this->multiFileComponentPathCache[$name] = $path;
         return $path;
     }
 
     public function normalizeName($nameComponentOrClass): string
     {
+        // Create a cache key that works for both strings and objects
+        $cacheKey = is_object($nameComponentOrClass) ? get_class($nameComponentOrClass) : $nameComponentOrClass;
+
+        // Check memoization cache first
+        if (isset($this->normalizedNameCache[$cacheKey])) {
+            return $this->normalizedNameCache[$cacheKey];
+        }
+
         $class = null;
 
         if (is_subclass_of($nameComponentOrClass, Component::class) && is_object($nameComponentOrClass)) {
@@ -156,17 +206,24 @@ class Finder
                 throw new \Exception('Component must have a name to be normalized');
             }
 
+            $this->normalizedNameCache[$cacheKey] = $name;
             return $name;
         }
 
         if (is_subclass_of($class = $nameComponentOrClass, Component::class)) {
             $name = array_search($class, $this->classComponents);
 
-            if ($name !== false) return $name;
+            if ($name !== false) {
+                $this->normalizedNameCache[$cacheKey] = $name;
+                return $name;
+            }
 
-            return $this->generateNameFromClass($class, $this->classNamespaces);
+            $result = $this->generateNameFromClass($class, $this->classNamespaces);
+            $this->normalizedNameCache[$cacheKey] = $result;
+            return $result;
         }
 
+        $this->normalizedNameCache[$cacheKey] = $nameComponentOrClass;
         return $nameComponentOrClass;
     }
 
