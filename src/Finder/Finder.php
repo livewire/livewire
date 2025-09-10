@@ -36,7 +36,6 @@ class Finder
         if ($viewPath !== null) $this->viewLocations[] = $viewPath;
     }
 
-
     public function addNamespace($namespace, $classNamespace = null, $viewPath = null): void
     {
         if ($classNamespace !== null) $this->classNamespaces[$namespace] = trim($classNamespace, '\\');
@@ -208,17 +207,6 @@ class Finder
         }
 
         $class = null;
-
-        if (is_subclass_of($nameComponentOrClass, Component::class) && is_object($nameComponentOrClass)) {
-            $name = $nameComponentOrClass->getName();
-
-            if (! $name) {
-                return null;
-            }
-
-            $this->normalizedNameCache[$cacheKey] = $name;
-            return $name;
-        }
 
         if (is_subclass_of($class = $nameComponentOrClass, Component::class)) {
             $name = array_search($class, $this->classComponents);

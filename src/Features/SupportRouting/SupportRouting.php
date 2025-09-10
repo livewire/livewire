@@ -10,7 +10,7 @@ class SupportRouting extends ComponentHook
     public static function provide()
     {
        Route::macro('livewire', function ($uri, $component) {
-            if (class_exists($component)) return Route::get($uri, $component);
+            if (is_string($component) && class_exists($component)) return Route::get($uri, $component);
 
             return Route::get($uri, function () use ($component) {
                 return app()->call([

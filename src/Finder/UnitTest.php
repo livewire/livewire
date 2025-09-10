@@ -2,11 +2,10 @@
 
 namespace Livewire\Finder;
 
-use Livewire\Finder\Fixtures\Nested\NestedComponent;
 use Livewire\Finder\Fixtures\SelfNamedComponent\SelfNamedComponent;
-use Livewire\Finder\Fixtures\IndexComponent\Index;
 use Livewire\Finder\Fixtures\FinderTestClassComponent;
-use Livewire\Component;
+use Livewire\Finder\Fixtures\Nested\NestedComponent;
+use Livewire\Finder\Fixtures\IndexComponent\Index;
 
 class UnitTest extends \Tests\TestCase
 {

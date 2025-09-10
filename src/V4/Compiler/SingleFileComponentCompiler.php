@@ -1124,7 +1124,7 @@ class SingleFileComponentCompiler extends Mechanism
                 break;
             }
         }
-        
+
         // Strip ⚡ from the component name
         $basename = str_replace('⚡', '', $basename);
 

@@ -1,0 +1,64 @@
+<?php
+
+namespace Livewire\Compiler\Parser;
+
+class Parser
+{
+    protected function stripTrailingPhpTag(string $contents): string
+    {
+        if (str_ends_with($contents, '?>')) {
+            return substr($contents, 0, -2);
+        }
+        return $contents;
+    }
+
+    protected function ensureAnonymousClassHasReturn(string $contents): string
+    {
+        if (preg_match('/\bnew\b/', $contents) && !preg_match('/\breturn\s+new\b/', $contents)) {
+            return preg_replace('/\bnew\b/', 'return new', $contents, 1);
+        }
+        return $contents;
+    }
+
+    protected function injectViewMethod(string $contents, string $viewFileName): string
+    {
+        $pattern = '/}(\s*);/';
+        preg_match_all($pattern, $contents, $matches, PREG_OFFSET_CAPTURE);
+        $lastMatch = end($matches[0]);
+
+        if ($lastMatch) {
+            $position = $lastMatch[1];
+            return substr_replace($contents, <<<PHP
+
+protected function view()
+{
+    return app('view')->file('{$viewFileName}');
+}
+}
+PHP
+            , $position, 1);
+        }
+
+        return $contents;
+    }
+
+    protected function injectUseStatementsFromClassPortion(string $contents, string $classPortion): string
+    {
+        // Extract everything between <?php and "new"
+        if (preg_match('/\<\?php(.*?)new/s', $classPortion, $matches)) {
+            $preamble = $matches[1];
+
+            // Extract all use statements
+            if (preg_match_all('/use\s+[^;]+;/s', $preamble, $useMatches)) {
+                $useStatements = implode("\n", $useMatches[0]);
+            }
+        }
+
+        // Only add PHP tags and use statements if we found any
+        if ($useStatements) {
+            $contents = "<?php\n" . $useStatements . "\n?>\n\n" . $contents;
+        }
+
+        return $contents;
+    }
+}

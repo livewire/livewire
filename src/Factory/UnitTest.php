@@ -2,11 +2,11 @@
 
 namespace Livewire\Factory;
 
-use Illuminate\Support\Facades\File;
 use Livewire\Factory\Fixtures\SimpleComponent;
-use Livewire\Finder\Finder;
-use Livewire\Compiler\CompilerEngine;
+use Illuminate\Support\Facades\File;
+use Livewire\Compiler\CacheManager;
 use Livewire\Compiler\Compiler;
+use Livewire\Finder\Finder;
 use Livewire\Component;
 
 class UnitTest extends \Tests\TestCase
@@ -37,8 +37,8 @@ class UnitTest extends \Tests\TestCase
     public function test_can_create_simple_class_based_component()
     {
         $finder = new Finder();
-        $compilerEngine = new CompilerEngine(new Compiler($this->cacheDir));
-        $factory = new Factory($finder, $compilerEngine);
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $factory = new Factory($finder, $compiler);
 
         $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
 
@@ -52,8 +52,8 @@ class UnitTest extends \Tests\TestCase
     public function test_can_create_simple_class_based_component_with_custom_id()
     {
         $finder = new Finder();
-        $compilerEngine = new CompilerEngine(new Compiler($this->cacheDir));
-        $factory = new Factory($finder, $compilerEngine);
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $factory = new Factory($finder, $compiler);
 
         $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
 
@@ -68,8 +68,8 @@ class UnitTest extends \Tests\TestCase
     public function test_can_create_component_from_class_name()
     {
         $finder = new Finder();
-        $compilerEngine = new CompilerEngine(new Compiler($this->cacheDir));
-        $factory = new Factory($finder, $compilerEngine);
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $factory = new Factory($finder, $compiler);
 
         $finder->addComponent(SimpleComponent::class);
 
@@ -81,8 +81,8 @@ class UnitTest extends \Tests\TestCase
     public function test_can_create_component_from_class_instance()
     {
         $finder = new Finder();
-        $compilerEngine = new CompilerEngine(new Compiler($this->cacheDir));
-        $factory = new Factory($finder, $compilerEngine);
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $factory = new Factory($finder, $compiler);
 
         $finder->addComponent(SimpleComponent::class);
 
@@ -96,8 +96,8 @@ class UnitTest extends \Tests\TestCase
     public function test_can_create_single_file_component()
     {
         $finder = new Finder();
-        $compilerEngine = new CompilerEngine(new Compiler($this->cacheDir));
-        $factory = new Factory($finder, $compilerEngine);
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $factory = new Factory($finder, $compiler);
 
         $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
 
@@ -111,8 +111,8 @@ class UnitTest extends \Tests\TestCase
     public function test_can_create_multi_file_component()
     {
         $finder = new Finder();
-        $compilerEngine = new CompilerEngine(new Compiler($this->cacheDir));
-        $factory = new Factory($finder, $compilerEngine);
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $factory = new Factory($finder, $compiler);
 
         $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
 
