@@ -4,6 +4,19 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Component Path
+    |---------------------------------------------------------------------------
+    |
+    | This value sets the root directory that will be used to resolve view-based
+    | components like single-file and multi-file components. This folder will
+    | also be referenced when creating new components via the make command.
+    |
+    */
+
+    'component_path' => resource_path('views/components'),
+
+    /*
+    |---------------------------------------------------------------------------
     | Class Namespace
     |---------------------------------------------------------------------------
     |

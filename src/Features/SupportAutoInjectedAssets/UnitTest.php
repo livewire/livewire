@@ -8,6 +8,7 @@ use Tests\TestCase;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
+use LegacyTests\Browser\Actions\Test;
 
 class UnitTest extends TestCase
 {
@@ -138,9 +139,9 @@ class UnitTest extends TestCase
     {
         config()->set('livewire.inject_assets', false);
 
-        Route::get('/with-livewire', function () {
-            return (new class Extends TestComponent {})();
-        });
+        Livewire::addComponent('test-component', TestComponent::class);
+
+        Route::get('/with-livewire', TestComponent::class);
 
         Route::get('/without-livewire', function () {
             return Blade::render('<html></html>');

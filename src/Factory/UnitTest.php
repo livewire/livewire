@@ -122,4 +122,69 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('simple-multi-file-component', $component->getName());
         $this->assertNotNull($component->getId());
     }
+
+    public function test_can_resolve_missing_component()
+    {
+        $finder = new Finder();
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $factory = new Factory($finder, $compiler);
+
+        $finder->addComponent(SimpleComponent::class);
+
+        $factory->resolveMissingComponent(function ($name) {
+            if ($name === 'missing-component') {
+                return SimpleComponent::class;
+            }
+
+            return null;
+        });
+
+        $existingComponent = new SimpleComponent();
+        $component = $factory->create('missing-component');
+
+        $this->assertInstanceOf(SimpleComponent::class, $component);
+        $this->assertNotSame($existingComponent, $component); // Should be a new instance
+    }
+
+    public function test_can_determine_if_component_exists()
+    {
+        $finder = new Finder();
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $factory = new Factory($finder, $compiler);
+
+        $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
+
+        $this->assertTrue($factory->exists('simple-component'));
+        $this->assertFalse($factory->exists('missing-component'));
+    }
+
+    public function test_can_resolve_component_class()
+    {
+        $finder = new Finder();
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $factory = new Factory($finder, $compiler);
+
+        $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
+
+        $component = $factory->create('simple-component');
+
+        $this->assertEquals(SimpleComponent::class, $factory->resolveComponentClass('simple-component'));
+        // $this->assertEquals(SimpleComponent::class, $factory->resolveComponentClass(SimpleComponent::class));
+        // $this->assertEquals(SimpleComponent::class, $factory->resolveComponentClass($component));
+    }
+
+    public function test_can_resolve_component_name()
+    {
+        $finder = new Finder();
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $factory = new Factory($finder, $compiler);
+
+        $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
+
+        $component = $factory->create('simple-component');
+
+        $this->assertEquals('simple-component', $factory->resolveComponentName('simple-component'));
+        $this->assertEquals('simple-component', $factory->resolveComponentName(SimpleComponent::class));
+        $this->assertEquals('simple-component', $factory->resolveComponentName($component));
+    }
 }

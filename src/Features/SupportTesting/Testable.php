@@ -60,16 +60,18 @@ class Testable
      */
     static function normalizeAndRegisterComponentName($name)
     {
-        if (is_array($otherComponents = $name)) {
-            $name = array_shift($otherComponents);
+        if (is_array($components = $name)) {
+            $firstComponent = array_values($components)[0];
 
-            foreach ($otherComponents as $key => $value) {
+            foreach ($components as $key => $value) {
                 if (is_numeric($key)) {
-                    app('livewire')->isDiscoverable($name) || app('livewire')->component($value);
+                    app('livewire')->exists($value) || app('livewire')->component($value);
                 } else {
                     app('livewire')->component($key, $value);
                 }
             }
+
+            return app('livewire.factory')->resolveComponentName($firstComponent);
         } elseif (is_object($name)) {
             $anonymousClassComponent = $name;
 

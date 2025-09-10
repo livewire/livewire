@@ -16,20 +16,6 @@ class Finder
 
     protected $viewComponents = [];
 
-    // Memoization caches
-    protected $classNameCache = [];
-
-    protected $singleFileComponentPathCache = [];
-
-    protected $multiFileComponentPathCache = [];
-
-    protected $normalizedNameCache = [];
-
-    public function __construct()
-    {
-        $this->classNamespaces[] = config('livewire.class_namespace');
-    }
-
     public function addLocation($classNamespace = null, $viewPath = null): void
     {
         if ($classNamespace !== null) $this->classNamespaces[] = trim($classNamespace, '\\');
@@ -47,7 +33,12 @@ class Finder
         // Support $name being used a single argument for class-based components...
         if ($name !== null && $className === null && $viewPath === null) {
             $className = $name;
-            $name = 'lw' . crc32(trim($className, '\\'));
+
+            $name = null;
+        }
+
+        if (is_object($className)) {
+            $className = get_class($className);
         }
 
         // Support $className being used a single named argument for class-based components...
@@ -65,36 +56,58 @@ class Finder
         }
     }
 
-    public function resolveClassName($name): ?string
+    public function normalizeName($nameComponentOrClass): ?string
     {
-        // Check memoization cache first
-        if (isset($this->classNameCache[$name])) {
-            return $this->classNameCache[$name];
+        if (is_object($nameComponentOrClass)) {
+            $nameComponentOrClass = get_class($nameComponentOrClass);
         }
 
+        $class = null;
+
+        if (is_subclass_of($class = $nameComponentOrClass, Component::class)) {
+            if (is_object($class)) {
+                $class = get_class($class);
+            }
+
+            $name = array_search($class, $this->classComponents);
+
+            if ($name !== false) {
+                return $name;
+            }
+
+            $hashOfClass = 'lw' . crc32(trim($class, '\\'));
+
+            $name = $this->classComponents[$hashOfClass] ?? false;
+
+            if ($name !== false) {
+                return $name;
+            }
+
+            $result = $this->generateNameFromClass($class, $this->classNamespaces);
+
+            return $result;
+        }
+
+        return $nameComponentOrClass;
+    }
+
+    public function resolveClassComponentClassName($name): ?string
+    {
         if (isset($this->classComponents[$name])) {
-            $this->classNameCache[$name] = $this->classComponents[$name];
             return $this->classComponents[$name];
         }
 
         $class = $this->generateClassFromName($name, $this->classNamespaces);
 
         if (! class_exists($class)) {
-            $this->classNameCache[$name] = null;
             return null;
         }
 
-        $this->classNameCache[$name] = $class;
         return $class;
     }
 
     public function resolveSingleFileComponentPath($name): ?string
     {
-        // Check memoization cache first
-        if (isset($this->singleFileComponentPathCache[$name])) {
-            return $this->singleFileComponentPathCache[$name];
-        }
-
         $path = null;
 
         // Check if the component is explicitly registered...
@@ -102,7 +115,6 @@ class Finder
             $path = $this->viewComponents[$name];
 
             if (! is_dir($path) && file_exists($path)) {
-                $this->singleFileComponentPathCache[$name] = $path;
                 return $path;
             }
         }
@@ -131,24 +143,16 @@ class Finder
 
             foreach ($paths as $filePath) {
                 if (! is_dir($filePath) && file_exists($filePath)) {
-                    $this->singleFileComponentPathCache[$name] = $filePath;
                     return $filePath;
                 }
             }
         }
-
-        $this->singleFileComponentPathCache[$name] = $path;
 
         return $path;
     }
 
     public function resolveMultiFileComponentPath($name): ?string
     {
-        // Check memoization cache first
-        if (isset($this->multiFileComponentPathCache[$name])) {
-            return $this->multiFileComponentPathCache[$name];
-        }
-
         $path = null;
 
         // Check if the component is explicitly registered...
@@ -156,7 +160,6 @@ class Finder
             $path = $this->viewComponents[$name];
 
             if (is_dir($path)) {
-                $this->multiFileComponentPathCache[$name] = $path;
                 return $path;
             }
         }
@@ -184,45 +187,13 @@ class Finder
 
             foreach ($dirs as $dir) {
                 if (is_dir($dir)) {
-                    $this->multiFileComponentPathCache[$name] = $dir;
 
                     return $dir;
                 }
             }
         }
 
-        $this->multiFileComponentPathCache[$name] = $path;
-
         return $path;
-    }
-
-    public function normalizeName($nameComponentOrClass): ?string
-    {
-        // Create a cache key that works for both strings and objects
-        $cacheKey = is_object($nameComponentOrClass) ? get_class($nameComponentOrClass) : $nameComponentOrClass;
-
-        // Check memoization cache first
-        if (isset($this->normalizedNameCache[$cacheKey])) {
-            return $this->normalizedNameCache[$cacheKey];
-        }
-
-        $class = null;
-
-        if (is_subclass_of($class = $nameComponentOrClass, Component::class)) {
-            $name = array_search($class, $this->classComponents);
-
-            if ($name !== false) {
-                $this->normalizedNameCache[$cacheKey] = $name;
-                return $name;
-            }
-
-            $result = $this->generateNameFromClass($class, $this->classNamespaces);
-            $this->normalizedNameCache[$cacheKey] = $result;
-            return $result;
-        }
-
-        $this->normalizedNameCache[$cacheKey] = $nameComponentOrClass;
-        return $nameComponentOrClass;
     }
 
     protected function generateClassFromName($name, $classNamespaces = [])
@@ -237,12 +208,12 @@ class Finder
             $lastSegment = last(explode('.', $name));
             $selfNamedClass = '\\' . $classNamespace . '\\' . $baseClass . '\\' . str($lastSegment)->studly();
 
-            if (class_exists($class)) return $class;
-            if (class_exists($indexClass)) return $indexClass;
-            if (class_exists($selfNamedClass)) return $selfNamedClass;
+            if (class_exists($class)) return trim($class, '\\');
+            if (class_exists($indexClass)) return trim($indexClass, '\\');
+            if (class_exists($selfNamedClass)) return trim($selfNamedClass, '\\');
         }
 
-        return $baseClass;
+        return trim($baseClass, '\\');
     }
 
     protected function generateNameFromClass($class, $classNamespaces = []): string

@@ -47,35 +47,35 @@ class IntegrateV4
         app('view')->addNamespace('layouts', resource_path('views/layouts'));
         app('blade.compiler')->anonymousComponentPath(resource_path('views/layouts'), 'layouts');
 
-        app('livewire')->namespace('pages', resource_path('views/pages'));
+        app('livewire')->addNamespace('pages', viewPath: resource_path('views/pages'));
 
         // Register a missing component resolver with Livewire's component registry
-        app('livewire')->resolveMissingComponent(function ($componentName) {
-            $viewPath = $this->finder->resolve($componentName);
+        // app('livewire')->resolveMissingComponent(function ($componentName) {
+        //     $viewPath = $this->finder->resolve($componentName);
 
-            // Detect if this is a multi-file component (directory) or single-file component
-            if (is_dir($viewPath)) {
-                // Multi-file component - use directory compilation
-                $result = $this->compiler->compileMultiFileComponent($viewPath);
-            } else {
-                // Single-file component - use standard compilation
-                $result = $this->compiler->compile($viewPath);
-            }
+        //     // Detect if this is a multi-file component (directory) or single-file component
+        //     if (is_dir($viewPath)) {
+        //         // Multi-file component - use directory compilation
+        //         $result = $this->compiler->compileMultiFileComponent($viewPath);
+        //     } else {
+        //         // Single-file component - use standard compilation
+        //         $result = $this->compiler->compile($viewPath);
+        //     }
 
-            $className = $result->className;
+        //     $className = $result->className;
 
-            // Load the generated class file since it won't be autoloaded
-            if (! class_exists($className)) {
-                require_once $result->classPath;
-            }
+        //     // Load the generated class file since it won't be autoloaded
+        //     if (! class_exists($className)) {
+        //         require_once $result->classPath;
+        //     }
 
-            // Double-check that the class now exists after loading
-            if (! class_exists($className)) {
-                throw new \Exception("Class {$className} does not exist after loading from {$result->classPath}");
-            }
+        //     // Double-check that the class now exists after loading
+        //     if (! class_exists($className)) {
+        //         throw new \Exception("Class {$className} does not exist after loading from {$result->classPath}");
+        //     }
 
-            return $className;
-        });
+        //     return $className;
+        // });
     }
 
     protected function supportWireTagSyntax()

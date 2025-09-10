@@ -1,8 +1,12 @@
 <?php
 
 namespace Livewire;
-use Composer\InstalledVersions;
+use Livewire\Finder\Finder;
+use Livewire\Factory\Factory;
+use Livewire\Compiler\Compiler;
 use Illuminate\Foundation\Console\AboutCommand;
+use Composer\InstalledVersions;
+use Livewire\Compiler\CacheManager;
 
 class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 {
@@ -25,10 +29,33 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     protected function registerLivewireSingleton()
     {
         $this->app->alias(LivewireManager::class, 'livewire');
-
         $this->app->singleton(LivewireManager::class);
 
         app('livewire')->setProvider($this);
+
+        $this->app->singleton('livewire.finder', function () {
+            $finder = new Finder;
+
+            $finder->addLocation(classNamespace: config('livewire.class_namespace'));
+            $finder->addLocation(viewPath: config('livewire.component_path'));
+
+            return $finder;
+        });
+
+        $this->app->singleton('livewire.compiler', function () {
+            return new Compiler(
+                new CacheManager(
+                    storage_path('framework/views/livewire')
+                )
+            );
+        });
+
+        $this->app->singleton('livewire.factory', function ($app) {
+            return new Factory(
+                $app['livewire.finder'],
+                $app['livewire.compiler']
+            );
+        });
     }
 
     protected function registerConfig()
@@ -54,7 +81,6 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Mechanisms\FrontendAssets\FrontendAssets::class,
             Mechanisms\ExtendBlade\ExtendBlade::class,
             Mechanisms\CompileLivewireTags\CompileLivewireTags::class,
-            Mechanisms\ComponentRegistry::class,
             Mechanisms\RenderComponent::class,
             Mechanisms\DataStore::class,
         ];

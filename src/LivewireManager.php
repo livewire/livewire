@@ -9,7 +9,6 @@ use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
-use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Features\SupportTesting\DuskTestable;
 use Livewire\Features\SupportLazyLoading\SupportLazyLoading;
@@ -33,7 +32,17 @@ class LivewireManager
 
     function component($name, $class = null)
     {
-        app(ComponentRegistry::class)->component($name, $class);
+        $this->addComponent($name, $class);
+    }
+
+    function addComponent($name, $className = null, $viewPath = null)
+    {
+        app('livewire.finder')->addComponent($name, className: $className, viewPath: $viewPath);
+    }
+
+    function addNamespace($namespace, $classNamespace = null, $viewPath = null)
+    {
+        return app('livewire.finder')->addNamespace($namespace, classNamespace: $classNamespace, viewPath: $viewPath);
     }
 
     function componentHook($hook)
@@ -58,22 +67,25 @@ class LivewireManager
 
     function new($name, $id = null)
     {
-        return app(ComponentRegistry::class)->new($name, $id);
+        return app('livewire.factory')->create($name, $id);
     }
 
+    /**
+     * @deprecated This method will be removed in a future version. Use exists() instead.
+     */
     function isDiscoverable($componentNameOrClass)
     {
-        return app(ComponentRegistry::class)->isDiscoverable($componentNameOrClass);
+        return $this->exists($componentNameOrClass);
+    }
+
+    function exists($componentNameOrClass)
+    {
+        return app('livewire.factory')->exists($componentNameOrClass);
     }
 
     function resolveMissingComponent($resolver)
     {
-        return app(ComponentRegistry::class)->resolveMissingComponent($resolver);
-    }
-
-    function namespace($namespace, $path)
-    {
-        return app('livewire.resolver')->namespace($namespace, $path);
+        return app('livewire.factory')->resolveMissingComponent($resolver);
     }
 
     function mount($name, $params = [], $key = null, $slots = [])

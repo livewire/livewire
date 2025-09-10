@@ -3,9 +3,10 @@
 namespace Livewire\Finder;
 
 use Livewire\Finder\Fixtures\SelfNamedComponent\SelfNamedComponent;
-use Livewire\Finder\Fixtures\FinderTestClassComponent;
 use Livewire\Finder\Fixtures\Nested\NestedComponent;
 use Livewire\Finder\Fixtures\IndexComponent\Index;
+use Livewire\Finder\Fixtures\FinderTestClassComponent;
+use Livewire\Component;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -13,13 +14,13 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addComponent('test-component', FinderTestClassComponent::class);
+        $finder->addComponent('test-component', className: FinderTestClassComponent::class);
 
         $name = $finder->normalizeName(FinderTestClassComponent::class);
 
         $this->assertEquals('test-component', $name);
 
-        $class = $finder->resolveClassName('test-component');
+        $class = $finder->resolveClassComponentClassName('test-component');
 
         $this->assertEquals(FinderTestClassComponent::class, $class);
     }
@@ -34,9 +35,47 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals('lw' . crc32(FinderTestClassComponent::class), $name);
 
-        $class = $finder->resolveClassName($name);
+        $class = $finder->resolveClassComponentClassName($name);
 
         $this->assertEquals(FinderTestClassComponent::class, $class);
+    }
+
+    public function test_can_add_and_resolve_named_anonymous_class_component()
+    {
+        $finder = new Finder();
+
+        $finder->addComponent('test-component', className: $obj = new class extends Component {
+            public function render() {
+                return '<div>Finder Location Test Component</div>';
+            }
+        });
+
+        $name = $finder->normalizeName($obj);
+
+        $this->assertEquals('test-component', $name);
+
+        $class = $finder->resolveClassComponentClassName('test-component');
+
+        $this->assertEquals($obj::class, $class);
+    }
+
+    public function test_can_add_and_resolve_unnamed_anonymous_class_component()
+    {
+        $finder = new Finder();
+
+        $finder->addComponent(className: $obj = new class extends Component {
+            public function render() {
+                return '<div>Finder Location Test Component</div>';
+            }
+        });
+
+        $name = $finder->normalizeName($obj);
+
+        $this->assertEquals('lw' . crc32($obj::class), $name);
+
+        $class = $finder->resolveClassComponentClassName($name);
+
+        $this->assertEquals($obj::class, $class);
     }
 
     public function test_can_add_and_resolve_location_class_component()
@@ -49,9 +88,9 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals('finder-test-class-component', $name);
 
-        $class = $finder->resolveClassName($name);
+        $class = $finder->resolveClassComponentClassName($name);
 
-        $this->assertEquals('\Livewire\Finder\Fixtures\FinderTestClassComponent', $class);
+        $this->assertEquals('Livewire\Finder\Fixtures\FinderTestClassComponent', $class);
     }
 
     public function test_can_add_and_resolve_location_class_nested_component()
@@ -64,9 +103,9 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals('nested.nested-component', $name);
 
-        $class = $finder->resolveClassName($name);
+        $class = $finder->resolveClassComponentClassName($name);
 
-        $this->assertEquals('\Livewire\Finder\Fixtures\Nested\NestedComponent', $class);
+        $this->assertEquals('Livewire\Finder\Fixtures\Nested\NestedComponent', $class);
     }
 
     public function test_can_add_and_resolve_location_class_index_component()
@@ -79,9 +118,9 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals('index-component', $name);
 
-        $class = $finder->resolveClassName($name);
+        $class = $finder->resolveClassComponentClassName($name);
 
-        $this->assertEquals('\Livewire\Finder\Fixtures\IndexComponent\Index', $class);
+        $this->assertEquals('Livewire\Finder\Fixtures\IndexComponent\Index', $class);
     }
 
     public function test_can_add_and_resolve_location_class_self_named_component()
@@ -94,9 +133,9 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals('self-named-component', $name);
 
-        $class = $finder->resolveClassName($name);
+        $class = $finder->resolveClassComponentClassName($name);
 
-        $this->assertEquals('\Livewire\Finder\Fixtures\SelfNamedComponent\SelfNamedComponent', $class);
+        $this->assertEquals('Livewire\Finder\Fixtures\SelfNamedComponent\SelfNamedComponent', $class);
     }
 
     public function test_can_add_and_resolve_named_view_based_component()
@@ -277,36 +316,5 @@ class UnitTest extends \Tests\TestCase
         $path = $finder->resolveMultiFileComponentPath('multi-file-zap-component');
 
         $this->assertEquals(__DIR__ . '/fixtures/⚡︎multi-file-zap-component', $path);
-    }
-
-    public function test_memoization_caches_results_within_request()
-    {
-        $finder = new Finder();
-
-        $finder->addLocation(viewPath: __DIR__ . '/fixtures');
-
-        // First call - should populate cache
-        $name1 = $finder->normalizeName('finder-test-single-file-component');
-        $class1 = $finder->resolveClassName('finder-test-single-file-component');
-        $singlePath1 = $finder->resolveSingleFileComponentPath('finder-test-single-file-component');
-        $multiPath1 = $finder->resolveMultiFileComponentPath('multi-file-test-component');
-
-        // Second call - should use cache (results should be identical)
-        $name2 = $finder->normalizeName('finder-test-single-file-component');
-        $class2 = $finder->resolveClassName('finder-test-single-file-component');
-        $singlePath2 = $finder->resolveSingleFileComponentPath('finder-test-single-file-component');
-        $multiPath2 = $finder->resolveMultiFileComponentPath('multi-file-test-component');
-
-        // Results should be identical, proving memoization is working
-        $this->assertEquals($name1, $name2);
-        $this->assertEquals($class1, $class2);
-        $this->assertEquals($singlePath1, $singlePath2);
-        $this->assertEquals($multiPath1, $multiPath2);
-
-        // Test that null results are also cached
-        $nonExistent1 = $finder->resolveClassName('non-existent-component');
-        $nonExistent2 = $finder->resolveClassName('non-existent-component');
-        $this->assertEquals($nonExistent1, $nonExistent2);
-        $this->assertNull($nonExistent1);
     }
 }
