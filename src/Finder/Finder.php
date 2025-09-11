@@ -18,13 +18,13 @@ class Finder
 
     public function addLocation($classNamespace = null, $viewPath = null): void
     {
-        if ($classNamespace !== null) $this->classNamespaces[] = trim($classNamespace, '\\');
+        if ($classNamespace !== null) $this->classNamespaces[] = $this->normalizeClassName($classNamespace);
         if ($viewPath !== null) $this->viewLocations[] = $viewPath;
     }
 
     public function addNamespace($namespace, $classNamespace = null, $viewPath = null): void
     {
-        if ($classNamespace !== null) $this->classNamespaces[$namespace] = trim($classNamespace, '\\');
+        if ($classNamespace !== null) $this->classNamespaces[$namespace] = $this->normalizeClassName($classNamespace);
         if ($viewPath !== null) $this->viewNamespaces[$namespace] = $viewPath;
     }
 
@@ -43,7 +43,7 @@ class Finder
 
         // Support $className being used a single named argument for class-based components...
         if ($name === null && $className !== null && $viewPath === null) {
-            $name = 'lw' . crc32(trim($className, '\\'));
+            $name = $this->generateHashName($className);
         }
 
         if ($name == null && $className === null && $viewPath !== null) {
@@ -51,7 +51,7 @@ class Finder
         }
 
         if ($name) {
-            if ($className !== null) $this->classComponents[$name] = trim($className, '\\');
+            if ($className !== null) $this->classComponents[$name] = $this->normalizeClassName($className);
             elseif ($viewPath !== null) $this->viewComponents[$name] = $viewPath;
         }
     }
@@ -75,7 +75,7 @@ class Finder
                 return $name;
             }
 
-            $hashOfClass = 'lw' . crc32(trim($class, '\\'));
+            $hashOfClass = $this->generateHashName($class);
 
             $name = $this->classComponents[$hashOfClass] ?? false;
 
@@ -121,7 +121,7 @@ class Finder
 
         // Check for a component inside locations...
         foreach ($this->viewLocations as $location) {
-            $location = rtrim($location, '/');
+            $location = $this->normalizeLocation($location);
 
 
             $segments = explode('.', $name);
@@ -166,7 +166,7 @@ class Finder
 
         // Check for a multi-file component inside locations...
         foreach ($this->viewLocations as $location) {
-            $location = rtrim($location, '/');
+            $location = $this->normalizeLocation($location);
 
             $segments = explode('.', $name);
 
@@ -208,12 +208,12 @@ class Finder
             $lastSegment = last(explode('.', $name));
             $selfNamedClass = '\\' . $classNamespace . '\\' . $baseClass . '\\' . str($lastSegment)->studly();
 
-            if (class_exists($class)) return trim($class, '\\');
-            if (class_exists($indexClass)) return trim($indexClass, '\\');
-            if (class_exists($selfNamedClass)) return trim($selfNamedClass, '\\');
+            if (class_exists($class)) return $this->normalizeClassName($class);
+            if (class_exists($indexClass)) return $this->normalizeClassName($indexClass);
+            if (class_exists($selfNamedClass)) return $this->normalizeClassName($selfNamedClass);
         }
 
-        return trim($baseClass, '\\');
+        return $this->normalizeClassName($baseClass);
     }
 
     protected function generateNameFromClass($class, $classNamespaces = []): string
@@ -221,7 +221,7 @@ class Finder
         $class = str_replace(
             ['/', '\\'],
             '.',
-            trim(trim($class, '/'), '\\')
+            $this->normalizePath($class)
         );
 
         $fullName = str(collect(explode('.', $class))
@@ -250,7 +250,7 @@ class Finder
             $namespace = str_replace(
                 ['/', '\\'],
                 '.',
-                trim(trim($classNamespace, '/'), '\\')
+                $this->normalizePath($classNamespace)
             );
 
             $namespace = collect(explode('.', $namespace))
@@ -263,5 +263,25 @@ class Finder
         }
 
         return (string) $fullName;
+    }
+
+    protected function normalizeClassName(string $className): string
+    {
+        return trim($className, '\\');
+    }
+
+    protected function generateHashName(string $className): string
+    {
+        return 'lw' . crc32($this->normalizeClassName($className));
+    }
+
+    protected function normalizePath(string $path): string
+    {
+        return trim(trim($path, '/'), '\\');
+    }
+
+    protected function normalizeLocation(string $location): string
+    {
+        return rtrim($location, '/');
     }
 }
