@@ -9,6 +9,7 @@ class SingleFileParser extends Parser
         public string $contents,
         public ?string $scriptPortion,
         public string $classPortion,
+        public string $placeholderPortion,
         public string $viewPortion,
     ) {}
 
@@ -20,6 +21,7 @@ class SingleFileParser extends Parser
 
         $scriptPortion = static::extractScriptPortion($mutableContents);
         $classPortion = static::extractClassPortion($mutableContents);
+        $placeholderPortion = static::extractPlaceholderPortion($mutableContents);
         $viewPortion = trim($mutableContents);
 
         return new self(
@@ -27,6 +29,7 @@ class SingleFileParser extends Parser
             $contents,
             $scriptPortion,
             $classPortion,
+            $placeholderPortion,
             $viewPortion,
         );
     }
@@ -53,7 +56,7 @@ class SingleFileParser extends Parser
         return $scriptPortion ?? null;
     }
 
-    public static function extractPattern(string $pattern, string &$contents): string | false
+    protected static function extractPattern(string $pattern, string &$contents): string | false
     {
         if (preg_match($pattern, $contents, $matches)) {
             $match = $matches[0];
@@ -66,13 +69,17 @@ class SingleFileParser extends Parser
         return false;
     }
 
-    public function generateClassContents(string $viewFileName): string
+    public function generateClassContents(string $viewFileName, ?string $placeholderFileName = null): string
     {
         $classContents = trim($this->classPortion);
 
         $classContents = $this->stripTrailingPhpTag($classContents);
         $classContents = $this->ensureAnonymousClassHasReturn($classContents);
         $classContents = $this->injectViewMethod($classContents, $viewFileName);
+
+        if ($placeholderFileName) {
+            $classContents = $this->injectPlaceholderMethod($classContents, $placeholderFileName);
+        }
 
         return $classContents;
     }

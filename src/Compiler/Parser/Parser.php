@@ -4,6 +4,27 @@ namespace Livewire\Compiler\Parser;
 
 class Parser
 {
+    public static function extractPlaceholderPortion(string &$contents): ?string
+    {
+        $pattern = '/@'.'placeholder(.*?)@endplaceholder/s';
+
+        if (preg_match($pattern, $contents, $matches)) {
+            $fullMatch = $matches[0];
+            $match = $matches[1];
+
+            $contents = str_replace($fullMatch, '', $contents);
+
+            return $match;
+        }
+
+        return $placeholderPortion ?? null;
+    }
+
+    public function generatePlaceholderContents(): ?string
+    {
+        return $this->placeholderPortion ?? null;
+    }
+
     protected function stripTrailingPhpTag(string $contents): string
     {
         if (str_ends_with($contents, '?>')) {
@@ -33,6 +54,28 @@ class Parser
     protected function view()
     {
         return app('view')->file('{$viewFileName}');
+    }
+}
+PHP
+            , $position, 1);
+        }
+
+        return $contents;
+    }
+
+    protected function injectPlaceholderMethod(string $contents, string $placeholderFileName): string
+    {
+        $pattern = '/}(\s*);/';
+        preg_match_all($pattern, $contents, $matches, PREG_OFFSET_CAPTURE);
+        $lastMatch = end($matches[0]);
+
+        if ($lastMatch) {
+            $position = $lastMatch[1];
+            return substr_replace($contents, <<<PHP
+
+    public function placeholder()
+    {
+        return app('view')->file('{$placeholderFileName}');
     }
 }
 PHP

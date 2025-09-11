@@ -34,8 +34,17 @@ class Compiler
             : MultiFileParser::parse($path);
 
         $viewFileName = $this->cacheManager->getViewPath($path);
+        $placeholderFileName = null;
 
-        $this->cacheManager->writeClassFile($path, $parser->generateClassContents($viewFileName));
+        $placeholderContents = $parser->generatePlaceholderContents();
+
+        if ($placeholderContents !== null) {
+            $placeholderFileName = $this->cacheManager->getPlaceholderPath($path);
+
+            $this->cacheManager->writePlaceholderFile($path, $placeholderContents);
+        }
+
+        $this->cacheManager->writeClassFile($path, $parser->generateClassContents($viewFileName, $placeholderFileName));
 
         $scriptContents = $parser->generateScriptContents();
 

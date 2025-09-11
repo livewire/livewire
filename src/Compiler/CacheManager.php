@@ -84,6 +84,13 @@ class CacheManager
         return $this->cacheDirectory . '/scripts/' . $hash . '.js';
     }
 
+    public function getPlaceholderPath(string $sourcePath): string
+    {
+        $hash = $this->getHash($sourcePath);
+
+        return $this->cacheDirectory . '/placeholders/' . $hash . '.blade.php';
+    }
+
     public function writeClassFile(string $sourcePath, string $contents): void
     {
         $this->invalidateOpCache($sourcePath);
@@ -111,6 +118,15 @@ class CacheManager
         File::ensureDirectoryExists($this->cacheDirectory . '/scripts');
 
         File::put($scriptPath, $contents);
+    }
+
+    public function writePlaceholderFile(string $sourcePath, string $contents): void
+    {
+        $placeholderPath = $this->getPlaceholderPath($sourcePath);
+
+        File::ensureDirectoryExists($this->cacheDirectory . '/placeholders');
+
+        File::put($placeholderPath, $contents);
     }
 
     public function invalidateOpCache(string $sourcePath): void

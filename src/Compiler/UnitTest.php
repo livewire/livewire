@@ -2,11 +2,12 @@
 
 namespace Livewire\Compiler;
 
+use Livewire\Component;
 use Livewire\Compiler\Parser\SingleFileParser;
 use Livewire\Compiler\Parser\MultiFileParser;
-use Illuminate\Support\Facades\File;
 use Livewire\Compiler\Compiler;
-use Livewire\Component;
+use Livewire\Compiler\CacheManager;
+use Illuminate\Support\Facades\File;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -95,6 +96,21 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringNotContainsString('use Livewire\Component;', $viewContents);
         $this->assertStringNotContainsString('<div>{{ $message }}</div>', $classContents);
         $this->assertStringNotContainsString('<div>{{ $message }}</div>', $scriptContents);
+    }
+
+    public function test_can_parse_placeholder_directive()
+    {
+        $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
+
+        $class = $compiler->compile(__DIR__ . '/Fixtures/sfc-component-with-placeholder.blade.php');
+
+        $classContents = file_get_contents($cacheManager->getClassPath(__DIR__ . '/Fixtures/sfc-component-with-placeholder.blade.php'));
+        $viewContents = file_get_contents($cacheManager->getViewPath(__DIR__ . '/Fixtures/sfc-component-with-placeholder.blade.php'));
+        $placeholderContents = file_get_contents($cacheManager->getPlaceholderPath(__DIR__ . '/Fixtures/sfc-component-with-placeholder.blade.php'));
+
+        $this->assertStringNotContainsString('@placeholder', $viewContents);
+        $this->assertStringContainsString('public function placeholder()', $classContents);
+        $this->assertStringContainsString('Loading...', $placeholderContents);
     }
 
     public function test_can_re_compile_simple_sfc_component()

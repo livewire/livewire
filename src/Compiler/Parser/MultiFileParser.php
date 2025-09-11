@@ -9,6 +9,7 @@ class MultiFileParser extends Parser
         public ?string $scriptPortion,
         public string $classPortion,
         public string $viewPortion,
+        public string $placeholderPortion,
     ) {}
 
     public static function parse(string $path): self
@@ -30,12 +31,14 @@ class MultiFileParser extends Parser
         $scriptPortion = file_exists($scriptPath) ? file_get_contents($scriptPath) : null;
         $classPortion = file_get_contents($classPath);
         $viewPortion = file_get_contents($viewPath);
+        $placeholderPortion = static::extractPlaceholderPortion($viewPortion);
 
         return new self(
             $path,
             $scriptPortion,
             $classPortion,
             $viewPortion,
+            $placeholderPortion,
         );
     }
 
