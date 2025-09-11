@@ -56,6 +56,18 @@ class UnitTest extends TestCase
             ->assertSee('Component for routing');
     }
 
+    public function test_can_use_livewire_macro_with_auto_discvovered_single_file_component()
+    {
+        app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');
+
+        Route::livewire('/component-for-routing', 'sfc-counter');
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/component-for-routing')
+            ->assertSee('Count: 1');
+    }
+
     public function test_route_parameters_are_passed_to_component()
     {
         Route::livewire('/route-with-params/{myId}', ComponentForRoutingWithParams::class);

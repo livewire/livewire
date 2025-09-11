@@ -12,8 +12,7 @@ class IntegrateV4
 {
     public function __construct()
     {
-        app()->alias(ComponentViewPathResolver::class, 'livewire.resolver');
-        app()->singleton(ComponentViewPathResolver::class);
+        //
     }
 
     public function __invoke()

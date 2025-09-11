@@ -93,7 +93,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertNotSame($existingComponent, $component); // Should be a new instance
     }
 
-    public function test_can_create_single_file_component()
+    public function test_can_create_and_render_single_file_component()
     {
         $finder = new Finder();
         $compiler = new Compiler(new CacheManager($this->cacheDir));

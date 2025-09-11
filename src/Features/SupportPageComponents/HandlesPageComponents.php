@@ -14,7 +14,9 @@ trait HandlesPageComponents
         $layoutConfig = SupportPageComponents::interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration(function () use (&$html) {
             $params = SupportPageComponents::gatherMountMethodParamsFromRouteParameters($this);
 
-            $html = app('livewire')->mount($this::class, $params);
+            $name = $this->getName() !== null ? $this->getName() : $this::class;
+
+            $html = app('livewire')->mount($name, $params);
         });
 
         $layoutConfig = $layoutConfig ?: new PageComponentConfig;

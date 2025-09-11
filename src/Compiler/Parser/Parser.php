@@ -30,10 +30,10 @@ class Parser
             $position = $lastMatch[1];
             return substr_replace($contents, <<<PHP
 
-protected function view()
-{
-    return app('view')->file('{$viewFileName}');
-}
+    protected function view()
+    {
+        return app('view')->file('{$viewFileName}');
+    }
 }
 PHP
             , $position, 1);
