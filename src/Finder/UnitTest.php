@@ -317,4 +317,158 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals(__DIR__ . '/fixtures/⚡︎multi-file-zap-component', $path);
     }
+
+    public function test_can_resolve_class_component_with_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
+
+        $class = $finder->resolveClassComponentClassName('admin::finder-test-class-component');
+
+        $this->assertEquals('Livewire\Finder\Fixtures\FinderTestClassComponent', $class);
+    }
+
+    public function test_can_resolve_nested_class_component_with_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
+
+        $class = $finder->resolveClassComponentClassName('admin::nested.nested-component');
+
+        $this->assertEquals('Livewire\Finder\Fixtures\Nested\NestedComponent', $class);
+    }
+
+    public function test_can_resolve_index_class_component_with_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
+
+        $class = $finder->resolveClassComponentClassName('admin::index-component');
+
+        $this->assertEquals('Livewire\Finder\Fixtures\IndexComponent\Index', $class);
+    }
+
+    public function test_can_resolve_self_named_class_component_with_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
+
+        $class = $finder->resolveClassComponentClassName('admin::self-named-component');
+
+        $this->assertEquals('Livewire\Finder\Fixtures\SelfNamedComponent\SelfNamedComponent', $class);
+    }
+
+    public function test_returns_null_for_unknown_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
+
+        $class = $finder->resolveClassComponentClassName('unknown::some-component');
+
+        $this->assertNull($class);
+    }
+
+    public function test_can_resolve_single_file_component_with_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('admin::finder-test-single-file-component');
+
+        $this->assertEquals(__DIR__ . '/fixtures/finder-test-single-file-component.blade.php', $path);
+    }
+
+    public function test_can_resolve_index_single_file_component_with_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('admin::nested-view-based');
+
+        $this->assertEquals(__DIR__ . '/fixtures/nested-view-based/index.blade.php', $path);
+    }
+
+    public function test_can_resolve_self_named_single_file_component_with_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('admin::self-named-component');
+
+        $this->assertEquals(__DIR__ . '/fixtures/self-named-component/self-named-component.blade.php', $path);
+    }
+
+    public function test_returns_null_for_single_file_component_with_unknown_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('unknown::some-component');
+
+        $this->assertNull($path);
+    }
+
+    public function test_can_resolve_multi_file_component_with_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+
+        $path = $finder->resolveMultiFileComponentPath('admin::multi-file-test-component');
+
+        $this->assertEquals(__DIR__ . '/fixtures/multi-file-test-component', $path);
+    }
+
+    public function test_can_resolve_multi_file_index_component_with_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+
+        $path = $finder->resolveMultiFileComponentPath('admin::multi-file-index');
+
+        $this->assertEquals(__DIR__ . '/fixtures/multi-file-index', $path);
+    }
+
+    public function test_can_resolve_multi_file_self_named_component_with_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+
+        $path = $finder->resolveMultiFileComponentPath('admin::multi-file-self-named');
+
+        $this->assertEquals(__DIR__ . '/fixtures/multi-file-self-named', $path);
+    }
+
+    public function test_returns_null_for_multi_file_component_with_unknown_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+
+        $path = $finder->resolveMultiFileComponentPath('unknown::some-component');
+
+        $this->assertNull($path);
+    }
+
+    public function test_can_resolve_component_with_namespace_in_factory()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('pages', classNamespace: 'Livewire\Finder\Fixtures');
+
+        $class = $finder->resolveClassComponentClassName('pages::finder-test-class-component');
+
+        $this->assertEquals('Livewire\Finder\Fixtures\FinderTestClassComponent', $class);
+    }
 }

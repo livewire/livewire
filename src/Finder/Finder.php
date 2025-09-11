@@ -91,8 +91,32 @@ class Finder
         return $nameComponentOrClass;
     }
 
+    protected function parseNamespaceAndName($name): array
+    {
+        if (str_contains($name, '::')) {
+            [$namespace, $componentName] = explode('::', $name, 2);
+            return [$namespace, $componentName];
+        }
+
+        return [null, $name];
+    }
+
     public function resolveClassComponentClassName($name): ?string
     {
+        [$namespace, $componentName] = $this->parseNamespaceAndName($name);
+
+        if ($namespace !== null) {
+            if (isset($this->classNamespaces[$namespace])) {
+                $class = $this->generateClassFromName($componentName, [$this->classNamespaces[$namespace]]);
+
+                if (class_exists($class)) {
+                    return $class;
+                }
+            }
+
+            return null;
+        }
+
         if (isset($this->classComponents[$name])) {
             return $this->classComponents[$name];
         }
@@ -110,21 +134,33 @@ class Finder
     {
         $path = null;
 
-        // Check if the component is explicitly registered...
-        if (isset($this->viewComponents[$name])) {
-            $path = $this->viewComponents[$name];
+        [$namespace, $componentName] = $this->parseNamespaceAndName($name);
 
-            if (! is_dir($path) && file_exists($path)) {
-                return $path;
+        if ($namespace !== null) {
+            if (isset($this->viewNamespaces[$namespace])) {
+                $locations = [$this->viewNamespaces[$namespace]];
+            } else {
+                return null;
             }
+        } else {
+            $componentName = $name;
+
+            // Check if the component is explicitly registered...
+            if (isset($this->viewComponents[$name])) {
+                $path = $this->viewComponents[$name];
+
+                if (! is_dir($path) && file_exists($path)) {
+                    return $path;
+                }
+            }
+
+            $locations = $this->viewLocations;
         }
 
         // Check for a component inside locations...
-        foreach ($this->viewLocations as $location) {
+        foreach ($locations as $location) {
             $location = $this->normalizeLocation($location);
-
-
-            $segments = explode('.', $name);
+            $segments = explode('.', $componentName);
 
             $lastSegment = last($segments);
             $leadingSegments = implode('.', array_slice($segments, 0, -1));
@@ -135,10 +171,13 @@ class Finder
             $paths = [
                 'singleFile' => $location . '/' . $leadingPath . $trailingPath . '.blade.php',
                 'singleFileWithZap' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath . '.blade.php',
+                'singleFileWithMacZap' => $location . '/' . $leadingPath . '⚡' . $trailingPath . '.blade.php',
                 'singleFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index.blade.php',
                 'singleFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index.blade.php',
+                'singleFileAsIndexWithMacZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡index.blade.php',
                 'singleFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath . '.blade.php',
-                'singleFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath . '.blade.php'
+                'singleFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath . '.blade.php',
+                'singleFileAsSelfNamedWithMacZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡' . $trailingPath . '.blade.php'
             ];
 
             foreach ($paths as $filePath) {
@@ -155,20 +194,34 @@ class Finder
     {
         $path = null;
 
-        // Check if the component is explicitly registered...
-        if (isset($this->viewComponents[$name])) {
-            $path = $this->viewComponents[$name];
+        [$namespace, $componentName] = $this->parseNamespaceAndName($name);
 
-            if (is_dir($path)) {
-                return $path;
+        if ($namespace !== null) {
+            if (isset($this->viewNamespaces[$namespace])) {
+                $locations = [$this->viewNamespaces[$namespace]];
+            } else {
+                return null;
             }
+        } else {
+            $componentName = $name;
+
+            // Check if the component is explicitly registered...
+            if (isset($this->viewComponents[$name])) {
+                $path = $this->viewComponents[$name];
+
+                if (is_dir($path)) {
+                    return $path;
+                }
+            }
+
+            $locations = $this->viewLocations;
         }
 
         // Check for a multi-file component inside locations...
-        foreach ($this->viewLocations as $location) {
+        foreach ($locations as $location) {
             $location = $this->normalizeLocation($location);
 
-            $segments = explode('.', $name);
+            $segments = explode('.', $componentName);
 
             $lastSegment = last($segments);
             $leadingSegments = implode('.', array_slice($segments, 0, -1));
@@ -179,10 +232,13 @@ class Finder
             $dirs = [
                 'multiFile' => $location . '/' . $leadingPath . $trailingPath,
                 'multiFileWithZap' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath,
+                'multiFileWithMacZap' => $location . '/' . $leadingPath . '⚡' . $trailingPath,
                 'multiFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index',
                 'multiFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index',
+                'multiFileAsIndexWithMacZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡index',
                 'multiFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath,
                 'multiFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath,
+                'multiFileAsSelfNamedWithMacZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡' . $trailingPath,
             ];
 
             foreach ($dirs as $dir) {

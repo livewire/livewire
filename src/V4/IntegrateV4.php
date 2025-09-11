@@ -4,24 +4,16 @@ namespace Livewire\V4;
 
 use Livewire\V4\Tailwind\Merge;
 use Livewire\V4\Slots\SupportSlots;
-use Livewire\V4\Registry\ComponentViewPathResolver;
-use Livewire\V4\Compiler\SingleFileComponentCompiler;
 use Illuminate\View\ComponentAttributeBag;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
 
 class IntegrateV4
 {
-    protected SingleFileComponentCompiler $compiler;
-    protected ComponentViewPathResolver $finder;
-
     public function __construct()
     {
         app()->alias(ComponentViewPathResolver::class, 'livewire.resolver');
         app()->singleton(ComponentViewPathResolver::class);
-        $this->finder = app('livewire.resolver');
-
-        $this->compiler = app(SingleFileComponentCompiler::class);
     }
 
     public function __invoke()
@@ -80,9 +72,9 @@ class IntegrateV4
 
     protected function supportWireTagSyntax()
     {
-        app('blade.compiler')->prepareStringsForCompilationUsing(function ($string) {
-            return app(WireTagCompiler::class)($string);
-        });
+        // app('blade.compiler')->prepareStringsForCompilationUsing(function ($string) {
+        //     return app(WireTagCompiler::class)($string);
+        // });
     }
 
     protected function supportTailwindMacro()
@@ -150,7 +142,7 @@ class IntegrateV4
             if (is_dir($cacheDirectory)) {
                 // Count files before clearing for informative output
                 $totalFiles = 0;
-                foreach (['classes', 'views', 'scripts', 'metadata'] as $subdir) {
+                foreach (['classes', 'views', 'scripts'] as $subdir) {
                     $path = $cacheDirectory . '/' . $subdir;
                     if (is_dir($path)) {
                         $totalFiles += count(glob($path . '/*'));
@@ -164,7 +156,6 @@ class IntegrateV4
                 \Illuminate\Support\Facades\File::makeDirectory($cacheDirectory . '/classes', 0755, true);
                 \Illuminate\Support\Facades\File::makeDirectory($cacheDirectory . '/views', 0755, true);
                 \Illuminate\Support\Facades\File::makeDirectory($cacheDirectory . '/scripts', 0755, true);
-                \Illuminate\Support\Facades\File::makeDirectory($cacheDirectory . '/metadata', 0755, true);
 
                 // Recreate .gitignore
                 \Illuminate\Support\Facades\File::put($cacheDirectory . '/.gitignore', "*\n!.gitignore");

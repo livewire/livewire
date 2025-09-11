@@ -55,7 +55,7 @@ PHP
         }
 
         // Only add PHP tags and use statements if we found any
-        if ($useStatements) {
+        if (isset($useStatements) && $useStatements) {
             $contents = "<?php\n" . $useStatements . "\n?>\n\n" . $contents;
         }
 
