@@ -2,10 +2,6 @@
 
 namespace Livewire\V4;
 
-use Livewire\V4\Tailwind\Merge;
-use Livewire\V4\Slots\SupportSlots;
-use Illuminate\View\ComponentAttributeBag;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
 
 class IntegrateV4
@@ -78,15 +74,15 @@ class IntegrateV4
 
     protected function supportTailwindMacro()
     {
-        ComponentAttributeBag::macro('tailwind', function ($weakClasses) {
-            $strongClasses = $this->attributes['class'] ?? '';
+        // ComponentAttributeBag::macro('tailwind', function ($weakClasses) {
+        //     $strongClasses = $this->attributes['class'] ?? '';
 
-            $weakClasses = is_array($weakClasses) ? implode(' ', $weakClasses) : $weakClasses;
+        //     $weakClasses = is_array($weakClasses) ? implode(' ', $weakClasses) : $weakClasses;
 
-            $this->attributes['class'] = app(Merge::class)->merge($weakClasses, $strongClasses);
+        //     $this->attributes['class'] = app(Merge::class)->merge($weakClasses, $strongClasses);
 
-            return $this;
-        });
+        //     return $this;
+        // });
     }
 
     protected function registerSlotDirectives()
