@@ -12,7 +12,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 {
     public function register()
     {
-        $this->registerLivewireSingleton();
+        $this->registerLivewireServices();
         $this->registerConfig();
         $this->bootEventBus();
         $this->registerMechanisms();
@@ -20,13 +20,14 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 
     public function boot()
     {
+        $this->bootConfiguredComponentPaths();
         $this->bootMechanisms();
         $this->bootFeatures();
 
         (new \Livewire\V4\IntegrateV4)();
     }
 
-    protected function registerLivewireSingleton()
+    protected function registerLivewireServices()
     {
         $this->app->alias(LivewireManager::class, 'livewire');
         $this->app->singleton(LivewireManager::class);
@@ -90,6 +91,20 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         foreach ($this->getMechanisms() as $mechanism) {
             app($mechanism)->register();
+        }
+    }
+
+    protected function bootConfiguredComponentPaths()
+    {
+        foreach (config('livewire.component_locations', []) as $location) {
+            app('livewire.finder')->addLocation(viewPath: $location);
+            app('blade.compiler')->anonymousComponentPath($location);
+
+        }
+
+        foreach (config('livewire.component_namespaces', []) as $namespace => $location) {
+            app('livewire.finder')->addNamespace($namespace, viewPath: $location);
+            app('blade.compiler')->anonymousComponentPath($location, $namespace);
         }
     }
 

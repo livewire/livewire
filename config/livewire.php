@@ -4,16 +4,35 @@ return [
 
     /*
     |---------------------------------------------------------------------------
-    | Component Path
+    | Component Locations
     |---------------------------------------------------------------------------
     |
-    | This value sets the root directory that will be used to resolve view-based
-    | components like single-file and multi-file components. This folder will
+    | This value sets the root directories that'll be used to resolve view-based
+    | components like single and multi-file components. The make command will
+    | use the first directory in this array to add new component files to.
+    |
+    */
+
+    'component_locations' => [
+        resource_path('views/components'),
+        resource_path('views/livewire'),
+    ],
+
+    /*
+    |---------------------------------------------------------------------------
+    | Component Namespaces
+    |---------------------------------------------------------------------------
+    |
+    | This value sets default namespaces that will be used to resolve view-based
+    | components like single-file and multi-file components. These folders'll
     | also be referenced when creating new components via the make command.
     |
     */
 
-    'component_path' => resource_path('views/components'),
+    'component_namespaces' => [
+        'layouts' => resource_path('views/layouts'),
+        'pages' => resource_path('views/pages'),
+    ],
 
     /*
     |---------------------------------------------------------------------------

@@ -41,6 +41,25 @@ class Parser
         return $contents;
     }
 
+    protected function ensureAnonymousClassHasTrailingSemicolon(string $contents): string
+    {
+        if (!preg_match('/\bnew\b/', $contents)) {
+            return $contents;
+        }
+
+        // Find last closing brace and ensure it has a trailing semicolon
+        if (preg_match('/}(?:\s*)$/', $contents)) {
+            return preg_replace('/}(\s*)$/', '};$1', $contents);
+        }
+
+        if (preg_match('/}(?:\s*);/', $contents)) {
+            return $contents;
+        }
+
+        // If we get here, we have a closing brace followed by other content
+        return $contents;
+    }
+
     protected function injectViewMethod(string $contents, string $viewFileName): string
     {
         $pattern = '/}(\s*);/';

@@ -9,7 +9,7 @@ class SingleFileParser extends Parser
         public string $contents,
         public ?string $scriptPortion,
         public string $classPortion,
-        public string $placeholderPortion,
+        public ?string $placeholderPortion,
         public string $viewPortion,
     ) {}
 
@@ -75,6 +75,7 @@ class SingleFileParser extends Parser
 
         $classContents = $this->stripTrailingPhpTag($classContents);
         $classContents = $this->ensureAnonymousClassHasReturn($classContents);
+        $classContents = $this->ensureAnonymousClassHasTrailingSemicolon($classContents);
         $classContents = $this->injectViewMethod($classContents, $viewFileName);
 
         if ($placeholderFileName) {

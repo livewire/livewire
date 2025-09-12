@@ -170,14 +170,17 @@ class Finder
 
             $paths = [
                 'singleFile' => $location . '/' . $leadingPath . $trailingPath . '.blade.php',
-                'singleFileWithZap' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath . '.blade.php',
-                'singleFileWithMacZap' => $location . '/' . $leadingPath . '⚡' . $trailingPath . '.blade.php',
+                'singleFileWithZap' => $location . '/' . $leadingPath . '⚡' . $trailingPath . '.blade.php',
+                'singleFileWithZapVariation15' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath . '.blade.php',
+                'singleFileWithZapVariation16' => $location . '/' . $leadingPath . '⚡️' . $trailingPath . '.blade.php',
                 'singleFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index.blade.php',
                 'singleFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index.blade.php',
-                'singleFileAsIndexWithMacZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡index.blade.php',
+                'singleFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index.blade.php',
+                'singleFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/⚡️index.blade.php',
                 'singleFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath . '.blade.php',
                 'singleFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath . '.blade.php',
-                'singleFileAsSelfNamedWithMacZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡' . $trailingPath . '.blade.php'
+                'singleFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath . '.blade.php',
+                'singleFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡️' . $trailingPath . '.blade.php',
             ];
 
             foreach ($paths as $filePath) {
@@ -232,13 +235,16 @@ class Finder
             $dirs = [
                 'multiFile' => $location . '/' . $leadingPath . $trailingPath,
                 'multiFileWithZap' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath,
-                'multiFileWithMacZap' => $location . '/' . $leadingPath . '⚡' . $trailingPath,
+                'multiFileWithZapVariation15' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath,
+                'multiFileWithZapVariation16' => $location . '/' . $leadingPath . '⚡️' . $trailingPath,
                 'multiFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index',
                 'multiFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index',
-                'multiFileAsIndexWithMacZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡index',
+                'multiFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index',
+                'multiFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/⚡️index',
                 'multiFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath,
                 'multiFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath,
-                'multiFileAsSelfNamedWithMacZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡' . $trailingPath,
+                'multiFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath,
+                'multiFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡️' . $trailingPath,
             ];
 
             foreach ($dirs as $dir) {

@@ -48,6 +48,7 @@ class MultiFileParser extends Parser
 
         $classContents = $this->stripTrailingPhpTag($classContents);
         $classContents = $this->ensureAnonymousClassHasReturn($classContents);
+        $classContents = $this->ensureAnonymousClassHasTrailingSemicolon($classContents);
         $classContents = $this->injectViewMethod($classContents, $viewFileName);
 
         return $classContents;

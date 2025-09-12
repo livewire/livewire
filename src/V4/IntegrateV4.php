@@ -13,9 +13,6 @@ class IntegrateV4
 
     public function __invoke()
     {
-        $this->supportSingleFileComponents();
-        $this->supportWireTagSyntax();
-        $this->supportTailwindMacro();
         $this->registerSlotDirectives();
         $this->registerSlotsSupport();
         $this->hookIntoViewClear();
@@ -23,66 +20,6 @@ class IntegrateV4
         \Illuminate\Console\Application::starting(fn (\Illuminate\Console\Application $artisan) => $artisan->resolveCommands([
             \Livewire\V4\Compiler\Commands\LivewireClearCommand::class,
         ]));
-    }
-
-    protected function supportSingleFileComponents()
-    {
-        // Register namespace for compiled Livewire components
-        app('view')->addNamespace('livewire-compiled', storage_path('framework/views/livewire/views'));
-
-        app('view')->addNamespace('pages', resource_path('views/pages'));
-        app('view')->addNamespace('layouts', resource_path('views/layouts'));
-        app('blade.compiler')->anonymousComponentPath(resource_path('views/layouts'), 'layouts');
-
-        app('livewire')->addNamespace('pages', viewPath: resource_path('views/pages'));
-
-        // Register a missing component resolver with Livewire's component registry
-        // app('livewire')->resolveMissingComponent(function ($componentName) {
-        //     $viewPath = $this->finder->resolve($componentName);
-
-        //     // Detect if this is a multi-file component (directory) or single-file component
-        //     if (is_dir($viewPath)) {
-        //         // Multi-file component - use directory compilation
-        //         $result = $this->compiler->compileMultiFileComponent($viewPath);
-        //     } else {
-        //         // Single-file component - use standard compilation
-        //         $result = $this->compiler->compile($viewPath);
-        //     }
-
-        //     $className = $result->className;
-
-        //     // Load the generated class file since it won't be autoloaded
-        //     if (! class_exists($className)) {
-        //         require_once $result->classPath;
-        //     }
-
-        //     // Double-check that the class now exists after loading
-        //     if (! class_exists($className)) {
-        //         throw new \Exception("Class {$className} does not exist after loading from {$result->classPath}");
-        //     }
-
-        //     return $className;
-        // });
-    }
-
-    protected function supportWireTagSyntax()
-    {
-        // app('blade.compiler')->prepareStringsForCompilationUsing(function ($string) {
-        //     return app(WireTagCompiler::class)($string);
-        // });
-    }
-
-    protected function supportTailwindMacro()
-    {
-        // ComponentAttributeBag::macro('tailwind', function ($weakClasses) {
-        //     $strongClasses = $this->attributes['class'] ?? '';
-
-        //     $weakClasses = is_array($weakClasses) ? implode(' ', $weakClasses) : $weakClasses;
-
-        //     $this->attributes['class'] = app(Merge::class)->merge($weakClasses, $strongClasses);
-
-        //     return $this;
-        // });
     }
 
     protected function registerSlotDirectives()

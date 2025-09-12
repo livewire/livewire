@@ -66,6 +66,15 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringNotContainsString('<div>{{ $message }}</div>', $scriptContents);
     }
 
+    public function test_parser_adds_trailing_semicolon_to_class_contents()
+    {
+        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component-without-trailing-semicolon.blade.php');
+
+        $classContents = $parser->generateClassContents('view-path.blade.php');
+
+        $this->assertStringContainsString('};', $classContents);
+    }
+
     public function test_can_compile_mfc_component()
     {
         $compiler = new Compiler(new CacheManager($this->cacheDir));
