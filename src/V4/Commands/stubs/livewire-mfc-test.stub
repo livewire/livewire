@@ -1,6 +1,6 @@
 <?php
 
-test('renders_successfully', function () {
-    Livewire::test('[name]')
+it('renders successfully', function () {
+    Livewire::test('[component-name]')
         ->assertStatus(200);
 });

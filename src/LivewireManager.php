@@ -32,17 +32,22 @@ class LivewireManager
 
     function component($name, $class = null)
     {
-        $this->addComponent($name, $class);
+        $this->addComponent($name, className: $class);
     }
 
-    function addComponent($name, $className = null, $viewPath = null)
+    function addComponent($name, $viewPath = null, $className = null)
     {
         app('livewire.finder')->addComponent($name, className: $className, viewPath: $viewPath);
     }
 
-    function addNamespace($namespace, $classNamespace = null, $viewPath = null)
+    function addNamespace($namespace, $viewPath = null, $classNamespace = null)
     {
         return app('livewire.finder')->addNamespace($namespace, classNamespace: $classNamespace, viewPath: $viewPath);
+    }
+
+    function addLocation($viewPath = null, $classNamespace = null)
+    {
+        return app('livewire.finder')->addLocation(classNamespace: $classNamespace, viewPath: $viewPath);
     }
 
     function componentHook($hook)

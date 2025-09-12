@@ -99,7 +99,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         // Adapt v4 config to v3 config...
 
         config()->set(
-            'component_locations',
+            'livewire.component_locations',
             config('livewire.component_locations', [
                 resource_path('views/components'),
                 resource_path('views/livewire'),
@@ -107,17 +107,17 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         );
 
         config()->set(
-            'component_layout',
+            'livewire.component_layout',
             config('livewire.component_layout', config('livewire.layout', null))
         );
 
         config()->set(
-            'component_placeholder',
+            'livewire.component_placeholder',
             config('livewire.component_placeholder', config('livewire.lazy_placeholder', null))
         );
 
         config()->set(
-            'make_command',
+            'livewire.make_command',
             config('livewire.make_command', [
                 'type' => 'class',
                 'emoji' => false,

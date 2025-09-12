@@ -16,19 +16,19 @@ class Finder
 
     protected $viewComponents = [];
 
-    public function addLocation($classNamespace = null, $viewPath = null): void
+    public function addLocation($viewPath = null, $classNamespace = null): void
     {
         if ($classNamespace !== null) $this->classNamespaces[] = $this->normalizeClassName($classNamespace);
         if ($viewPath !== null) $this->viewLocations[] = $viewPath;
     }
 
-    public function addNamespace($namespace, $classNamespace = null, $viewPath = null): void
+    public function addNamespace($namespace, $viewPath = null, $classNamespace = null): void
     {
         if ($classNamespace !== null) $this->classNamespaces[$namespace] = $this->normalizeClassName($classNamespace);
         if ($viewPath !== null) $this->viewNamespaces[$namespace] = $viewPath;
     }
 
-    public function addComponent($name = null, $className = null, $viewPath = null): void
+    public function addComponent($name = null, $viewPath = null, $className = null): void
     {
         // Support $name being used a single argument for class-based components...
         if ($name !== null && $className === null && $viewPath === null) {
@@ -345,5 +345,86 @@ class Finder
     protected function normalizeLocation(string $location): string
     {
         return rtrim($location, '/');
+    }
+
+    public function resolveSingleFileComponentPathForCreation(string $name): string
+    {
+        [$namespace, $componentName] = $this->parseNamespaceAndName($name);
+
+        // Get the appropriate location
+        if ($namespace !== null && isset($this->viewNamespaces[$namespace])) {
+            $location = $this->viewNamespaces[$namespace];
+        } else {
+            // Use the first configured component location or fallback
+            $location = $this->viewLocations[0] ?? resource_path('views/components');
+        }
+
+        $location = $this->normalizeLocation($location);
+
+        // Parse the component name into path segments
+        $segments = explode('.', $componentName ?? $name);
+        $lastSegment = array_pop($segments);
+        $leadingPath = !empty($segments) ? implode('/', $segments) . '/' : '';
+
+        // Determine if emoji should be used (get from config)
+        $useEmoji = config('livewire.make_command.emoji', true);
+        $prefix = $useEmoji ? '⚡' : '';
+
+        // Build the file path
+        return $location . '/' . $leadingPath . $prefix . $lastSegment . '.blade.php';
+    }
+
+    public function resolveMultiFileComponentPathForCreation(string $name): string
+    {
+        [$namespace, $componentName] = $this->parseNamespaceAndName($name);
+
+        // Get the appropriate location
+        if ($namespace !== null && isset($this->viewNamespaces[$namespace])) {
+            $location = $this->viewNamespaces[$namespace];
+        } else {
+            // Use the first configured component location or fallback
+            $location = $this->viewLocations[0] ?? resource_path('views/components');
+        }
+
+        $location = $this->normalizeLocation($location);
+
+        // Parse the component name into path segments
+        $segments = explode('.', $componentName ?? $name);
+        $lastSegment = array_pop($segments);
+        $leadingPath = !empty($segments) ? implode('/', $segments) . '/' : '';
+
+        // Determine if emoji should be used (get from config)
+        $useEmoji = config('livewire.make_command.emoji', true);
+        $prefix = $useEmoji ? '⚡' : '';
+
+        // Build the directory path
+        return $location . '/' . $leadingPath . $prefix . $lastSegment;
+    }
+
+    public function resolveClassComponentFilePaths(string $name): array
+    {
+        [$namespace, $componentName] = $this->parseNamespaceAndName($name);
+
+        // Parse the component name into segments
+        $segments = explode('.', $componentName ?? $name);
+
+        // Convert segments to StudlyCase for class name
+        $classSegments = array_map(fn($segment) => str($segment)->studly()->toString(), $segments);
+        $className = implode('\\', $classSegments);
+
+        // Convert segments to kebab-case for view name
+        $viewSegments = array_map(fn($segment) => str($segment)->kebab()->toString(), $segments);
+        $viewName = implode('.', $viewSegments);
+
+        // Build the class file path
+        $classPath = app_path('Livewire/' . str_replace('\\', '/', $className) . '.php');
+
+        // Build the view file path
+        $viewPath = resource_path('views/livewire/' . str_replace('.', '/', $viewName) . '.blade.php');
+
+        return [
+            'class' => $classPath,
+            'view' => $viewPath,
+        ];
     }
 }

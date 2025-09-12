@@ -9,7 +9,7 @@ class MultiFileParser extends Parser
         public ?string $scriptPortion,
         public string $classPortion,
         public string $viewPortion,
-        public string $placeholderPortion,
+        public ?string $placeholderPortion,
     ) {}
 
     public static function parse(string $path): self
