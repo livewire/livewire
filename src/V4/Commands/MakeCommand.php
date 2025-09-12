@@ -65,7 +65,7 @@ class MakeCommand extends GeneratorCommand
         $componentName = '⚡' . $componentName;
         $segments[] = $componentName;
         $view = implode('/', $segments);
-        
+
         $path = $this->viewPath(
             $view.'.blade.php'
         );
@@ -91,7 +91,7 @@ class MakeCommand extends GeneratorCommand
     protected function writeMultiFileComponent()
     {
         $directory = str_replace('.', '/', $this->getView());
-        
+
         // Add ⚡ prefix to the directory name
         $segments = explode('/', $directory);
         $componentDirName = array_pop($segments);

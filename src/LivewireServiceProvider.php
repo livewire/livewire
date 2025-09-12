@@ -20,7 +20,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 
     public function boot()
     {
-        $this->bootConfiguredComponentPaths();
+        $this->bootConfig();
         $this->bootMechanisms();
         $this->bootFeatures();
 
@@ -94,8 +94,38 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         }
     }
 
-    protected function bootConfiguredComponentPaths()
+    protected function bootConfig()
     {
+        // Adapt v4 config to v3 config...
+
+        config()->set(
+            'component_locations',
+            config('livewire.component_locations', [
+                resource_path('views/components'),
+                resource_path('views/livewire'),
+            ])
+        );
+
+        config()->set(
+            'component_layout',
+            config('livewire.component_layout', config('livewire.layout', null))
+        );
+
+        config()->set(
+            'component_placeholder',
+            config('livewire.component_placeholder', config('livewire.lazy_placeholder', null))
+        );
+
+        config()->set(
+            'make_command',
+            config('livewire.make_command', [
+                'type' => 'class',
+                'emoji' => false,
+            ])
+        );
+
+        // Register view-based component locations and namespaces...
+
         foreach (config('livewire.component_locations', []) as $location) {
             app('livewire.finder')->addLocation(viewPath: $location);
             app('blade.compiler')->anonymousComponentPath($location);

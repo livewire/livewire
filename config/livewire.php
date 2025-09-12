@@ -36,6 +36,45 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Page Layout
+    |---------------------------------------------------------------------------
+    | The view that will be used as the layout when rendering a single component as
+    | an entire page via `Route::livewire('/post/create', 'pages::create-post')`.
+    | In this case, the content of pages::create-post will render into $slot.
+    |
+    */
+
+    'component_layout' => 'layouts::app',
+
+    /*
+    |---------------------------------------------------------------------------
+    | Lazy Loading Placeholder
+    |---------------------------------------------------------------------------
+    | Livewire allows you to lazy load components that would otherwise slow down
+    | the initial page load. Every component can have a custom placeholder or
+    | you can define the default placeholder view for all components below.
+    |
+    */
+
+    'component_placeholder' => null, // Example: 'placeholders::skeleton'
+
+    /*
+    |---------------------------------------------------------------------------
+    | Make Command
+    |---------------------------------------------------------------------------
+    | This value determines the default configuration for the artisan make command
+    | You can configure the component type (sfc, mfc, class) and whether to use
+    | the high-voltage (⚡) emoji as a prefix in the sfc|mfc component names.
+    |
+    */
+
+    'make_command' => [
+        'type' => 'sfc', // Options: 'sfc', 'mfc', 'class'
+        'emoji' => true, // Options: true, false
+    ],
+
+    /*
+    |---------------------------------------------------------------------------
     | Class Namespace
     |---------------------------------------------------------------------------
     |
@@ -59,30 +98,6 @@ return [
     */
 
     'view_path' => resource_path('views/livewire'),
-
-    /*
-    |---------------------------------------------------------------------------
-    | Layout
-    |---------------------------------------------------------------------------
-    | The view that will be used as the layout when rendering a single component as
-    | an entire page via `Route::livewire('/post/create', 'pages::create-post')`.
-    | In this case, the content of pages::create-post will render into $slot.
-    |
-    */
-
-    'layout' => 'layouts::app',
-
-    /*
-    |---------------------------------------------------------------------------
-    | Lazy Loading Placeholder
-    |---------------------------------------------------------------------------
-    | Livewire allows you to lazy load components that would otherwise slow down
-    | the initial page load. Every component can have a custom placeholder or
-    | you can define the default placeholder view for all components below.
-    |
-    */
-
-    'lazy_placeholder' => null,
 
     /*
     |---------------------------------------------------------------------------
