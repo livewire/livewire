@@ -12,6 +12,35 @@ Route::livewire('/posts/create', 'pages::create-post');
 
 When you visit the specified URL, the component will be rendered as a complete page using your application's layout.
 
+### Component namespaces
+
+You may have noticed the `pages::` prefix in the route example above. Livewire automatically registers several component namespaces for better organization:
+
+- `pages::` — Points to `resources/views/pages/`
+- `layouts::` — Points to `resources/views/layouts/`
+
+These namespaces are registered for both Livewire components and Blade components, allowing you to organize your application's pages and layouts in dedicated directories. For example:
+
+```php
+// These all work automatically:
+Route::livewire('/dashboard', 'pages::dashboard');
+Route::livewire('/profile', 'pages::user.profile');
+
+// In Blade templates:
+<livewire:pages::dashboard />
+<x-layouts::app />
+```
+
+You can customize these namespaces or add your own in the `config/livewire.php` file:
+
+```php
+'component_namespaces' => [
+    'layouts' => resource_path('views/layouts'),
+    'pages' => resource_path('views/pages'),
+    'admin' => resource_path('views/admin'),  // Add custom namespace
+],
+```
+
 ## Layouts
 
 Components rendered via routes will use your application's layout file. By default, Livewire looks for a layout called `layouts::app` located at `resources/views/layouts/app.blade.php`.
