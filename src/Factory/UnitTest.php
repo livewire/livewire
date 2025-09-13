@@ -40,7 +40,7 @@ class UnitTest extends \Tests\TestCase
         $compiler = new Compiler(new CacheManager($this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
-        $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
+        $finder->addLocation(class: 'Livewire\Factory\Fixtures');
 
         $component = $factory->create('simple-component');
 
@@ -55,7 +55,7 @@ class UnitTest extends \Tests\TestCase
         $compiler = new Compiler(new CacheManager($this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
-        $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
+        $finder->addLocation(class: 'Livewire\Factory\Fixtures');
 
         $customId = 'custom-component-id';
         $component = $factory->create('simple-component', $customId);
@@ -99,7 +99,7 @@ class UnitTest extends \Tests\TestCase
         $compiler = new Compiler(new CacheManager($this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
-        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+        $finder->addLocation(path: __DIR__ . '/Fixtures');
 
         $component = $factory->create('simple-single-file-component');
 
@@ -114,7 +114,7 @@ class UnitTest extends \Tests\TestCase
         $compiler = new Compiler(new CacheManager($this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
-        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+        $finder->addLocation(path: __DIR__ . '/Fixtures');
 
         $component = $factory->create('simple-multi-file-component');
 
@@ -152,7 +152,7 @@ class UnitTest extends \Tests\TestCase
         $compiler = new Compiler(new CacheManager($this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
-        $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
+        $finder->addLocation(class: 'Livewire\Factory\Fixtures');
 
         $this->assertTrue($factory->exists('simple-component'));
         $this->assertFalse($factory->exists('missing-component'));
@@ -164,7 +164,7 @@ class UnitTest extends \Tests\TestCase
         $compiler = new Compiler(new CacheManager($this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
-        $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
+        $finder->addLocation(class: 'Livewire\Factory\Fixtures');
 
         $component = $factory->create('simple-component');
 
@@ -179,7 +179,7 @@ class UnitTest extends \Tests\TestCase
         $compiler = new Compiler(new CacheManager($this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
-        $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
+        $finder->addLocation(class: 'Livewire\Factory\Fixtures');
 
         $component = $factory->create('simple-component');
 

@@ -8,7 +8,7 @@ class UnitTest extends \Tests\TestCase
 {
     public function test_can_use_single_file_component()
     {
-        app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');
+        app('livewire.finder')->addLocation(path: __DIR__ . '/fixtures');
 
         Livewire::test('sfc-counter')
             ->assertSee('Count: 1')
@@ -18,7 +18,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_use_multi_file_component()
     {
-        app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');
+        app('livewire.finder')->addLocation(path: __DIR__ . '/fixtures');
 
         Livewire::test('mfc-counter')
             ->assertSee('Count: 1')

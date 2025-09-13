@@ -16,43 +16,43 @@ class Finder
 
     protected $viewComponents = [];
 
-    public function addLocation($viewPath = null, $classNamespace = null): void
+    public function addLocation($path = null, $class = null): void
     {
-        if ($classNamespace !== null) $this->classNamespaces[] = $this->normalizeClassName($classNamespace);
-        if ($viewPath !== null) $this->viewLocations[] = $viewPath;
+        if ($class !== null) $this->classNamespaces[] = $this->normalizeClassName($class);
+        if ($path !== null) $this->viewLocations[] = $path;
     }
 
-    public function addNamespace($namespace, $viewPath = null, $classNamespace = null): void
+    public function addNamespace($namespace, $path = null, $class = null): void
     {
-        if ($classNamespace !== null) $this->classNamespaces[$namespace] = $this->normalizeClassName($classNamespace);
-        if ($viewPath !== null) $this->viewNamespaces[$namespace] = $viewPath;
+        if ($class !== null) $this->classNamespaces[$namespace] = $this->normalizeClassName($class);
+        if ($path !== null) $this->viewNamespaces[$namespace] = $path;
     }
 
-    public function addComponent($name = null, $viewPath = null, $className = null): void
+    public function addComponent($name = null, $path = null, $class = null): void
     {
         // Support $name being used a single argument for class-based components...
-        if ($name !== null && $className === null && $viewPath === null) {
-            $className = $name;
+        if ($name !== null && $class === null && $path === null) {
+            $class = $name;
 
             $name = null;
         }
 
-        if (is_object($className)) {
-            $className = get_class($className);
+        if (is_object($class)) {
+            $class = get_class($class);
         }
 
-        // Support $className being used a single named argument for class-based components...
-        if ($name === null && $className !== null && $viewPath === null) {
-            $name = $this->generateHashName($className);
+        // Support $class being used a single named argument for class-based components...
+        if ($name === null && $class !== null && $path === null) {
+            $name = $this->generateHashName($class);
         }
 
-        if ($name == null && $className === null && $viewPath !== null) {
+        if ($name == null && $class === null && $path !== null) {
             throw new \Exception('You must provide a name when registering a single/multi-file component');
         }
 
         if ($name) {
-            if ($className !== null) $this->classComponents[$name] = $this->normalizeClassName($className);
-            elseif ($viewPath !== null) $this->viewComponents[$name] = $viewPath;
+            if ($class !== null) $this->classComponents[$name] = $this->normalizeClassName($class);
+            elseif ($path !== null) $this->viewComponents[$name] = $path;
         }
     }
 

@@ -14,7 +14,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addComponent('test-component', className: FinderTestClassComponent::class);
+        $finder->addComponent('test-component', class: FinderTestClassComponent::class);
 
         $name = $finder->normalizeName(FinderTestClassComponent::class);
 
@@ -29,7 +29,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addComponent(className: FinderTestClassComponent::class);
+        $finder->addComponent(class: FinderTestClassComponent::class);
 
         $name = $finder->normalizeName(FinderTestClassComponent::class);
 
@@ -44,7 +44,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addComponent('test-component', className: $obj = new class extends Component {
+        $finder->addComponent('test-component', class: $obj = new class extends Component {
             public function render() {
                 return '<div>Finder Location Test Component</div>';
             }
@@ -63,7 +63,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addComponent(className: $obj = new class extends Component {
+        $finder->addComponent(class: $obj = new class extends Component {
             public function render() {
                 return '<div>Finder Location Test Component</div>';
             }
@@ -82,7 +82,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addLocation(classNamespace: 'Livewire\Finder\Fixtures');
+        $finder->addLocation(class: 'Livewire\Finder\Fixtures');
 
         $name = $finder->normalizeName(FinderTestClassComponent::class);
 
@@ -97,7 +97,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addLocation(classNamespace: 'Livewire\Finder\Fixtures');
+        $finder->addLocation(class: 'Livewire\Finder\Fixtures');
 
         $name = $finder->normalizeName(NestedComponent::class);
 
@@ -112,7 +112,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addLocation(classNamespace: 'Livewire\Finder\Fixtures');
+        $finder->addLocation(class: 'Livewire\Finder\Fixtures');
 
         $name = $finder->normalizeName(Index::class);
 
@@ -127,7 +127,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addLocation(classNamespace: 'Livewire\Finder\Fixtures');
+        $finder->addLocation(class: 'Livewire\Finder\Fixtures');
 
         $name = $finder->normalizeName(SelfNamedComponent::class);
 
@@ -142,7 +142,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addComponent('test-component', viewPath: __DIR__ . '/fixtures/finder-test-single-file-component.blade.php');
+        $finder->addComponent('test-component', path: __DIR__ . '/fixtures/finder-test-single-file-component.blade.php');
 
         $name = $finder->normalizeName('test-component');
 
@@ -157,7 +157,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addComponent('test-component-with-zap', viewPath: __DIR__ . '/fixtures/⚡︎finder-test-single-file-component-with-zap.blade.php');
+        $finder->addComponent('test-component-with-zap', path: __DIR__ . '/fixtures/⚡︎finder-test-single-file-component-with-zap.blade.php');
 
         $name = $finder->normalizeName('test-component-with-zap');
 
@@ -172,7 +172,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addLocation(viewPath: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/fixtures');
 
         $name = $finder->normalizeName('finder-test-single-file-component');
 
@@ -187,7 +187,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addComponent('test-component-with-zap', viewPath: __DIR__ . '/fixtures/⚡︎finder-test-single-file-component-with-zap.blade.php');
+        $finder->addComponent('test-component-with-zap', path: __DIR__ . '/fixtures/⚡︎finder-test-single-file-component-with-zap.blade.php');
 
         $name = $finder->normalizeName('test-component-with-zap');
 
@@ -202,7 +202,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addLocation(viewPath: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/fixtures');
 
         $name = $finder->normalizeName('nested-view-based');
 
@@ -217,7 +217,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addLocation(viewPath: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/fixtures');
 
         $name = $finder->normalizeName('self-named-component');
 
@@ -232,7 +232,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addComponent('multi-file-test', viewPath: __DIR__ . '/fixtures/multi-file-test-component');
+        $finder->addComponent('multi-file-test', path: __DIR__ . '/fixtures/multi-file-test-component');
 
         $name = $finder->normalizeName('multi-file-test');
 
@@ -247,7 +247,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addComponent('multi-file-zap', viewPath: __DIR__ . '/fixtures/⚡︎multi-file-zap-component');
+        $finder->addComponent('multi-file-zap', path: __DIR__ . '/fixtures/⚡︎multi-file-zap-component');
 
         $name = $finder->normalizeName('multi-file-zap');
 
@@ -262,7 +262,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addLocation(viewPath: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/fixtures');
 
         $name = $finder->normalizeName('multi-file-test-component');
 
@@ -277,7 +277,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addLocation(viewPath: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/fixtures');
 
         $name = $finder->normalizeName('multi-file-index');
 
@@ -292,7 +292,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addLocation(viewPath: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/fixtures');
 
         $name = $finder->normalizeName('multi-file-self-named');
 
@@ -307,7 +307,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addLocation(viewPath: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/fixtures');
 
         $name = $finder->normalizeName('multi-file-zap-component');
 
@@ -322,7 +322,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
+        $finder->addNamespace('admin', class: 'Livewire\Finder\Fixtures');
 
         $class = $finder->resolveClassComponentClassName('admin::finder-test-class-component');
 
@@ -333,7 +333,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
+        $finder->addNamespace('admin', class: 'Livewire\Finder\Fixtures');
 
         $class = $finder->resolveClassComponentClassName('admin::nested.nested-component');
 
@@ -344,7 +344,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
+        $finder->addNamespace('admin', class: 'Livewire\Finder\Fixtures');
 
         $class = $finder->resolveClassComponentClassName('admin::index-component');
 
@@ -355,7 +355,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
+        $finder->addNamespace('admin', class: 'Livewire\Finder\Fixtures');
 
         $class = $finder->resolveClassComponentClassName('admin::self-named-component');
 
@@ -366,7 +366,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
+        $finder->addNamespace('admin', class: 'Livewire\Finder\Fixtures');
 
         $class = $finder->resolveClassComponentClassName('unknown::some-component');
 
@@ -377,7 +377,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
 
         $path = $finder->resolveSingleFileComponentPath('admin::finder-test-single-file-component');
 
@@ -388,7 +388,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
 
         $path = $finder->resolveSingleFileComponentPath('admin::nested-view-based');
 
@@ -399,7 +399,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
 
         $path = $finder->resolveSingleFileComponentPath('admin::self-named-component');
 
@@ -410,7 +410,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
 
         $path = $finder->resolveSingleFileComponentPath('unknown::some-component');
 
@@ -421,7 +421,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
 
         $path = $finder->resolveMultiFileComponentPath('admin::multi-file-test-component');
 
@@ -432,7 +432,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
 
         $path = $finder->resolveMultiFileComponentPath('admin::multi-file-index');
 
@@ -443,7 +443,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
 
         $path = $finder->resolveMultiFileComponentPath('admin::multi-file-self-named');
 
@@ -454,7 +454,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', viewPath: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
 
         $path = $finder->resolveMultiFileComponentPath('unknown::some-component');
 
@@ -465,7 +465,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('pages', classNamespace: 'Livewire\Finder\Fixtures');
+        $finder->addNamespace('pages', class: 'Livewire\Finder\Fixtures');
 
         $class = $finder->resolveClassComponentClassName('pages::finder-test-class-component');
 

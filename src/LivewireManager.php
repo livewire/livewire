@@ -2,7 +2,6 @@
 
 namespace Livewire;
 
-use Livewire\V4\Registry\ComponentViewPathResolver;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
@@ -32,22 +31,22 @@ class LivewireManager
 
     function component($name, $class = null)
     {
-        $this->addComponent($name, className: $class);
+        $this->addComponent($name, class: $class);
     }
 
-    function addComponent($name, $viewPath = null, $className = null)
+    function addComponent($name, $path = null, $class = null)
     {
-        app('livewire.finder')->addComponent($name, className: $className, viewPath: $viewPath);
+        app('livewire.finder')->addComponent($name, class: $class, path: $path);
     }
 
-    function addNamespace($namespace, $viewPath = null, $classNamespace = null)
+    function addNamespace($namespace, $path = null, $class = null)
     {
-        return app('livewire.finder')->addNamespace($namespace, classNamespace: $classNamespace, viewPath: $viewPath);
+        return app('livewire.finder')->addNamespace($namespace, class: $class, path: $path);
     }
 
-    function addLocation($viewPath = null, $classNamespace = null)
+    function addLocation($path = null, $class = null)
     {
-        return app('livewire.finder')->addLocation(classNamespace: $classNamespace, viewPath: $viewPath);
+        return app('livewire.finder')->addLocation(class: $class, path: $path);
     }
 
     function componentHook($hook)
