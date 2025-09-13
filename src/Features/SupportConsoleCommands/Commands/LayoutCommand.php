@@ -17,7 +17,7 @@ class LayoutCommand extends FileManipulationCommand
     {
         $baseViewPath = resource_path('views');
 
-        $layout = str(config('livewire.layout'));
+        $layout = str(config('livewire.component_layout'));
 
         $layoutPath = $this->layoutPath($baseViewPath, $layout);
 

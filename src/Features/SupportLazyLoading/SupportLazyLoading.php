@@ -149,7 +149,7 @@ class SupportLazyLoading extends ComponentHook
         $name = (string) str($this->component->getName())->afterLast('.');
         $compiledPlaceholder = "livewire-compiled::{$name}_placeholder";
 
-        $globalPlaceholder = config('livewire.lazy_placeholder');
+        $globalPlaceholder = config('livewire.component_placeholder');
 
         if (view()->exists($compiledPlaceholder)) {
             $placeholderHtml = $compiledPlaceholder;
