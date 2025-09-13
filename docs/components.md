@@ -2,20 +2,127 @@ Components are the building blocks of your Livewire application. They combine st
 
 ## Creating components
 
-A Livewire component is simply a PHP class that extends `Livewire\Component`. You can create component files by hand or use the following Artisan command:
+Livewire supports three different component formats to suit your preferences and project needs:
 
-```shell
-php artisan make:livewire CreatePost
-```
+* **Single-file components** — The entire component lives in one Blade file (default)
+* **Multi-file components** — A folder containing separate files for class, view, and optionally JavaScript and tests
+* **Class-based components** — Traditional split between a PHP class and a Blade view
 
-If you prefer kebab-cased names, you can use them as well:
+You can create components using the following Artisan command:
 
 ```shell
 php artisan make:livewire create-post
 ```
 
-After running this command, Livewire will create two new files in your application. The first will be the component's class: `app/Livewire/CreatePost.php`
+### Single-file components (default)
 
+By default, running `make:livewire` creates a single-file component. This is the quickest way to get rolling with a Livewire component — everything in one place, minimal boilerplate, super simple:
+
+`resources/views/components/⚡create-post.blade.php`
+```blade
+<?php
+
+use Livewire\Component;
+
+new class extends Component
+{
+    public $title = '';
+
+    public function save()
+    {
+        // Save logic here...
+    }
+};
+?>
+
+<div>
+    <input wire:model="title" type="text">
+    <button wire:click="save">Save Post</button>
+</div>
+```
+
+Single-file components are punchy, quick, and perfect for getting started. Everything is right there in one file — no jumping around, no guessing where things live.
+
+> [!info] Why the ⚡ emoji?
+> You might be wondering about the lightning bolt in the filename. This small touch serves a practical purpose: it makes Livewire components instantly recognizable in your editor's file tree and search results. Since it's a Unicode character, it works seamlessly across all platforms — Windows, macOS, Linux, Git, and your production servers. If you prefer a cleaner look, you can disable it in your configuration:
+>
+> ```php
+> 'make_command' => [
+>     'emoji' => false,
+> ],
+> ```
+
+### Multi-file components
+
+As your component grows, you might want the benefits of separate files: better editor intellisense, more maintainable code for larger classes and views, and the ability to colocate JavaScript and tests. Multi-file components give you this structure while keeping everything related to a single feature in one folder:
+
+```shell
+php artisan make:livewire create-post --mfc
+```
+
+This creates a directory with all related files together:
+
+```
+resources/views/components/⚡create-post/
+├── create-post.php        # PHP class (anonymous)
+├── create-post.blade.php  # Blade template
+├── create-post.js         # JavaScript (optional, with --js flag)
+└── create-post.test.php   # Pest test
+```
+
+Now you get full IDE support, your code is organized, and everything for this component lives in one predictable place. It's the natural evolution of a single-file component when you need more structure.
+
+### Organizing view-based components
+
+Both single-file and multi-file components can be organized using component locations and namespaces, giving you flexibility in how you structure your application.
+
+#### Component locations
+
+By default, Livewire looks for view-based components in these directories:
+
+```php
+'component_locations' => [
+    resource_path('views/components'),  // Used by make:livewire
+    resource_path('views/livewire'),
+],
+```
+
+The first location is where new components are created. You can add more locations or change the order in your `config/livewire.php` file.
+
+#### Component namespaces
+
+You can define named namespaces for better organization. For example, to create dedicated areas for layouts and pages:
+
+```php
+'component_namespaces' => [
+    'layouts' => resource_path('views/layouts'),
+    'pages' => resource_path('views/pages'),
+],
+```
+
+Now you can reference components using namespace syntax:
+
+```php
+// Reference a component in the pages namespace
+Route::livewire('/posts/create', 'pages::create-post');
+
+// Or create components directly in namespaced locations
+php artisan make:livewire pages::create-post
+```
+
+This helps keep your components organized by purpose — layouts, pages, shared UI components, etc.
+
+### Class-based components
+
+This is the traditional Livewire approach — the way Livewire has always worked. Some folks prefer this separation, and we fully support it for backwards compatibility and for teams that prefer this conventional Laravel structure:
+
+```shell
+php artisan make:livewire create-post --class
+```
+
+This creates two separate files in their standard locations:
+
+`app/Livewire/CreatePost.php`
 ```php
 <?php
 
@@ -32,69 +139,20 @@ class CreatePost extends Component
 }
 ```
 
-The second will be the component's Blade view: `resources/views/livewire/create-post.blade.php`
-
+`resources/views/livewire/create-post.blade.php`
 ```blade
 <div>
 	{{-- ... --}}
 </div>
 ```
 
-You may use namespace syntax or dot-notation to create your components in sub-directories. For example, the following commands will create a `CreatePost` component in the `Posts` sub-directory:
-
-```shell
-php artisan make:livewire Posts\\CreatePost
-php artisan make:livewire posts.create-post
-```
-
-### Inline components
-
-If your component is fairly small, you may want to create an _inline_ component. Inline components are single-file Livewire components whose view template is contained directly in the `render()` method rather than a separate file:
+With a few config tweaks, you can use Livewire exactly as you always have, without embracing the new view-based component concepts. Just set your default component type to `class` in the config, and it's business as usual:
 
 ```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Component;
-
-class CreatePost extends Component
-{
-	public function render()
-	{
-		return <<<'HTML' // [tl! highlight:4]
-		<div>
-		    {{-- Your Blade template goes here... --}}
-		</div>
-		HTML;
-	}
-}
+'make_command' => [
+    'type' => 'class',
+],
 ```
-
-You can create inline components by adding the `--inline` flag to the `make:livewire` command:
-
-```shell
-php artisan make:livewire CreatePost --inline
-```
-
-### Omitting the render method
-
-To reduce boilerplate in your components, you can omit the `render()` method entirely and Livewire will use its own underlying `render()` method, which returns a view with the conventional name corresponding to your component:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Component;
-
-class CreatePost extends Component
-{
-    //
-}
-```
-
-If the component above is rendered on a page, Livewire will automatically determine it should be rendered using the `livewire.create-post` template.
 
 ### Customizing component stubs
 
@@ -104,17 +162,61 @@ You can customize the files (or _stubs_) Livewire uses to generate new component
 php artisan livewire:stubs
 ```
 
-This will create seven new files in your application:
+This will create stub files in your application:
 
-* `stubs/livewire.stub` — used for generating new components
-* `stubs/livewire.attribute.stub` — used for generating attribute classes
-* `stubs/livewire.form.stub` — used for generating form classes
-* `stubs/livewire.inline.stub` — used for generating _inline_ components
-* `stubs/livewire.pest-test.stub` — used for generating Pest test files
-* `stubs/livewire.test.stub` — used for generating PHPUnit test files
-* `stubs/livewire.view.stub` — used for generating component views
+**Single-file component stubs:**
+* `stubs/livewire-sfc.stub` — Single-file components
+
+**Multi-file component stubs:**
+* `stubs/livewire-mfc-class.stub` — PHP class for multi-file components
+* `stubs/livewire-mfc-view.stub` — Blade view for multi-file components
+* `stubs/livewire-mfc-js.stub` — JavaScript for multi-file components
+* `stubs/livewire-mfc-test.stub` — Pest test for multi-file components
+
+**Class-based component stubs:**
+* `stubs/livewire.stub` — PHP class for class-based components
+* `stubs/livewire.view.stub` — Blade view for class-based components
+
+**Additional stubs:**
+* `stubs/livewire.attribute.stub` — Attribute classes
+* `stubs/livewire.form.stub` — Form classes
+* `stubs/livewire.test.stub` — PHPUnit test files
+* `stubs/livewire.pest-test.stub` — Pest test files
 
 Even though these files live in your application, you can still use the `make:livewire` Artisan command and Livewire will automatically use your custom stubs when generating files.
+
+### Choosing a component format
+
+With three different component formats available, you might be wondering which one to use. Here's a simple guide to help you choose the right format for your needs:
+
+**Start with single-file components when:**
+* You want to move fast and keep things simple
+* You value having everything in one file
+
+**Upgrade to multi-file components when:**
+* Your single-file component is getting large
+* You need better IDE support and intellisense
+
+**Use class-based components when:**
+* You're migrating from Livewire v3
+* Your team prefers the traditional structure
+
+### Upgrading components
+
+As your components grow in complexity, you can upgrade from single-file to multi-file components. When you try to create a multi-file component with the same name as an existing single-file component, Livewire will offer to upgrade it for you:
+
+```shell
+php artisan make:livewire counter --mfc
+# Component already exists as a single-file component. Would you like to upgrade it to a multi-file component?
+```
+
+This will automatically:
+* Parse your single-file component
+* Create a new directory for the multi-file component
+* Split the PHP and Blade code into separate files
+* Extract any JavaScript into its own file
+* Generate a test file
+* Delete the original single-file component
 
 ## Setting properties
 
@@ -392,9 +494,31 @@ This is effectively the same as assigning `$title` inside a `mount()` method.
 
 Livewire allows you to assign components directly to a route in your Laravel application. These are called "full-page components". You can use them to build standalone pages with logic and views, fully encapsulated within a Livewire component.
 
-To create a full-page component, define a route in your `routes/web.php` file and use the `Route::livewire()` method to map the component directly to a specific URL. For example, let's imagine you want to render the `CreatePost` component at the dedicated route: `/posts/create`.
+To create a full-page component, define a route in your `routes/web.php` file and use the `Route::livewire()` method to map the component directly to a specific URL.
 
-You can accomplish this by adding the following line to your `routes/web.php` file:
+### Using with single-file or multi-file components
+
+For single-file and multi-file components, you can reference them by their component name:
+
+```php
+Route::livewire('/posts/create', 'create-post');
+```
+
+Or register them manually and use the class reference:
+
+```php
+use Livewire\Livewire;
+
+// In a service provider
+Livewire::component('create-post', \App\View\Components\CreatePost::class);
+
+// Then in routes
+Route::livewire('/posts/create', \App\View\Components\CreatePost::class);
+```
+
+### Using with class-based components
+
+For class-based components, reference the component's class directly:
 
 ```php
 use App\Livewire\CreatePost;
@@ -402,11 +526,11 @@ use App\Livewire\CreatePost;
 Route::livewire('/posts/create', CreatePost::class);
 ```
 
-Now, when you visit the `/posts/create` path in your browser, the `CreatePost` component will be rendered as a full-page component.
+Now, when you visit the `/posts/create` path in your browser, the component will be rendered as a full-page component.
 
 ### Layout files
 
-Remember that full-page components will use your application's layout, typically defined in the `resources/views/components/layouts/app.blade.php` file.
+Remember that full-page components will use your application's layout, typically defined in the `resources/views/layouts/app.blade.php` file.
 
 You may create this file if it doesn't already exist by running the following command:
 
@@ -414,7 +538,7 @@ You may create this file if it doesn't already exist by running the following co
 php artisan livewire:layout
 ```
 
-This command will generate a file called `resources/views/components/layouts/app.blade.php`.
+This command will generate a file called `resources/views/layouts/app.blade.php`.
 
 Ensure you have created a Blade file at this location and included a `{{ $slot }}` placeholder:
 

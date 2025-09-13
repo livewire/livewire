@@ -27,22 +27,19 @@ Livewire provides a convenient Artisan command to generate new components quickl
 php artisan make:livewire counter
 ```
 
-This command will generate two new files in your project:
-* `app/Livewire/Counter.php`
-* `resources/views/livewire/counter.blade.php`
+This command will generate a new single-file component at:
+* `resources/views/components/⚡counter.blade.php`
 
-## Writing the class
+## Writing the component
 
-Open `app/Livewire/Counter.php` and replace its contents with the following:
+Open `resources/views/components/⚡counter.blade.php` and replace its contents with the following:
 
-```php
+```blade
 <?php
-
-namespace App\Livewire;
 
 use Livewire\Component;
 
-class Counter extends Component
+new class extends Component
 {
     public $count = 1;
 
@@ -55,24 +52,9 @@ class Counter extends Component
     {
         $this->count--;
     }
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.counter');
-    }
-}
-```
-
-Here's a brief explanation of the code above:
-- `public $count = 1;` — Declares a public property named `$count` with an initial value of `1`.
-- `public function increment()` — Declares a public method named `increment()` that increments the `$count` property each time it's called. Public methods like this can be triggered from the browser in a variety of ways, including when a user clicks a button.
-- `public function render()` — Declares a `render()` method that returns a Blade view. This Blade view will contain the HTML template for our component.
-
-## Writing the view
-
-Open the `resources/views/livewire/counter.blade.php` file and replace its content with the following:
-
-```blade
 <div>
     <h1>{{ $count }}</h1>
 
@@ -82,7 +64,11 @@ Open the `resources/views/livewire/counter.blade.php` file and replace its conte
 </div>
 ```
 
-This code will display the value of the `$count` property and two buttons that increment and decrement the `$count` property, respectively.
+Here's a brief explanation of the code above:
+- `public $count = 1;` — Declares a public property named `$count` with an initial value of `1`.
+- `public function increment()` — Declares a public method named `increment()` that increments the `$count` property each time it's called. Public methods like this can be triggered from the browser in a variety of ways, including when a user clicks a button.
+- `public function decrement()` — Similar to increment, but decreases the count.
+- The HTML template below the PHP code displays the count and provides buttons to modify it.
 
 > [!warning] Livewire components MUST have a single root element
 > In order for Livewire to work, components must have just **one** single element as its root. If multiple root elements are detected, an exception is thrown. It is recommended to use a `<div>` element as in the example. HTML comments count as separate elements and should be put inside the root element.
