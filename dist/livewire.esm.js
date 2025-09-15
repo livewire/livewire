@@ -9908,9 +9908,8 @@ on("effect", ({ component, effects }) => {
 var import_alpinejs8 = __toESM(require_module_cjs());
 function morph2(component, el, html) {
   let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-  if (customElements.get(wrapperTag)) {
-    wrapperTag = "div";
-  }
+  let customElement = customElements.get(wrapperTag);
+  wrapperTag = customElement ? customElement.name : wrapperTag;
   let wrapper = document.createElement(wrapperTag);
   wrapper.innerHTML = html;
   let parentComponent;
