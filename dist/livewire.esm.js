@@ -448,9 +448,9 @@ var init_supportFileUploads = __esm({
   }
 });
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1721,8 +1721,8 @@ var require_module_cjs = __commonJS({
     });
     var module_exports = {};
     __export(module_exports, {
-      Alpine: () => src_default,
-      default: () => module_default
+      Alpine: () => src_default2,
+      default: () => module_default2
     });
     module.exports = __toCommonJS(module_exports);
     var flushPending = false;
@@ -4257,8 +4257,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     alpine_default.setEvaluator(normalEvaluator);
     alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
-    var src_default = alpine_default;
-    var module_default = src_default;
+    var src_default2 = alpine_default;
+    var module_default2 = src_default2;
   }
 });
 
@@ -5064,6 +5064,8 @@ var init_supportIslands = __esm({
 // js/morph.js
 function morph(component, el, html) {
   let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+  let customElement = customElements.get(wrapperTag);
+  wrapperTag = customElement ? customElement.name : wrapperTag;
   let wrapper = document.createElement(wrapperTag);
   wrapper.innerHTML = html;
   let parentComponent;
@@ -6849,9 +6851,9 @@ var init_directives = __esm({
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../alpine/packages/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6871,11 +6873,11 @@ var require_module_cjs2 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      collapse: () => src_default,
-      default: () => module_default
+      collapse: () => src_default2,
+      default: () => module_default2
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
+    function src_default2(Alpine23) {
       Alpine23.directive("collapse", collapse3);
       collapse3.inline = (el, { modifiers }) => {
         if (!modifiers.includes("min"))
@@ -6966,13 +6968,13 @@ var require_module_cjs2 = __commonJS({
       }
       return rawValue;
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../alpine/packages/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -7763,13 +7765,13 @@ var require_module_cjs3 = __commonJS({
     });
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      focus: () => src_default
+      default: () => module_default2,
+      focus: () => src_default2
     });
     module.exports = __toCommonJS(module_exports);
     var import_focus_trap = __toESM2(require_focus_trap());
     var import_tabbable = __toESM2(require_dist());
-    function src_default(Alpine23) {
+    function src_default2(Alpine23) {
       let lastFocused;
       let currentFocused;
       window.addEventListener("focusin", () => {
@@ -7968,13 +7970,13 @@ var require_module_cjs3 = __commonJS({
         document.documentElement.style.paddingRight = paddingRight;
       };
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
-// node_modules/@alpinejs/persist/dist/module.cjs.js
+// ../alpine/packages/intersect/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7994,100 +7996,11 @@ var require_module_cjs4 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      persist: () => src_default
+      default: () => module_default2,
+      intersect: () => src_default2
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
-      let persist3 = () => {
-        let alias;
-        let storage;
-        try {
-          storage = localStorage;
-        } catch (e) {
-          console.error(e);
-          console.warn("Alpine: $persist is using temporary storage since localStorage is unavailable.");
-          let dummy = /* @__PURE__ */ new Map();
-          storage = {
-            getItem: dummy.get.bind(dummy),
-            setItem: dummy.set.bind(dummy)
-          };
-        }
-        return Alpine23.interceptor((initialValue, getter, setter, path, key2) => {
-          let lookup = alias || `_x_${path}`;
-          let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
-          setter(initial);
-          Alpine23.effect(() => {
-            let value = getter();
-            storageSet(lookup, value, storage);
-            setter(value);
-          });
-          return initial;
-        }, (func) => {
-          func.as = (key2) => {
-            alias = key2;
-            return func;
-          }, func.using = (target) => {
-            storage = target;
-            return func;
-          };
-        });
-      };
-      Object.defineProperty(Alpine23, "$persist", { get: () => persist3() });
-      Alpine23.magic("persist", persist3);
-      Alpine23.persist = (key2, { get, set }, storage = localStorage) => {
-        let initial = storageHas(key2, storage) ? storageGet(key2, storage) : get();
-        set(initial);
-        Alpine23.effect(() => {
-          let value = get();
-          storageSet(key2, value, storage);
-          set(value);
-        });
-      };
-    }
-    function storageHas(key2, storage) {
-      return storage.getItem(key2) !== null;
-    }
-    function storageGet(key2, storage) {
-      let value = storage.getItem(key2, storage);
-      if (value === void 0)
-        return;
-      return JSON.parse(value);
-    }
-    function storageSet(key2, value, storage) {
-      storage.setItem(key2, JSON.stringify(value));
-    }
-    var module_default = src_default;
-  }
-});
-
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
-var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
-    var __defProp2 = Object.defineProperty;
-    var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
-    var __getOwnPropNames2 = Object.getOwnPropertyNames;
-    var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all2) => {
-      for (var name in all2)
-        __defProp2(target, name, { get: all2[name], enumerable: true });
-    };
-    var __copyProps2 = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key2 of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
-            __defProp2(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
-      }
-      return to;
-    };
-    var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var module_exports = {};
-    __export(module_exports, {
-      default: () => module_default,
-      intersect: () => src_default
-    });
-    module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
+    function src_default2(Alpine23) {
       Alpine23.directive("intersect", Alpine23.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
         let evaluate = evaluateLater(expression);
         let options = {
@@ -8139,12 +8052,12 @@ var require_module_cjs5 = __commonJS({
       values = values.filter((v) => v !== void 0);
       return values.length ? values.join(" ").trim() : fallback2;
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
 // node_modules/@alpinejs/resize/dist/module.cjs.js
-var require_module_cjs6 = __commonJS({
+var require_module_cjs5 = __commonJS({
   "node_modules/@alpinejs/resize/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -8165,11 +8078,11 @@ var require_module_cjs6 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      resize: () => src_default
+      default: () => module_default2,
+      resize: () => src_default2
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
+    function src_default2(Alpine23) {
       Alpine23.directive("resize", Alpine23.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
         let evaluator = evaluateLater(expression);
         let evaluate = (width, height) => {
@@ -8211,13 +8124,13 @@ var require_module_cjs6 = __commonJS({
       }
       return [width, height];
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
-// node_modules/@alpinejs/anchor/dist/module.cjs.js
-var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
+// ../alpine/packages/anchor/dist/module.cjs.js
+var require_module_cjs6 = __commonJS({
+  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8237,8 +8150,8 @@ var require_module_cjs7 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      anchor: () => src_default,
-      default: () => module_default
+      anchor: () => src_default2,
+      default: () => module_default2
     });
     module.exports = __toCommonJS(module_exports);
     var min = Math.min;
@@ -9414,7 +9327,7 @@ var require_module_cjs7 = __commonJS({
         platform: platformWithCache
       });
     };
-    function src_default(Alpine23) {
+    function src_default2(Alpine23) {
       Alpine23.magic("anchor", (el) => {
         if (!el._x_anchor)
           throw "Alpine: No x-anchor directive found on element using $anchor...";
@@ -9472,7 +9385,7 @@ var require_module_cjs7 = __commonJS({
       let unstyled = modifiers.includes("no-style");
       return { placement, offsetValue, unstyled };
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
@@ -9753,9 +9666,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
-var require_module_cjs8 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+// ../alpine/packages/morph/dist/module.cjs.js
+var require_module_cjs7 = __commonJS({
+  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -9775,8 +9688,8 @@ var require_module_cjs8 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      morph: () => src_default
+      default: () => module_default2,
+      morph: () => src_default2
     });
     module.exports = __toCommonJS(module_exports);
     function morph3(from, toHtml, options) {
@@ -10121,16 +10034,16 @@ var require_module_cjs8 = __commonJS({
       to.setAttribute("id", fromId);
       to.id = fromId;
     }
-    function src_default(Alpine23) {
+    function src_default2(Alpine23) {
       Alpine23.morph = morph3;
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
-var require_module_cjs9 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+// ../alpine/packages/mask/dist/module.cjs.js
+var require_module_cjs8 = __commonJS({
+  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -10150,12 +10063,12 @@ var require_module_cjs9 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      mask: () => src_default,
+      default: () => module_default2,
+      mask: () => src_default2,
       stripDown: () => stripDown
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
+    function src_default2(Alpine23) {
       Alpine23.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
@@ -10322,7 +10235,7 @@ var require_module_cjs9 = __commonJS({
       });
       return template;
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
@@ -10661,10 +10574,73 @@ init_directives();
 init_hooks();
 var import_collapse = __toESM(require_module_cjs2());
 var import_focus = __toESM(require_module_cjs3());
-var import_persist2 = __toESM(require_module_cjs4());
-var import_intersect = __toESM(require_module_cjs5());
-var import_resize = __toESM(require_module_cjs6());
-var import_anchor = __toESM(require_module_cjs7());
+
+// ../alpine/packages/persist/dist/module.esm.js
+function src_default(Alpine23) {
+  let persist = () => {
+    let alias;
+    let storage;
+    try {
+      storage = localStorage;
+    } catch (e) {
+      console.error(e);
+      console.warn("Alpine: $persist is using temporary storage since localStorage is unavailable.");
+      let dummy = /* @__PURE__ */ new Map();
+      storage = {
+        getItem: dummy.get.bind(dummy),
+        setItem: dummy.set.bind(dummy)
+      };
+    }
+    return Alpine23.interceptor((initialValue, getter, setter, path, key2) => {
+      let lookup = alias || `_x_${path}`;
+      let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
+      setter(initial);
+      Alpine23.effect(() => {
+        let value = getter();
+        storageSet(lookup, value, storage);
+        setter(value);
+      });
+      return initial;
+    }, (func) => {
+      func.as = (key2) => {
+        alias = key2;
+        return func;
+      }, func.using = (target) => {
+        storage = target;
+        return func;
+      };
+    });
+  };
+  Object.defineProperty(Alpine23, "$persist", { get: () => persist() });
+  Alpine23.magic("persist", persist);
+  Alpine23.persist = (key2, { get, set }, storage = localStorage) => {
+    let initial = storageHas(key2, storage) ? storageGet(key2, storage) : get();
+    set(initial);
+    Alpine23.effect(() => {
+      let value = get();
+      storageSet(key2, value, storage);
+      set(value);
+    });
+  };
+}
+function storageHas(key2, storage) {
+  return storage.getItem(key2) !== null;
+}
+function storageGet(key2, storage) {
+  let value = storage.getItem(key2, storage);
+  if (value === void 0)
+    return;
+  return JSON.parse(value);
+}
+function storageSet(key2, value, storage) {
+  storage.setItem(key2, JSON.stringify(value));
+}
+var module_default = src_default;
+
+// js/lifecycle.js
+var import_intersect = __toESM(require_module_cjs4());
+var import_resize = __toESM(require_module_cjs5());
+var import_anchor = __toESM(require_module_cjs6());
 
 // js/plugins/navigate/history.js
 var Snapshot = class {
@@ -11760,8 +11736,8 @@ function fromQueryString(search, queryKey) {
 }
 
 // js/lifecycle.js
-var import_morph4 = __toESM(require_module_cjs8());
-var import_mask = __toESM(require_module_cjs9());
+var import_morph4 = __toESM(require_module_cjs7());
+var import_mask = __toESM(require_module_cjs8());
 var import_alpinejs6 = __toESM(require_module_cjs());
 init_utils();
 function start() {
@@ -11775,7 +11751,7 @@ function start() {
   import_alpinejs6.default.plugin(import_collapse.default);
   import_alpinejs6.default.plugin(import_anchor.default);
   import_alpinejs6.default.plugin(import_focus.default);
-  import_alpinejs6.default.plugin(import_persist2.default);
+  import_alpinejs6.default.plugin(module_default);
   import_alpinejs6.default.plugin(navigate_default);
   import_alpinejs6.default.plugin(import_mask.default);
   import_alpinejs6.default.addRootSelector(() => "[wire\\:id]");
@@ -11818,6 +11794,15 @@ function start() {
         } });
       });
     }
+  }, (el) => {
+    if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+      return;
+    let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+    directives.forEach((directive2) => {
+      trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
+        import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
+      } });
+    });
   }));
   import_alpinejs6.default.start();
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);

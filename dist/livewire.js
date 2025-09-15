@@ -449,7 +449,7 @@
     }
   });
 
-  // node_modules/alpinejs/dist/module.esm.js
+  // ../alpine/packages/alpinejs/dist/module.esm.js
   function scheduler(callback) {
     queueJob(callback);
   }
@@ -2869,7 +2869,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var flushPending, flushing, queue, lastFlushedIndex, reactive, effect, release, raw, shouldSchedule, onAttributeAddeds, onElRemoveds, onElAddeds, observer, currentlyObserving, queuedMutations, isCollecting, deferredMutations, mergeProxyTrap, magics, shouldAutoEvaluateFunctions, theEvaluatorFunction, evaluatorMemo, prefixAsString, directiveHandlers, isDeferringHandlers, directiveHandlerStacks, currentHandlerStackKey, startingWith, into, attributeTransformers, alpineAttributeRegex, DEFAULT, directiveOrder, started, rootSelectorCallbacks, initSelectorCallbacks, initInterceptors2, markerDispenser, tickStack, isHolding, isCloning, interceptors, isCloningLegacy, booleanAttributes, stores, isReactive, binds, datas, Alpine2, alpine_default, specialBooleanAttrs, isBooleanAttr2, EMPTY_OBJ, EMPTY_ARR, hasOwnProperty, hasOwn, isArray2, isMap, isString, isSymbol, isObject2, objectToString, toTypeString, toRawType, isIntegerKey, cacheStringFunction, camelizeRE, camelize, hyphenateRE, hyphenate, capitalize, toHandlerKey, hasChanged, targetMap, effectStack, activeEffect, ITERATE_KEY, MAP_KEY_ITERATE_KEY, uid, shouldTrack, trackStack, isNonTrackableKeys, builtInSymbols, get2, readonlyGet, arrayInstrumentations, set2, mutableHandlers, readonlyHandlers, toReactive, toReadonly, toShallow, getProto, mutableInstrumentations, readonlyInstrumentations, shallowInstrumentations, shallowReadonlyInstrumentations, mutableCollectionHandlers, readonlyCollectionHandlers, reactiveMap, shallowReactiveMap, readonlyMap, shallowReadonlyMap, globalIdMemo, teleportContainerDuringClone, handler, handler2, src_default, module_default;
   var init_module_esm = __esm({
-    "node_modules/alpinejs/dist/module.esm.js"() {
+    "../alpine/packages/alpinejs/dist/module.esm.js"() {
       flushPending = false;
       flushing = false;
       queue = [];
@@ -4432,6 +4432,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/morph.js
   function morph(component, el, html) {
     let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+    let customElement = customElements.get(wrapperTag);
+    wrapperTag = customElement ? customElement.name : wrapperTag;
     let wrapper = document.createElement(wrapperTag);
     wrapper.innerHTML = html;
     let parentComponent;
@@ -6825,7 +6827,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   init_directives();
   init_hooks();
 
-  // node_modules/@alpinejs/collapse/dist/module.esm.js
+  // ../alpine/packages/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -6919,7 +6921,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // node_modules/@alpinejs/focus/dist/module.esm.js
+  // ../alpine/packages/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -7868,7 +7870,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // node_modules/@alpinejs/persist/dist/module.esm.js
+  // ../alpine/packages/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -7930,7 +7932,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // node_modules/@alpinejs/intersect/dist/module.esm.js
+  // ../alpine/packages/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -8030,7 +8032,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // node_modules/@alpinejs/anchor/dist/module.esm.js
+  // ../alpine/packages/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -10357,7 +10359,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // node_modules/@alpinejs/morph/dist/module.esm.js
+  // ../alpine/packages/morph/dist/module.esm.js
   function morph2(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -10705,7 +10707,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // node_modules/@alpinejs/mask/dist/module.esm.js
+  // ../alpine/packages/mask/dist/module.esm.js
   function src_default9(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
@@ -10932,6 +10934,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           } });
         });
       }
+    }, (el) => {
+      if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+        return;
+      let directives2 = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+      directives2.forEach((directive3) => {
+        trigger2("directive.global.init", { el, directive: directive3, cleanup: (callback) => {
+          module_default.onAttributeRemoved(el, directive3.raw, callback);
+        } });
+      });
     }));
     module_default.start();
     setTimeout(() => window.Livewire.initialRenderIsFinished = true);

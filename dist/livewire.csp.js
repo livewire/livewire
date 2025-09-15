@@ -449,9 +449,9 @@
     }
   });
 
-  // node_modules/@alpinejs/csp/dist/module.cjs.js
+  // ../alpine/packages/csp/dist/module.cjs.js
   var require_module_cjs = __commonJS({
-    "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
+    "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
       var __create2 = Object.create;
       var __defProp2 = Object.defineProperty;
       var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5100,6 +5100,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   // js/morph.js
   function morph(component, el, html) {
     let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+    let customElement = customElements.get(wrapperTag);
+    wrapperTag = customElement ? customElement.name : wrapperTag;
     let wrapper = document.createElement(wrapperTag);
     wrapper.innerHTML = html;
     let parentComponent;
@@ -7496,7 +7498,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   init_directives();
   init_hooks();
 
-  // node_modules/@alpinejs/collapse/dist/module.esm.js
+  // ../alpine/packages/collapse/dist/module.esm.js
   function src_default(Alpine23) {
     Alpine23.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -7590,7 +7592,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }
   var module_default = src_default;
 
-  // node_modules/@alpinejs/focus/dist/module.esm.js
+  // ../alpine/packages/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -8539,7 +8541,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }
   var module_default2 = src_default2;
 
-  // node_modules/@alpinejs/persist/dist/module.esm.js
+  // ../alpine/packages/persist/dist/module.esm.js
   function src_default3(Alpine23) {
     let persist = () => {
       let alias;
@@ -8601,7 +8603,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }
   var module_default3 = src_default3;
 
-  // node_modules/@alpinejs/intersect/dist/module.esm.js
+  // ../alpine/packages/intersect/dist/module.esm.js
   function src_default4(Alpine23) {
     Alpine23.directive("intersect", Alpine23.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
       let evaluate2 = evaluateLater(expression);
@@ -8701,7 +8703,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }
   var module_default5 = src_default5;
 
-  // node_modules/@alpinejs/anchor/dist/module.esm.js
+  // ../alpine/packages/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -11028,7 +11030,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     return data;
   }
 
-  // node_modules/@alpinejs/morph/dist/module.esm.js
+  // ../alpine/packages/morph/dist/module.esm.js
   function morph2(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -11376,7 +11378,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }
   var module_default7 = src_default7;
 
-  // node_modules/@alpinejs/mask/dist/module.esm.js
+  // ../alpine/packages/mask/dist/module.esm.js
   function src_default8(Alpine23) {
     Alpine23.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
       let templateFn = () => expression;
@@ -11603,6 +11605,15 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
           } });
         });
       }
+    }, (el) => {
+      if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+        return;
+      let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+      directives.forEach((directive2) => {
+        trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
+          import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
+        } });
+      });
     }));
     import_alpinejs6.default.start();
     setTimeout(() => window.Livewire.initialRenderIsFinished = true);
