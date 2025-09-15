@@ -8,10 +8,11 @@ export function morph(component, el, html) {
         ? el.parentElement.tagName.toLowerCase()
         : 'div'
 
-    // If the wrapper tag is a custom element, we can't instantiate it using `document.createElement` so just use a div instead...
-    if (customElements.get(wrapperTag)) {
-        wrapperTag = 'div'
-    }
+    let customElement = customElements.get(wrapperTag)
+
+    // If the wrapper tag is a custom element, we can't instantiate it using the hyphenated
+    // tag name, so we need to get the name off the custom element instead...
+    wrapperTag = customElement ? customElement.name : wrapperTag
 
     let wrapper = document.createElement(wrapperTag)
 
