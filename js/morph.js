@@ -8,6 +8,11 @@ export function morph(component, el, html) {
         ? el.parentElement.tagName.toLowerCase()
         : 'div'
 
+    // If the wrapper tag is a custom element, we can't instantiate it using `document.createElement` so just use a div instead...
+    if (customElements.get(wrapperTag)) {
+        wrapperTag = 'div'
+    }
+
     let wrapper = document.createElement(wrapperTag)
 
     wrapper.innerHTML = html
