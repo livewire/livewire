@@ -18,11 +18,11 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
     {
         on('flush-state', function () {
             static::$shouldInjectConditionalMarkers = config('livewire.inject_morph_markers', true);
-            static::$shouldInjectLoopMarkers = config('livewire.inject_morph_markers', true);
+            static::$shouldInjectLoopMarkers = config('livewire.smart_wire_keys', false);
         });
 
         static::$shouldInjectConditionalMarkers = config('livewire.inject_morph_markers', true);
-        static::$shouldInjectLoopMarkers = config('livewire.smart_wire_keys', true);
+        static::$shouldInjectLoopMarkers = config('livewire.smart_wire_keys', false);
 
         if (! static::$shouldInjectConditionalMarkers && ! static::$shouldInjectLoopMarkers) {
             return;
