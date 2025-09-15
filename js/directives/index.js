@@ -12,6 +12,7 @@ import './wire-ignore';
 import './wire-cloak';
 import './wire-dirty';
 import './wire-model';
+import './wire-class';
 import './wire-init';
 import './wire-poll';
 import './wire-show';
