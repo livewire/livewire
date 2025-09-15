@@ -180,7 +180,7 @@ class FrontendAssets extends Mechanism
 
         $assetWarning = null;
 
-        $nonce = static::nonce($options['nonce']);
+        $nonce = static::nonce($options);
 
         [$url, $assetWarning] = static::usePublishedAssetsIfAvailable($url, $manifest, $nonce);
 
@@ -201,7 +201,7 @@ class FrontendAssets extends Mechanism
     {
         app(static::class)->hasRenderedScripts = true;
 
-        $nonce = static::nonce($options['nonce']);
+        $nonce = static::nonce($options);
 
         $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
 
