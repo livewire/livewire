@@ -234,7 +234,7 @@ class Finder
 
             $dirs = [
                 'multiFile' => $location . '/' . $leadingPath . $trailingPath,
-                'multiFileWithZap' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath,
+                'multiFileWithZap' => $location . '/' . $leadingPath . '⚡' . $trailingPath,
                 'multiFileWithZapVariation15' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath,
                 'multiFileWithZapVariation16' => $location . '/' . $leadingPath . '⚡️' . $trailingPath,
                 'multiFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index',
@@ -242,14 +242,13 @@ class Finder
                 'multiFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index',
                 'multiFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/⚡️index',
                 'multiFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath,
-                'multiFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath,
+                'multiFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡' . $trailingPath,
                 'multiFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath,
                 'multiFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡️' . $trailingPath,
             ];
 
             foreach ($dirs as $dir) {
                 if (is_dir($dir)) {
-
                     return $dir;
                 }
             }
@@ -419,8 +418,9 @@ class Finder
         // Build the class file path
         $classPath = app_path('Livewire/' . str_replace('\\', '/', $className) . '.php');
 
-        // Build the view file path
-        $viewPath = resource_path('views/livewire/' . str_replace('.', '/', $viewName) . '.blade.php');
+        // Build the view file path using the configured view path
+        $configuredViewPath = config('livewire.view_path', resource_path('views/livewire'));
+        $viewPath = $configuredViewPath . '/' . str_replace('.', '/', $viewName) . '.blade.php';
 
         return [
             'class' => $classPath,

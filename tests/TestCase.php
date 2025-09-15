@@ -26,6 +26,7 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
 
         File::deleteDirectory($this->livewireViewsPath());
         File::deleteDirectory($this->livewireClassesPath());
+        File::deleteDirectory($this->livewireComponentsPath());
         File::deleteDirectory($this->livewireTestsPath());
         File::delete(app()->bootstrapPath('cache/livewire-components.php'));
     }
@@ -71,6 +72,11 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
     protected function livewireViewsPath($path = '')
     {
         return resource_path('views').'/livewire'.($path ? '/'.$path : '');
+    }
+
+    protected function livewireComponentsPath($path = '')
+    {
+        return resource_path('views').'/components'.($path ? '/'.$path : '');
     }
 
     protected function livewireTestsPath($path = '')

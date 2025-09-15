@@ -2,256 +2,420 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
-use Illuminate\Contracts\Console\PromptsForMissingInput;
-use Illuminate\Support\Facades\File;
-use Symfony\Component\Console\Attribute\AsCommand;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
+use function Laravel\Prompts\text;
 use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\select;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Livewire\Finder\Finder;
+use Livewire\Compiler\Compiler;
+use Illuminate\Support\Str;
+use Illuminate\Foundation\Inspiring;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Console\Command;
 
-#[AsCommand(name: 'livewire:make')]
-class MakeCommand extends FileManipulationCommand implements PromptsForMissingInput
+#[AsCommand(name: 'make:livewire')]
+class MakeCommand extends Command
 {
-    protected $signature = 'livewire:make {name} {--force} {--inline} {--test} {--pest} {--stub= : If you have several stubs, stored in subfolders }';
+    protected $name = 'make:livewire';
 
     protected $description = 'Create a new Livewire component';
 
+    protected Filesystem $files;
+
+    protected Finder $finder;
+
+    protected Compiler $compiler;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->files = app('files');
+
+        $this->finder = app('livewire.finder');
+
+        $this->compiler = app('livewire.compiler');
+    }
+
     public function handle()
     {
-        $this->parser = new ComponentParser(
-            config('livewire.class_namespace'),
-            config('livewire.view_path'),
-            $this->argument('name'),
-            $this->option('stub')
+        $name = $this->argument('name');
+
+        if (! $name) {
+            $name = text('What should the component be named?', required: true);
+        }
+
+        $name = $this->normalizeComponentName($name);
+
+        $type = $this->determineComponentType(
+            config('livewire.make_command.type', 'sfc'),
         );
 
-        if (!$this->isClassNameValid($name = $this->parser->className())) {
-            $this->line("<options=bold,reverse;fg=red> WHOOPS! </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class is invalid:</> {$name}");
+        switch ($type) {
+            case 'class':
+                return $this->createClassBasedComponent($name);
 
-            return;
+            case 'mfc':
+                return $this->createMultiFileComponent($name);
+
+            case 'sfc':
+            default:
+                return $this->createSingleFileComponent($name);
+        }
+    }
+
+    protected function normalizeComponentName(string $name): string
+    {
+        return (string) str($name)
+            ->replace('/', '.')
+            ->replace('\\', '.')
+            ->explode('.')
+            ->map(fn ($i) => str($i)->kebab())
+            ->implode('.');
+    }
+
+    protected function determineComponentType($fallback): string
+    {
+        if ($this->option('class')) {
+            return 'class';
         }
 
-        if ($this->isReservedClassName($name)) {
-            $this->line("<options=bold,reverse;fg=red> WHOOPS! </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class is reserved:</> {$name}");
-
-            return;
+        if ($this->option('mfc')) {
+            return 'mfc';
         }
 
-        $force = $this->option('force');
-        $inline = $this->option('inline');
-        $test = $this->option('test') || $this->option('pest');
-        $testType = $this->option('pest') ? 'pest' : 'phpunit';
-
-        $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
-
-        $class = $this->createClass($force, $inline);
-        $view = $this->createView($force, $inline);
-
-        if ($test) {
-            $test = $this->createTest($force, $testType);
+        if ($this->option('sfc')) {
+            return 'sfc';
         }
 
-        if($class || $view) {
-            $this->line("<options=bold,reverse;fg=green> COMPONENT CREATED </> 🤙\n");
-            $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()}");
+        if ($this->option('type')) {
+            return $this->option('type');
+        }
 
-            if (! $inline) {
-                $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()}");
+        return $fallback;
+    }
+
+    protected function createClassBasedComponent(string $name): int
+    {
+        $paths = $this->finder->resolveClassComponentFilePaths($name);
+
+        if ($this->files->exists($paths['class'])) {
+            $this->components->error('Component already exists.');
+
+            return 1;
+        }
+
+        $this->ensureDirectoryExists(dirname($paths['class']));
+        $this->ensureDirectoryExists(dirname($paths['view']));
+
+        $classContent = $this->buildClassBasedComponentClass($name);
+        $viewContent = $this->buildClassBasedComponentView();
+
+        $this->files->put($paths['class'], $classContent);
+        $this->files->put($paths['view'], $viewContent);
+
+        $this->components->info(sprintf('Livewire component [%s] created successfully.', $paths['class']));
+
+        return 0;
+    }
+
+    protected function createSingleFileComponent(string $name): int
+    {
+        $path = $this->finder->resolveSingleFileComponentPathForCreation($name);
+
+        if ($this->files->exists($path)) {
+            $upgrade = confirm('Component already exists. Would you like to upgrade this component to a multi-file component?');
+
+            if ($upgrade) {
+                return $this->upgradeSingleFileToMultiFile($name, $path);
             }
 
-            if ($test) {
-                $test && $this->line("<options=bold;fg=green>TEST:</>  {$this->parser->relativeTestPath()}");
+            $this->components->error('Component already exists.');
+
+            return 1;
+        }
+
+        $this->ensureDirectoryExists(dirname($path));
+
+        $content = $this->buildSingleFileComponent();
+
+        $this->files->put($path, $content);
+
+        $this->components->info(sprintf('Livewire component [%s] created successfully.', $path));
+
+        return 0;
+    }
+
+    protected function createMultiFileComponent(string $name): int
+    {
+        $directory = $this->finder->resolveMultiFileComponentPathForCreation($name);
+
+        // Get the component name without emoji for file names inside the directory
+        $componentName = basename($directory);
+        if ($this->shouldUseEmoji()) {
+            $componentName = str_replace(['⚡', '⚡︎', '⚡️'], '', $componentName);
+        }
+
+        // Define file paths
+        $classPath = $directory . '/' . $componentName . '.php';
+        $viewPath = $directory . '/' . $componentName . '.blade.php';
+        $testPath = $directory . '/' . $componentName . '.test.php';
+        $jsPath = $directory . '/' . $componentName . '.js';
+
+        // Check if we're upgrading from a single-file component
+        $sfcPath = $this->finder->resolveSingleFileComponentPathForCreation($name);
+        if ($this->files->exists($sfcPath)) {
+            $upgrade = confirm('Component already exists as a single-file component. Would you like to upgrade it to a multi-file component?');
+
+            if ($upgrade) {
+                return $this->upgradeSingleFileToMultiFile($name, $sfcPath);
             }
 
-            if ($showWelcomeMessage && ! app()->runningUnitTests()) {
-                $this->writeWelcomeMessage();
+            $this->components->error('Component already exists.');
+
+            return 1;
+        }
+
+        if ($this->files->exists($directory)) {
+            $this->components->error('Component already exists.');
+
+            return 1;
+        }
+
+        $this->ensureDirectoryExists($directory);
+
+        $classContent = $this->buildMultiFileComponentClass();
+        $viewContent = $this->buildMultiFileComponentView();
+        $testContent = $this->buildMultiFileComponentTest($name);
+        $jsContent = $this->buildMultiFileComponentJs();
+
+        $this->files->put($classPath, $classContent);
+        $this->files->put($viewPath, $viewContent);
+        $this->files->put($testPath, $testContent);
+
+        if ($this->option('js')) {
+            $this->files->put($jsPath, $jsContent);
+        }
+
+        $this->components->info(sprintf('Livewire component [%s] created successfully.', $directory));
+
+        return 0;
+    }
+
+    protected function upgradeSingleFileToMultiFile(string $name, string $sfcPath): int
+    {
+        $directory = $this->finder->resolveMultiFileComponentPathForCreation($name);
+
+        $componentName = basename($directory);
+
+        if ($this->shouldUseEmoji()) {
+            $componentName = str_replace(['⚡', '⚡︎', '⚡️'], '', $componentName);
+        }
+
+        $classPath = $directory . '/' . $componentName . '.php';
+        $viewPath = $directory . '/' . $componentName . '.blade.php';
+        $testPath = $directory . '/' . $componentName . '.test.php';
+        $jsPath = $directory . '/' . $componentName . '.js';
+
+        $sfcContents = $this->files->get($sfcPath);
+        $parsed = app(SingleFileComponentCompiler::class)->parseComponent($sfcContents);
+
+        $this->ensureDirectoryExists($directory);
+
+        $this->files->put($classPath, $parsed->getClassSource());
+        $this->files->put($viewPath, $parsed->getViewSource());
+        $this->files->put($testPath, $this->buildMultiFileComponentTest($name));
+
+        if ($parsed->hasScripts()) {
+            $jsSource = $this->cleanupJavaScriptIndentation($parsed->getScriptSource());
+            $this->files->put($jsPath, $jsSource);
+        }
+
+        $this->files->delete($sfcPath);
+
+        $this->components->info(sprintf('Livewire component [%s] upgraded successfully.', $directory));
+
+        return 0;
+    }
+
+    protected function shouldUseEmoji(): bool
+    {
+        if ($this->option('emoji') !== null) {
+            return filter_var($this->option('emoji'), FILTER_VALIDATE_BOOLEAN);
+        }
+
+        return config('livewire.make_command.emoji', true);
+    }
+
+    protected function cleanupJavaScriptIndentation(string $source): string
+    {
+        // Remove leading line break
+        $source = ltrim($source, "\r\n");
+
+        // Detect and remove common indentation
+        $lines = explode("\n", $source);
+
+        if (! empty($lines)) {
+            // Find the indentation of the first non-empty line
+            $firstLineIndent = 0;
+
+            foreach ($lines as $line) {
+                if (trim($line) !== '') {
+                    $firstLineIndent = strlen($line) - strlen(ltrim($line));
+                    break;
+                }
             }
-        }
-    }
 
-    protected function createClass($force = false, $inline = false)
-    {
-        $classPath = $this->parser->classPath();
-
-        if (File::exists($classPath) && ! $force) {
-            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class already exists:</> {$this->parser->relativeClassPath()}");
-
-            return false;
-        }
-
-        $this->ensureDirectoryExists($classPath);
-
-        File::put($classPath, $this->parser->classContents($inline));
-
-        return $classPath;
-    }
-
-    protected function createView($force = false, $inline = false)
-    {
-        if ($inline) {
-            return false;
-        }
-        $viewPath = $this->parser->viewPath();
-
-        if (File::exists($viewPath) && ! $force) {
-            $this->line("<fg=red;options=bold>View already exists:</> {$this->parser->relativeViewPath()}");
-
-            return false;
-        }
-
-        $this->ensureDirectoryExists($viewPath);
-
-        File::put($viewPath, $this->parser->viewContents());
-
-        return $viewPath;
-    }
-
-    protected function createTest($force = false, $testType = 'phpunit')
-    {
-        $testPath = $this->parser->testPath();
-
-        if (File::exists($testPath) && ! $force) {
-            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Test class already exists:</> {$this->parser->relativeTestPath()}");
-
-            return false;
-        }
-
-        $this->ensureDirectoryExists($testPath);
-
-        File::put($testPath, $this->parser->testContents($testType));
-
-        return $testPath;
-    }
-
-    public function isClassNameValid($name)
-    {
-        return preg_match("/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/", $name);
-    }
-
-    public function isReservedClassName($name)
-    {
-        return array_search(strtolower($name), $this->getReservedName()) !== false;
-    }
-
-    protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output)
-    {
-        if ($this->didReceiveOptions($input)) {
-            return;
-        }
-
-        if(
-            confirm(
-                label: 'Do you want to make this an inline component?',
-                default: false
-            )
-        )
-        {
-            $input->setOption('inline', true);
-        }
-
-        if(
-            $testSuite = select(
-                label: 'Do you want to create a test file?',
-                options: [
-                    false => 'No',
-                    'phpunit' => 'PHPUnit',
-                    'pest' => 'Pest',
-                ],
-            )
-        )
-        {
-            $input->setOption('test', true);
-
-            if($testSuite === 'pest') {
-                $input->setOption('pest', true);
+            // Remove that amount of indentation from all lines
+            if ($firstLineIndent > 0) {
+                $lines = array_map(function($line) use ($firstLineIndent) {
+                    // Only remove indentation if the line has at least that much whitespace
+                    if (strlen($line) >= $firstLineIndent && substr($line, 0, $firstLineIndent) === str_repeat(' ', $firstLineIndent)) {
+                        return substr($line, $firstLineIndent);
+                    }
+                    return $line;
+                }, $lines);
             }
+
+            $source = implode("\n", $lines);
+        }
+
+        return $source;
+    }
+
+    protected function buildClassBasedComponentClass(string $name): string
+    {
+        $stub = $this->files->get($this->getStubPath('livewire.stub'));
+
+        $segments = explode('.', $name);
+
+        $className = Str::studly(end($segments));
+
+        $namespaceSegments = array_slice($segments, 0, -1);
+
+        $namespace = 'App\\Livewire';
+
+        if (! empty($namespaceSegments)) {
+            $namespace .= '\\' . collect($namespaceSegments)
+                ->map(fn($segment) => Str::studly($segment))
+                ->implode('\\');
+        }
+
+        // Get the configured view path and extract the view namespace from it
+        $viewPath = config('livewire.view_path', resource_path('views/livewire'));
+        $viewNamespace = $this->extractViewNamespace($viewPath);
+
+        $viewName = $viewNamespace . '.' . collect($segments)
+            ->map(fn($segment) => Str::kebab($segment))
+            ->implode('.');
+
+        $stub = str_replace('[namespace]', $namespace, $stub);
+        $stub = str_replace('[class]', $className, $stub);
+        $stub = str_replace('[view]', $viewName, $stub);
+
+        return $stub;
+    }
+
+    protected function buildClassBasedComponentView(): string
+    {
+        $stub = $this->files->get($this->getStubPath('livewire.view.stub'));
+
+        $stub = str_replace('[quote]', Inspiring::quotes()->random(), $stub);
+
+        return $stub;
+    }
+
+    protected function buildSingleFileComponent(): string
+    {
+        $stub = $this->files->get($this->getStubPath('livewire-sfc.stub'));
+
+        $stub = str_replace('[quote]', Inspiring::quotes()->random(), $stub);
+
+        return $stub;
+    }
+
+    protected function buildMultiFileComponentClass(): string
+    {
+        return $this->files->get($this->getStubPath('livewire-mfc-class.stub'));
+    }
+
+    protected function buildMultiFileComponentView(): string
+    {
+        $stub = $this->files->get($this->getStubPath('livewire-mfc-view.stub'));
+
+        $stub = str_replace('[quote]', Inspiring::quotes()->random(), $stub);
+
+        return $stub;
+    }
+
+    protected function buildMultiFileComponentTest(string $name): string
+    {
+        $stub = $this->files->get($this->getStubPath('livewire-mfc-test.stub'));
+
+        $componentName = collect(explode('.', $name))
+            ->map(fn($segment) => Str::kebab($segment))
+            ->implode('.');
+
+        $stub = str_replace('[component-name]', $componentName, $stub);
+
+        return $stub;
+    }
+
+    protected function buildMultiFileComponentJs(): string
+    {
+        return $this->files->get($this->getStubPath('livewire-mfc-js.stub'));
+    }
+
+    protected function getStubPath(string $stub): string
+    {
+        $customPath = $this->laravel->basePath('stubs/' . $stub);
+
+        if ($this->files->exists($customPath)) {
+            return $customPath;
+        }
+
+        return __DIR__ . '/' . $stub;
+    }
+
+    protected function ensureDirectoryExists(string $path): void
+    {
+        if (! $this->files->isDirectory($path)) {
+            $this->files->makeDirectory($path, 0755, true, true);
         }
     }
 
-    private function getReservedName()
+    protected function extractViewNamespace(string $viewPath): string
+    {
+        // Convert the view path to a namespace
+        // e.g., resource_path('views/livewire') => 'livewire'
+        // e.g., resource_path('views/not-livewire') => 'not-livewire'
+        $viewsPath = resource_path('views');
+
+        // Remove the base views path to get the relative path
+        $relativePath = str_replace($viewsPath . DIRECTORY_SEPARATOR, '', $viewPath);
+        $relativePath = str_replace($viewsPath . '/', '', $relativePath);
+
+        // Convert directory separators to dots for the namespace
+        return str_replace(['/', '\\'], '.', $relativePath);
+    }
+
+    protected function getArguments()
     {
         return [
-            'parent',
-            'component',
-            'interface',
-            '__halt_compiler',
-            'abstract',
-            'and',
-            'array',
-            'as',
-            'break',
-            'callable',
-            'case',
-            'catch',
-            'class',
-            'clone',
-            'const',
-            'continue',
-            'declare',
-            'default',
-            'die',
-            'do',
-            'echo',
-            'else',
-            'elseif',
-            'empty',
-            'enddeclare',
-            'endfor',
-            'endforeach',
-            'endif',
-            'endswitch',
-            'endwhile',
-            'enum',
-            'eval',
-            'exit',
-            'extends',
-            'final',
-            'finally',
-            'fn',
-            'for',
-            'foreach',
-            'function',
-            'global',
-            'goto',
-            'if',
-            'implements',
-            'include',
-            'include_once',
-            'instanceof',
-            'insteadof',
-            'interface',
-            'isset',
-            'self',
-            'list',
-            'match',
-            'namespace',
-            'new',
-            'or',
-            'print',
-            'private',
-            'protected',
-            'public',
-            'readonly',
-            'require',
-            'require_once',
-            'return',
-            'static',
-            'switch',
-            'throw',
-            'trait',
-            'try',
-            'unset',
-            'use',
-            'var',
-            'while',
-            'xor',
-            'yield',
+            ['name', InputArgument::OPTIONAL, 'The name of the component'],
         ];
     }
 
+    protected function getOptions()
+    {
+        return [
+            ['sfc', null, InputOption::VALUE_NONE, 'Create a single-file component'],
+            ['mfc', null, InputOption::VALUE_NONE, 'Create a multi-file component'],
+            ['class', null, InputOption::VALUE_NONE, 'Create a class-based component'],
+            ['type', null, InputOption::VALUE_REQUIRED, 'Component type (sfc, mfc, or class)'],
+            ['emoji', null, InputOption::VALUE_REQUIRED, 'Use emoji in file/directory names (true or false)'],
+            ['js', null, InputOption::VALUE_NONE, 'Create a JavaScript file for multi-file components'],
+        ];
+    }
 }
