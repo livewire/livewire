@@ -9013,6 +9013,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/morph.js
   function morph2(component, el, html) {
     let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+    if (customElements.get(wrapperTag)) {
+      wrapperTag = "div";
+    }
     let wrapper = document.createElement(wrapperTag);
     wrapper.innerHTML = html;
     let parentComponent;
