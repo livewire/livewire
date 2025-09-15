@@ -120,7 +120,8 @@ class Test extends TestCase
                     $this->assertNull($b->attribute('@blog.button', 'disabled'));
                 })
                 ->waitFor('#livewire-error')
-                ->click('#livewire-error')
+                // Close the error modal...
+                ->keys('#livewire-error', '{escape}')
 
                 /**
                  * keydown.debounce

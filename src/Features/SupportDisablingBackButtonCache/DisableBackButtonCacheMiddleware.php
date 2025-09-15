@@ -24,6 +24,10 @@ class DisableBackButtonCacheMiddleware
                 'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT',
                 'Cache-Control' => 'no-cache, must-revalidate, no-store, max-age=0, private',
             ]);
+
+            // We do flush this in the `SupportDisablingBackButtonCache` hook, but we 
+            // need to do it here as well to ensure that unit tests still work...
+            SupportDisablingBackButtonCache::$disableBackButtonCache = false;
         }
 
         return $response;

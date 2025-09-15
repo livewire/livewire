@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportLazyLoading;
 
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\HandleComponents\ViewContext;
 use function Livewire\{ on, store, trigger, wrap };
 use Illuminate\Routing\Route;
@@ -110,7 +111,11 @@ class SupportLazyLoading extends ComponentHook
 
         $container->forMount = array_diff_key($params, array_flip(['lazy']));
 
-        $snapshot = app('livewire')->snapshot($container);
+        $context = new ComponentContext($container, mounting: true);
+
+        trigger('dehydrate', $container, $context);
+
+        $snapshot = app('livewire')->snapshot($container, $context);
 
         $encoded = base64_encode(json_encode($snapshot));
 

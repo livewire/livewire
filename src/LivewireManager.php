@@ -73,9 +73,9 @@ class LivewireManager
         return app(HandleComponents::class)->mount($name, $params, $key);
     }
 
-    function snapshot($component)
+    function snapshot($component, $context = null)
     {
-        return app(HandleComponents::class)->snapshot($component);
+        return app(HandleComponents::class)->snapshot($component, $context);
     }
 
     function fromSnapshot($snapshot)

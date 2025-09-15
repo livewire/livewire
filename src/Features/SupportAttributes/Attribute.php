@@ -53,7 +53,7 @@ abstract class Attribute
     function getValue()
     {
         if ($this->level !== AttributeLevel::PROPERTY) {
-            throw new \Exception('Can\'t set the value of a non-property attribute.');
+            throw new \Exception('Can\'t get the value of a non-property attribute.');
         }
 
         return data_get($this->component->all(), $this->levelName);
