@@ -24,6 +24,8 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
     {
         Artisan::call('view:clear');
 
+        app()->forgetInstance('livewire.factory');
+
         File::deleteDirectory($this->livewireViewsPath());
         File::deleteDirectory($this->livewireClassesPath());
         File::deleteDirectory($this->livewireComponentsPath());

@@ -149,7 +149,7 @@ class Finder
             if (isset($this->viewComponents[$name])) {
                 $path = $this->viewComponents[$name];
 
-                if (! is_dir($path) && file_exists($path)) {
+                if (! is_dir($path) && file_exists($path) && $this->hasValidSingleFileComponentSource($path)) {
                     return $path;
                 }
             }
@@ -169,22 +169,24 @@ class Finder
             $leadingPath = $leadingSegments ? str_replace('.', '/', $leadingSegments) . '/' : '';
 
             $paths = [
-                'singleFile' => $location . '/' . $leadingPath . $trailingPath . '.blade.php',
                 'singleFileWithZap' => $location . '/' . $leadingPath . '⚡' . $trailingPath . '.blade.php',
                 'singleFileWithZapVariation15' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath . '.blade.php',
                 'singleFileWithZapVariation16' => $location . '/' . $leadingPath . '⚡️' . $trailingPath . '.blade.php',
-                'singleFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index.blade.php',
                 'singleFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index.blade.php',
                 'singleFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index.blade.php',
                 'singleFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/⚡️index.blade.php',
-                'singleFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath . '.blade.php',
                 'singleFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath . '.blade.php',
                 'singleFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath . '.blade.php',
                 'singleFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡️' . $trailingPath . '.blade.php',
+                'singleFile' => $location . '/' . $leadingPath . $trailingPath . '.blade.php',
+                'singleFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index.blade.php',
+                'singleFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath . '.blade.php',
             ];
 
             foreach ($paths as $filePath) {
-                if (! is_dir($filePath) && file_exists($filePath)) {
+                if (! is_dir($filePath)
+                    && file_exists($filePath)
+                    && $this->hasValidSingleFileComponentSource($filePath)) {
                     return $filePath;
                 }
             }
@@ -232,23 +234,31 @@ class Finder
             $trailingPath = str_replace('.', '/', $lastSegment);
             $leadingPath = $leadingSegments ? str_replace('.', '/', $leadingSegments) . '/' : '';
 
+
             $dirs = [
-                'multiFile' => $location . '/' . $leadingPath . $trailingPath,
                 'multiFileWithZap' => $location . '/' . $leadingPath . '⚡' . $trailingPath,
                 'multiFileWithZapVariation15' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath,
                 'multiFileWithZapVariation16' => $location . '/' . $leadingPath . '⚡️' . $trailingPath,
-                'multiFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index',
                 'multiFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index',
                 'multiFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index',
                 'multiFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/⚡️index',
-                'multiFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath,
                 'multiFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡' . $trailingPath,
                 'multiFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath,
                 'multiFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡️' . $trailingPath,
+                'multiFile' => $location . '/' . $leadingPath . $trailingPath,
+                'multiFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index',
+                'multiFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath,
             ];
 
             foreach ($dirs as $dir) {
-                if (is_dir($dir)) {
+                $baseName = basename($dir);
+
+                $fileBaseName = str_contains($baseName, 'index') ? 'index' : $baseName;
+
+                if (
+                    is_dir($dir)
+                    && $this->hasValidMultiFileComponentSource($dir, $fileBaseName)
+                ) {
                     return $dir;
                 }
             }
@@ -344,6 +354,27 @@ class Finder
     protected function normalizeLocation(string $location): string
     {
         return rtrim($location, '/');
+    }
+
+    protected function hasValidSingleFileComponentSource(string $filePath): bool
+    {
+        // Read the file contents
+        $contents = file_get_contents($filePath);
+
+        if ($contents === false) {
+            return false;
+        }
+
+        // Light touch check: Look for the pattern that indicates an SFC
+        // Pattern: <?php followed by 'new' and 'class' (with potential attributes/newlines between)
+        // This distinguishes SFCs from regular Blade views
+        return preg_match('/\<\?php.*new\s+.*class/s', $contents) === 1;
+    }
+
+    protected function hasValidMultiFileComponentSource(string $dir, string $fileBaseName): bool
+    {
+        return file_exists($dir . '/' . $fileBaseName . '.php')
+            || file_exists($dir . '/' . $fileBaseName . '.blade.php');
     }
 
     public function resolveSingleFileComponentPathForCreation(string $name): string

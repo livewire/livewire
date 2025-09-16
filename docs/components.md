@@ -301,7 +301,7 @@ use Livewire\Livewire;
 // In a service provider...
 Livewire::addNamespace(
     namespace: 'ui',
-    viewPath: resource_path('views/ui')
+    path: resource_path('views/ui')
 );
 ```
 

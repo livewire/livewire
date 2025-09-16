@@ -266,4 +266,26 @@ class MakeCommandUnitTest extends \Tests\TestCase
         Artisan::call('make:livewire', ['name' => 'default-class']);
         $this->assertTrue(File::exists($this->livewireClassesPath('DefaultClass.php')));
     }
+
+    public function test_class_based_component_view_in_livewire_folder_is_not_mistaken_for_sfc()
+    {
+        // This test demonstrates the issue where a class-based component's view
+        // in resources/views/livewire/ might be mistaken for an SFC
+
+        // First, create a class-based component
+        Artisan::call('make:livewire', ['name' => 'existing-class', '--class' => true]);
+        $this->assertTrue(File::exists($this->livewireClassesPath('ExistingClass.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('existing-class.blade.php')));
+
+        // Now try to create an SFC with the same name
+        // The system should recognize the existing class-based component
+        // and not mistake its view for an SFC
+        $exitCode = Artisan::call('make:livewire', ['name' => 'existing-class']);
+
+        // It should fail because component already exists (as class-based)
+        $this->assertEquals(1, $exitCode);
+
+        // The SFC should NOT have been created
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡existing-class.blade.php')));
+    }
 }

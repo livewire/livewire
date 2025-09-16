@@ -25,7 +25,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_configure_a_default_layout()
     {
-        config()->set('livewire.layout', 'layouts.app-with-baz-hardcoded');
+        config()->set('livewire.component_layout', 'layouts.app-with-baz-hardcoded');
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTest::class);
 
@@ -37,7 +37,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_configure_the_default_layout_to_a_class_based_component_layout()
     {
-        config()->set('livewire.layout', \LegacyTests\AppLayout::class);
+        config()->set('livewire.component_layout', \LegacyTests\AppLayout::class);
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTest::class);
 
@@ -51,7 +51,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_show_params_with_a_configured_class_based_component_layout()
     {
-        config()->set('livewire.layout', \LegacyTests\AppLayout::class);
+        config()->set('livewire.component_layout', \LegacyTests\AppLayout::class);
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomParams::class);
 
@@ -64,7 +64,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_set_custom_slot_for_a_configured_class_based_component_layout()
     {
-        config()->set('livewire.layout', \LegacyTests\AppLayout::class);
+        config()->set('livewire.component_layout', \LegacyTests\AppLayout::class);
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomSlot::class);
 
@@ -76,7 +76,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_configure_the_default_layout_to_an_anonymous_component_layout()
     {
-        config()->set('livewire.layout', 'layouts.app-anonymous-component');
+        config()->set('livewire.component_layout', 'layouts.app-anonymous-component');
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTest::class);
 
@@ -89,7 +89,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_show_params_with_a_configured_anonymous_component_layout()
     {
-        config()->set('livewire.layout', 'layouts.app-anonymous-component');
+        config()->set('livewire.component_layout', 'layouts.app-anonymous-component');
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomParams::class);
 
@@ -102,7 +102,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_set_custom_slot_for_a_configured_anonymous_component_layout()
     {
-        config()->set('livewire.layout', 'layouts.app-anonymous-component');
+        config()->set('livewire.component_layout', 'layouts.app-anonymous-component');
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomSlot::class);
 
@@ -114,7 +114,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_show_params_with_a_configured_anonymous_component_layout_that_has_a_required_prop()
     {
-        config()->set('livewire.layout', 'layouts.app-anonymous-component-with-required-prop');
+        config()->set('livewire.component_layout', 'layouts.app-anonymous-component-with-required-prop');
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomParams::class);
 
@@ -127,7 +127,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_override_optional_props_with_a_configured_anonymous_component_layout()
     {
-        config()->set('livewire.layout', 'layouts.app-anonymous-component');
+        config()->set('livewire.component_layout', 'layouts.app-anonymous-component');
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomFooParam::class);
 
@@ -140,7 +140,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_pass_attributes_to_a_configured_class_based_component_layout()
     {
-        config()->set('livewire.layout', \LegacyTests\AppLayout::class);
+        config()->set('livewire.component_layout', \LegacyTests\AppLayout::class);
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomAttributes::class);
 
@@ -152,7 +152,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_use_a_configured_class_based_component_layout_with_properties()
     {
-        config()->set('livewire.layout', \LegacyTests\AppLayoutWithProperties::class);
+        config()->set('livewire.component_layout', \LegacyTests\AppLayoutWithProperties::class);
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTest::class);
 
@@ -164,7 +164,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_pass_attributes_to_a_configured_anonymous_component_layout()
     {
-        config()->set('livewire.layout', 'layouts.app-anonymous-component');
+        config()->set('livewire.component_layout', 'layouts.app-anonymous-component');
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomAttributes::class);
 
