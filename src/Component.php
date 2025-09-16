@@ -88,6 +88,16 @@ abstract class Component
         store($this)->set('skipHydrate', true);
     }
 
+    function hasProvidedView()
+    {
+        return method_exists($this, 'view');
+    }
+
+    function getProvidedView()
+    {
+        return $this->view();
+    }
+
     function __isset($property)
     {
         try {

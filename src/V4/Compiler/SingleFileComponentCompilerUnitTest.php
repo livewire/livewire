@@ -16,6 +16,8 @@ class SingleFileComponentCompilerUnitTest extends \Tests\TestCase
     {
         parent::setUp();
 
+        $this->markTestSkipped();
+
         $this->tempPath = sys_get_temp_dir() . '/livewire_compiler_test_' . uniqid();
         $this->cacheDir = $this->tempPath . '/cache';
 

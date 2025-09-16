@@ -2,14 +2,12 @@
 
 namespace Livewire;
 
-use Livewire\V4\Registry\ComponentViewPathResolver;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
-use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Features\SupportTesting\DuskTestable;
 use Livewire\Features\SupportLazyLoading\SupportLazyLoading;
@@ -33,7 +31,22 @@ class LivewireManager
 
     function component($name, $class = null)
     {
-        app(ComponentRegistry::class)->component($name, $class);
+        $this->addComponent($name, class: $class);
+    }
+
+    function addComponent($name, $path = null, $class = null)
+    {
+        app('livewire.finder')->addComponent($name, class: $class, path: $path);
+    }
+
+    function addNamespace($namespace, $path = null, $class = null)
+    {
+        return app('livewire.finder')->addNamespace($namespace, class: $class, path: $path);
+    }
+
+    function addLocation($path = null, $class = null)
+    {
+        return app('livewire.finder')->addLocation(class: $class, path: $path);
     }
 
     function componentHook($hook)
@@ -58,22 +71,25 @@ class LivewireManager
 
     function new($name, $id = null)
     {
-        return app(ComponentRegistry::class)->new($name, $id);
+        return app('livewire.factory')->create($name, $id);
     }
 
+    /**
+     * @deprecated This method will be removed in a future version. Use exists() instead.
+     */
     function isDiscoverable($componentNameOrClass)
     {
-        return app(ComponentRegistry::class)->isDiscoverable($componentNameOrClass);
+        return $this->exists($componentNameOrClass);
+    }
+
+    function exists($componentNameOrClass)
+    {
+        return app('livewire.factory')->exists($componentNameOrClass);
     }
 
     function resolveMissingComponent($resolver)
     {
-        return app(ComponentRegistry::class)->resolveMissingComponent($resolver);
-    }
-
-    function namespace($namespace, $path)
-    {
-        return app('livewire.resolver')->namespace($namespace, $path);
+        return app('livewire.factory')->resolveMissingComponent($resolver);
     }
 
     function mount($name, $params = [], $key = null, $slots = [])

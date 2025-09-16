@@ -17,7 +17,7 @@ class PageComponentConfig
         public $slotOrSection = 'slot',
         public $params = [],
     ) {
-        $this->view = $view ?: config('livewire.layout');
+        $this->view = $view ?: config('livewire.component_layout');
         $this->viewContext = new ViewContext;
     }
 
