@@ -12,7 +12,7 @@ class UnitTest extends \Tests\TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html());
+        $this->assertStringContainsString('Child: foo', $component->html());
     }
 
     public function test_parent_renders_stub_element_in_place_of_child_on_subsequent_renders()
@@ -21,11 +21,11 @@ class UnitTest extends \Tests\TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html());
+        $this->assertStringContainsString('Child: foo', $component->html());
 
         $component->runAction('$refresh');
 
-        $this->assertStringNotContainsString('foo', $component->html());
+        $this->assertStringNotContainsString('Child: foo', $component->html());
     }
 
     public function test_stub_element_root_element_matches_original_child_component_root_element()
@@ -47,15 +47,15 @@ class UnitTest extends \Tests\TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html() );
+        $this->assertStringContainsString('Child: foo', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringContainsString('bar', $component->html());
+        $this->assertStringNotContainsString('Child: foo', $component->html());
+        $this->assertStringContainsString('Child: bar', $component->html());
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringNotContainsString('bar', $component->html());
+        $this->assertStringNotContainsString('Child: foo', $component->html());
+        $this->assertStringNotContainsString('Child: bar', $component->html());
     }
 
     public function test_parent_tracks_subsequent_renders_of_children_inside_a_loop_with_colon_wire_key_syntax()
@@ -64,15 +64,15 @@ class UnitTest extends \Tests\TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html() );
+        $this->assertStringContainsString('Child: foo', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringContainsString('bar', $component->html() );
+        $this->assertStringNotContainsString('Child: foo', $component->html());
+        $this->assertStringContainsString('Child: bar', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringNotContainsString('bar', $component->html());
+        $this->assertStringNotContainsString('Child: foo', $component->html());
+        $this->assertStringNotContainsString('Child: bar', $component->html());
     }
 
     public function test_parent_tracks_subsequent_renders_of_children_inside_a_loop_with_colon_wire_key_having_comma()
@@ -81,15 +81,15 @@ class UnitTest extends \Tests\TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html() );
+        $this->assertStringContainsString('Child: foo', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringContainsString('bar', $component->html() );
+        $this->assertStringNotContainsString('Child: foo', $component->html());
+        $this->assertStringContainsString('Child: bar', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringNotContainsString('bar', $component->html());
+        $this->assertStringNotContainsString('Child: foo', $component->html());
+        $this->assertStringNotContainsString('Child: bar', $component->html());
     }
 
     public function test_parent_keeps_rendered_children_even_when_skipped_rendering()
@@ -186,7 +186,7 @@ class ChildComponentForNestingStub extends Component
 
     public function render()
     {
-        return app('view')->make('show-name-with-this');
+        return '<span>Child: {{ $this->name }}</span>';
     }
 }
 

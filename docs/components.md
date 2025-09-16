@@ -104,11 +104,14 @@ You can customize the files (or _stubs_) Livewire uses to generate new component
 php artisan livewire:stubs
 ```
 
-This will create four new files in your application:
+This will create seven new files in your application:
 
 * `stubs/livewire.stub` — used for generating new components
+* `stubs/livewire.attribute.stub` — used for generating attribute classes
+* `stubs/livewire.form.stub` — used for generating form classes
 * `stubs/livewire.inline.stub` — used for generating _inline_ components
-* `stubs/livewire.test.stub` — used for generating test files
+* `stubs/livewire.pest-test.stub` — used for generating Pest test files
+* `stubs/livewire.test.stub` — used for generating PHPUnit test files
 * `stubs/livewire.view.stub` — used for generating component views
 
 Even though these files live in your application, you can still use the `make:livewire` Artisan command and Livewire will automatically use your custom stubs when generating files.

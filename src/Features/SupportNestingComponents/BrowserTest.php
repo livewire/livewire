@@ -360,6 +360,40 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewire()->click('@dispatch-foo-event-btn')
             ->assertSee('foo');
     }
+
+    public function test_a_child_component_can_be_removed_by_javascript_and_it_does_not_throw_an_error_on_the_next_render()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button type="button" wire:click="$refresh" dusk="refresh-parent">Refresh</button>
+                        <livewire:child />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component
+            {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div dusk="child">
+                        Child
+                        <button type="button" x-on:click="$el.parentElement.remove()" dusk="remove-child">Remove using javascript</button>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+        ->click('@remove-child')
+        ->assertNotPresent('@child')
+        ->waitForLivewire()->click('@refresh-parent')
+        ->assertConsoleLogHasNoErrors();
+    }
 }
 
 class Page extends Component

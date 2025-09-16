@@ -1,4 +1,4 @@
-import { closestComponent, destroyComponent, initComponent } from './store'
+import { closestComponent, destroyComponent, initComponent, hasComponent } from './store'
 import { matchesForLivewireDirective, extractDirective } from './directives'
 import { trigger } from './hooks'
 import collapse from '@alpinejs/collapse'
@@ -59,7 +59,7 @@ export function start() {
             // This prevents Livewire from causing general slowness for other Alpine elements on the page...
             if (! Array.from(el.attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return
 
-            if (el.hasAttribute('wire:id')) {
+            if (el.hasAttribute('wire:id') && ! el.__livewire && ! hasComponent(el.getAttribute('wire:id'))) {
                 let component = initComponent(el)
 
                 Alpine.onAttributeRemoved(el, 'wire:id', () => {
@@ -88,6 +88,22 @@ export function start() {
                     } })
                 })
             }
+        },
+        // We still want global directives to be processed during cloning, so we can do that in this fallback callback...
+        el => {
+            // if there are no "wire:" directives we don't need to process this element any further.
+            // This prevents Livewire from causing general slowness for other Alpine elements on the page...
+            if (! Array.from(el.attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return
+
+            let directives = Array.from(el.getAttributeNames())
+                .filter(name => matchesForLivewireDirective(name))
+                .map(name => extractDirective(el, name))
+            
+            directives.forEach(directive => {
+                trigger('directive.global.init', { el, directive, cleanup: (callback) => {
+                    Alpine.onAttributeRemoved(el, directive.raw, callback)
+                } })
+            })
         })
     )
 

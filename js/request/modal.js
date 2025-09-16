@@ -13,14 +13,14 @@ export function showHtmlModal(html) {
         // Modal already exists.
         modal.innerHTML = ''
     } else {
-        modal = document.createElement('div')
+        modal = document.createElement('dialog')
         modal.id = 'livewire-error'
-        modal.style.position = 'fixed'
-        modal.style.width = '100vw'
-        modal.style.height = '100vh'
-        modal.style.padding = '50px'
-        modal.style.backgroundColor = 'rgba(0, 0, 0, .6)'
-        modal.style.zIndex = 200000
+        modal.style.margin = '50px'
+        modal.style.width = 'calc(100% - 100px)'
+        modal.style.height = 'calc(100% - 100px)'
+        modal.style.borderRadius = '5px'
+        modal.style.padding = '0px'
+        // Background color is set on the ::backdrop in Livewire's styles...
     }
 
     let iframe = document.createElement('iframe')
@@ -36,18 +36,29 @@ export function showHtmlModal(html) {
     iframe.contentWindow.document.write(page.outerHTML)
     iframe.contentWindow.document.close()
 
-    // Close on click.
+    // Close on click...
     modal.addEventListener('click', () => hideHtmlModal(modal))
 
-    // Close on escape key press.
-    modal.setAttribute('tabindex', 0)
-    modal.addEventListener('keydown', e => {
-        if (e.key === 'Escape') hideHtmlModal(modal)
-    })
+    // Clean up on dialog close. This ensures that the modal dialog captures the escape
+    // event first, so that dialog elements below it do not capture the event, before
+    // we clean up and remove the modal from the DOM...
+    modal.addEventListener('close', () => cleanupModal(modal))
+
+    // Show the modal and focus it to ensure that the escape key works, otherwise it'll 
+    // be captured by the iframe, then blur so the modal focus ring isn't visible...
+    modal.showModal()
     modal.focus()
+    modal.blur()
 }
 
+// We don't want to clean up in here anymore because we're using the close 
+// event to trigger the cleanup. This function is kept here to maintain 
+// backwards compatibility as it is an exported function...
 export function hideHtmlModal(modal) {
+    modal.close()
+}
+
+function cleanupModal(modal) {
     modal.outerHTML = ''
     document.body.style.overflow = 'visible'
 }
