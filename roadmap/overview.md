@@ -12,12 +12,12 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [ ] Slots
 - [ ] Attributes
 - [ ] Getters/setter properties
-- [ ] Multi-file components
-- [ ] Single file components
+- [x] Multi-file components
+- [x] Single file components
 - [ ] Islands
 - [ ] Streaming
-- [ ] Make command
-- [ ] Convert commands to Prompts
+- [x] Make command
+- [x] Convert commands to Prompts
 
 ### Deliverables for each feature:
 - [ ] Tests
