@@ -67,9 +67,11 @@ In those cases, you can register your own endpoint however you like, and as long
 
 ```php
 Livewire::setUpdateRoute(function ($handle) {
-	return Route::post('/custom/livewire/update', $handle);
+	return Route::post('/custom/livewire/update', $handle)->name('livewire.update.custom');
 });
 ```
+
+As of Laravel v12.29.0, you also need to modify the name of the route.
 
 Now, instead of using `/livewire/update`, Livewire will send component updates to `/custom/livewire/update`.
 
