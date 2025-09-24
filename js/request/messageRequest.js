@@ -1,5 +1,5 @@
 import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
-import { showHtmlModal } from '@/request/modal'
+import { showHtmlModal } from '@/utils/modal'
 import Request from './request.js'
 import { trigger, triggerAsync } from '@/hooks'
 
@@ -9,6 +9,7 @@ export default class MessageRequest extends Request {
 
     addMessage(message) {
         this.messages.add(message)
+
         message.request = this
     }
 

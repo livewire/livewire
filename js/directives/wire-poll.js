@@ -1,6 +1,6 @@
 import { directive, getDirectives } from "@/directives"
 import { on } from '@/hooks'
-import Action from '@/v4/requests/action'
+import { fireAction, setNextActionOrigin } from '@/request'
 import { evaluateActionExpression } from '../evaluator'
 
 directive('poll', ({ el, directive, component }) => {
@@ -20,8 +20,6 @@ directive('poll', ({ el, directive, component }) => {
 })
 
 on('component.init', ({ component }) => {
-    if (! window.livewireV4) return
-
     let islands = component.islands
 
     if (! islands || Object.keys(islands).length === 0) return
@@ -32,14 +30,10 @@ on('component.init', ({ component }) => {
         let interval = extractDurationFrom([island.poll], 2000)
 
         let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-            let action = new Action(component, '$refresh')
-
-            action.addContext({
+            fireAction(component, '$refresh', [], {
                 type: 'poll',
                 island: { name: island.name },
             })
-
-            action.fire()
         }, interval)
 
         start()
@@ -50,21 +44,9 @@ on('component.init', ({ component }) => {
 })
 
 function triggerComponentRequest(el, directive, component) {
-    if (window.livewireV4) {
-        component.addActionContext({
-            type: 'poll',
-            el,
-            directive,
-        })
+    setNextActionOrigin({ el, directive })
 
-        let fullMethod = directive.expression ? directive.expression : '$refresh'
-
-        evaluateActionExpression(component, el, fullMethod)
-
-        return
-    }
-
-    let fullMethod = directive.expression ? directive.expression : '$commit'
+    let fullMethod = directive.expression ? directive.expression : '$refresh'
 
     evaluateActionExpression(component, el, fullMethod)
 }

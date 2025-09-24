@@ -1,10 +1,10 @@
 import { directive } from "@/directives"
-import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
+import { intercept } from '@/request'
 import { closestIsland } from '@/features/supportIslands.js'
 
 let wireIslands = new WeakMap
 
-interceptorRegistry.add(({ action, component, request, el, directive }) => {
+intercept(({ action, component, request, el, directive }) => {
     if (! el) return
 
     let island = wireIslands.get(el) ?? closestIsland(component, el)

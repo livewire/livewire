@@ -27,10 +27,38 @@ class SupportIslands extends ComponentHook
             // Shortcut out if there are no islands in the content...
             if (! str_contains($content, '@endisland')) return $content;
 
-            $pathSignature = Blade::getPath() || crc32($content);
+            $pathSignature = Blade::getPath() ?: crc32($content);
 
             return IslandCompiler::compile($pathSignature, $content);
         });
+    }
+
+    function call($method, $params, $returnEarly, $context, $componentContext)
+    {
+        if (! isset($context['island'])) return;
+
+        $island = $context['island'];
+
+        // if context contains an island, then we should render it...
+        return function (...$params) use ($island, $componentContext) {
+            ['name' => $name, 'mode' => $mode] = $island;
+
+            $islands = $this->component->getIslands();
+
+            $token = $islands[$name] ?? null;
+
+            if (! $token) return;
+
+            $this->component->skipRender();
+
+            $html = $this->component->renderIslandExpression(token: $token);
+
+            $componentContext->pushEffect('islands', [
+                'key' => $name,
+                'content' => $html,
+                'mode' => $mode,
+            ]);
+        };
     }
 
     public function dehydrate($context)

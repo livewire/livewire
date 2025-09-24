@@ -51,11 +51,11 @@ class IslandCompiler
         $result = $compiler->compileStatementsMadePublic($this->mutableContents);
 
         for ($i=$maxIslandStatementCounter; $i >= $islandStatementCounter; $i--) {
-            $result = preg_replace_callback('/(\[STARTISLAND:' . $i . '\])\((.*?)\)(.*?)(\[ENDISLAND:' . $i . '\])/s', function ($matches) use ($callback, $i) {
+            $result = preg_replace_callback('/(\[STARTISLAND:' . $i . '\])\((.*?)\)(.*?)(\[ENDISLAND:' . $i . '\])/s', function ($matches) use ($i) {
                 return $this->compileIsland(
                     occurrence: $i,
-                    innerContent: $matches[3],
                     expression: $matches[2],
+                    innerContent: $matches[3],
                 );
             }, $result);
         }
@@ -63,10 +63,11 @@ class IslandCompiler
         return $result;
     }
 
-    public function compileIsland(int $occurrence, string $innerContent, string $expression): string
+    public function compileIsland(int $occurrence, string $expression, string $innerContent): string
     {
         // Get the cached path for the extracted island...
-        $token = $this->pathSignature . '-' . $occurrence;
+        $hash = $this->getPathBasedHash($this->pathSignature);
+        $token = $hash . '-' . $occurrence;
         $cachedPath = self::getCachedPathFromToken($token);
 
         // Build the output directive for the island...
@@ -92,6 +93,13 @@ class IslandCompiler
         $cachedDirectory = app('livewire.compiler')->cacheManager->cacheDirectory;
 
         return $cachedDirectory . '/islands/' . $token . '.blade.php';
+    }
+
+    public function getPathBasedHash(string $path): string
+    {
+        return app('livewire.compiler')->cacheManager->getHash(
+            $this->pathSignature,
+        );
     }
 
     public function getHackedBladeCompiler()

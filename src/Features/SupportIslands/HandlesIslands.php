@@ -2,7 +2,9 @@
 
 namespace Livewire\Features\SupportIslands;
 
+use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
+use Livewire\Drawer\Utils;
 
 trait HandlesIslands
 {
@@ -30,8 +32,25 @@ trait HandlesIslands
         $this->islands[$name] = $token;
 
         return $this->decorateIslandWithMarker(
-            $viewInstance->render(), $name,
+            $this->renderIslandViewWithScope(
+                $viewInstance
+            ),
+            $name,
         );
+    }
+
+    public function renderIslandViewWithScope($view)
+    {
+        app(ExtendBlade::class)->startLivewireRendering($this);
+
+        $componentData = Utils::getPublicPropertiesDefinedOnSubclass($this);
+
+        // We need to ensure that the component instance is available in the island view, so any nested islands can access it...
+        $output = $view->with(array_merge($componentData, ['__livewire' => $this]))->render();
+
+        app(ExtendBlade::class)->endLivewireRendering();
+
+        return $output;
     }
 
     protected function decorateIslandWithMarker($output, $name)

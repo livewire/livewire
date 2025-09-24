@@ -1,6 +1,6 @@
 import Alpine from 'alpinejs'
 import { extractDirective } from '@/directives'
-import { evaluateActionExpression } from '../../evaluator'
+import { evaluateActionExpression } from '@/evaluator'
 
 Alpine.interceptInit(el => {
     for (let i = 0; i < el.attributes.length; i++) {

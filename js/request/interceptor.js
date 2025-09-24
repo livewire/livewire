@@ -1,4 +1,5 @@
-class Interceptor {
+
+export class Interceptor {
     beforeSend = () => {}
     afterSend = () => {}
     beforeResponse = () => {}
@@ -53,4 +54,57 @@ class Interceptor {
     }
 }
 
-export default Interceptor
+export class InterceptorRegistry {
+    constructor() {
+        this.globalInterceptors = new Set()
+        this.componentInterceptors = new Map()
+    }
+
+    add(callback, component = null, method = null) {
+        let interceptorData = {callback, method}
+
+        if (component === null) {
+            this.globalInterceptors.add(interceptorData)
+
+            return () => {
+                this.globalInterceptors.delete(interceptorData)
+            }
+        }
+
+        let interceptors = this.componentInterceptors.get(component)
+
+        if (! interceptors) {
+            interceptors = new Set()
+
+            this.componentInterceptors.set(component, interceptors)
+        }
+
+        interceptors.add(interceptorData)
+
+        return () => {
+            interceptors.delete(interceptorData)
+        }
+    }
+
+    eachRelevantInterceptor(action, callback) {
+        let interceptors = []
+
+        // Collect all global interceptors
+        for (let interceptorData of this.globalInterceptors) {
+            interceptors.push(interceptorData)
+        }
+
+        // Collect matching component interceptors
+        let componentInterceptors = this.componentInterceptors.get(action.component)
+        if (componentInterceptors) {
+            for (let interceptorData of componentInterceptors) {
+                if (interceptorData.method === action.method || interceptorData.method === null) {
+                    interceptors.push(interceptorData)
+                }
+            }
+        }
+
+        // Loop through and call the callback
+        interceptors.forEach(callback)
+    }
+}

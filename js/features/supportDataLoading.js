@@ -1,6 +1,6 @@
-import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
+import { intercept } from '@/request'
 
-interceptorRegistry.add(({ action, component, request, el, directive }) => {
+intercept(({ action, component, request, el, directive }) => {
     if (! el) return
 
     // Don't add data-loading to poll directives...

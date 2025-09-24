@@ -73,8 +73,7 @@ function applyDelay(directive) {
 }
 
 function whenTargetsArePartOfRequest(component, el, targets, loadingStack, inverted, [ startLoading, endLoading ]) {
-    if (window.livewireV4) {
-        return component.intercept(({ request }) => {
+    return component.intercept(({ request }) => {
             // This local variable ensures that the end loading is scoped to this request...
             let isLoading = false
 
@@ -129,19 +128,6 @@ function whenTargetsArePartOfRequest(component, el, targets, loadingStack, inver
             request.onError(cleanup)
             request.onCancel(cleanup)
         })
-    }
-
-    return on('commit', ({ component: iComponent, commit: payload, respond }) => {
-        if (iComponent !== component) return
-
-        if (targets.length > 0 && containsTargets(payload, targets) === inverted) return
-
-        startLoading()
-
-        respond(() => {
-            endLoading()
-        })
-    })
 }
 
 function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endLoading ]) {

@@ -2,16 +2,13 @@ import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/s
 import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent } from '@/store'
-import { requestCommit, requestCall } from '@/request'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
-import messageBroker from './v4/requests/messageBroker'
-import { getErrorsObject } from './v4/features/supportErrors'
-import { getPaginatorObject } from './v4/features/supportPaginators'
-import interceptorRegistry from './v4/interceptors/interceptorRegistry'
-import { findRef } from './v4/features/supportRefs'
-import Action from './v4/requests/action'
+import { fireAction, intercept } from '@/request'
+import { getErrorsObject } from '@/features/supportErrors'
+import { getPaginatorObject } from '@/features/supportPaginators'
+import { findRef } from '@/features/supportRefs'
 
 let properties = {}
 let fallback
@@ -147,17 +144,9 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     // If "live", send a request, queueing the property update to happen first
     // on the server, then trickle back down to the client and get merged...
     if (live) {
-        if (window.livewireV4) {
-            component.queueUpdate(property, value)
-
-            let action = new Action(component, '$set')
-
-            return action.fire()
-        }
-
         component.queueUpdate(property, value)
 
-        return await requestCommit(component)
+        return fireAction(component, '$set')
     }
 
     return Promise.resolve()
@@ -183,7 +172,7 @@ wireProperty('$intercept', (component) => (method, callback = null) => {
         method = null
     }
 
-    return interceptorRegistry.add(callback, component, method)
+    return intercept(callback, component, method)
 })
 
 wireProperty('$errors', (component) => getErrorsObject(component))
@@ -214,13 +203,9 @@ wireProperty('$call', (component) => async (method, ...params) => {
 })
 
 wireProperty('$island', (component) => async (name, mode = null) => {
-    let action = new Action(component, '$refresh')
-
-    action.addContext({
+    return fireAction(component, '$refresh', [], {
         island: { name, mode },
     })
-
-    return action.fire()
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {
@@ -242,22 +227,11 @@ wireProperty('$watch', (component) => (path, callback) => {
 })
 
 wireProperty('$refresh', (component) => async () => {
-    if (window.livewireV4) {
-        let action = new Action(component, '$refresh')
-
-        return action.fire()
-    }
-
-    return component.$wire.$commit()
+    return fireAction(component, '$refresh')
 })
+
 wireProperty('$commit', (component) => async () => {
-    if (window.livewireV4) {
-        let action = new Action(component, '$commit')
-
-        return action.fire()
-    }
-
-    return await requestCommit(component)
+    return fireAction(component, '$commit')
 })
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
@@ -327,11 +301,5 @@ wireFallback((component) => (property) => async (...params) => {
         }
     }
 
-    if (window.livewireV4) {
-        let action = new Action(component, property, params)
-
-        return action.fire()
-    }
-
-    return await requestCall(component, property, params)
+    return fireAction(component, property, params)
 })
