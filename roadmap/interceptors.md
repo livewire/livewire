@@ -42,7 +42,24 @@ this.intercept('foo', () => {})
 Each interceptor is passed a callback, which can be used to hook into different parts of the request lifecycle.
 
 ```js
-this.intercept(({ el, directive, component, request }) => {
+component.intercept(({ onSend, onCancel, onError, onSuccess }) => {
+    onSend()
+    onCancel()
+    onError()
+    onSuccess(({ onSync, onMorph, onRender }) => {
+        //
+    })
+})
+
+Livewire.intercept(({ request }) => {
+    request.onSend()
+    request.onReceive()
+    request.onFailure()
+    request.onError()
+    request.onAbort()
+})
+
+Livewire.intercept(({ request }) => {
     // Before anything code...
 
     request.beforeSend(({ component, payload }) => {}) // access to compiled payload
@@ -55,7 +72,7 @@ this.intercept(({ el, directive, component, request }) => {
 
     request.beforeMorph(({ component, el, html }) => {}) // same as beforeRender
     request.afterMorph(({ component, el, html }) => {}) // good place to interact with the HTML before the setTimeout
-   
+
     request.afterRender(({ component }) => {}) // runs after the setTimeout
 
     // Common ones...

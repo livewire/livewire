@@ -2,21 +2,53 @@
 export class MessageRequest {
     messages = new Set()
     controller = new AbortController()
+    payload = null
     respondCallbacks = []
     succeedCallbacks = []
     failCallbacks = []
 
-    cancel() {
-        this.controller.abort('cancelled')
-    }
+    initInterceptors(interceptorRegistry) {
+        this.messages.forEach(message => {
+            let interceptors = interceptorRegistry.getRelevantInterceptors(message)
 
-    isCancelled() {
-        return this.controller.signal.aborted
+            message.setInterceptors(interceptors)
+        })
     }
 
     addMessage(message) {
         this.messages.add(message)
     }
+
+    cancel() {
+        this.controller.abort('cancelled')
+
+        this.messages.forEach(message => message.cancel())
+    }
+
+    isCancelled() {
+        if (this.controller.signal.aborted) return true
+
+        return Array.from(this.messages).every(message => message.isCancelled())
+    }
+
+    /**
+     * Lifecycle methods
+     */
+    onSend() {
+        this.messages.forEach(message => message.onSend())
+    }
+
+    onError(status, responseContent, preventDefault) {
+        this.messages.forEach(message => message.onError(status, responseContent, preventDefault))
+    }
+
+    onSuccess() {
+        this.messages.forEach(message => message.onSuccess())
+    }
+
+    /**
+     * End of lifecycle methods
+     */
 
     respond(status, response) {
         this.messages.forEach(message => message.respond())

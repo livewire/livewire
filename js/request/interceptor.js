@@ -1,110 +1,54 @@
+import { WeakBag } from "@/utils"
 
 export class Interceptor {
-    beforeSend = () => {}
-    afterSend = () => {}
-    beforeResponse = () => {}
-    afterResponse = () => {}
-    beforeRender = () => {}
-    afterRender = () => {}
-    beforeMorph = () => {}
-    afterMorph = () => {}
-    beforeMorphIsland = () => {}
-    afterMorphIsland = () => {}
-    onError = () => {}
-    onFailure = () => {}
-    onSuccess = () => {}
+    onSend = () => {}
     onCancel = () => {}
+    onError = () => {}
+    onSuccess = () => {}
+    onSync = () => {}
+    onMorph = () => {}
+    onRender = () => {}
 
-    // If cancel is called before a message is prepared, then this flag
-    // instructs the message to cancel itself when it is loaded...
-    hasBeenCancelled = false
+    constructor(message, callback) {
+        this.message = message
 
-    cancel = () => {
-        this.hasBeenCancelled = true
-    }
+        let isCancellingSynchronously = true
 
-    constructor(callback, action) {
-        let request = this.requestObject()
-
-        let returned = callback({ action, component: action.component, request, el: action.el, directive: action.directive })
-
-        this.returned = (returned && typeof returned === 'function') ? returned : () => {}
-    }
-
-    requestObject() {
-        return {
-            beforeSend: (callback) => this.beforeSend = callback,
-            afterSend: (callback) => this.afterSend = callback,
-            beforeResponse: (callback) => this.beforeResponse = callback,
-            afterResponse: (callback) => this.afterResponse = callback,
-            beforeRender: (callback) => this.beforeRender = callback,
-            afterRender: (callback) => this.afterRender = callback,
-            beforeMorph: (callback) => this.beforeMorph = callback,
-            afterMorph: (callback) => this.afterMorph = callback,
-            beforeMorphIsland: (callback) => this.beforeMorphIsland = callback,
-            afterMorphIsland: (callback) => this.afterMorphIsland = callback,
-
-            onError: (callback) => this.onError = callback,
-            onFailure: (callback) => this.onFailure = callback,
-            onSuccess: (callback) => this.onSuccess = callback,
+        callback({
+            actions: message.actions,
+            component: message.component,
+            onSend: (callback) => this.onSend = callback,
             onCancel: (callback) => this.onCancel = callback,
+            onError: (callback) => this.onError = callback,
+            onSuccess: (callback) => this.onSuccess = callback,
+            cancel: () => {
+                if (isCancellingSynchronously) {
+                    queueMicrotask(() => {
+                        this.message.cancel()
+                    })
 
-            cancel: () => this.cancel()
-        }
+                    isCancellingSynchronously = false
+                } else {
+                    this.message.cancel()
+                }
+            }
+        })
     }
 }
 
 export class InterceptorRegistry {
-    constructor() {
-        this.globalInterceptors = new Set()
-        this.componentInterceptors = new Map()
+    interceptorCallbacksByComponent = new WeakBag
+    interceptorsByComponent = new WeakBag
+
+    add(component, callback) {
+        this.interceptorCallbacksByComponent.add(component, callback)
     }
 
-    add(callback, component = null, method = null) {
-        let interceptorData = {callback, method}
+    getRelevantInterceptors(message) {
+        let interceptorCallbacks = this.interceptorCallbacksByComponent.get(message.component)
 
-        if (component === null) {
-            this.globalInterceptors.add(interceptorData)
-
-            return () => {
-                this.globalInterceptors.delete(interceptorData)
-            }
-        }
-
-        let interceptors = this.componentInterceptors.get(component)
-
-        if (! interceptors) {
-            interceptors = new Set()
-
-            this.componentInterceptors.set(component, interceptors)
-        }
-
-        interceptors.add(interceptorData)
-
-        return () => {
-            interceptors.delete(interceptorData)
-        }
-    }
-
-    eachRelevantInterceptor(action, callback) {
-        let interceptors = []
-
-        // Collect all global interceptors
-        for (let interceptorData of this.globalInterceptors) {
-            interceptors.push(interceptorData)
-        }
-
-        // Collect matching component interceptors
-        let componentInterceptors = this.componentInterceptors.get(action.component)
-        if (componentInterceptors) {
-            for (let interceptorData of componentInterceptors) {
-                if (interceptorData.method === action.method || interceptorData.method === null) {
-                    interceptors.push(interceptorData)
-                }
-            }
-        }
-
-        // Loop through and call the callback
-        interceptors.forEach(callback)
+        return interceptorCallbacks.map(callback => {
+            return new Interceptor(message, callback)
+        })
     }
 }

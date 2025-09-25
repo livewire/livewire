@@ -10,7 +10,7 @@ let Livewire = {
     directive,
     dispatchTo,
     // @todo: See if this can be injected from a v4 feature...
-    intercept: (callback) => intercept(callback),
+    intercept: (component, callback) => intercept(component, callback),
     fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),
     start,
     first,

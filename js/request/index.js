@@ -1,4 +1,4 @@
-import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
+import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri, WeakBag } from '@/utils'
 import { MessageRequest, PageRequest } from './request.js'
 import { InterceptorRegistry } from './interceptor.js'
 import { trigger, triggerAsync } from '@/hooks.js'
@@ -7,16 +7,16 @@ import Message from './message.js'
 import Action from './action.js'
 import { morph } from '@/morph'
 
-let interceptors = new InterceptorRegistry
 let outstandingActionOrigin = null
-let outstandingMessages = new Map()
+let outstandingMessages = new Map
+let interceptors = new InterceptorRegistry
 
 export function setNextActionOrigin(origin) {
     outstandingActionOrigin = origin
 }
 
-export function intercept(callback, component = null, method = null) {
-    return interceptors.add(callback, component, method)
+export function intercept(component, callback) {
+    interceptors.add(component, callback)
 }
 
 export function fireAction(component, method, params = [], metadata = {}) {
@@ -36,14 +36,23 @@ export function fireAction(component, method, params = [], metadata = {}) {
         outstandingMessages.set(component, message)
 
         setTimeout(() => { // Buffer for 5ms to allow other areas of the codebase to hook into the lifecycle of an individual commit...
-            let messages = flushOutstandingMessages()
+            let messages = new Set(outstandingMessages.values())
+
+            outstandingMessages.clear()
 
             prepareMessages(messages)
 
             let requests = createRequestsFromMessages(messages)
 
             requests.forEach(request => {
+                request.initInterceptors(interceptors)
+
+                if (request.isCancelled()) return
+
                 sendRequest(request, {
+                    send: () => {
+                        request.onSend()
+                    },
                     failure: () => { // This is called when the request fails at the network level...
                         request.fail(503, null, () => {})
                     },
@@ -54,6 +63,8 @@ export function fireAction(component, method, params = [], metadata = {}) {
                         let preventDefault = false
 
                         request.fail(status, responseContent, () => preventDefault = true)
+
+                        request.onError(status, responseContent, () => preventDefault = true)
 
                         if (preventDefault) return
 
@@ -86,32 +97,26 @@ export function fireAction(component, method, params = [], metadata = {}) {
                                 if (snapshot.memo.id === message.component.id) {
                                     message.responsePayload = { snapshot, effects }
 
+                                    message.onSuccess()
+
                                     message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
+
+                                    message.onSync()
 
                                     // Trigger any side effects from the payload like "morph" and "dispatch event"...
                                     message.component.processEffects(effects)
 
                                     let html = effects['html']
 
-                                    let islands = effects['islands']
-
-                                    if (! html && ! islands) {
-                                        setTimeout(() => {
-                                            // message.interceptors.forEach(i => i.returned())
-                                        })
-
-                                        return
-                                    }
-
                                     queueMicrotask(() => {
                                         if (html) {
                                             applyMorph(message, html)
+
+                                            message.onMorph()
                                         }
 
                                         setTimeout(() => {
-                                            // message.interceptors.forEach(i => i.afterRender({ component: message.component }))
-
-                                            // message.interceptors.forEach(i => i.returned())
+                                            message.onRender()
                                         })
                                     })
                                 }
@@ -134,14 +139,6 @@ export function fireAction(component, method, params = [], metadata = {}) {
     message.addAction(action, promiseResolver)
 
     return promise
-}
-
-function flushOutstandingMessages() {
-    let messages = new Set(outstandingMessages.values())
-
-    outstandingMessages.clear()
-
-    return messages
 }
 
 function prepareMessages(messages) {
@@ -208,18 +205,20 @@ function createRequestsFromMessages(messages) {
 
     trigger('message.pooled', { requests })
 
+    requests.forEach(request => {
+        request.payload = {
+            _token: getCsrfToken(),
+            components: Array.from(request.messages, i => i.payload)
+        }
+    })
+
     return requests
 }
 
 async function sendRequest(request, handlers) {
-    let payload = {
-        _token: getCsrfToken(),
-        components: Array.from(request.messages, i => i.payload)
-    }
-
     let options = {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify(request.payload),
         headers: {
             'Content-type': 'application/json',
             'X-Livewire': '1', // This '1' value means nothing, but it stops Cloudflare from stripping the header...
@@ -242,6 +241,8 @@ async function sendRequest(request, handlers) {
 
     try {
         let fetchPromise = fetch(updateUri, options)
+
+        handlers.send()
 
         response = await fetchPromise
     } catch (e) {

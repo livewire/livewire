@@ -4662,17 +4662,36 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   var MessageRequest = class {
     messages = /* @__PURE__ */ new Set();
     controller = new AbortController();
+    payload = null;
     respondCallbacks = [];
     succeedCallbacks = [];
     failCallbacks = [];
-    cancel() {
-      this.controller.abort("cancelled");
-    }
-    isCancelled() {
-      return this.controller.signal.aborted;
+    initInterceptors(interceptorRegistry) {
+      this.messages.forEach((message) => {
+        let interceptors2 = interceptorRegistry.getRelevantInterceptors(message);
+        message.setInterceptors(interceptors2);
+      });
     }
     addMessage(message) {
       this.messages.add(message);
+    }
+    cancel() {
+      this.controller.abort("cancelled");
+      this.messages.forEach((message) => message.cancel());
+    }
+    isCancelled() {
+      if (this.controller.signal.aborted)
+        return true;
+      return Array.from(this.messages).every((message) => message.isCancelled());
+    }
+    onSend() {
+      this.messages.forEach((message) => message.onSend());
+    }
+    onError(status, responseContent, preventDefault) {
+      this.messages.forEach((message) => message.onError(status, responseContent, preventDefault));
+    }
+    onSuccess() {
+      this.messages.forEach((message) => message.onSuccess());
     }
     respond(status, response) {
       this.messages.forEach((message) => message.respond());
@@ -4701,43 +4720,55 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   };
 
   // js/request/interceptor.js
-  var InterceptorRegistry = class {
-    constructor() {
-      this.globalInterceptors = /* @__PURE__ */ new Set();
-      this.componentInterceptors = /* @__PURE__ */ new Map();
-    }
-    add(callback, component = null, method = null) {
-      let interceptorData = { callback, method };
-      if (component === null) {
-        this.globalInterceptors.add(interceptorData);
-        return () => {
-          this.globalInterceptors.delete(interceptorData);
-        };
-      }
-      let interceptors2 = this.componentInterceptors.get(component);
-      if (!interceptors2) {
-        interceptors2 = /* @__PURE__ */ new Set();
-        this.componentInterceptors.set(component, interceptors2);
-      }
-      interceptors2.add(interceptorData);
-      return () => {
-        interceptors2.delete(interceptorData);
-      };
-    }
-    eachRelevantInterceptor(action, callback) {
-      let interceptors2 = [];
-      for (let interceptorData of this.globalInterceptors) {
-        interceptors2.push(interceptorData);
-      }
-      let componentInterceptors = this.componentInterceptors.get(action.component);
-      if (componentInterceptors) {
-        for (let interceptorData of componentInterceptors) {
-          if (interceptorData.method === action.method || interceptorData.method === null) {
-            interceptors2.push(interceptorData);
+  var Interceptor = class {
+    onSend = () => {
+    };
+    onCancel = () => {
+    };
+    onError = () => {
+    };
+    onSuccess = () => {
+    };
+    onSync = () => {
+    };
+    onMorph = () => {
+    };
+    onRender = () => {
+    };
+    constructor(message, callback) {
+      this.message = message;
+      let isCancellingSynchronously = true;
+      callback({
+        actions: message.actions,
+        component: message.component,
+        onSend: (callback2) => this.onSend = callback2,
+        onCancel: (callback2) => this.onCancel = callback2,
+        onError: (callback2) => this.onError = callback2,
+        onSuccess: (callback2) => this.onSuccess = callback2,
+        cancel: () => {
+          if (isCancellingSynchronously) {
+            queueMicrotask(() => {
+              this.message.cancel();
+            });
+            isCancellingSynchronously = false;
+          } else {
+            this.message.cancel();
           }
         }
-      }
-      interceptors2.forEach(callback);
+      });
+    }
+  };
+  var InterceptorRegistry = class {
+    interceptorCallbacksByComponent = new WeakBag();
+    interceptorsByComponent = new WeakBag();
+    add(component, callback) {
+      this.interceptorCallbacksByComponent.add(component, callback);
+    }
+    getRelevantInterceptors(message) {
+      let interceptorCallbacks = this.interceptorCallbacksByComponent.get(message.component);
+      return interceptorCallbacks.map((callback) => {
+        return new Interceptor(message, callback);
+      });
     }
   };
 
@@ -4795,12 +4826,63 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     respondCallbacks = [];
     succeedCallbacks = [];
     failCallbacks = [];
+    interceptors = /* @__PURE__ */ new Set();
+    cancelled = false;
     constructor(component) {
       this.component = component;
     }
     addAction(action, promiseResolver) {
       this.actions.push(action);
       this.promiseResolversByAction.set(action, promiseResolver);
+    }
+    setInterceptors(interceptors2) {
+      this.interceptors = interceptors2;
+    }
+    cancel() {
+      this.cancelled = true;
+      this.onCancel();
+    }
+    isCancelled() {
+      return this.cancelled;
+    }
+    onSend() {
+      this.interceptors.forEach((interceptor) => interceptor.onSend({
+        payload: this.payload
+      }));
+    }
+    onCancel() {
+      this.interceptors.forEach((interceptor) => interceptor.onCancel());
+      this.actions.forEach((action) => {
+        let promiseResolver = this.promiseResolversByAction.get(action);
+        if (!promiseResolver)
+          return;
+      });
+    }
+    onError(status, responseContent, preventDefault) {
+      this.interceptors.forEach((interceptor) => interceptor.onError({
+        status,
+        responseContent,
+        preventDefault
+      }));
+    }
+    onSuccess() {
+      this.interceptors.forEach((interceptor) => {
+        interceptor.onSuccess({
+          payload: this.responsePayload,
+          onSync: (callback) => interceptor.onSync = callback,
+          onMorph: (callback) => interceptor.onMorph = callback,
+          onRender: (callback) => interceptor.onRender = callback
+        });
+      });
+    }
+    onSync() {
+      this.interceptors.forEach((interceptor) => interceptor.onSync());
+    }
+    onMorph() {
+      this.interceptors.forEach((interceptor) => interceptor.onMorph());
+    }
+    onRender() {
+      this.interceptors.forEach((interceptor) => interceptor.onRender());
     }
     respond() {
       this.respondCallbacks.forEach((i) => i());
@@ -5132,14 +5214,14 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }
 
   // js/request/index.js
-  var interceptors = new InterceptorRegistry();
   var outstandingActionOrigin = null;
   var outstandingMessages = /* @__PURE__ */ new Map();
+  var interceptors = new InterceptorRegistry();
   function setNextActionOrigin(origin) {
     outstandingActionOrigin = origin;
   }
-  function intercept(callback, component = null, method = null) {
-    return interceptors.add(callback, component, method);
+  function intercept(component, callback) {
+    interceptors.add(component, callback);
   }
   function fireAction(component, method, params = [], metadata = {}) {
     let origin = outstandingActionOrigin;
@@ -5151,11 +5233,18 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       message = new Message(component);
       outstandingMessages.set(component, message);
       setTimeout(() => {
-        let messages = flushOutstandingMessages();
+        let messages = new Set(outstandingMessages.values());
+        outstandingMessages.clear();
         prepareMessages(messages);
         let requests = createRequestsFromMessages(messages);
         requests.forEach((request) => {
+          request.initInterceptors(interceptors);
+          if (request.isCancelled())
+            return;
           sendRequest(request, {
+            send: () => {
+              request.onSend();
+            },
             failure: () => {
               request.fail(503, null, () => {
               });
@@ -5166,6 +5255,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
             error: ({ status, aborted, responseContent }) => {
               let preventDefault = false;
               request.fail(status, responseContent, () => preventDefault = true);
+              request.onError(status, responseContent, () => preventDefault = true);
               if (preventDefault)
                 return;
               if (status === 419) {
@@ -5190,20 +5280,18 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
                   let snapshot = JSON.parse(snapshotEncoded);
                   if (snapshot.memo.id === message2.component.id) {
                     message2.responsePayload = { snapshot, effects };
+                    message2.onSuccess();
                     message2.component.mergeNewSnapshot(snapshotEncoded, effects, message2.updates);
+                    message2.onSync();
                     message2.component.processEffects(effects);
                     let html = effects["html"];
-                    let islands = effects["islands"];
-                    if (!html && !islands) {
-                      setTimeout(() => {
-                      });
-                      return;
-                    }
                     queueMicrotask(() => {
                       if (html) {
                         applyMorph(message2, html);
+                        message2.onMorph();
                       }
                       setTimeout(() => {
+                        message2.onRender();
                       });
                     });
                   }
@@ -5221,11 +5309,6 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     });
     message.addAction(action, promiseResolver);
     return promise;
-  }
-  function flushOutstandingMessages() {
-    let messages = new Set(outstandingMessages.values());
-    outstandingMessages.clear();
-    return messages;
   }
   function prepareMessages(messages) {
     trigger("message.pooling", { messages });
@@ -5275,16 +5358,18 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       }
     }
     trigger("message.pooled", { requests });
+    requests.forEach((request) => {
+      request.payload = {
+        _token: getCsrfToken(),
+        components: Array.from(request.messages, (i) => i.payload)
+      };
+    });
     return requests;
   }
   async function sendRequest(request, handlers) {
-    let payload = {
-      _token: getCsrfToken(),
-      components: Array.from(request.messages, (i) => i.payload)
-    };
     let options = {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(request.payload),
       headers: {
         "Content-type": "application/json",
         "X-Livewire": "1"
@@ -5303,6 +5388,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     let response;
     try {
       let fetchPromise = fetch(updateUri, options);
+      handlers.send();
       response = await fetchPromise;
     } catch (e) {
       handlers.failure();
@@ -11747,7 +11833,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   var Livewire2 = {
     directive,
     dispatchTo,
-    intercept: (callback) => intercept(callback),
+    intercept: (component, callback) => intercept(component, callback),
     fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),
     start,
     first,

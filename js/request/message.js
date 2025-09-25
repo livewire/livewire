@@ -10,6 +10,8 @@ export default class Message {
     respondCallbacks = []
     succeedCallbacks = []
     failCallbacks = []
+    interceptors = new Set()
+    cancelled = false
 
     constructor(component) {
         this.component = component
@@ -19,6 +21,78 @@ export default class Message {
         this.actions.push(action)
         this.promiseResolversByAction.set(action, promiseResolver)
     }
+
+    setInterceptors(interceptors) {
+        this.interceptors = interceptors
+    }
+
+    cancel() {
+        this.cancelled = true
+
+        this.onCancel()
+    }
+
+    isCancelled() {
+        return this.cancelled
+    }
+
+    /**
+     * Lifecycle methods...
+     */
+
+    onSend() {
+        this.interceptors.forEach(interceptor => interceptor.onSend({
+            payload: this.payload
+        }))
+    }
+
+    onCancel() {
+        this.interceptors.forEach(interceptor => interceptor.onCancel())
+
+        // Reject any promises...
+        this.actions.forEach(action => {
+            let promiseResolver = this.promiseResolversByAction.get(action)
+
+            if (! promiseResolver) return;
+
+            // promiseResolver.reject()
+        })
+    }
+
+    onError(status, responseContent, preventDefault) {
+        this.interceptors.forEach(interceptor => interceptor.onError({
+            status,
+            responseContent,
+            preventDefault
+        }))
+    }
+
+    onSuccess() {
+        this.interceptors.forEach(interceptor => {
+            interceptor.onSuccess({
+                payload: this.responsePayload,
+                onSync: callback => interceptor.onSync = callback,
+                onMorph: callback => interceptor.onMorph = callback,
+                onRender: callback => interceptor.onRender = callback
+            })
+        })
+    }
+
+    onSync() {
+        this.interceptors.forEach(interceptor => interceptor.onSync())
+    }
+
+    onMorph() {
+        this.interceptors.forEach(interceptor => interceptor.onMorph())
+    }
+
+    onRender() {
+        this.interceptors.forEach(interceptor => interceptor.onRender())
+    }
+
+    /**
+     * Legacy lifecycle methods...
+     */
 
     respond() {
         this.respondCallbacks.forEach(i => i())
