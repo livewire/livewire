@@ -1,7 +1,5 @@
-import { trigger } from "@/hooks"
-import { createUrlObjectFromString, getUriStringFromUrlObject } from "./links"
-import requestBus from "@/request/requestBus"
-import PageRequest from "@/request/pageRequest"
+import { getUriStringFromUrlObject } from "./links"
+import { sendNavigateRequest } from "@/request"
 
 export function fetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination)
@@ -12,11 +10,5 @@ export function fetchHtml(destination, callback, errorCallback) {
 }
 
 export function performFetch(uri, callback, errorCallback) {
-    let request = new PageRequest(uri)
-
-    request.addSucceedCallback(callback)
-
-    request.addErrorCallback(errorCallback)
-
-    requestBus.add(request)
+    sendNavigateRequest(uri, callback, errorCallback)
 }

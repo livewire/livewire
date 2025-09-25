@@ -713,7 +713,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -1156,7 +1156,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function generateEvaluatorFromFunction(dataStack, func) {
     return (receiver = () => {
-    }, { scope: scope2 = {}, params = [], context } = {}) => {
+    }, { scope: scope2 = {}, params = [] } = {}) => {
       let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
       runIfTypeOfFunction(receiver, result);
     };
@@ -1188,12 +1188,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function generateEvaluatorFromString(dataStack, expression, el) {
     let func = generateFunctionFromString(expression, el);
     return (receiver = () => {
-    }, { scope: scope2 = {}, params = [], context } = {}) => {
+    }, { scope: scope2 = {}, params = [] } = {}) => {
       func.result = void 0;
       func.finished = false;
       let completeScope = mergeProxies([scope2, ...dataStack]);
       if (typeof func === "function") {
-        let promise = func.call(context, func, completeScope).catch((error2) => handleError(error2, el, expression));
+        let promise = func(func, completeScope).catch((error2) => handleError(error2, el, expression));
         if (func.finished) {
           runIfTypeOfFunction(receiver, func.result, completeScope, params, el);
           func.result = void 0;
@@ -2143,10 +2143,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return el.type === "radio" || el.localName === "ui-radio";
   }
   function debounce(func, wait) {
-    let timeout;
+    var timeout;
     return function() {
-      const context = this, args = arguments;
-      const later = function() {
+      var context = this, args = arguments;
+      var later = function() {
         timeout = null;
         func.apply(context, args);
       };
@@ -2295,7 +2295,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.15.0",
+    version: "3.14.9",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -3274,7 +3274,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
     let keyModifiers = modifiers.filter((i) => {
-      return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
+      return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
     });
     if (keyModifiers.includes("debounce")) {
       let debounceIndex = keyModifiers.indexOf("debounce");
@@ -3371,7 +3371,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           el.setAttribute("name", expression);
       });
     }
-    let event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
+    var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
     let removeListener = isCloning ? () => {
     } : on(el, event, modifiers, (e) => {
       setValue(getInputValue(el, modifiers, e, getValue()));
@@ -4028,178 +4028,106 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // js/utils/modal.js
-  function showHtmlModal2(html) {
-    let page = document.createElement("html");
-    page.innerHTML = html;
-    page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
-    let modal = document.getElementById("livewire-error");
-    if (typeof modal != "undefined" && modal != null) {
-      modal.innerHTML = "";
-    } else {
-      modal = document.createElement("dialog");
-      modal.id = "livewire-error";
-      modal.style.margin = "50px";
-      modal.style.width = "calc(100% - 100px)";
-      modal.style.height = "calc(100% - 100px)";
-      modal.style.borderRadius = "5px";
-      modal.style.padding = "0px";
-    }
-    let iframe = document.createElement("iframe");
-    iframe.style.backgroundColor = "#17161A";
-    iframe.style.borderRadius = "5px";
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    modal.appendChild(iframe);
-    document.body.prepend(modal);
-    document.body.style.overflow = "hidden";
-    iframe.contentWindow.document.open();
-    iframe.contentWindow.document.write(page.outerHTML);
-    iframe.contentWindow.document.close();
-    modal.addEventListener("click", () => hideHtmlModal(modal));
-    modal.addEventListener("close", () => cleanupModal(modal));
-    modal.showModal();
-    modal.focus();
-    modal.blur();
-  }
-  function hideHtmlModal(modal) {
-    modal.close();
-  }
-  function cleanupModal(modal) {
-    modal.outerHTML = "";
-    document.body.style.overflow = "visible";
-  }
-
-  // js/request/requestBus.js
-  var RequestBus = class {
-    requests = /* @__PURE__ */ new Set();
-    add(request) {
-      this.cancelRequestsThatShouldBeCancelled(request);
-      this.requests.add(request);
-      request.send();
-    }
-    remove(request) {
-      this.requests.delete(request);
-    }
-    cancelRequestsThatShouldBeCancelled(newRequest) {
-      this.requests.forEach((existingRequest) => {
-        newRequest.processCancellations(existingRequest);
-      });
-    }
-  };
-  var instance = new RequestBus();
-  var requestBus_default = instance;
-
   // js/request/request.js
-  var Request = class {
+  var MessageRequest = class {
+    messages = /* @__PURE__ */ new Set();
     controller = new AbortController();
     respondCallbacks = [];
     succeedCallbacks = [];
-    errorCallbacks = [];
+    failCallbacks = [];
     cancel() {
       this.controller.abort("cancelled");
-    }
-    finish() {
-      requestBus_default.remove(this);
     }
     isCancelled() {
       return this.controller.signal.aborted;
     }
-    async send() {
-      console.error("send must be implemented");
+    addMessage(message) {
+      this.messages.add(message);
     }
-    addRespondCallback(callback) {
-      this.respondCallbacks.push(callback);
+    respond(status, response) {
+      this.messages.forEach((message) => message.respond());
+      this.respondCallbacks.forEach((i) => i({ status, response }));
     }
-    addSucceedCallback(callback) {
-      this.succeedCallbacks.push(callback);
+    fail(status, content, preventDefault) {
+      this.messages.forEach((message) => message.fail());
+      this.failCallbacks.forEach((i) => i({ status, content, preventDefault }));
     }
-    addErrorCallback(callback) {
-      this.errorCallbacks.push(callback);
+    succeed(status, json) {
+      this.messages.forEach((message) => message.succeed());
+      this.succeedCallbacks.forEach((i) => i({ status, json }));
+    }
+  };
+  var PageRequest = class {
+    controller = new AbortController();
+    constructor(uri) {
+      this.uri = uri;
+    }
+    cancel() {
+      this.controller.abort("cancelled");
+    }
+    isCancelled() {
+      return this.controller.signal.aborted;
     }
   };
 
-  // js/request/messageRequest.js
-  var MessageRequest = class extends Request {
-    messages = /* @__PURE__ */ new Set();
-    addMessage(message) {
-      this.messages.add(message);
-      message.request = this;
+  // js/request/message.js
+  var Message = class {
+    actions = [];
+    promiseResolversByAction = /* @__PURE__ */ new Map();
+    snapshot = null;
+    updates = null;
+    calls = null;
+    payload = null;
+    responsePayload = null;
+    respondCallbacks = [];
+    succeedCallbacks = [];
+    failCallbacks = [];
+    constructor(component) {
+      this.component = component;
     }
-    deleteMessage(message) {
-      this.messages.delete(message);
+    addAction(action, promiseResolver) {
+      this.actions.push(action);
+      this.promiseResolversByAction.set(action, promiseResolver);
     }
-    hasMessageFor(component) {
-      return !!this.findMessageByComponent(component);
+    respond() {
+      this.respondCallbacks.forEach((i) => i());
     }
-    findMessageByComponent(component) {
-      return Array.from(this.messages).find((message) => message.component.id === component.id);
+    fail() {
+      this.failCallbacks.forEach((i) => i());
+      this.actions.forEach((action) => {
+        let promiseResolver = this.promiseResolversByAction.get(action);
+        if (!promiseResolver)
+          return;
+        promiseResolver.reject();
+      });
     }
-    isEmpty() {
-      return this.messages.size === 0;
-    }
-    processCancellations(existingRequest) {
-      if (existingRequest.constructor.name !== MessageRequest.name)
+    succeed() {
+      this.succeedCallbacks.forEach((i) => i(this.responsePayload));
+      let returns = this.responsePayload.effects["returns"];
+      if (!returns)
         return;
-      Array.from(existingRequest.messages).forEach((existingMessage) => {
-        existingMessage.processCancellations(this);
+      returns.forEach((value, index) => {
+        let action = this.actions[index];
+        if (!action)
+          return;
+        let promiseResolver = this.promiseResolversByAction.get(action);
+        if (!promiseResolver)
+          return;
+        promiseResolver.resolve(value);
       });
     }
-    cancelMessage(message) {
-      this.deleteMessage(message);
-      if (this.messages.size === 0) {
-        this.cancel();
-      }
-    }
-    redirectIfNeeded(response) {
-    }
-    respond(mutableObject) {
-      this.respondCallbacks.forEach((i) => i(mutableObject));
-    }
-    cancel() {
-      this.messages.forEach((message) => {
-        message.cancel();
-      });
-      super.cancel();
-    }
-    error(e) {
-      let preventDefault = false;
-      this.messages.forEach((message) => {
-        message.error(e);
-      });
-      this.errorCallbacks.forEach((i) => i({
-        status: 503,
-        content: null,
-        preventDefault: () => preventDefault = true
-      }));
-    }
-    fail(response, content) {
-      let preventDefault = false;
-      this.messages.forEach((message) => {
-        message.fail(response, content);
-      });
-      this.errorCallbacks.forEach((i) => i({
-        status: response.status,
-        content,
-        preventDefault: () => preventDefault = true
-      }));
-      if (preventDefault)
-        return;
-      if (response.status === 419) {
-        this.handlePageExpiry();
-      }
-      if (response.aborted) {
-        return;
-      } else {
-        return this.showFailureModal(content);
-      }
-    }
-    handlePageExpiry() {
-      confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
-    }
-    showFailureModal(content) {
-      let html = content;
-      showHtmlModal2(html);
+  };
+
+  // js/request/action.js
+  var Action = class {
+    handleReturn = () => {
+    };
+    constructor(component, method, params = [], metadata = {}, origin = {}) {
+      this.component = component;
+      this.method = method;
+      this.params = params;
+      this.metadata = metadata;
+      this.origin = origin;
     }
   };
 
@@ -4513,287 +4441,52 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return el.hasAttribute("wire:id");
   }
 
-  // js/request/message.js
-  var Message = class {
-    updates = {};
-    actions = [];
-    payload = {};
-    context = {};
-    interceptors = /* @__PURE__ */ new Set();
-    status = "waiting";
-    succeedCallbacks = [];
-    failCallbacks = [];
-    respondCallbacks = [];
-    finishTarget = null;
-    request = null;
-    isolate = false;
-    constructor(component) {
-      this.component = component;
+  // js/utils/modal.js
+  function showHtmlModal(html) {
+    let page = document.createElement("html");
+    page.innerHTML = html;
+    page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
+    let modal = document.getElementById("livewire-error");
+    if (typeof modal != "undefined" && modal != null) {
+      modal.innerHTML = "";
+    } else {
+      modal = document.createElement("dialog");
+      modal.id = "livewire-error";
+      modal.style.margin = "50px";
+      modal.style.width = "calc(100% - 100px)";
+      modal.style.height = "calc(100% - 100px)";
+      modal.style.borderRadius = "5px";
+      modal.style.padding = "0px";
     }
-    addInterceptor(interceptor2) {
-      if (interceptor2.hasBeenCancelled)
-        return this.cancel();
-      interceptor2.cancel = () => this.cancel();
-      this.interceptors.add(interceptor2);
-    }
-    addContext(context) {
-      this.context = { ...this.context, ...context };
-    }
-    getContainer() {
-      let isIsland = false;
-      let isComponent = false;
-      for (let action of this.actions) {
-        if (action.getContainer() === "island") {
-          isIsland = true;
-        } else {
-          isComponent = true;
-        }
-        if (isIsland && isComponent) {
-          return "mixed";
-        }
-      }
-      return isIsland ? "island" : "component";
-    }
-    addAction(action) {
-      this.actions.push(action);
-    }
-    getHighestPriorityType(actionTypes) {
-      let rankedTypes = [
-        "user",
-        "refresh",
-        "poll"
-      ];
-      let validActionTypes = actionTypes.filter((type) => rankedTypes.includes(type));
-      if (validActionTypes.length === 0) {
-        return null;
-      }
-      let highestPriorityType = validActionTypes.reduce((highest, current) => {
-        let highestIndex = rankedTypes.indexOf(highest);
-        let currentIndex = rankedTypes.indexOf(current);
-        return currentIndex < highestIndex ? current : highest;
-      });
-      return highestPriorityType;
-    }
-    type() {
-      let actionTypes = this.actions.map((i) => i.context.type ?? "user");
-      return this.getHighestPriorityType(actionTypes);
-    }
-    magicActions() {
-      return [
-        "$refresh",
-        "$set",
-        "$sync",
-        "$commit"
-      ];
-    }
-    isMagicAction(method) {
-      return this.magicActions().includes(method);
-    }
-    removeAllMagicActions() {
-      this.actions = this.actions.filter((i) => !this.isMagicAction(i.method));
-    }
-    findAndRemoveAction(method) {
-      this.actions = this.actions.filter((i) => i.method !== method);
-    }
-    processCancellations(newRequest) {
-      Array.from(newRequest.messages).forEach((newMessage) => {
-        if (this.component.id !== newMessage.component.id)
-          return;
-        let existingMessageContainer = this.getContainer();
-        let newMessageContainer = newMessage.getContainer();
-        if (existingMessageContainer === "island" && newMessageContainer === "component" || existingMessageContainer === "component" && newMessageContainer === "island") {
-          return;
-        }
-        this.actions.forEach((existingAction) => {
-          newMessage.actions.forEach((newAction) => {
-            let existingActionContainer = existingAction.getContainer();
-            let newActionContainer = newAction.getContainer();
-            if (existingActionContainer === "island" && newActionContainer === "component" || existingActionContainer === "component" && newActionContainer === "island") {
-              return;
-            }
-            if (existingActionContainer === "island" && newActionContainer === "island") {
-              if (existingAction.context.island.name !== newAction.context.island.name) {
-                return;
-              }
-            }
-            let existingActionType = existingAction.context.type ?? "user";
-            let newActionType = newAction.context.type ?? "user";
-            if (existingActionType === "poll" && newActionType === "poll") {
-              return newMessage.cancel();
-            }
-            if (existingActionType === "user" && newActionType === "poll") {
-              return newMessage.cancel();
-            }
-            return this.cancel();
-          });
-        });
-      });
-    }
-    buffer() {
-      this.status = "buffering";
-    }
-    prepare() {
-      trigger2("message.prepare", { component: this.component });
-      this.status = "preparing";
-      this.updates = this.component.getUpdates();
-      let snapshot = this.component.getEncodedSnapshotWithLatestChildrenMergedIn();
-      this.payload = {
-        snapshot,
-        updates: this.updates,
-        calls: this.actions.map((i) => ({
-          method: i.method,
-          params: i.params,
-          context: i.metadata
-        }))
-      };
-      this.finishTarget = trigger2("commit", {
-        component: this.component,
-        commit: this.payload,
-        succeed: (callback) => {
-          this.succeedCallbacks.push(callback);
-        },
-        fail: (callback) => {
-          this.failCallbacks.push(callback);
-        },
-        respond: (callback) => {
-          this.respondCallbacks.push(callback);
-        }
-      });
-      this.beforeSend();
-    }
-    beforeSend() {
-      this.interceptors.forEach((i) => i.beforeSend({ component: this.component, payload: this.payload }));
-    }
-    afterSend() {
-      this.interceptors.forEach((i) => i.afterSend({ component: this.component, payload: this.payload }));
-    }
-    beforeResponse(response) {
-      this.interceptors.forEach((i) => i.beforeResponse({ component: this.component, response }));
-    }
-    afterResponse(response) {
-      this.interceptors.forEach((i) => i.afterResponse({ component: this.component, response }));
-    }
-    respond() {
-      this.respondCallbacks.forEach((i) => i());
-    }
-    succeed(response) {
-      if (this.isCancelled())
-        return;
-      this.status = "succeeded";
-      this.beforeResponse(response);
-      this.respond();
-      let { snapshot, effects } = response;
-      this.component.mergeNewSnapshot(snapshot, effects, this.updates);
-      this.afterResponse(response);
-      this.component.processEffects(this.component.effects);
-      if (effects["returns"]) {
-        let returns = effects["returns"];
-        let returnHandlerStack = this.actions.map(({ handleReturn }) => handleReturn);
-        returnHandlerStack.forEach((handleReturn, index) => {
-          handleReturn(returns[index]);
-        });
-      }
-      let parsedSnapshot = JSON.parse(snapshot);
-      this.finishTarget({ snapshot: parsedSnapshot, effects });
-      this.interceptors.forEach((i) => i.onSuccess({ response }));
-      this.succeedCallbacks.forEach((i) => i(response));
-      let html = effects["html"];
-      let islands = effects["islands"];
-      if (!html && !islands) {
-        setTimeout(() => {
-          this.interceptors.forEach((i) => i.returned());
-        });
-        return;
-      }
-      this.interceptors.forEach((i) => i.beforeRender({ component: this.component }));
-      queueMicrotask(() => {
-        if (html) {
-          this.interceptors.forEach((i) => i.beforeMorph({ component: this.component, el: this.component.el, html }));
-          morph(this.component, this.component.el, html);
-          this.interceptors.forEach((i) => i.afterMorph({ component: this.component, el: this.component.el, html }));
-        }
-        if (islands) {
-          islands.forEach((islandPayload) => {
-            let { key, content, mode } = islandPayload;
-            let island = this.component.islands[key];
-            this.interceptors.forEach((i) => i.beforeMorphIsland({ component: this.component, island, content }));
-            renderIsland(this.component, key, content, mode);
-            this.interceptors.forEach((i) => i.afterMorphIsland({ component: this.component, island, content }));
-          });
-        }
-        setTimeout(() => {
-          this.interceptors.forEach((i) => i.afterRender({ component: this.component }));
-          this.interceptors.forEach((i) => i.returned());
-        });
-      });
-    }
-    error(e) {
-      if (this.isCancelled())
-        return;
-      this.status = "errored";
-      this.respond();
-      this.interceptors.forEach((i) => i.onError({ e }));
-      this.interceptors.forEach((i) => i.returned());
-    }
-    fail(response, content) {
-      if (this.isCancelled())
-        return;
-      this.status = "failed";
-      this.respond();
-      this.interceptors.forEach((i) => i.onFailure({ response, content }));
-      this.failCallbacks.forEach((i) => i());
-      this.interceptors.forEach((i) => i.returned());
-    }
-    cancel() {
-      if (this.isSucceeded())
-        return;
-      this.status = "cancelled";
-      this.request?.cancelMessage(this);
-      this.respond();
-      this.interceptors.forEach((i) => i.onCancel());
-      this.interceptors.forEach((i) => i.returned());
-    }
-    isBuffering() {
-      return this.status === "buffering";
-    }
-    isPreparing() {
-      return this.status === "preparing";
-    }
-    isSucceeded() {
-      return this.status === "succeeded";
-    }
-    isCancelled() {
-      return this.status === "cancelled";
-    }
-    isErrored() {
-      return this.status === "errored";
-    }
-    isFailed() {
-      return this.status === "failed";
-    }
-    isFinished() {
-      return this.isSucceeded() || this.isCancelled() || this.isFailed() || this.isErrored();
-    }
-  };
-
-  // js/request/action.js
-  var Action = class {
-    handleReturn = () => {
-    };
-    constructor(component, method, params = [], metadata = {}, origin = {}) {
-      this.component = component;
-      this.method = method;
-      this.params = params;
-      this.metadata = metadata;
-      this.origin = origin;
-    }
-  };
+    let iframe = document.createElement("iframe");
+    iframe.style.backgroundColor = "#17161A";
+    iframe.style.borderRadius = "5px";
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    modal.appendChild(iframe);
+    document.body.prepend(modal);
+    document.body.style.overflow = "hidden";
+    iframe.contentWindow.document.open();
+    iframe.contentWindow.document.write(page.outerHTML);
+    iframe.contentWindow.document.close();
+    modal.addEventListener("click", () => hideHtmlModal(modal));
+    modal.addEventListener("close", () => cleanupModal(modal));
+    modal.showModal();
+    modal.focus();
+    modal.blur();
+  }
+  function hideHtmlModal(modal) {
+    modal.close();
+  }
+  function cleanupModal(modal) {
+    modal.outerHTML = "";
+    document.body.style.overflow = "visible";
+  }
 
   // js/request/index.js
   var interceptors2 = new InterceptorRegistry();
   var outstandingActionOrigin = null;
   var outstandingMessages = /* @__PURE__ */ new Map();
-  var requests = /* @__PURE__ */ new Set();
   function setNextActionOrigin(origin) {
     outstandingActionOrigin = origin;
   }
@@ -4809,135 +4502,224 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!message) {
       message = new Message(component);
       outstandingMessages.set(component, message);
-    }
-    message.addAction(action);
-    return new Promise((resolve) => {
-      if (message.isBuffering() || message.isCancelled())
-        return;
-      message.buffer();
       setTimeout(() => {
-        trigger2("message.pooling", { messages: outstandingMessages });
-        let pooledMessages = new Set(outstandingMessages.values());
-        outstandingMessages.clear();
-        if (pooledMessages.size === 0)
-          return;
-        pooledMessages.forEach((message2) => {
-          if (message2.isCancelled())
-            return;
-          message2.prepare();
-        });
-        let pooledRequests = /* @__PURE__ */ new Set();
-        for (let message2 of pooledMessages) {
-          if (message2.isCancelled())
-            continue;
-          let hasFoundRequest = false;
-          pooledRequests.forEach((request) => {
-            if (!hasFoundRequest && !message2.isolate) {
-              request.addMessage(message2);
-              hasFoundRequest = true;
-            }
-          });
-          if (!hasFoundRequest) {
-            let request = new MessageRequest();
-            request.addMessage(message2);
-            pooledRequests.add(request);
-          }
-        }
-        trigger2("message.pooled", { requests: pooledRequests });
-        pooledRequests.forEach(async (request) => {
-          requests.add(request);
-          let payload = {
-            _token: getCsrfToken(),
-            components: Array.from(request.messages, (i) => i.payload)
-          };
-          let options = {
-            method: "POST",
-            body: JSON.stringify(payload),
-            headers: {
-              "Content-type": "application/json",
-              "X-Livewire": "1"
+        let messages = flushOutstandingMessages();
+        prepareMessages(messages);
+        let requests = createRequestsFromMessages(messages);
+        requests.forEach((request) => {
+          sendRequest(request, {
+            failure: () => {
+              request.fail(503, null, () => {
+              });
             },
-            signal: request.controller.signal
-          };
-          let updateUri = getUpdateUri();
-          trigger2("request", {
-            url: updateUri,
-            options,
-            payload: options.body,
-            respond: (i) => request.respondCallbacks.push(i),
-            succeed: (i) => request.succeedCallbacks.push(i),
-            fail: (i) => request.errorCallbacks.push(i)
-          });
-          let response;
-          try {
-            let fetchPromise = fetch(updateUri, options);
-            request.messages.forEach((message2) => {
-              message2.afterSend();
-            });
-            response = await fetchPromise;
-          } catch (e) {
-            requests.delete(request);
-            request.messages.forEach((message2) => {
-              message2.error(e);
-            });
-            request.errorCallbacks.forEach((i) => i({
-              status: 503,
-              content: null,
-              preventDefault: () => {
+            response: ({ status, response }) => {
+              request.respond(status, response);
+            },
+            error: ({ status, aborted, responseContent }) => {
+              let preventDefault = false;
+              request.fail(status, responseContent, () => preventDefault = true);
+              if (preventDefault)
+                return;
+              if (status === 419) {
+                confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
               }
-            }));
-            return;
-          }
-          requests.delete(request);
-          let mutableObject = {
-            status: response.status,
-            response
-          };
-          request.respondCallbacks.forEach((i) => i(mutableObject));
-          response = mutableObject.response;
-          let content = await response.text();
-          if (!response.ok) {
-            let preventDefault = false;
-            request.messages.forEach((message2) => {
-              message2.fail(response, content);
-            });
-            request.errorCallbacks.forEach((i) => i({
-              status: response.status,
-              content,
-              preventDefault: () => preventDefault = true
-            }));
-            if (preventDefault)
-              return;
-            if (response.status === 419) {
-              confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+              if (aborted)
+                return;
+              showHtmlModal(responseContent);
+            },
+            redirect: (url) => {
+              window.location.href = url;
+            },
+            dump: (dumpContent) => {
+              showHtmlModal(dumpContent);
+            },
+            success: async ({ status, responseJson }) => {
+              await triggerAsync("payload.intercept", responseJson);
+              let messageResponsePayloads = responseJson.components;
+              request.messages.forEach((message2) => {
+                messageResponsePayloads.forEach((payload) => {
+                  let { snapshot: snapshotEncoded, effects } = payload;
+                  let snapshot = JSON.parse(snapshotEncoded);
+                  if (snapshot.memo.id === message2.component.id) {
+                    message2.responsePayload = { snapshot, effects };
+                    message2.component.mergeNewSnapshot(snapshotEncoded, effects, message2.updates);
+                    message2.component.processEffects(effects);
+                    let html = effects["html"];
+                    let islands = effects["islands"];
+                    if (!html && !islands) {
+                      setTimeout(() => {
+                      });
+                      return;
+                    }
+                    queueMicrotask(() => {
+                      if (html) {
+                        applyMorph(message2, html);
+                      }
+                      setTimeout(() => {
+                      });
+                    });
+                  }
+                });
+              });
+              request.succeed(status, responseJson);
             }
-            if (response.aborted) {
-              return;
-            }
-            return showHtmlModal(content);
-          }
-          if (response.redirected) {
-            window.location.href = response.url;
-          }
-          if (contentIsFromDump(content)) {
-            let dump;
-            [dump, content] = splitDumpFromContent(content);
-            showHtmlModal(dump);
-          }
-          let { components: components2, assets } = JSON.parse(content);
-          await triggerAsync("payload.intercept", { components: components2, assets });
-          request.messages.forEach((message2) => {
-            components2.forEach((component2) => {
-              let snapshot = JSON.parse(component2.snapshot);
-              if (snapshot.memo.id === message2.component.id) {
-                message2.succeed(component2);
-              }
-            });
           });
-          request.succeedCallbacks.forEach((i) => i({ status: response.status, json: JSON.parse(content) }));
         });
       }, 5);
+    }
+    let promiseResolver;
+    let promise = new Promise((resolve, reject) => {
+      promiseResolver = { resolve, reject };
     });
+    message.addAction(action, promiseResolver);
+    return promise;
+  }
+  function flushOutstandingMessages() {
+    let messages = new Set(outstandingMessages.values());
+    outstandingMessages.clear();
+    return messages;
+  }
+  function prepareMessages(messages) {
+    trigger2("message.pooling", { messages });
+    messages.forEach((message) => {
+      trigger2("commit.prepare", { component: message.component });
+      message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn();
+      message.updates = message.component.getUpdates();
+      message.calls = message.actions.map((i) => ({
+        method: i.method,
+        params: i.params,
+        context: i.metadata
+      }));
+      message.payload = {
+        snapshot: message.snapshot,
+        updates: message.updates,
+        calls: message.calls
+      };
+      trigger2("commit", {
+        component: message.component,
+        commit: message.payload,
+        respond: (callback) => {
+          message.respondCallbacks.push(callback);
+        },
+        succeed: (callback) => {
+          message.succeedCallbacks.push(callback);
+        },
+        fail: (callback) => {
+          message.failCallbacks.push(callback);
+        }
+      });
+    });
+  }
+  function createRequestsFromMessages(messages) {
+    let requests = /* @__PURE__ */ new Set();
+    for (let message of messages) {
+      let hasFoundRequest = false;
+      requests.forEach((request) => {
+        if (!hasFoundRequest && !message.isolate) {
+          request.addMessage(message);
+          hasFoundRequest = true;
+        }
+      });
+      if (!hasFoundRequest) {
+        let request = new MessageRequest();
+        request.addMessage(message);
+        requests.add(request);
+      }
+    }
+    trigger2("message.pooled", { requests });
+    return requests;
+  }
+  async function sendRequest(request, handlers) {
+    let payload = {
+      _token: getCsrfToken(),
+      components: Array.from(request.messages, (i) => i.payload)
+    };
+    let options = {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: {
+        "Content-type": "application/json",
+        "X-Livewire": "1"
+      },
+      signal: request.controller.signal
+    };
+    let updateUri = getUpdateUri();
+    trigger2("request", {
+      url: updateUri,
+      options,
+      payload: options.body,
+      respond: (i) => request.respondCallbacks.push(i),
+      succeed: (i) => request.succeedCallbacks.push(i),
+      fail: (i) => request.failCallbacks.push(i)
+    });
+    let response;
+    try {
+      let fetchPromise = fetch(updateUri, options);
+      response = await fetchPromise;
+    } catch (e) {
+      handlers.failure();
+      return;
+    }
+    let mutableResponseObject = {
+      status: response.status,
+      response
+    };
+    handlers.response(mutableResponseObject);
+    response = mutableResponseObject.response;
+    let responseContent = await response.text();
+    if (!response.ok) {
+      handlers.error({ status: response.status, aborted: response.aborted, responseContent });
+      return;
+    }
+    if (response.redirected) {
+      handlers.redirect(response.url);
+    }
+    if (contentIsFromDump(responseContent)) {
+      let dump;
+      [dump, responseContent] = splitDumpFromContent(responseContent);
+      handlers.dump(dump);
+    }
+    let responseJson = JSON.parse(responseContent);
+    handlers.success({ status: response.status, responseJson });
+  }
+  function applyMorph(message, html) {
+    if (false)
+      return;
+    morph(message.component, message.component.el, html);
+  }
+  async function sendNavigateRequest(uri, callback, errorCallback) {
+    let request = new PageRequest(uri);
+    let options = {
+      headers: {
+        "X-Livewire-Navigate": "1"
+      },
+      signal: request.controller.signal
+    };
+    trigger2("navigate.request", {
+      uri,
+      options
+    });
+    let response;
+    try {
+      response = await fetch(uri, options);
+      let destination = getDestination(response);
+      let html = await response.text();
+      callback(html, destination);
+    } catch (error2) {
+      errorCallback(error2);
+      throw error2;
+    }
+  }
+  function getDestination(response) {
+    let destination = createUrlObjectFromString(this.uri);
+    let finalDestination = createUrlObjectFromString(response.url);
+    if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
+      finalDestination.hash = destination.hash;
+    }
+    return finalDestination;
+  }
+  function createUrlObjectFromString(urlString) {
+    return urlString !== null && new URL(urlString, document.baseURI);
   }
 
   // js/features/supportErrors.js
@@ -8328,60 +8110,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function extractDestinationFromLink(linkEl) {
-    return createUrlObjectFromString(linkEl.getAttribute("href"));
+    return createUrlObjectFromString2(linkEl.getAttribute("href"));
   }
-  function createUrlObjectFromString(urlString) {
+  function createUrlObjectFromString2(urlString) {
     return urlString !== null && new URL(urlString, document.baseURI);
   }
   function getUriStringFromUrlObject(urlObject) {
     return urlObject.pathname + urlObject.search + urlObject.hash;
   }
-
-  // js/request/pageRequest.js
-  var PageRequest = class extends Request {
-    constructor(uri) {
-      super();
-      this.uri = uri;
-    }
-    processCancellations(existingRequest) {
-      let requestTypesToCancel = [
-        PageRequest.name,
-        MessageRequest.name
-      ];
-      if (requestTypesToCancel.includes(existingRequest.constructor.name)) {
-        existingRequest.cancel();
-      }
-    }
-    async send() {
-      let options = {
-        headers: {
-          "X-Livewire-Navigate": "1"
-        },
-        signal: this.controller.signal
-      };
-      trigger2("navigate.request", {
-        url: this.uri,
-        options
-      });
-      try {
-        let response = await fetch(this.uri, options);
-        let destination = this.getDestination(response);
-        let html = await response.text();
-        this.succeedCallbacks.forEach((callback) => callback(html, destination));
-      } catch (error2) {
-        this.errorCallbacks.forEach((callback) => callback(error2));
-        throw error2;
-      }
-    }
-    getDestination(response) {
-      let destination = createUrlObjectFromString(this.uri);
-      let finalDestination = createUrlObjectFromString(response.url);
-      if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
-        finalDestination.hash = destination.hash;
-      }
-      return finalDestination;
-    }
-  };
 
   // js/plugins/navigate/fetch.js
   function fetchHtml(destination, callback, errorCallback) {
@@ -8391,10 +8127,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }, errorCallback);
   }
   function performFetch(uri, callback, errorCallback) {
-    let request = new PageRequest(uri);
-    request.addSucceedCallback(callback);
-    request.addErrorCallback(errorCallback);
-    requestBus_default.add(request);
+    sendNavigateRequest(uri, callback, errorCallback);
   }
 
   // js/plugins/navigate/prefetch.js
@@ -8839,7 +8572,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function navigate_default(Alpine3) {
     Alpine3.navigate = (url, options = {}) => {
       let { preserveScroll = false } = options;
-      let destination = createUrlObjectFromString(url);
+      let destination = createUrlObjectFromString2(url);
       let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,
         history: false,
@@ -8929,7 +8662,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
       ifThePageBeingVisitedHasntBeenCached((url) => {
-        let destination = createUrlObjectFromString(url);
+        let destination = createUrlObjectFromString2(url);
         let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
           url: destination,
           history: true,
@@ -8940,7 +8673,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         navigateTo(destination, { shouldPushToHistoryState: false });
       });
     }, (html, url, currentPageUrl, currentPageKey) => {
-      let destination = createUrlObjectFromString(url);
+      let destination = createUrlObjectFromString2(url);
       let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,
         history: true,
@@ -9234,158 +8967,116 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph2(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
-    let context = createMorphContext(options);
-    let toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
-    if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
-      toEl._x_dataStack = window.Alpine.closestDataStack(from);
-      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
+    let fromEl;
+    let toEl;
+    let key, lookahead, updating, updated, removing, removed, adding, added;
+    function assignOptions(options2 = {}) {
+      let defaultGetKey = (el) => el.getAttribute("key");
+      let noop = () => {
+      };
+      updating = options2.updating || noop;
+      updated = options2.updated || noop;
+      removing = options2.removing || noop;
+      removed = options2.removed || noop;
+      adding = options2.adding || noop;
+      added = options2.added || noop;
+      key = options2.key || defaultGetKey;
+      lookahead = options2.lookahead || false;
     }
-    context.patch(from, toEl);
-    return from;
-  }
-  function morphBetween(startMarker, endMarker, toHtml, options = {}) {
-    monkeyPatchDomSetAttributeToAllowAtSymbols();
-    let context = createMorphContext(options);
-    let fromContainer = startMarker.parentNode;
-    let fromBlock = new Block(startMarker, endMarker);
-    let toContainer = typeof toHtml === "string" ? (() => {
-      let container = document.createElement("div");
-      container.insertAdjacentHTML("beforeend", toHtml);
-      return container;
-    })() : toHtml;
-    let toStartMarker = document.createComment("[morph-start]");
-    let toEndMarker = document.createComment("[morph-end]");
-    toContainer.insertBefore(toStartMarker, toContainer.firstChild);
-    toContainer.appendChild(toEndMarker);
-    let toBlock = new Block(toStartMarker, toEndMarker);
-    if (window.Alpine && window.Alpine.closestDataStack) {
-      toContainer._x_dataStack = window.Alpine.closestDataStack(fromContainer);
-      toContainer._x_dataStack && window.Alpine.cloneNode(fromContainer, toContainer);
-    }
-    context.patchChildren(fromBlock, toBlock);
-  }
-  function createMorphContext(options = {}) {
-    let defaultGetKey = (el) => el.getAttribute("key");
-    let noop = () => {
-    };
-    let context = {
-      key: options.key || defaultGetKey,
-      lookahead: options.lookahead || false,
-      updating: options.updating || noop,
-      updated: options.updated || noop,
-      removing: options.removing || noop,
-      removed: options.removed || noop,
-      adding: options.adding || noop,
-      added: options.added || noop
-    };
-    context.patch = function(from, to) {
-      if (context.differentElementNamesTypesOrKeys(from, to)) {
-        return context.swapElements(from, to);
+    function patch(from2, to) {
+      if (differentElementNamesTypesOrKeys(from2, to)) {
+        return swapElements(from2, to);
       }
       let updateChildrenOnly = false;
       let skipChildren = false;
-      let skipUntil = (predicate) => context.skipUntilCondition = predicate;
-      if (shouldSkipChildren(context.updating, () => skipChildren = true, skipUntil, from, to, () => updateChildrenOnly = true))
+      if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
         return;
-      if (from.nodeType === 1 && window.Alpine) {
-        window.Alpine.cloneNode(from, to);
-        if (from._x_teleport && to._x_teleport) {
-          context.patch(from._x_teleport, to._x_teleport);
+      if (from2.nodeType === 1 && window.Alpine) {
+        window.Alpine.cloneNode(from2, to);
+        if (from2._x_teleport && to._x_teleport) {
+          patch(from2._x_teleport, to._x_teleport);
         }
       }
       if (textOrComment(to)) {
-        context.patchNodeValue(from, to);
-        context.updated(from, to);
+        patchNodeValue(from2, to);
+        updated(from2, to);
         return;
       }
       if (!updateChildrenOnly) {
-        context.patchAttributes(from, to);
+        patchAttributes(from2, to);
       }
-      context.updated(from, to);
+      updated(from2, to);
       if (!skipChildren) {
-        context.patchChildren(from, to);
+        patchChildren(from2, to);
       }
-    };
-    context.differentElementNamesTypesOrKeys = function(from, to) {
-      return from.nodeType != to.nodeType || from.nodeName != to.nodeName || context.getKey(from) != context.getKey(to);
-    };
-    context.swapElements = function(from, to) {
-      if (shouldSkip(context.removing, from))
+    }
+    function differentElementNamesTypesOrKeys(from2, to) {
+      return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
+    }
+    function swapElements(from2, to) {
+      if (shouldSkip(removing, from2))
         return;
       let toCloned = to.cloneNode(true);
-      if (shouldSkip(context.adding, toCloned))
+      if (shouldSkip(adding, toCloned))
         return;
-      from.replaceWith(toCloned);
-      context.removed(from);
-      context.added(toCloned);
-    };
-    context.patchNodeValue = function(from, to) {
+      from2.replaceWith(toCloned);
+      removed(from2);
+      added(toCloned);
+    }
+    function patchNodeValue(from2, to) {
       let value = to.nodeValue;
-      if (from.nodeValue !== value) {
-        from.nodeValue = value;
+      if (from2.nodeValue !== value) {
+        from2.nodeValue = value;
       }
-    };
-    context.patchAttributes = function(from, to) {
-      if (from._x_transitioning)
+    }
+    function patchAttributes(from2, to) {
+      if (from2._x_transitioning)
         return;
-      if (from._x_isShown && !to._x_isShown) {
-        return;
-      }
-      if (!from._x_isShown && to._x_isShown) {
+      if (from2._x_isShown && !to._x_isShown) {
         return;
       }
-      let domAttributes = Array.from(from.attributes);
+      if (!from2._x_isShown && to._x_isShown) {
+        return;
+      }
+      let domAttributes = Array.from(from2.attributes);
       let toAttributes = Array.from(to.attributes);
       for (let i = domAttributes.length - 1; i >= 0; i--) {
         let name = domAttributes[i].name;
         if (!to.hasAttribute(name)) {
-          from.removeAttribute(name);
+          from2.removeAttribute(name);
         }
       }
       for (let i = toAttributes.length - 1; i >= 0; i--) {
         let name = toAttributes[i].name;
         let value = toAttributes[i].value;
-        if (from.getAttribute(name) !== value) {
-          from.setAttribute(name, value);
+        if (from2.getAttribute(name) !== value) {
+          from2.setAttribute(name, value);
         }
       }
-    };
-    context.patchChildren = function(from, to) {
-      let fromKeys = context.keyToMap(from.children);
+    }
+    function patchChildren(from2, to) {
+      let fromKeys = keyToMap(from2.children);
       let fromKeyHoldovers = {};
       let currentTo = getFirstNode(to);
-      let currentFrom = getFirstNode(from);
+      let currentFrom = getFirstNode(from2);
       while (currentTo) {
         seedingMatchingId(currentTo, currentFrom);
-        let toKey = context.getKey(currentTo);
-        let fromKey = context.getKey(currentFrom);
-        if (context.skipUntilCondition) {
-          let fromDone = !currentFrom || context.skipUntilCondition(currentFrom);
-          let toDone = !currentTo || context.skipUntilCondition(currentTo);
-          if (fromDone && toDone) {
-            context.skipUntilCondition = null;
-          } else {
-            if (!fromDone)
-              currentFrom = currentFrom && getNextSibling(from, currentFrom);
-            if (!toDone)
-              currentTo = currentTo && getNextSibling(to, currentTo);
-            continue;
-          }
-        }
+        let toKey = getKey(currentTo);
+        let fromKey = getKey(currentFrom);
         if (!currentFrom) {
           if (toKey && fromKeyHoldovers[toKey]) {
             let holdover = fromKeyHoldovers[toKey];
-            from.appendChild(holdover);
+            from2.appendChild(holdover);
             currentFrom = holdover;
-            fromKey = context.getKey(currentFrom);
+            fromKey = getKey(currentFrom);
           } else {
-            if (!shouldSkip(context.adding, currentTo)) {
+            if (!shouldSkip(adding, currentTo)) {
               let clone2 = currentTo.cloneNode(true);
-              from.appendChild(clone2);
-              context.added(clone2);
+              from2.appendChild(clone2);
+              added(clone2);
             }
             currentTo = getNextSibling(to, currentTo);
             continue;
@@ -9397,7 +9088,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let nestedIfCount = 0;
           let fromBlockStart = currentFrom;
           while (currentFrom) {
-            let next = getNextSibling(from, currentFrom);
+            let next = getNextSibling(from2, currentFrom);
             if (isIf(next)) {
               nestedIfCount++;
             } else if (isEnd(next) && nestedIfCount > 0) {
@@ -9426,17 +9117,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let toBlockEnd = currentTo;
           let fromBlock = new Block(fromBlockStart, fromBlockEnd);
           let toBlock = new Block(toBlockStart, toBlockEnd);
-          context.patchChildren(fromBlock, toBlock);
+          patchChildren(fromBlock, toBlock);
           continue;
         }
-        if (currentFrom.nodeType === 1 && context.lookahead && !currentFrom.isEqualNode(currentTo)) {
+        if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
           let nextToElementSibling = getNextSibling(to, currentTo);
           let found = false;
           while (!found && nextToElementSibling) {
             if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
               found = true;
-              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
-              fromKey = context.getKey(currentFrom);
+              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+              fromKey = getKey(currentFrom);
             }
             nextToElementSibling = getNextSibling(to, nextToElementSibling);
           }
@@ -9444,9 +9135,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (toKey !== fromKey) {
           if (!toKey && fromKey) {
             fromKeyHoldovers[fromKey] = currentFrom;
-            currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+            currentFrom = addNodeBefore(from2, currentTo, currentFrom);
             fromKeyHoldovers[fromKey].remove();
-            currentFrom = getNextSibling(from, currentFrom);
+            currentFrom = getNextSibling(from2, currentFrom);
             currentTo = getNextSibling(to, currentTo);
             continue;
           }
@@ -9454,7 +9145,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             if (fromKeys[toKey]) {
               currentFrom.replaceWith(fromKeys[toKey]);
               currentFrom = fromKeys[toKey];
-              fromKey = context.getKey(currentFrom);
+              fromKey = getKey(currentFrom);
             }
           }
           if (toKey && fromKey) {
@@ -9463,57 +9154,67 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               fromKeyHoldovers[fromKey] = currentFrom;
               currentFrom.replaceWith(fromKeyNode);
               currentFrom = fromKeyNode;
-              fromKey = context.getKey(currentFrom);
+              fromKey = getKey(currentFrom);
             } else {
               fromKeyHoldovers[fromKey] = currentFrom;
-              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
               fromKeyHoldovers[fromKey].remove();
-              currentFrom = getNextSibling(from, currentFrom);
+              currentFrom = getNextSibling(from2, currentFrom);
               currentTo = getNextSibling(to, currentTo);
               continue;
             }
           }
         }
-        let currentFromNext = currentFrom && getNextSibling(from, currentFrom);
-        context.patch(currentFrom, currentTo);
+        let currentFromNext = currentFrom && getNextSibling(from2, currentFrom);
+        patch(currentFrom, currentTo);
         currentTo = currentTo && getNextSibling(to, currentTo);
         currentFrom = currentFromNext;
       }
       let removals = [];
       while (currentFrom) {
-        if (!shouldSkip(context.removing, currentFrom))
+        if (!shouldSkip(removing, currentFrom))
           removals.push(currentFrom);
-        currentFrom = getNextSibling(from, currentFrom);
+        currentFrom = getNextSibling(from2, currentFrom);
       }
       while (removals.length) {
         let domForRemoval = removals.shift();
         domForRemoval.remove();
-        context.removed(domForRemoval);
+        removed(domForRemoval);
       }
-    };
-    context.getKey = function(el) {
-      return el && el.nodeType === 1 && context.key(el);
-    };
-    context.keyToMap = function(els2) {
+    }
+    function getKey(el) {
+      return el && el.nodeType === 1 && key(el);
+    }
+    function keyToMap(els2) {
       let map = {};
       for (let el of els2) {
-        let theKey = context.getKey(el);
+        let theKey = getKey(el);
         if (theKey) {
           map[theKey] = el;
         }
       }
       return map;
-    };
-    context.addNodeBefore = function(parent, node, beforeMe) {
-      if (!shouldSkip(context.adding, node)) {
+    }
+    function addNodeBefore(parent, node, beforeMe) {
+      if (!shouldSkip(adding, node)) {
         let clone2 = node.cloneNode(true);
         parent.insertBefore(clone2, beforeMe);
-        context.added(clone2);
+        added(clone2);
         return clone2;
       }
       return node;
-    };
-    return context;
+    }
+    assignOptions(options);
+    fromEl = from;
+    toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
+    if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
+      toEl._x_dataStack = window.Alpine.closestDataStack(from);
+      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
+    }
+    patch(from, toEl);
+    fromEl = void 0;
+    toEl = void 0;
+    return from;
   }
   morph2.step = () => {
   };
@@ -9524,9 +9225,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     hook(...args, () => skip = true);
     return skip;
   }
-  function shouldSkipChildren(hook, skipChildren, skipUntil, ...args) {
+  function shouldSkipChildren(hook, skipChildren, ...args) {
     let skip = false;
-    hook(...args, () => skip = true, skipChildren, skipUntil);
+    hook(...args, () => skip = true, skipChildren);
     return skip;
   }
   var patched = false;
@@ -9611,7 +9312,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function src_default8(Alpine3) {
     Alpine3.morph = morph2;
-    Alpine3.morphBetween = morphBetween;
   }
   var module_default8 = src_default8;
 
@@ -10589,37 +10289,37 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   });
-  on2("message.pooled", ({ requests: requests2 }) => {
-    let messages = getRequestsMessages(requests2);
+  on2("message.pooled", ({ requests }) => {
+    let messages = getRequestsMessages(requests);
     messages.forEach((message) => {
       let component = message.component;
       getDeepChildrenWithBindings2(component, (child) => {
-        colocateRequestsByComponent(requests2, component, child);
+        colocateRequestsByComponent(requests, component, child);
       });
     });
   });
-  function getRequestsMessages(requests2) {
+  function getRequestsMessages(requests) {
     let messages = [];
-    requests2.forEach((request) => {
+    requests.forEach((request) => {
       request.messages.forEach((message) => {
         messages.push(message);
       });
     });
     return messages;
   }
-  function colocateRequestsByComponent(requests2, component, foreignComponent) {
-    let request = findRequestWithComponent(requests2, component);
-    let foreignRequest = findRequestWithComponent(requests2, foreignComponent);
+  function colocateRequestsByComponent(requests, component, foreignComponent) {
+    let request = findRequestWithComponent(requests, component);
+    let foreignRequest = findRequestWithComponent(requests, foreignComponent);
     let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
     foreignRequest.deleteMessage(foreignMessage);
     request.addMessage(foreignMessage);
-    requests2.forEach((request2) => {
+    requests.forEach((request2) => {
       if (request2.isEmpty())
-        requests2.delete(request2);
+        requests.delete(request2);
     });
   }
-  function findRequestWithComponent(requests2, component) {
-    return Array.from(requests2).find((request) => request.hasMessageFor(component));
+  function findRequestWithComponent(requests, component) {
+    return Array.from(requests).find((request) => request.hasMessageFor(component));
   }
   function getDeepChildrenWithBindings2(component, callback) {
     getDeepChildren2(component, (child) => {
@@ -11418,6 +11118,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     directive: directive2,
     dispatchTo,
     intercept: (callback) => intercept(callback),
+    fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),
     start: start2,
     first,
     find,

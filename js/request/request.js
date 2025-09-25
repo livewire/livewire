@@ -1,37 +1,54 @@
-import requestBus from './requestBus.js'
 
-export default class Request {
+export class MessageRequest {
+    messages = new Set()
     controller = new AbortController()
-
     respondCallbacks = []
     succeedCallbacks = []
-    errorCallbacks = []
+    failCallbacks = []
 
     cancel() {
         this.controller.abort('cancelled')
-    }
-
-    finish() {
-        requestBus.remove(this)
     }
 
     isCancelled() {
         return this.controller.signal.aborted
     }
 
-    async send() {
-        console.error('send must be implemented')
+    addMessage(message) {
+        this.messages.add(message)
     }
 
-    addRespondCallback(callback) {
-        this.respondCallbacks.push(callback)
+    respond(status, response) {
+        this.messages.forEach(message => message.respond())
+
+        this.respondCallbacks.forEach(i => i({ status, response }))
     }
 
-    addSucceedCallback(callback) {
-        this.succeedCallbacks.push(callback)
+    fail(status, content, preventDefault) {
+        this.messages.forEach(message => message.fail())
+
+        this.failCallbacks.forEach(i => i({ status, content, preventDefault }))
     }
 
-    addErrorCallback(callback) {
-        this.errorCallbacks.push(callback)
+    succeed(status, json) {
+        this.messages.forEach(message => message.succeed())
+
+        this.succeedCallbacks.forEach(i => i({ status, json }))
+    }
+}
+
+export class PageRequest {
+    controller = new AbortController()
+
+    constructor(uri) {
+        this.uri = uri
+    }
+
+    cancel() {
+        this.controller.abort('cancelled')
+    }
+
+    isCancelled() {
+        return this.controller.signal.aborted
     }
 }
