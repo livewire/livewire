@@ -3988,65 +3988,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/request/interceptor.js
-  var Interceptor = class {
-    beforeSend = () => {
-    };
-    afterSend = () => {
-    };
-    beforeResponse = () => {
-    };
-    afterResponse = () => {
-    };
-    beforeRender = () => {
-    };
-    afterRender = () => {
-    };
-    beforeMorph = () => {
-    };
-    afterMorph = () => {
-    };
-    beforeMorphIsland = () => {
-    };
-    afterMorphIsland = () => {
-    };
-    onError = () => {
-    };
-    onFailure = () => {
-    };
-    onSuccess = () => {
-    };
-    onCancel = () => {
-    };
-    hasBeenCancelled = false;
-    cancel = () => {
-      this.hasBeenCancelled = true;
-    };
-    constructor(callback, action) {
-      let request = this.requestObject();
-      let returned = callback({ action, component: action.component, request, el: action.el, directive: action.directive });
-      this.returned = returned && typeof returned === "function" ? returned : () => {
-      };
-    }
-    requestObject() {
-      return {
-        beforeSend: (callback) => this.beforeSend = callback,
-        afterSend: (callback) => this.afterSend = callback,
-        beforeResponse: (callback) => this.beforeResponse = callback,
-        afterResponse: (callback) => this.afterResponse = callback,
-        beforeRender: (callback) => this.beforeRender = callback,
-        afterRender: (callback) => this.afterRender = callback,
-        beforeMorph: (callback) => this.beforeMorph = callback,
-        afterMorph: (callback) => this.afterMorph = callback,
-        beforeMorphIsland: (callback) => this.beforeMorphIsland = callback,
-        afterMorphIsland: (callback) => this.afterMorphIsland = callback,
-        onError: (callback) => this.onError = callback,
-        onFailure: (callback) => this.onFailure = callback,
-        onSuccess: (callback) => this.onSuccess = callback,
-        onCancel: (callback) => this.onCancel = callback,
-        cancel: () => this.cancel()
-      };
-    }
-  };
   var InterceptorRegistry = class {
     constructor() {
       this.globalInterceptors = /* @__PURE__ */ new Set();
@@ -4084,6 +4025,181 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       }
       interceptors3.forEach(callback);
+    }
+  };
+
+  // js/utils/modal.js
+  function showHtmlModal2(html) {
+    let page = document.createElement("html");
+    page.innerHTML = html;
+    page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
+    let modal = document.getElementById("livewire-error");
+    if (typeof modal != "undefined" && modal != null) {
+      modal.innerHTML = "";
+    } else {
+      modal = document.createElement("dialog");
+      modal.id = "livewire-error";
+      modal.style.margin = "50px";
+      modal.style.width = "calc(100% - 100px)";
+      modal.style.height = "calc(100% - 100px)";
+      modal.style.borderRadius = "5px";
+      modal.style.padding = "0px";
+    }
+    let iframe = document.createElement("iframe");
+    iframe.style.backgroundColor = "#17161A";
+    iframe.style.borderRadius = "5px";
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    modal.appendChild(iframe);
+    document.body.prepend(modal);
+    document.body.style.overflow = "hidden";
+    iframe.contentWindow.document.open();
+    iframe.contentWindow.document.write(page.outerHTML);
+    iframe.contentWindow.document.close();
+    modal.addEventListener("click", () => hideHtmlModal(modal));
+    modal.addEventListener("close", () => cleanupModal(modal));
+    modal.showModal();
+    modal.focus();
+    modal.blur();
+  }
+  function hideHtmlModal(modal) {
+    modal.close();
+  }
+  function cleanupModal(modal) {
+    modal.outerHTML = "";
+    document.body.style.overflow = "visible";
+  }
+
+  // js/request/requestBus.js
+  var RequestBus = class {
+    requests = /* @__PURE__ */ new Set();
+    add(request) {
+      this.cancelRequestsThatShouldBeCancelled(request);
+      this.requests.add(request);
+      request.send();
+    }
+    remove(request) {
+      this.requests.delete(request);
+    }
+    cancelRequestsThatShouldBeCancelled(newRequest) {
+      this.requests.forEach((existingRequest) => {
+        newRequest.processCancellations(existingRequest);
+      });
+    }
+  };
+  var instance = new RequestBus();
+  var requestBus_default = instance;
+
+  // js/request/request.js
+  var Request = class {
+    controller = new AbortController();
+    respondCallbacks = [];
+    succeedCallbacks = [];
+    errorCallbacks = [];
+    cancel() {
+      this.controller.abort("cancelled");
+    }
+    finish() {
+      requestBus_default.remove(this);
+    }
+    isCancelled() {
+      return this.controller.signal.aborted;
+    }
+    async send() {
+      console.error("send must be implemented");
+    }
+    addRespondCallback(callback) {
+      this.respondCallbacks.push(callback);
+    }
+    addSucceedCallback(callback) {
+      this.succeedCallbacks.push(callback);
+    }
+    addErrorCallback(callback) {
+      this.errorCallbacks.push(callback);
+    }
+  };
+
+  // js/request/messageRequest.js
+  var MessageRequest = class extends Request {
+    messages = /* @__PURE__ */ new Set();
+    addMessage(message) {
+      this.messages.add(message);
+      message.request = this;
+    }
+    deleteMessage(message) {
+      this.messages.delete(message);
+    }
+    hasMessageFor(component) {
+      return !!this.findMessageByComponent(component);
+    }
+    findMessageByComponent(component) {
+      return Array.from(this.messages).find((message) => message.component.id === component.id);
+    }
+    isEmpty() {
+      return this.messages.size === 0;
+    }
+    processCancellations(existingRequest) {
+      if (existingRequest.constructor.name !== MessageRequest.name)
+        return;
+      Array.from(existingRequest.messages).forEach((existingMessage) => {
+        existingMessage.processCancellations(this);
+      });
+    }
+    cancelMessage(message) {
+      this.deleteMessage(message);
+      if (this.messages.size === 0) {
+        this.cancel();
+      }
+    }
+    redirectIfNeeded(response) {
+    }
+    respond(mutableObject) {
+      this.respondCallbacks.forEach((i) => i(mutableObject));
+    }
+    cancel() {
+      this.messages.forEach((message) => {
+        message.cancel();
+      });
+      super.cancel();
+    }
+    error(e) {
+      let preventDefault = false;
+      this.messages.forEach((message) => {
+        message.error(e);
+      });
+      this.errorCallbacks.forEach((i) => i({
+        status: 503,
+        content: null,
+        preventDefault: () => preventDefault = true
+      }));
+    }
+    fail(response, content) {
+      let preventDefault = false;
+      this.messages.forEach((message) => {
+        message.fail(response, content);
+      });
+      this.errorCallbacks.forEach((i) => i({
+        status: response.status,
+        content,
+        preventDefault: () => preventDefault = true
+      }));
+      if (preventDefault)
+        return;
+      if (response.status === 419) {
+        this.handlePageExpiry();
+      }
+      if (response.aborted) {
+        return;
+      } else {
+        return this.showFailureModal(content);
+      }
+    }
+    handlePageExpiry() {
+      confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+    }
+    showFailureModal(content) {
+      let html = content;
+      showHtmlModal2(html);
     }
   };
 
@@ -4660,384 +4776,168 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // js/utils/modal.js
-  function showHtmlModal(html) {
-    let page = document.createElement("html");
-    page.innerHTML = html;
-    page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
-    let modal = document.getElementById("livewire-error");
-    if (typeof modal != "undefined" && modal != null) {
-      modal.innerHTML = "";
-    } else {
-      modal = document.createElement("dialog");
-      modal.id = "livewire-error";
-      modal.style.margin = "50px";
-      modal.style.width = "calc(100% - 100px)";
-      modal.style.height = "calc(100% - 100px)";
-      modal.style.borderRadius = "5px";
-      modal.style.padding = "0px";
-    }
-    let iframe = document.createElement("iframe");
-    iframe.style.backgroundColor = "#17161A";
-    iframe.style.borderRadius = "5px";
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    modal.appendChild(iframe);
-    document.body.prepend(modal);
-    document.body.style.overflow = "hidden";
-    iframe.contentWindow.document.open();
-    iframe.contentWindow.document.write(page.outerHTML);
-    iframe.contentWindow.document.close();
-    modal.addEventListener("click", () => hideHtmlModal(modal));
-    modal.addEventListener("close", () => cleanupModal(modal));
-    modal.showModal();
-    modal.focus();
-    modal.blur();
-  }
-  function hideHtmlModal(modal) {
-    modal.close();
-  }
-  function cleanupModal(modal) {
-    modal.outerHTML = "";
-    document.body.style.overflow = "visible";
-  }
-
-  // js/request/requestBus.js
-  var RequestBus = class {
-    requests = /* @__PURE__ */ new Set();
-    add(request) {
-      this.cancelRequestsThatShouldBeCancelled(request);
-      this.requests.add(request);
-      request.send();
-    }
-    remove(request) {
-      this.requests.delete(request);
-    }
-    cancelRequestsThatShouldBeCancelled(newRequest) {
-      this.requests.forEach((existingRequest) => {
-        newRequest.processCancellations(existingRequest);
-      });
-    }
-  };
-  var instance = new RequestBus();
-  var requestBus_default = instance;
-
-  // js/request/request.js
-  var Request = class {
-    controller = new AbortController();
-    respondCallbacks = [];
-    succeedCallbacks = [];
-    errorCallbacks = [];
-    cancel() {
-      this.controller.abort("cancelled");
-    }
-    finish() {
-      requestBus_default.remove(this);
-    }
-    isCancelled() {
-      return this.controller.signal.aborted;
-    }
-    async send() {
-      console.error("send must be implemented");
-    }
-    addRespondCallback(callback) {
-      this.respondCallbacks.push(callback);
-    }
-    addSucceedCallback(callback) {
-      this.succeedCallbacks.push(callback);
-    }
-    addErrorCallback(callback) {
-      this.errorCallbacks.push(callback);
-    }
-  };
-
-  // js/request/messageRequest.js
-  var MessageRequest = class extends Request {
-    messages = /* @__PURE__ */ new Set();
-    finishProfile = null;
-    addMessage(message) {
-      this.messages.add(message);
-      message.request = this;
-    }
-    deleteMessage(message) {
-      this.messages.delete(message);
-    }
-    hasMessageFor(component) {
-      return !!this.findMessageByComponent(component);
-    }
-    findMessageByComponent(component) {
-      return Array.from(this.messages).find((message) => message.component.id === component.id);
-    }
-    isEmpty() {
-      return this.messages.size === 0;
-    }
-    processCancellations(existingRequest) {
-      if (existingRequest.constructor.name !== MessageRequest.name)
-        return;
-      Array.from(existingRequest.messages).forEach((existingMessage) => {
-        existingMessage.processCancellations(this);
-      });
-    }
-    cancelMessage(message) {
-      this.deleteMessage(message);
-      if (this.messages.size === 0) {
-        this.cancel();
-      }
-    }
-    async send() {
-      let payload = {
-        _token: getCsrfToken(),
-        components: Array.from(this.messages, (i) => i.payload)
-      };
-      let options = {
-        method: "POST",
-        body: JSON.stringify(payload),
-        headers: {
-          "Content-type": "application/json",
-          "X-Livewire": "1"
-        },
-        signal: this.controller.signal
-      };
-      this.finishProfile = trigger2("request.profile", options);
-      let updateUri = getUpdateUri();
-      trigger2("request", {
-        url: updateUri,
-        options,
-        payload: options.body,
-        respond: (i) => this.respondCallbacks.push(i),
-        succeed: (i) => this.succeedCallbacks.push(i),
-        fail: (i) => this.errorCallbacks.push(i)
-      });
-      let response;
-      try {
-        let fetchPromise = fetch(updateUri, options);
-        this.messages.forEach((message) => {
-          message.afterSend();
-        });
-        response = await fetchPromise;
-      } catch (e) {
-        this.finish();
-        this.error(e);
-        return;
-      }
-      this.finish();
-      let mutableObject = {
-        status: response.status,
-        response
-      };
-      this.respond(mutableObject);
-      response = mutableObject.response;
-      let content = await response.text();
-      if (!response.ok) {
-        this.fail(response, content);
-        return;
-      }
-      this.redirectIfNeeded(response);
-      await this.succeed(response, content);
-    }
-    redirectIfNeeded(response) {
-      if (response.redirected) {
-        window.location.href = response.url;
-      }
-    }
-    respond(mutableObject) {
-      this.respondCallbacks.forEach((i) => i(mutableObject));
-    }
-    async succeed(response, content) {
-      if (contentIsFromDump(content)) {
-        let dump;
-        [dump, content] = splitDumpFromContent(content);
-        showHtmlModal(dump);
-        this.finishProfile({ content: "{}", failed: true });
-      } else {
-        this.finishProfile({ content, failed: false });
-      }
-      let { components: components2, assets } = JSON.parse(content);
-      await triggerAsync("payload.intercept", { components: components2, assets });
-      this.messages.forEach((message) => {
-        components2.forEach((component) => {
-          let snapshot = JSON.parse(component.snapshot);
-          if (snapshot.memo.id === message.component.id) {
-            message.succeed(component);
-          }
-        });
-      });
-      this.succeedCallbacks.forEach((i) => i({ status: response.status, json: JSON.parse(content) }));
-    }
-    cancel() {
-      this.messages.forEach((message) => {
-        message.cancel();
-      });
-      super.cancel();
-    }
-    error(e) {
-      this.finishProfile({ content: "{}", failed: true });
-      let preventDefault = false;
-      this.messages.forEach((message) => {
-        message.error(e);
-      });
-      this.errorCallbacks.forEach((i) => i({
-        status: 503,
-        content: null,
-        preventDefault: () => preventDefault = true
-      }));
-    }
-    fail(response, content) {
-      this.finishProfile({ content: "{}", failed: true });
-      let preventDefault = false;
-      this.messages.forEach((message) => {
-        message.fail(response, content);
-      });
-      this.errorCallbacks.forEach((i) => i({
-        status: response.status,
-        content,
-        preventDefault: () => preventDefault = true
-      }));
-      if (preventDefault)
-        return;
-      if (response.status === 419) {
-        this.handlePageExpiry();
-      }
-      if (response.aborted) {
-        return;
-      } else {
-        return this.showFailureModal(content);
-      }
-    }
-    handlePageExpiry() {
-      confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
-    }
-    showFailureModal(content) {
-      let html = content;
-      showHtmlModal(html);
-    }
-  };
-
-  // js/request/messageBroker.js
-  var MessageBroker = class {
-    messages = /* @__PURE__ */ new Map();
-    getMessage(component) {
-      let message = this.messages.get(component.id);
-      if (!message) {
-        message = new Message(component);
-        this.messages.set(component.id, message);
-      }
-      return message;
-    }
-    addInterceptor(interceptor2, component) {
-      let message = this.getMessage(component);
-      message.addInterceptor(interceptor2);
-    }
-    addAction(action) {
-      let message = this.getMessage(action.component);
-      let promise = new Promise((resolve) => {
-        message.addAction(action, resolve);
-      });
-      this.send(message);
-      return promise;
-    }
-    send(message) {
-      this.bufferMessageForFiveMs(message);
-    }
-    bufferMessageForFiveMs(message) {
-      if (message.isBuffering() || message.isCancelled())
-        return;
-      message.buffer();
-      setTimeout(() => {
-        this.prepareRequests();
-      }, 5);
-    }
-    prepareRequests() {
-      trigger2("message.pooling", { messages: this.messages });
-      let messages = new Set(this.messages.values());
-      this.messages.clear();
-      if (messages.size === 0)
-        return;
-      messages.forEach((message) => {
-        if (message.isCancelled())
-          return;
-        message.prepare();
-      });
-      let requests = this.corraleMessagesIntoRequests(messages);
-      trigger2("message.pooled", { requests });
-      this.sendRequests(requests);
-    }
-    corraleMessagesIntoRequests(messages) {
-      let requests = /* @__PURE__ */ new Set();
-      for (let message of messages) {
-        if (message.isCancelled())
-          continue;
-        let hasFoundRequest = false;
-        requests.forEach((request) => {
-          if (!hasFoundRequest && !message.isolate) {
-            request.addMessage(message);
-            hasFoundRequest = true;
-          }
-        });
-        if (!hasFoundRequest) {
-          let request = new MessageRequest();
-          request.addMessage(message);
-          requests.add(request);
-        }
-      }
-      return requests;
-    }
-    sendRequests(requests) {
-      requests.forEach((request) => {
-        requestBus_default.add(request);
-      });
-    }
-  };
-  var instance2 = new MessageBroker();
-  var messageBroker_default = instance2;
-
-  // js/request/actionOrigin.js
-  var nextActionOrigin = null;
-  function setNextActionOrigin(origin) {
-    nextActionOrigin = origin;
-  }
-  function pullNextActionOrigin() {
-    let origin = nextActionOrigin;
-    nextActionOrigin = null;
-    return origin || {};
-  }
-
   // js/request/action.js
   var Action = class {
     handleReturn = () => {
     };
-    constructor(component, method, params = [], metadata = {}) {
+    constructor(component, method, params = [], metadata = {}, origin = {}) {
       this.component = component;
       this.method = method;
       this.params = params;
       this.metadata = metadata;
-      this.origin = pullNextActionOrigin();
-      this.context = this.metadata;
-      this.el = this.origin.el || null;
-      this.directive = this.origin.directive || null;
-    }
-    addContext(context) {
-      this.metadata = { ...this.metadata, ...context };
-      this.context = this.metadata;
-    }
-    getContainer() {
-      return "island" in this.metadata ? "island" : "component";
+      this.origin = origin;
     }
   };
 
   // js/request/index.js
   var interceptors2 = new InterceptorRegistry();
+  var outstandingActionOrigin = null;
+  var outstandingMessages = /* @__PURE__ */ new Map();
+  var requests = /* @__PURE__ */ new Set();
+  function setNextActionOrigin(origin) {
+    outstandingActionOrigin = origin;
+  }
   function intercept(callback, component = null, method = null) {
     return interceptors2.add(callback, component, method);
   }
   function fireAction(component, method, params = [], metadata = {}) {
-    let action = new Action(component, method, params, metadata);
-    let message = messageBroker_default.getMessage(component);
-    interceptors2.eachRelevantInterceptor(action, (interceptorData) => {
-      let interceptor2 = new Interceptor(interceptorData.callback, action);
-      message.addInterceptor(interceptor2);
+    let origin = outstandingActionOrigin;
+    outstandingActionOrigin = null;
+    origin = origin || {};
+    let action = new Action(component, method, params, metadata, origin);
+    let message = outstandingMessages.get(component);
+    if (!message) {
+      message = new Message(component);
+      outstandingMessages.set(component, message);
+    }
+    message.addAction(action);
+    return new Promise((resolve) => {
+      if (message.isBuffering() || message.isCancelled())
+        return;
+      message.buffer();
+      setTimeout(() => {
+        trigger2("message.pooling", { messages: outstandingMessages });
+        let pooledMessages = new Set(outstandingMessages.values());
+        outstandingMessages.clear();
+        if (pooledMessages.size === 0)
+          return;
+        pooledMessages.forEach((message2) => {
+          if (message2.isCancelled())
+            return;
+          message2.prepare();
+        });
+        let pooledRequests = /* @__PURE__ */ new Set();
+        for (let message2 of pooledMessages) {
+          if (message2.isCancelled())
+            continue;
+          let hasFoundRequest = false;
+          pooledRequests.forEach((request) => {
+            if (!hasFoundRequest && !message2.isolate) {
+              request.addMessage(message2);
+              hasFoundRequest = true;
+            }
+          });
+          if (!hasFoundRequest) {
+            let request = new MessageRequest();
+            request.addMessage(message2);
+            pooledRequests.add(request);
+          }
+        }
+        trigger2("message.pooled", { requests: pooledRequests });
+        pooledRequests.forEach(async (request) => {
+          requests.add(request);
+          let payload = {
+            _token: getCsrfToken(),
+            components: Array.from(request.messages, (i) => i.payload)
+          };
+          let options = {
+            method: "POST",
+            body: JSON.stringify(payload),
+            headers: {
+              "Content-type": "application/json",
+              "X-Livewire": "1"
+            },
+            signal: request.controller.signal
+          };
+          let updateUri = getUpdateUri();
+          trigger2("request", {
+            url: updateUri,
+            options,
+            payload: options.body,
+            respond: (i) => request.respondCallbacks.push(i),
+            succeed: (i) => request.succeedCallbacks.push(i),
+            fail: (i) => request.errorCallbacks.push(i)
+          });
+          let response;
+          try {
+            let fetchPromise = fetch(updateUri, options);
+            request.messages.forEach((message2) => {
+              message2.afterSend();
+            });
+            response = await fetchPromise;
+          } catch (e) {
+            requests.delete(request);
+            request.messages.forEach((message2) => {
+              message2.error(e);
+            });
+            request.errorCallbacks.forEach((i) => i({
+              status: 503,
+              content: null,
+              preventDefault: () => {
+              }
+            }));
+            return;
+          }
+          requests.delete(request);
+          let mutableObject = {
+            status: response.status,
+            response
+          };
+          request.respondCallbacks.forEach((i) => i(mutableObject));
+          response = mutableObject.response;
+          let content = await response.text();
+          if (!response.ok) {
+            let preventDefault = false;
+            request.messages.forEach((message2) => {
+              message2.fail(response, content);
+            });
+            request.errorCallbacks.forEach((i) => i({
+              status: response.status,
+              content,
+              preventDefault: () => preventDefault = true
+            }));
+            if (preventDefault)
+              return;
+            if (response.status === 419) {
+              confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+            }
+            if (response.aborted) {
+              return;
+            }
+            return showHtmlModal(content);
+          }
+          if (response.redirected) {
+            window.location.href = response.url;
+          }
+          if (contentIsFromDump(content)) {
+            let dump;
+            [dump, content] = splitDumpFromContent(content);
+            showHtmlModal(dump);
+          }
+          let { components: components2, assets } = JSON.parse(content);
+          await triggerAsync("payload.intercept", { components: components2, assets });
+          request.messages.forEach((message2) => {
+            components2.forEach((component2) => {
+              let snapshot = JSON.parse(component2.snapshot);
+              if (snapshot.memo.id === message2.component.id) {
+                message2.succeed(component2);
+              }
+            });
+          });
+          request.succeedCallbacks.forEach((i) => i({ status: response.status, json: JSON.parse(content) }));
+        });
+      }, 5);
     });
-    return messageBroker_default.addAction(action);
   }
 
   // js/features/supportErrors.js
@@ -10689,37 +10589,37 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   });
-  on2("message.pooled", ({ requests }) => {
-    let messages = getRequestsMessages(requests);
+  on2("message.pooled", ({ requests: requests2 }) => {
+    let messages = getRequestsMessages(requests2);
     messages.forEach((message) => {
       let component = message.component;
       getDeepChildrenWithBindings2(component, (child) => {
-        colocateRequestsByComponent(requests, component, child);
+        colocateRequestsByComponent(requests2, component, child);
       });
     });
   });
-  function getRequestsMessages(requests) {
+  function getRequestsMessages(requests2) {
     let messages = [];
-    requests.forEach((request) => {
+    requests2.forEach((request) => {
       request.messages.forEach((message) => {
         messages.push(message);
       });
     });
     return messages;
   }
-  function colocateRequestsByComponent(requests, component, foreignComponent) {
-    let request = findRequestWithComponent(requests, component);
-    let foreignRequest = findRequestWithComponent(requests, foreignComponent);
+  function colocateRequestsByComponent(requests2, component, foreignComponent) {
+    let request = findRequestWithComponent(requests2, component);
+    let foreignRequest = findRequestWithComponent(requests2, foreignComponent);
     let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
     foreignRequest.deleteMessage(foreignMessage);
     request.addMessage(foreignMessage);
-    requests.forEach((request2) => {
+    requests2.forEach((request2) => {
       if (request2.isEmpty())
-        requests.delete(request2);
+        requests2.delete(request2);
     });
   }
-  function findRequestWithComponent(requests, component) {
-    return Array.from(requests).find((request) => request.hasMessageFor(component));
+  function findRequestWithComponent(requests2, component) {
+    return Array.from(requests2).find((request) => request.hasMessageFor(component));
   }
   function getDeepChildrenWithBindings2(component, callback) {
     getDeepChildren2(component, (child) => {
