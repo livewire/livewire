@@ -1,11 +1,11 @@
 import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
+import { MessageRequest, PageRequest } from './request.js'
 import { InterceptorRegistry } from './interceptor.js'
 import { trigger, triggerAsync } from '@/hooks.js'
-import { MessageRequest, PageRequest } from './request.js'
+import { showHtmlModal } from '@/utils/modal.js'
 import Message from './message.js'
 import Action from './action.js'
 import { morph } from '@/morph'
-import { showHtmlModal } from '@/utils/modal.js'
 
 let interceptors = new InterceptorRegistry
 let outstandingActionOrigin = null
@@ -20,9 +20,6 @@ export function intercept(callback, component = null, method = null) {
 }
 
 export function fireAction(component, method, params = [], metadata = {}) {
-    /**
-     * Construct a Action object
-     */
     let origin = outstandingActionOrigin
 
     outstandingActionOrigin = null
@@ -31,9 +28,6 @@ export function fireAction(component, method, params = [], metadata = {}) {
 
     let action = new Action(component, method, params, metadata, origin)
 
-    /**
-     * Find or construct a Message object
-     */
     let message = outstandingMessages.get(component)
 
     if (! message) {

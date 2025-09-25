@@ -3987,47 +3987,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return latest;
   }
 
-  // js/request/interceptor.js
-  var InterceptorRegistry = class {
-    constructor() {
-      this.globalInterceptors = /* @__PURE__ */ new Set();
-      this.componentInterceptors = /* @__PURE__ */ new Map();
-    }
-    add(callback, component = null, method = null) {
-      let interceptorData = { callback, method };
-      if (component === null) {
-        this.globalInterceptors.add(interceptorData);
-        return () => {
-          this.globalInterceptors.delete(interceptorData);
-        };
-      }
-      let interceptors3 = this.componentInterceptors.get(component);
-      if (!interceptors3) {
-        interceptors3 = /* @__PURE__ */ new Set();
-        this.componentInterceptors.set(component, interceptors3);
-      }
-      interceptors3.add(interceptorData);
-      return () => {
-        interceptors3.delete(interceptorData);
-      };
-    }
-    eachRelevantInterceptor(action, callback) {
-      let interceptors3 = [];
-      for (let interceptorData of this.globalInterceptors) {
-        interceptors3.push(interceptorData);
-      }
-      let componentInterceptors = this.componentInterceptors.get(action.component);
-      if (componentInterceptors) {
-        for (let interceptorData of componentInterceptors) {
-          if (interceptorData.method === action.method || interceptorData.method === null) {
-            interceptors3.push(interceptorData);
-          }
-        }
-      }
-      interceptors3.forEach(callback);
-    }
-  };
-
   // js/request/request.js
   var MessageRequest = class {
     messages = /* @__PURE__ */ new Set();
@@ -4069,6 +4028,89 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return this.controller.signal.aborted;
     }
   };
+
+  // js/request/interceptor.js
+  var InterceptorRegistry = class {
+    constructor() {
+      this.globalInterceptors = /* @__PURE__ */ new Set();
+      this.componentInterceptors = /* @__PURE__ */ new Map();
+    }
+    add(callback, component = null, method = null) {
+      let interceptorData = { callback, method };
+      if (component === null) {
+        this.globalInterceptors.add(interceptorData);
+        return () => {
+          this.globalInterceptors.delete(interceptorData);
+        };
+      }
+      let interceptors3 = this.componentInterceptors.get(component);
+      if (!interceptors3) {
+        interceptors3 = /* @__PURE__ */ new Set();
+        this.componentInterceptors.set(component, interceptors3);
+      }
+      interceptors3.add(interceptorData);
+      return () => {
+        interceptors3.delete(interceptorData);
+      };
+    }
+    eachRelevantInterceptor(action, callback) {
+      let interceptors3 = [];
+      for (let interceptorData of this.globalInterceptors) {
+        interceptors3.push(interceptorData);
+      }
+      let componentInterceptors = this.componentInterceptors.get(action.component);
+      if (componentInterceptors) {
+        for (let interceptorData of componentInterceptors) {
+          if (interceptorData.method === action.method || interceptorData.method === null) {
+            interceptors3.push(interceptorData);
+          }
+        }
+      }
+      interceptors3.forEach(callback);
+    }
+  };
+
+  // js/utils/modal.js
+  function showHtmlModal(html) {
+    let page = document.createElement("html");
+    page.innerHTML = html;
+    page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
+    let modal = document.getElementById("livewire-error");
+    if (typeof modal != "undefined" && modal != null) {
+      modal.innerHTML = "";
+    } else {
+      modal = document.createElement("dialog");
+      modal.id = "livewire-error";
+      modal.style.margin = "50px";
+      modal.style.width = "calc(100% - 100px)";
+      modal.style.height = "calc(100% - 100px)";
+      modal.style.borderRadius = "5px";
+      modal.style.padding = "0px";
+    }
+    let iframe = document.createElement("iframe");
+    iframe.style.backgroundColor = "#17161A";
+    iframe.style.borderRadius = "5px";
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    modal.appendChild(iframe);
+    document.body.prepend(modal);
+    document.body.style.overflow = "hidden";
+    iframe.contentWindow.document.open();
+    iframe.contentWindow.document.write(page.outerHTML);
+    iframe.contentWindow.document.close();
+    modal.addEventListener("click", () => hideHtmlModal(modal));
+    modal.addEventListener("close", () => cleanupModal(modal));
+    modal.showModal();
+    modal.focus();
+    modal.blur();
+  }
+  function hideHtmlModal(modal) {
+    modal.close();
+  }
+  function cleanupModal(modal) {
+    modal.outerHTML = "";
+    document.body.style.overflow = "visible";
+  }
 
   // js/request/message.js
   var Message = class {
@@ -4282,32 +4324,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
   }
-  function closestIsland(el) {
-    let current = el;
-    while (current) {
-      let sibling = current.previousSibling;
-      let foundEndMarker = [];
-      while (sibling) {
-        if (isEndMarker2(sibling)) {
-          foundEndMarker.push("a");
-        }
-        if (isStartMarker2(sibling)) {
-          if (foundEndMarker.length > 0) {
-            foundEndMarker.pop();
-          } else {
-            let key = extractIslandName(sibling);
-            return { name: key, mode: "replace" };
-          }
-        }
-        sibling = sibling.previousSibling;
-      }
-      current = current.parentElement;
-      if (current && current.hasAttribute("wire:id")) {
-        break;
-      }
-    }
-    return null;
-  }
   function isStartMarker2(el) {
     return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
   }
@@ -4439,48 +4455,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function isComponentRootEl(el) {
     return el.hasAttribute("wire:id");
-  }
-
-  // js/utils/modal.js
-  function showHtmlModal(html) {
-    let page = document.createElement("html");
-    page.innerHTML = html;
-    page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
-    let modal = document.getElementById("livewire-error");
-    if (typeof modal != "undefined" && modal != null) {
-      modal.innerHTML = "";
-    } else {
-      modal = document.createElement("dialog");
-      modal.id = "livewire-error";
-      modal.style.margin = "50px";
-      modal.style.width = "calc(100% - 100px)";
-      modal.style.height = "calc(100% - 100px)";
-      modal.style.borderRadius = "5px";
-      modal.style.padding = "0px";
-    }
-    let iframe = document.createElement("iframe");
-    iframe.style.backgroundColor = "#17161A";
-    iframe.style.borderRadius = "5px";
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    modal.appendChild(iframe);
-    document.body.prepend(modal);
-    document.body.style.overflow = "hidden";
-    iframe.contentWindow.document.open();
-    iframe.contentWindow.document.write(page.outerHTML);
-    iframe.contentWindow.document.close();
-    modal.addEventListener("click", () => hideHtmlModal(modal));
-    modal.addEventListener("close", () => cleanupModal(modal));
-    modal.showModal();
-    modal.focus();
-    modal.blur();
-  }
-  function hideHtmlModal(modal) {
-    modal.close();
-  }
-  function cleanupModal(modal) {
-    modal.outerHTML = "";
-    document.body.style.overflow = "visible";
   }
 
   // js/request/index.js
@@ -10614,11 +10588,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/wire-loading.js
-  var loadingStack = /* @__PURE__ */ new WeakMap();
   directive2("loading", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
     let { targets, inverted } = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive3);
-    let cleanupA = whenTargetsArePartOfRequest(component, el, targets, loadingStack, inverted, [
+    let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
       () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
     ]);
@@ -10669,48 +10642,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     ];
   }
-  function whenTargetsArePartOfRequest(component, el, targets, loadingStack2, inverted, [startLoading, endLoading]) {
-    return component.intercept(({ request }) => {
-      let isLoading = false;
-      request.beforeSend(({ component: requestComponent, payload }) => {
-        if (requestComponent !== component)
-          return;
-        let island = closestIsland(component, el);
-        let shouldLoad = shouldLoadAsComponentOrIslandsMatch(payload, island);
-        if (!shouldLoad)
-          return;
-        if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
-          if (loadingStack2.has(el)) {
-            loadingStack2.delete(el);
-            endLoading();
-            isLoading = false;
-          }
-          return;
-        }
-        if (!loadingStack2.has(el)) {
-          loadingStack2.set(el, 0);
-        } else {
-          loadingStack2.set(el, loadingStack2.get(el) + 1);
-        }
-        isLoading = true;
-        startLoading();
+  function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
+    return on2("commit", ({ component: iComponent, commit: payload, respond }) => {
+      if (iComponent !== component)
+        return;
+      if (targets.length > 0 && containsTargets(payload, targets) === inverted)
+        return;
+      startLoading();
+      respond(() => {
+        endLoading();
       });
-      let cleanup2 = () => {
-        if (!isLoading)
-          return;
-        if (!loadingStack2.has(el))
-          return;
-        if (loadingStack2.get(el) === 0) {
-          loadingStack2.delete(el);
-          endLoading();
-        } else {
-          loadingStack2.set(el, loadingStack2.get(el) - 1);
-        }
-      };
-      request.onSuccess(cleanup2);
-      request.onFailure(cleanup2);
-      request.onError(cleanup2);
-      request.onCancel(cleanup2);
     });
   }
   function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
@@ -10765,13 +10706,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return true;
     });
   }
-  function shouldLoadAsComponentOrIslandsMatch(payload, island) {
-    let payloadIslands = Array.from(payload.calls).map((i) => i.context.island?.name).filter((name) => name !== void 0);
-    if (island === null) {
-      return payloadIslands.length === 0;
-    }
-    return payloadIslands.includes(island.name);
-  }
   function getTargets(el) {
     let directives2 = getDirectives(el);
     let targets = [];
@@ -10782,7 +10716,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (directive3.modifiers.includes("except"))
         inverted = true;
       if (raw2.includes("(") && raw2.includes(")")) {
-        targets = targets.concat(directive3.methods.map((method) => ({ target: method.method, params: quickHash(JSON.stringify(method.params)) })));
+        targets.push({ target: directive3.method, params: quickHash(JSON.stringify(directive3.params)) });
       } else if (raw2.includes(",")) {
         raw2.split(",").map((i) => i.trim()).forEach((target) => {
           targets.push({ target });
@@ -10791,7 +10725,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         targets.push({ target: raw2 });
       }
     } else {
-      let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "navigate", "target", "loading", "poll", "ignore", "key", "id"];
+      let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
       directives2.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
     }
     return { targets, inverted };
