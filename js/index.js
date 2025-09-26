@@ -4,13 +4,14 @@ import { start } from './lifecycle'
 import { on as hook, trigger, triggerAsync } from './hooks'
 import { directive } from './directives'
 import Alpine from 'alpinejs'
-import { fireAction, intercept } from '@/request'
+import { fireAction, interceptMessage, interceptRequest } from '@/request'
 
 let Livewire = {
     directive,
     dispatchTo,
     // @todo: See if this can be injected from a v4 feature...
-    intercept: (component, callback) => intercept(component, callback),
+    interceptMessage: (callback) => interceptMessage(callback),
+    interceptRequest: (callback) => interceptRequest(callback),
     fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),
     start,
     first,

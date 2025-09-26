@@ -7,10 +7,7 @@ export default class Message {
     calls = null
     payload = null
     responsePayload = null
-    respondCallbacks = []
-    succeedCallbacks = []
-    failCallbacks = []
-    interceptors = new Set()
+    interceptors = []
     cancelled = false
 
     constructor(component) {
@@ -26,13 +23,16 @@ export default class Message {
         this.interceptors = interceptors
     }
 
+    getInterceptors() {
+        return this.interceptors
+    }
+
     cancel() {
+        if (this.cancelled) return
+
         this.cancelled = true
 
-        // Wait for the interceptors to finish being registered before we process the `onCancel` hooks...
-        queueMicrotask(() => {
-            this.onCancel()
-        })
+        this.onCancel()
     }
 
     isCancelled() {
@@ -52,22 +52,23 @@ export default class Message {
     onCancel() {
         this.interceptors.forEach(interceptor => interceptor.onCancel())
 
-        // Reject any promises...
-        this.actions.forEach(action => {
-            let promiseResolver = this.promiseResolversByAction.get(action)
-
-            if (! promiseResolver) return;
-
-            // promiseResolver.reject()
-        })
+        this.resolvePromises()
     }
 
-    onError(status, responseContent, preventDefault) {
+    onFailure(e) {
+        this.interceptors.forEach(interceptor => interceptor.onFailure(e))
+
+        this.resolvePromises()
+    }
+
+    onError({ response, responseBody, preventDefault }) {
         this.interceptors.forEach(interceptor => interceptor.onError({
-            status,
-            responseContent,
+            response,
+            responseBody,
             preventDefault
         }))
+
+        this.resolvePromises()
     }
 
     onSuccess() {
@@ -79,43 +80,6 @@ export default class Message {
                 onRender: callback => interceptor.onRender = callback
             })
         })
-    }
-
-    onSync() {
-        this.interceptors.forEach(interceptor => interceptor.onSync())
-    }
-
-    onMorph() {
-        this.interceptors.forEach(interceptor => interceptor.onMorph())
-    }
-
-    onRender() {
-        this.interceptors.forEach(interceptor => interceptor.onRender())
-    }
-
-    /**
-     * Legacy lifecycle methods...
-     */
-
-    respond() {
-        this.respondCallbacks.forEach(i => i())
-    }
-
-    fail() {
-        this.failCallbacks.forEach(i => i())
-
-        // Reject any promises...
-        this.actions.forEach(action => {
-            let promiseResolver = this.promiseResolversByAction.get(action)
-
-            if (! promiseResolver) return;
-
-            promiseResolver.reject()
-        })
-    }
-
-    succeed() {
-        this.succeedCallbacks.forEach(i => i(this.responsePayload))
 
         // Process any returned values...
         let returns = this.responsePayload.effects['returns']
@@ -132,6 +96,28 @@ export default class Message {
             if (! promiseResolver) return;
 
             promiseResolver.resolve(value)
+        })
+    }
+
+    onSync() {
+        this.interceptors.forEach(interceptor => interceptor.onSync())
+    }
+
+    onMorph() {
+        this.interceptors.forEach(interceptor => interceptor.onMorph())
+    }
+
+    onRender() {
+        this.interceptors.forEach(interceptor => interceptor.onRender())
+    }
+
+    resolvePromises() {
+        this.actions.forEach(action => {
+            let promiseResolver = this.promiseResolversByAction.get(action)
+
+            if (! promiseResolver) return;
+
+            promiseResolver.resolve()
         })
     }
 }

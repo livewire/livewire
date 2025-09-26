@@ -16,7 +16,15 @@ export function setNextActionOrigin(origin) {
 }
 
 export function intercept(component, callback) {
-    interceptors.add(component, callback)
+    interceptors.addInterceptor(component, callback)
+}
+
+export function interceptMessage(callback) {
+    interceptors.addMessageInterceptor(callback)
+}
+
+export function interceptRequest(callback) {
+    interceptors.addRequestInterceptor(callback)
 }
 
 export function fireAction(component, method, params = [], metadata = {}) {
@@ -47,44 +55,63 @@ export function fireAction(component, method, params = [], metadata = {}) {
             requests.forEach(request => {
                 request.initInterceptors(interceptors)
 
-                if (request.isCancelled()) return
+                if (request.hasAllCancelledMessages()) {
+                    request.cancel()
+
+                    return
+                }
 
                 sendRequest(request, {
-                    send: () => {
-                        request.onSend()
+                    send: ({ responsePromise }) => {
+                        request.onSend({ responsePromise })
                     },
-                    failure: () => { // This is called when the request fails at the network level...
-                        request.fail(503, null, () => {})
+                    failure: ({ error }) => {
+                        request.onFailure({ error })
                     },
-                    response: ({ status, response }) => { // This is called when the response is received...
-                        request.respond(status, response)
+                    response: ({ response }) => {
+                        request.onResponse({ response })
                     },
-                    error: ({ status, aborted, responseContent }) => { // This is called when the response fails at the HTTP level...
+                    parsed: ({ response, responseBody }) => {
+                        request.onParsed({ response, responseBody })
+                    },
+                    error: ({ response, responseBody }) => {
                         let preventDefault = false
 
-                        request.fail(status, responseContent, () => preventDefault = true)
-
-                        request.onError(status, responseContent, () => preventDefault = true)
+                        request.onError({ response, responseBody, preventDefault })
 
                         if (preventDefault) return
 
-                        if (status === 419) {
+                        if (response.status === 419) {
                             confirm(
                                 'This page has expired.\nWould you like to refresh the page?'
                             ) && window.location.reload()
                         }
 
-                        if (aborted) return
+                        if (response.aborted) return
 
-                        showHtmlModal(responseContent)
+                        showHtmlModal(responseBody)
                     },
-                    redirect: (url) => { // This is called when the response is a redirect...
+                    redirect: (url) => {
+                        let preventDefault = false
+
+                        request.onRedirect({ url, preventDefault })
+
+                        if (preventDefault) return
+
                         window.location.href = url
                     },
-                    dump: (dumpContent) => { // This is called when the response is a dump...
+                    dump: (content) => {
+                        let preventDefault = false
+
+                        request.onDump({ content, preventDefault })
+
+                        if (preventDefault) return
+
                         showHtmlModal(dumpContent)
                     },
-                    success: async ({ status, responseJson }) => { // This is called when the request fully succeeds...
+                    success: async ({ response, responseBody, responseJson }) => {
+                        request.onSuccess({ response, responseBody, responseJson })
+
                         await triggerAsync('payload.intercept', responseJson)
 
                         let messageResponsePayloads = responseJson.components
@@ -122,8 +149,6 @@ export function fireAction(component, method, params = [], metadata = {}) {
                                 }
                             })
                         })
-
-                        request.succeed(status, responseJson)
                     },
                 })
             })
@@ -161,22 +186,6 @@ function prepareMessages(messages) {
             // @todo: Rename to "actions"...
             calls: message.calls,
         }
-
-        // Allow other areas of the codebase to hook into the lifecycle
-        // of an individual commit...
-        trigger('commit', {
-            component: message.component,
-            commit: message.payload,
-            respond: (callback) => {
-                message.respondCallbacks.push(callback)
-            },
-            succeed: (callback) => {
-                message.succeedCallbacks.push(callback)
-            },
-            fail: (callback) => {
-                message.failCallbacks.push(callback)
-            },
-        })
     })
 }
 
@@ -206,65 +215,59 @@ function createRequestsFromMessages(messages) {
     trigger('message.pooled', { requests })
 
     requests.forEach(request => {
-        request.payload = {
-            _token: getCsrfToken(),
-            components: Array.from(request.messages, i => i.payload)
-        }
+        request.uri = getUpdateUri()
+
+        Object.defineProperty(request, 'payload', {
+            get() {
+                return {
+                    _token: getCsrfToken(),
+                    components: Array.from(request.messages, i => i.payload)
+                }
+            }
+        })
+
+        Object.defineProperty(request, 'options', {
+            get() {
+                return {
+                    method: 'POST',
+                    body: JSON.stringify(request.payload),
+                    headers: {
+                        'Content-type': 'application/json',
+                        'X-Livewire': '1', // This '1' value means nothing, but it stops Cloudflare from stripping the header...
+                    },
+                    signal: request.controller.signal,
+                }
+            }
+        })
     })
 
     return requests
 }
 
 async function sendRequest(request, handlers) {
-    let options = {
-        method: 'POST',
-        body: JSON.stringify(request.payload),
-        headers: {
-            'Content-type': 'application/json',
-            'X-Livewire': '1', // This '1' value means nothing, but it stops Cloudflare from stripping the header...
-        },
-        signal: request.controller.signal,
-    }
-
-    let updateUri = getUpdateUri()
-
-    trigger('request', {
-        url: updateUri,
-        options,
-        payload: options.body,
-        respond: i => request.respondCallbacks.push(i),
-        succeed: i => request.succeedCallbacks.push(i),
-        fail: i => request.failCallbacks.push(i),
-    })
-
     let response
 
     try {
-        let fetchPromise = fetch(updateUri, options)
+        let responsePromise = fetch(request.uri, request.options)
 
-        handlers.send()
+        handlers.send({ responsePromise })
 
-        response = await fetchPromise
+        response = await responsePromise
     } catch (e) {
-        handlers.failure()
+        handlers.failure({ error: e })
 
         return
     }
 
-    let mutableResponseObject = {
-        status: response.status,
-        response,
-    }
+    handlers.response({ response })
 
-    handlers.response(mutableResponseObject)
+    let responseBody = await response.text()
 
-    response = mutableResponseObject.response
-
-    let responseContent = await response.text()
+    handlers.parsed({ response, responseBody })
 
     // Handle error response...
     if (! response.ok) {
-        handlers.error({ status: response.status, aborted: response.aborted, responseContent })
+        handlers.error({ response, responseBody })
 
         return
     }
@@ -279,17 +282,17 @@ async function sendRequest(request, handlers) {
      * render the dump in a modal and allow Livewire to continue with the
      * request.
      */
-    if (contentIsFromDump(responseContent)) {
+    if (contentIsFromDump(responseBody)) {
         let dump
 
-        [dump, responseContent] = splitDumpFromContent(responseContent)
+        [dump, responseBody] = splitDumpFromContent(responseBody)
 
         handlers.dump(dump)
     }
 
-    let responseJson = JSON.parse(responseContent)
+    let responseJson = JSON.parse(responseBody)
 
-    handlers.success({ status: response.status, responseJson })
+    handlers.success({ response, responseBody, responseJson })
 }
 
 function applyMorph(message, html) {
@@ -350,3 +353,110 @@ function getDestination(response) {
 function createUrlObjectFromString(urlString) {
     return urlString !== null && new URL(urlString, document.baseURI)
 }
+
+// Support legacy 'request' event...
+interceptRequest(({
+    request,
+    onSend,
+    onCancel,
+    onFailure,
+    onResponse,
+    onParsed,
+    onError,
+    onSuccess,
+}) => {
+    let respondCallbacks = []
+    let succeedCallbacks = []
+    let failCallbacks = []
+
+    trigger('request', {
+        url: request.uri,
+        options: request.options,
+        payload: request.options.body,
+        respond: i => respondCallbacks.push(i),
+        succeed: i => succeedCallbacks.push(i),
+        fail: i => failCallbacks.push(i),
+    })
+
+    onResponse(({ response }) => {
+        respondCallbacks.forEach(callback => callback({
+            status: response.status,
+            response,
+        }))
+    })
+
+    onSuccess(({ response, responseJson }) => {
+        succeedCallbacks.forEach(callback => callback({
+            status: response.status,
+            json: responseJson,
+        }))
+    })
+
+    onFailure(({ error }) => {
+        failCallbacks.forEach(callback => callback({
+            status: 503,
+            content: null,
+            preventDefault: () => {},
+        }))
+    })
+
+    onError(({ response, responseBody, preventDefault }) => {
+        failCallbacks.forEach(callback => callback({
+            status: response.status,
+            content: responseBody,
+            preventDefault,
+        }))
+    })
+})
+
+// Support legacy 'commit' event...
+interceptMessage(({
+    message,
+    onSend,
+    onCancel,
+    onError,
+    onSuccess,
+    onSync,
+    onMorph,
+    onRender,
+}) => {
+    // Allow other areas of the codebase to hook into the lifecycle
+    // of an individual commit...
+    let respondCallbacks = []
+    let succeedCallbacks = []
+    let failCallbacks = []
+
+    trigger('commit', {
+        component: message.component,
+        commit: message.payload,
+        respond: (callback) => {
+            respondCallbacks.push(callback)
+        },
+        succeed: (callback) => {
+            succeedCallbacks.push(callback)
+        },
+        fail: (callback) => {
+            failCallbacks.push(callback)
+        },
+    })
+
+    onSuccess(({ payload, onSync, onMorph, onRender }) => {
+        respondCallbacks.forEach(callback => callback())
+
+        onRender(() => {
+            succeedCallbacks.forEach(callback => callback({
+                snapshot: payload.snapshot,
+                effects: payload.effects,
+            }))
+        })
+    })
+
+    onError(() => {
+        failCallbacks.forEach(callback => callback())
+    })
+
+    onCancel(() => {
+        respondCallbacks.forEach(callback => callback())
+        failCallbacks.forEach(callback => callback())
+    })
+})

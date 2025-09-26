@@ -1,42 +1,135 @@
 import { WeakBag } from "@/utils"
 
-export class Interceptor {
+export class MessageInterceptor {
     onSend = () => {}
     onCancel = () => {}
+    onFailure = () => {}
     onError = () => {}
     onSuccess = () => {}
     onSync = () => {}
     onMorph = () => {}
     onRender = () => {}
 
+    hasBeenSynchronouslyCancelled = false
+
     constructor(message, callback) {
         this.message = message
 
-        callback({
-            actions: message.actions,
-            component: message.component,
+        this.callback = callback
+
+        let isInsideCallbackSynchronously = true
+
+        this.callback({
+            message: this.message,
+            actions: this.message.actions,
+            component: this.message.component,
             onSend: (callback) => this.onSend = callback,
             onCancel: (callback) => this.onCancel = callback,
+            onFailure: (callback) => this.onFailure = callback,
             onError: (callback) => this.onError = callback,
             onSuccess: (callback) => this.onSuccess = callback,
-            cancel: () => this.message.cancel()
+            cancel: () => {
+                if (isInsideCallbackSynchronously) {
+                    this.hasBeenSynchronouslyCancelled = true
+                } else {
+                    this.message.cancel()
+                }
+            },
         })
+
+        isInsideCallbackSynchronously = false
+    }
+
+    init() {
+        if (this.hasBeenSynchronouslyCancelled) {
+            this.message.cancel()
+        }
+    }
+}
+
+export class RequestInterceptor {
+    onSend = () => {}
+    onCancel = () => {}
+    onFailure = () => {}
+    onResponse = () => {}
+    onParsed = () => {}
+    onError = () => {}
+    onRedirect = () => {}
+    onDump = () => {}
+    onSuccess = () => {}
+
+
+    hasBeenSynchronouslyCancelled = false
+
+    constructor(request, callback) {
+        this.request = request
+
+        this.callback = callback
+
+        let isInsideCallbackSynchronously = true
+
+        this.callback({
+            request: this.request,
+            component: this.request.component,
+            onSend: (callback) => this.onSend = callback,
+            onCancel: (callback) => this.onCancel = callback,
+            onFailure: (callback) => this.onFailure = callback,
+            onResponse: (callback) => this.onResponse = callback,
+            onParsed: (callback) => this.onParsed = callback,
+            onError: (callback) => this.onError = callback,
+            onRedirect: (callback) => this.onRedirect = callback,
+            onDump: (callback) => this.onDump = callback,
+            onSuccess: (callback) => this.onSuccess = callback,
+            cancel: () => {
+                if (isInsideCallbackSynchronously) {
+                    this.hasBeenSynchronouslyCancelled = true
+                } else {
+                    this.request.cancel()
+                }
+            },
+        })
+
+        isInsideCallbackSynchronously = false
+    }
+
+    init() {
+        if (this.hasBeenSynchronouslyCancelled) {
+            this.request.cancel()
+        }
     }
 }
 
 export class InterceptorRegistry {
-    interceptorCallbacksByComponent = new WeakBag
-    interceptorsByComponent = new WeakBag
+    messageInterceptorCallbacks = []
+    messageInterceptorCallbacksByComponent = new WeakBag
+    requestInterceptorCallbacks = []
 
-    add(component, callback) {
-        this.interceptorCallbacksByComponent.add(component, callback)
+    addInterceptor(component, callback) {
+        this.messageInterceptorCallbacksByComponent.add(component, callback)
     }
 
-    getRelevantInterceptors(message) {
-        let interceptorCallbacks = this.interceptorCallbacksByComponent.get(message.component)
+    addMessageInterceptor(callback) {
+        this.messageInterceptorCallbacks.push(callback)
+    }
 
-        return interceptorCallbacks.map(callback => {
-            return new Interceptor(message, callback)
+    addRequestInterceptor(callback) {
+        this.requestInterceptorCallbacks.push(callback)
+    }
+
+    getMessageInterceptors(message) {
+        let callbacks = [
+            ...this.messageInterceptorCallbacksByComponent.get(message.component),
+            ...this.messageInterceptorCallbacks,
+        ]
+
+        return callbacks.map(callback => {
+            return new MessageInterceptor(message, callback)
+        })
+    }
+
+    getRequestInterceptors(request) {
+        return this.requestInterceptorCallbacks.map(callback => {
+            return new RequestInterceptor(request, callback)
         })
     }
 }

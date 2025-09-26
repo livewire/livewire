@@ -18,9 +18,9 @@
   };
   var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-  // ../alpine/packages/csp/dist/module.cjs.js
+  // node_modules/@alpinejs/csp/dist/module.cjs.js
   var require_module_cjs = __commonJS({
-    "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
+    "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
       var __create2 = Object.create;
       var __defProp2 = Object.defineProperty;
       var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1738,7 +1738,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       function generateEvaluatorFromFunction(dataStack, func) {
         return (receiver = () => {
-        }, { scope: scope2 = {}, params = [], context } = {}) => {
+        }, { scope: scope2 = {}, params = [] } = {}) => {
           let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
           runIfTypeOfFunction(receiver, result);
         };
@@ -1770,12 +1770,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       function generateEvaluatorFromString(dataStack, expression, el) {
         let func = generateFunctionFromString(expression, el);
         return (receiver = () => {
-        }, { scope: scope2 = {}, params = [], context } = {}) => {
+        }, { scope: scope2 = {}, params = [] } = {}) => {
           func.result = void 0;
           func.finished = false;
           let completeScope = mergeProxies([scope2, ...dataStack]);
           if (typeof func === "function") {
-            let promise = func.call(context, func, completeScope).catch((error2) => handleError(error2, el, expression));
+            let promise = func(func, completeScope).catch((error2) => handleError(error2, el, expression));
             if (func.finished) {
               runIfTypeOfFunction(receiver, func.result, completeScope, params, el);
               func.result = void 0;
@@ -2725,10 +2725,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return el.type === "radio" || el.localName === "ui-radio";
       }
       function debounce2(func, wait) {
-        let timeout;
+        var timeout;
         return function() {
-          const context = this, args = arguments;
-          const later = function() {
+          var context = this, args = arguments;
+          var later = function() {
             timeout = null;
             func.apply(context, args);
           };
@@ -2877,7 +2877,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         get raw() {
           return raw;
         },
-        version: "3.15.0",
+        version: "3.14.9",
         flushAndStopDeferringMutations,
         dontAutoEvaluateFunctions,
         disableEffectScheduling,
@@ -2931,751 +2931,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         bind: bind2
       };
       var alpine_default = Alpine23;
-      var Token = class {
-        constructor(type, value, start22, end) {
-          this.type = type;
-          this.value = value;
-          this.start = start22;
-          this.end = end;
-        }
-      };
-      var Tokenizer = class {
-        constructor(input) {
-          this.input = input;
-          this.position = 0;
-          this.tokens = [];
-        }
-        tokenize() {
-          while (this.position < this.input.length) {
-            this.skipWhitespace();
-            if (this.position >= this.input.length)
-              break;
-            const char = this.input[this.position];
-            if (this.isDigit(char)) {
-              this.readNumber();
-            } else if (this.isAlpha(char) || char === "_" || char === "$") {
-              this.readIdentifierOrKeyword();
-            } else if (char === '"' || char === "'") {
-              this.readString();
-            } else if (char === "/" && this.peek() === "/") {
-              this.skipLineComment();
-            } else {
-              this.readOperatorOrPunctuation();
-            }
-          }
-          this.tokens.push(new Token("EOF", null, this.position, this.position));
-          return this.tokens;
-        }
-        skipWhitespace() {
-          while (this.position < this.input.length && /\s/.test(this.input[this.position])) {
-            this.position++;
-          }
-        }
-        skipLineComment() {
-          while (this.position < this.input.length && this.input[this.position] !== "\n") {
-            this.position++;
-          }
-        }
-        isDigit(char) {
-          return /[0-9]/.test(char);
-        }
-        isAlpha(char) {
-          return /[a-zA-Z]/.test(char);
-        }
-        isAlphaNumeric(char) {
-          return /[a-zA-Z0-9_$]/.test(char);
-        }
-        peek(offset2 = 1) {
-          return this.input[this.position + offset2] || "";
-        }
-        readNumber() {
-          const start22 = this.position;
-          let hasDecimal = false;
-          while (this.position < this.input.length) {
-            const char = this.input[this.position];
-            if (this.isDigit(char)) {
-              this.position++;
-            } else if (char === "." && !hasDecimal) {
-              hasDecimal = true;
-              this.position++;
-            } else {
-              break;
-            }
-          }
-          const value = this.input.slice(start22, this.position);
-          this.tokens.push(new Token("NUMBER", parseFloat(value), start22, this.position));
-        }
-        readIdentifierOrKeyword() {
-          const start22 = this.position;
-          while (this.position < this.input.length && this.isAlphaNumeric(this.input[this.position])) {
-            this.position++;
-          }
-          const value = this.input.slice(start22, this.position);
-          const keywords = ["true", "false", "null", "undefined", "new", "typeof", "void", "delete", "in", "instanceof"];
-          if (keywords.includes(value)) {
-            if (value === "true" || value === "false") {
-              this.tokens.push(new Token("BOOLEAN", value === "true", start22, this.position));
-            } else if (value === "null") {
-              this.tokens.push(new Token("NULL", null, start22, this.position));
-            } else if (value === "undefined") {
-              this.tokens.push(new Token("UNDEFINED", void 0, start22, this.position));
-            } else {
-              this.tokens.push(new Token("KEYWORD", value, start22, this.position));
-            }
-          } else {
-            this.tokens.push(new Token("IDENTIFIER", value, start22, this.position));
-          }
-        }
-        readString() {
-          const start22 = this.position;
-          const quote = this.input[this.position];
-          this.position++;
-          let value = "";
-          let escaped = false;
-          while (this.position < this.input.length) {
-            const char = this.input[this.position];
-            if (escaped) {
-              switch (char) {
-                case "n":
-                  value += "\n";
-                  break;
-                case "t":
-                  value += "	";
-                  break;
-                case "r":
-                  value += "\r";
-                  break;
-                case "\\":
-                  value += "\\";
-                  break;
-                case quote:
-                  value += quote;
-                  break;
-                default:
-                  value += char;
-              }
-              escaped = false;
-            } else if (char === "\\") {
-              escaped = true;
-            } else if (char === quote) {
-              this.position++;
-              this.tokens.push(new Token("STRING", value, start22, this.position));
-              return;
-            } else {
-              value += char;
-            }
-            this.position++;
-          }
-          throw new Error(`Unterminated string starting at position ${start22}`);
-        }
-        readOperatorOrPunctuation() {
-          const start22 = this.position;
-          const char = this.input[this.position];
-          const next = this.peek();
-          const nextNext = this.peek(2);
-          if (char === "=" && next === "=" && nextNext === "=") {
-            this.position += 3;
-            this.tokens.push(new Token("OPERATOR", "===", start22, this.position));
-          } else if (char === "!" && next === "=" && nextNext === "=") {
-            this.position += 3;
-            this.tokens.push(new Token("OPERATOR", "!==", start22, this.position));
-          } else if (char === "=" && next === "=") {
-            this.position += 2;
-            this.tokens.push(new Token("OPERATOR", "==", start22, this.position));
-          } else if (char === "!" && next === "=") {
-            this.position += 2;
-            this.tokens.push(new Token("OPERATOR", "!=", start22, this.position));
-          } else if (char === "<" && next === "=") {
-            this.position += 2;
-            this.tokens.push(new Token("OPERATOR", "<=", start22, this.position));
-          } else if (char === ">" && next === "=") {
-            this.position += 2;
-            this.tokens.push(new Token("OPERATOR", ">=", start22, this.position));
-          } else if (char === "&" && next === "&") {
-            this.position += 2;
-            this.tokens.push(new Token("OPERATOR", "&&", start22, this.position));
-          } else if (char === "|" && next === "|") {
-            this.position += 2;
-            this.tokens.push(new Token("OPERATOR", "||", start22, this.position));
-          } else if (char === "+" && next === "+") {
-            this.position += 2;
-            this.tokens.push(new Token("OPERATOR", "++", start22, this.position));
-          } else if (char === "-" && next === "-") {
-            this.position += 2;
-            this.tokens.push(new Token("OPERATOR", "--", start22, this.position));
-          } else {
-            this.position++;
-            const type = "()[]{},.;:?".includes(char) ? "PUNCTUATION" : "OPERATOR";
-            this.tokens.push(new Token(type, char, start22, this.position));
-          }
-        }
-      };
-      var Parser = class {
-        constructor(tokens) {
-          this.tokens = tokens;
-          this.position = 0;
-        }
-        parse() {
-          if (this.isAtEnd()) {
-            throw new Error("Empty expression");
-          }
-          const expr = this.parseExpression();
-          this.match("PUNCTUATION", ";");
-          if (!this.isAtEnd()) {
-            throw new Error(`Unexpected token: ${this.current().value}`);
-          }
-          return expr;
-        }
-        parseExpression() {
-          return this.parseAssignment();
-        }
-        parseAssignment() {
-          const expr = this.parseTernary();
-          if (this.match("OPERATOR", "=")) {
-            const value = this.parseAssignment();
-            if (expr.type === "Identifier" || expr.type === "MemberExpression") {
-              return {
-                type: "AssignmentExpression",
-                left: expr,
-                operator: "=",
-                right: value
-              };
-            }
-            throw new Error("Invalid assignment target");
-          }
-          return expr;
-        }
-        parseTernary() {
-          const expr = this.parseLogicalOr();
-          if (this.match("PUNCTUATION", "?")) {
-            const consequent = this.parseExpression();
-            this.consume("PUNCTUATION", ":");
-            const alternate = this.parseExpression();
-            return {
-              type: "ConditionalExpression",
-              test: expr,
-              consequent,
-              alternate
-            };
-          }
-          return expr;
-        }
-        parseLogicalOr() {
-          let expr = this.parseLogicalAnd();
-          while (this.match("OPERATOR", "||")) {
-            const operator = this.previous().value;
-            const right = this.parseLogicalAnd();
-            expr = {
-              type: "BinaryExpression",
-              operator,
-              left: expr,
-              right
-            };
-          }
-          return expr;
-        }
-        parseLogicalAnd() {
-          let expr = this.parseEquality();
-          while (this.match("OPERATOR", "&&")) {
-            const operator = this.previous().value;
-            const right = this.parseEquality();
-            expr = {
-              type: "BinaryExpression",
-              operator,
-              left: expr,
-              right
-            };
-          }
-          return expr;
-        }
-        parseEquality() {
-          let expr = this.parseRelational();
-          while (this.match("OPERATOR", "==", "!=", "===", "!==")) {
-            const operator = this.previous().value;
-            const right = this.parseRelational();
-            expr = {
-              type: "BinaryExpression",
-              operator,
-              left: expr,
-              right
-            };
-          }
-          return expr;
-        }
-        parseRelational() {
-          let expr = this.parseAdditive();
-          while (this.match("OPERATOR", "<", ">", "<=", ">=")) {
-            const operator = this.previous().value;
-            const right = this.parseAdditive();
-            expr = {
-              type: "BinaryExpression",
-              operator,
-              left: expr,
-              right
-            };
-          }
-          return expr;
-        }
-        parseAdditive() {
-          let expr = this.parseMultiplicative();
-          while (this.match("OPERATOR", "+", "-")) {
-            const operator = this.previous().value;
-            const right = this.parseMultiplicative();
-            expr = {
-              type: "BinaryExpression",
-              operator,
-              left: expr,
-              right
-            };
-          }
-          return expr;
-        }
-        parseMultiplicative() {
-          let expr = this.parseUnary();
-          while (this.match("OPERATOR", "*", "/", "%")) {
-            const operator = this.previous().value;
-            const right = this.parseUnary();
-            expr = {
-              type: "BinaryExpression",
-              operator,
-              left: expr,
-              right
-            };
-          }
-          return expr;
-        }
-        parseUnary() {
-          if (this.match("OPERATOR", "++", "--")) {
-            const operator = this.previous().value;
-            const argument = this.parseUnary();
-            return {
-              type: "UpdateExpression",
-              operator,
-              argument,
-              prefix: true
-            };
-          }
-          if (this.match("OPERATOR", "!", "-", "+")) {
-            const operator = this.previous().value;
-            const argument = this.parseUnary();
-            return {
-              type: "UnaryExpression",
-              operator,
-              argument,
-              prefix: true
-            };
-          }
-          return this.parsePostfix();
-        }
-        parsePostfix() {
-          let expr = this.parseMember();
-          if (this.match("OPERATOR", "++", "--")) {
-            const operator = this.previous().value;
-            return {
-              type: "UpdateExpression",
-              operator,
-              argument: expr,
-              prefix: false
-            };
-          }
-          return expr;
-        }
-        parseMember() {
-          let expr = this.parsePrimary();
-          while (true) {
-            if (this.match("PUNCTUATION", ".")) {
-              const property = this.consume("IDENTIFIER");
-              expr = {
-                type: "MemberExpression",
-                object: expr,
-                property: { type: "Identifier", name: property.value },
-                computed: false
-              };
-            } else if (this.match("PUNCTUATION", "[")) {
-              const property = this.parseExpression();
-              this.consume("PUNCTUATION", "]");
-              expr = {
-                type: "MemberExpression",
-                object: expr,
-                property,
-                computed: true
-              };
-            } else if (this.match("PUNCTUATION", "(")) {
-              const args = this.parseArguments();
-              expr = {
-                type: "CallExpression",
-                callee: expr,
-                arguments: args
-              };
-            } else {
-              break;
-            }
-          }
-          return expr;
-        }
-        parseArguments() {
-          const args = [];
-          if (!this.check("PUNCTUATION", ")")) {
-            do {
-              args.push(this.parseExpression());
-            } while (this.match("PUNCTUATION", ","));
-          }
-          this.consume("PUNCTUATION", ")");
-          return args;
-        }
-        parsePrimary() {
-          if (this.match("NUMBER")) {
-            return { type: "Literal", value: this.previous().value };
-          }
-          if (this.match("STRING")) {
-            return { type: "Literal", value: this.previous().value };
-          }
-          if (this.match("BOOLEAN")) {
-            return { type: "Literal", value: this.previous().value };
-          }
-          if (this.match("NULL")) {
-            return { type: "Literal", value: null };
-          }
-          if (this.match("UNDEFINED")) {
-            return { type: "Literal", value: void 0 };
-          }
-          if (this.match("IDENTIFIER")) {
-            return { type: "Identifier", name: this.previous().value };
-          }
-          if (this.match("PUNCTUATION", "(")) {
-            const expr = this.parseExpression();
-            this.consume("PUNCTUATION", ")");
-            return expr;
-          }
-          if (this.match("PUNCTUATION", "[")) {
-            return this.parseArrayLiteral();
-          }
-          if (this.match("PUNCTUATION", "{")) {
-            return this.parseObjectLiteral();
-          }
-          throw new Error(`Unexpected token: ${this.current().type} "${this.current().value}"`);
-        }
-        parseArrayLiteral() {
-          const elements = [];
-          while (!this.check("PUNCTUATION", "]") && !this.isAtEnd()) {
-            elements.push(this.parseExpression());
-            if (this.match("PUNCTUATION", ",")) {
-              if (this.check("PUNCTUATION", "]")) {
-                break;
-              }
-            } else {
-              break;
-            }
-          }
-          this.consume("PUNCTUATION", "]");
-          return {
-            type: "ArrayExpression",
-            elements
-          };
-        }
-        parseObjectLiteral() {
-          const properties2 = [];
-          while (!this.check("PUNCTUATION", "}") && !this.isAtEnd()) {
-            let key;
-            let computed = false;
-            if (this.match("STRING")) {
-              key = { type: "Literal", value: this.previous().value };
-            } else if (this.match("IDENTIFIER")) {
-              const name = this.previous().value;
-              key = { type: "Identifier", name };
-            } else if (this.match("PUNCTUATION", "[")) {
-              key = this.parseExpression();
-              computed = true;
-              this.consume("PUNCTUATION", "]");
-            } else {
-              throw new Error("Expected property key");
-            }
-            this.consume("PUNCTUATION", ":");
-            const value = this.parseExpression();
-            properties2.push({
-              type: "Property",
-              key,
-              value,
-              computed,
-              shorthand: false
-            });
-            if (this.match("PUNCTUATION", ",")) {
-              if (this.check("PUNCTUATION", "}")) {
-                break;
-              }
-            } else {
-              break;
-            }
-          }
-          this.consume("PUNCTUATION", "}");
-          return {
-            type: "ObjectExpression",
-            properties: properties2
-          };
-        }
-        match(...args) {
-          for (let i = 0; i < args.length; i++) {
-            const arg = args[i];
-            if (i === 0 && args.length > 1) {
-              const type = arg;
-              for (let j = 1; j < args.length; j++) {
-                if (this.check(type, args[j])) {
-                  this.advance();
-                  return true;
-                }
-              }
-              return false;
-            } else if (args.length === 1) {
-              if (this.checkType(arg)) {
-                this.advance();
-                return true;
-              }
-              return false;
-            }
-          }
-          return false;
-        }
-        check(type, value) {
-          if (this.isAtEnd())
-            return false;
-          if (value !== void 0) {
-            return this.current().type === type && this.current().value === value;
-          }
-          return this.current().type === type;
-        }
-        checkType(type) {
-          if (this.isAtEnd())
-            return false;
-          return this.current().type === type;
-        }
-        advance() {
-          if (!this.isAtEnd())
-            this.position++;
-          return this.previous();
-        }
-        isAtEnd() {
-          return this.current().type === "EOF";
-        }
-        current() {
-          return this.tokens[this.position];
-        }
-        previous() {
-          return this.tokens[this.position - 1];
-        }
-        consume(type, value) {
-          if (value !== void 0) {
-            if (this.check(type, value))
-              return this.advance();
-            throw new Error(`Expected ${type} "${value}" but got ${this.current().type} "${this.current().value}"`);
-          }
-          if (this.check(type))
-            return this.advance();
-          throw new Error(`Expected ${type} but got ${this.current().type} "${this.current().value}"`);
-        }
-      };
-      var Evaluator = class {
-        evaluate({ node, scope: scope2 = {}, context = null, allowGlobal = false, forceBindingRootScopeToFunctions = true }) {
-          switch (node.type) {
-            case "Literal":
-              return node.value;
-            case "Identifier":
-              if (node.name in scope2) {
-                const value2 = scope2[node.name];
-                if (typeof value2 === "function") {
-                  return value2.bind(scope2);
-                }
-                return value2;
-              }
-              if (allowGlobal && typeof globalThis[node.name] !== "undefined") {
-                const value2 = globalThis[node.name];
-                if (typeof value2 === "function") {
-                  return value2.bind(globalThis);
-                }
-                return value2;
-              }
-              throw new Error(`Undefined variable: ${node.name}`);
-            case "MemberExpression":
-              const object = this.evaluate({ node: node.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-              if (object == null) {
-                throw new Error("Cannot read property of null or undefined");
-              }
-              let memberValue;
-              if (node.computed) {
-                const property = this.evaluate({ node: node.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                memberValue = object[property];
-              } else {
-                memberValue = object[node.property.name];
-              }
-              if (typeof memberValue === "function") {
-                if (forceBindingRootScopeToFunctions) {
-                  return memberValue.bind(scope2);
-                } else {
-                  return memberValue.bind(object);
-                }
-              }
-              return memberValue;
-            case "CallExpression":
-              const args = node.arguments.map((arg) => this.evaluate({ node: arg, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }));
-              if (node.callee.type === "MemberExpression") {
-                const obj = this.evaluate({ node: node.callee.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                let func;
-                if (node.callee.computed) {
-                  const prop = this.evaluate({ node: node.callee.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                  func = obj[prop];
-                } else {
-                  func = obj[node.callee.property.name];
-                }
-                if (typeof func !== "function") {
-                  throw new Error("Value is not a function");
-                }
-                return func.apply(obj, args);
-              } else {
-                if (node.callee.type === "Identifier") {
-                  const name = node.callee.name;
-                  let func;
-                  if (name in scope2) {
-                    func = scope2[name];
-                  } else if (allowGlobal && typeof globalThis[name] !== "undefined") {
-                    func = globalThis[name];
-                  } else {
-                    throw new Error(`Undefined variable: ${name}`);
-                  }
-                  if (typeof func !== "function") {
-                    throw new Error("Value is not a function");
-                  }
-                  const thisContext = context !== null ? context : scope2;
-                  return func.apply(thisContext, args);
-                } else {
-                  const callee = this.evaluate({ node: node.callee, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                  if (typeof callee !== "function") {
-                    throw new Error("Value is not a function");
-                  }
-                  return callee.apply(context, args);
-                }
-              }
-            case "UnaryExpression":
-              const argument = this.evaluate({ node: node.argument, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-              switch (node.operator) {
-                case "!":
-                  return !argument;
-                case "-":
-                  return -argument;
-                case "+":
-                  return +argument;
-                default:
-                  throw new Error(`Unknown unary operator: ${node.operator}`);
-              }
-            case "UpdateExpression":
-              if (node.argument.type === "Identifier") {
-                const name = node.argument.name;
-                if (!(name in scope2)) {
-                  throw new Error(`Undefined variable: ${name}`);
-                }
-                const oldValue = scope2[name];
-                if (node.operator === "++") {
-                  scope2[name] = oldValue + 1;
-                } else if (node.operator === "--") {
-                  scope2[name] = oldValue - 1;
-                }
-                return node.prefix ? scope2[name] : oldValue;
-              } else if (node.argument.type === "MemberExpression") {
-                const obj = this.evaluate({ node: node.argument.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                const prop = node.argument.computed ? this.evaluate({ node: node.argument.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }) : node.argument.property.name;
-                const oldValue = obj[prop];
-                if (node.operator === "++") {
-                  obj[prop] = oldValue + 1;
-                } else if (node.operator === "--") {
-                  obj[prop] = oldValue - 1;
-                }
-                return node.prefix ? obj[prop] : oldValue;
-              }
-              throw new Error("Invalid update expression target");
-            case "BinaryExpression":
-              const left = this.evaluate({ node: node.left, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-              const right = this.evaluate({ node: node.right, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-              switch (node.operator) {
-                case "+":
-                  return left + right;
-                case "-":
-                  return left - right;
-                case "*":
-                  return left * right;
-                case "/":
-                  return left / right;
-                case "%":
-                  return left % right;
-                case "==":
-                  return left == right;
-                case "!=":
-                  return left != right;
-                case "===":
-                  return left === right;
-                case "!==":
-                  return left !== right;
-                case "<":
-                  return left < right;
-                case ">":
-                  return left > right;
-                case "<=":
-                  return left <= right;
-                case ">=":
-                  return left >= right;
-                case "&&":
-                  return left && right;
-                case "||":
-                  return left || right;
-                default:
-                  throw new Error(`Unknown binary operator: ${node.operator}`);
-              }
-            case "ConditionalExpression":
-              const test = this.evaluate({ node: node.test, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-              return test ? this.evaluate({ node: node.consequent, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }) : this.evaluate({ node: node.alternate, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-            case "AssignmentExpression":
-              const value = this.evaluate({ node: node.right, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-              if (node.left.type === "Identifier") {
-                scope2[node.left.name] = value;
-                return value;
-              } else if (node.left.type === "MemberExpression") {
-                const obj = this.evaluate({ node: node.left.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                if (node.left.computed) {
-                  const prop = this.evaluate({ node: node.left.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                  obj[prop] = value;
-                } else {
-                  obj[node.left.property.name] = value;
-                }
-                return value;
-              }
-              throw new Error("Invalid assignment target");
-            case "ArrayExpression":
-              return node.elements.map((el) => this.evaluate({ node: el, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }));
-            case "ObjectExpression":
-              const result = {};
-              for (const prop of node.properties) {
-                const key = prop.computed ? this.evaluate({ node: prop.key, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }) : prop.key.type === "Identifier" ? prop.key.name : this.evaluate({ node: prop.key, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                const value2 = this.evaluate({ node: prop.value, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                result[key] = value2;
-              }
-              return result;
-            default:
-              throw new Error(`Unknown node type: ${node.type}`);
-          }
-        }
-      };
-      function generateRuntimeFunction(expression) {
-        try {
-          const tokenizer = new Tokenizer(expression);
-          const tokens = tokenizer.tokenize();
-          const parser = new Parser(tokens);
-          const ast = parser.parse();
-          const evaluator = new Evaluator();
-          return function(options = {}) {
-            const { scope: scope2 = {}, context = null, allowGlobal = false, forceBindingRootScopeToFunctions = false } = options;
-            return evaluator.evaluate({ node: ast, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-          };
-        } catch (error2) {
-          throw new Error(`CSP Parser Error: ${error2.message}`);
-        }
-      }
       function cspEvaluator(el, expression) {
         let dataStack = generateDataStack(el);
         if (typeof expression === "function") {
@@ -3693,25 +2948,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return (receiver = () => {
         }, { scope: scope2 = {}, params = [] } = {}) => {
           let completeScope = mergeProxies([scope2, ...dataStack]);
-          let evaluate22 = generateRuntimeFunction(expression);
-          let returnValue = evaluate22({
-            scope: completeScope,
-            allowGlobal: true,
-            forceBindingRootScopeToFunctions: true
-          });
-          if (shouldAutoEvaluateFunctions && typeof returnValue === "function") {
-            let nextReturnValue = returnValue.apply(returnValue, params);
-            if (nextReturnValue instanceof Promise) {
-              nextReturnValue.then((i) => receiver(i));
-            } else {
-              receiver(nextReturnValue);
+          let evaluatedExpression = expression.split(".").reduce((currentScope, currentExpression) => {
+            if (currentScope[currentExpression] === void 0) {
+              throwExpressionError(el, expression);
             }
-          } else if (typeof returnValue === "object" && returnValue instanceof Promise) {
-            returnValue.then((i) => receiver(i));
-          } else {
-            receiver(returnValue);
-          }
+            return currentScope[currentExpression];
+          }, completeScope);
+          runIfTypeOfFunction(receiver, evaluatedExpression, completeScope, params);
         };
+      }
+      function throwExpressionError(el, expression) {
+        console.warn(`Alpine Error: Alpine is unable to interpret the following expression using the CSP-friendly build:
+
+"${expression}"
+
+Read more about the Alpine's CSP-friendly build restrictions here: https://alpinejs.dev/advanced/csp
+
+`, el);
       }
       var import_reactivity10 = __toESM2(require_reactivity());
       magic("nextTick", () => nextTick);
@@ -3991,7 +3244,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
         let keyModifiers = modifiers.filter((i) => {
-          return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
+          return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
         });
         if (keyModifiers.includes("debounce")) {
           let debounceIndex = keyModifiers.indexOf("debounce");
@@ -4088,7 +3341,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               el.setAttribute("name", expression);
           });
         }
-        let event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
+        var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
         let removeListener = isCloning ? () => {
         } : on3(el, event, modifiers, (e) => {
           setValue(getInputValue(el, modifiers, e, getValue()));
@@ -5407,53 +4660,68 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/request/request.js
   var MessageRequest = class {
-    _messages = /* @__PURE__ */ new Set();
+    messages = /* @__PURE__ */ new Set();
     controller = new AbortController();
+    interceptors = [];
+    cancelled = false;
+    uri = null;
     payload = null;
-    respondCallbacks = [];
-    succeedCallbacks = [];
-    failCallbacks = [];
-    get messages() {
-      return new Set([...this._messages].filter((message) => !message.isCancelled()));
+    options = null;
+    addMessage(message) {
+      this.messages.add(message);
+    }
+    getActiveMessages() {
+      return new Set([...this.messages].filter((message) => !message.isCancelled()));
     }
     initInterceptors(interceptorRegistry) {
-      this._messages.forEach((message) => {
-        let interceptors2 = interceptorRegistry.getRelevantInterceptors(message);
-        message.setInterceptors(interceptors2);
+      this.interceptors = interceptorRegistry.getRequestInterceptors(this);
+      this.messages.forEach((message) => {
+        let messageInterceptors = interceptorRegistry.getMessageInterceptors(message);
+        message.setInterceptors(messageInterceptors);
+      });
+      this.interceptors.forEach((interceptor) => interceptor.init());
+      this.messages.forEach((message) => {
+        message.getInterceptors().forEach((interceptor) => interceptor.init());
       });
     }
-    addMessage(message) {
-      this._messages.add(message);
-    }
     cancel() {
+      if (this.cancelled)
+        return;
+      this.cancelled = true;
       this.controller.abort("cancelled");
       this.messages.forEach((message) => message.cancel());
     }
-    isCancelled() {
-      if (this.controller.signal.aborted)
-        return true;
-      return this.messages.size === 0;
+    hasAllCancelledMessages() {
+      return this.getActiveMessages().size === 0;
     }
-    onSend() {
+    isCancelled() {
+      return this.cancelled;
+    }
+    onSend({ responsePromise }) {
+      this.interceptors.forEach((interceptor) => interceptor.onSend({ responsePromise }));
       this.messages.forEach((message) => message.onSend());
     }
-    onError(status, responseContent, preventDefault) {
-      this.messages.forEach((message) => message.onError(status, responseContent, preventDefault));
+    onFailure({ error: error2 }) {
+      this.interceptors.forEach((interceptor) => interceptor.onFailure({ error: error2 }));
     }
-    onSuccess() {
-      this.messages.forEach((message) => message.onSuccess());
+    onResponse({ response }) {
+      this.interceptors.forEach((interceptor) => interceptor.onResponse({ response }));
     }
-    respond(status, response) {
-      this.messages.forEach((message) => message.respond());
-      this.respondCallbacks.forEach((i) => i({ status, response }));
+    onParsed({ response, responseBody }) {
+      this.interceptors.forEach((interceptor) => interceptor.onParsed({ response, responseBody }));
     }
-    fail(status, content, preventDefault) {
-      this.messages.forEach((message) => message.fail());
-      this.failCallbacks.forEach((i) => i({ status, content, preventDefault }));
+    onRedirect({ url, preventDefault }) {
+      this.interceptors.forEach((interceptor) => interceptor.onRedirect({ url, preventDefault }));
     }
-    succeed(status, json) {
-      this.messages.forEach((message) => message.succeed());
-      this.succeedCallbacks.forEach((i) => i({ status, json }));
+    onDump({ content, preventDefault }) {
+      this.interceptors.forEach((interceptor) => interceptor.onDump({ content, preventDefault }));
+    }
+    onError({ response, responseBody, preventDefault }) {
+      this.interceptors.forEach((interceptor) => interceptor.onError({ response, responseBody, preventDefault }));
+      this.messages.forEach((message) => message.onError({ response, responseBody, preventDefault }));
+    }
+    onSuccess({ response, responseBody, responseJson }) {
+      this.interceptors.forEach((interceptor) => interceptor.onSuccess({ response, responseBody, responseJson }));
     }
   };
   var PageRequest = class {
@@ -5470,10 +4738,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   };
 
   // js/request/interceptor.js
-  var Interceptor = class {
+  var MessageInterceptor = class {
     onSend = () => {
     };
     onCancel = () => {
+    };
+    onFailure = () => {
     };
     onError = () => {
     };
@@ -5485,29 +4755,113 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     onRender = () => {
     };
+    hasBeenSynchronouslyCancelled = false;
     constructor(message, callback) {
       this.message = message;
-      callback({
-        actions: message.actions,
-        component: message.component,
+      this.callback = callback;
+      let isInsideCallbackSynchronously = true;
+      this.callback({
+        message: this.message,
+        actions: this.message.actions,
+        component: this.message.component,
         onSend: (callback2) => this.onSend = callback2,
         onCancel: (callback2) => this.onCancel = callback2,
+        onFailure: (callback2) => this.onFailure = callback2,
         onError: (callback2) => this.onError = callback2,
         onSuccess: (callback2) => this.onSuccess = callback2,
-        cancel: () => this.message.cancel()
+        cancel: () => {
+          if (isInsideCallbackSynchronously) {
+            this.hasBeenSynchronouslyCancelled = true;
+          } else {
+            this.message.cancel();
+          }
+        }
       });
+      isInsideCallbackSynchronously = false;
+    }
+    init() {
+      if (this.hasBeenSynchronouslyCancelled) {
+        this.message.cancel();
+      }
+    }
+  };
+  var RequestInterceptor = class {
+    onSend = () => {
+    };
+    onCancel = () => {
+    };
+    onFailure = () => {
+    };
+    onResponse = () => {
+    };
+    onParsed = () => {
+    };
+    onError = () => {
+    };
+    onRedirect = () => {
+    };
+    onDump = () => {
+    };
+    onSuccess = () => {
+    };
+    hasBeenSynchronouslyCancelled = false;
+    constructor(request, callback) {
+      this.request = request;
+      this.callback = callback;
+      let isInsideCallbackSynchronously = true;
+      this.callback({
+        request: this.request,
+        component: this.request.component,
+        onSend: (callback2) => this.onSend = callback2,
+        onCancel: (callback2) => this.onCancel = callback2,
+        onFailure: (callback2) => this.onFailure = callback2,
+        onResponse: (callback2) => this.onResponse = callback2,
+        onParsed: (callback2) => this.onParsed = callback2,
+        onError: (callback2) => this.onError = callback2,
+        onRedirect: (callback2) => this.onRedirect = callback2,
+        onDump: (callback2) => this.onDump = callback2,
+        onSuccess: (callback2) => this.onSuccess = callback2,
+        cancel: () => {
+          if (isInsideCallbackSynchronously) {
+            this.hasBeenSynchronouslyCancelled = true;
+          } else {
+            this.request.cancel();
+          }
+        }
+      });
+      isInsideCallbackSynchronously = false;
+    }
+    init() {
+      if (this.hasBeenSynchronouslyCancelled) {
+        this.request.cancel();
+      }
     }
   };
   var InterceptorRegistry = class {
-    interceptorCallbacksByComponent = new WeakBag();
-    interceptorsByComponent = new WeakBag();
-    add(component, callback) {
-      this.interceptorCallbacksByComponent.add(component, callback);
+    messageInterceptorCallbacks = [];
+    messageInterceptorCallbacksByComponent = new WeakBag();
+    requestInterceptorCallbacks = [];
+    addInterceptor(component, callback) {
+      this.messageInterceptorCallbacksByComponent.add(component, callback);
     }
-    getRelevantInterceptors(message) {
-      let interceptorCallbacks = this.interceptorCallbacksByComponent.get(message.component);
-      return interceptorCallbacks.map((callback) => {
-        return new Interceptor(message, callback);
+    addMessageInterceptor(callback) {
+      this.messageInterceptorCallbacks.push(callback);
+    }
+    addRequestInterceptor(callback) {
+      this.requestInterceptorCallbacks.push(callback);
+    }
+    getMessageInterceptors(message) {
+      let callbacks = [
+        ...this.messageInterceptorCallbacksByComponent.get(message.component),
+        ...this.messageInterceptorCallbacks
+      ];
+      return callbacks.map((callback) => {
+        return new MessageInterceptor(message, callback);
+      });
+    }
+    getRequestInterceptors(request) {
+      return this.requestInterceptorCallbacks.map((callback) => {
+        return new RequestInterceptor(request, callback);
       });
     }
   };
@@ -5563,10 +4917,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     calls = null;
     payload = null;
     responsePayload = null;
-    respondCallbacks = [];
-    succeedCallbacks = [];
-    failCallbacks = [];
-    interceptors = /* @__PURE__ */ new Set();
+    interceptors = [];
     cancelled = false;
     constructor(component) {
       this.component = component;
@@ -5578,11 +4929,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setInterceptors(interceptors2) {
       this.interceptors = interceptors2;
     }
+    getInterceptors() {
+      return this.interceptors;
+    }
     cancel() {
+      if (this.cancelled)
+        return;
       this.cancelled = true;
-      queueMicrotask(() => {
-        this.onCancel();
-      });
+      this.onCancel();
     }
     isCancelled() {
       return this.cancelled;
@@ -5594,18 +4948,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     onCancel() {
       this.interceptors.forEach((interceptor) => interceptor.onCancel());
-      this.actions.forEach((action) => {
-        let promiseResolver = this.promiseResolversByAction.get(action);
-        if (!promiseResolver)
-          return;
-      });
+      this.resolvePromises();
     }
-    onError(status, responseContent, preventDefault) {
+    onFailure(e) {
+      this.interceptors.forEach((interceptor) => interceptor.onFailure(e));
+      this.resolvePromises();
+    }
+    onError({ response, responseBody, preventDefault }) {
       this.interceptors.forEach((interceptor) => interceptor.onError({
-        status,
-        responseContent,
+        response,
+        responseBody,
         preventDefault
       }));
+      this.resolvePromises();
     }
     onSuccess() {
       this.interceptors.forEach((interceptor) => {
@@ -5616,30 +4971,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           onRender: (callback) => interceptor.onRender = callback
         });
       });
-    }
-    onSync() {
-      this.interceptors.forEach((interceptor) => interceptor.onSync());
-    }
-    onMorph() {
-      this.interceptors.forEach((interceptor) => interceptor.onMorph());
-    }
-    onRender() {
-      this.interceptors.forEach((interceptor) => interceptor.onRender());
-    }
-    respond() {
-      this.respondCallbacks.forEach((i) => i());
-    }
-    fail() {
-      this.failCallbacks.forEach((i) => i());
-      this.actions.forEach((action) => {
-        let promiseResolver = this.promiseResolversByAction.get(action);
-        if (!promiseResolver)
-          return;
-        promiseResolver.reject();
-      });
-    }
-    succeed() {
-      this.succeedCallbacks.forEach((i) => i(this.responsePayload));
       let returns = this.responsePayload.effects["returns"];
       if (!returns)
         return;
@@ -5651,6 +4982,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (!promiseResolver)
           return;
         promiseResolver.resolve(value);
+      });
+    }
+    onSync() {
+      this.interceptors.forEach((interceptor) => interceptor.onSync());
+    }
+    onMorph() {
+      this.interceptors.forEach((interceptor) => interceptor.onMorph());
+    }
+    onRender() {
+      this.interceptors.forEach((interceptor) => interceptor.onRender());
+    }
+    resolvePromises() {
+      this.actions.forEach((action) => {
+        let promiseResolver = this.promiseResolversByAction.get(action);
+        if (!promiseResolver)
+          return;
+        promiseResolver.resolve();
       });
     }
   };
@@ -5963,7 +5311,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     outstandingActionOrigin = origin;
   }
   function intercept(component, callback) {
-    interceptors.add(component, callback);
+    interceptors.addInterceptor(component, callback);
+  }
+  function interceptMessage(callback) {
+    interceptors.addMessageInterceptor(callback);
+  }
+  function interceptRequest(callback) {
+    interceptors.addRequestInterceptor(callback);
   }
   function fireAction(component, method, params = [], metadata = {}) {
     let origin = outstandingActionOrigin;
@@ -5981,39 +5335,51 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let requests = createRequestsFromMessages(messages);
         requests.forEach((request) => {
           request.initInterceptors(interceptors);
-          if (request.isCancelled())
+          if (request.hasAllCancelledMessages()) {
+            request.cancel();
             return;
+          }
           sendRequest(request, {
-            send: () => {
-              request.onSend();
+            send: ({ responsePromise }) => {
+              request.onSend({ responsePromise });
             },
-            failure: () => {
-              request.fail(503, null, () => {
-              });
+            failure: ({ error: error2 }) => {
+              request.onFailure({ error: error2 });
             },
-            response: ({ status, response }) => {
-              request.respond(status, response);
+            response: ({ response }) => {
+              request.onResponse({ response });
             },
-            error: ({ status, aborted, responseContent }) => {
+            parsed: ({ response, responseBody }) => {
+              request.onParsed({ response, responseBody });
+            },
+            error: ({ response, responseBody }) => {
               let preventDefault = false;
-              request.fail(status, responseContent, () => preventDefault = true);
-              request.onError(status, responseContent, () => preventDefault = true);
+              request.onError({ response, responseBody, preventDefault });
               if (preventDefault)
                 return;
-              if (status === 419) {
+              if (response.status === 419) {
                 confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
               }
-              if (aborted)
+              if (response.aborted)
                 return;
-              showHtmlModal(responseContent);
+              showHtmlModal(responseBody);
             },
             redirect: (url) => {
+              let preventDefault = false;
+              request.onRedirect({ url, preventDefault });
+              if (preventDefault)
+                return;
               window.location.href = url;
             },
-            dump: (dumpContent) => {
+            dump: (content) => {
+              let preventDefault = false;
+              request.onDump({ content, preventDefault });
+              if (preventDefault)
+                return;
               showHtmlModal(dumpContent);
             },
-            success: async ({ status, responseJson }) => {
+            success: async ({ response, responseBody, responseJson }) => {
+              request.onSuccess({ response, responseBody, responseJson });
               await triggerAsync("payload.intercept", responseJson);
               let messageResponsePayloads = responseJson.components;
               request.messages.forEach((message2) => {
@@ -6039,7 +5405,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                   }
                 });
               });
-              request.succeed(status, responseJson);
             }
           });
         });
@@ -6068,19 +5433,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         updates: message.updates,
         calls: message.calls
       };
-      trigger("commit", {
-        component: message.component,
-        commit: message.payload,
-        respond: (callback) => {
-          message.respondCallbacks.push(callback);
-        },
-        succeed: (callback) => {
-          message.succeedCallbacks.push(callback);
-        },
-        fail: (callback) => {
-          message.failCallbacks.push(callback);
-        }
-      });
     });
   }
   function createRequestsFromMessages(messages) {
@@ -6101,62 +5453,58 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     trigger("message.pooled", { requests });
     requests.forEach((request) => {
-      request.payload = {
-        _token: getCsrfToken(),
-        components: Array.from(request.messages, (i) => i.payload)
-      };
+      request.uri = getUpdateUri();
+      Object.defineProperty(request, "payload", {
+        get() {
+          return {
+            _token: getCsrfToken(),
+            components: Array.from(request.messages, (i) => i.payload)
+          };
+        }
+      });
+      Object.defineProperty(request, "options", {
+        get() {
+          return {
+            method: "POST",
+            body: JSON.stringify(request.payload),
+            headers: {
+              "Content-type": "application/json",
+              "X-Livewire": "1"
+            },
+            signal: request.controller.signal
+          };
+        }
+      });
     });
     return requests;
   }
   async function sendRequest(request, handlers) {
-    let options = {
-      method: "POST",
-      body: JSON.stringify(request.payload),
-      headers: {
-        "Content-type": "application/json",
-        "X-Livewire": "1"
-      },
-      signal: request.controller.signal
-    };
-    let updateUri = getUpdateUri();
-    trigger("request", {
-      url: updateUri,
-      options,
-      payload: options.body,
-      respond: (i) => request.respondCallbacks.push(i),
-      succeed: (i) => request.succeedCallbacks.push(i),
-      fail: (i) => request.failCallbacks.push(i)
-    });
     let response;
     try {
-      let fetchPromise = fetch(updateUri, options);
-      handlers.send();
-      response = await fetchPromise;
+      let responsePromise = fetch(request.uri, request.options);
+      handlers.send({ responsePromise });
+      response = await responsePromise;
     } catch (e) {
-      handlers.failure();
+      handlers.failure({ error: e });
       return;
     }
-    let mutableResponseObject = {
-      status: response.status,
-      response
-    };
-    handlers.response(mutableResponseObject);
-    response = mutableResponseObject.response;
-    let responseContent = await response.text();
+    handlers.response({ response });
+    let responseBody = await response.text();
+    handlers.parsed({ response, responseBody });
     if (!response.ok) {
-      handlers.error({ status: response.status, aborted: response.aborted, responseContent });
+      handlers.error({ response, responseBody });
       return;
     }
     if (response.redirected) {
       handlers.redirect(response.url);
     }
-    if (contentIsFromDump(responseContent)) {
+    if (contentIsFromDump(responseBody)) {
       let dump;
-      [dump, responseContent] = splitDumpFromContent(responseContent);
+      [dump, responseBody] = splitDumpFromContent(responseBody);
       handlers.dump(dump);
     }
-    let responseJson = JSON.parse(responseContent);
-    handlers.success({ status: response.status, responseJson });
+    let responseJson = JSON.parse(responseBody);
+    handlers.success({ response, responseBody, responseJson });
   }
   function applyMorph(message, html) {
     if (false)
@@ -6197,6 +5545,98 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function createUrlObjectFromString(urlString) {
     return urlString !== null && new URL(urlString, document.baseURI);
   }
+  interceptRequest(({
+    request,
+    onSend,
+    onCancel,
+    onFailure,
+    onResponse,
+    onParsed,
+    onError,
+    onSuccess
+  }) => {
+    let respondCallbacks = [];
+    let succeedCallbacks = [];
+    let failCallbacks = [];
+    trigger("request", {
+      url: request.uri,
+      options: request.options,
+      payload: request.options.body,
+      respond: (i) => respondCallbacks.push(i),
+      succeed: (i) => succeedCallbacks.push(i),
+      fail: (i) => failCallbacks.push(i)
+    });
+    onResponse(({ response }) => {
+      respondCallbacks.forEach((callback) => callback({
+        status: response.status,
+        response
+      }));
+    });
+    onSuccess(({ response, responseJson }) => {
+      succeedCallbacks.forEach((callback) => callback({
+        status: response.status,
+        json: responseJson
+      }));
+    });
+    onFailure(({ error: error2 }) => {
+      failCallbacks.forEach((callback) => callback({
+        status: 503,
+        content: null,
+        preventDefault: () => {
+        }
+      }));
+    });
+    onError(({ response, responseBody, preventDefault }) => {
+      failCallbacks.forEach((callback) => callback({
+        status: response.status,
+        content: responseBody,
+        preventDefault
+      }));
+    });
+  });
+  interceptMessage(({
+    message,
+    onSend,
+    onCancel,
+    onError,
+    onSuccess,
+    onSync,
+    onMorph,
+    onRender
+  }) => {
+    let respondCallbacks = [];
+    let succeedCallbacks = [];
+    let failCallbacks = [];
+    trigger("commit", {
+      component: message.component,
+      commit: message.payload,
+      respond: (callback) => {
+        respondCallbacks.push(callback);
+      },
+      succeed: (callback) => {
+        succeedCallbacks.push(callback);
+      },
+      fail: (callback) => {
+        failCallbacks.push(callback);
+      }
+    });
+    onSuccess(({ payload, onSync: onSync2, onMorph: onMorph2, onRender: onRender2 }) => {
+      respondCallbacks.forEach((callback) => callback());
+      onRender2(() => {
+        succeedCallbacks.forEach((callback) => callback({
+          snapshot: payload.snapshot,
+          effects: payload.effects
+        }));
+      });
+    });
+    onError(() => {
+      failCallbacks.forEach((callback) => callback());
+    });
+    onCancel(() => {
+      respondCallbacks.forEach((callback) => callback());
+      failCallbacks.forEach((callback) => callback());
+    });
+  });
 
   // js/features/supportErrors.js
   function getErrorsObject(component) {
@@ -7001,7 +6441,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default(Alpine23) {
     Alpine23.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -7095,7 +6535,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default = src_default;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -7962,8 +7402,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         allowOutsideClick: true,
         fallbackFocus: () => el
       };
-      let undoInert = () => {
-      };
       if (modifiers.includes("noautofocus")) {
         options.initialFocus = false;
       } else {
@@ -7971,14 +7409,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (autofocusEl)
           options.initialFocus = autofocusEl;
       }
-      if (modifiers.includes("inert")) {
-        options.onPostActivate = () => {
-          Alpine23.nextTick(() => {
-            undoInert = setInert(el);
-          });
-        };
-      }
       let trap = createFocusTrap(el, options);
+      let undoInert = () => {
+      };
       let undoDisableScrolling = () => {
       };
       const releaseFocus = () => {
@@ -7998,6 +7431,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (value && !oldValue) {
           if (modifiers.includes("noscroll"))
             undoDisableScrolling = disableScrolling();
+          if (modifiers.includes("inert"))
+            undoInert = setInert(el);
           setTimeout(() => {
             trap.activate();
           }, 15);
@@ -8049,7 +7484,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default3(Alpine23) {
     let persist = () => {
       let alias;
@@ -8101,7 +7536,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return storage.getItem(key) !== null;
   }
   function storageGet(key, storage) {
-    let value = storage.getItem(key);
+    let value = storage.getItem(key, storage);
     if (value === void 0)
       return;
     return JSON.parse(value);
@@ -8111,7 +7546,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default4(Alpine23) {
     Alpine23.directive("intersect", Alpine23.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
       let evaluate2 = evaluateLater(expression);
@@ -8211,7 +7646,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -10450,158 +9885,116 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph2(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
-    let context = createMorphContext(options);
-    let toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
-    if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
-      toEl._x_dataStack = window.Alpine.closestDataStack(from);
-      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
+    let fromEl;
+    let toEl;
+    let key, lookahead, updating, updated, removing, removed, adding, added;
+    function assignOptions(options2 = {}) {
+      let defaultGetKey = (el) => el.getAttribute("key");
+      let noop = () => {
+      };
+      updating = options2.updating || noop;
+      updated = options2.updated || noop;
+      removing = options2.removing || noop;
+      removed = options2.removed || noop;
+      adding = options2.adding || noop;
+      added = options2.added || noop;
+      key = options2.key || defaultGetKey;
+      lookahead = options2.lookahead || false;
     }
-    context.patch(from, toEl);
-    return from;
-  }
-  function morphBetween(startMarker, endMarker, toHtml, options = {}) {
-    monkeyPatchDomSetAttributeToAllowAtSymbols();
-    let context = createMorphContext(options);
-    let fromContainer = startMarker.parentNode;
-    let fromBlock = new Block(startMarker, endMarker);
-    let toContainer = typeof toHtml === "string" ? (() => {
-      let container = document.createElement("div");
-      container.insertAdjacentHTML("beforeend", toHtml);
-      return container;
-    })() : toHtml;
-    let toStartMarker = document.createComment("[morph-start]");
-    let toEndMarker = document.createComment("[morph-end]");
-    toContainer.insertBefore(toStartMarker, toContainer.firstChild);
-    toContainer.appendChild(toEndMarker);
-    let toBlock = new Block(toStartMarker, toEndMarker);
-    if (window.Alpine && window.Alpine.closestDataStack) {
-      toContainer._x_dataStack = window.Alpine.closestDataStack(fromContainer);
-      toContainer._x_dataStack && window.Alpine.cloneNode(fromContainer, toContainer);
-    }
-    context.patchChildren(fromBlock, toBlock);
-  }
-  function createMorphContext(options = {}) {
-    let defaultGetKey = (el) => el.getAttribute("key");
-    let noop = () => {
-    };
-    let context = {
-      key: options.key || defaultGetKey,
-      lookahead: options.lookahead || false,
-      updating: options.updating || noop,
-      updated: options.updated || noop,
-      removing: options.removing || noop,
-      removed: options.removed || noop,
-      adding: options.adding || noop,
-      added: options.added || noop
-    };
-    context.patch = function(from, to) {
-      if (context.differentElementNamesTypesOrKeys(from, to)) {
-        return context.swapElements(from, to);
+    function patch(from2, to) {
+      if (differentElementNamesTypesOrKeys(from2, to)) {
+        return swapElements(from2, to);
       }
       let updateChildrenOnly = false;
       let skipChildren = false;
-      let skipUntil = (predicate) => context.skipUntilCondition = predicate;
-      if (shouldSkipChildren(context.updating, () => skipChildren = true, skipUntil, from, to, () => updateChildrenOnly = true))
+      if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
         return;
-      if (from.nodeType === 1 && window.Alpine) {
-        window.Alpine.cloneNode(from, to);
-        if (from._x_teleport && to._x_teleport) {
-          context.patch(from._x_teleport, to._x_teleport);
+      if (from2.nodeType === 1 && window.Alpine) {
+        window.Alpine.cloneNode(from2, to);
+        if (from2._x_teleport && to._x_teleport) {
+          patch(from2._x_teleport, to._x_teleport);
         }
       }
       if (textOrComment(to)) {
-        context.patchNodeValue(from, to);
-        context.updated(from, to);
+        patchNodeValue(from2, to);
+        updated(from2, to);
         return;
       }
       if (!updateChildrenOnly) {
-        context.patchAttributes(from, to);
+        patchAttributes(from2, to);
       }
-      context.updated(from, to);
+      updated(from2, to);
       if (!skipChildren) {
-        context.patchChildren(from, to);
+        patchChildren(from2, to);
       }
-    };
-    context.differentElementNamesTypesOrKeys = function(from, to) {
-      return from.nodeType != to.nodeType || from.nodeName != to.nodeName || context.getKey(from) != context.getKey(to);
-    };
-    context.swapElements = function(from, to) {
-      if (shouldSkip(context.removing, from))
+    }
+    function differentElementNamesTypesOrKeys(from2, to) {
+      return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
+    }
+    function swapElements(from2, to) {
+      if (shouldSkip(removing, from2))
         return;
       let toCloned = to.cloneNode(true);
-      if (shouldSkip(context.adding, toCloned))
+      if (shouldSkip(adding, toCloned))
         return;
-      from.replaceWith(toCloned);
-      context.removed(from);
-      context.added(toCloned);
-    };
-    context.patchNodeValue = function(from, to) {
+      from2.replaceWith(toCloned);
+      removed(from2);
+      added(toCloned);
+    }
+    function patchNodeValue(from2, to) {
       let value = to.nodeValue;
-      if (from.nodeValue !== value) {
-        from.nodeValue = value;
+      if (from2.nodeValue !== value) {
+        from2.nodeValue = value;
       }
-    };
-    context.patchAttributes = function(from, to) {
-      if (from._x_transitioning)
+    }
+    function patchAttributes(from2, to) {
+      if (from2._x_transitioning)
         return;
-      if (from._x_isShown && !to._x_isShown) {
-        return;
-      }
-      if (!from._x_isShown && to._x_isShown) {
+      if (from2._x_isShown && !to._x_isShown) {
         return;
       }
-      let domAttributes = Array.from(from.attributes);
+      if (!from2._x_isShown && to._x_isShown) {
+        return;
+      }
+      let domAttributes = Array.from(from2.attributes);
       let toAttributes = Array.from(to.attributes);
       for (let i = domAttributes.length - 1; i >= 0; i--) {
         let name = domAttributes[i].name;
         if (!to.hasAttribute(name)) {
-          from.removeAttribute(name);
+          from2.removeAttribute(name);
         }
       }
       for (let i = toAttributes.length - 1; i >= 0; i--) {
         let name = toAttributes[i].name;
         let value = toAttributes[i].value;
-        if (from.getAttribute(name) !== value) {
-          from.setAttribute(name, value);
+        if (from2.getAttribute(name) !== value) {
+          from2.setAttribute(name, value);
         }
       }
-    };
-    context.patchChildren = function(from, to) {
-      let fromKeys = context.keyToMap(from.children);
+    }
+    function patchChildren(from2, to) {
+      let fromKeys = keyToMap(from2.children);
       let fromKeyHoldovers = {};
       let currentTo = getFirstNode(to);
-      let currentFrom = getFirstNode(from);
+      let currentFrom = getFirstNode(from2);
       while (currentTo) {
         seedingMatchingId(currentTo, currentFrom);
-        let toKey = context.getKey(currentTo);
-        let fromKey = context.getKey(currentFrom);
-        if (context.skipUntilCondition) {
-          let fromDone = !currentFrom || context.skipUntilCondition(currentFrom);
-          let toDone = !currentTo || context.skipUntilCondition(currentTo);
-          if (fromDone && toDone) {
-            context.skipUntilCondition = null;
-          } else {
-            if (!fromDone)
-              currentFrom = currentFrom && getNextSibling(from, currentFrom);
-            if (!toDone)
-              currentTo = currentTo && getNextSibling(to, currentTo);
-            continue;
-          }
-        }
+        let toKey = getKey(currentTo);
+        let fromKey = getKey(currentFrom);
         if (!currentFrom) {
           if (toKey && fromKeyHoldovers[toKey]) {
             let holdover = fromKeyHoldovers[toKey];
-            from.appendChild(holdover);
+            from2.appendChild(holdover);
             currentFrom = holdover;
-            fromKey = context.getKey(currentFrom);
+            fromKey = getKey(currentFrom);
           } else {
-            if (!shouldSkip(context.adding, currentTo)) {
+            if (!shouldSkip(adding, currentTo)) {
               let clone = currentTo.cloneNode(true);
-              from.appendChild(clone);
-              context.added(clone);
+              from2.appendChild(clone);
+              added(clone);
             }
             currentTo = getNextSibling(to, currentTo);
             continue;
@@ -10613,7 +10006,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let nestedIfCount = 0;
           let fromBlockStart = currentFrom;
           while (currentFrom) {
-            let next = getNextSibling(from, currentFrom);
+            let next = getNextSibling(from2, currentFrom);
             if (isIf(next)) {
               nestedIfCount++;
             } else if (isEnd(next) && nestedIfCount > 0) {
@@ -10642,17 +10035,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let toBlockEnd = currentTo;
           let fromBlock = new Block(fromBlockStart, fromBlockEnd);
           let toBlock = new Block(toBlockStart, toBlockEnd);
-          context.patchChildren(fromBlock, toBlock);
+          patchChildren(fromBlock, toBlock);
           continue;
         }
-        if (currentFrom.nodeType === 1 && context.lookahead && !currentFrom.isEqualNode(currentTo)) {
+        if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
           let nextToElementSibling = getNextSibling(to, currentTo);
           let found = false;
           while (!found && nextToElementSibling) {
             if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
               found = true;
-              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
-              fromKey = context.getKey(currentFrom);
+              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+              fromKey = getKey(currentFrom);
             }
             nextToElementSibling = getNextSibling(to, nextToElementSibling);
           }
@@ -10660,9 +10053,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (toKey !== fromKey) {
           if (!toKey && fromKey) {
             fromKeyHoldovers[fromKey] = currentFrom;
-            currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+            currentFrom = addNodeBefore(from2, currentTo, currentFrom);
             fromKeyHoldovers[fromKey].remove();
-            currentFrom = getNextSibling(from, currentFrom);
+            currentFrom = getNextSibling(from2, currentFrom);
             currentTo = getNextSibling(to, currentTo);
             continue;
           }
@@ -10670,7 +10063,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             if (fromKeys[toKey]) {
               currentFrom.replaceWith(fromKeys[toKey]);
               currentFrom = fromKeys[toKey];
-              fromKey = context.getKey(currentFrom);
+              fromKey = getKey(currentFrom);
             }
           }
           if (toKey && fromKey) {
@@ -10679,57 +10072,67 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               fromKeyHoldovers[fromKey] = currentFrom;
               currentFrom.replaceWith(fromKeyNode);
               currentFrom = fromKeyNode;
-              fromKey = context.getKey(currentFrom);
+              fromKey = getKey(currentFrom);
             } else {
               fromKeyHoldovers[fromKey] = currentFrom;
-              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
               fromKeyHoldovers[fromKey].remove();
-              currentFrom = getNextSibling(from, currentFrom);
+              currentFrom = getNextSibling(from2, currentFrom);
               currentTo = getNextSibling(to, currentTo);
               continue;
             }
           }
         }
-        let currentFromNext = currentFrom && getNextSibling(from, currentFrom);
-        context.patch(currentFrom, currentTo);
+        let currentFromNext = currentFrom && getNextSibling(from2, currentFrom);
+        patch(currentFrom, currentTo);
         currentTo = currentTo && getNextSibling(to, currentTo);
         currentFrom = currentFromNext;
       }
       let removals = [];
       while (currentFrom) {
-        if (!shouldSkip(context.removing, currentFrom))
+        if (!shouldSkip(removing, currentFrom))
           removals.push(currentFrom);
-        currentFrom = getNextSibling(from, currentFrom);
+        currentFrom = getNextSibling(from2, currentFrom);
       }
       while (removals.length) {
         let domForRemoval = removals.shift();
         domForRemoval.remove();
-        context.removed(domForRemoval);
+        removed(domForRemoval);
       }
-    };
-    context.getKey = function(el) {
-      return el && el.nodeType === 1 && context.key(el);
-    };
-    context.keyToMap = function(els2) {
+    }
+    function getKey(el) {
+      return el && el.nodeType === 1 && key(el);
+    }
+    function keyToMap(els2) {
       let map = {};
       for (let el of els2) {
-        let theKey = context.getKey(el);
+        let theKey = getKey(el);
         if (theKey) {
           map[theKey] = el;
         }
       }
       return map;
-    };
-    context.addNodeBefore = function(parent, node, beforeMe) {
-      if (!shouldSkip(context.adding, node)) {
+    }
+    function addNodeBefore(parent, node, beforeMe) {
+      if (!shouldSkip(adding, node)) {
         let clone = node.cloneNode(true);
         parent.insertBefore(clone, beforeMe);
-        context.added(clone);
+        added(clone);
         return clone;
       }
       return node;
-    };
-    return context;
+    }
+    assignOptions(options);
+    fromEl = from;
+    toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
+    if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
+      toEl._x_dataStack = window.Alpine.closestDataStack(from);
+      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
+    }
+    patch(from, toEl);
+    fromEl = void 0;
+    toEl = void 0;
+    return from;
   }
   morph2.step = () => {
   };
@@ -10740,9 +10143,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     hook(...args, () => skip = true);
     return skip;
   }
-  function shouldSkipChildren(hook, skipChildren, skipUntil, ...args) {
+  function shouldSkipChildren(hook, skipChildren, ...args) {
     let skip = false;
-    hook(...args, () => skip = true, skipChildren, skipUntil);
+    hook(...args, () => skip = true, skipChildren);
     return skip;
   }
   var patched = false;
@@ -10827,11 +10230,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function src_default7(Alpine23) {
     Alpine23.morph = morph2;
-    Alpine23.morphBetween = morphBetween;
   }
   var module_default7 = src_default7;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default8(Alpine23) {
     Alpine23.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
       let templateFn = () => expression;
@@ -12613,7 +12015,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var Livewire2 = {
     directive,
     dispatchTo,
-    intercept: (component, callback) => intercept(component, callback),
+    interceptMessage: (callback) => interceptMessage(callback),
+    interceptRequest: (callback) => interceptRequest(callback),
     fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),
     start,
     first,

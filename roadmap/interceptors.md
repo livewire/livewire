@@ -51,12 +51,17 @@ component.intercept(({ onSend, onCancel, onError, onSuccess }) => {
     })
 })
 
-Livewire.intercept(({ request }) => {
-    request.onSend()
-    request.onReceive()
-    request.onFailure()
-    request.onError()
-    request.onAbort()
+Livewire.interceptMessage(({ message }) => {
+
+})
+
+Livewire.interceptRequest(({ request, messages }) => {
+    onSend()
+    onCancel()
+    onFailure()
+    onResponse(({ response, onParsed }) => {
+        //
+    })
 })
 
 Livewire.intercept(({ request }) => {

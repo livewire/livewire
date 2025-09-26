@@ -1,75 +1,92 @@
 
 export class MessageRequest {
-    _messages = new Set()
+    messages = new Set()
     controller = new AbortController()
+    interceptors = []
+    cancelled = false
+    uri = null
     payload = null
-    respondCallbacks = []
-    succeedCallbacks = []
-    failCallbacks = []
+    options = null
 
-    get messages() {
-        return new Set([...this._messages].filter(message => ! message.isCancelled()))
+    addMessage(message) {
+        this.messages.add(message)
+    }
+
+    getActiveMessages() {
+        return new Set([...this.messages].filter(message => ! message.isCancelled()))
     }
 
     initInterceptors(interceptorRegistry) {
-        this._messages.forEach(message => {
-            let interceptors = interceptorRegistry.getRelevantInterceptors(message)
+        this.interceptors = interceptorRegistry.getRequestInterceptors(this)
 
-            message.setInterceptors(interceptors)
+        this.messages.forEach(message => {
+            let messageInterceptors = interceptorRegistry.getMessageInterceptors(message)
+
+            message.setInterceptors(messageInterceptors)
+        })
+
+        this.interceptors.forEach(interceptor => interceptor.init())
+
+        this.messages.forEach(message => {
+            message.getInterceptors().forEach(interceptor => interceptor.init())
         })
     }
 
-    addMessage(message) {
-        this._messages.add(message)
-    }
-
     cancel() {
+        if (this.cancelled) return
+
+        this.cancelled = true
+
         this.controller.abort('cancelled')
 
         this.messages.forEach(message => message.cancel())
     }
 
-    isCancelled() {
-        if (this.controller.signal.aborted) return true
+    hasAllCancelledMessages() {
+        return this.getActiveMessages().size === 0
+    }
 
-        return this.messages.size === 0
+    isCancelled() {
+        return this.cancelled
     }
 
     /**
      * Lifecycle methods
      */
-    onSend() {
+    onSend({ responsePromise }) {
+        this.interceptors.forEach(interceptor => interceptor.onSend({ responsePromise }))
+
         this.messages.forEach(message => message.onSend())
     }
 
-    onError(status, responseContent, preventDefault) {
-        this.messages.forEach(message => message.onError(status, responseContent, preventDefault))
+    onFailure({ error }) {
+        this.interceptors.forEach(interceptor => interceptor.onFailure({ error }))
     }
 
-    onSuccess() {
-        this.messages.forEach(message => message.onSuccess())
+    onResponse({ response }) {
+        this.interceptors.forEach(interceptor => interceptor.onResponse({ response }))
     }
 
-    /**
-     * End of lifecycle methods
-     */
-
-    respond(status, response) {
-        this.messages.forEach(message => message.respond())
-
-        this.respondCallbacks.forEach(i => i({ status, response }))
+    onParsed({ response, responseBody }) {
+        this.interceptors.forEach(interceptor => interceptor.onParsed({ response, responseBody }))
     }
 
-    fail(status, content, preventDefault) {
-        this.messages.forEach(message => message.fail())
-
-        this.failCallbacks.forEach(i => i({ status, content, preventDefault }))
+    onRedirect({ url, preventDefault }) {
+        this.interceptors.forEach(interceptor => interceptor.onRedirect({ url, preventDefault }))
     }
 
-    succeed(status, json) {
-        this.messages.forEach(message => message.succeed())
+    onDump({ content, preventDefault }) {
+        this.interceptors.forEach(interceptor => interceptor.onDump({ content, preventDefault }))
+    }
 
-        this.succeedCallbacks.forEach(i => i({ status, json }))
+    onError({ response, responseBody, preventDefault }) {
+        this.interceptors.forEach(interceptor => interceptor.onError({ response, responseBody, preventDefault }))
+
+        this.messages.forEach(message => message.onError({ response, responseBody, preventDefault }))
+    }
+
+    onSuccess({ response, responseBody, responseJson }) {
+        this.interceptors.forEach(interceptor => interceptor.onSuccess({ response, responseBody, responseJson }))
     }
 }
 
