@@ -3,12 +3,14 @@ export class MessageRequest {
     messages = new Set()
     controller = new AbortController()
     interceptors = []
-    cancelled = false
+    aborted = false
     uri = null
     payload = null
     options = null
 
     addMessage(message) {
+        message.setRequest(this)
+
         this.messages.add(message)
     }
 
@@ -32,22 +34,26 @@ export class MessageRequest {
         })
     }
 
-    cancel() {
-        if (this.cancelled) return
+    abort() {
+        if (this.aborted) return
 
-        this.cancelled = true
+        this.aborted = true
 
-        this.controller.abort('cancelled')
+        this.controller.abort()
 
-        this.messages.forEach(message => message.cancel())
+        this.messages.forEach(message => {
+            if (message.isCancelled()) return
+
+            message.cancel()
+        })
     }
 
     hasAllCancelledMessages() {
         return this.getActiveMessages().size === 0
     }
 
-    isCancelled() {
-        return this.cancelled
+    isAborted() {
+        return this.aborted
     }
 
     /**
@@ -57,6 +63,10 @@ export class MessageRequest {
         this.interceptors.forEach(interceptor => interceptor.onSend({ responsePromise }))
 
         this.messages.forEach(message => message.onSend())
+    }
+
+    onAbort() {
+        this.interceptors.forEach(interceptor => interceptor.onAbort())
     }
 
     onFailure({ error }) {
@@ -98,7 +108,7 @@ export class PageRequest {
     }
 
     cancel() {
-        this.controller.abort('cancelled')
+        this.controller.abort()
     }
 
     isCancelled() {

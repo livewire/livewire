@@ -3992,11 +3992,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     messages = /* @__PURE__ */ new Set();
     controller = new AbortController();
     interceptors = [];
-    cancelled = false;
+    aborted = false;
     uri = null;
     payload = null;
     options = null;
     addMessage(message) {
+      message.setRequest(this);
       this.messages.add(message);
     }
     getActiveMessages() {
@@ -4013,22 +4014,29 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         message.getInterceptors().forEach((interceptor2) => interceptor2.init());
       });
     }
-    cancel() {
-      if (this.cancelled)
+    abort() {
+      if (this.aborted)
         return;
-      this.cancelled = true;
-      this.controller.abort("cancelled");
-      this.messages.forEach((message) => message.cancel());
+      this.aborted = true;
+      this.controller.abort();
+      this.messages.forEach((message) => {
+        if (message.isCancelled())
+          return;
+        message.cancel();
+      });
     }
     hasAllCancelledMessages() {
       return this.getActiveMessages().size === 0;
     }
-    isCancelled() {
-      return this.cancelled;
+    isAborted() {
+      return this.aborted;
     }
     onSend({ responsePromise }) {
       this.interceptors.forEach((interceptor2) => interceptor2.onSend({ responsePromise }));
       this.messages.forEach((message) => message.onSend());
+    }
+    onAbort() {
+      this.interceptors.forEach((interceptor2) => interceptor2.onAbort());
     }
     onFailure({ error: error2 }) {
       this.interceptors.forEach((interceptor2) => interceptor2.onFailure({ error: error2 }));
@@ -4059,7 +4067,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.uri = uri;
     }
     cancel() {
-      this.controller.abort("cancelled");
+      this.controller.abort();
     }
     isCancelled() {
       return this.controller.signal.aborted;
@@ -4117,7 +4125,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var RequestInterceptor = class {
     onSend = () => {
     };
-    onCancel = () => {
+    onAbort = () => {
     };
     onFailure = () => {
     };
@@ -4142,7 +4150,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         request: this.request,
         component: this.request.component,
         onSend: (callback2) => this.onSend = callback2,
-        onCancel: (callback2) => this.onCancel = callback2,
+        onAbort: (callback2) => this.onAbort = callback2,
         onFailure: (callback2) => this.onFailure = callback2,
         onResponse: (callback2) => this.onResponse = callback2,
         onParsed: (callback2) => this.onParsed = callback2,
@@ -4248,6 +4256,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     responsePayload = null;
     interceptors = [];
     cancelled = false;
+    request = null;
     constructor(component) {
       this.component = component;
     }
@@ -4258,6 +4267,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setInterceptors(interceptors3) {
       this.interceptors = interceptors3;
     }
+    setRequest(request) {
+      this.request = request;
+    }
     getInterceptors() {
       return this.interceptors;
     }
@@ -4266,6 +4278,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return;
       this.cancelled = true;
       this.onCancel();
+      if (this.request.hasAllCancelledMessages()) {
+        this.request.abort();
+      }
     }
     isCancelled() {
       return this.cancelled;
@@ -4336,7 +4351,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var Action = class {
     handleReturn = () => {
     };
-    constructor(component, method, params = [], metadata = {}, origin = {}) {
+    constructor(component, method, params = [], metadata = {}, origin = null) {
       this.component = component;
       this.method = method;
       this.params = params;
@@ -4631,10 +4646,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/request/index.js
   var outstandingActionOrigin = null;
+  var outstandingActionMetadata = {};
   var outstandingMessages = /* @__PURE__ */ new Map();
   var interceptors2 = new InterceptorRegistry();
   function setNextActionOrigin(origin) {
     outstandingActionOrigin = origin;
+  }
+  function setNextActionMetadata(metadata) {
+    outstandingActionMetadata = metadata;
   }
   function intercept(component, callback) {
     interceptors2.addInterceptor(component, callback);
@@ -4648,7 +4667,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function fireAction(component, method, params = [], metadata = {}) {
     let origin = outstandingActionOrigin;
     outstandingActionOrigin = null;
-    origin = origin || {};
+    metadata = {
+      ...metadata,
+      ...outstandingActionMetadata
+    };
+    outstandingActionMetadata = {};
     let action = new Action(component, method, params, metadata, origin);
     let message = outstandingMessages.get(component);
     if (!message) {
@@ -4662,8 +4685,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         requests.forEach((request) => {
           request.initInterceptors(interceptors2);
           if (request.hasAllCancelledMessages()) {
-            request.cancel();
-            return;
+            request.abort();
           }
           sendRequest(request, {
             send: ({ responsePromise }) => {
@@ -4710,21 +4732,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               let messageResponsePayloads = responseJson.components;
               request.messages.forEach((message2) => {
                 messageResponsePayloads.forEach((payload) => {
+                  if (message2.isCancelled())
+                    return;
                   let { snapshot: snapshotEncoded, effects } = payload;
                   let snapshot = JSON.parse(snapshotEncoded);
                   if (snapshot.memo.id === message2.component.id) {
                     message2.responsePayload = { snapshot, effects };
                     message2.onSuccess();
+                    if (message2.isCancelled())
+                      return;
                     message2.component.mergeNewSnapshot(snapshotEncoded, effects, message2.updates);
                     message2.onSync();
+                    if (message2.isCancelled())
+                      return;
                     message2.component.processEffects(effects);
                     let html = effects["html"];
                     queueMicrotask(() => {
+                      if (message2.isCancelled())
+                        return;
                       if (html) {
                         applyMorph(message2, html);
                         message2.onMorph();
+                        if (message2.isCancelled())
+                          return;
                       }
                       setTimeout(() => {
+                        if (message2.isCancelled())
+                          return;
                         message2.onRender();
                       });
                     });
@@ -4807,10 +4841,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   async function sendRequest(request, handlers) {
     let response;
     try {
+      if (request.isAborted())
+        return;
       let responsePromise = fetch(request.uri, request.options);
+      if (request.isAborted())
+        return;
       handlers.send({ responsePromise });
       response = await responsePromise;
     } catch (e) {
+      if (request.isAborted())
+        return;
       handlers.failure({ error: e });
       return;
     }
@@ -4874,7 +4914,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   interceptRequest(({
     request,
     onSend,
-    onCancel,
+    onAbort,
     onFailure,
     onResponse,
     onParsed,
@@ -10457,18 +10497,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportDataLoading.js
-  intercept(({ action, component, request, el, directive: directive3 }) => {
-    if (!el)
-      return;
-    if (action.context.type === "poll")
-      return;
-    el.setAttribute("data-loading", "true");
-    request.afterResponse(() => {
-      el.removeAttribute("data-loading");
+  interceptMessage(({ actions, onSend, onCancel, onFailure, onError, onSuccess }) => {
+    let undos = [];
+    onSend(() => {
+      actions.forEach((action) => {
+        let origin = action.origin;
+        if (!origin || !origin.el)
+          return;
+        if (action.metadata?.type === "poll")
+          return;
+        origin.el.setAttribute("data-loading", "true");
+        undos.push(() => {
+          origin.el.removeAttribute("data-loading");
+        });
+      });
     });
-    request.onCancel(() => {
-      el.removeAttribute("data-loading");
-    });
+    onCancel(() => undos.forEach((undo) => undo()));
+    onFailure(() => undos.forEach((undo) => undo()));
+    onError(() => undos.forEach((undo) => undo()));
+    onSuccess(() => undos.forEach((undo) => undo()));
   });
 
   // js/features/supportPreserveScroll.js
@@ -11194,6 +11241,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function triggerComponentRequest(el, directive3, component) {
     setNextActionOrigin({ el, directive: directive3 });
+    setNextActionMetadata({ type: "poll" });
     let fullMethod = directive3.expression ? directive3.expression : "$refresh";
     evaluateActionExpression(component, el, fullMethod);
   }

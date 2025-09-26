@@ -1,4 +1,4 @@
-import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri, WeakBag } from '@/utils'
+import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
 import { MessageRequest, PageRequest } from './request.js'
 import { InterceptorRegistry } from './interceptor.js'
 import { trigger, triggerAsync } from '@/hooks.js'
@@ -8,11 +8,16 @@ import Action from './action.js'
 import { morph } from '@/morph'
 
 let outstandingActionOrigin = null
+let outstandingActionMetadata = {}
 let outstandingMessages = new Map
 let interceptors = new InterceptorRegistry
 
 export function setNextActionOrigin(origin) {
     outstandingActionOrigin = origin
+}
+
+export function setNextActionMetadata(metadata) {
+    outstandingActionMetadata = metadata
 }
 
 export function intercept(component, callback) {
@@ -32,7 +37,12 @@ export function fireAction(component, method, params = [], metadata = {}) {
 
     outstandingActionOrigin = null
 
-    origin = origin || {}
+    metadata = {
+        ...metadata,
+        ...outstandingActionMetadata,
+    }
+
+    outstandingActionMetadata = {}
 
     let action = new Action(component, method, params, metadata, origin)
 
@@ -56,9 +66,7 @@ export function fireAction(component, method, params = [], metadata = {}) {
                 request.initInterceptors(interceptors)
 
                 if (request.hasAllCancelledMessages()) {
-                    request.cancel()
-
-                    return
+                    request.abort()
                 }
 
                 sendRequest(request, {
@@ -118,6 +126,8 @@ export function fireAction(component, method, params = [], metadata = {}) {
 
                         request.messages.forEach(message => {
                             messageResponsePayloads.forEach(payload => {
+                                if (message.isCancelled()) return
+
                                 let { snapshot: snapshotEncoded, effects } = payload
                                 let snapshot = JSON.parse(snapshotEncoded)
 
@@ -125,10 +135,12 @@ export function fireAction(component, method, params = [], metadata = {}) {
                                     message.responsePayload = { snapshot, effects }
 
                                     message.onSuccess()
+                                    if (message.isCancelled()) return
 
                                     message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
 
                                     message.onSync()
+                                    if (message.isCancelled()) return
 
                                     // Trigger any side effects from the payload like "morph" and "dispatch event"...
                                     message.component.processEffects(effects)
@@ -136,13 +148,17 @@ export function fireAction(component, method, params = [], metadata = {}) {
                                     let html = effects['html']
 
                                     queueMicrotask(() => {
+                                        if (message.isCancelled()) return
+
                                         if (html) {
                                             applyMorph(message, html)
 
                                             message.onMorph()
+                                            if (message.isCancelled()) return
                                         }
 
                                         setTimeout(() => {
+                                            if (message.isCancelled()) return
                                             message.onRender()
                                         })
                                     })
@@ -248,12 +264,17 @@ async function sendRequest(request, handlers) {
     let response
 
     try {
+        if (request.isAborted()) return
+
         let responsePromise = fetch(request.uri, request.options)
 
+        if (request.isAborted()) return
         handlers.send({ responsePromise })
 
         response = await responsePromise
     } catch (e) {
+        if (request.isAborted()) return
+
         handlers.failure({ error: e })
 
         return
@@ -358,7 +379,7 @@ function createUrlObjectFromString(urlString) {
 interceptRequest(({
     request,
     onSend,
-    onCancel,
+    onAbort,
     onFailure,
     onResponse,
     onParsed,

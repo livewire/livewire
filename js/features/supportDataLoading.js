@@ -1,18 +1,26 @@
-import { intercept } from '@/request'
+import { interceptMessage } from '@/request'
 
-intercept(({ action, component, request, el, directive }) => {
-    if (! el) return
+interceptMessage(({ actions, onSend, onCancel, onFailure, onError, onSuccess }) => {
+    let undos = []
 
-    // Don't add data-loading to poll directives...
-    if (action.context.type === 'poll') return
+    onSend(() => {
+        actions.forEach(action => {
+            let origin = action.origin
 
-    el.setAttribute('data-loading', 'true')
+            if (! origin || ! origin.el) return
 
-    request.afterResponse(() => {
-        el.removeAttribute('data-loading')
+            if (action.metadata?.type === 'poll') return
+
+            origin.el.setAttribute('data-loading', 'true')
+
+            undos.push(() => {
+                origin.el.removeAttribute('data-loading')
+            })
+        })
     })
 
-    request.onCancel(() => {
-        el.removeAttribute('data-loading')
-    })
+    onCancel(() => undos.forEach(undo => undo()))
+    onFailure(() => undos.forEach(undo => undo()))
+    onError(() => undos.forEach(undo => undo()))
+    onSuccess(() => undos.forEach(undo => undo()))
 })

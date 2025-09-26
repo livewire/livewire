@@ -49,7 +49,7 @@ export class MessageInterceptor {
 
 export class RequestInterceptor {
     onSend = () => {}
-    onCancel = () => {}
+    onAbort = () => {}
     onFailure = () => {}
     onResponse = () => {}
     onParsed = () => {}
@@ -72,7 +72,7 @@ export class RequestInterceptor {
             request: this.request,
             component: this.request.component,
             onSend: (callback) => this.onSend = callback,
-            onCancel: (callback) => this.onCancel = callback,
+            onAbort: (callback) => this.onAbort = callback,
             onFailure: (callback) => this.onFailure = callback,
             onResponse: (callback) => this.onResponse = callback,
             onParsed: (callback) => this.onParsed = callback,

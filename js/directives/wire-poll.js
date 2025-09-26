@@ -1,6 +1,6 @@
 import { directive, getDirectives } from "@/directives"
 import { on } from '@/hooks'
-import { fireAction, setNextActionOrigin } from '@/request'
+import { fireAction, setNextActionMetadata, setNextActionOrigin } from '@/request'
 import { evaluateActionExpression } from '../evaluator'
 
 directive('poll', ({ el, directive, component }) => {
@@ -45,6 +45,7 @@ on('component.init', ({ component }) => {
 
 function triggerComponentRequest(el, directive, component) {
     setNextActionOrigin({ el, directive })
+    setNextActionMetadata({ type: 'poll' })
 
     let fullMethod = directive.expression ? directive.expression : '$refresh'
 

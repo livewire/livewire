@@ -9,6 +9,7 @@ export default class Message {
     responsePayload = null
     interceptors = []
     cancelled = false
+    request = null
 
     constructor(component) {
         this.component = component
@@ -23,6 +24,10 @@ export default class Message {
         this.interceptors = interceptors
     }
 
+    setRequest(request) {
+        this.request = request
+    }
+
     getInterceptors() {
         return this.interceptors
     }
@@ -33,6 +38,10 @@ export default class Message {
         this.cancelled = true
 
         this.onCancel()
+
+        if (this.request.hasAllCancelledMessages()) {
+            this.request.abort()
+        }
     }
 
     isCancelled() {
