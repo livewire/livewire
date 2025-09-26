@@ -12,8 +12,6 @@ export class Interceptor {
     constructor(message, callback) {
         this.message = message
 
-        let isCancellingSynchronously = true
-
         callback({
             actions: message.actions,
             component: message.component,
@@ -21,17 +19,7 @@ export class Interceptor {
             onCancel: (callback) => this.onCancel = callback,
             onError: (callback) => this.onError = callback,
             onSuccess: (callback) => this.onSuccess = callback,
-            cancel: () => {
-                if (isCancellingSynchronously) {
-                    queueMicrotask(() => {
-                        this.message.cancel()
-                    })
-
-                    isCancellingSynchronously = false
-                } else {
-                    this.message.cancel()
-                }
-            }
+            cancel: () => this.message.cancel()
         })
     }
 }

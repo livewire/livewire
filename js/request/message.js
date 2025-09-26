@@ -29,7 +29,10 @@ export default class Message {
     cancel() {
         this.cancelled = true
 
-        this.onCancel()
+        // Wait for the interceptors to finish being registered before we process the `onCancel` hooks...
+        queueMicrotask(() => {
+            this.onCancel()
+        })
     }
 
     isCancelled() {

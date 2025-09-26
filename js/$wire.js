@@ -172,7 +172,7 @@ wireProperty('$intercept', (component) => (method, callback = null) => {
         method = null
     }
 
-    return intercept(callback, component, method)
+    return intercept(component, callback)
 })
 
 wireProperty('$errors', (component) => getErrorsObject(component))

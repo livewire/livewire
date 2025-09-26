@@ -1,14 +1,18 @@
 
 export class MessageRequest {
-    messages = new Set()
+    _messages = new Set()
     controller = new AbortController()
     payload = null
     respondCallbacks = []
     succeedCallbacks = []
     failCallbacks = []
 
+    get messages() {
+        return new Set([...this._messages].filter(message => ! message.isCancelled()))
+    }
+
     initInterceptors(interceptorRegistry) {
-        this.messages.forEach(message => {
+        this._messages.forEach(message => {
             let interceptors = interceptorRegistry.getRelevantInterceptors(message)
 
             message.setInterceptors(interceptors)
@@ -16,7 +20,7 @@ export class MessageRequest {
     }
 
     addMessage(message) {
-        this.messages.add(message)
+        this._messages.add(message)
     }
 
     cancel() {
@@ -28,7 +32,7 @@ export class MessageRequest {
     isCancelled() {
         if (this.controller.signal.aborted) return true
 
-        return Array.from(this.messages).every(message => message.isCancelled())
+        return this.messages.size === 0
     }
 
     /**
