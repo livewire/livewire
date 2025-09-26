@@ -13,6 +13,11 @@ class IntegrateV4
 
     public function __invoke()
     {
+        // Register the livewire-compiled namespace for now as islands and placeholders depends on it.
+        // @todo: Remove this once islands and placeholders are updated to use the cache manager...
+        app('view')->addNamespace('livewire-compiled', storage_path('framework/views/livewire/views'));
+
+
         $this->registerSlotDirectives();
         $this->registerSlotsSupport();
         $this->hookIntoViewClear();
