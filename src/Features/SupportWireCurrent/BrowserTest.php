@@ -18,10 +18,12 @@ class BrowserTest extends BrowserTestCase
 
             Livewire::component('first-page', FirstPage::class);
             Livewire::component('second-page', SecondPage::class);
+            Livewire::component('wire-current-inside-component', WireCurrentInsideComponentPage::class);
 
             Route::get('/first', FirstPage::class)->middleware('web')->name('first');
             Route::get('/first/sub', FirstSubPage::class)->middleware('web')->name('first.sub');
             Route::get('/second', SecondPage::class)->middleware('web')->name('second');
+            Route::get('/wire-current-inside-component', WireCurrentInsideComponentPage::class)->middleware('web')->name('wire-current-inside-component');
         };
     }
 
@@ -146,6 +148,25 @@ class BrowserTest extends BrowserTestCase
                 ;
         });
     }
+
+    public function test_wire_current_works_inside_a_component_and_after_an_update()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/wire-current-inside-component')
+                ->waitForText('Current Page')
+
+                ->assertAttribute('@current', 'data-current', '')
+                ->assertHasClass('@current', 'active')
+
+                ->waitForLivewire()->click('@refresh')
+                ->waitForText('Current Page')
+
+                ->assertAttribute('@current', 'data-current', '')
+                ->assertHasClass('@current', 'active')
+                ;
+        });
+    }
 }
 
 #[Layout('test-views::navbar-sidebar')]
@@ -161,6 +182,7 @@ class FirstPage extends Component
         return <<<'HTML'
         <div>
             <div>On first</div>
+            <button type="button" wire:click="$refresh" dusk="refresh">Refresh</button>
         </div>
         HTML;
     }
@@ -187,6 +209,24 @@ class SecondPage extends Component
         return <<<'HTML'
         <div>
             <div>On second</div>
+        </div>
+        HTML;
+    }
+}
+
+class WireCurrentInsideComponentPage extends Component
+{
+    public function doRedirect($to)
+    {
+        return $this->redirect($to, navigate: true);
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <a href="/wire-current-inside-component" wire:current="active" dusk="current">Current Page</a>
+            <button type="button" wire:click="$refresh" dusk="refresh">Refresh</button>
         </div>
         HTML;
     }

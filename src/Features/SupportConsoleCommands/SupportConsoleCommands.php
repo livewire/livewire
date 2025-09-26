@@ -12,20 +12,11 @@ class SupportConsoleCommands extends ComponentHook
         if (! app()->runningInConsole()) return;
 
         static::commands([
-            \Livewire\LivewireManager::$v4
-                ? \Livewire\V4\Commands\MakeCommand::class
-                : Commands\MakeLivewireCommand::class,      // make:livewire
-            Commands\MakeCommand::class,         // livewire:make
+            Commands\MakeCommand::class,         // make:livewire
+            Commands\LivewireMakeCommand::class, // livewire:make (alias)
             Commands\FormCommand::class,         // livewire:form
             Commands\AttributeCommand::class,    // livewire:attribute
-            Commands\TouchCommand::class,        // livewire:touch
-            Commands\CopyCommand::class,         // livewire:copy
-            Commands\CpCommand::class,           // livewire:cp
-            Commands\DeleteCommand::class,       // livewire:delete
             Commands\LayoutCommand::class,       // livewire:layout
-            Commands\RmCommand::class,           // livewire:rm
-            Commands\MoveCommand::class,         // livewire:move
-            Commands\MvCommand::class,           // livewire:mv
             Commands\StubsCommand::class,        // livewire:stubs
             Commands\S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
             Commands\PublishCommand::class,      // livewire:publish
@@ -36,6 +27,9 @@ class SupportConsoleCommands extends ComponentHook
     static function commands($commands)
     {
         $commands = is_array($commands) ? $commands : func_get_args();
+
+        // Filter out null values
+        $commands = array_filter($commands);
 
         Artisan::starting(fn(Artisan $artisan) => $artisan->resolveCommands($commands));
     }

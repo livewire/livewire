@@ -5,6 +5,7 @@ Getting Started:
     Upgrade Guide: { uri: /docs/upgrading, file: /upgrading.md }
 Essentials:
     Components: { uri: /docs/components, file: /components.md }
+    Pages: { uri: /docs/pages, file: /pages.md }
     Properties: { uri: /docs/properties, file: /properties.md }
     Actions: { uri: /docs/actions, file: /actions.md }
     Forms: { uri: /docs/forms, file: /forms.md }

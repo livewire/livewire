@@ -8,6 +8,7 @@ use Tests\TestCase;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
+use LegacyTests\Browser\Actions\Test;
 
 class UnitTest extends TestCase
 {
@@ -138,9 +139,9 @@ class UnitTest extends TestCase
     {
         config()->set('livewire.inject_assets', false);
 
-        Route::get('/with-livewire', function () {
-            return (new class Extends TestComponent {})();
-        });
+        Livewire::addComponent('test-component', TestComponent::class);
+
+        Route::get('/with-livewire', TestComponent::class);
 
         Route::get('/without-livewire', function () {
             return Blade::render('<html></html>');
@@ -154,34 +155,36 @@ class UnitTest extends TestCase
     {
         config()->set('livewire.inject_assets', false);
 
-        Route::get('/with-livewire', function () {
-            return (new class Extends TestComponent {})();
-        });
+        Route::livewire('/with-livewire', new class Extends TestComponent {});
 
         Route::get('/without-livewire', function () {
             return '<html></html>';
         });
 
+        // Check for the appropriate script path based on debug mode
+        $scriptPath = config('app.debug') ? '/livewire/livewire.js' : '/livewire/livewire.min.js';
+
         \Livewire\Livewire::forceAssetInjection();
-        $this->get('/with-livewire')->assertSee('/livewire/livewire.min.js');
+        $this->get('/with-livewire')->assertSee($scriptPath);
 
         \Livewire\Livewire::flushState();
         \Livewire\Livewire::forceAssetInjection();
-        $this->get('/without-livewire')->assertSee('/livewire/livewire.min.js');
+        $this->get('/without-livewire')->assertSee($scriptPath);
     }
 
     public function test_only_auto_injects_when_a_livewire_component_was_rendered_on_the_page(): void
     {
-        Route::get('/with-livewire', function () {
-            return (new class Extends TestComponent {})();
-        });
+        Route::livewire('/with-livewire', new class Extends TestComponent {});
 
         Route::get('/without-livewire', function () {
             return '<html></html>';
         });
 
-        $this->get('/without-livewire')->assertDontSee('/livewire/livewire.min.js');
-        $this->get('/with-livewire')->assertSee('/livewire/livewire.min.js');
+        // Check for the appropriate script path based on debug mode
+        $scriptPath = config('app.debug') ? '/livewire/livewire.js' : '/livewire/livewire.min.js';
+
+        $this->get('/without-livewire')->assertDontSee($scriptPath);
+        $this->get('/with-livewire')->assertSee($scriptPath);
     }
 
     public function test_only_auto_injects_when_persist_was_rendered_on_the_page(): void
@@ -194,8 +197,11 @@ class UnitTest extends TestCase
             return '<html></html>';
         });
 
-        $this->get('/without-persist')->assertDontSee('/livewire/livewire.min.js');
-        $this->get('/with-persist')->assertSee('/livewire/livewire.min.js');
+        // Check for the appropriate script path based on debug mode
+        $scriptPath = config('app.debug') ? '/livewire/livewire.js' : '/livewire/livewire.min.js';
+
+        $this->get('/without-persist')->assertDontSee($scriptPath);
+        $this->get('/with-persist')->assertSee($scriptPath);
     }
 
     public function test_only_injects_on_full_page_loads(): void

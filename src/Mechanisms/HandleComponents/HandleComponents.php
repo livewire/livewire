@@ -295,7 +295,7 @@ class HandleComponents extends Mechanism
         });
     }
 
-    protected function hydratePropertyUpdate($valueOrTuple, $context, $path, $raw)
+    protected function hydratePropertyUpdate($valueOrTuple, $context, $path)
     {
         if (! Utils::isSyntheticTuple($value = $tuple = $valueOrTuple)) return $value;
 
@@ -308,8 +308,8 @@ class HandleComponents extends Mechanism
 
         $synth = $this->propertySynth($meta['s'], $context, $path);
 
-        return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path, $raw) {
-            return $this->hydrateForUpdate($raw, "{$path}.{$name}", $child, $context);
+        return $synth->hydrate($value, $meta, function ($name, $child) {
+            return $child;
         });
     }
 
@@ -366,9 +366,15 @@ class HandleComponents extends Mechanism
 
         $fileName = str($dotName)->replace('.', '/')->__toString();
 
-        $viewOrString = method_exists($component, 'render')
-            ? wrap($component)->render()
-            : View::file($viewPath . '/' . $fileName . '.blade.php');
+       $viewOrString = null;
+
+        if (method_exists($component, 'render')) {
+            $viewOrString = wrap($component)->render();
+        } elseif ($component->hasProvidedView()) {
+            $viewOrString = $component->getProvidedView();
+        } else {
+            $viewOrString = View::file($viewPath . '/' . $fileName . '.blade.php');
+        }
 
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
 
@@ -438,7 +444,7 @@ class HandleComponents extends Mechanism
 
         // If we have meta data already for this property, let's use that to get a synth...
         if ($meta) {
-            return $this->hydratePropertyUpdate([$value, $meta], $context, $path, $raw);
+            return $this->hydratePropertyUpdate([$value, $meta], $context, $path);
         }
 
         // If we don't, let's check to see if it's a typed property and fetch the synth that way...
