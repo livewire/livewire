@@ -142,7 +142,7 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addComponent('test-component', path: __DIR__ . '/fixtures/finder-test-single-file-component.blade.php');
+        $finder->addComponent('test-component', path: __DIR__ . '/Fixtures/finder-test-single-file-component.blade.php');
 
         $name = $finder->normalizeName('test-component');
 
@@ -150,14 +150,14 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveSingleFileComponentPath('test-component');
 
-        $this->assertEquals(__DIR__ . '/fixtures/finder-test-single-file-component.blade.php', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/finder-test-single-file-component.blade.php', $path);
     }
 
     public function test_can_add_and_resolve_named_view_based_component_with_zap()
     {
         $finder = new Finder();
 
-        $finder->addComponent('test-component-with-zap', path: __DIR__ . '/fixtures/⚡︎finder-test-single-file-component-with-zap.blade.php');
+        $finder->addComponent('test-component-with-zap', path: __DIR__ . '/Fixtures/⚡︎finder-test-single-file-component-with-zap.blade.php');
 
         $name = $finder->normalizeName('test-component-with-zap');
 
@@ -165,14 +165,14 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveSingleFileComponentPath('test-component-with-zap');
 
-        $this->assertEquals(__DIR__ . '/fixtures/⚡︎finder-test-single-file-component-with-zap.blade.php', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/⚡︎finder-test-single-file-component-with-zap.blade.php', $path);
     }
 
     public function test_can_add_and_resolve_named_view_based_directory_component()
     {
         $finder = new Finder();
 
-        $finder->addLocation(path: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/Fixtures');
 
         $name = $finder->normalizeName('finder-test-single-file-component');
 
@@ -180,14 +180,14 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveSingleFileComponentPath('finder-test-single-file-component');
 
-        $this->assertEquals(__DIR__ . '/fixtures/finder-test-single-file-component.blade.php', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/finder-test-single-file-component.blade.php', $path);
     }
 
     public function test_can_add_and_resolve_named_view_based_directory_component_with_zap()
     {
         $finder = new Finder();
 
-        $finder->addComponent('test-component-with-zap', path: __DIR__ . '/fixtures/⚡︎finder-test-single-file-component-with-zap.blade.php');
+        $finder->addComponent('test-component-with-zap', path: __DIR__ . '/Fixtures/⚡︎finder-test-single-file-component-with-zap.blade.php');
 
         $name = $finder->normalizeName('test-component-with-zap');
 
@@ -195,14 +195,14 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveSingleFileComponentPath('test-component-with-zap');
 
-        $this->assertEquals(__DIR__ . '/fixtures/⚡︎finder-test-single-file-component-with-zap.blade.php', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/⚡︎finder-test-single-file-component-with-zap.blade.php', $path);
     }
 
     public function test_can_add_and_resolve_index_single_file_component()
     {
         $finder = new Finder();
 
-        $finder->addLocation(path: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/Fixtures');
 
         $name = $finder->normalizeName('nested-view-based');
 
@@ -210,14 +210,14 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveSingleFileComponentPath('nested-view-based');
 
-        $this->assertEquals(__DIR__ . '/fixtures/nested-view-based/index.blade.php', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/nested-view-based/index.blade.php', $path);
     }
 
     public function test_can_add_and_resolve_self_named_single_file_component()
     {
         $finder = new Finder();
 
-        $finder->addLocation(path: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/Fixtures');
 
         $name = $finder->normalizeName('self-named-component');
 
@@ -225,14 +225,14 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveSingleFileComponentPath('self-named-component');
 
-        $this->assertEquals(__DIR__ . '/fixtures/self-named-component/self-named-component.blade.php', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/self-named-component/self-named-component.blade.php', $path);
     }
 
     public function test_can_add_and_resolve_named_multi_file_component()
     {
         $finder = new Finder();
 
-        $finder->addComponent('multi-file-test', path: __DIR__ . '/fixtures/multi-file-test-component');
+        $finder->addComponent('multi-file-test', path: __DIR__ . '/Fixtures/multi-file-test-component');
 
         $name = $finder->normalizeName('multi-file-test');
 
@@ -240,14 +240,14 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveMultiFileComponentPath('multi-file-test');
 
-        $this->assertEquals(__DIR__ . '/fixtures/multi-file-test-component', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/multi-file-test-component', $path);
     }
 
     public function test_can_add_and_resolve_named_multi_file_component_with_zap()
     {
         $finder = new Finder();
 
-        $finder->addComponent('multi-file-zap', path: __DIR__ . '/fixtures/⚡︎multi-file-zap-component');
+        $finder->addComponent('multi-file-zap', path: __DIR__ . '/Fixtures/⚡︎multi-file-zap-component');
 
         $name = $finder->normalizeName('multi-file-zap');
 
@@ -255,14 +255,14 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveMultiFileComponentPath('multi-file-zap');
 
-        $this->assertEquals(__DIR__ . '/fixtures/⚡︎multi-file-zap-component', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/⚡︎multi-file-zap-component', $path);
     }
 
     public function test_can_add_and_resolve_location_multi_file_component()
     {
         $finder = new Finder();
 
-        $finder->addLocation(path: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/Fixtures');
 
         $name = $finder->normalizeName('multi-file-test-component');
 
@@ -270,14 +270,14 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveMultiFileComponentPath('multi-file-test-component');
 
-        $this->assertEquals(__DIR__ . '/fixtures/multi-file-test-component', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/multi-file-test-component', $path);
     }
 
     public function test_can_add_and_resolve_location_multi_file_index_component()
     {
         $finder = new Finder();
 
-        $finder->addLocation(path: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/Fixtures');
 
         $name = $finder->normalizeName('multi-file-index');
 
@@ -285,14 +285,14 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveMultiFileComponentPath('multi-file-index');
 
-        $this->assertEquals(__DIR__ . '/fixtures/multi-file-index', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/multi-file-index', $path);
     }
 
     public function test_can_add_and_resolve_location_multi_file_self_named_component()
     {
         $finder = new Finder();
 
-        $finder->addLocation(path: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/Fixtures');
 
         $name = $finder->normalizeName('multi-file-self-named');
 
@@ -300,14 +300,14 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveMultiFileComponentPath('multi-file-self-named');
 
-        $this->assertEquals(__DIR__ . '/fixtures/multi-file-self-named', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/multi-file-self-named', $path);
     }
 
     public function test_can_add_and_resolve_location_multi_file_component_with_zap()
     {
         $finder = new Finder();
 
-        $finder->addLocation(path: __DIR__ . '/fixtures');
+        $finder->addLocation(path: __DIR__ . '/Fixtures');
 
         $name = $finder->normalizeName('multi-file-zap-component');
 
@@ -315,7 +315,7 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveMultiFileComponentPath('multi-file-zap-component');
 
-        $this->assertEquals(__DIR__ . '/fixtures/⚡︎multi-file-zap-component', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/⚡︎multi-file-zap-component', $path);
     }
 
     public function test_can_resolve_class_component_with_namespace()
@@ -377,40 +377,40 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/Fixtures');
 
         $path = $finder->resolveSingleFileComponentPath('admin::finder-test-single-file-component');
 
-        $this->assertEquals(__DIR__ . '/fixtures/finder-test-single-file-component.blade.php', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/finder-test-single-file-component.blade.php', $path);
     }
 
     public function test_can_resolve_index_single_file_component_with_namespace()
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/Fixtures');
 
         $path = $finder->resolveSingleFileComponentPath('admin::nested-view-based');
 
-        $this->assertEquals(__DIR__ . '/fixtures/nested-view-based/index.blade.php', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/nested-view-based/index.blade.php', $path);
     }
 
     public function test_can_resolve_self_named_single_file_component_with_namespace()
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/Fixtures');
 
         $path = $finder->resolveSingleFileComponentPath('admin::self-named-component');
 
-        $this->assertEquals(__DIR__ . '/fixtures/self-named-component/self-named-component.blade.php', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/self-named-component/self-named-component.blade.php', $path);
     }
 
     public function test_returns_null_for_single_file_component_with_unknown_namespace()
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/Fixtures');
 
         $path = $finder->resolveSingleFileComponentPath('unknown::some-component');
 
@@ -421,40 +421,40 @@ class UnitTest extends \Tests\TestCase
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/Fixtures');
 
         $path = $finder->resolveMultiFileComponentPath('admin::multi-file-test-component');
 
-        $this->assertEquals(__DIR__ . '/fixtures/multi-file-test-component', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/multi-file-test-component', $path);
     }
 
     public function test_can_resolve_multi_file_index_component_with_namespace()
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/Fixtures');
 
         $path = $finder->resolveMultiFileComponentPath('admin::multi-file-index');
 
-        $this->assertEquals(__DIR__ . '/fixtures/multi-file-index', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/multi-file-index', $path);
     }
 
     public function test_can_resolve_multi_file_self_named_component_with_namespace()
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/Fixtures');
 
         $path = $finder->resolveMultiFileComponentPath('admin::multi-file-self-named');
 
-        $this->assertEquals(__DIR__ . '/fixtures/multi-file-self-named', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/multi-file-self-named', $path);
     }
 
     public function test_returns_null_for_multi_file_component_with_unknown_namespace()
     {
         $finder = new Finder();
 
-        $finder->addNamespace('admin', path: __DIR__ . '/fixtures');
+        $finder->addNamespace('admin', path: __DIR__ . '/Fixtures');
 
         $path = $finder->resolveMultiFileComponentPath('unknown::some-component');
 
