@@ -7956,6 +7956,8 @@ var MessageInterceptor = class {
   };
   onSuccess = () => {
   };
+  onFinish = () => {
+  };
   onSync = () => {
   };
   onMorph = () => {
@@ -7976,6 +7978,7 @@ var MessageInterceptor = class {
       onFailure: (callback2) => this.onFailure = callback2,
       onError: (callback2) => this.onError = callback2,
       onSuccess: (callback2) => this.onSuccess = callback2,
+      onFinish: (callback2) => this.onFinish = callback2,
       cancel: () => {
         if (isInsideCallbackSynchronously) {
           this.hasBeenSynchronouslyCancelled = true;
@@ -8118,7 +8121,6 @@ function cleanupModal(modal) {
 // js/request/message.js
 var Message = class {
   actions = [];
-  promiseResolversByAction = /* @__PURE__ */ new Map();
   snapshot = null;
   updates = null;
   calls = null;
@@ -8127,15 +8129,20 @@ var Message = class {
   interceptors = [];
   cancelled = false;
   request = null;
+  isolate = false;
   constructor(component) {
     this.component = component;
   }
-  addAction(action, promiseResolver) {
+  addAction(action) {
     this.actions.push(action);
-    this.promiseResolversByAction.set(action, promiseResolver);
   }
   setInterceptors(interceptors2) {
     this.interceptors = interceptors2;
+  }
+  addInterceptor(callback) {
+    let interceptor = new MessageInterceptor(this, callback);
+    this.interceptors.push(interceptor);
+    interceptor.init();
   }
   setRequest(request) {
     this.request = request;
@@ -8162,11 +8169,13 @@ var Message = class {
   }
   onCancel() {
     this.interceptors.forEach((interceptor) => interceptor.onCancel());
-    this.resolvePromises();
+    this.rejectActionPromises("Request cancelled");
+    this.onFinish();
   }
   onFailure(e) {
     this.interceptors.forEach((interceptor) => interceptor.onFailure(e));
-    this.resolvePromises();
+    this.rejectActionPromises("Request failed");
+    this.onFinish();
   }
   onError({ response, responseBody, preventDefault }) {
     this.interceptors.forEach((interceptor) => interceptor.onError({
@@ -8174,7 +8183,8 @@ var Message = class {
       responseBody,
       preventDefault
     }));
-    this.resolvePromises();
+    this.rejectActionPromises("Request failed");
+    this.onFinish();
   }
   onSuccess() {
     this.interceptors.forEach((interceptor) => {
@@ -8185,18 +8195,9 @@ var Message = class {
         onRender: (callback) => interceptor.onRender = callback
       });
     });
-    let returns = this.responsePayload.effects["returns"];
-    if (!returns)
-      return;
-    returns.forEach((value, index) => {
-      let action = this.actions[index];
-      if (!action)
-        return;
-      let promiseResolver = this.promiseResolversByAction.get(action);
-      if (!promiseResolver)
-        return;
-      promiseResolver.resolve(value);
-    });
+    let returns = this.responsePayload.effects["returns"] || [];
+    this.resolveActionPromises(returns);
+    this.onFinish();
   }
   onSync() {
     this.interceptors.forEach((interceptor) => interceptor.onSync());
@@ -8207,12 +8208,27 @@ var Message = class {
   onRender() {
     this.interceptors.forEach((interceptor) => interceptor.onRender());
   }
-  resolvePromises() {
+  onFinish() {
+    this.interceptors.forEach((interceptor) => interceptor.onFinish());
+  }
+  rejectActionPromises(error2) {
     this.actions.forEach((action) => {
-      let promiseResolver = this.promiseResolversByAction.get(action);
-      if (!promiseResolver)
+      action.rejectPromise(error2);
+    });
+  }
+  resolveActionPromises(returns) {
+    let resolvedActions = /* @__PURE__ */ new Set();
+    returns.forEach((value, index) => {
+      let action = this.actions[index];
+      if (!action)
         return;
-      promiseResolver.resolve();
+      action.resolvePromise(value);
+      resolvedActions.add(action);
+    });
+    this.actions.forEach((action) => {
+      if (resolvedActions.has(action))
+        return;
+      action.resolvePromise();
     });
   }
 };
@@ -8227,6 +8243,22 @@ var Action = class {
     this.params = params;
     this.metadata = metadata;
     this.origin = origin;
+    this.promise = new Promise((resolve, reject) => {
+      this.promiseResolution = { resolve, reject };
+    });
+  }
+  get fingerprint() {
+    let componentId = this.component.id;
+    let method = this.method;
+    let params = JSON.stringify(this.params);
+    let metadata = JSON.stringify(this.metadata);
+    return window.btoa(componentId + method + params + metadata);
+  }
+  rejectPromise(error2) {
+    this.promiseResolution.resolve();
+  }
+  resolvePromise(value) {
+    this.promiseResolution.resolve(value);
   }
 };
 
@@ -8520,8 +8552,10 @@ function isComponentRootEl(el) {
 // js/request/index.js
 var outstandingActionOrigin = null;
 var outstandingActionMetadata = {};
-var outstandingMessages = /* @__PURE__ */ new Map();
+var outstandingMessages = /* @__PURE__ */ new Set();
 var interceptors = new InterceptorRegistry();
+var actionInterceptors = [];
+var partitionInterceptors = [];
 function setNextActionOrigin(origin) {
   outstandingActionOrigin = origin;
 }
@@ -8531,12 +8565,33 @@ function setNextActionMetadata(metadata) {
 function intercept(component, callback) {
   interceptors.addInterceptor(component, callback);
 }
+function interceptAction(callback) {
+  actionInterceptors.push(callback);
+}
+function interceptPartition(callback) {
+  partitionInterceptors.push(callback);
+}
 function interceptMessage(callback) {
   interceptors.addMessageInterceptor(callback);
 }
 function interceptRequest(callback) {
   interceptors.addRequestInterceptor(callback);
 }
+var activeMessages = /* @__PURE__ */ new Set();
+interceptMessage(({ message, onCancel, onFailure, onError, onSuccess }) => {
+  activeMessages.add(message);
+  onCancel(() => activeMessages.delete(message));
+  onFailure(() => activeMessages.delete(message));
+  onError(() => activeMessages.delete(message));
+  onSuccess(() => activeMessages.delete(message));
+});
+function getScopedMessages(action) {
+  return [...Array.from(activeMessages), ...Array.from(outstandingMessages)].filter((message) => {
+    return message.component === action.component;
+  });
+}
+interceptAction(({ action, scopedMessages, reject, defer }) => {
+});
 function fireAction(component, method, params = [], metadata = {}) {
   let origin = outstandingActionOrigin;
   outstandingActionOrigin = null;
@@ -8546,134 +8601,92 @@ function fireAction(component, method, params = [], metadata = {}) {
   };
   outstandingActionMetadata = {};
   let action = new Action(component, method, params, metadata, origin);
-  let message = outstandingMessages.get(component);
+  let rejected = false;
+  let deferred = false;
+  actionInterceptors.forEach((callback) => {
+    callback({
+      action,
+      scopedMessages: getScopedMessages(action),
+      reject: () => rejected = true,
+      defer: () => deferred = true
+    });
+  });
+  if (deferred) {
+    return action.promise;
+  }
+  if (rejected) {
+    action.rejectPromise();
+    return action.promise;
+  }
+  let message = Array.from(outstandingMessages).find((message2) => message2.component === component);
   if (!message) {
     message = new Message(component);
-    outstandingMessages.set(component, message);
+    outstandingMessages.add(message);
     setTimeout(() => {
-      let messages = new Set(outstandingMessages.values());
-      outstandingMessages.clear();
-      prepareMessages(messages);
-      let requests = createRequestsFromMessages(messages);
-      requests.forEach((request) => {
-        request.initInterceptors(interceptors);
-        if (request.hasAllCancelledMessages()) {
-          request.abort();
-        }
-        sendRequest(request, {
-          send: ({ responsePromise }) => {
-            request.onSend({ responsePromise });
-          },
-          failure: ({ error: error2 }) => {
-            request.onFailure({ error: error2 });
-          },
-          response: ({ response }) => {
-            request.onResponse({ response });
-          },
-          parsed: ({ response, responseBody }) => {
-            request.onParsed({ response, responseBody });
-          },
-          error: ({ response, responseBody }) => {
-            let preventDefault = false;
-            request.onError({ response, responseBody, preventDefault });
-            if (preventDefault)
-              return;
-            if (response.status === 419) {
-              confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
-            }
-            if (response.aborted)
-              return;
-            showHtmlModal(responseBody);
-          },
-          redirect: (url) => {
-            let preventDefault = false;
-            request.onRedirect({ url, preventDefault });
-            if (preventDefault)
-              return;
-            window.location.href = url;
-          },
-          dump: (content) => {
-            let preventDefault = false;
-            request.onDump({ content, preventDefault });
-            if (preventDefault)
-              return;
-            showHtmlModal(dumpContent);
-          },
-          success: async ({ response, responseBody, responseJson }) => {
-            request.onSuccess({ response, responseBody, responseJson });
-            await triggerAsync("payload.intercept", responseJson);
-            let messageResponsePayloads = responseJson.components;
-            request.messages.forEach((message2) => {
-              messageResponsePayloads.forEach((payload) => {
-                if (message2.isCancelled())
-                  return;
-                let { snapshot: snapshotEncoded, effects } = payload;
-                let snapshot = JSON.parse(snapshotEncoded);
-                if (snapshot.memo.id === message2.component.id) {
-                  message2.responsePayload = { snapshot, effects };
-                  message2.onSuccess();
-                  if (message2.isCancelled())
-                    return;
-                  message2.component.mergeNewSnapshot(snapshotEncoded, effects, message2.updates);
-                  message2.onSync();
-                  if (message2.isCancelled())
-                    return;
-                  message2.component.processEffects(effects);
-                  let html = effects["html"];
-                  queueMicrotask(() => {
-                    if (message2.isCancelled())
-                      return;
-                    if (html) {
-                      applyMorph(message2, html);
-                      message2.onMorph();
-                      if (message2.isCancelled())
-                        return;
-                    }
-                    setTimeout(() => {
-                      if (message2.isCancelled())
-                        return;
-                      message2.onRender();
-                    });
-                  });
-                }
-              });
-            });
-          }
-        });
-      });
+      sendMessages();
     }, 5);
   }
-  let promiseResolver;
-  let promise = new Promise((resolve, reject) => {
-    promiseResolver = { resolve, reject };
-  });
-  message.addAction(action, promiseResolver);
-  return promise;
+  message.addAction(action);
+  return action.promise;
 }
-function prepareMessages(messages) {
-  trigger("message.pooling", { messages });
-  messages.forEach((message) => {
-    trigger("commit.prepare", { component: message.component });
-    message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn();
-    message.updates = message.component.getUpdates();
-    message.calls = message.actions.map((i) => ({
-      method: i.method,
-      params: i.params,
-      context: i.metadata
-    }));
-    message.payload = {
-      snapshot: message.snapshot,
-      updates: message.updates,
-      calls: message.calls
-    };
+function fireActionSynchronouslyMidPartitionAndReturnMessage(component, method, params = [], metadata = {}) {
+  let origin = outstandingActionOrigin;
+  outstandingActionOrigin = null;
+  metadata = {
+    ...metadata,
+    ...outstandingActionMetadata
+  };
+  outstandingActionMetadata = {};
+  let action = new Action(component, method, params, metadata, origin);
+  let rejected = false;
+  let deferred = false;
+  actionInterceptors.forEach((callback) => {
+    callback({
+      action,
+      scopedMessages: getScopedMessages(action),
+      reject: () => rejected = true,
+      defer: () => deferred = true
+    });
   });
+  if (deferred) {
+    return action.promise;
+  }
+  if (rejected) {
+    action.rejectPromise();
+    return action.promise;
+  }
+  let message = Array.from(outstandingMessages).find((message2) => message2.component === component);
+  if (!message) {
+    message = new Message(component);
+    outstandingMessages.add(message);
+  }
+  message.addAction(action);
+  return message;
 }
-function createRequestsFromMessages(messages) {
+function sendMessages() {
   let requests = /* @__PURE__ */ new Set();
+  Array.from(outstandingMessages).forEach((message) => {
+    partitionInterceptors.forEach((callback) => {
+      callback({
+        message,
+        compileRequest: (messages2) => {
+          let request = new MessageRequest();
+          messages2.forEach((message2) => request.addMessage(message2));
+          requests.add(request);
+          return request;
+        }
+      });
+    });
+  });
+  let messages = Array.from(outstandingMessages);
+  outstandingMessages.clear();
   for (let message of messages) {
+    if (Array.from(requests).some((request) => request.messages.has(message))) {
+      continue;
+    }
     let hasFoundRequest = false;
     requests.forEach((request) => {
-      if (!hasFoundRequest && !message.isolate) {
+      if (!hasFoundRequest) {
         request.addMessage(message);
         hasFoundRequest = true;
       }
@@ -8684,7 +8697,22 @@ function createRequestsFromMessages(messages) {
       requests.add(request);
     }
   }
-  trigger("message.pooled", { requests });
+  requests.forEach((request) => {
+    request.messages.forEach((message) => {
+      message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn();
+      message.updates = message.component.getUpdates();
+      message.calls = message.actions.map((i) => ({
+        method: i.method,
+        params: i.params,
+        context: i.metadata
+      }));
+      message.payload = {
+        snapshot: message.snapshot,
+        updates: message.updates,
+        calls: message.calls
+      };
+    });
+  });
   requests.forEach((request) => {
     request.uri = getUpdateUri();
     Object.defineProperty(request, "payload", {
@@ -8709,7 +8737,90 @@ function createRequestsFromMessages(messages) {
       }
     });
   });
-  return requests;
+  requests.forEach((request) => {
+    request.initInterceptors(interceptors);
+    if (request.hasAllCancelledMessages()) {
+      request.abort();
+    }
+    sendRequest(request, {
+      send: ({ responsePromise }) => {
+        request.onSend({ responsePromise });
+      },
+      failure: ({ error: error2 }) => {
+        request.onFailure({ error: error2 });
+      },
+      response: ({ response }) => {
+        request.onResponse({ response });
+      },
+      parsed: ({ response, responseBody }) => {
+        request.onParsed({ response, responseBody });
+      },
+      error: ({ response, responseBody }) => {
+        let preventDefault = false;
+        request.onError({ response, responseBody, preventDefault });
+        if (preventDefault)
+          return;
+        if (response.status === 419) {
+          confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+        }
+        if (response.aborted)
+          return;
+        showHtmlModal(responseBody);
+      },
+      redirect: (url) => {
+        let preventDefault = false;
+        request.onRedirect({ url, preventDefault });
+        if (preventDefault)
+          return;
+        window.location.href = url;
+      },
+      dump: (content) => {
+        let preventDefault = false;
+        request.onDump({ content, preventDefault });
+        if (preventDefault)
+          return;
+        showHtmlModal(dumpContent);
+      },
+      success: async ({ response, responseBody, responseJson }) => {
+        request.onSuccess({ response, responseBody, responseJson });
+        await triggerAsync("payload.intercept", responseJson);
+        let messageResponsePayloads = responseJson.components;
+        request.messages.forEach((message) => {
+          messageResponsePayloads.forEach((payload) => {
+            if (message.isCancelled())
+              return;
+            let { snapshot: snapshotEncoded, effects } = payload;
+            let snapshot = JSON.parse(snapshotEncoded);
+            if (snapshot.memo.id === message.component.id) {
+              message.responsePayload = { snapshot, effects };
+              message.onSuccess();
+              if (message.isCancelled())
+                return;
+              message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates);
+              message.onSync();
+              if (message.isCancelled())
+                return;
+              message.component.processEffects(effects);
+              let html = effects["html"];
+              queueMicrotask(() => {
+                if (html) {
+                  if (message.isCancelled())
+                    return;
+                  applyMorph(message, html);
+                  message.onMorph();
+                }
+                setTimeout(() => {
+                  if (message.isCancelled())
+                    return;
+                  message.onRender();
+                });
+              });
+            }
+          });
+        });
+      }
+    });
+  });
 }
 async function sendRequest(request, handlers) {
   let response;
@@ -11057,49 +11168,14 @@ function markReadOnly(el) {
 }
 
 // js/features/supportPropsAndModelables.js
-on("commit.pooling", ({ commits }) => {
-  commits.forEach((commit) => {
-    let component = commit.component;
-    getDeepChildrenWithBindings(component, (child) => {
-      child.$wire.$commit();
-    });
+interceptPartition(({ message, compileRequest }) => {
+  let component = message.component;
+  let bundledMessages = [message];
+  getDeepChildrenWithBindings(component, (child) => {
+    bundledMessages.push(fireActionSynchronouslyMidPartitionAndReturnMessage(child, "$commit"));
   });
+  compileRequest(bundledMessages);
 });
-on("commit.pooled", ({ pools }) => {
-  let commits = getPooledCommits(pools);
-  commits.forEach((commit) => {
-    let component = commit.component;
-    getDeepChildrenWithBindings(component, (child) => {
-      colocateCommitsByComponent(pools, component, child);
-    });
-  });
-});
-function getPooledCommits(pools) {
-  let commits = [];
-  pools.forEach((pool) => {
-    pool.commits.forEach((commit) => {
-      commits.push(commit);
-    });
-  });
-  return commits;
-}
-function colocateCommitsByComponent(pools, component, foreignComponent) {
-  let pool = findPoolWithComponent(pools, component);
-  let foreignPool = findPoolWithComponent(pools, foreignComponent);
-  let foreignCommit = foreignPool.findCommitByComponent(foreignComponent);
-  foreignPool.delete(foreignCommit);
-  pool.add(foreignCommit);
-  pools.forEach((pool2) => {
-    if (pool2.empty())
-      pools.delete(pool2);
-  });
-}
-function findPoolWithComponent(pools, component) {
-  for (let [idx, pool] of pools.entries()) {
-    if (pool.hasCommitFor(component))
-      return pool;
-  }
-}
 function getDeepChildrenWithBindings(component, callback) {
   getDeepChildren(component, (child) => {
     if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
@@ -11172,18 +11248,15 @@ on("component.init", ({ component }) => {
     componentsThatWantToBeBundled.add(component);
   }
 });
-on("commit.pooling", ({ commits }) => {
-  commits.forEach((commit) => {
-    if (!componentsThatAreLazy.has(commit.component))
-      return;
-    if (componentsThatWantToBeBundled.has(commit.component)) {
-      commit.isolate = false;
-      componentsThatWantToBeBundled.delete(commit.component);
-    } else {
-      commit.isolate = true;
-    }
-    componentsThatAreLazy.delete(commit.component);
-  });
+interceptPartition(({ message, compileRequest }) => {
+  if (!componentsThatAreLazy.has(message.component))
+    return;
+  if (componentsThatWantToBeBundled.has(message.component)) {
+    componentsThatWantToBeBundled.delete(message.component);
+  } else {
+    compileRequest([message]);
+  }
+  componentsThatAreLazy.delete(message.component);
 });
 
 // js/features/supportQueryString.js
@@ -11305,12 +11378,10 @@ on("component.init", ({ component }) => {
     return;
   componentsThatAreIsolated.add(component);
 });
-on("commit.pooling", ({ commits }) => {
-  commits.forEach((commit) => {
-    if (!componentsThatAreIsolated.has(commit.component))
-      return;
-    commit.isolate = true;
-  });
+interceptPartition(({ message, compileRequest }) => {
+  if (!componentsThatAreIsolated.has(message.component))
+    return;
+  compileRequest([message]);
 });
 
 // js/features/supportStreaming.js
@@ -11436,7 +11507,7 @@ on("effect", ({ effects }) => {
 });
 
 // js/features/supportDataLoading.js
-interceptMessage(({ actions, onSend, onCancel, onFailure, onError, onSuccess }) => {
+interceptMessage(({ actions, onSend, onFinish }) => {
   let undos = [];
   onSend(() => {
     actions.forEach((action) => {
@@ -11451,10 +11522,7 @@ interceptMessage(({ actions, onSend, onCancel, onFailure, onError, onSuccess }) 
       });
     });
   });
-  onCancel(() => undos.forEach((undo) => undo()));
-  onFailure(() => undos.forEach((undo) => undo()));
-  onError(() => undos.forEach((undo) => undo()));
-  onSuccess(() => undos.forEach((undo) => undo()));
+  onFinish(() => undos.forEach((undo) => undo()));
 });
 
 // js/features/supportPreserveScroll.js
@@ -11507,113 +11575,6 @@ on("effect", ({ component, effects }) => {
       module.run.bind(component.$wire)();
     });
   }
-});
-
-// js/features/supportPropsAndModelablesV4.js
-on("message.pooling", ({ messages }) => {
-  messages.forEach((message) => {
-    let component = message.component;
-    getDeepChildrenWithBindings2(component, (child) => {
-      child.$wire.$commit();
-    });
-  });
-});
-on("message.pooled", ({ requests }) => {
-  let messages = getRequestsMessages(requests);
-  messages.forEach((message) => {
-    let component = message.component;
-    getDeepChildrenWithBindings2(component, (child) => {
-      colocateRequestsByComponent(requests, component, child);
-    });
-  });
-});
-function getRequestsMessages(requests) {
-  let messages = [];
-  requests.forEach((request) => {
-    request.messages.forEach((message) => {
-      messages.push(message);
-    });
-  });
-  return messages;
-}
-function colocateRequestsByComponent(requests, component, foreignComponent) {
-  let request = findRequestWithComponent(requests, component);
-  let foreignRequest = findRequestWithComponent(requests, foreignComponent);
-  let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
-  foreignRequest.deleteMessage(foreignMessage);
-  request.addMessage(foreignMessage);
-  requests.forEach((request2) => {
-    if (request2.isEmpty())
-      requests.delete(request2);
-  });
-}
-function findRequestWithComponent(requests, component) {
-  return Array.from(requests).find((request) => request.hasMessageFor(component));
-}
-function getDeepChildrenWithBindings2(component, callback) {
-  getDeepChildren2(component, (child) => {
-    if (hasReactiveProps2(child) || hasWireModelableBindings2(child)) {
-      callback(child);
-    }
-  });
-}
-function hasReactiveProps2(component) {
-  let meta = component.snapshot.memo;
-  let props = meta.props;
-  return !!props;
-}
-function hasWireModelableBindings2(component) {
-  let meta = component.snapshot.memo;
-  let bindings = meta.bindings;
-  return !!bindings;
-}
-function getDeepChildren2(component, callback) {
-  component.children.forEach((child) => {
-    callback(child);
-    getDeepChildren2(child, callback);
-  });
-}
-
-// js/features/supportIsolatingV4.js
-var componentsThatAreIsolated2 = /* @__PURE__ */ new WeakSet();
-on("component.init", ({ component }) => {
-  let memo = component.snapshot.memo;
-  if (memo.isolate !== true)
-    return;
-  componentsThatAreIsolated2.add(component);
-});
-on("message.pooling", ({ messages }) => {
-  messages.forEach((message) => {
-    if (!componentsThatAreIsolated2.has(message.component))
-      return;
-    message.isolate = true;
-  });
-});
-
-// js/features/supportLazyLoadingV4.js
-var componentsThatWantToBeBundled2 = /* @__PURE__ */ new WeakSet();
-var componentsThatAreLazy2 = /* @__PURE__ */ new WeakSet();
-on("component.init", ({ component }) => {
-  let memo = component.snapshot.memo;
-  if (memo.lazyLoaded === void 0)
-    return;
-  componentsThatAreLazy2.add(component);
-  if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-    componentsThatWantToBeBundled2.add(component);
-  }
-});
-on("message.pooling", ({ messages }) => {
-  messages.forEach((message) => {
-    if (!componentsThatAreLazy2.has(message.component))
-      return;
-    if (componentsThatWantToBeBundled2.has(message.component)) {
-      message.isolate = false;
-      componentsThatWantToBeBundled2.delete(message.component);
-    } else {
-      message.isolate = true;
-    }
-    componentsThatAreLazy2.delete(message.component);
-  });
 });
 
 // js/directives/wire-transition.js

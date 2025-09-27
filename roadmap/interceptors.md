@@ -51,7 +51,112 @@ component.intercept(({ onSend, onCancel, onError, onSuccess }) => {
     })
 })
 
-Livewire.interceptMessage(({ message }) => {
+Livewire.interceptMessage(({ message, queuedRequests, inFlightRequests }) => {
+
+// an incrementing counter
+// a toggling like emoji
+// a save button
+// a refresh button
+
+// hit 3 times scenario:
+// A) Allow both messages async
+// B) Cancel me (new message)
+// C) Cancel previous message
+// D) Queue up all actions inside one message on response received and squash identical actions
+
+//
+
+// 1) We're creating a new message
+// 2) We waited for the buffer and have a concrete message with all actions
+    // 2.1) We can prompt the outside to re-arrange or add new messages
+    // 2.2) Classify the message as a type
+// 3) We have partitioned them into requests
+// 4) We have finalized the payloads
+
+// queueing a message till another one comes back
+interceptAction(({ action, otherScopedMessages, blockMe, queueMe }) => {
+    // find the message
+
+    message.afterFinish(() => {
+        fireActionDirectlyAndSquashIdenticalActions(action)
+    })
+})
+
+// wire:poll (all passive types of actions)
+interceptAction(({ action, otherScopedMessages, blockMe, queueMe }) => {
+    //
+})
+
+// wire:model.live
+interceptAction(({ action, otherScopedMessages, blockMe, queueMe }) => {
+    message.cancel()
+})
+
+// squash identical actions
+beforePartition(({ message, putOntoNewRequest }) => {
+    message.actions // loop through and make sure only one of each fingerprint is here...
+})
+
+// basic isolation
+beforePartition(({ message, putOntoNewRequest }) => {
+    if (message.component.isIsolated()) {
+        putOntoNewRequest()
+    }
+})
+
+// modelable/reactive
+beforePartition(({ message, otherMessages, putOntoNewRequest }) => {
+    let collectedMesages = []
+
+    getDeepChildrenWithBindings(message.component, child => {
+        collectedMessages.push(
+            fireActionSkipBufferAndReturnMessage(child, '$commit')
+        )
+    })
+
+    putOntoNewRequest([message, ...collectedMessages])
+})
+
+// lazy loading
+beforePartition(({ message, putOntoNewRequest }) => {
+    if (message.component.isLazyIsolated() && ! message.component.isIsolated()) {
+        putOntoNewRequest()
+    }
+})
+
+beforePartition(({ messages, addIntoNewRequest }) => {
+    messages.forEach(message => {
+        if (message.isIsolated()) {
+            addIntoNewRequest()
+        }
+    })
+})
+
+onPartition(({ requests }) => {
+    requests.forEach(request => {
+        request.messages.forEach(message => {
+            if (message.isIsolated()) {
+                makeSureThisMessageTravelsSolo()
+            }
+        })
+    })
+})
+
+
+    // different message types:
+    // compound message (waits for inflights, blocks )
+    // poll (poll)
+    // data update (wire:model.live)
+    // lazy load
+    // wire:model.live
+    // wire:click action / $refresh
+
+    // Is this a parallel action?
+        // skip buffering, put it in a message and send it off as a single request
+    // Is there a message already out for this component?
+        // are the
+            // Put it in it's own request
+    //
 
 })
 
@@ -62,6 +167,14 @@ Livewire.interceptRequest(({ request, messages }) => {
     onResponse(({ response, onParsed }) => {
         //
     })
+})
+
+Livewire.interceptTransmission(({
+    requests,
+    inFlightRequests
+}) => {
+
+
 })
 
 Livewire.intercept(({ request }) => {

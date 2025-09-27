@@ -9,8 +9,10 @@ import { morph } from '@/morph'
 
 let outstandingActionOrigin = null
 let outstandingActionMetadata = {}
-let outstandingMessages = new Map
+let outstandingMessages = new Set
 let interceptors = new InterceptorRegistry
+let actionInterceptors = []
+let partitionInterceptors = []
 
 export function setNextActionOrigin(origin) {
     outstandingActionOrigin = origin
@@ -24,6 +26,14 @@ export function intercept(component, callback) {
     interceptors.addInterceptor(component, callback)
 }
 
+export function interceptAction(callback) {
+    actionInterceptors.push(callback)
+}
+
+export function interceptPartition(callback) {
+    partitionInterceptors.push(callback)
+}
+
 export function interceptMessage(callback) {
     interceptors.addMessageInterceptor(callback)
 }
@@ -31,6 +41,27 @@ export function interceptMessage(callback) {
 export function interceptRequest(callback) {
     interceptors.addRequestInterceptor(callback)
 }
+
+let activeMessages = new Set()
+
+interceptMessage(({ message, onCancel, onFailure, onError, onSuccess }) => {
+    activeMessages.add(message)
+
+    onCancel(() => activeMessages.delete(message))
+    onFailure(() => activeMessages.delete(message))
+    onError(() => activeMessages.delete(message))
+    onSuccess(() => activeMessages.delete(message))
+})
+
+function getScopedMessages(action) {
+    return [...Array.from(activeMessages), ...Array.from(outstandingMessages)].filter(message => {
+        return message.component === action.component
+    })
+}
+
+interceptAction(({ action, scopedMessages, reject, defer }) => {
+    //
+})
 
 export function fireAction(component, method, params = [], metadata = {}) {
     let origin = outstandingActionOrigin
@@ -46,173 +77,129 @@ export function fireAction(component, method, params = [], metadata = {}) {
 
     let action = new Action(component, method, params, metadata, origin)
 
-    let message = outstandingMessages.get(component)
+    let rejected = false
+    let deferred = false
+
+    actionInterceptors.forEach(callback => {
+        callback({
+            action,
+            scopedMessages: getScopedMessages(action),
+            reject: () => rejected = true,
+            defer: () => deferred = true,
+        })
+    })
+
+    if (deferred) {
+        return action.promise
+    }
+
+    if (rejected) {
+        action.rejectPromise()
+
+        return action.promise
+    }
+
+    let message = Array.from(outstandingMessages).find(message => message.component === component)
 
     if (! message) {
         message = new Message(component)
 
-        outstandingMessages.set(component, message)
+        outstandingMessages.add(message)
 
         setTimeout(() => { // Buffer for 5ms to allow other areas of the codebase to hook into the lifecycle of an individual commit...
-            let messages = new Set(outstandingMessages.values())
-
-            outstandingMessages.clear()
-
-            prepareMessages(messages)
-
-            let requests = createRequestsFromMessages(messages)
-
-            requests.forEach(request => {
-                request.initInterceptors(interceptors)
-
-                if (request.hasAllCancelledMessages()) {
-                    request.abort()
-                }
-
-                sendRequest(request, {
-                    send: ({ responsePromise }) => {
-                        request.onSend({ responsePromise })
-                    },
-                    failure: ({ error }) => {
-                        request.onFailure({ error })
-                    },
-                    response: ({ response }) => {
-                        request.onResponse({ response })
-                    },
-                    parsed: ({ response, responseBody }) => {
-                        request.onParsed({ response, responseBody })
-                    },
-                    error: ({ response, responseBody }) => {
-                        let preventDefault = false
-
-                        request.onError({ response, responseBody, preventDefault })
-
-                        if (preventDefault) return
-
-                        if (response.status === 419) {
-                            confirm(
-                                'This page has expired.\nWould you like to refresh the page?'
-                            ) && window.location.reload()
-                        }
-
-                        if (response.aborted) return
-
-                        showHtmlModal(responseBody)
-                    },
-                    redirect: (url) => {
-                        let preventDefault = false
-
-                        request.onRedirect({ url, preventDefault })
-
-                        if (preventDefault) return
-
-                        window.location.href = url
-                    },
-                    dump: (content) => {
-                        let preventDefault = false
-
-                        request.onDump({ content, preventDefault })
-
-                        if (preventDefault) return
-
-                        showHtmlModal(dumpContent)
-                    },
-                    success: async ({ response, responseBody, responseJson }) => {
-                        request.onSuccess({ response, responseBody, responseJson })
-
-                        await triggerAsync('payload.intercept', responseJson)
-
-                        let messageResponsePayloads = responseJson.components
-
-                        request.messages.forEach(message => {
-                            messageResponsePayloads.forEach(payload => {
-                                if (message.isCancelled()) return
-
-                                let { snapshot: snapshotEncoded, effects } = payload
-                                let snapshot = JSON.parse(snapshotEncoded)
-
-                                if (snapshot.memo.id === message.component.id) {
-                                    message.responsePayload = { snapshot, effects }
-
-                                    message.onSuccess()
-                                    if (message.isCancelled()) return
-
-                                    message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
-
-                                    message.onSync()
-                                    if (message.isCancelled()) return
-
-                                    // Trigger any side effects from the payload like "morph" and "dispatch event"...
-                                    message.component.processEffects(effects)
-
-                                    let html = effects['html']
-
-                                    queueMicrotask(() => {
-                                        if (message.isCancelled()) return
-
-                                        if (html) {
-                                            applyMorph(message, html)
-
-                                            message.onMorph()
-                                            if (message.isCancelled()) return
-                                        }
-
-                                        setTimeout(() => {
-                                            if (message.isCancelled()) return
-                                            message.onRender()
-                                        })
-                                    })
-                                }
-                            })
-                        })
-                    },
-                })
-            })
+            sendMessages()
         }, 5)
     }
 
-    let promiseResolver
+    message.addAction(action)
 
-    let promise = new Promise((resolve, reject) => {
-        promiseResolver = { resolve, reject }
-    })
-
-    message.addAction(action, promiseResolver)
-
-    return promise
+    return action.promise
 }
 
-function prepareMessages(messages) {
-    trigger('message.pooling', { messages })
+export function fireActionSynchronouslyMidPartitionAndReturnMessage(component, method, params = [], metadata = {}) {
+    let origin = outstandingActionOrigin
 
-    messages.forEach(message => {
-        trigger('commit.prepare', { component: message.component })
+    outstandingActionOrigin = null
 
-        message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn()
-        message.updates = message.component.getUpdates()
-        message.calls = message.actions.map(i => ({
-            method: i.method,
-            params: i.params,
-            context: i.metadata,
-        }))
+    metadata = {
+        ...metadata,
+        ...outstandingActionMetadata,
+    }
 
-        message.payload = {
-            snapshot: message.snapshot,
-            updates: message.updates,
-            // @todo: Rename to "actions"...
-            calls: message.calls,
-        }
+    outstandingActionMetadata = {}
+
+    let action = new Action(component, method, params, metadata, origin)
+
+    let rejected = false
+    let deferred = false
+
+    actionInterceptors.forEach(callback => {
+        callback({
+            action,
+            scopedMessages: getScopedMessages(action),
+            reject: () => rejected = true,
+            defer: () => deferred = true,
+        })
     })
+
+    if (deferred) {
+        return action.promise
+    }
+
+    if (rejected) {
+        action.rejectPromise()
+
+        return action.promise
+    }
+
+    let message = Array.from(outstandingMessages).find(message => message.component === component)
+
+    if (! message) {
+        message = new Message(component)
+
+        outstandingMessages.add(message)
+    }
+
+    message.addAction(action)
+
+    return message
 }
 
-function createRequestsFromMessages(messages) {
+function sendMessages() {
     let requests = new Set()
 
+    // This Array.from is necessary to avoid a situation where the Set is mutated while iterating over it...
+    // We may actually want that behavior, and in that case we can remove the Array.from...
+    Array.from(outstandingMessages).forEach(message => {
+        partitionInterceptors.forEach(callback => {
+            callback({
+                message,
+                compileRequest: (messages) => {
+                    let request = new MessageRequest()
+
+                    messages.forEach(message => request.addMessage(message))
+
+                    requests.add(request)
+
+                    return request
+                },
+            })
+        })
+    })
+
+    let messages = Array.from(outstandingMessages)
+
+    outstandingMessages.clear()
+
     for (let message of messages) {
+        if (Array.from(requests).some(request => request.messages.has(message))) {
+            continue
+        }
+
         let hasFoundRequest = false
 
         requests.forEach(request => {
-            if (! hasFoundRequest && ! message.isolate) {
+            if (! hasFoundRequest) {
                 request.addMessage(message)
 
                 hasFoundRequest = true
@@ -228,7 +215,24 @@ function createRequestsFromMessages(messages) {
         }
     }
 
-    trigger('message.pooled', { requests })
+    requests.forEach(request => {
+        request.messages.forEach(message => {
+            message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn()
+            message.updates = message.component.getUpdates()
+            message.calls = message.actions.map(i => ({
+                method: i.method,
+                params: i.params,
+                context: i.metadata,
+            }))
+
+            message.payload = {
+                snapshot: message.snapshot,
+                updates: message.updates,
+                // @todo: Rename to "actions"...
+                calls: message.calls,
+            }
+        })
+    })
 
     requests.forEach(request => {
         request.uri = getUpdateUri()
@@ -257,8 +261,112 @@ function createRequestsFromMessages(messages) {
         })
     })
 
-    return requests
+    requests.forEach(request => {
+        request.initInterceptors(interceptors)
+
+        if (request.hasAllCancelledMessages()) {
+            request.abort()
+        }
+
+        sendRequest(request, {
+            send: ({ responsePromise }) => {
+                request.onSend({ responsePromise })
+            },
+            failure: ({ error }) => {
+                request.onFailure({ error })
+            },
+            response: ({ response }) => {
+                request.onResponse({ response })
+            },
+            parsed: ({ response, responseBody }) => {
+                request.onParsed({ response, responseBody })
+            },
+            error: ({ response, responseBody }) => {
+                let preventDefault = false
+
+                request.onError({ response, responseBody, preventDefault })
+
+                if (preventDefault) return
+
+                if (response.status === 419) {
+                    confirm(
+                        'This page has expired.\nWould you like to refresh the page?'
+                    ) && window.location.reload()
+                }
+
+                if (response.aborted) return
+
+                showHtmlModal(responseBody)
+            },
+            redirect: (url) => {
+                let preventDefault = false
+
+                request.onRedirect({ url, preventDefault })
+
+                if (preventDefault) return
+
+                window.location.href = url
+            },
+            dump: (content) => {
+                let preventDefault = false
+
+                request.onDump({ content, preventDefault })
+
+                if (preventDefault) return
+
+                showHtmlModal(dumpContent)
+            },
+            success: async ({ response, responseBody, responseJson }) => {
+                request.onSuccess({ response, responseBody, responseJson })
+
+                await triggerAsync('payload.intercept', responseJson)
+
+                let messageResponsePayloads = responseJson.components
+
+                request.messages.forEach(message => {
+                    messageResponsePayloads.forEach(payload => {
+                        if (message.isCancelled()) return
+
+                        let { snapshot: snapshotEncoded, effects } = payload
+                        let snapshot = JSON.parse(snapshotEncoded)
+
+                        if (snapshot.memo.id === message.component.id) {
+                            message.responsePayload = { snapshot, effects }
+
+                            message.onSuccess()
+                            if (message.isCancelled()) return
+
+                            message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
+
+                            message.onSync()
+                            if (message.isCancelled()) return
+
+                            // Trigger any side effects from the payload like "morph" and "dispatch event"...
+                            message.component.processEffects(effects)
+
+                            let html = effects['html']
+
+                            queueMicrotask(() => {
+                                if (html) {
+                                    if (message.isCancelled()) return
+                                    applyMorph(message, html)
+
+                                    message.onMorph()
+                                }
+
+                                setTimeout(() => {
+                                    if (message.isCancelled()) return
+                                    message.onRender()
+                                })
+                            })
+                        }
+                    })
+                })
+            },
+        })
+    })
 }
+
 
 async function sendRequest(request, handlers) {
     let response

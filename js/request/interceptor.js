@@ -6,6 +6,7 @@ export class MessageInterceptor {
     onFailure = () => {}
     onError = () => {}
     onSuccess = () => {}
+    onFinish = () => {}
     onSync = () => {}
     onMorph = () => {}
     onRender = () => {}
@@ -28,6 +29,7 @@ export class MessageInterceptor {
             onFailure: (callback) => this.onFailure = callback,
             onError: (callback) => this.onError = callback,
             onSuccess: (callback) => this.onSuccess = callback,
+            onFinish: (callback) => this.onFinish = callback,
             cancel: () => {
                 if (isInsideCallbackSynchronously) {
                     this.hasBeenSynchronouslyCancelled = true

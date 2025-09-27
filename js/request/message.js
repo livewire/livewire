@@ -1,7 +1,7 @@
+import { MessageInterceptor } from "./interceptor"
 
 export default class Message {
     actions = []
-    promiseResolversByAction = new Map()
     snapshot = null
     updates = null
     calls = null
@@ -10,18 +10,26 @@ export default class Message {
     interceptors = []
     cancelled = false
     request = null
+    isolate = false
 
     constructor(component) {
         this.component = component
     }
 
-    addAction(action, promiseResolver) {
+    addAction(action) {
         this.actions.push(action)
-        this.promiseResolversByAction.set(action, promiseResolver)
     }
 
     setInterceptors(interceptors) {
         this.interceptors = interceptors
+    }
+
+    addInterceptor(callback) {
+        let interceptor = new MessageInterceptor(this, callback)
+
+        this.interceptors.push(interceptor)
+
+        interceptor.init()
     }
 
     setRequest(request) {
@@ -61,13 +69,17 @@ export default class Message {
     onCancel() {
         this.interceptors.forEach(interceptor => interceptor.onCancel())
 
-        this.resolvePromises()
+        this.rejectActionPromises('Request cancelled')
+
+        this.onFinish()
     }
 
     onFailure(e) {
         this.interceptors.forEach(interceptor => interceptor.onFailure(e))
 
-        this.resolvePromises()
+        this.rejectActionPromises('Request failed')
+
+        this.onFinish()
     }
 
     onError({ response, responseBody, preventDefault }) {
@@ -77,7 +89,9 @@ export default class Message {
             preventDefault
         }))
 
-        this.resolvePromises()
+        this.rejectActionPromises('Request failed')
+
+        this.onFinish()
     }
 
     onSuccess() {
@@ -91,21 +105,11 @@ export default class Message {
         })
 
         // Process any returned values...
-        let returns = this.responsePayload.effects['returns']
+        let returns = this.responsePayload.effects['returns'] || []
 
-        if (! returns) return;
+        this.resolveActionPromises(returns)
 
-        returns.forEach((value, index) => {
-            let action = this.actions[index]
-
-            if (! action) return;
-
-            let promiseResolver = this.promiseResolversByAction.get(action)
-
-            if (! promiseResolver) return;
-
-            promiseResolver.resolve(value)
-        })
+        this.onFinish()
     }
 
     onSync() {
@@ -120,13 +124,33 @@ export default class Message {
         this.interceptors.forEach(interceptor => interceptor.onRender())
     }
 
-    resolvePromises() {
+    onFinish() {
+        this.interceptors.forEach(interceptor => interceptor.onFinish())
+    }
+
+    rejectActionPromises(error) {
         this.actions.forEach(action => {
-            let promiseResolver = this.promiseResolversByAction.get(action)
+            action.rejectPromise(error)
+        })
+    }
 
-            if (! promiseResolver) return;
+    resolveActionPromises(returns) {
+        let resolvedActions = new Set()
 
-            promiseResolver.resolve()
+        returns.forEach((value, index) => {
+            let action = this.actions[index]
+
+            if (! action) return;
+
+            action.resolvePromise(value)
+
+            resolvedActions.add(action)
+        })
+
+        this.actions.forEach(action => {
+            if (resolvedActions.has(action)) return
+
+            action.resolvePromise()
         })
     }
 }

@@ -1,6 +1,6 @@
 import { interceptMessage } from '@/request'
 
-interceptMessage(({ actions, onSend, onCancel, onFailure, onError, onSuccess }) => {
+interceptMessage(({ actions, onSend, onFinish }) => {
     let undos = []
 
     onSend(() => {
@@ -19,8 +19,5 @@ interceptMessage(({ actions, onSend, onCancel, onFailure, onError, onSuccess }) 
         })
     })
 
-    onCancel(() => undos.forEach(undo => undo()))
-    onFailure(() => undos.forEach(undo => undo()))
-    onError(() => undos.forEach(undo => undo()))
-    onSuccess(() => undos.forEach(undo => undo()))
+    onFinish(() => undos.forEach(undo => undo()))
 })
