@@ -1,153 +1,408 @@
 import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
-import { trigger, triggerAsync } from '@/hooks'
-import { showHtmlModal } from './modal'
-import { CommitBus } from './bus'
+import { MessageRequest, PageRequest } from './request.js'
+import { InterceptorRegistry } from './interceptor.js'
+import { trigger, triggerAsync } from '@/hooks.js'
+import { showHtmlModal } from '@/utils/modal.js'
+import Message from './message.js'
+import Action from './action.js'
+import { morph } from '@/morph'
 
-/**
- * This is the bus that manages pooling and sending
- * commits to the server as network requests...
- */
-let commitBus = new CommitBus
+let outstandingActionOrigin = null
+let outstandingActionMetadata = {}
+let outstandingMessages = new Set
+let interceptors = new InterceptorRegistry
+let actionInterceptors = []
+let partitionInterceptors = []
 
-/**
- * Create a commit and trigger a network request...
- */
-export async function requestCommit(component) {
-    let commit = commitBus.add(component)
-
-    let promise = new Promise((resolve) => {
-        commit.addResolver(resolve)
-    })
-
-    promise.commit = commit
-
-    return promise
+export function setNextActionOrigin(origin) {
+    outstandingActionOrigin = origin
 }
 
-/**
- * Create a commit with an "action" call and trigger a network request...
- */
-export async function requestCall(component, method, params) {
-    let commit = commitBus.add(component)
-
-    let promise = new Promise((resolve) => {
-        commit.addCall(method, params, value => resolve(value))
-    })
-
-    promise.commit = commit
-
-    return promise
+export function setNextActionMetadata(metadata) {
+    outstandingActionMetadata = metadata
 }
 
-/**
- * Send a pool of commits to the server over HTTP...
- */
-export async function sendRequest(pool) {
-    let [payload, handleSuccess, handleFailure] = pool.payload()
+export function intercept(component, callback) {
+    interceptors.addInterceptor(component, callback)
+}
 
-    window.controller = new AbortController()
+export function interceptAction(callback) {
+    actionInterceptors.push(callback)
+}
 
-    let options = {
-        method: 'POST',
-        body: JSON.stringify({
-            _token: getCsrfToken(),
-            components: payload,
-        }),
-        headers: {
-            'Content-type': 'application/json',
-            'X-Livewire': '',
-        },
-        signal: window.controller.signal,
+export function interceptPartition(callback) {
+    partitionInterceptors.push(callback)
+}
+
+export function interceptMessage(callback) {
+    interceptors.addMessageInterceptor(callback)
+}
+
+export function interceptRequest(callback) {
+    interceptors.addRequestInterceptor(callback)
+}
+
+let activeMessages = new Set()
+
+interceptMessage(({ message, onCancel, onFailure, onError, onSuccess }) => {
+    activeMessages.add(message)
+
+    onCancel(() => activeMessages.delete(message))
+    onFailure(() => activeMessages.delete(message))
+    onError(() => activeMessages.delete(message))
+    onSuccess(() => activeMessages.delete(message))
+})
+
+function getScopedMessages(action) {
+    return [...Array.from(activeMessages), ...Array.from(outstandingMessages)].filter(message => {
+        return message.component === action.component
+    })
+}
+
+interceptAction(({ action, scopedMessages, reject, defer }) => {
+    //
+})
+
+export function fireAction(component, method, params = [], metadata = {}) {
+    let origin = outstandingActionOrigin
+
+    outstandingActionOrigin = null
+
+    metadata = {
+        ...metadata,
+        ...outstandingActionMetadata,
     }
 
-    let succeedCallbacks = []
-    let failCallbacks = []
-    let respondCallbacks = []
+    outstandingActionMetadata = {}
 
-    let succeed = (fwd) => succeedCallbacks.forEach(i => i(fwd))
-    let fail = (fwd) => failCallbacks.forEach(i => i(fwd))
-    let respond = (fwd) => respondCallbacks.forEach(i => i(fwd))
+    let action = new Action(component, method, params, metadata, origin)
 
-    let finishProfile = trigger('request.profile', options)
+    let rejected = false
+    let deferred = false
 
-    let updateUri = getUpdateUri()
-
-    trigger('request', {
-        url: updateUri,
-        options,
-        payload: options.body,
-        respond: i => respondCallbacks.push(i),
-        succeed: i => succeedCallbacks.push(i),
-        fail: i => failCallbacks.push(i),
+    actionInterceptors.forEach(callback => {
+        callback({
+            action,
+            scopedMessages: getScopedMessages(action),
+            reject: () => rejected = true,
+            defer: () => deferred = true,
+        })
     })
 
+    if (deferred) {
+        return action.promise
+    }
+
+    if (rejected) {
+        action.rejectPromise()
+
+        return action.promise
+    }
+
+    let message = Array.from(outstandingMessages).find(message => message.component === component)
+
+    if (! message) {
+        message = new Message(component)
+
+        outstandingMessages.add(message)
+
+        setTimeout(() => { // Buffer for 5ms to allow other areas of the codebase to hook into the lifecycle of an individual commit...
+            sendMessages()
+        }, 5)
+    }
+
+    message.addAction(action)
+
+    return action.promise
+}
+
+export function fireActionSynchronouslyMidPartitionAndReturnMessage(component, method, params = [], metadata = {}) {
+    let origin = outstandingActionOrigin
+
+    outstandingActionOrigin = null
+
+    metadata = {
+        ...metadata,
+        ...outstandingActionMetadata,
+    }
+
+    outstandingActionMetadata = {}
+
+    let action = new Action(component, method, params, metadata, origin)
+
+    let rejected = false
+    let deferred = false
+
+    actionInterceptors.forEach(callback => {
+        callback({
+            action,
+            scopedMessages: getScopedMessages(action),
+            reject: () => rejected = true,
+            defer: () => deferred = true,
+        })
+    })
+
+    if (deferred) {
+        return action.promise
+    }
+
+    if (rejected) {
+        action.rejectPromise()
+
+        return action.promise
+    }
+
+    let message = Array.from(outstandingMessages).find(message => message.component === component)
+
+    if (! message) {
+        message = new Message(component)
+
+        outstandingMessages.add(message)
+    }
+
+    message.addAction(action)
+
+    return message
+}
+
+function sendMessages() {
+    let requests = new Set()
+
+    // This Array.from is necessary to avoid a situation where the Set is mutated while iterating over it...
+    // We may actually want that behavior, and in that case we can remove the Array.from...
+    Array.from(outstandingMessages).forEach(message => {
+        partitionInterceptors.forEach(callback => {
+            callback({
+                message,
+                compileRequest: (messages) => {
+                    let request = new MessageRequest()
+
+                    messages.forEach(message => request.addMessage(message))
+
+                    requests.add(request)
+
+                    return request
+                },
+            })
+        })
+    })
+
+    let messages = Array.from(outstandingMessages)
+
+    outstandingMessages.clear()
+
+    for (let message of messages) {
+        if (Array.from(requests).some(request => request.messages.has(message))) {
+            continue
+        }
+
+        let hasFoundRequest = false
+
+        requests.forEach(request => {
+            if (! hasFoundRequest) {
+                request.addMessage(message)
+
+                hasFoundRequest = true
+            }
+        })
+
+        if (! hasFoundRequest) {
+            let request = new MessageRequest()
+
+            request.addMessage(message)
+
+            requests.add(request)
+        }
+    }
+
+    requests.forEach(request => {
+        request.messages.forEach(message => {
+            message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn()
+            message.updates = message.component.getUpdates()
+            message.calls = message.actions.map(i => ({
+                method: i.method,
+                params: i.params,
+                context: i.metadata,
+            }))
+
+            message.payload = {
+                snapshot: message.snapshot,
+                updates: message.updates,
+                // @todo: Rename to "actions"...
+                calls: message.calls,
+            }
+        })
+    })
+
+    requests.forEach(request => {
+        request.uri = getUpdateUri()
+
+        Object.defineProperty(request, 'payload', {
+            get() {
+                return {
+                    _token: getCsrfToken(),
+                    components: Array.from(request.messages, i => i.payload)
+                }
+            }
+        })
+
+        Object.defineProperty(request, 'options', {
+            get() {
+                return {
+                    method: 'POST',
+                    body: JSON.stringify(request.payload),
+                    headers: {
+                        'Content-type': 'application/json',
+                        'X-Livewire': '1', // This '1' value means nothing, but it stops Cloudflare from stripping the header...
+                    },
+                    signal: request.controller.signal,
+                }
+            }
+        })
+    })
+
+    requests.forEach(request => {
+        request.initInterceptors(interceptors)
+
+        if (request.hasAllCancelledMessages()) {
+            request.abort()
+        }
+
+        sendRequest(request, {
+            send: ({ responsePromise }) => {
+                request.onSend({ responsePromise })
+            },
+            failure: ({ error }) => {
+                request.onFailure({ error })
+            },
+            response: ({ response }) => {
+                request.onResponse({ response })
+            },
+            parsed: ({ response, responseBody }) => {
+                request.onParsed({ response, responseBody })
+            },
+            error: ({ response, responseBody }) => {
+                let preventDefault = false
+
+                request.onError({ response, responseBody, preventDefault })
+
+                if (preventDefault) return
+
+                if (response.status === 419) {
+                    confirm(
+                        'This page has expired.\nWould you like to refresh the page?'
+                    ) && window.location.reload()
+                }
+
+                if (response.aborted) return
+
+                showHtmlModal(responseBody)
+            },
+            redirect: (url) => {
+                let preventDefault = false
+
+                request.onRedirect({ url, preventDefault })
+
+                if (preventDefault) return
+
+                window.location.href = url
+            },
+            dump: (content) => {
+                let preventDefault = false
+
+                request.onDump({ content, preventDefault })
+
+                if (preventDefault) return
+
+                showHtmlModal(dumpContent)
+            },
+            success: async ({ response, responseBody, responseJson }) => {
+                request.onSuccess({ response, responseBody, responseJson })
+
+                await triggerAsync('payload.intercept', responseJson)
+
+                let messageResponsePayloads = responseJson.components
+
+                request.messages.forEach(message => {
+                    messageResponsePayloads.forEach(payload => {
+                        if (message.isCancelled()) return
+
+                        let { snapshot: snapshotEncoded, effects } = payload
+                        let snapshot = JSON.parse(snapshotEncoded)
+
+                        if (snapshot.memo.id === message.component.id) {
+                            message.responsePayload = { snapshot, effects }
+
+                            message.onSuccess()
+                            if (message.isCancelled()) return
+
+                            message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
+
+                            message.onSync()
+                            if (message.isCancelled()) return
+
+                            // Trigger any side effects from the payload like "morph" and "dispatch event"...
+                            message.component.processEffects(effects)
+
+                            let html = effects['html']
+
+                            queueMicrotask(() => {
+                                if (html) {
+                                    if (message.isCancelled()) return
+                                    applyMorph(message, html)
+
+                                    message.onMorph()
+                                }
+
+                                setTimeout(() => {
+                                    if (message.isCancelled()) return
+                                    message.onRender()
+                                })
+                            })
+                        }
+                    })
+                })
+            },
+        })
+    })
+}
+
+
+async function sendRequest(request, handlers) {
     let response
 
     try {
-        response = await fetch(updateUri, options)
+        if (request.isAborted()) return
+
+        let responsePromise = fetch(request.uri, request.options)
+
+        if (request.isAborted()) return
+        handlers.send({ responsePromise })
+
+        response = await responsePromise
     } catch (e) {
-        // If something went wrong with the fetch (particularly
-        // this would happen if the connection went offline)
-        // fail with a 503 and allow Livewire to clean up
+        if (request.isAborted()) return
 
-        finishProfile({ content: '{}', failed: true })
-
-        handleFailure()
-
-        fail({
-            status: 503,
-            content: null,
-            preventDefault: () => {},
-        })
+        handlers.failure({ error: e })
 
         return
     }
 
-    let mutableObject = {
-        status: response.status,
-        response,
-    }
+    handlers.response({ response })
 
-    respond(mutableObject)
+    let responseBody = await response.text()
 
-    response = mutableObject.response
-
-    let content = await response.text()
+    handlers.parsed({ response, responseBody })
 
     // Handle error response...
     if (! response.ok) {
-        finishProfile({ content: '{}', failed: true })
+        handlers.error({ response, responseBody })
 
-        let preventDefault = false
-
-        handleFailure()
-
-        fail({
-            status: response.status,
-            content,
-            preventDefault: () => preventDefault = true,
-        })
-
-        if (preventDefault) return
-
-        if (response.status === 419) {
-            handlePageExpiry()
-        }
-
-        if (response.aborted) {
-            return
-        } else {
-            return showFailureModal(content)
-        }
+        return
     }
 
-    /**
-     * Sometimes a redirect happens on the backend outside of Livewire's control,
-     * for example to a login page from a middleware, so we will just redirect
-     * to that page.
-     */
     if (response.redirected) {
-        window.location.href = response.url
+        handlers.redirect(response.url)
     }
 
     /**
@@ -156,37 +411,181 @@ export async function sendRequest(pool) {
      * render the dump in a modal and allow Livewire to continue with the
      * request.
      */
-    if (contentIsFromDump(content)) {
+    if (contentIsFromDump(responseBody)) {
         let dump
-        [dump, content] = splitDumpFromContent(content)
 
-        showHtmlModal(dump)
+        [dump, responseBody] = splitDumpFromContent(responseBody)
 
-        finishProfile({ content: '{}', failed: true })
-    } else {
-        finishProfile({ content, failed: false })
+        handlers.dump(dump)
     }
 
-    let { components, assets } = JSON.parse(content)
+    let responseJson = JSON.parse(responseBody)
 
-    await triggerAsync('payload.intercept', { components, assets })
-
-    await handleSuccess(components)
-
-    succeed({ status: response.status, json: JSON.parse(content) })
+    handlers.success({ response, responseBody, responseJson })
 }
 
-// Spoof a response payload...
-// Trigger a failure
+function applyMorph(message, html) {
+    // check if testing environment and skip...
+    if (process.env.NODE_ENV === 'test') return
 
-function handlePageExpiry() {
-    confirm(
-        'This page has expired.\nWould you like to refresh the page?'
-    ) && window.location.reload()
+    morph(message.component, message.component.el, html)
 }
 
-function showFailureModal(content) {
-    let html = content
+export async function sendNavigateRequest(uri, callback, errorCallback) {
+    let request = new PageRequest(uri)
 
-    showHtmlModal(html)
+    let options = {
+        // method: 'GET',
+        headers: {
+            'X-Livewire-Navigate': '1', // This '1' value means nothing, but it stops Cloudflare from stripping the header...
+        },
+        signal: request.controller.signal,
+    }
+
+    trigger('navigate.request', {
+        uri,
+        options,
+    })
+
+    let response
+
+    try {
+        response = await fetch(uri, options)
+
+        let destination = getDestination(response)
+
+        let html = await response.text()
+
+        callback(html, destination)
+    } catch (error) {
+        errorCallback(error)
+
+        throw error
+    }
 }
+
+function getDestination(response) {
+    let destination = createUrlObjectFromString(this.uri)
+    let finalDestination = createUrlObjectFromString(response.url)
+
+    // If there was no redirect triggered by the URL that was fetched...
+    if ((destination.pathname + destination.search) === (finalDestination.pathname + finalDestination.search)) {
+        // Then let's cary over any "hash" entries on the URL.
+        // We have to do this because hashes aren't sent to
+        // the server by "fetch", so it needs to get added
+        finalDestination.hash = destination.hash
+    }
+
+    return finalDestination
+}
+
+function createUrlObjectFromString(urlString) {
+    return urlString !== null && new URL(urlString, document.baseURI)
+}
+
+// Support legacy 'request' event...
+interceptRequest(({
+    request,
+    onSend,
+    onAbort,
+    onFailure,
+    onResponse,
+    onParsed,
+    onError,
+    onSuccess,
+}) => {
+    let respondCallbacks = []
+    let succeedCallbacks = []
+    let failCallbacks = []
+
+    trigger('request', {
+        url: request.uri,
+        options: request.options,
+        payload: request.options.body,
+        respond: i => respondCallbacks.push(i),
+        succeed: i => succeedCallbacks.push(i),
+        fail: i => failCallbacks.push(i),
+    })
+
+    onResponse(({ response }) => {
+        respondCallbacks.forEach(callback => callback({
+            status: response.status,
+            response,
+        }))
+    })
+
+    onSuccess(({ response, responseJson }) => {
+        succeedCallbacks.forEach(callback => callback({
+            status: response.status,
+            json: responseJson,
+        }))
+    })
+
+    onFailure(({ error }) => {
+        failCallbacks.forEach(callback => callback({
+            status: 503,
+            content: null,
+            preventDefault: () => {},
+        }))
+    })
+
+    onError(({ response, responseBody, preventDefault }) => {
+        failCallbacks.forEach(callback => callback({
+            status: response.status,
+            content: responseBody,
+            preventDefault,
+        }))
+    })
+})
+
+// Support legacy 'commit' event...
+interceptMessage(({
+    message,
+    onSend,
+    onCancel,
+    onError,
+    onSuccess,
+    onSync,
+    onMorph,
+    onRender,
+}) => {
+    // Allow other areas of the codebase to hook into the lifecycle
+    // of an individual commit...
+    let respondCallbacks = []
+    let succeedCallbacks = []
+    let failCallbacks = []
+
+    trigger('commit', {
+        component: message.component,
+        commit: message.payload,
+        respond: (callback) => {
+            respondCallbacks.push(callback)
+        },
+        succeed: (callback) => {
+            succeedCallbacks.push(callback)
+        },
+        fail: (callback) => {
+            failCallbacks.push(callback)
+        },
+    })
+
+    onSuccess(({ payload, onSync, onMorph, onRender }) => {
+        respondCallbacks.forEach(callback => callback())
+
+        onRender(() => {
+            succeedCallbacks.forEach(callback => callback({
+                snapshot: payload.snapshot,
+                effects: payload.effects,
+            }))
+        })
+    })
+
+    onError(() => {
+        failCallbacks.forEach(callback => callback())
+    })
+
+    onCancel(() => {
+        respondCallbacks.forEach(callback => callback())
+        failCallbacks.forEach(callback => callback())
+    })
+})

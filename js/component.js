@@ -2,7 +2,7 @@ import { dataSet, deepClone, diff, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { closestComponent, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
-import messageBroker from '@/v4/requests/messageBroker.js'
+import { setNextActionOrigin } from '@/request'
 
 export class Component {
     constructor(el) {
@@ -50,7 +50,16 @@ export class Component {
     }
 
     addActionContext(context) {
-        messageBroker.addContext(this, context)
+        // New system: just set the origin for next action
+        if (context.el || context.directive) {
+            setNextActionOrigin({
+                el: context.el,
+                directive: context.directive
+            })
+        }
+
+        // Note: Non-origin metadata should be passed directly to fireAction
+        // This method is kept for backwards compatibility but simplified
     }
 
     intercept(action, callback = null) {

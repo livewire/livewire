@@ -94,6 +94,33 @@ function build(options) {
     return require('esbuild').build({
         watch: process.argv.includes('--watch'),
         // external: ['alpinejs'],
+        plugins: [
+            ...(options.plugins || []),
+            {
+                name: 'path-resolver',
+                setup(build) {
+                    // Resolve @/ alias to js/ directory
+                    build.onResolve({ filter: /^@\// }, args => {
+                        const relativePath = args.path.slice(2) // Remove '@/'
+                        const fullPath = path.resolve(__dirname, '../js', relativePath)
+
+                        // Try different extensions if it's not found
+                        const fs = require('fs')
+                        const extensions = ['.js', '/index.js', '']
+
+                        for (const ext of extensions) {
+                            const testPath = fullPath + ext
+                            if (fs.existsSync(testPath)) {
+                                return { path: testPath }
+                            }
+                        }
+
+                        // Default to the original path
+                        return { path: fullPath }
+                    })
+                }
+            }
+        ],
         ...options,
     }).catch(() => process.exit(1))
 }

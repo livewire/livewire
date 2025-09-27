@@ -23,18 +23,6 @@ class MessageBroker {
         message.addInterceptor(interceptor)
     }
 
-    addContext(component, context) {
-        let message = this.getMessage(component)
-
-        message.addContext(context)
-    }
-
-    pullContext(component) {
-        let message = this.getMessage(component)
-        
-        return message.pullContext()
-    }
-
     addAction(action) {
         let message = this.getMessage(action.component)
 
@@ -74,7 +62,7 @@ class MessageBroker {
 
         messages.forEach(message => {
             if (message.isCancelled()) return
-            
+
             message.prepare()
         })
 

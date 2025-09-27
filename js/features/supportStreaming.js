@@ -1,4 +1,4 @@
-import { findRefEl } from '@/v4/features/supportRefs'
+import { findRefEl } from '@/features/supportRefs'
 import { contentIsFromDump } from '@/utils'
 import { findComponent } from '@/store'
 import { on, trigger } from '@/hooks'

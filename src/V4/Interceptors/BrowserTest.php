@@ -42,9 +42,13 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewireToLoad()
         ->assertScript('window.intercepts.length', 0)
         ->click('@refresh')
+        // Wait for the requests to be corralled...
+        ->pause(6)
         ->assertScript('window.intercepts.length', 1)
         ->assertScript('window.intercepts[0]', 'intercept')
         ->click('@child-refresh')
+        // Wait for the requests to be corralled...
+        ->pause(6)
         ->assertScript('window.intercepts.length', 2)
         ->assertScript('window.intercepts[1]', 'intercept')
         ;
@@ -86,9 +90,13 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewireToLoad()
         ->assertScript('window.intercepts.length', 0)
         ->click('@refresh')
+        // Wait for the requests to be corralled...
+        ->pause(6)
         ->assertScript('window.intercepts.length', 1)
         ->assertScript('window.intercepts[0]', 'intercept')
         ->click('@child-refresh')
+        // Wait for the requests to be corralled...
+        ->pause(6)
 
         // The child component should not have been intercepted...
         ->assertScript('window.intercepts.length', 1)
@@ -127,10 +135,14 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // The interceptor should not be triggered when the component is refreshed...
         ->click('@refresh')
+        // Wait for the requests to be corralled...
+        ->pause(6)
         ->assertScript('window.intercepts.length', 0)
 
         // The interceptor should be triggered when the action is performed...
         ->click('@do-something')
+        // Wait for the requests to be corralled...
+        ->pause(6)
         ->assertScript('window.intercepts.length', 1)
         ->assertScript('window.intercepts[0]', 'intercept')
         ;
@@ -159,60 +171,40 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ request, directive }) => {
-                            window.intercepts.push(`init-${directive.method}`)
+                        this.intercept(({ actions, onSend, onCancel, onError, onSuccess, cancel }) => {
+                            let action = actions[0]
+                            let method = action.method
+                            let directive = action.origin.directive
 
-                            request.beforeSend(() => {
-                                window.intercepts.push(`beforeSend-${directive.method}`)
+                            window.intercepts.push(`onInit-${directive.method}`)
+
+                            onSend(() => {
+                                window.intercepts.push(`onSend-${directive.method}`)
                             })
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`afterSend-${directive.method}`)
+                            onCancel(() => {
+                                window.intercepts.push(`onCancel-${directive.method}`)
                             })
 
-                            request.beforeResponse(() => {
-                                window.intercepts.push(`beforeResponse-${directive.method}`)
+                            onError(() => {
+                                window.intercepts.push(`onError-${directive.method}`)
                             })
 
-                            request.afterResponse(() => {
-                                window.intercepts.push(`afterResponse-${directive.method}`)
-                            })
+                            onSuccess(({ onSync, onMorph, onRender }) => {
+                                window.intercepts.push(`onSuccess-${directive.method}`)
 
-                            request.beforeRender(() => {
-                                window.intercepts.push(`beforeRender-${directive.method}`)
-                            })
+                                onSync(() => {
+                                    window.intercepts.push(`onSync-${directive.method}`)
+                                })
 
-                            request.afterRender(() => {
-                                window.intercepts.push(`afterRender-${directive.method}`)
-                            })
+                                onMorph(() => {
+                                    window.intercepts.push(`onMorph-${directive.method}`)
+                                })
 
-                            request.beforeMorph(() => {
-                                window.intercepts.push(`beforeMorph-${directive.method}`)
+                                onRender(() => {
+                                    window.intercepts.push(`onRender-${directive.method}`)
+                                })
                             })
-
-                            request.afterMorph(() => {
-                                window.intercepts.push(`afterMorph-${directive.method}`)
-                            })
-
-                            request.onError(() => {
-                                window.intercepts.push(`error-${directive.method}`)
-                            })
-
-                            request.onFailure(() => {
-                                window.intercepts.push(`failure-${directive.method}`)
-                            })
-
-                            request.onSuccess(() => {
-                                window.intercepts.push(`success-${directive.method}`)
-                            })
-
-                            request.onCancel(() => {
-                                window.intercepts.push(`cancel-${directive.method}`)
-                            })
-
-                            return () => {
-                                window.intercepts.push(`returned-${directive.method}`)
-                            }
                         })
                     </script>
                     @endscript
@@ -225,19 +217,16 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // The interceptor should not be triggered when the component is refreshed...
         ->waitForLivewire()->click('@refresh')
-        ->assertScript('window.intercepts.length', 11)
+        // Wait for the requests to be corralled...
+        ->pause(6)
+        ->assertScript('window.intercepts.length', 6)
         ->assertScript('window.intercepts', [
-            'init-$refresh',
-            'beforeSend-$refresh',
-            'afterSend-$refresh',
-            'beforeResponse-$refresh',
-            'afterResponse-$refresh',
-            'success-$refresh',
-            'beforeRender-$refresh',
-            'beforeMorph-$refresh',
-            'afterMorph-$refresh',
-            'afterRender-$refresh',
-            'returned-$refresh'
+            'onInit-$refresh',
+            'onSend-$refresh',
+            'onSuccess-$refresh',
+            'onSync-$refresh',
+            'onMorph-$refresh',
+            'onRender-$refresh',
         ])
 
         // Reset...
@@ -247,29 +236,26 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // Trigger the slow request...
         ->click('@slow-request')
+        // Wait for the requests to be corralled...
+        ->pause(6)
 
         // Wait for a moment, then trigger another request which should cancel the slow request...
         ->pause(100)
         ->waitForLivewire()->click('@refresh')
-        ->assertScript('window.intercepts.length', 16)
+        // Wait for the requests to be corralled...
+        ->pause(6)
+        ->assertScript('window.intercepts.length', 9)
         // The below results are the combination of the slow request and the refresh request...
         ->assertScript('window.intercepts', [
-            'init-slowRequest',
-            'beforeSend-slowRequest',
-            'afterSend-slowRequest',
-            'init-$refresh',
-            'beforeSend-$refresh',
-            'cancel-slowRequest',
-            'returned-slowRequest',
-            'afterSend-$refresh',
-            'beforeResponse-$refresh',
-            'afterResponse-$refresh',
-            'success-$refresh',
-            'beforeRender-$refresh',
-            'beforeMorph-$refresh',
-            'afterMorph-$refresh',
-            'afterRender-$refresh',
-            'returned-$refresh',
+            'onInit-slowRequest',
+            'onSend-slowRequest',
+            'onInit-$refresh',
+            'onCancel-slowRequest',
+            'onSend-$refresh',
+            'onSuccess-$refresh',
+            'onSync-$refresh',
+            'onMorph-$refresh',
+            'onRender-$refresh',
         ])
 
         // Reset...
@@ -279,19 +265,19 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // Trigger the error request...
         ->waitForLivewire()->click('@throw-error')
+        // Wait for the requests to be corralled...
+        ->pause(6)
 
-        ->assertScript('window.intercepts.length', 5)
+        ->assertScript('window.intercepts.length', 3)
         ->assertScript('window.intercepts', [
-            'init-throwAnError',
-            'beforeSend-throwAnError',
-            'afterSend-throwAnError',
-            'failure-throwAnError',
-            'returned-throwAnError',
+            'onInit-throwAnError',
+            'onSend-throwAnError',
+            'onError-throwAnError',
         ])
         ;
     }
 
-    public function test_an_interceptor_can_cancel_a_message_request()
+    public function test_an_interceptor_can_cancel_a_message_before_it_is_sent()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
@@ -309,62 +295,118 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ request, directive }) => {
-                            window.intercepts.push(`init-${directive.method}`)
+                        this.intercept(({ actions, onSend, onCancel, onError, onSuccess, cancel }) => {
+                            let action = actions[0]
+                            let method = action.method
+                            let directive = action.origin.directive
 
-                            setTimeout(() => request.cancel(), 200)
+                            window.intercepts.push(`onInit-${directive.method}`)
 
-                            request.beforeSend(() => {
-                                window.intercepts.push(`beforeSend-${directive.method}`)
+                            onCancel(() => {
+                                window.intercepts.push(`onCancel-${directive.method}`)
                             })
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`afterSend-${directive.method}`)
+                            cancel()
+
+                            onSend(() => {
+                                window.intercepts.push(`onSend-${directive.method}`)
                             })
 
-                            request.beforeResponse(() => {
-                                window.intercepts.push(`beforeResponse-${directive.method}`)
+                            onError(() => {
+                                window.intercepts.push(`onError-${directive.method}`)
                             })
 
-                            request.afterResponse(() => {
-                                window.intercepts.push(`afterResponse-${directive.method}`)
+                            onSuccess(({ onSync, onMorph, onRender }) => {
+                                window.intercepts.push(`onSuccess-${directive.method}`)
+
+                                onSync(() => {
+                                    window.intercepts.push(`onSync-${directive.method}`)
+                                })
+
+                                onMorph(() => {
+                                    window.intercepts.push(`onMorph-${directive.method}`)
+                                })
+
+                                onRender(() => {
+                                    window.intercepts.push(`onRender-${directive.method}`)
+                                })
+                            })
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+        ->assertScript('window.intercepts.length', 0)
+
+        // The interceptor has a timeout set to cancel the request after 200ms...
+        ->click('@slow-request')
+        // Wait for the requests to be corralled...
+        ->pause(6)
+        ->assertScript('window.intercepts.length', 2)
+        ->assertScript('window.intercepts', [
+            'onInit-slowRequest',
+            'onCancel-slowRequest',
+        ])
+        ;
+    }
+
+    public function test_an_interceptor_can_cancel_a_message_request_while_in_flight()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    sleep(1);
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="slowRequest" dusk="slow-request">Slow Request</button>
+                    </div>
+
+                    @script
+                    <script>
+                        window.intercepts = []
+
+                        this.intercept(({ actions, onSend, onCancel, onError, onSuccess, cancel }) => {
+                            let action = actions[0]
+                            let method = action.method
+                            let directive = action.origin.directive
+
+                            window.intercepts.push(`onInit-${directive.method}`)
+
+                            setTimeout(() => cancel(), 200)
+
+                            onSend(() => {
+                                window.intercepts.push(`onSend-${directive.method}`)
                             })
 
-                            request.beforeRender(() => {
-                                window.intercepts.push(`beforeRender-${directive.method}`)
+                            onCancel(() => {
+                                window.intercepts.push(`onCancel-${directive.method}`)
                             })
 
-                            request.afterRender(() => {
-                                window.intercepts.push(`afterRender-${directive.method}`)
+                            onError(() => {
+                                window.intercepts.push(`onError-${directive.method}`)
                             })
 
-                            request.beforeMorph(() => {
-                                window.intercepts.push(`beforeMorph-${directive.method}`)
-                            })
+                            onSuccess(({ onSync, onMorph, onRender }) => {
+                                window.intercepts.push(`onSuccess-${directive.method}`)
 
-                            request.afterMorph(() => {
-                                window.intercepts.push(`afterMorph-${directive.method}`)
-                            })
+                                onSync(() => {
+                                    window.intercepts.push(`onSync-${directive.method}`)
+                                })
 
-                            request.onError(() => {
-                                window.intercepts.push(`error-${directive.method}`)
-                            })
+                                onMorph(() => {
+                                    window.intercepts.push(`onMorph-${directive.method}`)
+                                })
 
-                            request.onFailure(() => {
-                                window.intercepts.push(`failure-${directive.method}`)
+                                onRender(() => {
+                                    window.intercepts.push(`onRender-${directive.method}`)
+                                })
                             })
-
-                            request.onSuccess(() => {
-                                window.intercepts.push(`success-${directive.method}`)
-                            })
-
-                            request.onCancel(() => {
-                                window.intercepts.push(`cancel-${directive.method}`)
-                            })
-
-                            return () => {
-                                window.intercepts.push(`returned-${directive.method}`)
-                            }
                         })
                     </script>
                     @endscript
@@ -377,13 +419,11 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // The interceptor has a timeout set to cancel the request after 200ms...
         ->waitForLivewire()->click('@slow-request')
-        ->assertScript('window.intercepts.length', 5)
+        ->assertScript('window.intercepts.length', 3)
         ->assertScript('window.intercepts', [
-            'init-slowRequest',
-            'beforeSend-slowRequest',
-            'afterSend-slowRequest',
-            'cancel-slowRequest',
-            'returned-slowRequest',
+            'onInit-slowRequest',
+            'onSend-slowRequest',
+            'onCancel-slowRequest',
         ])
         ;
     }

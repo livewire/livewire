@@ -1,5 +1,5 @@
 import { componentsByName } from "@/store"
-import { findRefEl } from "./v4/features/supportRefs"
+import { findRefEl } from "@/features/supportRefs"
 
 export function dispatch(component, name, params) {
     dispatchEvent(component.el, name, params)

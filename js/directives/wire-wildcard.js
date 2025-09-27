@@ -1,6 +1,7 @@
 import { callAndClearComponentDebounces } from '@/debounce'
 import { customDirectiveHasBeenRegistered } from '@/directives'
 import { on } from '@/hooks'
+import { setNextActionOrigin } from '@/request'
 import Alpine from 'alpinejs'
 import { evaluateActionExpression } from '../evaluator'
 
@@ -22,11 +23,7 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
 
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
-                    component.addActionContext({
-                        // type: 'user',
-                        el,
-                        directive,
-                    })
+                    setNextActionOrigin({ el, directive })
 
                     evaluateActionExpression(component, el, directive.expression, { scope: { $event: e } })
                 })

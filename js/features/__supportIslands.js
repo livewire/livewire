@@ -1,17 +1,22 @@
-import { intercept } from '@/request'
+import { findComponent, hasComponent } from '@/store'
 import { morphIsland } from '@/morph'
+import { on } from '@/hooks'
 
-// intercept(({ action, component, request, el, directive }) => {
-//     if (! el) return
+on('stream', (payload) => {
+    if (payload.type !== 'island') return
 
-//     let island = closestIsland(el)
+    let { id, name, content } = payload
 
-//     if (! island) return
+    if (! hasComponent(id)) return
 
-//     action.addContext({
-//         island: { name: island.name, mode: island.mode },
-//     })
-// })
+    let component = findComponent(id)
+
+    streamIsland(component, key, content)
+})
+
+export function streamIsland(component, key, content) {
+    renderIsland(component, key, content)
+}
 
 export function renderIsland(component, key, content, mode = null) {
     let island = component.islands[key]
@@ -63,7 +68,7 @@ export function renderIsland(component, key, content, mode = null) {
 
 export function skipIslandContents(component, el, toEl, skipUntil) {
     if (isStartMarker(el) && isStartMarker(toEl)) {
-        let key = extractIslandName(toEl)
+        let key = extractIslandKey(toEl)
         let island = component.islands[key]
         let mode = island.mode
         let render = island.render
@@ -110,7 +115,7 @@ export function skipIslandContents(component, el, toEl, skipUntil) {
     }
 }
 
-export function closestIsland(el) {
+export function closestIsland(component, el) {
     let current = el;
 
     while (current) {
@@ -128,9 +133,9 @@ export function closestIsland(el) {
                 if (foundEndMarker.length > 0) {
                     foundEndMarker.pop()
                 } else {
-                    let key = extractIslandName(sibling)
+                    let key = extractIslandKey(sibling)
 
-                    return { name: key, mode: 'replace' }
+                    return component.islands[key]
                 }
             }
 
@@ -157,7 +162,7 @@ function isEndMarker(el) {
     return el.nodeType === 8 && el.textContent.startsWith('[if ENDISLAND')
 }
 
-function extractIslandName(el) {
+function extractIslandKey(el) {
     let key = el.textContent.match(/\[if ISLAND:([\w-]+)(?::placeholder)?\]/)?.[1]
 
     return key

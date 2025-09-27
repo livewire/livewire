@@ -2,8 +2,9 @@ import { directive } from '@/directives'
 import { handleFileUpload } from '@/features/supportFileUploads'
 import { closestComponent } from '@/store'
 import { dataGet, dataSet } from '@/utils'
+import { setNextActionOrigin } from '@/request'
 import Alpine from 'alpinejs'
-import Action from '@/v4/requests/action'
+// Action is no longer needed - wire:model uses $commit which creates its own actions
 
 directive('model', ({ el, directive, component, cleanup }) => {
     // @todo: will need to probaby do this further upstream i just don't want to bog down the entire lifecycle right now...
@@ -32,13 +33,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Trigger a network request (only if .live or .lazy is added to wire:model)...
     let update = () => {
-        if (window.livewireV4) {
-            component.addActionContext({
-                // type: 'user',
-                el,
-                directive,
-            })
-        }
+        setNextActionOrigin({ el, directive })
 
         expression.startsWith('$parent')
             ? component.$wire.$parent.$commit()

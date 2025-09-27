@@ -1,4 +1,5 @@
 import { on } from '@/hooks'
+import { interceptPartition } from '@/request'
 
 let componentsThatWantToBeBundled = new WeakSet
 
@@ -19,20 +20,16 @@ on('component.init', ({ component }) => {
     }
 })
 
-on('commit.pooling', ({ commits }) => {
-    commits.forEach(commit => {
-        // We only care about lazy components...
-        if (! componentsThatAreLazy.has(commit.component)) return
+interceptPartition(({ message, compileRequest }) => {
+    // We only care about lazy components...
+    if (! componentsThatAreLazy.has(message.component)) return
 
-        if (componentsThatWantToBeBundled.has(commit.component)) {
-            commit.isolate = false
+    if (componentsThatWantToBeBundled.has(message.component)) {
+        componentsThatWantToBeBundled.delete(message.component)
+    } else {
+        compileRequest([message])
+    }
 
-            componentsThatWantToBeBundled.delete(commit.component)
-        } else {
-            commit.isolate = true
-        }
-
-        // Component is no longer lazy after the first full request, so remove it...
-        componentsThatAreLazy.delete(commit.component)
-    })
+    // Component is no longer lazy after the first full request, so remove it...
+    componentsThatAreLazy.delete(message.component)
 })

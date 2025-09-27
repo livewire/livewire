@@ -1,4 +1,5 @@
 import { on } from '@/hooks'
+import { interceptPartition } from '@/request'
 
 let componentsThatAreIsolated = new WeakSet
 
@@ -11,11 +12,9 @@ on('component.init', ({ component }) => {
     componentsThatAreIsolated.add(component)
 })
 
-on('commit.pooling', ({ commits }) => {
-    commits.forEach(commit => {
-        // We only care about isolated components...
-        if (! componentsThatAreIsolated.has(commit.component)) return
+interceptPartition(({ message, compileRequest }) => {
+    // We only care about isolated components...
+    if (! componentsThatAreIsolated.has(message.component)) return
 
-        commit.isolate = true
-    })
+    compileRequest([message])
 })
