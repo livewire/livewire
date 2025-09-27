@@ -286,6 +286,16 @@ By default, updating the state is deferred (changes on the client, but not immed
 > [!warning] Refrain from using the @@entangle directive
 > In Livewire version 2, it was recommended to use Blade's `@@entangle` directive. That is no longer the case in v3. `$wire.entangle()` is preferred as it is a more robust utility and avoids certain [issues when removing DOM elements](https://github.com/livewire/livewire/pull/6833#issuecomment-1902260844).
 
+## Using the `@js` directive
+
+If you need to output PHP data for use in Alpine directly, you can use the `@js` directive.
+
+```blade
+<div x-data="{ posts: @js($posts) }">
+    ...
+</div>
+```
+
 ## Manually bundling Alpine in your JavaScript build
 
 By default, Livewire and Alpine's JavaScript is injected onto each Livewire page automatically.
