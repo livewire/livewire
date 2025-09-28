@@ -1,6 +1,6 @@
 import { trigger } from '@/hooks'
 import { morph } from '@/morph'
-import { renderIsland } from '@/features/supportIslands'
+// import { renderIsland } from '@/features/supportIslands'
 
 export default class Message {
     updates = {}
@@ -8,7 +8,6 @@ export default class Message {
     payload = {}
     context = {}
     interceptors = new Set()
-    resolvers = []
     status = 'waiting'
     succeedCallbacks = []
     failCallbacks = []
@@ -52,38 +51,7 @@ export default class Message {
         return isIsland ? 'island' : 'component'
     }
 
-    pullContext() {
-        let context = this.context
-
-        this.context = {}
-
-        return context
-    }
-
-    addAction(action, resolve) {
-        // If the action isn't a magic action then it supersedes any magic actions.
-        // Remove them so there aren't any unnecessary actions in the request...
-        if (! this.isMagicAction(action.method)) {
-            this.removeAllMagicActions()
-        }
-
-        if (this.isMagicAction(action.method)) {
-            // If the action is a magic action and it already exists then remove the
-            // old action so there aren't any duplicate actions in the request...
-            // @todo: Should this happen now? What if the same action is called, but it has a different context?
-            this.findAndRemoveAction(action.method)
-
-            this.actions.push(action)
-
-            // We need to store the resolver, so we can call all of the
-            // magic action resolvers when the message is finished...
-            this.resolvers.push(resolve)
-
-            return
-        }
-
-        action.handleReturn = resolve
-
+    addAction(action) {
         this.actions.push(action)
     }
 
@@ -176,7 +144,7 @@ export default class Message {
                     let existingActionType = existingAction.context.type ?? 'user'
                     let newActionType = newAction.context.type ?? 'user'
 
-                    // If both actions are polls we need to cancel the new one to let 
+                    // If both actions are polls we need to cancel the new one to let
                     // the old one finish so we don't end up in a polling loop...
                     if (existingActionType === 'poll' && newActionType === 'poll') {
                         return newMessage.cancel()
@@ -215,7 +183,7 @@ export default class Message {
             calls: this.actions.map(i => ({
                 method: i.method,
                 params: i.params,
-                context: i.context,
+                context: i.metadata,
             })),
         }
 
@@ -275,8 +243,6 @@ export default class Message {
 
         // Trigger any side effects from the payload like "morph" and "dispatch event"...
         this.component.processEffects(this.component.effects)
-
-        this.resolvers.forEach(i => i())
 
         if (effects['returns']) {
             let returns = effects['returns']
@@ -351,7 +317,7 @@ export default class Message {
         this.respond()
 
         this.interceptors.forEach(i => i.onError({ e }))
-        
+
         this.interceptors.forEach(i => i.returned())
     }
 
@@ -365,7 +331,7 @@ export default class Message {
         this.interceptors.forEach(i => i.onFailure({ response, content }))
 
         this.failCallbacks.forEach(i => i())
-        
+
         this.interceptors.forEach(i => i.returned())
     }
 
@@ -379,7 +345,7 @@ export default class Message {
         this.respond()
 
         this.interceptors.forEach(i => i.onCancel())
-        
+
         this.interceptors.forEach(i => i.returned())
     }
 

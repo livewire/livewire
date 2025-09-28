@@ -23,6 +23,6 @@ trait HandlesStreaming
             return $stream->content($content, $replace);
         }
 
-        return $stream->to($name, $el, $ref);
+        return $stream->content($content, $replace)->to($name, $el, $ref);
     }
 }

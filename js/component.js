@@ -2,7 +2,7 @@ import { dataSet, deepClone, diff, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { closestComponent, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
-import messageBroker from '@/v4/requests/messageBroker.js'
+import { setNextActionOrigin } from '@/request'
 
 export class Component {
     constructor(el) {
@@ -50,7 +50,16 @@ export class Component {
     }
 
     addActionContext(context) {
-        messageBroker.addContext(this, context)
+        // New system: just set the origin for next action
+        if (context.el || context.directive) {
+            setNextActionOrigin({
+                el: context.el,
+                directive: context.directive
+            })
+        }
+
+        // Note: Non-origin metadata should be passed directly to fireAction
+        // This method is kept for backwards compatibility but simplified
     }
 
     intercept(action, callback = null) {
@@ -171,6 +180,52 @@ export class Component {
 
     get parent() {
         return closestComponent(this.el.parentElement)
+    }
+
+    get isIsolated() {
+        return this.snapshot.memo.isolate
+    }
+
+    get isLazy() {
+        return this.snapshot.memo.lazyLoaded !== undefined
+    }
+
+    get hasBeenLazyLoaded() {
+        return this.snapshot.memo.lazyLoaded === true
+    }
+
+    get isLazyIsolated() {
+        return !! this.snapshot.memo.lazyIsolated
+    }
+
+    getDeepChildrenWithBindings(callback) {
+        this.getDeepChildren(child => {
+            if (child.hasReactiveProps() || child.hasWireModelableBindings()) {
+                callback(child)
+            }
+        })
+    }
+
+    hasReactiveProps() {
+        let meta = this.snapshot.memo
+        let props = meta.props
+
+        return !! props
+    }
+
+    hasWireModelableBindings() {
+        let meta = this.snapshot.memo
+        let bindings = meta.bindings
+
+        return !! bindings
+    }
+
+    getDeepChildren(callback) {
+        this.children.forEach(child => {
+            callback(child)
+
+            child.getDeepChildren(callback)
+        })
     }
 
     getEncodedSnapshotWithLatestChildrenMergedIn() {

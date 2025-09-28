@@ -1,12 +1,5 @@
 class RequestBus {
-    booted = false
     requests = new Set()
-
-    boot() {
-        this.booted = true
-
-        console.log('v4 requests enabled')
-    }
 
     add(request) {
         this.cancelRequestsThatShouldBeCancelled(request)
