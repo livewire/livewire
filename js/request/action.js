@@ -2,6 +2,8 @@
 export default class Action {
     handleReturn = () => {}
 
+    squashedActions = new Set()
+
     constructor(component, method, params = [], metadata = {}, origin = null) {
         this.component = component
         this.method = method
@@ -26,10 +28,16 @@ export default class Action {
     rejectPromise(error) {
         // Resolving instead of rejecting to avoid unhandled promise rejection errors...
         // Should think about how we can handle this better...
+        this.squashedActions.forEach(action => action.rejectPromise(error))
         this.promiseResolution.resolve()
     }
 
+    addSquashedAction(action) {
+        this.squashedActions.add(action)
+    }
+
     resolvePromise(value) {
+        this.squashedActions.forEach(action => action.resolvePromise(value))
         this.promiseResolution.resolve(value)
     }
 }

@@ -182,6 +182,52 @@ export class Component {
         return closestComponent(this.el.parentElement)
     }
 
+    get isIsolated() {
+        return this.snapshot.memo.isolate
+    }
+
+    get isLazy() {
+        return this.snapshot.memo.lazyLoaded !== undefined
+    }
+
+    get hasBeenLazyLoaded() {
+        return this.snapshot.memo.lazyLoaded === true
+    }
+
+    get isLazyIsolated() {
+        return !! this.snapshot.memo.lazyIsolated
+    }
+
+    getDeepChildrenWithBindings(callback) {
+        this.getDeepChildren(child => {
+            if (child.hasReactiveProps() || child.hasWireModelableBindings()) {
+                callback(child)
+            }
+        })
+    }
+
+    hasReactiveProps() {
+        let meta = this.snapshot.memo
+        let props = meta.props
+
+        return !! props
+    }
+
+    hasWireModelableBindings() {
+        let meta = this.snapshot.memo
+        let bindings = meta.bindings
+
+        return !! bindings
+    }
+
+    getDeepChildren(callback) {
+        this.children.forEach(child => {
+            callback(child)
+
+            child.getDeepChildren(callback)
+        })
+    }
+
     getEncodedSnapshotWithLatestChildrenMergedIn() {
         let { snapshotEncoded, children, snapshot } = this
         let childIds = children.map(child => child.id)

@@ -2,7 +2,7 @@ import { directive } from '@/directives'
 import { handleFileUpload } from '@/features/supportFileUploads'
 import { closestComponent } from '@/store'
 import { dataGet, dataSet } from '@/utils'
-import { setNextActionOrigin } from '@/request'
+import { setNextActionMetadata, setNextActionOrigin } from '@/request'
 import Alpine from 'alpinejs'
 // Action is no longer needed - wire:model uses $commit which creates its own actions
 
@@ -34,6 +34,10 @@ directive('model', ({ el, directive, component, cleanup }) => {
     // Trigger a network request (only if .live or .lazy is added to wire:model)...
     let update = () => {
         setNextActionOrigin({ el, directive })
+
+        if (isLive || isDebounced) {
+            setNextActionMetadata({ type: 'model.live' })
+        }
 
         expression.startsWith('$parent')
             ? component.$wire.$parent.$commit()

@@ -1,16 +1,18 @@
 import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
+import { coordinateNetworkInteractions } from './interactions.js'
 import { MessageRequest, PageRequest } from './request.js'
 import { InterceptorRegistry } from './interceptor.js'
 import { trigger, triggerAsync } from '@/hooks.js'
 import { showHtmlModal } from '@/utils/modal.js'
+import { MessageBus } from './messageBus.js'
 import Message from './message.js'
 import Action from './action.js'
 import { morph } from '@/morph'
 
 let outstandingActionOrigin = null
 let outstandingActionMetadata = {}
-let outstandingMessages = new Set
 let interceptors = new InterceptorRegistry
+let messageBus = new MessageBus()
 let actionInterceptors = []
 let partitionInterceptors = []
 
@@ -42,28 +44,33 @@ export function interceptRequest(callback) {
     interceptors.addRequestInterceptor(callback)
 }
 
-let activeMessages = new Set()
+interceptMessage(({ message, onFinish }) => {
+    messageBus.addActiveMessage(message)
 
-interceptMessage(({ message, onCancel, onFailure, onError, onSuccess }) => {
-    activeMessages.add(message)
-
-    onCancel(() => activeMessages.delete(message))
-    onFailure(() => activeMessages.delete(message))
-    onError(() => activeMessages.delete(message))
-    onSuccess(() => activeMessages.delete(message))
+    onFinish(() => messageBus.removeActiveMessage(message))
 })
 
-function getScopedMessages(action) {
-    return [...Array.from(activeMessages), ...Array.from(outstandingMessages)].filter(message => {
-        return message.component === action.component
-    })
-}
-
-interceptAction(({ action, scopedMessages, reject, defer }) => {
-    //
-})
+coordinateNetworkInteractions(messageBus)
 
 export function fireAction(component, method, params = [], metadata = {}) {
+    let action = constructAction(component, method, params, metadata)
+
+    let prevented = false
+
+    actionInterceptors.forEach(callback => {
+        callback({
+            action,
+            reject: () => { action.rejectPromise(); prevented = true },
+            defer: () => prevented = true,
+        })
+    })
+
+    if (prevented) return action.promise
+
+    return fireActionInstance(action)
+}
+
+export function constructAction(component, method, params, metadata) {
     let origin = outstandingActionOrigin
 
     outstandingActionOrigin = null
@@ -75,92 +82,27 @@ export function fireAction(component, method, params = [], metadata = {}) {
 
     outstandingActionMetadata = {}
 
-    let action = new Action(component, method, params, metadata, origin)
+    return new Action(component, method, params, metadata, origin)
+}
 
-    let rejected = false
-    let deferred = false
+export function fireActionInstance(action) {
+    let message = createOrAddToOutstandingMessage(action)
 
-    actionInterceptors.forEach(callback => {
-        callback({
-            action,
-            scopedMessages: getScopedMessages(action),
-            reject: () => rejected = true,
-            defer: () => deferred = true,
-        })
+    messageBus.messageBuffer(message, () => {
+        sendMessages()
     })
-
-    if (deferred) {
-        return action.promise
-    }
-
-    if (rejected) {
-        action.rejectPromise()
-
-        return action.promise
-    }
-
-    let message = Array.from(outstandingMessages).find(message => message.component === component)
-
-    if (! message) {
-        message = new Message(component)
-
-        outstandingMessages.add(message)
-
-        setTimeout(() => { // Buffer for 5ms to allow other areas of the codebase to hook into the lifecycle of an individual commit...
-            sendMessages()
-        }, 5)
-    }
-
-    message.addAction(action)
 
     return action.promise
 }
 
-export function fireActionSynchronouslyMidPartitionAndReturnMessage(component, method, params = [], metadata = {}) {
-    let origin = outstandingActionOrigin
+export function createOrAddToOutstandingMessage(action) {
+    let message = messageBus.findScopedPendingMessage(action)
 
-    outstandingActionOrigin = null
-
-    metadata = {
-        ...metadata,
-        ...outstandingActionMetadata,
-    }
-
-    outstandingActionMetadata = {}
-
-    let action = new Action(component, method, params, metadata, origin)
-
-    let rejected = false
-    let deferred = false
-
-    actionInterceptors.forEach(callback => {
-        callback({
-            action,
-            scopedMessages: getScopedMessages(action),
-            reject: () => rejected = true,
-            defer: () => deferred = true,
-        })
-    })
-
-    if (deferred) {
-        return action.promise
-    }
-
-    if (rejected) {
-        action.rejectPromise()
-
-        return action.promise
-    }
-
-    let message = Array.from(outstandingMessages).find(message => message.component === component)
-
-    if (! message) {
-        message = new Message(component)
-
-        outstandingMessages.add(message)
-    }
+    if (! message) message = new Message(action.component)
 
     message.addAction(action)
+
+    messageBus.addPendingMessage(message)
 
     return message
 }
@@ -168,13 +110,15 @@ export function fireActionSynchronouslyMidPartitionAndReturnMessage(component, m
 function sendMessages() {
     let requests = new Set()
 
-    // This Array.from is necessary to avoid a situation where the Set is mutated while iterating over it...
-    // We may actually want that behavior, and in that case we can remove the Array.from...
-    Array.from(outstandingMessages).forEach(message => {
+    messageBus.eachPendingMessage(message => {
         partitionInterceptors.forEach(callback => {
             callback({
                 message,
                 compileRequest: (messages) => {
+                    if (Array.from(requests).some(request => Array.from(request.messages).some(message => messages.includes(message)))) {
+                        throw new Error('A request already contains one of the messages in this array')
+                    }
+
                     let request = new MessageRequest()
 
                     messages.forEach(message => request.addMessage(message))
@@ -187,9 +131,9 @@ function sendMessages() {
         })
     })
 
-    let messages = Array.from(outstandingMessages)
+    let messages = messageBus.getPendingMessages()
 
-    outstandingMessages.clear()
+    messageBus.clearPendingMessages()
 
     for (let message of messages) {
         if (Array.from(requests).some(request => request.messages.has(message))) {
@@ -219,7 +163,7 @@ function sendMessages() {
         request.messages.forEach(message => {
             message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn()
             message.updates = message.component.getUpdates()
-            message.calls = message.actions.map(i => ({
+            message.calls = Array.from(message.actions).map(i => ({
                 method: i.method,
                 params: i.params,
                 context: i.metadata,
@@ -277,6 +221,21 @@ function sendMessages() {
             },
             response: ({ response }) => {
                 request.onResponse({ response })
+            },
+            stream: async ({ response }) => {
+                let finalResponse = ''
+
+                try {
+                    finalResponse = await interceptStreamAndReturnFinalResponse(response, streamed => {
+                        trigger('stream', streamed)
+                    })
+                } catch (e) {
+                    throw e
+
+                    request.abort()
+                }
+
+                return finalResponse
             },
             parsed: ({ response, responseBody }) => {
                 request.onParsed({ response, responseBody })
@@ -367,7 +326,6 @@ function sendMessages() {
     })
 }
 
-
 async function sendRequest(request, handlers) {
     let response
 
@@ -390,7 +348,15 @@ async function sendRequest(request, handlers) {
 
     handlers.response({ response })
 
-    let responseBody = await response.text()
+    let responseBody = null
+
+    if (response.headers.has('X-Livewire-Stream')) {
+        responseBody = await handlers.stream({ response })
+    } else {
+        responseBody = await response.text()
+    }
+
+    if (request.isAborted()) return
 
     handlers.parsed({ response, responseBody })
 
@@ -422,6 +388,46 @@ async function sendRequest(request, handlers) {
     let responseJson = JSON.parse(responseBody)
 
     handlers.success({ response, responseBody, responseJson })
+}
+
+async function interceptStreamAndReturnFinalResponse(response, callback) {
+    let reader = response.body.getReader()
+    let remainingResponse = ''
+
+    while (true) {
+        let { done, value: chunk } = await reader.read()
+
+        let decoder = new TextDecoder
+        let output = decoder.decode(chunk)
+
+        let [ streams, remaining ] = extractStreamObjects(remainingResponse + output)
+
+        streams.forEach(stream => {
+            callback(stream)
+        })
+
+        remainingResponse = remaining
+
+        if (done) return remainingResponse
+    }
+}
+
+function extractStreamObjects(raw) {
+    let regex = /({"stream":true.*?"endStream":true})/g
+
+    let matches = raw.match(regex)
+
+    let parsed = []
+
+    if (matches) {
+        for (let i = 0; i < matches.length; i++) {
+            parsed.push(JSON.parse(matches[i]).body)
+        }
+    }
+
+    let remaining = raw.replace(regex, '');
+
+    return [ parsed, remaining ];
 }
 
 function applyMorph(message, html) {
@@ -486,11 +492,8 @@ function createUrlObjectFromString(urlString) {
 // Support legacy 'request' event...
 interceptRequest(({
     request,
-    onSend,
-    onAbort,
     onFailure,
     onResponse,
-    onParsed,
     onError,
     onSuccess,
 }) => {
@@ -541,13 +544,10 @@ interceptRequest(({
 // Support legacy 'commit' event...
 interceptMessage(({
     message,
-    onSend,
     onCancel,
     onError,
     onSuccess,
-    onSync,
-    onMorph,
-    onRender,
+    onFinish,
 }) => {
     // Allow other areas of the codebase to hook into the lifecycle
     // of an individual commit...
@@ -569,9 +569,11 @@ interceptMessage(({
         },
     })
 
-    onSuccess(({ payload, onSync, onMorph, onRender }) => {
+    onFinish(() => {
         respondCallbacks.forEach(callback => callback())
+    })
 
+    onSuccess(({ payload, onSync, onMorph, onRender }) => {
         onRender(() => {
             succeedCallbacks.forEach(callback => callback({
                 snapshot: payload.snapshot,
@@ -585,7 +587,6 @@ interceptMessage(({
     })
 
     onCancel(() => {
-        respondCallbacks.forEach(callback => callback())
         failCallbacks.forEach(callback => callback())
     })
 })

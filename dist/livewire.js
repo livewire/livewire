@@ -3987,6 +3987,54 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return latest;
   }
 
+  // js/request/interactions.js
+  function coordinateNetworkInteractions(bus) {
+    interceptPartition(({ message, compileRequest }) => {
+      if (!message.component.isIsolated)
+        return;
+      compileRequest([message]);
+    });
+    interceptPartition(({ message, compileRequest }) => {
+      if (message.component.isLazy && !message.component.hasBeenLazyLoaded && message.component.isLazyIsolated) {
+        compileRequest([message]);
+      }
+    });
+    interceptPartition(({ message, compileRequest }) => {
+      let component = message.component;
+      let bundledMessages = [];
+      component.getDeepChildrenWithBindings((child) => {
+        let action = constructAction(child, "$commit");
+        let message2 = createOrAddToOutstandingMessage(action);
+        bundledMessages.push(message2);
+      });
+      if (bundledMessages.length > 0) {
+        compileRequest([message, ...bundledMessages]);
+      }
+    });
+    interceptAction(({ action, scopedMessages, reject, defer }) => {
+      let message = bus.activeMessageMatchingScope(action);
+      if (message) {
+        if (action.metadata.type === "poll") {
+          return reject();
+        }
+        if (Array.from(message.actions).every((action2) => action2.metadata.type === "poll")) {
+          message.cancel();
+        }
+        if (Array.from(message.actions).every((action2) => action2.metadata.type === "model.live")) {
+          if (action.metadata.type === "model.live") {
+            return;
+          }
+        }
+        defer();
+        message.addInterceptor(({ onFinish }) => {
+          onFinish(() => {
+            fireActionInstance(action);
+          });
+        });
+      }
+    });
+  }
+
   // js/request/request.js
   var MessageRequest = class {
     messages = /* @__PURE__ */ new Set();
@@ -4248,9 +4296,57 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     document.body.style.overflow = "visible";
   }
 
+  // js/request/messageBus.js
+  var MessageBus = class {
+    pendingMessages = /* @__PURE__ */ new Set();
+    activeMessages = /* @__PURE__ */ new Set();
+    bufferingMessages = /* @__PURE__ */ new Set();
+    constructor() {
+    }
+    messageBuffer(message, callback) {
+      if (this.bufferingMessages.has(message)) {
+        return;
+      }
+      this.bufferingMessages.add(message);
+      setTimeout(() => {
+        callback();
+        this.bufferingMessages.delete(message);
+      }, 5);
+    }
+    addPendingMessage(message) {
+      this.pendingMessages.add(message);
+    }
+    clearPendingMessages() {
+      this.pendingMessages.clear();
+    }
+    getPendingMessages() {
+      return Array.from(this.pendingMessages);
+    }
+    addActiveMessage(message) {
+      this.activeMessages.add(message);
+    }
+    removeActiveMessage(message) {
+      this.activeMessages.delete(message);
+    }
+    findScopedPendingMessage(action) {
+      return Array.from(this.pendingMessages).find((message) => message.component === action.component);
+    }
+    activeMessageMatchingScope(action) {
+      return Array.from(this.activeMessages).find((message) => message.component === action.component);
+    }
+    allScopedMessages(action) {
+      return [...Array.from(this.activeMessages), ...Array.from(this.pendingMessages)].filter((message) => {
+        return message.component === action.component;
+      });
+    }
+    eachPendingMessage(callback) {
+      Array.from(this.pendingMessages).forEach(callback);
+    }
+  };
+
   // js/request/message.js
   var Message = class {
-    actions = [];
+    actions = /* @__PURE__ */ new Set();
     snapshot = null;
     updates = null;
     calls = null;
@@ -4264,7 +4360,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.component = component;
     }
     addAction(action) {
-      this.actions.push(action);
+      let actionsByFingerprint = /* @__PURE__ */ new Map();
+      Array.from(this.actions).forEach((action2) => {
+        actionsByFingerprint.set(action2.fingerprint, action2);
+      });
+      if (actionsByFingerprint.has(action.fingerprint)) {
+        actionsByFingerprint.get(action.fingerprint).addSquashedAction(action);
+        return;
+      }
+      this.actions.add(action);
     }
     setInterceptors(interceptors3) {
       this.interceptors = interceptors3;
@@ -4342,20 +4446,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.interceptors.forEach((interceptor2) => interceptor2.onFinish());
     }
     rejectActionPromises(error2) {
-      this.actions.forEach((action) => {
+      Array.from(this.actions).forEach((action) => {
         action.rejectPromise(error2);
       });
     }
     resolveActionPromises(returns) {
       let resolvedActions = /* @__PURE__ */ new Set();
       returns.forEach((value, index) => {
-        let action = this.actions[index];
+        let action = Array.from(this.actions)[index];
         if (!action)
           return;
         action.resolvePromise(value);
         resolvedActions.add(action);
       });
-      this.actions.forEach((action) => {
+      Array.from(this.actions).forEach((action) => {
         if (resolvedActions.has(action))
           return;
         action.resolvePromise();
@@ -4367,6 +4471,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var Action = class {
     handleReturn = () => {
     };
+    squashedActions = /* @__PURE__ */ new Set();
     constructor(component, method, params = [], metadata = {}, origin = null) {
       this.component = component;
       this.method = method;
@@ -4385,9 +4490,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return window.btoa(componentId + method + params + metadata);
     }
     rejectPromise(error2) {
+      this.squashedActions.forEach((action) => action.rejectPromise(error2));
       this.promiseResolution.resolve();
     }
+    addSquashedAction(action) {
+      this.squashedActions.add(action);
+    }
     resolvePromise(value) {
+      this.squashedActions.forEach((action) => action.resolvePromise(value));
       this.promiseResolution.resolve(value);
     }
   };
@@ -4679,8 +4789,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/request/index.js
   var outstandingActionOrigin = null;
   var outstandingActionMetadata = {};
-  var outstandingMessages = /* @__PURE__ */ new Set();
   var interceptors2 = new InterceptorRegistry();
+  var messageBus = new MessageBus();
   var actionInterceptors = [];
   var partitionInterceptors = [];
   function setNextActionOrigin(origin) {
@@ -4704,22 +4814,29 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function interceptRequest(callback) {
     interceptors2.addRequestInterceptor(callback);
   }
-  var activeMessages = /* @__PURE__ */ new Set();
-  interceptMessage(({ message, onCancel, onFailure, onError, onSuccess }) => {
-    activeMessages.add(message);
-    onCancel(() => activeMessages.delete(message));
-    onFailure(() => activeMessages.delete(message));
-    onError(() => activeMessages.delete(message));
-    onSuccess(() => activeMessages.delete(message));
+  interceptMessage(({ message, onFinish }) => {
+    messageBus.addActiveMessage(message);
+    onFinish(() => messageBus.removeActiveMessage(message));
   });
-  function getScopedMessages(action) {
-    return [...Array.from(activeMessages), ...Array.from(outstandingMessages)].filter((message) => {
-      return message.component === action.component;
-    });
-  }
-  interceptAction(({ action, scopedMessages, reject, defer }) => {
-  });
+  coordinateNetworkInteractions(messageBus);
   function fireAction(component, method, params = [], metadata = {}) {
+    let action = constructAction(component, method, params, metadata);
+    let prevented = false;
+    actionInterceptors.forEach((callback) => {
+      callback({
+        action,
+        reject: () => {
+          action.rejectPromise();
+          prevented = true;
+        },
+        defer: () => prevented = true
+      });
+    });
+    if (prevented)
+      return action.promise;
+    return fireActionInstance(action);
+  }
+  function constructAction(component, method, params, metadata) {
     let origin = outstandingActionOrigin;
     outstandingActionOrigin = null;
     metadata = {
@@ -4727,76 +4844,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       ...outstandingActionMetadata
     };
     outstandingActionMetadata = {};
-    let action = new Action(component, method, params, metadata, origin);
-    let rejected = false;
-    let deferred = false;
-    actionInterceptors.forEach((callback) => {
-      callback({
-        action,
-        scopedMessages: getScopedMessages(action),
-        reject: () => rejected = true,
-        defer: () => deferred = true
-      });
+    return new Action(component, method, params, metadata, origin);
+  }
+  function fireActionInstance(action) {
+    let message = createOrAddToOutstandingMessage(action);
+    messageBus.messageBuffer(message, () => {
+      sendMessages();
     });
-    if (deferred) {
-      return action.promise;
-    }
-    if (rejected) {
-      action.rejectPromise();
-      return action.promise;
-    }
-    let message = Array.from(outstandingMessages).find((message2) => message2.component === component);
-    if (!message) {
-      message = new Message(component);
-      outstandingMessages.add(message);
-      setTimeout(() => {
-        sendMessages();
-      }, 5);
-    }
-    message.addAction(action);
     return action.promise;
   }
-  function fireActionSynchronouslyMidPartitionAndReturnMessage(component, method, params = [], metadata = {}) {
-    let origin = outstandingActionOrigin;
-    outstandingActionOrigin = null;
-    metadata = {
-      ...metadata,
-      ...outstandingActionMetadata
-    };
-    outstandingActionMetadata = {};
-    let action = new Action(component, method, params, metadata, origin);
-    let rejected = false;
-    let deferred = false;
-    actionInterceptors.forEach((callback) => {
-      callback({
-        action,
-        scopedMessages: getScopedMessages(action),
-        reject: () => rejected = true,
-        defer: () => deferred = true
-      });
-    });
-    if (deferred) {
-      return action.promise;
-    }
-    if (rejected) {
-      action.rejectPromise();
-      return action.promise;
-    }
-    let message = Array.from(outstandingMessages).find((message2) => message2.component === component);
-    if (!message) {
-      message = new Message(component);
-      outstandingMessages.add(message);
-    }
+  function createOrAddToOutstandingMessage(action) {
+    let message = messageBus.findScopedPendingMessage(action);
+    if (!message)
+      message = new Message(action.component);
     message.addAction(action);
+    messageBus.addPendingMessage(message);
     return message;
   }
   function sendMessages() {
     let requests = /* @__PURE__ */ new Set();
-    Array.from(outstandingMessages).forEach((message) => {
+    messageBus.eachPendingMessage((message) => {
       partitionInterceptors.forEach((callback) => {
         callback({
           message,
           compileRequest: (messages2) => {
+            if (Array.from(requests).some((request2) => Array.from(request2.messages).some((message2) => messages2.includes(message2)))) {
+              throw new Error("A request already contains one of the messages in this array");
+            }
             let request = new MessageRequest();
             messages2.forEach((message2) => request.addMessage(message2));
             requests.add(request);
@@ -4805,8 +4879,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
     });
-    let messages = Array.from(outstandingMessages);
-    outstandingMessages.clear();
+    let messages = messageBus.getPendingMessages();
+    messageBus.clearPendingMessages();
     for (let message of messages) {
       if (Array.from(requests).some((request) => request.messages.has(message))) {
         continue;
@@ -4828,7 +4902,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       request.messages.forEach((message) => {
         message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn();
         message.updates = message.component.getUpdates();
-        message.calls = message.actions.map((i) => ({
+        message.calls = Array.from(message.actions).map((i) => ({
           method: i.method,
           params: i.params,
           context: i.metadata
@@ -4878,6 +4952,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         },
         response: ({ response }) => {
           request.onResponse({ response });
+        },
+        stream: async ({ response }) => {
+          let finalResponse = "";
+          try {
+            finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
+              trigger2("stream", streamed);
+            });
+          } catch (e) {
+            throw e;
+            request.abort();
+          }
+          return finalResponse;
         },
         parsed: ({ response, responseBody }) => {
           request.onParsed({ response, responseBody });
@@ -4966,7 +5052,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     }
     handlers.response({ response });
-    let responseBody = await response.text();
+    let responseBody = null;
+    if (response.headers.has("X-Livewire-Stream")) {
+      responseBody = await handlers.stream({ response });
+    } else {
+      responseBody = await response.text();
+    }
+    if (request.isAborted())
+      return;
     handlers.parsed({ response, responseBody });
     if (!response.ok) {
       handlers.error({ response, responseBody });
@@ -4982,6 +5075,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     let responseJson = JSON.parse(responseBody);
     handlers.success({ response, responseBody, responseJson });
+  }
+  async function interceptStreamAndReturnFinalResponse(response, callback) {
+    let reader = response.body.getReader();
+    let remainingResponse = "";
+    while (true) {
+      let { done, value: chunk } = await reader.read();
+      let decoder = new TextDecoder();
+      let output = decoder.decode(chunk);
+      let [streams, remaining] = extractStreamObjects(remainingResponse + output);
+      streams.forEach((stream) => {
+        callback(stream);
+      });
+      remainingResponse = remaining;
+      if (done)
+        return remainingResponse;
+    }
+  }
+  function extractStreamObjects(raw2) {
+    let regex = /({"stream":true.*?"endStream":true})/g;
+    let matches2 = raw2.match(regex);
+    let parsed = [];
+    if (matches2) {
+      for (let i = 0; i < matches2.length; i++) {
+        parsed.push(JSON.parse(matches2[i]).body);
+      }
+    }
+    let remaining = raw2.replace(regex, "");
+    return [parsed, remaining];
   }
   function applyMorph(message, html) {
     if (false)
@@ -5024,11 +5145,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   interceptRequest(({
     request,
-    onSend,
-    onAbort,
     onFailure,
     onResponse,
-    onParsed,
     onError,
     onSuccess
   }) => {
@@ -5073,13 +5191,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   interceptMessage(({
     message,
-    onSend,
     onCancel,
     onError,
     onSuccess,
-    onSync,
-    onMorph,
-    onRender
+    onFinish
   }) => {
     let respondCallbacks = [];
     let succeedCallbacks = [];
@@ -5097,9 +5212,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         failCallbacks.push(callback);
       }
     });
-    onSuccess(({ payload, onSync: onSync2, onMorph: onMorph2, onRender: onRender2 }) => {
+    onFinish(() => {
       respondCallbacks.forEach((callback) => callback());
-      onRender2(() => {
+    });
+    onSuccess(({ payload, onSync, onMorph, onRender }) => {
+      onRender(() => {
         succeedCallbacks.forEach((callback) => callback({
           snapshot: payload.snapshot,
           effects: payload.effects
@@ -5110,7 +5227,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       failCallbacks.forEach((callback) => callback());
     });
     onCancel(() => {
-      respondCallbacks.forEach((callback) => callback());
       failCallbacks.forEach((callback) => callback());
     });
   });
@@ -5651,6 +5767,41 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     get parent() {
       return closestComponent(this.el.parentElement);
+    }
+    get isIsolated() {
+      return this.snapshot.memo.isolate;
+    }
+    get isLazy() {
+      return this.snapshot.memo.lazyLoaded !== void 0;
+    }
+    get hasBeenLazyLoaded() {
+      return this.snapshot.memo.lazyLoaded === true;
+    }
+    get isLazyIsolated() {
+      return !!this.snapshot.memo.lazyIsolated;
+    }
+    getDeepChildrenWithBindings(callback) {
+      this.getDeepChildren((child) => {
+        if (child.hasReactiveProps() || child.hasWireModelableBindings()) {
+          callback(child);
+        }
+      });
+    }
+    hasReactiveProps() {
+      let meta = this.snapshot.memo;
+      let props = meta.props;
+      return !!props;
+    }
+    hasWireModelableBindings() {
+      let meta = this.snapshot.memo;
+      let bindings = meta.bindings;
+      return !!bindings;
+    }
+    getDeepChildren(callback) {
+      this.children.forEach((child) => {
+        callback(child);
+        child.getDeepChildren(callback);
+      });
     }
     getEncodedSnapshotWithLatestChildrenMergedIn() {
       let { snapshotEncoded, children, snapshot } = this;
@@ -10229,39 +10380,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return undo;
   }
 
-  // js/features/supportPropsAndModelables.js
-  interceptPartition(({ message, compileRequest }) => {
-    let component = message.component;
-    let bundledMessages = [message];
-    getDeepChildrenWithBindings(component, (child) => {
-      bundledMessages.push(fireActionSynchronouslyMidPartitionAndReturnMessage(child, "$commit"));
-    });
-    compileRequest(bundledMessages);
-  });
-  function getDeepChildrenWithBindings(component, callback) {
-    getDeepChildren(component, (child) => {
-      if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
-        callback(child);
-      }
-    });
-  }
-  function hasReactiveProps(component) {
-    let meta = component.snapshot.memo;
-    let props = meta.props;
-    return !!props;
-  }
-  function hasWireModelableBindings(component) {
-    let meta = component.snapshot.memo;
-    let bindings = meta.bindings;
-    return !!bindings;
-  }
-  function getDeepChildren(component, callback) {
-    component.children.forEach((child) => {
-      callback(child);
-      getDeepChildren(child, callback);
-    });
-  }
-
   // js/features/supportFileDownloads.js
   on2("commit", ({ succeed }) => {
     succeed(({ effects }) => {
@@ -10297,29 +10415,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return new Blob(byteArrays, { type: contentType });
   }
-
-  // js/features/supportLazyLoading.js
-  var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
-  var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
-  on2("component.init", ({ component }) => {
-    let memo = component.snapshot.memo;
-    if (memo.lazyLoaded === void 0)
-      return;
-    componentsThatAreLazy.add(component);
-    if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-      componentsThatWantToBeBundled.add(component);
-    }
-  });
-  interceptPartition(({ message, compileRequest }) => {
-    if (!componentsThatAreLazy.has(message.component))
-      return;
-    if (componentsThatWantToBeBundled.has(message.component)) {
-      componentsThatWantToBeBundled.delete(message.component);
-    } else {
-      compileRequest([message]);
-    }
-    componentsThatAreLazy.delete(message.component);
-  });
 
   // js/features/supportQueryString.js
   on2("effect", ({ component, effects, cleanup: cleanup2 }) => {
@@ -10431,20 +10526,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
-  // js/features/supportIsolating.js
-  var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
-  on2("component.init", ({ component }) => {
-    let memo = component.snapshot.memo;
-    if (memo.isolate !== true)
-      return;
-    componentsThatAreIsolated.add(component);
-  });
-  interceptPartition(({ message, compileRequest }) => {
-    if (!componentsThatAreIsolated.has(message.component))
-      return;
-    compileRequest([message]);
-  });
-
   // js/features/supportStreaming.js
   on2("stream", (payload) => {
     let { id, name, el, ref, content, mode } = payload;
@@ -10471,61 +10552,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       targetEl.insertAdjacentHTML("beforeend", content);
     }
   });
-  on2("request", ({ respond }) => {
-    respond((mutableObject) => {
-      let response = mutableObject.response;
-      if (!response.headers.has("X-Livewire-Stream"))
-        return;
-      mutableObject.response = {
-        ok: true,
-        redirected: false,
-        status: 200,
-        async text() {
-          let finalResponse = "";
-          try {
-            finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-              trigger2("stream", streamed);
-            });
-          } catch (e) {
-            this.aborted = true;
-            this.ok = false;
-          }
-          if (contentIsFromDump(finalResponse)) {
-            this.ok = false;
-          }
-          return finalResponse;
-        }
-      };
-    });
-  });
-  async function interceptStreamAndReturnFinalResponse(response, callback) {
-    let reader = response.body.getReader();
-    let remainingResponse = "";
-    while (true) {
-      let { done, value: chunk } = await reader.read();
-      let decoder = new TextDecoder();
-      let output = decoder.decode(chunk);
-      let [streams, remaining] = extractStreamObjects(remainingResponse + output);
-      streams.forEach((stream) => {
-        callback(stream);
-      });
-      remainingResponse = remaining;
-      if (done)
-        return remainingResponse;
-    }
-  }
-  function extractStreamObjects(raw2) {
-    let regex = /({"stream":true.*?"endStream":true})/g;
-    let matches2 = raw2.match(regex);
-    let parsed = [];
-    if (matches2) {
-      for (let i = 0; i < matches2.length; i++) {
-        parsed.push(JSON.parse(matches2[i]).body);
-      }
-    }
-    let remaining = raw2.replace(regex, "");
-    return [parsed, remaining];
-  }
 
   // js/features/supportNavigate.js
   document.addEventListener("livewire:initialized", () => {
@@ -11104,6 +11130,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let isDebounced = modifiers.includes("debounce");
     let update = () => {
       setNextActionOrigin({ el, directive: directive3 });
+      if (isLive || isDebounced) {
+        setNextActionMetadata({ type: "model.live" });
+      }
       expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
     };
     let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce2(update, 150) : update;

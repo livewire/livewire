@@ -11,13 +11,10 @@ import './supportDispatches';
  * Features where order does NOT matter:
  */
 import './supportDisablingFormsDuringRequest';
-import './supportPropsAndModelables';
 import './supportFileDownloads';
-import './supportLazyLoading';
 import './supportFileUploads';
 import './supportQueryString';
 import './supportLaravelEcho';
-import './supportIsolating';
 import './supportStreaming';
 import './supportRedirects';
 // import './supportIslands';
@@ -32,6 +29,3 @@ import './supportPreserveScroll';
 import './supportWireIntersect';
 // import './supportWireIsland';
 import './supportJsModules';
-import './supportPropsAndModelables';
-import './supportIsolating';
-import './supportLazyLoading';

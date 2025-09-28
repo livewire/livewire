@@ -1,7 +1,7 @@
 import { MessageInterceptor } from "./interceptor"
 
 export default class Message {
-    actions = []
+    actions = new Set()
     snapshot = null
     updates = null
     calls = null
@@ -17,7 +17,19 @@ export default class Message {
     }
 
     addAction(action) {
-        this.actions.push(action)
+        let actionsByFingerprint = new Map()
+
+        Array.from(this.actions).forEach(action => {
+            actionsByFingerprint.set(action.fingerprint, action)
+        })
+
+        if (actionsByFingerprint.has(action.fingerprint)) {
+            actionsByFingerprint.get(action.fingerprint).addSquashedAction(action)
+
+            return
+        }
+
+        this.actions.add(action)
     }
 
     setInterceptors(interceptors) {
@@ -129,7 +141,7 @@ export default class Message {
     }
 
     rejectActionPromises(error) {
-        this.actions.forEach(action => {
+        Array.from(this.actions).forEach(action => {
             action.rejectPromise(error)
         })
     }
@@ -138,7 +150,7 @@ export default class Message {
         let resolvedActions = new Set()
 
         returns.forEach((value, index) => {
-            let action = this.actions[index]
+            let action = Array.from(this.actions)[index]
 
             if (! action) return;
 
@@ -147,7 +159,7 @@ export default class Message {
             resolvedActions.add(action)
         })
 
-        this.actions.forEach(action => {
+        Array.from(this.actions).forEach(action => {
             if (resolvedActions.has(action)) return
 
             action.resolvePromise()
