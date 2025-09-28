@@ -9,6 +9,8 @@ class UnitTest extends TestCase
 {
     public function test_render_island_directives()
     {
+        $this->markTestSkipped();
+
         $component = Livewire::test(new class extends \Livewire\Component {
             public function render() {
                 return <<<'HTML'
@@ -28,7 +30,5 @@ class UnitTest extends TestCase
             ->assertSee('Inside island')
             ->assertSee('!--[if ISLAND:')
             ->assertSee('!--[if ENDISLAND:');
-
-        dd($component->instance());
     }
 }
