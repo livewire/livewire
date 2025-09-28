@@ -4863,14 +4863,13 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     };
     onSuccess = () => {
     };
-    hasBeenSynchronouslyCancelled = false;
+    hasBeenSynchronouslyAborted = false;
     constructor(request, callback) {
       this.request = request;
       this.callback = callback;
       let isInsideCallbackSynchronously = true;
       this.callback({
         request: this.request,
-        component: this.request.component,
         onSend: (callback2) => this.onSend = callback2,
         onAbort: (callback2) => this.onAbort = callback2,
         onFailure: (callback2) => this.onFailure = callback2,
@@ -4880,19 +4879,19 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         onRedirect: (callback2) => this.onRedirect = callback2,
         onDump: (callback2) => this.onDump = callback2,
         onSuccess: (callback2) => this.onSuccess = callback2,
-        cancel: () => {
+        abort: () => {
           if (isInsideCallbackSynchronously) {
-            this.hasBeenSynchronouslyCancelled = true;
+            this.hasBeenSynchronouslyAborted = true;
           } else {
-            this.request.cancel();
+            this.request.abort();
           }
         }
       });
       isInsideCallbackSynchronously = false;
     }
     init() {
-      if (this.hasBeenSynchronouslyCancelled) {
-        this.request.cancel();
+      if (this.hasBeenSynchronouslyAborted) {
+        this.request.abort();
       }
     }
   };
@@ -5041,6 +5040,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       }
       this.actions.add(action);
     }
+    getActions() {
+      return Array.from(this.actions);
+    }
     setInterceptors(interceptors2) {
       this.interceptors = interceptors2;
     }
@@ -5077,8 +5079,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       this.rejectActionPromises("Request cancelled");
       this.onFinish();
     }
-    onFailure(e) {
-      this.interceptors.forEach((interceptor) => interceptor.onFailure(e));
+    onFailure(error2) {
+      this.interceptors.forEach((interceptor) => interceptor.onFailure({ error: error2 }));
       this.rejectActionPromises("Request failed");
       this.onFinish();
     }
@@ -6238,11 +6240,14 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     });
   });
   wireProperty("$intercept", (component) => (method, callback = null) => {
-    if (callback === null) {
-      callback = method;
-      method = null;
+    if (callback === null && typeof method === "function") {
+      return intercept(component, callback);
     }
-    return intercept(component, callback);
+    return intercept(component, (options) => {
+      if (options.message.getActions().some((action) => action.method === method)) {
+        callback(options);
+      }
+    });
   });
   wireProperty("$errors", (component) => getErrorsObject(component));
   wireProperty("$paginator", (component) => {
