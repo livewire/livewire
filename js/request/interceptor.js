@@ -15,7 +15,6 @@ export class MessageInterceptor {
 
     constructor(message, callback) {
         this.message = message
-
         this.callback = callback
 
         let isInsideCallbackSynchronously = true
@@ -60,8 +59,7 @@ export class RequestInterceptor {
     onDump = () => {}
     onSuccess = () => {}
 
-
-    hasBeenSynchronouslyCancelled = false
+    hasBeenSynchronouslyAborted = false
 
     constructor(request, callback) {
         this.request = request
@@ -72,7 +70,6 @@ export class RequestInterceptor {
 
         this.callback({
             request: this.request,
-            component: this.request.component,
             onSend: (callback) => this.onSend = callback,
             onAbort: (callback) => this.onAbort = callback,
             onFailure: (callback) => this.onFailure = callback,
@@ -82,11 +79,11 @@ export class RequestInterceptor {
             onRedirect: (callback) => this.onRedirect = callback,
             onDump: (callback) => this.onDump = callback,
             onSuccess: (callback) => this.onSuccess = callback,
-            cancel: () => {
+            abort: () => {
                 if (isInsideCallbackSynchronously) {
-                    this.hasBeenSynchronouslyCancelled = true
+                    this.hasBeenSynchronouslyAborted = true
                 } else {
-                    this.request.cancel()
+                    this.request.abort()
                 }
             },
         })
@@ -95,8 +92,8 @@ export class RequestInterceptor {
     }
 
     init() {
-        if (this.hasBeenSynchronouslyCancelled) {
-            this.request.cancel()
+        if (this.hasBeenSynchronouslyAborted) {
+            this.request.abort()
         }
     }
 }

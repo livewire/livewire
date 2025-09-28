@@ -32,6 +32,10 @@ export default class Message {
         this.actions.add(action)
     }
 
+    getActions() {
+        return Array.from(this.actions)
+    }
+
     setInterceptors(interceptors) {
         this.interceptors = interceptors
     }
@@ -86,8 +90,8 @@ export default class Message {
         this.onFinish()
     }
 
-    onFailure(e) {
-        this.interceptors.forEach(interceptor => interceptor.onFailure(e))
+    onFailure(error) {
+        this.interceptors.forEach(interceptor => interceptor.onFailure({ error }))
 
         this.rejectActionPromises('Request failed')
 

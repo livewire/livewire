@@ -167,12 +167,15 @@ wireProperty('$refs', (component) => {
 })
 
 wireProperty('$intercept', (component) => (method, callback = null) => {
-    if (callback === null) {
-        callback = method
-        method = null
+    if (callback === null && typeof method === 'function') {
+        return intercept(component, callback)
     }
 
-    return intercept(component, callback)
+    return intercept(component, (options) => {
+        if (options.message.getActions().some(action => action.method === method)) {
+            callback(options)
+        }
+    })
 })
 
 wireProperty('$errors', (component) => getErrorsObject(component))

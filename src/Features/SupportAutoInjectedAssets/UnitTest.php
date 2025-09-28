@@ -155,9 +155,7 @@ class UnitTest extends TestCase
     {
         config()->set('livewire.inject_assets', false);
 
-        Route::get('/with-livewire', function () {
-            return (new class Extends TestComponent {})();
-        });
+        Route::livewire('/with-livewire', new class Extends TestComponent {});
 
         Route::get('/without-livewire', function () {
             return '<html></html>';
@@ -176,9 +174,7 @@ class UnitTest extends TestCase
 
     public function test_only_auto_injects_when_a_livewire_component_was_rendered_on_the_page(): void
     {
-        Route::get('/with-livewire', function () {
-            return (new class Extends TestComponent {})();
-        });
+        Route::livewire('/with-livewire', new class Extends TestComponent {});
 
         Route::get('/without-livewire', function () {
             return '<html></html>';
