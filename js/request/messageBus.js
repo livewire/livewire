@@ -47,12 +47,31 @@ export class MessageBus {
     }
 
     activeMessageMatchingScope(action) {
-        return Array.from(this.activeMessages).find(message => message.component === action.component)
+        return Array.from(this.activeMessages).find(message => this.matchesScope(message, action))
+    }
+
+    matchesScope(message, action) {
+        let isSameComponent = message.component === action.component
+        let isIslandMessage = Array.from(message.actions).every(action => action.metadata.island)
+        let isIslandAction = action.metadata.island
+        let isSameIsland = isIslandMessage && isIslandAction && Array.from(message.actions).every(action => action.metadata.island.name === action.metadata.island.name)
+
+        if (! isSameComponent) return false
+
+        if (isIslandMessage && isIslandAction) {
+            return isSameIsland
+        }
+
+        if (isIslandMessage && ! isIslandAction) {
+            return false
+        }
+
+        return true
     }
 
     allScopedMessages(action) {
         return [...Array.from(this.activeMessages), ...Array.from(this.pendingMessages)].filter(message => {
-            return message.component === action.component
+            return this.matchesScope(message, action)
         })
     }
 

@@ -1,6 +1,6 @@
 import { constructAction, createOrAddToOutstandingMessage, fireActionInstance, interceptAction, interceptPartition } from '@/request'
 
-export function coordinateNetworkInteractions(bus) {
+export function coordinateNetworkInteractions(messageBus) {
     // Handle isolated components...
     interceptPartition(({ message, compileRequest }) => {
         if (! message.component.isIsolated) return
@@ -38,8 +38,8 @@ export function coordinateNetworkInteractions(bus) {
     })
 
     // If a request is in-flight, queue up the action to fire after the in-flight request has finished...
-    interceptAction(({ action, scopedMessages, reject, defer }) => {
-        let message = bus.activeMessageMatchingScope(action)
+    interceptAction(({ action, reject, defer }) => {
+        let message = messageBus.activeMessageMatchingScope(action)
 
         if (message) {
             // Wire:poll:

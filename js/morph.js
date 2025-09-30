@@ -2,7 +2,7 @@ import { trigger } from "@/hooks"
 import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
 import { skipSlotContents } from "./features/supportSlots"
-import { skipIslandContents } from "./features/supportIslands"
+import { Island } from "./island"
 
 export function morph(component, el, html) {
     let wrapperTag = el.parentElement
@@ -69,7 +69,7 @@ export function morph(component, el, html) {
     trigger('morphed', { el, component })
 }
 
-export function morphIsland(component, startNode, endNode, toHTML) {
+export function morphFragment(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement
     let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
 
@@ -104,7 +104,7 @@ function getMorphConfig(component) {
     return {
         updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
             skipSlotContents(el, toEl, skipUntil)
-            skipIslandContents(component, el, toEl, skipUntil)
+            Island.skipIslandContents(component, el, toEl, skipUntil)
 
             if (isntElement(el)) return
 

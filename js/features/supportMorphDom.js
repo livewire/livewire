@@ -1,2 +1,14 @@
-// V3 morphdom support - no longer needed with v4
-// This file can potentially be deleted if v3 compatibility is not required
+import { morph } from "@/morph";
+import { interceptMessage } from "@/request";
+
+interceptMessage(({ message, onSuccess }) => {
+    onSuccess(({ payload, onMorph }) => {
+        onMorph(() => {
+            let html = payload.effects.html
+
+            if (! html) return
+
+            morph(message.component, message.component.el, html)
+        })
+    })
+})

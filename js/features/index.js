@@ -17,7 +17,7 @@ import './supportQueryString';
 import './supportLaravelEcho';
 import './supportStreaming';
 import './supportRedirects';
-// import './supportIslands';
+import './supportIslands';
 import './supportNavigate';
 import './supportEntangle';
 import './supportSlots';

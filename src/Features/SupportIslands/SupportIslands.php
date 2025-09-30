@@ -33,13 +33,13 @@ class SupportIslands extends ComponentHook
         });
     }
 
-    function call($method, $params, $returnEarly, $context, $componentContext)
+    function call($method, $params, $returnEarly, $metadata, $componentContext)
     {
-        if (! isset($context['island'])) return;
+        if (! isset($metadata['island'])) return;
 
-        $island = $context['island'];
+        $island = $metadata['island'];
 
-        // if context contains an island, then we should render it...
+        // if metadata contains an island, then we should render it...
         return function (...$params) use ($island, $componentContext) {
             ['name' => $name, 'mode' => $mode] = $island;
 
@@ -54,8 +54,8 @@ class SupportIslands extends ComponentHook
             $html = $this->component->renderIslandExpression(token: $token);
 
             $componentContext->pushEffect('islands', [
-                'key' => $name,
-                'content' => $html,
+                'name' => $name,
+                'html' => $html,
                 'mode' => $mode,
             ]);
         };

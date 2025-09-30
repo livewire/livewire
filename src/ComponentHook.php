@@ -35,10 +35,10 @@ abstract class ComponentHook
         };
     }
 
-    function callCall($method, $params, $returnEarly, $context, $componentContext) {
+    function callCall($method, $params, $returnEarly, $metadata, $componentContext) {
         $callbacks = [];
 
-        if (method_exists($this, 'call')) $callbacks[] = $this->call($method, $params, $returnEarly, $context, $componentContext);
+        if (method_exists($this, 'call')) $callbacks[] = $this->call($method, $params, $returnEarly, $metadata, $componentContext);
 
         return function (...$params) use ($callbacks) {
             foreach ($callbacks as $callback) {

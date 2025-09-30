@@ -10,7 +10,6 @@ export default class Message {
     interceptors = []
     cancelled = false
     request = null
-    isolate = false
 
     constructor(component) {
         this.component = component
@@ -30,6 +29,18 @@ export default class Message {
         }
 
         this.actions.add(action)
+    }
+
+    actionMatchesMessageScope(action) {
+        let actionIsIsland = action.metadata.island
+        let messageIsIsland = Array.from(this.actions).every(action => action.metadata.island)
+        let messageContainsIdenticalIslands = messageIsIsland && new Set(Array.from(this.actions).map(action => action.metadata.island.name)).size === 1
+        let messageAndActionIslandsMatch = messageIsIsland && actionIsIsland && Array.from(this.actions).every(a => a.metadata.island.name === action.metadata.island.name)
+        let isSameComponent = this.component === action.component
+
+        if (actionIsIsland) return messageAndActionIslandsMatch
+
+        return (! messageIsIsland) && isSameComponent
     }
 
     getActions() {
@@ -115,6 +126,7 @@ export default class Message {
             interceptor.onSuccess({
                 payload: this.responsePayload,
                 onSync: callback => interceptor.onSync = callback,
+                onEffect: callback => interceptor.onEffect = callback,
                 onMorph: callback => interceptor.onMorph = callback,
                 onRender: callback => interceptor.onRender = callback
             })
@@ -130,6 +142,10 @@ export default class Message {
 
     onSync() {
         this.interceptors.forEach(interceptor => interceptor.onSync())
+    }
+
+    onEffect() {
+        this.interceptors.forEach(interceptor => interceptor.onEffect())
     }
 
     onMorph() {

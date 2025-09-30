@@ -1,27 +1,43 @@
-import { intercept } from '@/request'
-import { morphIsland } from '@/morph'
+import { interceptAction, interceptMessage } from '@/request'
+import { Island } from '@/island'
+import { morphFragment } from '@/morph'
 
-// intercept(({ action, component, request, el, directive }) => {
-//     if (! el) return
+interceptAction(({ action }) => {
+    let origin = action.origin
 
-//     let island = closestIsland(el)
+    if (! origin) return
 
-//     if (! island) return
+    let island = Island.closestIsland(origin)
 
-//     action.addContext({
-//         island: { name: island.name, mode: island.mode },
-//     })
-// })
+    if (! island) return
 
-export function renderIsland(component, key, content, mode = null) {
+    action.mergeMetadata(island.toMetadata())
+})
+
+interceptMessage(({ message, onSuccess }) => {
+    onSuccess(({ payload, onMorph }) => {
+        onMorph(() => {
+            let islands = payload.effects.islands || []
+
+            islands.forEach(island => {
+                let { name, html, mode } = island
+
+                renderIsland(message.component, name, html, mode)
+            })
+        })
+    })
+})
+
+export function renderIsland(component, key, html, mode = null) {
     let island = component.islands[key]
+
     mode ??= island.mode
 
     let { startNode, endNode } = findIslandComments(component.el, key)
 
     if (!startNode || !endNode) return
 
-    let strippedContent = stripIslandComments(content, key)
+    let strippedContent = stripIslandComments(html, key)
 
     let parentElement = startNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
@@ -57,123 +73,23 @@ export function renderIsland(component, key, content, mode = null) {
                 startNode.parentNode.insertBefore(node, startNode.nextSibling)
             })
     } else {
-        morphIsland(component, startNode, endNode, strippedContent)
+        morphFragment(component, startNode, endNode, strippedContent)
     }
 }
 
-export function skipIslandContents(component, el, toEl, skipUntil) {
-    if (isStartMarker(el) && isStartMarker(toEl)) {
-        let key = extractIslandName(toEl)
-        let island = component.islands[key]
-        let mode = island.mode
-        let render = island.render
 
-        if (['bypass', 'skip', 'once'].includes(render)) {
-            skipUntil(node => isEndMarker(node))
-        } else if (mode === 'prepend') {
-            // Collect all siblings until end marker
-            let sibling = toEl.nextSibling
-            let siblings = []
-            while (sibling && !isEndMarker(sibling)) {
-                siblings.push(sibling)
-                sibling = sibling.nextSibling
-            }
-
-            // Insert collected siblings after the start marker
-            siblings.forEach(node => {
-                el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling)
-            })
-
-            skipUntil(node => isEndMarker(node))
-        } else if (mode === 'append') {
-            // Find end marker of fromEl
-            let endMarker = el.nextSibling
-            while (endMarker && !isEndMarker(endMarker)) {
-                endMarker = endMarker.nextSibling
-            }
-
-            // Collect all siblings until end marker
-            let sibling = toEl.nextSibling
-            let siblings = []
-            while (sibling && !isEndMarker(sibling)) {
-                siblings.push(sibling)
-                sibling = sibling.nextSibling
-            }
-
-            // Insert collected siblings before the end marker
-            siblings.forEach(node => {
-                endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker)
-            })
-
-            skipUntil(node => isEndMarker(node))
-        }
-    }
-}
-
-export function closestIsland(el) {
-    let current = el;
-
-    while (current) {
-        // Check previous siblings
-        let sibling = current.previousSibling;
-
-        let foundEndMarker = []
-        while (sibling) {
-            if (isEndMarker(sibling)) {
-                // Keep iterating up until we find the start marker and skip it...
-                foundEndMarker.push('a')
-            }
-
-            if (isStartMarker(sibling)) {
-                if (foundEndMarker.length > 0) {
-                    foundEndMarker.pop()
-                } else {
-                    let key = extractIslandName(sibling)
-
-                    return { name: key, mode: 'replace' }
-                }
-            }
-
-            sibling = sibling.previousSibling;
-        }
-
-        // No start marker found at this level or found end marker
-        // Go up to parent unless we've hit the component root
-        current = current.parentElement;
-
-        if (current && current.hasAttribute('wire:id')) {
-            break; // Stop at component root
-        }
-    }
-
-    return null;
-}
-
-function isStartMarker(el) {
-    return el.nodeType === 8 && el.textContent.startsWith('[if ISLAND')
-}
-
-function isEndMarker(el) {
-    return el.nodeType === 8 && el.textContent.startsWith('[if ENDISLAND')
-}
-
-function extractIslandName(el) {
-    let key = el.textContent.match(/\[if ISLAND:([\w-]+)(?::placeholder)?\]/)?.[1]
-
-    return key
-}
 
 function isPlaceholderMarker(el) {
     return el.nodeType === 8 && el.textContent.match(/\[if ISLAND:[\w-]+:placeholder\]/)
 }
 
-function stripIslandComments(content, key) {
+function stripIslandComments(html, key) {
     // Remove the start and end comment markers
     let startComment = new RegExp(`<!--\\[if ISLAND:${key}(:placeholder)?\\]><\\!\\[endif\\]-->`)
     let endComment = new RegExp(`<!--\\[if ENDISLAND:${key}\\]><\\!\\[endif\\]-->`)
 
-    // Strip out the comments from the content
-    let stripped = content
+    // Strip out the comments from thehtml
+    let stripped =html
         .replace(startComment, '')
         .replace(endComment, '')
 

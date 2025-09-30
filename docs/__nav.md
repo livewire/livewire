@@ -16,6 +16,7 @@ Essentials:
 Features:
     Alpine: { uri: /docs/alpine, file: /alpine.md }
     Navigate: { uri: /docs/navigate, file: /navigate.md }
+    Islands: { uri: /docs/islands, file: /islands.md }
     Lazy Loading: { uri: /docs/lazy, file: /lazy.md }
     Validation: { uri: /docs/validation, file: /validation.md }
     File Uploads: { uri: /docs/uploads, file: /uploads.md }

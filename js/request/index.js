@@ -7,7 +7,6 @@ import { showHtmlModal } from '@/utils/modal.js'
 import { MessageBus } from './messageBus.js'
 import Message from './message.js'
 import Action from './action.js'
-import { morph } from '@/morph'
 
 let outstandingActionOrigin = null
 let outstandingActionMetadata = {}
@@ -166,7 +165,7 @@ function sendMessages() {
             message.calls = Array.from(message.actions).map(i => ({
                 method: i.method,
                 params: i.params,
-                context: i.metadata,
+                metadata: i.metadata,
             }))
 
             message.payload = {
@@ -303,18 +302,17 @@ function sendMessages() {
                             // Trigger any side effects from the payload like "morph" and "dispatch event"...
                             message.component.processEffects(effects)
 
-                            let html = effects['html']
+                            message.onEffect()
+                            if (message.isCancelled()) return
 
                             queueMicrotask(() => {
-                                if (html) {
-                                    if (message.isCancelled()) return
-                                    applyMorph(message, html)
+                                if (message.isCancelled()) return
 
-                                    message.onMorph()
-                                }
+                                message.onMorph()
 
                                 setTimeout(() => {
                                     if (message.isCancelled()) return
+
                                     message.onRender()
                                 })
                             })
@@ -428,13 +426,6 @@ function extractStreamObjects(raw) {
     let remaining = raw.replace(regex, '');
 
     return [ parsed, remaining ];
-}
-
-function applyMorph(message, html) {
-    // check if testing environment and skip...
-    if (process.env.NODE_ENV === 'test') return
-
-    morph(message.component, message.component.el, html)
 }
 
 export async function sendNavigateRequest(uri, callback, errorCallback) {

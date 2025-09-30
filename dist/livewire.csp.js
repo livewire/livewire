@@ -16,7 +16,10 @@
     }
     return to;
   };
-  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
+  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+    isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+    mod
+  ));
 
   // node_modules/@alpinejs/csp/dist/module.cjs.js
   var require_module_cjs = __commonJS({
@@ -42,7 +45,10 @@
         }
         return to;
       };
-      var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
+      var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(
+        isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target,
+        mod
+      ));
       var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
       var require_shared_cjs = __commonJS2({
         "node_modules/@vue/shared/dist/shared.cjs.js"(exports2) {
@@ -354,7 +360,9 @@
           };
           var isPlainObject = (val) => toTypeString(val) === "[object Object]";
           var isIntegerKey = (key) => isString(key) && key !== "NaN" && key[0] !== "-" && "" + parseInt(key, 10) === key;
-          var isReservedProp = /* @__PURE__ */ makeMap(",key,ref,onVnodeBeforeMount,onVnodeMounted,onVnodeBeforeUpdate,onVnodeUpdated,onVnodeBeforeUnmount,onVnodeUnmounted");
+          var isReservedProp = /* @__PURE__ */ makeMap(
+            ",key,ref,onVnodeBeforeMount,onVnodeMounted,onVnodeBeforeUpdate,onVnodeUpdated,onVnodeBeforeUnmount,onVnodeUnmounted"
+          );
           var cacheStringFunction = (fn) => {
             const cache = /* @__PURE__ */ Object.create(null);
             return (str) => {
@@ -961,10 +969,18 @@
               has(key) {
                 return has$1.call(this, key, true);
               },
-              add: createReadonlyMethod("add"),
-              set: createReadonlyMethod("set"),
-              delete: createReadonlyMethod("delete"),
-              clear: createReadonlyMethod("clear"),
+              add: createReadonlyMethod(
+                "add"
+              ),
+              set: createReadonlyMethod(
+                "set"
+              ),
+              delete: createReadonlyMethod(
+                "delete"
+              ),
+              clear: createReadonlyMethod(
+                "clear"
+              ),
               forEach: createForEach(true, false)
             };
             const shallowReadonlyInstrumentations2 = {
@@ -977,10 +993,18 @@
               has(key) {
                 return has$1.call(this, key, true);
               },
-              add: createReadonlyMethod("add"),
-              set: createReadonlyMethod("set"),
-              delete: createReadonlyMethod("delete"),
-              clear: createReadonlyMethod("clear"),
+              add: createReadonlyMethod(
+                "add"
+              ),
+              set: createReadonlyMethod(
+                "set"
+              ),
+              delete: createReadonlyMethod(
+                "delete"
+              ),
+              clear: createReadonlyMethod(
+                "clear"
+              ),
               forEach: createForEach(true, true)
             };
             const iteratorMethods = ["keys", "values", "entries", Symbol.iterator];
@@ -1581,20 +1605,32 @@
       }
       var mergeProxyTrap = {
         ownKeys({ objects }) {
-          return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
+          return Array.from(
+            new Set(objects.flatMap((i) => Object.keys(i)))
+          );
         },
         has({ objects }, name) {
           if (name == Symbol.unscopables)
             return false;
-          return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name) || Reflect.has(obj, name));
+          return objects.some(
+            (obj) => Object.prototype.hasOwnProperty.call(obj, name) || Reflect.has(obj, name)
+          );
         },
         get({ objects }, name, thisProxy) {
           if (name == "toJSON")
             return collapseProxies;
-          return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
+          return Reflect.get(
+            objects.find(
+              (obj) => Reflect.has(obj, name)
+            ) || {},
+            name,
+            thisProxy
+          );
         },
         set({ objects }, name, value, thisProxy) {
-          const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
+          const target = objects.find(
+            (obj) => Object.prototype.hasOwnProperty.call(obj, name)
+          ) || objects[objects.length - 1];
           const descriptor = Object.getOwnPropertyDescriptor(target, name);
           if ((descriptor == null ? void 0 : descriptor.set) && (descriptor == null ? void 0 : descriptor.get))
             return descriptor.set.call(thisProxy, value) || true;
@@ -1701,7 +1737,10 @@
         }
       }
       function handleError(error2, el, expression = void 0) {
-        error2 = Object.assign(error2 != null ? error2 : { message: "No error message given." }, { el, expression });
+        error2 = Object.assign(
+          error2 != null ? error2 : { message: "No error message given." },
+          { el, expression }
+        );
         console.warn(`Alpine Expression Error: ${error2.message}
 
 ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
@@ -1738,7 +1777,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       function generateEvaluatorFromFunction(dataStack, func) {
         return (receiver = () => {
-        }, { scope: scope2 = {}, params = [] } = {}) => {
+        }, { scope: scope2 = {}, params = [], context } = {}) => {
           let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
           runIfTypeOfFunction(receiver, result);
         };
@@ -1753,7 +1792,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression.trim()) || /^(let|const)\s/.test(expression.trim()) ? `(async()=>{ ${expression} })()` : expression;
         const safeAsyncFunction = () => {
           try {
-            let func2 = new AsyncFunction(["__self", "scope"], `with (scope) { __self.result = ${rightSideSafeExpression} }; __self.finished = true; return __self.result;`);
+            let func2 = new AsyncFunction(
+              ["__self", "scope"],
+              `with (scope) { __self.result = ${rightSideSafeExpression} }; __self.finished = true; return __self.result;`
+            );
             Object.defineProperty(func2, "name", {
               value: `[Alpine] ${expression}`
             });
@@ -1770,12 +1812,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       function generateEvaluatorFromString(dataStack, expression, el) {
         let func = generateFunctionFromString(expression, el);
         return (receiver = () => {
-        }, { scope: scope2 = {}, params = [] } = {}) => {
+        }, { scope: scope2 = {}, params = [], context } = {}) => {
           func.result = void 0;
           func.finished = false;
           let completeScope = mergeProxies([scope2, ...dataStack]);
           if (typeof func === "function") {
-            let promise = func(func, completeScope).catch((error2) => handleError(error2, el, expression));
+            let promise = func.call(context, func, completeScope).catch((error2) => handleError(error2, el, expression));
             if (func.finished) {
               runIfTypeOfFunction(receiver, func.result, completeScope, params, el);
               func.result = void 0;
@@ -1965,12 +2007,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return directiveOrder.indexOf(typeA) - directiveOrder.indexOf(typeB);
       }
       function dispatch3(el, name, detail = {}) {
-        el.dispatchEvent(new CustomEvent(name, {
-          detail,
-          bubbles: true,
-          composed: true,
-          cancelable: true
-        }));
+        el.dispatchEvent(
+          new CustomEvent(name, {
+            detail,
+            bubbles: true,
+            composed: true,
+            cancelable: true
+          })
+        );
       }
       function walk(el, callback) {
         if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
@@ -2725,10 +2769,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return el.type === "radio" || el.localName === "ui-radio";
       }
       function debounce2(func, wait) {
-        var timeout;
+        let timeout;
         return function() {
-          var context = this, args = arguments;
-          var later = function() {
+          const context = this, args = arguments;
+          const later = function() {
             timeout = null;
             func.apply(context, args);
           };
@@ -2877,7 +2921,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         get raw() {
           return raw;
         },
-        version: "3.14.9",
+        version: "3.15.0",
         flushAndStopDeferringMutations,
         dontAutoEvaluateFunctions,
         disableEffectScheduling,
@@ -2931,6 +2975,751 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         bind: bind2
       };
       var alpine_default = Alpine23;
+      var Token = class {
+        constructor(type, value, start22, end) {
+          this.type = type;
+          this.value = value;
+          this.start = start22;
+          this.end = end;
+        }
+      };
+      var Tokenizer = class {
+        constructor(input) {
+          this.input = input;
+          this.position = 0;
+          this.tokens = [];
+        }
+        tokenize() {
+          while (this.position < this.input.length) {
+            this.skipWhitespace();
+            if (this.position >= this.input.length)
+              break;
+            const char = this.input[this.position];
+            if (this.isDigit(char)) {
+              this.readNumber();
+            } else if (this.isAlpha(char) || char === "_" || char === "$") {
+              this.readIdentifierOrKeyword();
+            } else if (char === '"' || char === "'") {
+              this.readString();
+            } else if (char === "/" && this.peek() === "/") {
+              this.skipLineComment();
+            } else {
+              this.readOperatorOrPunctuation();
+            }
+          }
+          this.tokens.push(new Token("EOF", null, this.position, this.position));
+          return this.tokens;
+        }
+        skipWhitespace() {
+          while (this.position < this.input.length && /\s/.test(this.input[this.position])) {
+            this.position++;
+          }
+        }
+        skipLineComment() {
+          while (this.position < this.input.length && this.input[this.position] !== "\n") {
+            this.position++;
+          }
+        }
+        isDigit(char) {
+          return /[0-9]/.test(char);
+        }
+        isAlpha(char) {
+          return /[a-zA-Z]/.test(char);
+        }
+        isAlphaNumeric(char) {
+          return /[a-zA-Z0-9_$]/.test(char);
+        }
+        peek(offset2 = 1) {
+          return this.input[this.position + offset2] || "";
+        }
+        readNumber() {
+          const start22 = this.position;
+          let hasDecimal = false;
+          while (this.position < this.input.length) {
+            const char = this.input[this.position];
+            if (this.isDigit(char)) {
+              this.position++;
+            } else if (char === "." && !hasDecimal) {
+              hasDecimal = true;
+              this.position++;
+            } else {
+              break;
+            }
+          }
+          const value = this.input.slice(start22, this.position);
+          this.tokens.push(new Token("NUMBER", parseFloat(value), start22, this.position));
+        }
+        readIdentifierOrKeyword() {
+          const start22 = this.position;
+          while (this.position < this.input.length && this.isAlphaNumeric(this.input[this.position])) {
+            this.position++;
+          }
+          const value = this.input.slice(start22, this.position);
+          const keywords = ["true", "false", "null", "undefined", "new", "typeof", "void", "delete", "in", "instanceof"];
+          if (keywords.includes(value)) {
+            if (value === "true" || value === "false") {
+              this.tokens.push(new Token("BOOLEAN", value === "true", start22, this.position));
+            } else if (value === "null") {
+              this.tokens.push(new Token("NULL", null, start22, this.position));
+            } else if (value === "undefined") {
+              this.tokens.push(new Token("UNDEFINED", void 0, start22, this.position));
+            } else {
+              this.tokens.push(new Token("KEYWORD", value, start22, this.position));
+            }
+          } else {
+            this.tokens.push(new Token("IDENTIFIER", value, start22, this.position));
+          }
+        }
+        readString() {
+          const start22 = this.position;
+          const quote = this.input[this.position];
+          this.position++;
+          let value = "";
+          let escaped = false;
+          while (this.position < this.input.length) {
+            const char = this.input[this.position];
+            if (escaped) {
+              switch (char) {
+                case "n":
+                  value += "\n";
+                  break;
+                case "t":
+                  value += "	";
+                  break;
+                case "r":
+                  value += "\r";
+                  break;
+                case "\\":
+                  value += "\\";
+                  break;
+                case quote:
+                  value += quote;
+                  break;
+                default:
+                  value += char;
+              }
+              escaped = false;
+            } else if (char === "\\") {
+              escaped = true;
+            } else if (char === quote) {
+              this.position++;
+              this.tokens.push(new Token("STRING", value, start22, this.position));
+              return;
+            } else {
+              value += char;
+            }
+            this.position++;
+          }
+          throw new Error(`Unterminated string starting at position ${start22}`);
+        }
+        readOperatorOrPunctuation() {
+          const start22 = this.position;
+          const char = this.input[this.position];
+          const next = this.peek();
+          const nextNext = this.peek(2);
+          if (char === "=" && next === "=" && nextNext === "=") {
+            this.position += 3;
+            this.tokens.push(new Token("OPERATOR", "===", start22, this.position));
+          } else if (char === "!" && next === "=" && nextNext === "=") {
+            this.position += 3;
+            this.tokens.push(new Token("OPERATOR", "!==", start22, this.position));
+          } else if (char === "=" && next === "=") {
+            this.position += 2;
+            this.tokens.push(new Token("OPERATOR", "==", start22, this.position));
+          } else if (char === "!" && next === "=") {
+            this.position += 2;
+            this.tokens.push(new Token("OPERATOR", "!=", start22, this.position));
+          } else if (char === "<" && next === "=") {
+            this.position += 2;
+            this.tokens.push(new Token("OPERATOR", "<=", start22, this.position));
+          } else if (char === ">" && next === "=") {
+            this.position += 2;
+            this.tokens.push(new Token("OPERATOR", ">=", start22, this.position));
+          } else if (char === "&" && next === "&") {
+            this.position += 2;
+            this.tokens.push(new Token("OPERATOR", "&&", start22, this.position));
+          } else if (char === "|" && next === "|") {
+            this.position += 2;
+            this.tokens.push(new Token("OPERATOR", "||", start22, this.position));
+          } else if (char === "+" && next === "+") {
+            this.position += 2;
+            this.tokens.push(new Token("OPERATOR", "++", start22, this.position));
+          } else if (char === "-" && next === "-") {
+            this.position += 2;
+            this.tokens.push(new Token("OPERATOR", "--", start22, this.position));
+          } else {
+            this.position++;
+            const type = "()[]{},.;:?".includes(char) ? "PUNCTUATION" : "OPERATOR";
+            this.tokens.push(new Token(type, char, start22, this.position));
+          }
+        }
+      };
+      var Parser = class {
+        constructor(tokens) {
+          this.tokens = tokens;
+          this.position = 0;
+        }
+        parse() {
+          if (this.isAtEnd()) {
+            throw new Error("Empty expression");
+          }
+          const expr = this.parseExpression();
+          this.match("PUNCTUATION", ";");
+          if (!this.isAtEnd()) {
+            throw new Error(`Unexpected token: ${this.current().value}`);
+          }
+          return expr;
+        }
+        parseExpression() {
+          return this.parseAssignment();
+        }
+        parseAssignment() {
+          const expr = this.parseTernary();
+          if (this.match("OPERATOR", "=")) {
+            const value = this.parseAssignment();
+            if (expr.type === "Identifier" || expr.type === "MemberExpression") {
+              return {
+                type: "AssignmentExpression",
+                left: expr,
+                operator: "=",
+                right: value
+              };
+            }
+            throw new Error("Invalid assignment target");
+          }
+          return expr;
+        }
+        parseTernary() {
+          const expr = this.parseLogicalOr();
+          if (this.match("PUNCTUATION", "?")) {
+            const consequent = this.parseExpression();
+            this.consume("PUNCTUATION", ":");
+            const alternate = this.parseExpression();
+            return {
+              type: "ConditionalExpression",
+              test: expr,
+              consequent,
+              alternate
+            };
+          }
+          return expr;
+        }
+        parseLogicalOr() {
+          let expr = this.parseLogicalAnd();
+          while (this.match("OPERATOR", "||")) {
+            const operator = this.previous().value;
+            const right = this.parseLogicalAnd();
+            expr = {
+              type: "BinaryExpression",
+              operator,
+              left: expr,
+              right
+            };
+          }
+          return expr;
+        }
+        parseLogicalAnd() {
+          let expr = this.parseEquality();
+          while (this.match("OPERATOR", "&&")) {
+            const operator = this.previous().value;
+            const right = this.parseEquality();
+            expr = {
+              type: "BinaryExpression",
+              operator,
+              left: expr,
+              right
+            };
+          }
+          return expr;
+        }
+        parseEquality() {
+          let expr = this.parseRelational();
+          while (this.match("OPERATOR", "==", "!=", "===", "!==")) {
+            const operator = this.previous().value;
+            const right = this.parseRelational();
+            expr = {
+              type: "BinaryExpression",
+              operator,
+              left: expr,
+              right
+            };
+          }
+          return expr;
+        }
+        parseRelational() {
+          let expr = this.parseAdditive();
+          while (this.match("OPERATOR", "<", ">", "<=", ">=")) {
+            const operator = this.previous().value;
+            const right = this.parseAdditive();
+            expr = {
+              type: "BinaryExpression",
+              operator,
+              left: expr,
+              right
+            };
+          }
+          return expr;
+        }
+        parseAdditive() {
+          let expr = this.parseMultiplicative();
+          while (this.match("OPERATOR", "+", "-")) {
+            const operator = this.previous().value;
+            const right = this.parseMultiplicative();
+            expr = {
+              type: "BinaryExpression",
+              operator,
+              left: expr,
+              right
+            };
+          }
+          return expr;
+        }
+        parseMultiplicative() {
+          let expr = this.parseUnary();
+          while (this.match("OPERATOR", "*", "/", "%")) {
+            const operator = this.previous().value;
+            const right = this.parseUnary();
+            expr = {
+              type: "BinaryExpression",
+              operator,
+              left: expr,
+              right
+            };
+          }
+          return expr;
+        }
+        parseUnary() {
+          if (this.match("OPERATOR", "++", "--")) {
+            const operator = this.previous().value;
+            const argument = this.parseUnary();
+            return {
+              type: "UpdateExpression",
+              operator,
+              argument,
+              prefix: true
+            };
+          }
+          if (this.match("OPERATOR", "!", "-", "+")) {
+            const operator = this.previous().value;
+            const argument = this.parseUnary();
+            return {
+              type: "UnaryExpression",
+              operator,
+              argument,
+              prefix: true
+            };
+          }
+          return this.parsePostfix();
+        }
+        parsePostfix() {
+          let expr = this.parseMember();
+          if (this.match("OPERATOR", "++", "--")) {
+            const operator = this.previous().value;
+            return {
+              type: "UpdateExpression",
+              operator,
+              argument: expr,
+              prefix: false
+            };
+          }
+          return expr;
+        }
+        parseMember() {
+          let expr = this.parsePrimary();
+          while (true) {
+            if (this.match("PUNCTUATION", ".")) {
+              const property = this.consume("IDENTIFIER");
+              expr = {
+                type: "MemberExpression",
+                object: expr,
+                property: { type: "Identifier", name: property.value },
+                computed: false
+              };
+            } else if (this.match("PUNCTUATION", "[")) {
+              const property = this.parseExpression();
+              this.consume("PUNCTUATION", "]");
+              expr = {
+                type: "MemberExpression",
+                object: expr,
+                property,
+                computed: true
+              };
+            } else if (this.match("PUNCTUATION", "(")) {
+              const args = this.parseArguments();
+              expr = {
+                type: "CallExpression",
+                callee: expr,
+                arguments: args
+              };
+            } else {
+              break;
+            }
+          }
+          return expr;
+        }
+        parseArguments() {
+          const args = [];
+          if (!this.check("PUNCTUATION", ")")) {
+            do {
+              args.push(this.parseExpression());
+            } while (this.match("PUNCTUATION", ","));
+          }
+          this.consume("PUNCTUATION", ")");
+          return args;
+        }
+        parsePrimary() {
+          if (this.match("NUMBER")) {
+            return { type: "Literal", value: this.previous().value };
+          }
+          if (this.match("STRING")) {
+            return { type: "Literal", value: this.previous().value };
+          }
+          if (this.match("BOOLEAN")) {
+            return { type: "Literal", value: this.previous().value };
+          }
+          if (this.match("NULL")) {
+            return { type: "Literal", value: null };
+          }
+          if (this.match("UNDEFINED")) {
+            return { type: "Literal", value: void 0 };
+          }
+          if (this.match("IDENTIFIER")) {
+            return { type: "Identifier", name: this.previous().value };
+          }
+          if (this.match("PUNCTUATION", "(")) {
+            const expr = this.parseExpression();
+            this.consume("PUNCTUATION", ")");
+            return expr;
+          }
+          if (this.match("PUNCTUATION", "[")) {
+            return this.parseArrayLiteral();
+          }
+          if (this.match("PUNCTUATION", "{")) {
+            return this.parseObjectLiteral();
+          }
+          throw new Error(`Unexpected token: ${this.current().type} "${this.current().value}"`);
+        }
+        parseArrayLiteral() {
+          const elements = [];
+          while (!this.check("PUNCTUATION", "]") && !this.isAtEnd()) {
+            elements.push(this.parseExpression());
+            if (this.match("PUNCTUATION", ",")) {
+              if (this.check("PUNCTUATION", "]")) {
+                break;
+              }
+            } else {
+              break;
+            }
+          }
+          this.consume("PUNCTUATION", "]");
+          return {
+            type: "ArrayExpression",
+            elements
+          };
+        }
+        parseObjectLiteral() {
+          const properties2 = [];
+          while (!this.check("PUNCTUATION", "}") && !this.isAtEnd()) {
+            let key;
+            let computed = false;
+            if (this.match("STRING")) {
+              key = { type: "Literal", value: this.previous().value };
+            } else if (this.match("IDENTIFIER")) {
+              const name = this.previous().value;
+              key = { type: "Identifier", name };
+            } else if (this.match("PUNCTUATION", "[")) {
+              key = this.parseExpression();
+              computed = true;
+              this.consume("PUNCTUATION", "]");
+            } else {
+              throw new Error("Expected property key");
+            }
+            this.consume("PUNCTUATION", ":");
+            const value = this.parseExpression();
+            properties2.push({
+              type: "Property",
+              key,
+              value,
+              computed,
+              shorthand: false
+            });
+            if (this.match("PUNCTUATION", ",")) {
+              if (this.check("PUNCTUATION", "}")) {
+                break;
+              }
+            } else {
+              break;
+            }
+          }
+          this.consume("PUNCTUATION", "}");
+          return {
+            type: "ObjectExpression",
+            properties: properties2
+          };
+        }
+        match(...args) {
+          for (let i = 0; i < args.length; i++) {
+            const arg = args[i];
+            if (i === 0 && args.length > 1) {
+              const type = arg;
+              for (let j = 1; j < args.length; j++) {
+                if (this.check(type, args[j])) {
+                  this.advance();
+                  return true;
+                }
+              }
+              return false;
+            } else if (args.length === 1) {
+              if (this.checkType(arg)) {
+                this.advance();
+                return true;
+              }
+              return false;
+            }
+          }
+          return false;
+        }
+        check(type, value) {
+          if (this.isAtEnd())
+            return false;
+          if (value !== void 0) {
+            return this.current().type === type && this.current().value === value;
+          }
+          return this.current().type === type;
+        }
+        checkType(type) {
+          if (this.isAtEnd())
+            return false;
+          return this.current().type === type;
+        }
+        advance() {
+          if (!this.isAtEnd())
+            this.position++;
+          return this.previous();
+        }
+        isAtEnd() {
+          return this.current().type === "EOF";
+        }
+        current() {
+          return this.tokens[this.position];
+        }
+        previous() {
+          return this.tokens[this.position - 1];
+        }
+        consume(type, value) {
+          if (value !== void 0) {
+            if (this.check(type, value))
+              return this.advance();
+            throw new Error(`Expected ${type} "${value}" but got ${this.current().type} "${this.current().value}"`);
+          }
+          if (this.check(type))
+            return this.advance();
+          throw new Error(`Expected ${type} but got ${this.current().type} "${this.current().value}"`);
+        }
+      };
+      var Evaluator = class {
+        evaluate({ node, scope: scope2 = {}, context = null, allowGlobal = false, forceBindingRootScopeToFunctions = true }) {
+          switch (node.type) {
+            case "Literal":
+              return node.value;
+            case "Identifier":
+              if (node.name in scope2) {
+                const value2 = scope2[node.name];
+                if (typeof value2 === "function") {
+                  return value2.bind(scope2);
+                }
+                return value2;
+              }
+              if (allowGlobal && typeof globalThis[node.name] !== "undefined") {
+                const value2 = globalThis[node.name];
+                if (typeof value2 === "function") {
+                  return value2.bind(globalThis);
+                }
+                return value2;
+              }
+              throw new Error(`Undefined variable: ${node.name}`);
+            case "MemberExpression":
+              const object = this.evaluate({ node: node.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              if (object == null) {
+                throw new Error("Cannot read property of null or undefined");
+              }
+              let memberValue;
+              if (node.computed) {
+                const property = this.evaluate({ node: node.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                memberValue = object[property];
+              } else {
+                memberValue = object[node.property.name];
+              }
+              if (typeof memberValue === "function") {
+                if (forceBindingRootScopeToFunctions) {
+                  return memberValue.bind(scope2);
+                } else {
+                  return memberValue.bind(object);
+                }
+              }
+              return memberValue;
+            case "CallExpression":
+              const args = node.arguments.map((arg) => this.evaluate({ node: arg, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }));
+              if (node.callee.type === "MemberExpression") {
+                const obj = this.evaluate({ node: node.callee.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                let func;
+                if (node.callee.computed) {
+                  const prop = this.evaluate({ node: node.callee.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                  func = obj[prop];
+                } else {
+                  func = obj[node.callee.property.name];
+                }
+                if (typeof func !== "function") {
+                  throw new Error("Value is not a function");
+                }
+                return func.apply(obj, args);
+              } else {
+                if (node.callee.type === "Identifier") {
+                  const name = node.callee.name;
+                  let func;
+                  if (name in scope2) {
+                    func = scope2[name];
+                  } else if (allowGlobal && typeof globalThis[name] !== "undefined") {
+                    func = globalThis[name];
+                  } else {
+                    throw new Error(`Undefined variable: ${name}`);
+                  }
+                  if (typeof func !== "function") {
+                    throw new Error("Value is not a function");
+                  }
+                  const thisContext = context !== null ? context : scope2;
+                  return func.apply(thisContext, args);
+                } else {
+                  const callee = this.evaluate({ node: node.callee, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                  if (typeof callee !== "function") {
+                    throw new Error("Value is not a function");
+                  }
+                  return callee.apply(context, args);
+                }
+              }
+            case "UnaryExpression":
+              const argument = this.evaluate({ node: node.argument, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              switch (node.operator) {
+                case "!":
+                  return !argument;
+                case "-":
+                  return -argument;
+                case "+":
+                  return +argument;
+                default:
+                  throw new Error(`Unknown unary operator: ${node.operator}`);
+              }
+            case "UpdateExpression":
+              if (node.argument.type === "Identifier") {
+                const name = node.argument.name;
+                if (!(name in scope2)) {
+                  throw new Error(`Undefined variable: ${name}`);
+                }
+                const oldValue = scope2[name];
+                if (node.operator === "++") {
+                  scope2[name] = oldValue + 1;
+                } else if (node.operator === "--") {
+                  scope2[name] = oldValue - 1;
+                }
+                return node.prefix ? scope2[name] : oldValue;
+              } else if (node.argument.type === "MemberExpression") {
+                const obj = this.evaluate({ node: node.argument.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                const prop = node.argument.computed ? this.evaluate({ node: node.argument.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }) : node.argument.property.name;
+                const oldValue = obj[prop];
+                if (node.operator === "++") {
+                  obj[prop] = oldValue + 1;
+                } else if (node.operator === "--") {
+                  obj[prop] = oldValue - 1;
+                }
+                return node.prefix ? obj[prop] : oldValue;
+              }
+              throw new Error("Invalid update expression target");
+            case "BinaryExpression":
+              const left = this.evaluate({ node: node.left, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              const right = this.evaluate({ node: node.right, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              switch (node.operator) {
+                case "+":
+                  return left + right;
+                case "-":
+                  return left - right;
+                case "*":
+                  return left * right;
+                case "/":
+                  return left / right;
+                case "%":
+                  return left % right;
+                case "==":
+                  return left == right;
+                case "!=":
+                  return left != right;
+                case "===":
+                  return left === right;
+                case "!==":
+                  return left !== right;
+                case "<":
+                  return left < right;
+                case ">":
+                  return left > right;
+                case "<=":
+                  return left <= right;
+                case ">=":
+                  return left >= right;
+                case "&&":
+                  return left && right;
+                case "||":
+                  return left || right;
+                default:
+                  throw new Error(`Unknown binary operator: ${node.operator}`);
+              }
+            case "ConditionalExpression":
+              const test = this.evaluate({ node: node.test, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              return test ? this.evaluate({ node: node.consequent, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }) : this.evaluate({ node: node.alternate, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+            case "AssignmentExpression":
+              const value = this.evaluate({ node: node.right, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              if (node.left.type === "Identifier") {
+                scope2[node.left.name] = value;
+                return value;
+              } else if (node.left.type === "MemberExpression") {
+                const obj = this.evaluate({ node: node.left.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                if (node.left.computed) {
+                  const prop = this.evaluate({ node: node.left.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                  obj[prop] = value;
+                } else {
+                  obj[node.left.property.name] = value;
+                }
+                return value;
+              }
+              throw new Error("Invalid assignment target");
+            case "ArrayExpression":
+              return node.elements.map((el) => this.evaluate({ node: el, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }));
+            case "ObjectExpression":
+              const result = {};
+              for (const prop of node.properties) {
+                const key = prop.computed ? this.evaluate({ node: prop.key, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }) : prop.key.type === "Identifier" ? prop.key.name : this.evaluate({ node: prop.key, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                const value2 = this.evaluate({ node: prop.value, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                result[key] = value2;
+              }
+              return result;
+            default:
+              throw new Error(`Unknown node type: ${node.type}`);
+          }
+        }
+      };
+      function generateRuntimeFunction(expression) {
+        try {
+          const tokenizer = new Tokenizer(expression);
+          const tokens = tokenizer.tokenize();
+          const parser = new Parser(tokens);
+          const ast = parser.parse();
+          const evaluator = new Evaluator();
+          return function(options = {}) {
+            const { scope: scope2 = {}, context = null, allowGlobal = false, forceBindingRootScopeToFunctions = false } = options;
+            return evaluator.evaluate({ node: ast, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+          };
+        } catch (error2) {
+          throw new Error(`CSP Parser Error: ${error2.message}`);
+        }
+      }
       function cspEvaluator(el, expression) {
         let dataStack = generateDataStack(el);
         if (typeof expression === "function") {
@@ -2948,23 +3737,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return (receiver = () => {
         }, { scope: scope2 = {}, params = [] } = {}) => {
           let completeScope = mergeProxies([scope2, ...dataStack]);
-          let evaluatedExpression = expression.split(".").reduce((currentScope, currentExpression) => {
-            if (currentScope[currentExpression] === void 0) {
-              throwExpressionError(el, expression);
+          let evaluate22 = generateRuntimeFunction(expression);
+          let returnValue = evaluate22({
+            scope: completeScope,
+            allowGlobal: true,
+            forceBindingRootScopeToFunctions: true
+          });
+          if (shouldAutoEvaluateFunctions && typeof returnValue === "function") {
+            let nextReturnValue = returnValue.apply(returnValue, params);
+            if (nextReturnValue instanceof Promise) {
+              nextReturnValue.then((i) => receiver(i));
+            } else {
+              receiver(nextReturnValue);
             }
-            return currentScope[currentExpression];
-          }, completeScope);
-          runIfTypeOfFunction(receiver, evaluatedExpression, completeScope, params);
+          } else if (typeof returnValue === "object" && returnValue instanceof Promise) {
+            returnValue.then((i) => receiver(i));
+          } else {
+            receiver(returnValue);
+          }
         };
-      }
-      function throwExpressionError(el, expression) {
-        console.warn(`Alpine Error: Alpine is unable to interpret the following expression using the CSP-friendly build:
-
-"${expression}"
-
-Read more about the Alpine's CSP-friendly build restrictions here: https://alpinejs.dev/advanced/csp
-
-`, el);
       }
       var import_reactivity10 = __toESM2(require_reactivity());
       magic("nextTick", () => nextTick);
@@ -3063,21 +3854,24 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
           el._x_removeModelListeners["default"]();
           let outerGet = el._x_model.get;
           let outerSet = el._x_model.set;
-          let releaseEntanglement = entangle({
-            get() {
-              return outerGet();
+          let releaseEntanglement = entangle(
+            {
+              get() {
+                return outerGet();
+              },
+              set(value) {
+                outerSet(value);
+              }
             },
-            set(value) {
-              outerSet(value);
+            {
+              get() {
+                return innerGet();
+              },
+              set(value) {
+                innerSet(value);
+              }
             }
-          }, {
-            get() {
-              return innerGet();
-            },
-            set(value) {
-              innerSet(value);
-            }
-          });
+          );
           cleanup(releaseEntanglement);
         });
       });
@@ -3120,10 +3914,12 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
             placeInDom(el._x_teleport, target2, modifiers);
           });
         };
-        cleanup(() => mutateDom(() => {
-          clone2.remove();
-          destroyTree(clone2);
-        }));
+        cleanup(
+          () => mutateDom(() => {
+            clone2.remove();
+            destroyTree(clone2);
+          })
+        );
       });
       var teleportContainerDuringClone = document.createElement("div");
       function getTarget(expression) {
@@ -3232,7 +4028,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         return !Array.isArray(subject) && !isNaN(subject);
       }
       function kebabCase2(subject) {
-        if ([" ", "_"].includes(subject))
+        if ([" ", "_"].includes(
+          subject
+        ))
           return subject;
         return subject.replace(/([a-z])([A-Z])/g, "$1-$2").replace(/[_\s]/, "-").toLowerCase();
       }
@@ -3244,7 +4042,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       }
       function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
         let keyModifiers = modifiers.filter((i) => {
-          return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
+          return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
         });
         if (keyModifiers.includes("debounce")) {
           let debounceIndex = keyModifiers.indexOf("debounce");
@@ -3341,14 +4139,16 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
               el.setAttribute("name", expression);
           });
         }
-        var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
+        let event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
         let removeListener = isCloning ? () => {
         } : on3(el, event, modifiers, (e) => {
           setValue(getInputValue(el, modifiers, e, getValue()));
         });
         if (modifiers.includes("fill")) {
           if ([void 0, null, ""].includes(getValue()) || isCheckbox(el) && Array.isArray(getValue()) || el.tagName.toLowerCase() === "select" && el.multiple) {
-            setValue(getInputValue(el, modifiers, { target: el }, getValue()));
+            setValue(
+              getInputValue(el, modifiers, { target: el }, getValue())
+            );
           }
         }
         if (!el._x_removeModelListeners)
@@ -3584,13 +4384,16 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
           el._x_isShown = true;
         };
         let clickAwayCompatibleShow = () => setTimeout(show);
-        let toggle = once((value) => value ? show() : hide(), (value) => {
-          if (typeof el._x_toggleAndCascadeWithTransitions === "function") {
-            el._x_toggleAndCascadeWithTransitions(el, value, show, hide);
-          } else {
-            value ? clickAwayCompatibleShow() : hide();
+        let toggle = once(
+          (value) => value ? show() : hide(),
+          (value) => {
+            if (typeof el._x_toggleAndCascadeWithTransitions === "function") {
+              el._x_toggleAndCascadeWithTransitions(el, value, show, hide);
+            } else {
+              value ? clickAwayCompatibleShow() : hide();
+            }
           }
-        });
+        );
         let oldValue;
         let firstTime = true;
         effect3(() => evaluate22((value) => {
@@ -3606,15 +4409,20 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       directive2("for", (el, { expression }, { effect: effect3, cleanup }) => {
         let iteratorNames = parseForExpression(expression);
         let evaluateItems = evaluateLater(el, iteratorNames.items);
-        let evaluateKey = evaluateLater(el, el._x_keyExpression || "index");
+        let evaluateKey = evaluateLater(
+          el,
+          el._x_keyExpression || "index"
+        );
         el._x_prevKeys = [];
         el._x_lookup = {};
         effect3(() => loop(el, iteratorNames, evaluateItems, evaluateKey));
         cleanup(() => {
-          Object.values(el._x_lookup).forEach((el2) => mutateDom(() => {
-            destroyTree(el2);
-            el2.remove();
-          }));
+          Object.values(el._x_lookup).forEach((el2) => mutateDom(
+            () => {
+              destroyTree(el2);
+              el2.remove();
+            }
+          ));
           delete el._x_prevKeys;
           delete el._x_lookup;
         });
@@ -4186,12 +4994,14 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     }
   };
   function dispatch(target, name, detail = {}, bubbles = true) {
-    target.dispatchEvent(new CustomEvent(name, {
-      detail,
-      bubbles,
-      composed: true,
-      cancelable: true
-    }));
+    target.dispatchEvent(
+      new CustomEvent(name, {
+        detail,
+        bubbles,
+        composed: true,
+        cancelable: true
+      })
+    );
   }
   function listen(target, name, handler) {
     target.addEventListener(name, handler);
@@ -4324,10 +5134,12 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     let cancel = () => el.dispatchEvent(new CustomEvent("livewire-upload-cancel", { bubbles: true, detail: { id: component.id, property } }));
     let progress = (progressEvent) => {
       var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
-      el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
-        bubbles: true,
-        detail: { progress: percentCompleted }
-      }));
+      el.dispatchEvent(
+        new CustomEvent("livewire-upload-progress", {
+          bubbles: true,
+          detail: { progress: percentCompleted }
+        })
+      );
     };
     let eventHandler = (e) => {
       if (e.target.files.length === 0)
@@ -4540,7 +5352,14 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }, cancelledCallback = () => {
   }) {
     let uploadManager = getUploadManager(component);
-    uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback);
+    uploadManager.upload(
+      name,
+      file,
+      finishCallback,
+      errorCallback,
+      progressCallback,
+      cancelledCallback
+    );
   }
   function uploadMultiple(component, name, files, finishCallback = () => {
   }, errorCallback = () => {
@@ -4548,18 +5367,33 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }, cancelledCallback = () => {
   }) {
     let uploadManager = getUploadManager(component);
-    uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback);
+    uploadManager.uploadMultiple(
+      name,
+      files,
+      finishCallback,
+      errorCallback,
+      progressCallback,
+      cancelledCallback
+    );
   }
   function removeUpload(component, name, tmpFilename, finishCallback = () => {
   }, errorCallback = () => {
   }) {
     let uploadManager = getUploadManager(component);
-    uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
+    uploadManager.removeUpload(
+      name,
+      tmpFilename,
+      finishCallback,
+      errorCallback
+    );
   }
   function cancelUpload(component, name, cancelledCallback = () => {
   }) {
     let uploadManager = getUploadManager(component);
-    uploadManager.cancelUpload(name, cancelledCallback);
+    uploadManager.cancelUpload(
+      name,
+      cancelledCallback
+    );
   }
 
   // js/features/supportEntangle.js
@@ -4611,7 +5445,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }
 
   // js/$wire.js
-  var import_alpinejs3 = __toESM(require_module_cjs());
+  var import_alpinejs2 = __toESM(require_module_cjs());
 
   // js/hooks.js
   var listeners = [];
@@ -4659,7 +5493,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }
 
   // js/request/interactions.js
-  function coordinateNetworkInteractions(bus) {
+  function coordinateNetworkInteractions(messageBus2) {
     interceptPartition(({ message, compileRequest }) => {
       if (!message.component.isIsolated)
         return;
@@ -4682,8 +5516,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         compileRequest([message, ...bundledMessages]);
       }
     });
-    interceptAction(({ action, scopedMessages, reject, defer }) => {
-      let message = bus.activeMessageMatchingScope(action);
+    interceptAction(({ action, reject, defer }) => {
+      let message = messageBus2.activeMessageMatchingScope(action);
       if (message) {
         if (action.metadata.type === "poll") {
           return reject();
@@ -4809,6 +5643,8 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     };
     onSync = () => {
     };
+    onEffect = () => {
+    };
     onMorph = () => {
     };
     onRender = () => {
@@ -4928,7 +5764,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   function showHtmlModal(html) {
     let page = document.createElement("html");
     page.innerHTML = html;
-    page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
+    page.querySelectorAll("a").forEach(
+      (a) => a.setAttribute("target", "_top")
+    );
     let modal = document.getElementById("livewire-error");
     if (typeof modal != "undefined" && modal != null) {
       modal.innerHTML = "";
@@ -5002,11 +5840,26 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       return Array.from(this.pendingMessages).find((message) => message.component === action.component);
     }
     activeMessageMatchingScope(action) {
-      return Array.from(this.activeMessages).find((message) => message.component === action.component);
+      return Array.from(this.activeMessages).find((message) => this.matchesScope(message, action));
+    }
+    matchesScope(message, action) {
+      let isSameComponent = message.component === action.component;
+      let isIslandMessage = Array.from(message.actions).every((action2) => action2.metadata.island);
+      let isIslandAction = action.metadata.island;
+      let isSameIsland = isIslandMessage && isIslandAction && Array.from(message.actions).every((action2) => action2.metadata.island.name === action2.metadata.island.name);
+      if (!isSameComponent)
+        return false;
+      if (isIslandMessage && isIslandAction) {
+        return isSameIsland;
+      }
+      if (isIslandMessage && !isIslandAction) {
+        return false;
+      }
+      return true;
     }
     allScopedMessages(action) {
       return [...Array.from(this.activeMessages), ...Array.from(this.pendingMessages)].filter((message) => {
-        return message.component === action.component;
+        return this.matchesScope(message, action);
       });
     }
     eachPendingMessage(callback) {
@@ -5025,7 +5878,6 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     interceptors = [];
     cancelled = false;
     request = null;
-    isolate = false;
     constructor(component) {
       this.component = component;
     }
@@ -5039,6 +5891,16 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         return;
       }
       this.actions.add(action);
+    }
+    actionMatchesMessageScope(action) {
+      let actionIsIsland = action.metadata.island;
+      let messageIsIsland = Array.from(this.actions).every((action2) => action2.metadata.island);
+      let messageContainsIdenticalIslands = messageIsIsland && new Set(Array.from(this.actions).map((action2) => action2.metadata.island.name)).size === 1;
+      let messageAndActionIslandsMatch = messageIsIsland && actionIsIsland && Array.from(this.actions).every((a) => a.metadata.island.name === action.metadata.island.name);
+      let isSameComponent = this.component === action.component;
+      if (actionIsIsland)
+        return messageAndActionIslandsMatch;
+      return !messageIsIsland && isSameComponent;
     }
     getActions() {
       return Array.from(this.actions);
@@ -5098,6 +5960,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         interceptor.onSuccess({
           payload: this.responsePayload,
           onSync: (callback) => interceptor.onSync = callback,
+          onEffect: (callback) => interceptor.onEffect = callback,
           onMorph: (callback) => interceptor.onMorph = callback,
           onRender: (callback) => interceptor.onRender = callback
         });
@@ -5108,6 +5971,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     }
     onSync() {
       this.interceptors.forEach((interceptor) => interceptor.onSync());
+    }
+    onEffect() {
+      this.interceptors.forEach((interceptor) => interceptor.onEffect());
     }
     onMorph() {
       this.interceptors.forEach((interceptor) => interceptor.onMorph());
@@ -5162,6 +6028,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       let metadata = JSON.stringify(this.metadata);
       return window.btoa(componentId + method + params + metadata);
     }
+    mergeMetadata(metadata) {
+      this.metadata = { ...this.metadata, ...metadata };
+    }
     rejectPromise(error2) {
       this.squashedActions.forEach((action) => action.rejectPromise(error2));
       this.promiseResolution.resolve();
@@ -5174,293 +6043,6 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       this.promiseResolution.resolve(value);
     }
   };
-
-  // js/morph.js
-  var import_alpinejs2 = __toESM(require_module_cjs());
-
-  // js/features/supportSlots.js
-  on("effect", ({ component, effects }) => {
-    let slots = effects.slots;
-    if (!slots)
-      return;
-    let parentId = component.el.getAttribute("wire:id");
-    Object.entries(slots).forEach(([childId, childSlots]) => {
-      let childComponent = findComponent(childId);
-      if (!childComponent)
-        return;
-      Object.entries(childSlots).forEach(([name, content]) => {
-        queueMicrotask(() => {
-          queueMicrotask(() => {
-            queueMicrotask(() => {
-              let fullName = parentId ? `${name}:${parentId}` : name;
-              let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
-              if (!startNode || !endNode)
-                return;
-              let strippedContent = stripSlotComments(content, fullName);
-              morphIsland(childComponent, startNode, endNode, strippedContent);
-            });
-          });
-        });
-      });
-    });
-  });
-  function stripSlotComments(content, slotName) {
-    let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
-    let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
-    let stripped = content.replace(startComment, "").replace(endComment, "");
-    return stripped.trim();
-  }
-  function findSlotComments(rootEl, slotName) {
-    let startNode = null;
-    let endNode = null;
-    walkElements(rootEl, (el, skip) => {
-      if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-        return skip();
-      }
-      Array.from(el.childNodes).forEach((node) => {
-        if (node.nodeType === Node.COMMENT_NODE) {
-          if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
-            startNode = node;
-          }
-          if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
-            endNode = node;
-          }
-        }
-      });
-    });
-    return { startNode, endNode };
-  }
-  function walkElements(el, callback) {
-    let skip = false;
-    callback(el, () => skip = true);
-    if (skip)
-      return;
-    Array.from(el.children).forEach((child) => {
-      walkElements(child, callback);
-    });
-  }
-  function skipSlotContents(el, toEl, skipUntil) {
-    if (isStartMarker(el) && isStartMarker(toEl)) {
-      skipUntil((node) => isEndMarker(node));
-    }
-  }
-  function isStartMarker(el) {
-    return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
-  }
-  function isEndMarker(el) {
-    return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
-  }
-  function extractSlotData(el) {
-    let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
-    let match = el.textContent.match(regex);
-    if (!match)
-      return;
-    return {
-      name: match[1],
-      parentId: match[2] || null
-    };
-  }
-  function checkPreviousSiblingForSlotStartMarker(el) {
-    function searchInPreviousSiblings(node) {
-      let sibling = node.previousSibling;
-      while (sibling) {
-        if (isEndMarker(sibling)) {
-          return null;
-        }
-        if (isStartMarker(sibling)) {
-          return sibling;
-        }
-        sibling = sibling.previousSibling;
-      }
-      return null;
-    }
-    function searchRecursively(currentEl) {
-      let found = searchInPreviousSiblings(currentEl);
-      if (found !== null) {
-        return found;
-      }
-      let parent = currentEl.parentElement;
-      if (!parent) {
-        return null;
-      }
-      if (parent.hasAttribute && parent.hasAttribute("wire:id")) {
-        return null;
-      }
-      return searchRecursively(parent);
-    }
-    return searchRecursively(el);
-  }
-
-  // js/features/supportIslands.js
-  function skipIslandContents(component, el, toEl, skipUntil) {
-    if (isStartMarker2(el) && isStartMarker2(toEl)) {
-      let key = extractIslandName(toEl);
-      let island = component.islands[key];
-      let mode = island.mode;
-      let render = island.render;
-      if (["bypass", "skip", "once"].includes(render)) {
-        skipUntil((node) => isEndMarker2(node));
-      } else if (mode === "prepend") {
-        let sibling = toEl.nextSibling;
-        let siblings = [];
-        while (sibling && !isEndMarker2(sibling)) {
-          siblings.push(sibling);
-          sibling = sibling.nextSibling;
-        }
-        siblings.forEach((node) => {
-          el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
-        });
-        skipUntil((node) => isEndMarker2(node));
-      } else if (mode === "append") {
-        let endMarker = el.nextSibling;
-        while (endMarker && !isEndMarker2(endMarker)) {
-          endMarker = endMarker.nextSibling;
-        }
-        let sibling = toEl.nextSibling;
-        let siblings = [];
-        while (sibling && !isEndMarker2(sibling)) {
-          siblings.push(sibling);
-          sibling = sibling.nextSibling;
-        }
-        siblings.forEach((node) => {
-          endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
-        });
-        skipUntil((node) => isEndMarker2(node));
-      }
-    }
-  }
-  function isStartMarker2(el) {
-    return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
-  }
-  function isEndMarker2(el) {
-    return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
-  }
-  function extractIslandName(el) {
-    let key = el.textContent.match(/\[if ISLAND:([\w-]+)(?::placeholder)?\]/)?.[1];
-    return key;
-  }
-
-  // js/morph.js
-  function morph(component, el, html) {
-    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-    let customElement = customElements.get(wrapperTag);
-    wrapperTag = customElement ? customElement.name : wrapperTag;
-    let wrapper = document.createElement(wrapperTag);
-    wrapper.innerHTML = html;
-    let parentComponent;
-    try {
-      parentComponent = closestComponent(el.parentElement);
-    } catch (e) {
-    }
-    parentComponent && (wrapper.__livewire = parentComponent);
-    let to = wrapper.firstElementChild;
-    to.setAttribute("wire:snapshot", component.snapshotEncoded);
-    let effects = { ...component.effects };
-    delete effects.html;
-    to.setAttribute("wire:effects", JSON.stringify(effects));
-    to.__livewire = component;
-    trigger("morph", { el, toEl: to, component });
-    let existingComponentsMap = {};
-    el.querySelectorAll("[wire\\:id]").forEach((component2) => {
-      existingComponentsMap[component2.getAttribute("wire:id")] = component2;
-    });
-    to.querySelectorAll("[wire\\:id]").forEach((child) => {
-      if (child.hasAttribute("wire:snapshot"))
-        return;
-      let wireId = child.getAttribute("wire:id");
-      let existingComponent = existingComponentsMap[wireId];
-      if (existingComponent) {
-        child.replaceWith(existingComponent.cloneNode(true));
-      }
-    });
-    import_alpinejs2.default.morph(el, to, getMorphConfig(component));
-    trigger("morphed", { el, component });
-  }
-  function morphIsland(component, startNode, endNode, toHTML) {
-    let fromContainer = startNode.parentElement;
-    let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
-    let toContainer = document.createElement(fromContainerTag);
-    toContainer.innerHTML = toHTML;
-    toContainer.__livewire = component;
-    let parentElement = component.el.parentElement;
-    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-    let parentComponent;
-    try {
-      parentComponent = parentElement ? closestComponent(parentElement) : null;
-    } catch (e) {
-    }
-    if (parentComponent) {
-      let parentProviderWrapper = document.createElement(parentElementTag);
-      parentProviderWrapper.appendChild(toContainer);
-      parentProviderWrapper.__livewire = parentComponent;
-    }
-    trigger("island.morph", { startNode, endNode, component });
-    import_alpinejs2.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
-    trigger("island.morphed", { startNode, endNode, component });
-  }
-  function getMorphConfig(component) {
-    return {
-      updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
-        skipSlotContents(el, toEl, skipUntil);
-        skipIslandContents(component, el, toEl, skipUntil);
-        if (isntElement(el))
-          return;
-        trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
-        if (el.__livewire_replace === true)
-          el.innerHTML = toEl.innerHTML;
-        if (el.__livewire_replace_self === true) {
-          el.outerHTML = toEl.outerHTML;
-          return skip();
-        }
-        if (el.__livewire_ignore === true)
-          return skip();
-        if (el.__livewire_ignore_self === true)
-          childrenOnly();
-        if (el.__livewire_ignore_children === true)
-          return skipChildren();
-        if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
-          return skip();
-        if (isComponentRootEl(el))
-          toEl.__livewire = component;
-      },
-      updated: (el) => {
-        if (isntElement(el))
-          return;
-        trigger("morph.updated", { el, component });
-      },
-      removing: (el, skip) => {
-        if (isntElement(el))
-          return;
-        trigger("morph.removing", { el, component, skip });
-      },
-      removed: (el) => {
-        if (isntElement(el))
-          return;
-        trigger("morph.removed", { el, component });
-      },
-      adding: (el) => {
-        trigger("morph.adding", { el, component });
-      },
-      added: (el) => {
-        if (isntElement(el))
-          return;
-        const closestComponentId = closestComponent(el).id;
-        trigger("morph.added", { el });
-      },
-      key: (el) => {
-        if (isntElement(el))
-          return;
-        return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
-      },
-      lookahead: false
-    };
-  }
-  function isntElement(el) {
-    return typeof el.hasAttribute !== "function";
-  }
-  function isComponentRootEl(el) {
-    return el.hasAttribute("wire:id");
-  }
 
   // js/request/index.js
   var outstandingActionOrigin = null;
@@ -5581,7 +6163,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         message.calls = Array.from(message.actions).map((i) => ({
           method: i.method,
           params: i.params,
-          context: i.metadata
+          metadata: i.metadata
         }));
         message.payload = {
           snapshot: message.snapshot,
@@ -5650,7 +6232,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
           if (preventDefault)
             return;
           if (response.status === 419) {
-            confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+            confirm(
+              "This page has expired.\nWould you like to refresh the page?"
+            ) && window.location.reload();
           }
           if (response.aborted)
             return;
@@ -5690,14 +6274,13 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
                 if (message.isCancelled())
                   return;
                 message.component.processEffects(effects);
-                let html = effects["html"];
+                message.onEffect();
+                if (message.isCancelled())
+                  return;
                 queueMicrotask(() => {
-                  if (html) {
-                    if (message.isCancelled())
-                      return;
-                    applyMorph(message, html);
-                    message.onMorph();
-                  }
+                  if (message.isCancelled())
+                    return;
+                  message.onMorph();
                   setTimeout(() => {
                     if (message.isCancelled())
                       return;
@@ -5779,11 +6362,6 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     }
     let remaining = raw.replace(regex, "");
     return [parsed, remaining];
-  }
-  function applyMorph(message, html) {
-    if (false)
-      return;
-    morph(message.component, message.component.el, html);
   }
   async function sendNavigateRequest(uri, callback, errorCallback) {
     let request = new PageRequest(uri);
@@ -6185,7 +6763,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   function getFallback(component) {
     return fallback(component);
   }
-  import_alpinejs3.default.magic("wire", (el, { cleanup }) => {
+  import_alpinejs2.default.magic("wire", (el, { cleanup }) => {
     let component;
     return new Proxy({}, {
       get(target, property) {
@@ -6286,7 +6864,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     let getter = () => {
       return dataGet(component.reactive, path);
     };
-    let unwatch = import_alpinejs3.default.watch(getter, callback);
+    let unwatch = import_alpinejs2.default.watch(getter, callback);
     component.addCleanup(unwatch);
   });
   wireProperty("$refresh", (component) => async () => {
@@ -6485,8 +7063,13 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     getEncodedSnapshotWithLatestChildrenMergedIn() {
       let { snapshotEncoded, children, snapshot } = this;
       let childIds = children.map((child) => child.id);
-      let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
-      return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
+      let filteredChildren = Object.fromEntries(
+        Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1]))
+      );
+      return snapshotEncoded.replace(
+        /"children":\{[^}]*\}/,
+        `"children":${JSON.stringify(filteredChildren)}`
+      );
     }
     inscribeSnapshotAndEffectsOnElement() {
       let el = this.el;
@@ -6522,6 +7105,331 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       }
     }
   };
+
+  // js/morph.js
+  var import_alpinejs3 = __toESM(require_module_cjs());
+
+  // js/island.js
+  var Island = class {
+    constructor({ name, mode, origin }) {
+      this.name = name;
+      this.mode = mode;
+      this.origin = origin;
+    }
+    toMetadata() {
+      return {
+        island: { name: this.name, mode: this.mode }
+      };
+    }
+    static closestIsland(origin) {
+      let current = origin.el;
+      while (current) {
+        let sibling = current.previousSibling;
+        let foundEndMarker = [];
+        while (sibling) {
+          if (Island.isEndMarker(sibling)) {
+            foundEndMarker.push("a");
+          }
+          if (Island.isStartMarker(sibling)) {
+            if (foundEndMarker.length > 0) {
+              foundEndMarker.pop();
+            } else {
+              let key = Island.extractIslandName(sibling);
+              return new Island({ name: key, mode: "replace", origin });
+            }
+          }
+          sibling = sibling.previousSibling;
+        }
+        current = current.parentElement;
+        if (current && current.hasAttribute("wire:id")) {
+          break;
+        }
+      }
+      return null;
+    }
+    static skipIslandContents(component, el, toEl, skipUntil) {
+      if (Island.isStartMarker(el) && Island.isStartMarker(toEl)) {
+        let key = Island.extractIslandName(toEl);
+        let island = component.islands[key];
+        let mode = island.mode;
+        let render = island.render;
+        if (["bypass", "skip", "once"].includes(render)) {
+          skipUntil((node) => Island.isEndMarker(node));
+        } else if (mode === "prepend") {
+          let sibling = toEl.nextSibling;
+          let siblings = [];
+          while (sibling && !Island.isEndMarker(sibling)) {
+            siblings.push(sibling);
+            sibling = sibling.nextSibling;
+          }
+          siblings.forEach((node) => {
+            el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
+          });
+          skipUntil((node) => Island.isEndMarker(node));
+        } else if (mode === "append") {
+          let endMarker = el.nextSibling;
+          while (endMarker && !Island.isEndMarker(endMarker)) {
+            endMarker = endMarker.nextSibling;
+          }
+          let sibling = toEl.nextSibling;
+          let siblings = [];
+          while (sibling && !Island.isEndMarker(sibling)) {
+            siblings.push(sibling);
+            sibling = sibling.nextSibling;
+          }
+          siblings.forEach((node) => {
+            endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
+          });
+          skipUntil((node) => Island.isEndMarker(node));
+        }
+      }
+    }
+    static isStartMarker(el) {
+      return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
+    }
+    static isEndMarker(el) {
+      return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
+    }
+    static extractIslandName(el) {
+      let key = el.textContent.match(/\[if ISLAND:([\w-]+)(?::placeholder)?\]/)?.[1];
+      return key;
+    }
+  };
+
+  // js/morph.js
+  function morph(component, el, html) {
+    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+    let customElement = customElements.get(wrapperTag);
+    wrapperTag = customElement ? customElement.name : wrapperTag;
+    let wrapper = document.createElement(wrapperTag);
+    wrapper.innerHTML = html;
+    let parentComponent;
+    try {
+      parentComponent = closestComponent(el.parentElement);
+    } catch (e) {
+    }
+    parentComponent && (wrapper.__livewire = parentComponent);
+    let to = wrapper.firstElementChild;
+    to.setAttribute("wire:snapshot", component.snapshotEncoded);
+    let effects = { ...component.effects };
+    delete effects.html;
+    to.setAttribute("wire:effects", JSON.stringify(effects));
+    to.__livewire = component;
+    trigger("morph", { el, toEl: to, component });
+    let existingComponentsMap = {};
+    el.querySelectorAll("[wire\\:id]").forEach((component2) => {
+      existingComponentsMap[component2.getAttribute("wire:id")] = component2;
+    });
+    to.querySelectorAll("[wire\\:id]").forEach((child) => {
+      if (child.hasAttribute("wire:snapshot"))
+        return;
+      let wireId = child.getAttribute("wire:id");
+      let existingComponent = existingComponentsMap[wireId];
+      if (existingComponent) {
+        child.replaceWith(existingComponent.cloneNode(true));
+      }
+    });
+    import_alpinejs3.default.morph(el, to, getMorphConfig(component));
+    trigger("morphed", { el, component });
+  }
+  function morphFragment(component, startNode, endNode, toHTML) {
+    let fromContainer = startNode.parentElement;
+    let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+    let toContainer = document.createElement(fromContainerTag);
+    toContainer.innerHTML = toHTML;
+    toContainer.__livewire = component;
+    let parentElement = component.el.parentElement;
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+    let parentComponent;
+    try {
+      parentComponent = parentElement ? closestComponent(parentElement) : null;
+    } catch (e) {
+    }
+    if (parentComponent) {
+      let parentProviderWrapper = document.createElement(parentElementTag);
+      parentProviderWrapper.appendChild(toContainer);
+      parentProviderWrapper.__livewire = parentComponent;
+    }
+    trigger("island.morph", { startNode, endNode, component });
+    import_alpinejs3.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+    trigger("island.morphed", { startNode, endNode, component });
+  }
+  function getMorphConfig(component) {
+    return {
+      updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+        skipSlotContents(el, toEl, skipUntil);
+        Island.skipIslandContents(component, el, toEl, skipUntil);
+        if (isntElement(el))
+          return;
+        trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
+        if (el.__livewire_replace === true)
+          el.innerHTML = toEl.innerHTML;
+        if (el.__livewire_replace_self === true) {
+          el.outerHTML = toEl.outerHTML;
+          return skip();
+        }
+        if (el.__livewire_ignore === true)
+          return skip();
+        if (el.__livewire_ignore_self === true)
+          childrenOnly();
+        if (el.__livewire_ignore_children === true)
+          return skipChildren();
+        if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
+          return skip();
+        if (isComponentRootEl(el))
+          toEl.__livewire = component;
+      },
+      updated: (el) => {
+        if (isntElement(el))
+          return;
+        trigger("morph.updated", { el, component });
+      },
+      removing: (el, skip) => {
+        if (isntElement(el))
+          return;
+        trigger("morph.removing", { el, component, skip });
+      },
+      removed: (el) => {
+        if (isntElement(el))
+          return;
+        trigger("morph.removed", { el, component });
+      },
+      adding: (el) => {
+        trigger("morph.adding", { el, component });
+      },
+      added: (el) => {
+        if (isntElement(el))
+          return;
+        const closestComponentId = closestComponent(el).id;
+        trigger("morph.added", { el });
+      },
+      key: (el) => {
+        if (isntElement(el))
+          return;
+        return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
+      },
+      lookahead: false
+    };
+  }
+  function isntElement(el) {
+    return typeof el.hasAttribute !== "function";
+  }
+  function isComponentRootEl(el) {
+    return el.hasAttribute("wire:id");
+  }
+
+  // js/features/supportSlots.js
+  on("effect", ({ component, effects }) => {
+    let slots = effects.slots;
+    if (!slots)
+      return;
+    let parentId = component.el.getAttribute("wire:id");
+    Object.entries(slots).forEach(([childId, childSlots]) => {
+      let childComponent = findComponent(childId);
+      if (!childComponent)
+        return;
+      Object.entries(childSlots).forEach(([name, content]) => {
+        queueMicrotask(() => {
+          queueMicrotask(() => {
+            queueMicrotask(() => {
+              let fullName = parentId ? `${name}:${parentId}` : name;
+              let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
+              if (!startNode || !endNode)
+                return;
+              let strippedContent = stripSlotComments(content, fullName);
+              morphFragment(childComponent, startNode, endNode, strippedContent);
+            });
+          });
+        });
+      });
+    });
+  });
+  function stripSlotComments(content, slotName) {
+    let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
+    let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
+    let stripped = content.replace(startComment, "").replace(endComment, "");
+    return stripped.trim();
+  }
+  function findSlotComments(rootEl, slotName) {
+    let startNode = null;
+    let endNode = null;
+    walkElements(rootEl, (el, skip) => {
+      if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+        return skip();
+      }
+      Array.from(el.childNodes).forEach((node) => {
+        if (node.nodeType === Node.COMMENT_NODE) {
+          if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
+            startNode = node;
+          }
+          if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
+            endNode = node;
+          }
+        }
+      });
+    });
+    return { startNode, endNode };
+  }
+  function walkElements(el, callback) {
+    let skip = false;
+    callback(el, () => skip = true);
+    if (skip)
+      return;
+    Array.from(el.children).forEach((child) => {
+      walkElements(child, callback);
+    });
+  }
+  function skipSlotContents(el, toEl, skipUntil) {
+    if (isStartMarker(el) && isStartMarker(toEl)) {
+      skipUntil((node) => isEndMarker(node));
+    }
+  }
+  function isStartMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
+  }
+  function isEndMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
+  }
+  function extractSlotData(el) {
+    let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
+    let match = el.textContent.match(regex);
+    if (!match)
+      return;
+    return {
+      name: match[1],
+      parentId: match[2] || null
+    };
+  }
+  function checkPreviousSiblingForSlotStartMarker(el) {
+    function searchInPreviousSiblings(node) {
+      let sibling = node.previousSibling;
+      while (sibling) {
+        if (isEndMarker(sibling)) {
+          return null;
+        }
+        if (isStartMarker(sibling)) {
+          return sibling;
+        }
+        sibling = sibling.previousSibling;
+      }
+      return null;
+    }
+    function searchRecursively(currentEl) {
+      let found = searchInPreviousSiblings(currentEl);
+      if (found !== null) {
+        return found;
+      }
+      let parent = currentEl.parentElement;
+      if (!parent) {
+        return null;
+      }
+      if (parent.hasAttribute && parent.hasAttribute("wire:id")) {
+        return null;
+      }
+      return searchRecursively(parent);
+    }
+    return searchRecursively(el);
+  }
 
   // js/store.js
   var components = {};
@@ -6734,9 +7642,13 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
           return [].concat(p);
         };
         method = methodAndParamString[1];
-        let params2 = Alpine.evaluate(document, "argumentsToArray(" + methodAndParamString[2] + ")", {
-          scope: { argumentsToArray }
-        });
+        let params2 = Alpine.evaluate(
+          document,
+          "argumentsToArray(" + methodAndParamString[2] + ")",
+          {
+            scope: { argumentsToArray }
+          }
+        );
         methods.push({ method, params: params2 });
         slicedLength += methodAndParamString[0].length;
         methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex);
@@ -7701,59 +8613,67 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         }
       };
     });
-    Alpine23.directive("trap", Alpine23.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup }) => {
-      let evaluator = evaluateLater(expression);
-      let oldValue = false;
-      let options = {
-        escapeDeactivates: false,
-        allowOutsideClick: true,
-        fallbackFocus: () => el
-      };
-      if (modifiers.includes("noautofocus")) {
-        options.initialFocus = false;
-      } else {
-        let autofocusEl = el.querySelector("[autofocus]");
-        if (autofocusEl)
-          options.initialFocus = autofocusEl;
+    Alpine23.directive("trap", Alpine23.skipDuringClone(
+      (el, { expression, modifiers }, { effect, evaluateLater, cleanup }) => {
+        let evaluator = evaluateLater(expression);
+        let oldValue = false;
+        let options = {
+          escapeDeactivates: false,
+          allowOutsideClick: true,
+          fallbackFocus: () => el
+        };
+        let undoInert = () => {
+        };
+        if (modifiers.includes("noautofocus")) {
+          options.initialFocus = false;
+        } else {
+          let autofocusEl = el.querySelector("[autofocus]");
+          if (autofocusEl)
+            options.initialFocus = autofocusEl;
+        }
+        if (modifiers.includes("inert")) {
+          options.onPostActivate = () => {
+            Alpine23.nextTick(() => {
+              undoInert = setInert(el);
+            });
+          };
+        }
+        let trap = createFocusTrap(el, options);
+        let undoDisableScrolling = () => {
+        };
+        const releaseFocus = () => {
+          undoInert();
+          undoInert = () => {
+          };
+          undoDisableScrolling();
+          undoDisableScrolling = () => {
+          };
+          trap.deactivate({
+            returnFocus: !modifiers.includes("noreturn")
+          });
+        };
+        effect(() => evaluator((value) => {
+          if (oldValue === value)
+            return;
+          if (value && !oldValue) {
+            if (modifiers.includes("noscroll"))
+              undoDisableScrolling = disableScrolling();
+            setTimeout(() => {
+              trap.activate();
+            }, 15);
+          }
+          if (!value && oldValue) {
+            releaseFocus();
+          }
+          oldValue = !!value;
+        }));
+        cleanup(releaseFocus);
+      },
+      (el, { expression, modifiers }, { evaluate: evaluate2 }) => {
+        if (modifiers.includes("inert") && evaluate2(expression))
+          setInert(el);
       }
-      let trap = createFocusTrap(el, options);
-      let undoInert = () => {
-      };
-      let undoDisableScrolling = () => {
-      };
-      const releaseFocus = () => {
-        undoInert();
-        undoInert = () => {
-        };
-        undoDisableScrolling();
-        undoDisableScrolling = () => {
-        };
-        trap.deactivate({
-          returnFocus: !modifiers.includes("noreturn")
-        });
-      };
-      effect(() => evaluator((value) => {
-        if (oldValue === value)
-          return;
-        if (value && !oldValue) {
-          if (modifiers.includes("noscroll"))
-            undoDisableScrolling = disableScrolling();
-          if (modifiers.includes("inert"))
-            undoInert = setInert(el);
-          setTimeout(() => {
-            trap.activate();
-          }, 15);
-        }
-        if (!value && oldValue) {
-          releaseFocus();
-        }
-        oldValue = !!value;
-      }));
-      cleanup(releaseFocus);
-    }, (el, { expression, modifiers }, { evaluate: evaluate2 }) => {
-      if (modifiers.includes("inert") && evaluate2(expression))
-        setInert(el);
-    }));
+    ));
   }
   function setInert(el) {
     let undos = [];
@@ -7843,7 +8763,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     return storage.getItem(key) !== null;
   }
   function storageGet(key, storage) {
-    let value = storage.getItem(key, storage);
+    let value = storage.getItem(key);
     if (value === void 0)
       return;
     return JSON.parse(value);
@@ -9138,34 +10058,37 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         to._x_anchor = from._x_anchor;
       }
     });
-    Alpine23.directive("anchor", Alpine23.skipDuringClone((el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
-      let { placement, offsetValue, unstyled } = getOptions(modifiers);
-      el._x_anchor = Alpine23.reactive({ x: 0, y: 0 });
-      let reference = evaluate2(expression);
-      if (!reference)
-        throw "Alpine: no element provided to x-anchor...";
-      let compute = () => {
-        let previousValue;
-        computePosition2(reference, el, {
-          placement,
-          middleware: [flip(), shift({ padding: 5 }), offset(offsetValue)]
-        }).then(({ x, y }) => {
-          unstyled || setStyles(el, x, y);
-          if (JSON.stringify({ x, y }) !== previousValue) {
-            el._x_anchor.x = x;
-            el._x_anchor.y = y;
-          }
-          previousValue = JSON.stringify({ x, y });
-        });
-      };
-      let release = autoUpdate(reference, el, () => compute());
-      cleanup(() => release());
-    }, (el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
-      let { placement, offsetValue, unstyled } = getOptions(modifiers);
-      if (el._x_anchor) {
-        unstyled || setStyles(el, el._x_anchor.x, el._x_anchor.y);
+    Alpine23.directive("anchor", Alpine23.skipDuringClone(
+      (el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
+        let { placement, offsetValue, unstyled } = getOptions(modifiers);
+        el._x_anchor = Alpine23.reactive({ x: 0, y: 0 });
+        let reference = evaluate2(expression);
+        if (!reference)
+          throw "Alpine: no element provided to x-anchor...";
+        let compute = () => {
+          let previousValue;
+          computePosition2(reference, el, {
+            placement,
+            middleware: [flip(), shift({ padding: 5 }), offset(offsetValue)]
+          }).then(({ x, y }) => {
+            unstyled || setStyles(el, x, y);
+            if (JSON.stringify({ x, y }) !== previousValue) {
+              el._x_anchor.x = x;
+              el._x_anchor.y = y;
+            }
+            previousValue = JSON.stringify({ x, y });
+          });
+        };
+        let release = autoUpdate(reference, el, () => compute());
+        cleanup(() => release());
+      },
+      (el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
+        let { placement, offsetValue, unstyled } = getOptions(modifiers);
+        if (el._x_anchor) {
+          unstyled || setStyles(el, el._x_anchor.x, el._x_anchor.y);
+        }
       }
-    }));
+    ));
   }
   function setStyles(el, x, y) {
     Object.assign(el.style, {
@@ -9279,7 +10202,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       snapshotCache.currentUrl = url;
     } catch (error2) {
       if (error2 instanceof DOMException && error2.name === "SecurityError") {
-        console.error("Livewire: You can't use wire:navigate with a link to a different root domain: " + url);
+        console.error(
+          "Livewire: You can't use wire:navigate with a link to a different root domain: " + url
+        );
       }
       console.error(error2);
     }
@@ -9669,7 +10594,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes2) {
     newBody.querySelectorAll("script").forEach((i) => {
       if (i.hasAttribute("data-navigate-once")) {
-        let hash = simpleHash(ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing));
+        let hash = simpleHash(
+          ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing)
+        );
         if (oldBodyScriptTagHashes2.includes(hash))
           return;
       }
@@ -9707,7 +10634,11 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
           }
           if (isScript(child)) {
             try {
-              remoteScriptsPromises.push(injectScriptTagAndWaitForItToFullyLoad(cloneScriptTag(child)));
+              remoteScriptsPromises.push(
+                injectScriptTagAndWaitForItToFullyLoad(
+                  cloneScriptTag(child)
+                )
+              );
             } catch (error2) {
             }
           } else {
@@ -9885,51 +10816,54 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         showProgressBar && finishAndHideProgressBar();
       });
     }
-    whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
-      ifThePageBeingVisitedHasntBeenCached((url) => {
+    whenTheBackOrForwardButtonIsClicked(
+      (ifThePageBeingVisitedHasntBeenCached) => {
+        ifThePageBeingVisitedHasntBeenCached((url) => {
+          let destination = createUrlObjectFromString2(url);
+          let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
+            url: destination,
+            history: true,
+            cached: false
+          });
+          if (prevented)
+            return;
+          navigateTo(destination, { shouldPushToHistoryState: false });
+        });
+      },
+      (html, url, currentPageUrl, currentPageKey) => {
         let destination = createUrlObjectFromString2(url);
         let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
           url: destination,
           history: true,
-          cached: false
+          cached: true
         });
         if (prevented)
           return;
-        navigateTo(destination, { shouldPushToHistoryState: false });
-      });
-    }, (html, url, currentPageUrl, currentPageKey) => {
-      let destination = createUrlObjectFromString2(url);
-      let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
-        url: destination,
-        history: true,
-        cached: true
-      });
-      if (prevented)
-        return;
-      storeScrollInformationInHtmlBeforeNavigatingAway();
-      fireEventForOtherLibrariesToHookInto("alpine:navigating");
-      updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
-      preventAlpineFromPickingUpDomChanges(Alpine23, (andAfterAllThis) => {
-        enablePersist && storePersistantElementsForLater((persistedEl) => {
-          packUpPersistedTeleports(persistedEl);
-          packUpPersistedPopovers(persistedEl);
-        });
-        swapCurrentPageWithNewHtml(html, () => {
-          removeAnyLeftOverStaleProgressBars();
-          removeAnyLeftOverStaleTeleportTargets(document.body);
-          enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
-            unPackPersistedTeleports(persistedEl);
-            unPackPersistedPopovers(persistedEl);
+        storeScrollInformationInHtmlBeforeNavigatingAway();
+        fireEventForOtherLibrariesToHookInto("alpine:navigating");
+        updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
+        preventAlpineFromPickingUpDomChanges(Alpine23, (andAfterAllThis) => {
+          enablePersist && storePersistantElementsForLater((persistedEl) => {
+            packUpPersistedTeleports(persistedEl);
+            packUpPersistedPopovers(persistedEl);
           });
-          restoreScrollPositionOrScrollToTop();
-          andAfterAllThis(() => {
-            autofocus && autofocusElementsWithTheAutofocusAttribute();
-            nowInitializeAlpineOnTheNewPage(Alpine23);
-            fireEventForOtherLibrariesToHookInto("alpine:navigated");
+          swapCurrentPageWithNewHtml(html, () => {
+            removeAnyLeftOverStaleProgressBars();
+            removeAnyLeftOverStaleTeleportTargets(document.body);
+            enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+              unPackPersistedTeleports(persistedEl);
+              unPackPersistedPopovers(persistedEl);
+            });
+            restoreScrollPositionOrScrollToTop();
+            andAfterAllThis(() => {
+              autofocus && autofocusElementsWithTheAutofocusAttribute();
+              nowInitializeAlpineOnTheNewPage(Alpine23);
+              fireEventForOtherLibrariesToHookInto("alpine:navigated");
+            });
           });
         });
-      });
-    });
+      }
+    );
     setTimeout(() => {
       fireEventForOtherLibrariesToHookInto("alpine:navigated");
     });
@@ -10195,113 +11129,155 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph2(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
-    let fromEl;
-    let toEl;
-    let key, lookahead, updating, updated, removing, removed, adding, added;
-    function assignOptions(options2 = {}) {
-      let defaultGetKey = (el) => el.getAttribute("key");
-      let noop = () => {
-      };
-      updating = options2.updating || noop;
-      updated = options2.updated || noop;
-      removing = options2.removing || noop;
-      removed = options2.removed || noop;
-      adding = options2.adding || noop;
-      added = options2.added || noop;
-      key = options2.key || defaultGetKey;
-      lookahead = options2.lookahead || false;
+    let context = createMorphContext(options);
+    let toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
+    if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
+      toEl._x_dataStack = window.Alpine.closestDataStack(from);
+      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
     }
-    function patch(from2, to) {
-      if (differentElementNamesTypesOrKeys(from2, to)) {
-        return swapElements(from2, to);
+    context.patch(from, toEl);
+    return from;
+  }
+  function morphBetween(startMarker, endMarker, toHtml, options = {}) {
+    monkeyPatchDomSetAttributeToAllowAtSymbols();
+    let context = createMorphContext(options);
+    let fromContainer = startMarker.parentNode;
+    let fromBlock = new Block(startMarker, endMarker);
+    let toContainer = typeof toHtml === "string" ? (() => {
+      let container = document.createElement("div");
+      container.insertAdjacentHTML("beforeend", toHtml);
+      return container;
+    })() : toHtml;
+    let toStartMarker = document.createComment("[morph-start]");
+    let toEndMarker = document.createComment("[morph-end]");
+    toContainer.insertBefore(toStartMarker, toContainer.firstChild);
+    toContainer.appendChild(toEndMarker);
+    let toBlock = new Block(toStartMarker, toEndMarker);
+    if (window.Alpine && window.Alpine.closestDataStack) {
+      toContainer._x_dataStack = window.Alpine.closestDataStack(fromContainer);
+      toContainer._x_dataStack && window.Alpine.cloneNode(fromContainer, toContainer);
+    }
+    context.patchChildren(fromBlock, toBlock);
+  }
+  function createMorphContext(options = {}) {
+    let defaultGetKey = (el) => el.getAttribute("key");
+    let noop = () => {
+    };
+    let context = {
+      key: options.key || defaultGetKey,
+      lookahead: options.lookahead || false,
+      updating: options.updating || noop,
+      updated: options.updated || noop,
+      removing: options.removing || noop,
+      removed: options.removed || noop,
+      adding: options.adding || noop,
+      added: options.added || noop
+    };
+    context.patch = function(from, to) {
+      if (context.differentElementNamesTypesOrKeys(from, to)) {
+        return context.swapElements(from, to);
       }
       let updateChildrenOnly = false;
       let skipChildren = false;
-      if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
+      let skipUntil = (predicate) => context.skipUntilCondition = predicate;
+      if (shouldSkipChildren(context.updating, () => skipChildren = true, skipUntil, from, to, () => updateChildrenOnly = true))
         return;
-      if (from2.nodeType === 1 && window.Alpine) {
-        window.Alpine.cloneNode(from2, to);
-        if (from2._x_teleport && to._x_teleport) {
-          patch(from2._x_teleport, to._x_teleport);
+      if (from.nodeType === 1 && window.Alpine) {
+        window.Alpine.cloneNode(from, to);
+        if (from._x_teleport && to._x_teleport) {
+          context.patch(from._x_teleport, to._x_teleport);
         }
       }
       if (textOrComment(to)) {
-        patchNodeValue(from2, to);
-        updated(from2, to);
+        context.patchNodeValue(from, to);
+        context.updated(from, to);
         return;
       }
       if (!updateChildrenOnly) {
-        patchAttributes(from2, to);
+        context.patchAttributes(from, to);
       }
-      updated(from2, to);
+      context.updated(from, to);
       if (!skipChildren) {
-        patchChildren(from2, to);
+        context.patchChildren(from, to);
       }
-    }
-    function differentElementNamesTypesOrKeys(from2, to) {
-      return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
-    }
-    function swapElements(from2, to) {
-      if (shouldSkip(removing, from2))
+    };
+    context.differentElementNamesTypesOrKeys = function(from, to) {
+      return from.nodeType != to.nodeType || from.nodeName != to.nodeName || context.getKey(from) != context.getKey(to);
+    };
+    context.swapElements = function(from, to) {
+      if (shouldSkip(context.removing, from))
         return;
       let toCloned = to.cloneNode(true);
-      if (shouldSkip(adding, toCloned))
+      if (shouldSkip(context.adding, toCloned))
         return;
-      from2.replaceWith(toCloned);
-      removed(from2);
-      added(toCloned);
-    }
-    function patchNodeValue(from2, to) {
+      from.replaceWith(toCloned);
+      context.removed(from);
+      context.added(toCloned);
+    };
+    context.patchNodeValue = function(from, to) {
       let value = to.nodeValue;
-      if (from2.nodeValue !== value) {
-        from2.nodeValue = value;
+      if (from.nodeValue !== value) {
+        from.nodeValue = value;
       }
-    }
-    function patchAttributes(from2, to) {
-      if (from2._x_transitioning)
+    };
+    context.patchAttributes = function(from, to) {
+      if (from._x_transitioning)
         return;
-      if (from2._x_isShown && !to._x_isShown) {
-        return;
-      }
-      if (!from2._x_isShown && to._x_isShown) {
+      if (from._x_isShown && !to._x_isShown) {
         return;
       }
-      let domAttributes = Array.from(from2.attributes);
+      if (!from._x_isShown && to._x_isShown) {
+        return;
+      }
+      let domAttributes = Array.from(from.attributes);
       let toAttributes = Array.from(to.attributes);
       for (let i = domAttributes.length - 1; i >= 0; i--) {
         let name = domAttributes[i].name;
         if (!to.hasAttribute(name)) {
-          from2.removeAttribute(name);
+          from.removeAttribute(name);
         }
       }
       for (let i = toAttributes.length - 1; i >= 0; i--) {
         let name = toAttributes[i].name;
         let value = toAttributes[i].value;
-        if (from2.getAttribute(name) !== value) {
-          from2.setAttribute(name, value);
+        if (from.getAttribute(name) !== value) {
+          from.setAttribute(name, value);
         }
       }
-    }
-    function patchChildren(from2, to) {
-      let fromKeys = keyToMap(from2.children);
+    };
+    context.patchChildren = function(from, to) {
+      let fromKeys = context.keyToMap(from.children);
       let fromKeyHoldovers = {};
       let currentTo = getFirstNode(to);
-      let currentFrom = getFirstNode(from2);
+      let currentFrom = getFirstNode(from);
       while (currentTo) {
         seedingMatchingId(currentTo, currentFrom);
-        let toKey = getKey(currentTo);
-        let fromKey = getKey(currentFrom);
+        let toKey = context.getKey(currentTo);
+        let fromKey = context.getKey(currentFrom);
+        if (context.skipUntilCondition) {
+          let fromDone = !currentFrom || context.skipUntilCondition(currentFrom);
+          let toDone = !currentTo || context.skipUntilCondition(currentTo);
+          if (fromDone && toDone) {
+            context.skipUntilCondition = null;
+          } else {
+            if (!fromDone)
+              currentFrom = currentFrom && getNextSibling(from, currentFrom);
+            if (!toDone)
+              currentTo = currentTo && getNextSibling(to, currentTo);
+            continue;
+          }
+        }
         if (!currentFrom) {
           if (toKey && fromKeyHoldovers[toKey]) {
             let holdover = fromKeyHoldovers[toKey];
-            from2.appendChild(holdover);
+            from.appendChild(holdover);
             currentFrom = holdover;
-            fromKey = getKey(currentFrom);
+            fromKey = context.getKey(currentFrom);
           } else {
-            if (!shouldSkip(adding, currentTo)) {
+            if (!shouldSkip(context.adding, currentTo)) {
               let clone = currentTo.cloneNode(true);
-              from2.appendChild(clone);
-              added(clone);
+              from.appendChild(clone);
+              context.added(clone);
             }
             currentTo = getNextSibling(to, currentTo);
             continue;
@@ -10313,7 +11289,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
           let nestedIfCount = 0;
           let fromBlockStart = currentFrom;
           while (currentFrom) {
-            let next = getNextSibling(from2, currentFrom);
+            let next = getNextSibling(from, currentFrom);
             if (isIf(next)) {
               nestedIfCount++;
             } else if (isEnd(next) && nestedIfCount > 0) {
@@ -10342,17 +11318,17 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
           let toBlockEnd = currentTo;
           let fromBlock = new Block(fromBlockStart, fromBlockEnd);
           let toBlock = new Block(toBlockStart, toBlockEnd);
-          patchChildren(fromBlock, toBlock);
+          context.patchChildren(fromBlock, toBlock);
           continue;
         }
-        if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
+        if (currentFrom.nodeType === 1 && context.lookahead && !currentFrom.isEqualNode(currentTo)) {
           let nextToElementSibling = getNextSibling(to, currentTo);
           let found = false;
           while (!found && nextToElementSibling) {
             if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
               found = true;
-              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
-              fromKey = getKey(currentFrom);
+              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+              fromKey = context.getKey(currentFrom);
             }
             nextToElementSibling = getNextSibling(to, nextToElementSibling);
           }
@@ -10360,9 +11336,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         if (toKey !== fromKey) {
           if (!toKey && fromKey) {
             fromKeyHoldovers[fromKey] = currentFrom;
-            currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+            currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
             fromKeyHoldovers[fromKey].remove();
-            currentFrom = getNextSibling(from2, currentFrom);
+            currentFrom = getNextSibling(from, currentFrom);
             currentTo = getNextSibling(to, currentTo);
             continue;
           }
@@ -10370,7 +11346,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
             if (fromKeys[toKey]) {
               currentFrom.replaceWith(fromKeys[toKey]);
               currentFrom = fromKeys[toKey];
-              fromKey = getKey(currentFrom);
+              fromKey = context.getKey(currentFrom);
             }
           }
           if (toKey && fromKey) {
@@ -10379,67 +11355,57 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
               fromKeyHoldovers[fromKey] = currentFrom;
               currentFrom.replaceWith(fromKeyNode);
               currentFrom = fromKeyNode;
-              fromKey = getKey(currentFrom);
+              fromKey = context.getKey(currentFrom);
             } else {
               fromKeyHoldovers[fromKey] = currentFrom;
-              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
               fromKeyHoldovers[fromKey].remove();
-              currentFrom = getNextSibling(from2, currentFrom);
+              currentFrom = getNextSibling(from, currentFrom);
               currentTo = getNextSibling(to, currentTo);
               continue;
             }
           }
         }
-        let currentFromNext = currentFrom && getNextSibling(from2, currentFrom);
-        patch(currentFrom, currentTo);
+        let currentFromNext = currentFrom && getNextSibling(from, currentFrom);
+        context.patch(currentFrom, currentTo);
         currentTo = currentTo && getNextSibling(to, currentTo);
         currentFrom = currentFromNext;
       }
       let removals = [];
       while (currentFrom) {
-        if (!shouldSkip(removing, currentFrom))
+        if (!shouldSkip(context.removing, currentFrom))
           removals.push(currentFrom);
-        currentFrom = getNextSibling(from2, currentFrom);
+        currentFrom = getNextSibling(from, currentFrom);
       }
       while (removals.length) {
         let domForRemoval = removals.shift();
         domForRemoval.remove();
-        removed(domForRemoval);
+        context.removed(domForRemoval);
       }
-    }
-    function getKey(el) {
-      return el && el.nodeType === 1 && key(el);
-    }
-    function keyToMap(els2) {
+    };
+    context.getKey = function(el) {
+      return el && el.nodeType === 1 && context.key(el);
+    };
+    context.keyToMap = function(els2) {
       let map = {};
       for (let el of els2) {
-        let theKey = getKey(el);
+        let theKey = context.getKey(el);
         if (theKey) {
           map[theKey] = el;
         }
       }
       return map;
-    }
-    function addNodeBefore(parent, node, beforeMe) {
-      if (!shouldSkip(adding, node)) {
+    };
+    context.addNodeBefore = function(parent, node, beforeMe) {
+      if (!shouldSkip(context.adding, node)) {
         let clone = node.cloneNode(true);
         parent.insertBefore(clone, beforeMe);
-        added(clone);
+        context.added(clone);
         return clone;
       }
       return node;
-    }
-    assignOptions(options);
-    fromEl = from;
-    toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
-    if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
-      toEl._x_dataStack = window.Alpine.closestDataStack(from);
-      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
-    }
-    patch(from, toEl);
-    fromEl = void 0;
-    toEl = void 0;
-    return from;
+    };
+    return context;
   }
   morph2.step = () => {
   };
@@ -10450,9 +11416,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     hook(...args, () => skip = true);
     return skip;
   }
-  function shouldSkipChildren(hook, skipChildren, ...args) {
+  function shouldSkipChildren(hook, skipChildren, skipUntil, ...args) {
     let skip = false;
-    hook(...args, () => skip = true, skipChildren);
+    hook(...args, () => skip = true, skipChildren, skipUntil);
     return skip;
   }
   var patched = false;
@@ -10537,6 +11503,7 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   }
   function src_default7(Alpine23) {
     Alpine23.morph = morph2;
+    Alpine23.morphBetween = morphBetween;
   }
   var module_default7 = src_default7;
 
@@ -10616,7 +11583,13 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     let unformattedValue = el.value;
     callback();
     let beforeLeftOfCursorBeforeFormatting = unformattedValue.slice(0, cursorPosition);
-    let newPosition = buildUp(template, stripDown(template, beforeLeftOfCursorBeforeFormatting)).length;
+    let newPosition = buildUp(
+      template,
+      stripDown(
+        template,
+        beforeLeftOfCursorBeforeFormatting
+      )
+    ).length;
     el.setSelectionRange(newPosition, newPosition);
   }
   function stripDown(template, input) {
@@ -10742,40 +11715,45 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
         } });
       });
     });
-    import_alpinejs6.default.interceptInit(import_alpinejs6.default.skipDuringClone((el) => {
-      if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
-        return;
-      if (el.hasAttribute("wire:id") && !el.__livewire && !hasComponent(el.getAttribute("wire:id"))) {
-        let component2 = initComponent(el);
-        import_alpinejs6.default.onAttributeRemoved(el, "wire:id", () => {
-          destroyComponent(component2.id);
-        });
-      }
-      let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
-      directives.forEach((directive2) => {
-        trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
-          import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
-        } });
-      });
-      let component = closestComponent(el, false);
-      if (component) {
-        trigger("element.init", { el, component });
-        directives.forEach((directive2) => {
-          trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-            import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
-          } });
-        });
-      }
-    }, (el) => {
-      if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
-        return;
-      let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
-      directives.forEach((directive2) => {
-        trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
-          import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
-        } });
-      });
-    }));
+    import_alpinejs6.default.interceptInit(
+      import_alpinejs6.default.skipDuringClone(
+        (el) => {
+          if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+            return;
+          if (el.hasAttribute("wire:id") && !el.__livewire && !hasComponent(el.getAttribute("wire:id"))) {
+            let component2 = initComponent(el);
+            import_alpinejs6.default.onAttributeRemoved(el, "wire:id", () => {
+              destroyComponent(component2.id);
+            });
+          }
+          let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+          directives.forEach((directive2) => {
+            trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
+              import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
+            } });
+          });
+          let component = closestComponent(el, false);
+          if (component) {
+            trigger("element.init", { el, component });
+            directives.forEach((directive2) => {
+              trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
+                import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
+              } });
+            });
+          }
+        },
+        (el) => {
+          if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+            return;
+          let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+          directives.forEach((directive2) => {
+            trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
+              import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
+            } });
+          });
+        }
+      )
+    );
     import_alpinejs6.default.start();
     setTimeout(() => window.Livewire.initialRenderIsFinished = true);
     dispatch(document, "livewire:initialized");
@@ -10984,6 +11962,18 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     }
   });
 
+  // js/features/supportMorphDom.js
+  interceptMessage(({ message, onSuccess }) => {
+    onSuccess(({ payload, onMorph }) => {
+      onMorph(() => {
+        let html = payload.effects.html;
+        if (!html)
+          return;
+        morph(message.component, message.component.el, html);
+      });
+    });
+  });
+
   // js/features/supportDispatches.js
   on("effect", ({ component, effects }) => {
     queueMicrotask(() => {
@@ -11078,7 +12068,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       if (!download)
         return;
       let urlObject = window.webkitURL || window.URL;
-      let url = urlObject.createObjectURL(base64toBlob(download.content, download.contentType));
+      let url = urlObject.createObjectURL(
+        base64toBlob(download.content, download.contentType)
+      );
       let invisibleLink = document.createElement("a");
       invisibleLink.style.display = "none";
       invisibleLink.href = url;
@@ -11285,6 +12277,95 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
     });
   });
 
+  // js/features/supportIslands.js
+  interceptAction(({ action }) => {
+    let origin = action.origin;
+    if (!origin)
+      return;
+    let island = Island.closestIsland(origin);
+    if (!island)
+      return;
+    action.mergeMetadata(island.toMetadata());
+  });
+  interceptMessage(({ message, onSuccess }) => {
+    onSuccess(({ payload, onMorph }) => {
+      onMorph(() => {
+        let islands = payload.effects.islands || [];
+        islands.forEach((island) => {
+          let { name, html, mode } = island;
+          renderIsland(message.component, name, html, mode);
+        });
+      });
+    });
+  });
+  function renderIsland(component, key, html, mode = null) {
+    let island = component.islands[key];
+    mode ??= island.mode;
+    let { startNode, endNode } = findIslandComments(component.el, key);
+    if (!startNode || !endNode)
+      return;
+    let strippedContent = stripIslandComments(html, key);
+    let parentElement = startNode.parentElement;
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+    if (isPlaceholderMarker(startNode)) {
+      mode = "replace";
+      startNode.textContent = startNode.textContent.replace(":placeholder", "");
+    }
+    if (mode === "append") {
+      let container = document.createElement(parentElementTag);
+      container.innerHTML = strippedContent;
+      Array.from(container.childNodes).forEach((node) => {
+        endNode.parentNode.insertBefore(node, endNode);
+      });
+    } else if (mode === "prepend") {
+      let container = document.createElement(parentElementTag);
+      container.innerHTML = strippedContent;
+      Array.from(container.childNodes).reverse().forEach((node) => {
+        startNode.parentNode.insertBefore(node, startNode.nextSibling);
+      });
+    } else {
+      morphFragment(component, startNode, endNode, strippedContent);
+    }
+  }
+  function isPlaceholderMarker(el) {
+    return el.nodeType === 8 && el.textContent.match(/\[if ISLAND:[\w-]+:placeholder\]/);
+  }
+  function stripIslandComments(html, key) {
+    let startComment = new RegExp(`<!--\\[if ISLAND:${key}(:placeholder)?\\]><\\!\\[endif\\]-->`);
+    let endComment = new RegExp(`<!--\\[if ENDISLAND:${key}\\]><\\!\\[endif\\]-->`);
+    let stripped = html.replace(startComment, "").replace(endComment, "");
+    return stripped.trim();
+  }
+  function findIslandComments(rootEl, key) {
+    let startNode = null;
+    let endNode = null;
+    walkElements2(rootEl, (el, skip) => {
+      if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+        return skip();
+      }
+      Array.from(el.childNodes).forEach((node) => {
+        if (node.nodeType === Node.COMMENT_NODE) {
+          if (node.textContent.match(new RegExp(`\\[if ISLAND:${key}(:placeholder)?\\]><\\!\\[endif\\]`))) {
+            startNode = node;
+          }
+          if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${key}\\]><\\!\\[endif\\]`))) {
+            endNode = node;
+          }
+        }
+      });
+    });
+    return { startNode, endNode };
+  }
+  function walkElements2(el, callback) {
+    let skip = false;
+    callback(el, () => skip = true);
+    if (skip)
+      return;
+    Array.from(el.children).forEach((child) => {
+      walkElements2(child, callback);
+    });
+  }
+
   // js/features/supportDataLoading.js
   interceptMessage(({ actions, onSend, onFinish }) => {
     let undos = [];
@@ -11448,19 +12529,21 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
   import_alpinejs15.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
   import_alpinejs15.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
   import_alpinejs15.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
-  import_alpinejs15.default.interceptInit(import_alpinejs15.default.skipDuringClone((el) => {
-    if (el.hasAttribute("wire:navigate")) {
-      import_alpinejs15.default.bind(el, { ["x-navigate"]: true });
-    } else if (el.hasAttribute("wire:navigate.hover")) {
-      import_alpinejs15.default.bind(el, { ["x-navigate.hover"]: true });
-    } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
-      import_alpinejs15.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
-    } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
-      import_alpinejs15.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
-    } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
-      import_alpinejs15.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
-    }
-  }));
+  import_alpinejs15.default.interceptInit(
+    import_alpinejs15.default.skipDuringClone((el) => {
+      if (el.hasAttribute("wire:navigate")) {
+        import_alpinejs15.default.bind(el, { ["x-navigate"]: true });
+      } else if (el.hasAttribute("wire:navigate.hover")) {
+        import_alpinejs15.default.bind(el, { ["x-navigate.hover"]: true });
+      } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
+        import_alpinejs15.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
+      } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
+        import_alpinejs15.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
+      } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
+        import_alpinejs15.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
+      }
+    })
+  );
   document.addEventListener("alpine:navigating", () => {
     Livewire.all().forEach((component) => {
       component.inscribeSnapshotAndEffectsOnElement();
@@ -11804,7 +12887,9 @@ Read more about the Alpine's CSP-friendly build restrictions here: https://alpin
       targets.push(directives.get("model").expression);
     }
     if (directives.has("target")) {
-      targets = targets.concat(directives.get("target").expression.split(",").map((s) => s.trim()));
+      targets = targets.concat(
+        directives.get("target").expression.split(",").map((s) => s.trim())
+      );
     }
     return targets;
   }
