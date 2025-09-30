@@ -1,17 +1,30 @@
 import { interceptAction, interceptMessage } from '@/request'
 import { Island } from '@/island'
 import { morphFragment } from '@/morph'
+import { closestFragment, extractFragmentMetadataFromHtml, extractInnerHtmlFromFragmentHtml, findFragment } from '@/fragment'
 
 interceptAction(({ action }) => {
     let origin = action.origin
 
     if (! origin) return
 
-    let island = Island.closestIsland(origin)
+    let fragment = closestFragment(origin.el, {
+        isMatch: ({ type }) => {
+            return type === 'island'
+        },
+        hasReachedBoundary: ({ el }) => {
+            return el.hasAttribute('wire:id')
+        },
+    })
 
-    if (! island) return
+    if (! fragment) return
 
-    action.mergeMetadata(island.toMetadata())
+    action.mergeMetadata({
+        island: {
+            name: fragment.metadata.name,
+            mode: 'morph',
+        }
+    })
 })
 
 interceptMessage(({ message, onSuccess }) => {
@@ -19,29 +32,39 @@ interceptMessage(({ message, onSuccess }) => {
         onMorph(() => {
             let islands = payload.effects.islands || []
 
-            islands.forEach(island => {
-                let { name, html, mode } = island
-
-                renderIsland(message.component, name, html, mode)
+            islands.forEach(islandHtml => {
+                renderIsland(message.component, islandHtml)
             })
         })
     })
 })
 
-export function renderIsland(component, key, html, mode = null) {
-    let island = component.islands[key]
+export function renderIsland(component, islandHtml) {
+    let metadata = extractFragmentMetadataFromHtml(islandHtml)
 
-    mode ??= island.mode
+    let fragment = findFragment(component.el, {
+        isMatch: ({ type, name }) => {
+            return type === metadata.type && name === metadata.name
+        },
+        hasReachedBoundary: ({ el }) => {
+            return el.hasAttribute('wire:id')
+        },
+    })
 
-    let { startNode, endNode } = findIslandComments(component.el, key)
+    if (! fragment) return
 
-    if (!startNode || !endNode) return
+    let strippedContent = extractInnerHtmlFromFragmentHtml(islandHtml)
 
-    let strippedContent = stripIslandComments(html, key)
-
-    let parentElement = startNode.parentElement
+    let parentElement = fragment.startMarkerNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
 
+    mode = fragment.metadata.mode || 'morph'
+
+    if (mode === 'morph') {
+        morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent)
+    }
+
+    return
     // If the start node is a placeholder marker, we need to replace the island regardless of the mode....
     if (isPlaceholderMarker(startNode)) {
         mode = 'replace'
@@ -97,39 +120,10 @@ function stripIslandComments(html, key) {
 }
 
 function findIslandComments(rootEl, key) {
-    let startNode = null
-    let endNode = null
 
-    walkElements(rootEl, (el, skip) => {
-        // Skip nested Livewire components
-        if (el.hasAttribute && el.hasAttribute('wire:id') && el !== rootEl) {
-            return skip()
-        }
-
-        // Check all child nodes (including text and comment nodes)
-        Array.from(el.childNodes).forEach(node => {
-            if (node.nodeType === Node.COMMENT_NODE) {
-                if (node.textContent.match(new RegExp(`\\[if ISLAND:${key}(:placeholder)?\\]><\\!\\[endif\\]`))) {
-                    startNode = node
-                }
-
-                if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${key}\\]><\\!\\[endif\\]`))) {
-                    endNode = node
-                }
-            }
-        })
-    })
-
-    return { startNode, endNode }
 }
 
-function walkElements(el, callback) {
-    let skip = false
-    callback(el, () => skip = true)
 
-    if (skip) return
-
-    Array.from(el.children).forEach(child => {
-        walkElements(child, callback)
-    })
+function extractModeFromFragmentOpeningComment(el, defaultMode = 'morph') {
+    return el.textContent.match(/\[if FRAGMENT:[\w-]+:(\w+)\]/)?.[1] ?? defaultMode
 }

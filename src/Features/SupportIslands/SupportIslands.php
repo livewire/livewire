@@ -17,7 +17,7 @@ class SupportIslands extends ComponentHook
     public static function registerIslandDirective()
     {
         Blade::directive('island', function ($expression) {
-            return "<?php if (isset(\$__livewire)) echo \$__livewire->renderIslandExpression({$expression}); ?>";
+            return "<?php if (isset(\$__livewire)) echo \$__livewire->renderIslandDirective({$expression}); ?>";
         });
     }
 
@@ -51,13 +51,9 @@ class SupportIslands extends ComponentHook
 
             $this->component->skipRender();
 
-            $html = $this->component->renderIslandExpression(token: $token);
+            $html = $this->component->renderIsland(name: $name, token: $token, mode: $mode);
 
-            $componentContext->pushEffect('islands', [
-                'name' => $name,
-                'html' => $html,
-                'mode' => $mode,
-            ]);
+            $componentContext->pushEffect('islands', $html);
         };
     }
 
@@ -68,6 +64,8 @@ class SupportIslands extends ComponentHook
 
     public function hydrate($memo)
     {
+        $this->component->markIslandsAsMounted();
+
         $islands = $memo['islands'] ?? null;
 
         if (! $islands) return;

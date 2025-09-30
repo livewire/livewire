@@ -12,45 +12,6 @@ export class Island {
         }
     }
 
-    static closestIsland(origin) {
-        let current = origin.el
-
-        while (current) {
-            // Check previous siblings
-            let sibling = current.previousSibling;
-
-            let foundEndMarker = []
-            while (sibling) {
-                if (Island.isEndMarker(sibling)) {
-                    // Keep iterating up until we find the start marker and skip it...
-                    foundEndMarker.push('a')
-                }
-
-                if (Island.isStartMarker(sibling)) {
-                    if (foundEndMarker.length > 0) {
-                        foundEndMarker.pop()
-                    } else {
-                        let key = Island.extractIslandName(sibling)
-
-                        return new Island({ name: key, mode: 'replace', origin })
-                    }
-                }
-
-                sibling = sibling.previousSibling;
-            }
-
-            // No start marker found at this level or found end marker
-            // Go up to parent unless we've hit the component root
-            current = current.parentElement;
-
-            if (current && current.hasAttribute('wire:id')) {
-                break; // Stop at component root
-            }
-        }
-
-        return null;
-    }
-
     static skipIslandContents(component, el, toEl, skipUntil) {
         if (Island.isStartMarker(el) && Island.isStartMarker(toEl)) {
             let key = Island.extractIslandName(toEl)
@@ -101,15 +62,15 @@ export class Island {
     }
 
     static isStartMarker(el) {
-        return el.nodeType === 8 && el.textContent.startsWith('[if ISLAND')
+        return el.nodeType === 8 && el.textContent.startsWith('[if FRAGMENT')
     }
 
     static isEndMarker(el) {
-        return el.nodeType === 8 && el.textContent.startsWith('[if ENDISLAND')
+        return el.nodeType === 8 && el.textContent.startsWith('[if ENDFRAGMENT')
     }
 
     static extractIslandName(el) {
-        let key = el.textContent.match(/\[if ISLAND:([\w-]+)(?::placeholder)?\]/)?.[1]
+        let key = el.textContent.match(/\[if FRAGMENT:([\w-]+)(?::placeholder)?\]/)?.[1]
 
         return key
     }

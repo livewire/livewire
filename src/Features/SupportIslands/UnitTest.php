@@ -9,9 +9,7 @@ class UnitTest extends TestCase
 {
     public function test_render_island_directives()
     {
-        $this->markTestSkipped();
-
-        $component = Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends \Livewire\Component {
             public function render() {
                 return <<<'HTML'
                 <div>
