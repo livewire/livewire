@@ -89,13 +89,31 @@ trait HandlesIslands
 
     protected function decorateIslandWithMarker($output, $name, $mode = null)
     {
-        $startFragment = $mode
-            ? "<!--[if FRAGMENT:island:{$name}:{$mode}]><![endif]-->"
-            : "<!--[if FRAGMENT:island:{$name}]><![endif]-->";
+        $metadata = $mode ? [
+            'type' => 'island',
+            'name' => $name,
+            'mode' => $mode,
+        ] : [
+            'type' => 'island',
+            'name' => $name,
+        ];
 
-        $endFragment = "<!--[if ENDFRAGMENT:island:{$name}]><![endif]-->";
+        $startFragment = "<!--[if FRAGMENT:{$this->encodeFragmentMetadata($metadata)}]><![endif]-->";
+
+        $endFragment = "<!--[if ENDFRAGMENT:{$this->encodeFragmentMetadata($metadata)}]><![endif]-->";
 
         return $startFragment . $output . $endFragment;
+    }
+
+    protected function encodeFragmentMetadata($metadata)
+    {
+        $output = '';
+
+        foreach ($metadata as $key => $value) {
+            $output .= "{$key}={$value}|";
+        }
+
+        return rtrim($output, '|');
     }
 
     protected function storeIsland($name, $token)

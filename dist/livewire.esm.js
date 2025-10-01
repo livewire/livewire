@@ -8226,14 +8226,17 @@ var MessageBus = class {
   matchesScope(message, action) {
     let isSameComponent = message.component === action.component;
     let isIslandMessage = Array.from(message.actions).every((action2) => action2.metadata.island);
-    let isIslandAction = action.metadata.island;
-    let isSameIsland = isIslandMessage && isIslandAction && Array.from(message.actions).every((action2) => action2.metadata.island.name === action2.metadata.island.name);
+    let isIslandAction = !!action.metadata.island;
+    let isSameIsland = !!isIslandMessage && isIslandAction && Array.from(message.actions).every((action2) => action2.metadata.island.name === action2.metadata.island.name);
     if (!isSameComponent)
       return false;
     if (isIslandMessage && isIslandAction) {
       return isSameIsland;
     }
     if (isIslandMessage && !isIslandAction) {
+      return false;
+    }
+    if (!isIslandMessage && isIslandAction) {
       return false;
     }
     return true;
@@ -8457,7 +8460,9 @@ interceptMessage(({ message, onFinish }) => {
   messageBus.addActiveMessage(message);
   onFinish(() => messageBus.removeActiveMessage(message));
 });
-coordinateNetworkInteractions(messageBus);
+queueMicrotask(() => {
+  coordinateNetworkInteractions(messageBus);
+});
 function fireAction(component, method, params = [], metadata = {}) {
   let action = constructAction(component, method, params, metadata);
   let prevented = false;
@@ -9491,12 +9496,6 @@ var Component = class {
 var import_alpinejs3 = __toESM(require_module_cjs());
 
 // js/fragment.js
-function isStartFragmentMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if FRAGMENT");
-}
-function isEndFragmentMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ENDFRAGMENT");
-}
 function closestFragment(el, { isMatch, hasReachedBoundary }) {
   let current = el;
   while (current) {
@@ -9510,8 +9509,8 @@ function closestFragment(el, { isMatch, hasReachedBoundary }) {
         if (foundEndMarker.length > 0) {
           foundEndMarker.pop();
         } else {
-          let { type, name, mode: mode2 } = extractFragmentMetadataFromStartMarkerNode(sibling);
-          if (isMatch({ type, name, mode: mode2 })) {
+          let metadata = extractFragmentMetadataFromMarkerNode(sibling);
+          if (isMatch(metadata)) {
             return new Fragment(sibling);
           }
         }
@@ -9534,8 +9533,8 @@ function findFragment(el, { isMatch, hasReachedBoundary }) {
     }
     Array.from(el2.childNodes).forEach((node) => {
       if (isStartFragmentMarker(node)) {
-        let { type, name, mode: mode2 } = extractFragmentMetadataFromStartMarkerNode(node);
-        if (isMatch({ type, name, mode: mode2 })) {
+        let metadata = extractFragmentMetadataFromMarkerNode(node);
+        if (isMatch(metadata)) {
           startNode2 = node;
           stop();
         }
@@ -9543,6 +9542,12 @@ function findFragment(el, { isMatch, hasReachedBoundary }) {
     });
   });
   return startNode2 && new Fragment(startNode2);
+}
+function isStartFragmentMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if FRAGMENT");
+}
+function isEndFragmentMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ENDFRAGMENT");
 }
 function walkElements(el, callback) {
   let skip = false;
@@ -9559,18 +9564,18 @@ function walkElements(el, callback) {
 var Fragment = class {
   constructor(startMarkerNode) {
     this.startMarkerNode = startMarkerNode;
-    this.metadata = extractFragmentMetadataFromStartMarkerNode(startMarkerNode);
+    this.metadata = extractFragmentMetadataFromMarkerNode(startMarkerNode);
   }
   get endMarkerNode() {
-    return findMatchingEndMarkerNode(this.startMarkerNode, this.metadata.type, this.metadata.name);
+    return findMatchingEndMarkerNode(this.startMarkerNode, this.metadata);
   }
 };
-function findMatchingEndMarkerNode(startMarkerNode, type, name) {
+function findMatchingEndMarkerNode(startMarkerNode, metadata) {
   let current = startMarkerNode;
   while (current) {
     if (isEndFragmentMarker(current)) {
-      let { type: currentType, name: currentName } = extractFragmentMetadataFromEndMarkerNode(current);
-      if (currentType === type && currentName === name) {
+      let currentMetadata = extractFragmentMetadataFromMarkerNode(current);
+      if (Object.keys(metadata).every((key) => metadata[key] === currentMetadata[key])) {
         return current;
       }
     }
@@ -9587,28 +9592,29 @@ function extractInnerHtmlFromFragmentHtml(fragmentHtml) {
   return html;
 }
 function extractFragmentMetadataFromHtml(fragmentHtml) {
-  let regex = /\[if FRAGMENT:([\w-]+):([\w-]+)(?::([\w-]+))?\]/;
+  let regex = /\[if (FRAGMENT|ENDFRAGMENT):(.*?)\]/;
   let match = fragmentHtml.match(regex);
   if (!match)
     throw new Error("Invalid fragment marker");
-  let [_, type, name, mode2] = match;
-  return { type, name, mode: mode2 };
+  let [_, __, encodedMetadata] = match;
+  return decodeMetadata(encodedMetadata);
 }
-function extractFragmentMetadataFromStartMarkerNode(startMarkerNode) {
-  let regex = /\[if FRAGMENT:([\w-]+):([\w-]+)(?::([\w-]+))?\]/;
+function extractFragmentMetadataFromMarkerNode(startMarkerNode) {
+  let regex = /\[if (FRAGMENT|ENDFRAGMENT):(.*?)\]/;
   let match = startMarkerNode.textContent.match(regex);
   if (!match)
     throw new Error("Invalid fragment marker");
-  let [_, type, name, mode2] = match;
-  return { type, name, mode: mode2 };
+  let [_, __, encodedMetadata] = match;
+  return decodeMetadata(encodedMetadata);
 }
-function extractFragmentMetadataFromEndMarkerNode(endMarkerNode) {
-  let regex = /\[if ENDFRAGMENT:([\w-]+):([\w-]+)(?::([\w-]+))?\]/;
-  let match = endMarkerNode.textContent.match(regex);
-  if (!match)
-    throw new Error("Invalid fragment marker");
-  let [_, type, name, mode2] = match;
-  return { type, name, mode: mode2 };
+function decodeMetadata(encodedMetadata) {
+  let metadata = {};
+  let pairs = encodedMetadata.split("|");
+  pairs.forEach((pair) => {
+    let [key, value] = pair.split("=");
+    metadata[key] = value;
+  });
+  return metadata;
 }
 
 // js/morph.js
@@ -9673,7 +9679,10 @@ function getMorphConfig(component) {
   return {
     updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
       if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
-        skipUntil((node) => isEndFragmentMarker(node));
+        let metadata = extractFragmentMetadataFromMarkerNode(toEl);
+        if (metadata.mode !== "morph") {
+          skipUntil((node) => isEndFragmentMarker(node));
+        }
       }
       if (isntElement(el))
         return;
@@ -11779,9 +11788,9 @@ interceptAction(({ action }) => {
 interceptMessage(({ message, onSuccess }) => {
   onSuccess(({ payload, onMorph }) => {
     onMorph(() => {
-      let islands = payload.effects.islands || [];
-      islands.forEach((islandHtml) => {
-        renderIsland(message.component, islandHtml);
+      let fragments = payload.effects.islandFragments || [];
+      fragments.forEach((fragmentHtml) => {
+        renderIsland(message.component, fragmentHtml);
       });
     });
   });

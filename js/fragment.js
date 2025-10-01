@@ -1,12 +1,4 @@
 
-export function isStartFragmentMarker(el) {
-    return el.nodeType === 8 && el.textContent.startsWith('[if FRAGMENT')
-}
-
-export function isEndFragmentMarker(el) {
-    return el.nodeType === 8 && el.textContent.startsWith('[if ENDFRAGMENT')
-}
-
 export function closestFragment(el, { isMatch, hasReachedBoundary }) {
     let current = el
 
@@ -26,9 +18,9 @@ export function closestFragment(el, { isMatch, hasReachedBoundary }) {
                 if (foundEndMarker.length > 0) {
                     foundEndMarker.pop()
                 } else {
-                    let { type, name, mode } = extractFragmentMetadataFromStartMarkerNode(sibling)
+                    let metadata = extractFragmentMetadataFromMarkerNode(sibling)
 
-                    if (isMatch({ type, name, mode })) {
+                    if (isMatch(metadata)) {
                         return new Fragment(sibling)
                     }
                 }
@@ -36,8 +28,6 @@ export function closestFragment(el, { isMatch, hasReachedBoundary }) {
 
             sibling = sibling.previousSibling;
         }
-
-
 
         // No start marker found at this level or found end marker
         // Go up to parent unless we've hit the component root
@@ -65,9 +55,9 @@ export function findFragment(el, { isMatch, hasReachedBoundary }) {
         // Check all child nodes (including text and comment nodes)
         Array.from(el.childNodes).forEach(node => {
             if (isStartFragmentMarker(node)) {
-                let { type, name, mode } = extractFragmentMetadataFromStartMarkerNode(node)
+                let metadata = extractFragmentMetadataFromMarkerNode(node)
 
-                if (isMatch({ type, name, mode })) {
+                if (isMatch(metadata)) {
                     startNode = node
 
                     stop()
@@ -76,9 +66,15 @@ export function findFragment(el, { isMatch, hasReachedBoundary }) {
         })
     })
 
-
-
     return startNode && new Fragment(startNode)
+}
+
+export function isStartFragmentMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith('[if FRAGMENT')
+}
+
+export function isEndFragmentMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith('[if ENDFRAGMENT')
 }
 
 function walkElements(el, callback) {
@@ -96,34 +92,26 @@ function walkElements(el, callback) {
     })
 }
 
-export class FragmentMetdata {
-    constructor(type, name, mode) {
-        this.type = type
-        this.name = name
-        this.mode = mode
-    }
-}
-
 export class Fragment {
     constructor(startMarkerNode) {
         this.startMarkerNode = startMarkerNode
 
-        this.metadata = extractFragmentMetadataFromStartMarkerNode(startMarkerNode)
+        this.metadata = extractFragmentMetadataFromMarkerNode(startMarkerNode)
     }
 
     get endMarkerNode() {
-        return findMatchingEndMarkerNode(this.startMarkerNode, this.metadata.type, this.metadata.name)
+        return findMatchingEndMarkerNode(this.startMarkerNode, this.metadata)
     }
 }
 
-export function findMatchingEndMarkerNode(startMarkerNode, type, name) {
+export function findMatchingEndMarkerNode(startMarkerNode, metadata) {
     let current = startMarkerNode
 
     while (current) {
         if (isEndFragmentMarker(current)) {
-            let { type: currentType, name: currentName } = extractFragmentMetadataFromEndMarkerNode(current)
+            let currentMetadata = extractFragmentMetadataFromMarkerNode(current)
 
-            if (currentType === type && currentName === name) {
+            if (Object.keys(metadata).every(key => metadata[key] === currentMetadata[key])) {
                 return current
             }
         }
@@ -147,37 +135,40 @@ export function extractInnerHtmlFromFragmentHtml(fragmentHtml) {
 }
 
 export function extractFragmentMetadataFromHtml(fragmentHtml) {
-    let regex = /\[if FRAGMENT:([\w-]+):([\w-]+)(?::([\w-]+))?\]/
+    let regex = /\[if (FRAGMENT|ENDFRAGMENT):(.*?)\]/
 
     let match = fragmentHtml.match(regex)
 
     if (! match) throw new Error('Invalid fragment marker')
 
-    let [_, type, name, mode] = match
+    let [_, __, encodedMetadata] = match
 
-    return { type, name, mode }
+    return decodeMetadata(encodedMetadata)
 }
 
-function extractFragmentMetadataFromStartMarkerNode(startMarkerNode) {
-    let regex = /\[if FRAGMENT:([\w-]+):([\w-]+)(?::([\w-]+))?\]/
+export function extractFragmentMetadataFromMarkerNode(startMarkerNode) {
+    let regex = /\[if (FRAGMENT|ENDFRAGMENT):(.*?)\]/
 
     let match = startMarkerNode.textContent.match(regex)
 
     if (! match) throw new Error('Invalid fragment marker')
 
-    let [_, type, name, mode] = match
+    let [_, __, encodedMetadata] = match
 
-    return { type, name, mode }
+    return decodeMetadata(encodedMetadata)
 }
 
-function extractFragmentMetadataFromEndMarkerNode(endMarkerNode) {
-    let regex = /\[if ENDFRAGMENT:([\w-]+):([\w-]+)(?::([\w-]+))?\]/
+export function decodeMetadata(encodedMetadata) {
+    let metadata = {}
 
-    let match = endMarkerNode.textContent.match(regex)
+    // Split by pipe character to get key=value pairs
+    let pairs = encodedMetadata.split('|')
 
-    if (! match) throw new Error('Invalid fragment marker')
+    pairs.forEach(pair => {
+        // Split each pair by = to get key and value
+        let [key, value] = pair.split('=')
+        metadata[key] = value
+    })
 
-    let [_, type, name, mode] = match
-
-    return { type, name, mode }
+    return metadata
 }

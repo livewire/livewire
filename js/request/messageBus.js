@@ -53,8 +53,8 @@ export class MessageBus {
     matchesScope(message, action) {
         let isSameComponent = message.component === action.component
         let isIslandMessage = Array.from(message.actions).every(action => action.metadata.island)
-        let isIslandAction = action.metadata.island
-        let isSameIsland = isIslandMessage && isIslandAction && Array.from(message.actions).every(action => action.metadata.island.name === action.metadata.island.name)
+        let isIslandAction = !! action.metadata.island
+        let isSameIsland = !! isIslandMessage && isIslandAction && Array.from(message.actions).every(action => action.metadata.island.name === action.metadata.island.name)
 
         if (! isSameComponent) return false
 
@@ -63,6 +63,10 @@ export class MessageBus {
         }
 
         if (isIslandMessage && ! isIslandAction) {
+            return false
+        }
+
+        if (! isIslandMessage && isIslandAction) {
             return false
         }
 

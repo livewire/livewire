@@ -1,5 +1,4 @@
 import { interceptAction, interceptMessage } from '@/request'
-import { Island } from '@/island'
 import { morphFragment } from '@/morph'
 import { closestFragment, extractFragmentMetadataFromHtml, extractInnerHtmlFromFragmentHtml, findFragment } from '@/fragment'
 
@@ -30,10 +29,10 @@ interceptAction(({ action }) => {
 interceptMessage(({ message, onSuccess }) => {
     onSuccess(({ payload, onMorph }) => {
         onMorph(() => {
-            let islands = payload.effects.islands || []
+            let fragments = payload.effects.islandFragments || []
 
-            islands.forEach(islandHtml => {
-                renderIsland(message.component, islandHtml)
+            fragments.forEach(fragmentHtml => {
+                renderIsland(message.component, fragmentHtml)
             })
         })
     })

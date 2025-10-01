@@ -49,7 +49,10 @@ interceptMessage(({ message, onFinish }) => {
     onFinish(() => messageBus.removeActiveMessage(message))
 })
 
-coordinateNetworkInteractions(messageBus)
+// Ensure that other parts of the codebase are able to intercept actions before the default handling...
+queueMicrotask(() => {
+    coordinateNetworkInteractions(messageBus)
+})
 
 export function fireAction(component, method, params = [], metadata = {}) {
     let action = constructAction(component, method, params, metadata)

@@ -53,7 +53,7 @@ class SupportIslands extends ComponentHook
 
             $html = $this->component->renderIsland(name: $name, token: $token, mode: $mode);
 
-            $componentContext->pushEffect('islands', $html);
+            $componentContext->pushEffect('islandFragments', $html);
         };
     }
 

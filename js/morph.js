@@ -3,7 +3,7 @@ import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
 import { skipSlotContents } from "./features/supportSlots"
 import { Island } from "./island"
-import { isEndFragmentMarker, isStartFragmentMarker } from "./fragment"
+import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFragmentMarker } from "./fragment"
 
 export function morph(component, el, html) {
     let wrapperTag = el.parentElement
@@ -106,7 +106,11 @@ function getMorphConfig(component) {
         updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
             // Skip fragments...
             if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
-                skipUntil(node => isEndFragmentMarker(node))
+                let metadata = extractFragmentMetadataFromMarkerNode(toEl)
+
+                if (metadata.mode !== 'morph') {
+                    skipUntil(node => isEndFragmentMarker(node))
+                }
             }
 
             if (isntElement(el)) return
