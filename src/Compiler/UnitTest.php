@@ -122,6 +122,19 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('Loading...', $placeholderContents);
     }
 
+    public function test_ignores_placeholders_in_islands()
+    {
+        $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
+
+        $class = $compiler->compile(__DIR__ . '/Fixtures/sfc-component-with-placeholder-in-island.blade.php');
+
+        $classContents = file_get_contents($cacheManager->getClassPath(__DIR__ . '/Fixtures/sfc-component-with-placeholder-in-island.blade.php'));
+        $viewContents = file_get_contents($cacheManager->getViewPath(__DIR__ . '/Fixtures/sfc-component-with-placeholder-in-island.blade.php'));
+
+        $this->assertStringContainsString('@placeholder', $viewContents);
+        $this->assertStringNotContainsString('public function placeholder()', $classContents);
+    }
+
     public function test_can_re_compile_simple_sfc_component()
     {
         $compiler = new Compiler(new CacheManager($this->cacheDir));

@@ -31,7 +31,7 @@ class IslandCompiler
         $maxIslandStatementCounter = 1;
 
         $compiler->directive('island', function ($expression) use (&$islandStatementCounter, &$maxIslandStatementCounter) {
-            if (str_contains($expression, 'view:') || str_contains($expression, 'name:')) {
+            if (str_contains($expression, 'view:')) {
                 return $expression;
             }
 
@@ -52,10 +52,20 @@ class IslandCompiler
 
         for ($i=$maxIslandStatementCounter; $i >= $islandStatementCounter; $i--) {
             $result = preg_replace_callback('/(\[STARTISLAND:' . $i . '\])\((.*?)\)(.*?)(\[ENDISLAND:' . $i . '\])/s', function ($matches) use ($i) {
+                $innerContent = $matches[3];
+
+                if (str_contains($innerContent, '@placeholder')) {
+                    $innerContent = str_replace('@placeholder', '<'.'?php if (isset($__placeholder)) { ob_start(); } if (isset($__placeholder)): ?'.'>', $innerContent);
+                    $innerContent = str_replace('@endplaceholder', '<'.'?php endif; if (isset($__placeholder)) { echo ob_get_clean(); return; } ?'.'>', $innerContent);
+
+                } else {
+                    $innerContent = '<'.'?php if (isset($__placeholder)) { echo $__placeholder; return; } ?'.'>' . "\n\n" . $innerContent;
+                }
+
                 return $this->compileIsland(
                     occurrence: $i,
                     expression: $matches[2],
-                    innerContent: $matches[3],
+                    innerContent: $innerContent,
                 );
             }, $result);
         }

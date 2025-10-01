@@ -9525,7 +9525,7 @@ function closestFragment(el, { isMatch, hasReachedBoundary }) {
   return null;
 }
 function findFragment(el, { isMatch, hasReachedBoundary }) {
-  let startNode2 = null;
+  let startNode = null;
   let rootEl = el;
   walkElements(rootEl, (el2, { skip, stop }) => {
     if (el2.hasAttribute && el2 !== rootEl && hasReachedBoundary({ el: el2 })) {
@@ -9535,13 +9535,13 @@ function findFragment(el, { isMatch, hasReachedBoundary }) {
       if (isStartFragmentMarker(node)) {
         let metadata = extractFragmentMetadataFromMarkerNode(node);
         if (isMatch(metadata)) {
-          startNode2 = node;
+          startNode = node;
           stop();
         }
       }
     });
   });
-  return startNode2 && new Fragment(startNode2);
+  return startNode && new Fragment(startNode);
 }
 function isStartFragmentMarker(el) {
   return el.nodeType === 8 && el.textContent.startsWith("[if FRAGMENT");
@@ -9568,6 +9568,20 @@ var Fragment = class {
   }
   get endMarkerNode() {
     return findMatchingEndMarkerNode(this.startMarkerNode, this.metadata);
+  }
+  append(mountContainerTagName, html) {
+    let container = document.createElement(mountContainerTagName);
+    container.innerHTML = html;
+    Array.from(container.childNodes).forEach((node) => {
+      this.endMarkerNode.before(node);
+    });
+  }
+  prepend(mountContainerTagName, html) {
+    let container = document.createElement(mountContainerTagName);
+    container.innerHTML = html;
+    Array.from(container.childNodes).reverse().forEach((node) => {
+      this.startMarkerNode.after(node);
+    });
   }
 };
 function findMatchingEndMarkerNode(startMarkerNode, metadata) {
@@ -9653,8 +9667,8 @@ function morph(component, el, html) {
   import_alpinejs3.default.morph(el, to, getMorphConfig(component));
   trigger("morphed", { el, component });
 }
-function morphFragment(component, startNode2, endNode2, toHTML) {
-  let fromContainer = startNode2.parentElement;
+function morphFragment(component, startNode, endNode, toHTML) {
+  let fromContainer = startNode.parentElement;
   let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
   let toContainer = document.createElement(fromContainerTag);
   toContainer.innerHTML = toHTML;
@@ -9671,9 +9685,9 @@ function morphFragment(component, startNode2, endNode2, toHTML) {
     parentProviderWrapper.appendChild(toContainer);
     parentProviderWrapper.__livewire = parentComponent;
   }
-  trigger("island.morph", { startNode: startNode2, endNode: endNode2, component });
-  import_alpinejs3.default.morphBetween(startNode2, endNode2, toContainer, getMorphConfig(component));
-  trigger("island.morphed", { startNode: startNode2, endNode: endNode2, component });
+  trigger("island.morph", { startNode, endNode, component });
+  import_alpinejs3.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+  trigger("island.morphed", { startNode, endNode, component });
 }
 function getMorphConfig(component) {
   return {
@@ -9758,11 +9772,11 @@ on("effect", ({ component, effects }) => {
         queueMicrotask(() => {
           queueMicrotask(() => {
             let fullName = parentId ? `${name}:${parentId}` : name;
-            let { startNode: startNode2, endNode: endNode2 } = findSlotComments(childComponent.el, fullName);
-            if (!startNode2 || !endNode2)
+            let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
+            if (!startNode || !endNode)
               return;
             let strippedContent = stripSlotComments(content, fullName);
-            morphFragment(childComponent, startNode2, endNode2, strippedContent);
+            morphFragment(childComponent, startNode, endNode, strippedContent);
           });
         });
       });
@@ -9776,8 +9790,8 @@ function stripSlotComments(content, slotName) {
   return stripped.trim();
 }
 function findSlotComments(rootEl, slotName) {
-  let startNode2 = null;
-  let endNode2 = null;
+  let startNode = null;
+  let endNode = null;
   walkElements2(rootEl, (el, skip) => {
     if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
       return skip();
@@ -9785,15 +9799,15 @@ function findSlotComments(rootEl, slotName) {
     Array.from(el.childNodes).forEach((node) => {
       if (node.nodeType === Node.COMMENT_NODE) {
         if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
-          startNode2 = node;
+          startNode = node;
         }
         if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
-          endNode2 = node;
+          endNode = node;
         }
       }
     });
   });
-  return { startNode: startNode2, endNode: endNode2 };
+  return { startNode, endNode };
 }
 function walkElements2(el, callback) {
   let skip = false;
@@ -11768,12 +11782,27 @@ interceptAction(({ action }) => {
   let origin = action.origin;
   if (!origin)
     return;
+  let el = origin.el;
+  let islandAttributeName = el.getAttribute("wire:island");
+  let prependIslandAttributeName = el.getAttribute("wire:island.prepend");
+  let appendIslandAttributeName = el.getAttribute("wire:island.append");
+  let islandName = islandAttributeName || prependIslandAttributeName || appendIslandAttributeName;
+  if (islandName) {
+    let mode2 = appendIslandAttributeName ? "append" : prependIslandAttributeName ? "prepend" : "morph";
+    action.mergeMetadata({
+      island: {
+        name: islandName,
+        mode: mode2
+      }
+    });
+    return;
+  }
   let fragment = closestFragment(origin.el, {
     isMatch: ({ type }) => {
       return type === "island";
     },
-    hasReachedBoundary: ({ el }) => {
-      return el.hasAttribute("wire:id");
+    hasReachedBoundary: ({ el: el2 }) => {
+      return el2.hasAttribute("wire:id");
     }
   });
   if (!fragment)
@@ -11807,36 +11836,18 @@ function renderIsland(component, islandHtml) {
   });
   if (!fragment)
     return;
+  let incomingMetadata = extractFragmentMetadataFromHtml(islandHtml);
   let strippedContent = extractInnerHtmlFromFragmentHtml(islandHtml);
   let parentElement = fragment.startMarkerNode.parentElement;
   let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-  mode = fragment.metadata.mode || "morph";
+  mode = incomingMetadata.mode || "morph";
   if (mode === "morph") {
     morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
-  }
-  return;
-  if (isPlaceholderMarker(startNode)) {
-    mode = "replace";
-    startNode.textContent = startNode.textContent.replace(":placeholder", "");
-  }
-  if (mode === "append") {
-    let container = document.createElement(parentElementTag);
-    container.innerHTML = strippedContent;
-    Array.from(container.childNodes).forEach((node) => {
-      endNode.parentNode.insertBefore(node, endNode);
-    });
+  } else if (mode === "append") {
+    fragment.append(parentElementTag, strippedContent);
   } else if (mode === "prepend") {
-    let container = document.createElement(parentElementTag);
-    container.innerHTML = strippedContent;
-    Array.from(container.childNodes).reverse().forEach((node) => {
-      startNode.parentNode.insertBefore(node, startNode.nextSibling);
-    });
-  } else {
-    morphFragment(component, startNode, endNode, strippedContent);
+    fragment.prepend(parentElementTag, strippedContent);
   }
-}
-function isPlaceholderMarker(el) {
-  return el.nodeType === 8 && el.textContent.match(/\[if ISLAND:[\w-]+:placeholder\]/);
 }
 
 // js/features/supportDataLoading.js
@@ -12451,6 +12462,7 @@ function debounce(func, wait) {
 // js/directives/wire-init.js
 directive("init", ({ component, el, directive: directive2 }) => {
   let fullMethod = directive2.expression ? directive2.expression : "$refresh";
+  setNextActionOrigin({ el, directive: directive2 });
   evaluateActionExpression(component, el, fullMethod);
 });
 

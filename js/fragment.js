@@ -102,6 +102,28 @@ export class Fragment {
     get endMarkerNode() {
         return findMatchingEndMarkerNode(this.startMarkerNode, this.metadata)
     }
+
+    append(mountContainerTagName, html) {
+        let container = document.createElement(mountContainerTagName)
+
+        container.innerHTML = html
+
+        Array.from(container.childNodes).forEach(node => {
+            this.endMarkerNode.before(node)
+        })
+    }
+
+    prepend(mountContainerTagName, html) {
+        let container = document.createElement(mountContainerTagName)
+
+        container.innerHTML = html
+
+        Array.from(container.childNodes)
+            .reverse()
+            .forEach(node => {
+                this.startMarkerNode.after(node)
+            })
+    }
 }
 
 export function findMatchingEndMarkerNode(startMarkerNode, metadata) {

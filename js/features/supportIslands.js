@@ -1,11 +1,32 @@
+import { closestFragment, extractFragmentMetadataFromHtml, extractInnerHtmlFromFragmentHtml, findFragment } from '@/fragment'
 import { interceptAction, interceptMessage } from '@/request'
 import { morphFragment } from '@/morph'
-import { closestFragment, extractFragmentMetadataFromHtml, extractInnerHtmlFromFragmentHtml, findFragment } from '@/fragment'
 
 interceptAction(({ action }) => {
     let origin = action.origin
 
     if (! origin) return
+
+    let el = origin.el
+
+    let islandAttributeName = el.getAttribute('wire:island')
+    let prependIslandAttributeName = el.getAttribute('wire:island.prepend')
+    let appendIslandAttributeName = el.getAttribute('wire:island.append')
+
+    let islandName = islandAttributeName || prependIslandAttributeName || appendIslandAttributeName
+
+    if (islandName) {
+        let mode = appendIslandAttributeName ? 'append' : (prependIslandAttributeName ? 'prepend' : 'morph')
+
+        action.mergeMetadata({
+            island: {
+                name: islandName,
+                mode: mode,
+            }
+        })
+
+        return
+    }
 
     let fragment = closestFragment(origin.el, {
         isMatch: ({ type }) => {
@@ -52,77 +73,19 @@ export function renderIsland(component, islandHtml) {
 
     if (! fragment) return
 
+    let incomingMetadata = extractFragmentMetadataFromHtml(islandHtml)
     let strippedContent = extractInnerHtmlFromFragmentHtml(islandHtml)
 
     let parentElement = fragment.startMarkerNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
 
-    mode = fragment.metadata.mode || 'morph'
+    mode = incomingMetadata.mode || 'morph'
 
     if (mode === 'morph') {
         morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent)
-    }
-
-    return
-    // If the start node is a placeholder marker, we need to replace the island regardless of the mode....
-    if (isPlaceholderMarker(startNode)) {
-        mode = 'replace'
-
-        // Remove the placeholder marker from the start node...
-        startNode.textContent = startNode.textContent.replace(':placeholder', '')
-    }
-
-    if (mode === 'append') {
-        let container = document.createElement(parentElementTag)
-
-        container.innerHTML = strippedContent
-
-        // Insert each child node before the end node
-        Array.from(container.childNodes).forEach(node => {
-            endNode.parentNode.insertBefore(node, endNode)
-        })
-
+    } else if (mode === 'append') {
+        fragment.append(parentElementTag, strippedContent)
     } else if (mode === 'prepend') {
-        let container = document.createElement(parentElementTag)
-
-        container.innerHTML = strippedContent
-
-        // Insert each child node after the start node in reverse order
-        // to maintain correct ordering
-        Array.from(container.childNodes)
-            .reverse()
-            .forEach(node => {
-                startNode.parentNode.insertBefore(node, startNode.nextSibling)
-            })
-    } else {
-        morphFragment(component, startNode, endNode, strippedContent)
+        fragment.prepend(parentElementTag, strippedContent)
     }
-}
-
-
-
-function isPlaceholderMarker(el) {
-    return el.nodeType === 8 && el.textContent.match(/\[if ISLAND:[\w-]+:placeholder\]/)
-}
-
-function stripIslandComments(html, key) {
-    // Remove the start and end comment markers
-    let startComment = new RegExp(`<!--\\[if ISLAND:${key}(:placeholder)?\\]><\\!\\[endif\\]-->`)
-    let endComment = new RegExp(`<!--\\[if ENDISLAND:${key}\\]><\\!\\[endif\\]-->`)
-
-    // Strip out the comments from thehtml
-    let stripped =html
-        .replace(startComment, '')
-        .replace(endComment, '')
-
-    return stripped.trim()
-}
-
-function findIslandComments(rootEl, key) {
-
-}
-
-
-function extractModeFromFragmentOpeningComment(el, defaultMode = 'morph') {
-    return el.textContent.match(/\[if FRAGMENT:[\w-]+:(\w+)\]/)?.[1] ?? defaultMode
 }

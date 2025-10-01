@@ -26,7 +26,7 @@ class UnitTest extends TestCase
             ->assertDontSee('@endisland')
             ->assertSee('Outside island')
             ->assertSee('Inside island')
-            ->assertSee('!--[if ISLAND:')
-            ->assertSee('!--[if ENDISLAND:');
+            ->assertSee('!--[if FRAGMENT:')
+            ->assertSee('!--[if ENDFRAGMENT:');
     }
 }

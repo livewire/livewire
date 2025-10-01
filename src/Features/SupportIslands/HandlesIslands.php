@@ -2,14 +2,19 @@
 
 namespace Livewire\Features\SupportIslands;
 
-use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
+use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Drawer\Utils;
 
 trait HandlesIslands
 {
     protected $islands = [];
     protected $islandsHaveMounted = false;
+
+    public function islandIsMounting()
+    {
+        return ! $this->islandsHaveMounted;
+    }
 
     public function markIslandsAsMounted()
     {
@@ -26,78 +31,72 @@ trait HandlesIslands
         $this->islands = $islands;
     }
 
-    public function renderIslandDirective($name = null, $token = null)
+    public function renderIslandDirective($name = null, $token = null, $lazy = false)
     {
         // If no name is provided, use the token...
         $name = $name ?? $token;
 
-        if ($this->islandsHaveMounted) {
-            $this->renderSkippedIsland($name);
-        } else {
+        if ($this->islandIsMounting()) {
             $this->storeIsland($name, $token);
+        } else {
+            return $this->renderSkippedIsland($name);
         }
 
-        $path = IslandCompiler::getCachedPathFromToken($token);
+        if ($lazy) {
+            $renderedContent = $this->renderIslandView($token, [
+                '__placeholder' => '<div wire:init="$refresh"></div>',
+            ]);
 
-        $viewInstance = app('view')->file($path);
+            $renderedContent = '<div wire:init="$refresh">' . $renderedContent . '</div>';
+        } else {
+            $renderedContent = $this->renderIslandView($token);
+        }
 
-        return $this->decorateIslandWithMarker(
-            $this->renderIslandViewWithScope(
-                $viewInstance
-            ),
-            $name,
-        );
+        return $this->wrapWithFragmentMarkers($renderedContent,[
+            'type' => 'island',
+            'name' => $name,
+        ]);
     }
 
     public function renderSkippedIsland($name)
     {
-        return $this->decorateIslandWithMarker(
-            '',
-            $name,
-            'skip',
-        );
+        return $this->wrapWithFragmentMarkers('', [
+            'type' => 'island',
+            'name' => $name,
+            'mode' => 'skip',
+        ]);
     }
 
     public function renderIsland($name, $token, $mode)
     {
-        $path = IslandCompiler::getCachedPathFromToken($token);
-
-        $viewInstance = app('view')->file($path);
-
-        return $this->decorateIslandWithMarker(
-            $this->renderIslandViewWithScope(
-                $viewInstance
-            ),
-            $name,
-            $mode,
-        );
+        return $this->wrapWithFragmentMarkers($this->renderIslandView($token), [
+            'type' => 'island',
+            'name' => $name,
+            'mode' => $mode,
+        ]);
     }
 
-    public function renderIslandViewWithScope($view)
+    public function renderIslandView($token, $data = [])
     {
+        $path = IslandCompiler::getCachedPathFromToken($token);
+
+        $view = app('view')->file($path);
+
         app(ExtendBlade::class)->startLivewireRendering($this);
 
         $componentData = Utils::getPublicPropertiesDefinedOnSubclass($this);
 
-        // We need to ensure that the component instance is available in the island view, so any nested islands can access it...
-        $output = $view->with(array_merge($componentData, ['__livewire' => $this]))->render();
+        $scope = array_merge(['__livewire' => $this], $componentData, $data);
+
+        $output = $view->with($scope)->render();
 
         app(ExtendBlade::class)->endLivewireRendering();
 
         return $output;
     }
 
-    protected function decorateIslandWithMarker($output, $name, $mode = null)
+    protected function wrapWithFragmentMarkers($output, $metadata)
     {
-        $metadata = $mode ? [
-            'type' => 'island',
-            'name' => $name,
-            'mode' => $mode,
-        ] : [
-            'type' => 'island',
-            'name' => $name,
-        ];
-
         $startFragment = "<!--[if FRAGMENT:{$this->encodeFragmentMetadata($metadata)}]><![endif]-->";
 
         $endFragment = "<!--[if ENDFRAGMENT:{$this->encodeFragmentMetadata($metadata)}]><![endif]-->";

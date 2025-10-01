@@ -6,15 +6,32 @@ class Parser
 {
     public static function extractPlaceholderPortion(string &$contents): ?string
     {
-        $pattern = '/@'.'placeholder(.*?)@endplaceholder/s';
+        $islandsPattern = '/(@'.'island.*?@endisland)/s';
 
-        if (preg_match($pattern, $contents, $matches)) {
+        $replacements = [];
+
+        $contents = preg_replace_callback($islandsPattern, function($matches) use (&$replacements) {
+            $key = 'ISLANDREPLACEMENT:' . count($replacements);
+
+            $replacements[$key] = $matches[0];
+
+            return $key;
+        }, $contents);
+
+        $placeholderPattern = '/@'.'placeholder(.*?)@endplaceholder/s';
+
+        $placeholderPortion = null;
+
+        if (preg_match($placeholderPattern, $contents, $matches)) {
             $fullMatch = $matches[0];
-            $match = $matches[1];
+
+            $placeholderPortion = $matches[1];
 
             $contents = str_replace($fullMatch, '', $contents);
+        }
 
-            return $match;
+        foreach ($replacements as $key => $replacement) {
+            $contents = str_replace($key, $replacement, $contents);
         }
 
         return $placeholderPortion ?? null;
