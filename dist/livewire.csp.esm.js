@@ -7503,9 +7503,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
+// ../alpine/packages/morph/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -10380,7 +10380,7 @@ function findMatchingEndMarkerNode(startMarkerNode, metadata) {
   return null;
 }
 function extractInnerHtmlFromFragmentHtml(fragmentHtml) {
-  let regex = /<!--\[if FRAGMENT:.*?\]><!\[endif\]-->([\s\S]*?)<!--\[if ENDFRAGMENT:.*?\]><!\[endif\]-->/;
+  let regex = /<!--\[if FRAGMENT\b.*?\]><!\[endif\]-->([\s\S]*)<!--\[if ENDFRAGMENT\b.*?\]><!\[endif\]-->/i;
   let match = fragmentHtml.match(regex);
   if (!match)
     throw new Error("Invalid fragment marker");
@@ -10477,7 +10477,13 @@ function getMorphConfig(component) {
       if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
         let metadata = extractFragmentMetadataFromMarkerNode(toEl);
         if (metadata.mode !== "morph") {
-          skipUntil((node) => isEndFragmentMarker(node));
+          skipUntil((node) => {
+            if (isEndFragmentMarker(node)) {
+              let endMarkerMetadata = extractFragmentMetadataFromMarkerNode(node);
+              return endMarkerMetadata.token === metadata.token;
+            }
+            return false;
+          });
         }
       }
       if (isntElement(el))
@@ -12609,8 +12615,8 @@ interceptMessage(({ message, onSuccess }) => {
 function renderIsland(component, islandHtml) {
   let metadata = extractFragmentMetadataFromHtml(islandHtml);
   let fragment = findFragment(component.el, {
-    isMatch: ({ type, name }) => {
-      return type === metadata.type && name === metadata.name;
+    isMatch: ({ type, token }) => {
+      return type === metadata.type && token === metadata.token;
     },
     hasReachedBoundary: ({ el }) => {
       return el.hasAttribute("wire:id");

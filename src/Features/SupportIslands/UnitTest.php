@@ -16,7 +16,13 @@ class UnitTest extends TestCase
                     Outside island
 
                     @island
-                        Inside island
+                        before
+
+                        @island
+                            Nested island
+                        @endisland
+
+                        after
                     @endisland
                 </div>
                 HTML;

@@ -10,6 +10,7 @@ trait HandlesIslands
 {
     protected $islands = [];
     protected $islandsHaveMounted = false;
+    protected $islandIsTopLevelRender = false;
 
     public function islandIsMounting()
     {
@@ -18,7 +19,7 @@ trait HandlesIslands
 
     public function markIslandsAsMounted()
     {
-        $this->hasMountedIslands = true;
+        $this->islandsHaveMounted = true;
     }
 
     public function getIslands()
@@ -31,7 +32,7 @@ trait HandlesIslands
         $this->islands = $islands;
     }
 
-    public function renderIslandDirective($name = null, $token = null, $lazy = false)
+    public function renderIslandDirective($name = null, $token = null, $lazy = false, $defer = false, $always = false)
     {
         // If no name is provided, use the token...
         $name = $name ?? $token;
@@ -39,12 +40,20 @@ trait HandlesIslands
         if ($this->islandIsMounting()) {
             $this->storeIsland($name, $token);
         } else {
-            return $this->renderSkippedIsland($name);
+            if (! $always) {
+                return $this->renderSkippedIsland($name, $token);
+            }
         }
 
         if ($lazy) {
             $renderedContent = $this->renderIslandView($token, [
-                '__placeholder' => '<div wire:init="$refresh"></div>',
+                '__placeholder' => '',
+            ]);
+
+            $renderedContent = '<div wire:intersect="$refresh">' . $renderedContent . '</div>';
+        } elseif ($defer) {
+            $renderedContent = $this->renderIslandView($token, [
+                '__placeholder' => '',
             ]);
 
             $renderedContent = '<div wire:init="$refresh">' . $renderedContent . '</div>';
@@ -55,14 +64,17 @@ trait HandlesIslands
         return $this->wrapWithFragmentMarkers($renderedContent,[
             'type' => 'island',
             'name' => $name,
+            'token' => $token,
+            'mode' => 'morph',
         ]);
     }
 
-    public function renderSkippedIsland($name)
+    public function renderSkippedIsland($name, $token)
     {
         return $this->wrapWithFragmentMarkers('', [
             'type' => 'island',
             'name' => $name,
+            'token' => $token,
             'mode' => 'skip',
         ]);
     }
@@ -72,6 +84,7 @@ trait HandlesIslands
         return $this->wrapWithFragmentMarkers($this->renderIslandView($token), [
             'type' => 'island',
             'name' => $name,
+            'token' => $token,
             'mode' => $mode,
         ]);
     }
@@ -117,6 +130,9 @@ trait HandlesIslands
 
     protected function storeIsland($name, $token)
     {
-        $this->islands[$name] = $token;
+        $this->islands[] = [
+            'name' => $name,
+            'token' => $token,
+        ];
     }
 }

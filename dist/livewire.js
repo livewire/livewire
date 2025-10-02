@@ -742,7 +742,7 @@
     );
   }
 
-  // node_modules/alpinejs/dist/module.esm.js
+  // ../alpine/packages/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -5791,7 +5791,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return null;
   }
   function extractInnerHtmlFromFragmentHtml(fragmentHtml) {
-    let regex = /<!--\[if FRAGMENT:.*?\]><!\[endif\]-->([\s\S]*?)<!--\[if ENDFRAGMENT:.*?\]><!\[endif\]-->/;
+    let regex = /<!--\[if FRAGMENT\b.*?\]><!\[endif\]-->([\s\S]*)<!--\[if ENDFRAGMENT\b.*?\]><!\[endif\]-->/i;
     let match = fragmentHtml.match(regex);
     if (!match)
       throw new Error("Invalid fragment marker");
@@ -5888,7 +5888,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
           let metadata = extractFragmentMetadataFromMarkerNode(toEl);
           if (metadata.mode !== "morph") {
-            skipUntil((node) => isEndFragmentMarker(node));
+            skipUntil((node) => {
+              if (isEndFragmentMarker(node)) {
+                let endMarkerMetadata = extractFragmentMetadataFromMarkerNode(node);
+                return endMarkerMetadata.token === metadata.token;
+              }
+              return false;
+            });
           }
         }
         if (isntElement(el))
@@ -9751,7 +9757,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // node_modules/@alpinejs/morph/dist/module.esm.js
+  // ../alpine/packages/morph/dist/module.esm.js
   function morph2(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -10941,8 +10947,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function renderIsland(component, islandHtml) {
     let metadata = extractFragmentMetadataFromHtml(islandHtml);
     let fragment = findFragment(component.el, {
-      isMatch: ({ type, name }) => {
-        return type === metadata.type && name === metadata.name;
+      isMatch: ({ type, token }) => {
+        return type === metadata.type && token === metadata.token;
       },
       hasReachedBoundary: ({ el }) => {
         return el.hasAttribute("wire:id");

@@ -45,15 +45,21 @@ class SupportIslands extends ComponentHook
 
             $islands = $this->component->getIslands();
 
-            $token = $islands[$name] ?? null;
+            $islands = array_filter($islands, fn ($island) => $island['name'] === $name);
 
-            if (! $token) return;
+            if (! $island) return;
 
             $this->component->skipRender();
 
-            $html = $this->component->renderIsland(name: $name, token: $token, mode: $mode);
+            foreach ($islands as $island) {
+                $html = $this->component->renderIsland(
+                    name: $name,
+                    token: $island['token'],
+                    mode: $mode,
+                );
 
-            $componentContext->pushEffect('islandFragments', $html);
+                $componentContext->pushEffect('islandFragments', $html);
+            }
         };
     }
 

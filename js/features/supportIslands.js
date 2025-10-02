@@ -63,8 +63,8 @@ export function renderIsland(component, islandHtml) {
     let metadata = extractFragmentMetadataFromHtml(islandHtml)
 
     let fragment = findFragment(component.el, {
-        isMatch: ({ type, name }) => {
-            return type === metadata.type && name === metadata.name
+        isMatch: ({ type, token }) => {
+            return type === metadata.type && token === metadata.token
         },
         hasReachedBoundary: ({ el }) => {
             return el.hasAttribute('wire:id')

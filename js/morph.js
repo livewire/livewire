@@ -1,8 +1,6 @@
 import { trigger } from "@/hooks"
 import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
-import { skipSlotContents } from "./features/supportSlots"
-import { Island } from "./island"
 import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFragmentMarker } from "./fragment"
 
 export function morph(component, el, html) {
@@ -109,7 +107,15 @@ function getMorphConfig(component) {
                 let metadata = extractFragmentMetadataFromMarkerNode(toEl)
 
                 if (metadata.mode !== 'morph') {
-                    skipUntil(node => isEndFragmentMarker(node))
+                    skipUntil(node => {
+                        if (isEndFragmentMarker(node)) {
+                            let endMarkerMetadata = extractFragmentMetadataFromMarkerNode(node)
+
+                            return endMarkerMetadata.token === metadata.token
+                        }
+
+                        return false
+                    })
                 }
             }
 

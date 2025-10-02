@@ -27,32 +27,31 @@ class IslandCompiler
     {
         $compiler = $this->getHackedBladeCompiler();
 
-        $islandStatementCounter = 1;
-        $maxIslandStatementCounter = 1;
+        $currentNestingLevel = 1;
+        $maxNestingLevel = $currentNestingLevel;
+        $startDirectiveCount = 1;
 
-        $compiler->directive('island', function ($expression) use (&$islandStatementCounter, &$maxIslandStatementCounter) {
-            if (str_contains($expression, 'view:')) {
-                return $expression;
-            }
+        $compiler->directive('island', function ($expression) use (&$currentNestingLevel, &$maxNestingLevel, &$startDirectiveCount) {
+            $maxNestingLevel = max($maxNestingLevel, $currentNestingLevel);
 
-            $maxIslandStatementCounter = max($maxIslandStatementCounter, $islandStatementCounter);
-
-            return '[STARTISLAND:' . $islandStatementCounter++ . ']('.$expression.')';
+            return '[STARTISLAND:' . $startDirectiveCount++ . ':' . $currentNestingLevel++ . ']('.$expression.')';
         });
 
-        $compiler->directive('endisland', function () use (&$islandStatementCounter) {
-            return '[ENDISLAND:' . --$islandStatementCounter . ']';
+        $compiler->directive('endisland', function () use (&$currentNestingLevel) {
+            return '[ENDISLAND:' . --$currentNestingLevel . ']';
         });
 
-        if ($islandStatementCounter !== 1) {
+        if ($currentNestingLevel !== 1) {
             throw new \Exception('Start @island directive found without a matching @endisland directive');
         }
 
         $result = $compiler->compileStatementsMadePublic($this->mutableContents);
 
-        for ($i=$maxIslandStatementCounter; $i >= $islandStatementCounter; $i--) {
-            $result = preg_replace_callback('/(\[STARTISLAND:' . $i . '\])\((.*?)\)(.*?)(\[ENDISLAND:' . $i . '\])/s', function ($matches) use ($i) {
-                $innerContent = $matches[3];
+        for ($i=$maxNestingLevel; $i >= $currentNestingLevel; $i--) {
+            $result = preg_replace_callback('/(\[STARTISLAND:([0-9]+):' . $i . '\])\((.*?)\)(.*?)(\[ENDISLAND:' . $i . '\])/s', function ($matches) use ($i) {
+                $occurrence = $matches[2];
+                $innerContent = $matches[4];
+                $expression = $matches[3];
 
                 if (str_contains($innerContent, '@placeholder')) {
                     $innerContent = str_replace('@placeholder', '<'.'?php if (isset($__placeholder)) { ob_start(); } if (isset($__placeholder)): ?'.'>', $innerContent);
@@ -63,8 +62,9 @@ class IslandCompiler
                 }
 
                 return $this->compileIsland(
-                    occurrence: $i,
-                    expression: $matches[2],
+                    occurrence: $occurrence,
+                    nestingLevel: $i,
+                    expression: $expression,
                     innerContent: $innerContent,
                 );
             }, $result);
@@ -73,7 +73,7 @@ class IslandCompiler
         return $result;
     }
 
-    public function compileIsland(int $occurrence, string $expression, string $innerContent): string
+    public function compileIsland(int $occurrence, int $nestingLevel, string $expression, string $innerContent): string
     {
         // Get the cached path for the extracted island...
         $hash = $this->getPathBasedHash($this->pathSignature);

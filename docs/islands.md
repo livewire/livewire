@@ -152,7 +152,3 @@ Available modes:
 - `replace` (default) - Replace the island's content
 - `append` - Add new content to the end
 - `prepend` - Add new content to the beginning
-
-// @todo:
-// add defer (timeout), lazy intersect
-// always: true

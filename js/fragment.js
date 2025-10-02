@@ -145,7 +145,7 @@ export function findMatchingEndMarkerNode(startMarkerNode, metadata) {
 }
 
 export function extractInnerHtmlFromFragmentHtml(fragmentHtml) {
-    let regex = /<!--\[if FRAGMENT:.*?\]><!\[endif\]-->([\s\S]*?)<!--\[if ENDFRAGMENT:.*?\]><!\[endif\]-->/
+    let regex = /<!--\[if FRAGMENT\b.*?\]><!\[endif\]-->([\s\S]*)<!--\[if ENDFRAGMENT\b.*?\]><!\[endif\]-->/i;
 
     let match = fragmentHtml.match(regex)
 
