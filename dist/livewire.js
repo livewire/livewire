@@ -4096,6 +4096,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     interceptAction(({ action, reject, defer }) => {
       let message = messageBus2.activeMessageMatchingScope(action);
       if (message) {
+        let isAsync = (action2) => action2.origin?.directive?.modifiers.includes("async");
+        let messageIsAsync = Array.from(message?.actions || []).every(isAsync);
+        let actionIsAsync = isAsync(action);
+        if (messageIsAsync || actionIsAsync)
+          return;
         if (action.metadata.type === "poll") {
           return reject();
         }
@@ -4174,6 +4179,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     onResponse({ response }) {
       this.interceptors.forEach((interceptor2) => interceptor2.onResponse({ response }));
     }
+    onStream({ response }) {
+      this.interceptors.forEach((interceptor2) => interceptor2.onStream({ response }));
+    }
     onParsed({ response, responseBody }) {
       this.interceptors.forEach((interceptor2) => interceptor2.onParsed({ response, responseBody }));
     }
@@ -4214,6 +4222,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     onError = () => {
     };
+    onStream = () => {
+    };
     onSuccess = () => {
     };
     onFinish = () => {
@@ -4239,6 +4249,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         onCancel: (callback2) => this.onCancel = callback2,
         onFailure: (callback2) => this.onFailure = callback2,
         onError: (callback2) => this.onError = callback2,
+        onStream: (callback2) => this.onStream = callback2,
         onSuccess: (callback2) => this.onSuccess = callback2,
         onFinish: (callback2) => this.onFinish = callback2,
         cancel: () => {
@@ -4270,6 +4281,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     onError = () => {
     };
+    onStream = () => {
+    };
     onRedirect = () => {
     };
     onDump = () => {
@@ -4289,6 +4302,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         onResponse: (callback2) => this.onResponse = callback2,
         onParsed: (callback2) => this.onParsed = callback2,
         onError: (callback2) => this.onError = callback2,
+        onStream: (callback2) => this.onStream = callback2,
         onRedirect: (callback2) => this.onRedirect = callback2,
         onDump: (callback2) => this.onDump = callback2,
         onSuccess: (callback2) => this.onSuccess = callback2,
@@ -4382,6 +4396,48 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/request/messageBus.js
+  var componentSymbols = /* @__PURE__ */ new WeakMap();
+  var componentIslandSymbols = /* @__PURE__ */ new WeakMap();
+  function scopeSymbolFromMessage(message) {
+    let component = message.component;
+    let hasAllIslands = Array.from(message.actions).every((action) => action.metadata.island);
+    if (hasAllIslands) {
+      let islandName = Array.from(message.actions).map((action) => action.metadata.island.name).sort().join("|");
+      let islandSymbols = componentIslandSymbols.get(component);
+      if (!islandSymbols) {
+        islandSymbols = { [islandName]: Symbol() };
+        componentIslandSymbols.set(component, islandSymbols);
+      }
+      if (!islandSymbols[islandName]) {
+        islandSymbols[islandName] = Symbol();
+      }
+      return islandSymbols[islandName];
+    }
+    if (!componentSymbols.has(component)) {
+      componentSymbols.set(component, Symbol());
+    }
+    return componentSymbols.get(component);
+  }
+  function scopeSymbolFromAction(action) {
+    let component = action.component;
+    let isIsland = !!action.metadata.island;
+    if (isIsland) {
+      let islandName = action.metadata.island.name;
+      let islandSymbols = componentIslandSymbols.get(component);
+      if (!islandSymbols) {
+        islandSymbols = { [islandName]: Symbol() };
+        componentIslandSymbols.add(component, islandSymbols);
+      }
+      if (!islandSymbols[islandName]) {
+        islandSymbols[islandName] = Symbol();
+      }
+      return islandSymbols[islandName];
+    }
+    if (!componentSymbols.has(component)) {
+      componentSymbols.set(component, Symbol());
+    }
+    return componentSymbols.get(component);
+  }
   var MessageBus = class {
     pendingMessages = /* @__PURE__ */ new Set();
     activeMessages = /* @__PURE__ */ new Set();
@@ -4420,22 +4476,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return Array.from(this.activeMessages).find((message) => this.matchesScope(message, action));
     }
     matchesScope(message, action) {
-      let isSameComponent = message.component === action.component;
-      let isIslandMessage = Array.from(message.actions).every((action2) => action2.metadata.island);
-      let isIslandAction = !!action.metadata.island;
-      let isSameIsland = !!isIslandMessage && isIslandAction && Array.from(message.actions).every((action2) => action2.metadata.island.name === action2.metadata.island.name);
-      if (!isSameComponent)
-        return false;
-      if (isIslandMessage && isIslandAction) {
-        return isSameIsland;
-      }
-      if (isIslandMessage && !isIslandAction) {
-        return false;
-      }
-      if (!isIslandMessage && isIslandAction) {
-        return false;
-      }
-      return true;
+      return message.scope === scopeSymbolFromAction(action);
     }
     allScopedMessages(action) {
       return [...Array.from(this.activeMessages), ...Array.from(this.pendingMessages)].filter((message) => {
@@ -4458,6 +4499,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     interceptors = [];
     cancelled = false;
     request = null;
+    _scope = null;
+    get scope() {
+      if (!this._scope) {
+        throw new Error("Message scope has not been set yet");
+      }
+      return this._scope;
+    }
+    set scope(scope2) {
+      this._scope = scope2;
+    }
     constructor(component) {
       this.component = component;
     }
@@ -4534,6 +4585,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }));
       this.rejectActionPromises("Request failed");
       this.onFinish();
+    }
+    onStream({ streamedJson }) {
+      this.interceptors.forEach((interceptor2) => interceptor2.onStream({ streamedJson }));
     }
     onSuccess() {
       this.interceptors.forEach((interceptor2) => {
@@ -4646,20 +4700,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function interceptPartition(callback) {
     partitionInterceptors.push(callback);
   }
-  function interceptMessage(callback) {
+  function interceptMessage2(callback) {
     interceptors2.addMessageInterceptor(callback);
   }
   function interceptRequest(callback) {
     interceptors2.addRequestInterceptor(callback);
   }
-  interceptMessage(({ message, onFinish }) => {
+  interceptMessage2(({ message, onFinish }) => {
     messageBus.addActiveMessage(message);
     onFinish(() => messageBus.removeActiveMessage(message));
   });
   queueMicrotask(() => {
     coordinateNetworkInteractions(messageBus);
   });
-  function fireAction(component, method, params = [], metadata = {}) {
+  function fireAction2(component, method, params = [], metadata = {}) {
     let action = constructAction(component, method, params, metadata);
     let prevented = false;
     actionInterceptors.forEach((callback) => {
@@ -4755,6 +4809,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     requests.forEach((request) => {
+      request.messages.forEach((message) => {
+        message.scope = scopeSymbolFromMessage(message);
+      });
+    });
+    requests.forEach((request) => {
       request.uri = getUpdateUri();
       Object.defineProperty(request, "payload", {
         get() {
@@ -4794,14 +4853,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           request.onResponse({ response });
         },
         stream: async ({ response }) => {
+          request.onStream({ response });
           let finalResponse = "";
           try {
-            finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-              trigger2("stream", streamed);
+            finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamedJson) => {
+              let componentId = streamedJson.id;
+              request.messages.forEach((message) => {
+                if (message.component.id === componentId) {
+                  message.onStream({ streamedJson });
+                }
+              });
+              trigger2("stream", streamedJson);
             });
           } catch (e) {
-            throw e;
             request.abort();
+            throw e;
           }
           return finalResponse;
         },
@@ -5025,7 +5091,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }));
     });
   });
-  interceptMessage(({
+  interceptMessage2(({
     message,
     onCancel,
     onError,
@@ -5384,7 +5450,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     dataSet(component.reactive, property, value);
     if (live) {
       component.queueUpdate(property, value);
-      return fireAction(component, "$set");
+      return fireAction2(component, "$set");
     }
     return Promise.resolve();
   });
@@ -5432,7 +5498,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return await component.$wire[method](...params);
   });
   wireProperty("$island", (component) => async (name, mode2 = null) => {
-    return fireAction(component, "$refresh", [], {
+    return fireAction2(component, "$refresh", [], {
       island: { name, mode: mode2 }
     });
   });
@@ -5450,10 +5516,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     component.addCleanup(unwatch);
   });
   wireProperty("$refresh", (component) => async () => {
-    return fireAction(component, "$refresh");
+    return fireAction2(component, "$refresh");
   });
   wireProperty("$commit", (component) => async () => {
-    return fireAction(component, "$commit");
+    return fireAction2(component, "$commit");
   });
   wireProperty("$on", (component) => (...params) => listen2(component, ...params));
   wireProperty("$hook", (component) => (name, callback) => {
@@ -5500,7 +5566,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return overrides[property](params);
       }
     }
-    return fireAction(component, property, params);
+    return fireAction2(component, property, params);
   });
 
   // js/component.js
@@ -10585,7 +10651,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportMorphDom.js
-  interceptMessage(({ message, onSuccess }) => {
+  interceptMessage2(({ message, onSuccess }) => {
     onSuccess(({ payload, onMorph }) => {
       onMorph(() => {
         let html = payload.effects.html;
@@ -10831,30 +10897,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportStreaming.js
-  on2("stream", (payload) => {
-    let { id, name, el, ref, content, mode: mode2 } = payload;
-    let component = findComponent(id);
-    let targetEl = null;
-    if (name) {
-      replaceEl = component.el.querySelector(`[wire\\:stream.replace="${name}"]`);
-      if (replaceEl) {
-        targetEl = replaceEl;
-        mode2 = "replace";
-      } else {
-        targetEl = component.el.querySelector(`[wire\\:stream="${name}"]`);
+  interceptMessage(({ message, onStream }) => {
+    onStream(({ streamedJson }) => {
+      let { id, type, name, el, ref, content, mode: mode2 } = streamedJson;
+      if (type === "island")
+        return;
+      let component = findComponent(id);
+      let targetEl = null;
+      if (type === "directive") {
+        replaceEl = component.el.querySelector(`[wire\\:stream.replace="${name}"]`);
+        if (replaceEl) {
+          targetEl = replaceEl;
+          mode2 = "replace";
+        } else {
+          targetEl = component.el.querySelector(`[wire\\:stream="${name}"]`);
+        }
+      } else if (type === "ref") {
+        targetEl = findRefEl(component, ref);
+      } else if (type === "element") {
+        targetEl = component.el.querySelector(el);
       }
-    } else if (ref) {
-      targetEl = findRefEl(component, ref);
-    } else if (el) {
-      targetEl = component.el.querySelector(el);
-    }
-    if (!targetEl)
-      return;
-    if (mode2 === "replace") {
-      targetEl.innerHTML = content;
-    } else {
-      targetEl.insertAdjacentHTML("beforeend", content);
-    }
+      if (!targetEl)
+        return;
+      if (mode2 === "replace") {
+        targetEl.innerHTML = content;
+      } else {
+        targetEl.insertAdjacentHTML("beforeend", content);
+      }
+    });
   });
 
   // js/features/supportNavigate.js
@@ -10897,7 +10967,152 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
+  // js/directives/wire-poll.js
+  directive2("poll", ({ el, directive: directive3, component }) => {
+    let interval = extractDurationFrom(directive3.modifiers, 2e3);
+    let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+      triggerComponentRequest(el, directive3, component);
+    }, interval);
+    start3();
+    throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive3));
+    pauseWhile(() => theDirectiveHasVisible(directive3) && theElementIsNotInTheViewport(el));
+    pauseWhile(() => theDirectiveIsOffTheElement(el));
+    pauseWhile(() => livewireIsOffline());
+    stopWhen(() => theElementIsDisconnected(el));
+  });
+  on2("component.init", ({ component }) => {
+    return;
+    let islands = component.islands;
+    if (!islands || Object.keys(islands).length === 0)
+      return;
+    Object.values(islands).forEach((island) => {
+      if (!island.poll)
+        return;
+      let interval = extractDurationFrom([island.poll], 2e3);
+      let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+        fireAction2(component, "$refresh", [], {
+          type: "poll",
+          island: { name: island.name }
+        });
+      }, interval);
+      start3();
+      pauseWhile(() => livewireIsOffline());
+      stopWhen(() => theElementIsDisconnected(component.el));
+    });
+  });
+  function triggerComponentRequest(el, directive3, component) {
+    setNextActionOrigin({ el, directive: directive3 });
+    setNextActionMetadata({ type: "poll" });
+    let fullMethod = directive3.expression ? directive3.expression : "$refresh";
+    evaluateActionExpression(component, el, fullMethod);
+  }
+  function poll(callback, interval = 2e3) {
+    let pauseConditions = [];
+    let throttleConditions = [];
+    let stopConditions = [];
+    return {
+      start() {
+        let clear2 = syncronizedInterval(interval, () => {
+          if (stopConditions.some((i) => i()))
+            return clear2();
+          if (pauseConditions.some((i) => i()))
+            return;
+          if (throttleConditions.some((i) => i()) && Math.random() < 0.95)
+            return;
+          callback();
+        });
+      },
+      pauseWhile(condition) {
+        pauseConditions.push(condition);
+      },
+      throttleWhile(condition) {
+        throttleConditions.push(condition);
+      },
+      stopWhen(condition) {
+        stopConditions.push(condition);
+      }
+    };
+  }
+  var clocks = [];
+  function syncronizedInterval(ms, callback) {
+    if (!clocks[ms]) {
+      let clock = {
+        timer: setInterval(() => clock.callbacks.forEach((i) => i()), ms),
+        callbacks: /* @__PURE__ */ new Set()
+      };
+      clocks[ms] = clock;
+    }
+    clocks[ms].callbacks.add(callback);
+    return () => {
+      clocks[ms].callbacks.delete(callback);
+      if (clocks[ms].callbacks.size === 0) {
+        clearInterval(clocks[ms].timer);
+        delete clocks[ms];
+      }
+    };
+  }
+  var isOffline = false;
+  window.addEventListener("offline", () => isOffline = true);
+  window.addEventListener("online", () => isOffline = false);
+  function livewireIsOffline() {
+    return isOffline;
+  }
+  var inBackground = false;
+  document.addEventListener("visibilitychange", () => {
+    inBackground = document.hidden;
+  }, false);
+  function theTabIsInTheBackground() {
+    return inBackground;
+  }
+  function theDirectiveIsOffTheElement(el) {
+    return !getDirectives(el).has("poll");
+  }
+  function theDirectiveIsMissingKeepAlive(directive3) {
+    return !directive3.modifiers.includes("keep-alive");
+  }
+  function theDirectiveHasVisible(directive3) {
+    return directive3.modifiers.includes("visible");
+  }
+  function theElementIsNotInTheViewport(el) {
+    let bounding = el.getBoundingClientRect();
+    return !(bounding.top < (window.innerHeight || document.documentElement.clientHeight) && bounding.left < (window.innerWidth || document.documentElement.clientWidth) && bounding.bottom > 0 && bounding.right > 0);
+  }
+  function theElementIsDisconnected(el) {
+    return el.isConnected === false;
+  }
+  function extractDurationFrom(modifiers, defaultDuration) {
+    let durationInMilliSeconds;
+    let durationInMilliSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)ms/));
+    let durationInSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)s/));
+    if (durationInMilliSecondsString) {
+      durationInMilliSeconds = Number(durationInMilliSecondsString.replace("ms", ""));
+    } else if (durationInSecondsString) {
+      durationInMilliSeconds = Number(durationInSecondsString.replace("s", "")) * 1e3;
+    }
+    return durationInMilliSeconds || defaultDuration;
+  }
+
   // js/features/supportIslands.js
+  on2("component.init", ({ component }) => {
+    let islands = component.islands;
+    if (!islands || Object.keys(islands).length === 0)
+      return;
+    Object.values(islands).forEach((island) => {
+      let poll2 = island.poll;
+      if (!poll2)
+        return;
+      let interval = extractDurationFrom([island.poll], 2e3);
+      let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll2(() => {
+        fireAction(component, "$refresh", [], {
+          type: "poll",
+          island: { name: island.name }
+        });
+      }, interval);
+      start3();
+      pauseWhile(() => livewireIsOffline());
+      stopWhen(() => theElementIsDisconnected(component.el));
+    });
+  });
   interceptAction(({ action }) => {
     let origin = action.origin;
     if (!origin)
@@ -10934,7 +11149,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
   });
-  interceptMessage(({ message, onSuccess }) => {
+  interceptMessage2(({ message, onSuccess, onStream }) => {
+    onStream(({ streamedJson }) => {
+      let fragment = streamedJson.islandFragment;
+      if (!fragment)
+        return;
+      renderIsland(message.component, fragment);
+    });
     onSuccess(({ payload, onMorph }) => {
       onMorph(() => {
         let fragments = payload.effects.islandFragments || [];
@@ -10971,7 +11192,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportDataLoading.js
-  interceptMessage(({ actions, onSend, onFinish }) => {
+  interceptMessage2(({ actions, onSend, onFinish }) => {
     let undos = [];
     onSend(() => {
       actions.forEach((action) => {
@@ -11098,6 +11319,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let attribute = directive3.rawName.replace("wire:", "x-on:");
     if (directive3.value === "submit" && !directive3.modifiers.includes("prevent")) {
       attribute = attribute + ".prevent";
+    }
+    if (directive3.modifiers.includes("async")) {
+      attribute = attribute.replace(".async", "");
     }
     let cleanupBinding = module_default.bind(el, {
       [attribute](e) {
@@ -11324,14 +11548,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     ];
   }
   function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
-    return on2("commit", ({ component: iComponent, commit: payload, respond }) => {
-      if (iComponent !== component)
+    interceptMessage2(({ message, onSend, onFinish }) => {
+      if (component !== message.component)
         return;
-      if (targets.length > 0 && containsTargets(payload, targets) === inverted)
-        return;
-      startLoading();
-      respond(() => {
-        endLoading();
+      let matches2 = true;
+      onSend(({ payload }) => {
+        if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
+          matches2 = false;
+        }
+        matches2 && startLoading();
+      });
+      onFinish(() => {
+        matches2 && endLoading();
       });
     });
   }
@@ -11579,130 +11807,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     evaluateActionExpression(component, el, fullMethod);
   });
 
-  // js/directives/wire-poll.js
-  directive2("poll", ({ el, directive: directive3, component }) => {
-    let interval = extractDurationFrom(directive3.modifiers, 2e3);
-    let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-      triggerComponentRequest(el, directive3, component);
-    }, interval);
-    start3();
-    throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive3));
-    pauseWhile(() => theDirectiveHasVisible(directive3) && theElementIsNotInTheViewport(el));
-    pauseWhile(() => theDirectiveIsOffTheElement(el));
-    pauseWhile(() => livewireIsOffline());
-    stopWhen(() => theElementIsDisconnected(el));
-  });
-  on2("component.init", ({ component }) => {
-    let islands = component.islands;
-    if (!islands || Object.keys(islands).length === 0)
-      return;
-    Object.values(islands).forEach((island) => {
-      if (!island.poll)
-        return;
-      let interval = extractDurationFrom([island.poll], 2e3);
-      let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-        fireAction(component, "$refresh", [], {
-          type: "poll",
-          island: { name: island.name }
-        });
-      }, interval);
-      start3();
-      pauseWhile(() => livewireIsOffline());
-      stopWhen(() => theElementIsDisconnected(component.el));
-    });
-  });
-  function triggerComponentRequest(el, directive3, component) {
-    setNextActionOrigin({ el, directive: directive3 });
-    setNextActionMetadata({ type: "poll" });
-    let fullMethod = directive3.expression ? directive3.expression : "$refresh";
-    evaluateActionExpression(component, el, fullMethod);
-  }
-  function poll(callback, interval = 2e3) {
-    let pauseConditions = [];
-    let throttleConditions = [];
-    let stopConditions = [];
-    return {
-      start() {
-        let clear2 = syncronizedInterval(interval, () => {
-          if (stopConditions.some((i) => i()))
-            return clear2();
-          if (pauseConditions.some((i) => i()))
-            return;
-          if (throttleConditions.some((i) => i()) && Math.random() < 0.95)
-            return;
-          callback();
-        });
-      },
-      pauseWhile(condition) {
-        pauseConditions.push(condition);
-      },
-      throttleWhile(condition) {
-        throttleConditions.push(condition);
-      },
-      stopWhen(condition) {
-        stopConditions.push(condition);
-      }
-    };
-  }
-  var clocks = [];
-  function syncronizedInterval(ms, callback) {
-    if (!clocks[ms]) {
-      let clock = {
-        timer: setInterval(() => clock.callbacks.forEach((i) => i()), ms),
-        callbacks: /* @__PURE__ */ new Set()
-      };
-      clocks[ms] = clock;
-    }
-    clocks[ms].callbacks.add(callback);
-    return () => {
-      clocks[ms].callbacks.delete(callback);
-      if (clocks[ms].callbacks.size === 0) {
-        clearInterval(clocks[ms].timer);
-        delete clocks[ms];
-      }
-    };
-  }
-  var isOffline = false;
-  window.addEventListener("offline", () => isOffline = true);
-  window.addEventListener("online", () => isOffline = false);
-  function livewireIsOffline() {
-    return isOffline;
-  }
-  var inBackground = false;
-  document.addEventListener("visibilitychange", () => {
-    inBackground = document.hidden;
-  }, false);
-  function theTabIsInTheBackground() {
-    return inBackground;
-  }
-  function theDirectiveIsOffTheElement(el) {
-    return !getDirectives(el).has("poll");
-  }
-  function theDirectiveIsMissingKeepAlive(directive3) {
-    return !directive3.modifiers.includes("keep-alive");
-  }
-  function theDirectiveHasVisible(directive3) {
-    return directive3.modifiers.includes("visible");
-  }
-  function theElementIsNotInTheViewport(el) {
-    let bounding = el.getBoundingClientRect();
-    return !(bounding.top < (window.innerHeight || document.documentElement.clientHeight) && bounding.left < (window.innerWidth || document.documentElement.clientWidth) && bounding.bottom > 0 && bounding.right > 0);
-  }
-  function theElementIsDisconnected(el) {
-    return el.isConnected === false;
-  }
-  function extractDurationFrom(modifiers, defaultDuration) {
-    let durationInMilliSeconds;
-    let durationInMilliSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)ms/));
-    let durationInSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)s/));
-    if (durationInMilliSecondsString) {
-      durationInMilliSeconds = Number(durationInMilliSecondsString.replace("ms", ""));
-    } else if (durationInSecondsString) {
-      durationInMilliSeconds = Number(durationInSecondsString.replace("s", "")) * 1e3;
-    }
-    return durationInMilliSeconds || defaultDuration;
-  }
-
   // js/directives/wire-show.js
   module_default.interceptInit((el) => {
     for (let i = 0; i < el.attributes.length; i++) {
@@ -11739,9 +11843,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var Livewire2 = {
     directive: directive2,
     dispatchTo,
-    interceptMessage: (callback) => interceptMessage(callback),
+    interceptMessage: (callback) => interceptMessage2(callback),
     interceptRequest: (callback) => interceptRequest(callback),
-    fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),
+    fireAction: (component, method, params = [], metadata = {}) => fireAction2(component, method, params, metadata),
     start: start2,
     first,
     find,

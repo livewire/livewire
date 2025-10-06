@@ -12,8 +12,19 @@ class SupportStreaming extends ComponentHook
     {
         static::ensureStreamResponseStarted();
 
+        $hasName = $name !== null;
+        $hasEl = $el !== null;
+        $hasRef = $ref !== null;
+
+        $type = match (true) {
+            $hasName => 'directive',
+            $hasEl => 'element',
+            $hasRef => 'ref',
+        };
+
         static::streamContent([
             'id' => $this->component->getId(),
+            'type' => $type,
             'content' => $content,
             'mode' => $replace ? 'replace' : 'default',
             'name' => $name,

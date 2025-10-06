@@ -5,6 +5,7 @@ export class MessageInterceptor {
     onCancel = () => {}
     onFailure = () => {}
     onError = () => {}
+    onStream = () => {}
     onSuccess = () => {}
     onFinish = () => {}
     onSync = () => {}
@@ -28,6 +29,7 @@ export class MessageInterceptor {
             onCancel: (callback) => this.onCancel = callback,
             onFailure: (callback) => this.onFailure = callback,
             onError: (callback) => this.onError = callback,
+            onStream: (callback) => this.onStream = callback,
             onSuccess: (callback) => this.onSuccess = callback,
             onFinish: (callback) => this.onFinish = callback,
             cancel: () => {
@@ -56,6 +58,7 @@ export class RequestInterceptor {
     onResponse = () => {}
     onParsed = () => {}
     onError = () => {}
+    onStream = () => {}
     onRedirect = () => {}
     onDump = () => {}
     onSuccess = () => {}
@@ -77,6 +80,7 @@ export class RequestInterceptor {
             onResponse: (callback) => this.onResponse = callback,
             onParsed: (callback) => this.onParsed = callback,
             onError: (callback) => this.onError = callback,
+            onStream: (callback) => this.onStream = callback,
             onRedirect: (callback) => this.onRedirect = callback,
             onDump: (callback) => this.onDump = callback,
             onSuccess: (callback) => this.onSuccess = callback,

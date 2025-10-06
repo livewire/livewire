@@ -1,6 +1,34 @@
 import { closestFragment, extractFragmentMetadataFromHtml, extractInnerHtmlFromFragmentHtml, findFragment } from '@/fragment'
+import { extractDurationFrom, livewireIsOffline, theElementIsDisconnected } from '@/directives/wire-poll'
 import { interceptAction, interceptMessage } from '@/request'
 import { morphFragment } from '@/morph'
+import { on } from '@/hooks'
+
+on('component.init', ({ component }) => {
+    let islands = component.islands
+
+    if (! islands || Object.keys(islands).length === 0) return
+
+    Object.values(islands).forEach(island => {
+        let poll = island.poll
+
+        if (! poll) return
+
+        let interval = extractDurationFrom([island.poll], 2000)
+
+        let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+            fireAction(component, '$refresh', [], {
+                type: 'poll',
+                island: { name: island.name },
+            })
+        }, interval)
+
+        start()
+
+        pauseWhile(() => livewireIsOffline())
+        stopWhen(() => theElementIsDisconnected(component.el))
+    })
+})
 
 interceptAction(({ action }) => {
     let origin = action.origin
@@ -47,7 +75,15 @@ interceptAction(({ action }) => {
     })
 })
 
-interceptMessage(({ message, onSuccess }) => {
+interceptMessage(({ message, onSuccess, onStream }) => {
+    onStream(({ streamedJson }) => {
+        let fragment = streamedJson.islandFragment
+
+        if (! fragment) return
+
+        renderIsland(message.component, fragment)
+    })
+
     onSuccess(({ payload, onMorph }) => {
         onMorph(() => {
             let fragments = payload.effects.islandFragments || []

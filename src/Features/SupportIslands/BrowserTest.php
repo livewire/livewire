@@ -7,7 +7,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends BrowserTestCase
 {
-    public function test_render_island_directives()
+    public function test_island_directive()
     {
         Livewire::visit([new class extends \Livewire\Component {
             public $count = 0;
@@ -40,6 +40,50 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_sibling_islands()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island
+                        <button type="button" wire:click="increment" dusk="island-increment">Count: {{ $count }}</button>
+                    @endisland
+
+                    @island
+                        <button type="button" wire:click="increment" dusk="sibling-increment">Count: {{ $count }}</button>
+                    @endisland
+
+                    <button type="button" wire:click="increment" dusk="root-increment">Root count: {{ $count }}</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-increment', 'Count: 0')
+            ->assertSeeIn('@sibling-increment', 'Count: 0')
+            ->assertSeeIn('@root-increment', 'Root count: 0')
+            ->waitForLivewire()->click('@island-increment')
+            ->assertSeeIn('@island-increment', 'Count: 1')
+            ->assertSeeIn('@sibling-increment', 'Count: 0')
+            ->assertSeeIn('@root-increment', 'Root count: 0')
+            ->waitForLivewire()->click('@sibling-increment')
+            ->assertSeeIn('@island-increment', 'Count: 1')
+            ->assertSeeIn('@sibling-increment', 'Count: 2')
+            ->assertSeeIn('@root-increment', 'Root count: 0')
+            ->waitForLivewire()->click('@root-increment')
+            ->assertSeeIn('@island-increment', 'Count: 1')
+            ->assertSeeIn('@sibling-increment', 'Count: 2')
+            ->assertSeeIn('@root-increment', 'Root count: 3')
+            ;
+    }
+
     public function test_render_nested_islands()
     {
         Livewire::visit([new class extends \Livewire\Component {
@@ -53,8 +97,6 @@ class BrowserTest extends BrowserTestCase
             public function render() {
                 return <<<'HTML'
                 <div>
-                    @island(view: 'pages::islands')
-
                     @island
                         <button type="button" wire:click="increment" dusk="island-increment">Count: {{ $count }}</button>
 
@@ -116,6 +158,53 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@root-increment')
             ->assertSeeIn('@island-increment', 'Count: 2')
             ->assertSeeIn('@root-increment', 'Root count: 2')
+            ;
+    }
+
+    public function test_skip_render_island()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo', skip: true)
+                        @placeholder
+                            <p dusk="island-placeholder">Loading...</p>
+                        @endplaceholder
+
+                        <button type="button" wire:click="increment" dusk="island-increment">Count: {{ $count }}</button>
+                    @endisland
+
+                    <button type="button" wire:click="increment" wire:island="foo" dusk="foo-increment">Root count: {{ $count }}</button>
+
+                    <button type="button" wire:click="increment" dusk="root-increment">Root count: {{ $count }}</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertNotPresent('@island-increment')
+            ->assertPresent('@island-placeholder')
+            ->assertSeeIn('@foo-increment', 'Root count: 0')
+            ->assertSeeIn('@root-increment', 'Root count: 0')
+            ->waitForLivewire()->click('@foo-increment')
+            ->assertSeeIn('@island-increment', 'Count: 1')
+            ->assertSeeIn('@foo-increment', 'Root count: 0')
+            ->assertSeeIn('@root-increment', 'Root count: 0')
+            ->waitForLivewire()->click('@island-increment')
+            ->assertSeeIn('@island-increment', 'Count: 2')
+            ->assertSeeIn('@foo-increment', 'Root count: 0')
+            ->assertSeeIn('@root-increment', 'Root count: 0')
+            ->waitForLivewire()->click('@root-increment')
+            ->assertSeeIn('@island-increment', 'Count: 2')
+            ->assertSeeIn('@foo-increment', 'Root count: 3')
+            ->assertSeeIn('@root-increment', 'Root count: 3')
             ;
     }
 
@@ -311,6 +400,76 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_render_island_method()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+
+                $this->renderIsland('foo');
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo')
+                        <button type="button" wire:click="increment" dusk="island-increment">Count: {{ $count }}</button>
+                    @endisland
+
+                    <button type="button" wire:click="increment" dusk="root-increment">Root count: {{ $count }}</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-increment', 'Count: 0')
+            ->assertSeeIn('@root-increment', 'Root count: 0')
+            ->waitForLivewire()->click('@island-increment')
+            ->assertSeeIn('@island-increment', 'Count: 1')
+            ->assertSeeIn('@root-increment', 'Root count: 0')
+            ->waitForLivewire()->click('@root-increment')
+            ->assertSeeIn('@island-increment', 'Count: 2')
+            ->assertSeeIn('@root-increment', 'Root count: 2')
+            ;
+    }
+
+    public function test_stream_island_method()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+
+                $this->streamIsland('foo');
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo')
+                        <button type="button" wire:click="increment" dusk="island-increment">Count: {{ $count }}</button>
+                    @endisland
+
+                    <button type="button" wire:click="increment" dusk="root-increment">Root count: {{ $count }}</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-increment', 'Count: 0')
+            ->assertSeeIn('@root-increment', 'Root count: 0')
+            ->waitForLivewire()->click('@island-increment')
+            ->assertSeeIn('@island-increment', 'Count: 1')
+            ->assertSeeIn('@root-increment', 'Root count: 0')
+            ->waitForLivewire()->click('@root-increment')
+            ->assertSeeIn('@island-increment', 'Count: 2')
+            ->assertSeeIn('@root-increment', 'Root count: 2')
+            ;
+    }
+
     public function test_append_and_prepend_islands()
     {
         Livewire::visit([new class extends \Livewire\Component {
@@ -346,6 +505,43 @@ class BrowserTest extends BrowserTestCase
             ->assertSourceHas('<div>Count: 4</div><div>Count: 2</div><div>Count: 1</div><div>Count: 3</div>')
             ->waitForLivewire()->click('@foo-append-increment')
             ->assertSourceHas('<div>Count: 4</div><div>Count: 2</div><div>Count: 1</div><div>Count: 3</div><div>Count: 5</div>')
+            ;
+    }
+
+    public function test_streams_append_into_island_over_time()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public function send()
+            {
+                $this->streamIsland('foo', 'Hi, how are you?', mode: 'append');
+                usleep(250000);
+                $this->streamIsland('foo', ' I hope things are going well.', mode: 'append');
+                usleep(250000);
+                $this->streamIsland('foo', ' I just wanted to check in.', mode: 'append');
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div dusk="foo-island">
+                        @island(name: 'foo')@endisland
+                    </div>
+
+                    <button type="button" wire:click="send" dusk="send">Send</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertPresent('@send')
+            ->assertPresent('@foo-island')
+            ->assertDontSee('Hi, how are you?')
+            ->click('@send')
+            ->waitForText('Hi, how are you?')
+            ->assertSeeIn('@foo-island', 'Hi, how are you?')
+            ->waitForText('I hope things are going well.')
+            ->assertSeeIn('@foo-island', 'Hi, how are you? I hope things are going well.')
+            ->waitForText('I just wanted to check in.')
+            ->assertSeeIn('@foo-island', 'Hi, how are you? I hope things are going well. I just wanted to check in.')
             ;
     }
 }

@@ -8682,6 +8682,11 @@ function coordinateNetworkInteractions(messageBus2) {
   interceptAction(({ action, reject, defer }) => {
     let message = messageBus2.activeMessageMatchingScope(action);
     if (message) {
+      let isAsync = (action2) => action2.origin?.directive?.modifiers.includes("async");
+      let messageIsAsync = Array.from(message?.actions || []).every(isAsync);
+      let actionIsAsync = isAsync(action);
+      if (messageIsAsync || actionIsAsync)
+        return;
       if (action.metadata.type === "poll") {
         return reject();
       }
@@ -8760,6 +8765,9 @@ var MessageRequest = class {
   onResponse({ response }) {
     this.interceptors.forEach((interceptor) => interceptor.onResponse({ response }));
   }
+  onStream({ response }) {
+    this.interceptors.forEach((interceptor) => interceptor.onStream({ response }));
+  }
   onParsed({ response, responseBody }) {
     this.interceptors.forEach((interceptor) => interceptor.onParsed({ response, responseBody }));
   }
@@ -8800,6 +8808,8 @@ var MessageInterceptor = class {
   };
   onError = () => {
   };
+  onStream = () => {
+  };
   onSuccess = () => {
   };
   onFinish = () => {
@@ -8825,6 +8835,7 @@ var MessageInterceptor = class {
       onCancel: (callback2) => this.onCancel = callback2,
       onFailure: (callback2) => this.onFailure = callback2,
       onError: (callback2) => this.onError = callback2,
+      onStream: (callback2) => this.onStream = callback2,
       onSuccess: (callback2) => this.onSuccess = callback2,
       onFinish: (callback2) => this.onFinish = callback2,
       cancel: () => {
@@ -8856,6 +8867,8 @@ var RequestInterceptor = class {
   };
   onError = () => {
   };
+  onStream = () => {
+  };
   onRedirect = () => {
   };
   onDump = () => {
@@ -8875,6 +8888,7 @@ var RequestInterceptor = class {
       onResponse: (callback2) => this.onResponse = callback2,
       onParsed: (callback2) => this.onParsed = callback2,
       onError: (callback2) => this.onError = callback2,
+      onStream: (callback2) => this.onStream = callback2,
       onRedirect: (callback2) => this.onRedirect = callback2,
       onDump: (callback2) => this.onDump = callback2,
       onSuccess: (callback2) => this.onSuccess = callback2,
@@ -8968,6 +8982,48 @@ function cleanupModal(modal) {
 }
 
 // js/request/messageBus.js
+var componentSymbols = /* @__PURE__ */ new WeakMap();
+var componentIslandSymbols = /* @__PURE__ */ new WeakMap();
+function scopeSymbolFromMessage(message) {
+  let component = message.component;
+  let hasAllIslands = Array.from(message.actions).every((action) => action.metadata.island);
+  if (hasAllIslands) {
+    let islandName = Array.from(message.actions).map((action) => action.metadata.island.name).sort().join("|");
+    let islandSymbols = componentIslandSymbols.get(component);
+    if (!islandSymbols) {
+      islandSymbols = { [islandName]: Symbol() };
+      componentIslandSymbols.set(component, islandSymbols);
+    }
+    if (!islandSymbols[islandName]) {
+      islandSymbols[islandName] = Symbol();
+    }
+    return islandSymbols[islandName];
+  }
+  if (!componentSymbols.has(component)) {
+    componentSymbols.set(component, Symbol());
+  }
+  return componentSymbols.get(component);
+}
+function scopeSymbolFromAction(action) {
+  let component = action.component;
+  let isIsland = !!action.metadata.island;
+  if (isIsland) {
+    let islandName = action.metadata.island.name;
+    let islandSymbols = componentIslandSymbols.get(component);
+    if (!islandSymbols) {
+      islandSymbols = { [islandName]: Symbol() };
+      componentIslandSymbols.add(component, islandSymbols);
+    }
+    if (!islandSymbols[islandName]) {
+      islandSymbols[islandName] = Symbol();
+    }
+    return islandSymbols[islandName];
+  }
+  if (!componentSymbols.has(component)) {
+    componentSymbols.set(component, Symbol());
+  }
+  return componentSymbols.get(component);
+}
 var MessageBus = class {
   pendingMessages = /* @__PURE__ */ new Set();
   activeMessages = /* @__PURE__ */ new Set();
@@ -9006,22 +9062,7 @@ var MessageBus = class {
     return Array.from(this.activeMessages).find((message) => this.matchesScope(message, action));
   }
   matchesScope(message, action) {
-    let isSameComponent = message.component === action.component;
-    let isIslandMessage = Array.from(message.actions).every((action2) => action2.metadata.island);
-    let isIslandAction = !!action.metadata.island;
-    let isSameIsland = !!isIslandMessage && isIslandAction && Array.from(message.actions).every((action2) => action2.metadata.island.name === action2.metadata.island.name);
-    if (!isSameComponent)
-      return false;
-    if (isIslandMessage && isIslandAction) {
-      return isSameIsland;
-    }
-    if (isIslandMessage && !isIslandAction) {
-      return false;
-    }
-    if (!isIslandMessage && isIslandAction) {
-      return false;
-    }
-    return true;
+    return message.scope === scopeSymbolFromAction(action);
   }
   allScopedMessages(action) {
     return [...Array.from(this.activeMessages), ...Array.from(this.pendingMessages)].filter((message) => {
@@ -9044,6 +9085,16 @@ var Message = class {
   interceptors = [];
   cancelled = false;
   request = null;
+  _scope = null;
+  get scope() {
+    if (!this._scope) {
+      throw new Error("Message scope has not been set yet");
+    }
+    return this._scope;
+  }
+  set scope(scope) {
+    this._scope = scope;
+  }
   constructor(component) {
     this.component = component;
   }
@@ -9120,6 +9171,9 @@ var Message = class {
     }));
     this.rejectActionPromises("Request failed");
     this.onFinish();
+  }
+  onStream({ streamedJson }) {
+    this.interceptors.forEach((interceptor) => interceptor.onStream({ streamedJson }));
   }
   onSuccess() {
     this.interceptors.forEach((interceptor) => {
@@ -9232,20 +9286,20 @@ function interceptAction(callback) {
 function interceptPartition(callback) {
   partitionInterceptors.push(callback);
 }
-function interceptMessage(callback) {
+function interceptMessage2(callback) {
   interceptors.addMessageInterceptor(callback);
 }
 function interceptRequest(callback) {
   interceptors.addRequestInterceptor(callback);
 }
-interceptMessage(({ message, onFinish }) => {
+interceptMessage2(({ message, onFinish }) => {
   messageBus.addActiveMessage(message);
   onFinish(() => messageBus.removeActiveMessage(message));
 });
 queueMicrotask(() => {
   coordinateNetworkInteractions(messageBus);
 });
-function fireAction(component, method, params = [], metadata = {}) {
+function fireAction2(component, method, params = [], metadata = {}) {
   let action = constructAction(component, method, params, metadata);
   let prevented = false;
   actionInterceptors.forEach((callback) => {
@@ -9341,6 +9395,11 @@ function sendMessages() {
     });
   });
   requests.forEach((request) => {
+    request.messages.forEach((message) => {
+      message.scope = scopeSymbolFromMessage(message);
+    });
+  });
+  requests.forEach((request) => {
     request.uri = getUpdateUri();
     Object.defineProperty(request, "payload", {
       get() {
@@ -9380,14 +9439,21 @@ function sendMessages() {
         request.onResponse({ response });
       },
       stream: async ({ response }) => {
+        request.onStream({ response });
         let finalResponse = "";
         try {
-          finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-            trigger("stream", streamed);
+          finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamedJson) => {
+            let componentId = streamedJson.id;
+            request.messages.forEach((message) => {
+              if (message.component.id === componentId) {
+                message.onStream({ streamedJson });
+              }
+            });
+            trigger("stream", streamedJson);
           });
         } catch (e) {
-          throw e;
           request.abort();
+          throw e;
         }
         return finalResponse;
       },
@@ -9611,7 +9677,7 @@ interceptRequest(({
     }));
   });
 });
-interceptMessage(({
+interceptMessage2(({
   message,
   onCancel,
   onError,
@@ -9970,7 +10036,7 @@ wireProperty("$set", (component) => async (property, value, live = true) => {
   dataSet(component.reactive, property, value);
   if (live) {
     component.queueUpdate(property, value);
-    return fireAction(component, "$set");
+    return fireAction2(component, "$set");
   }
   return Promise.resolve();
 });
@@ -10018,7 +10084,7 @@ wireProperty("$call", (component) => async (method, ...params) => {
   return await component.$wire[method](...params);
 });
 wireProperty("$island", (component) => async (name, mode2 = null) => {
-  return fireAction(component, "$refresh", [], {
+  return fireAction2(component, "$refresh", [], {
     island: { name, mode: mode2 }
   });
 });
@@ -10036,10 +10102,10 @@ wireProperty("$watch", (component) => (path, callback) => {
   component.addCleanup(unwatch);
 });
 wireProperty("$refresh", (component) => async () => {
-  return fireAction(component, "$refresh");
+  return fireAction2(component, "$refresh");
 });
 wireProperty("$commit", (component) => async () => {
-  return fireAction(component, "$commit");
+  return fireAction2(component, "$commit");
 });
 wireProperty("$on", (component) => (...params) => listen2(component, ...params));
 wireProperty("$hook", (component) => (name, callback) => {
@@ -10086,7 +10152,7 @@ wireFallback((component) => (property) => async (...params) => {
       return overrides[property](params);
     }
   }
-  return fireAction(component, property, params);
+  return fireAction2(component, property, params);
 });
 
 // js/component.js
@@ -12251,7 +12317,7 @@ on("effect", ({ component, effects }) => {
 });
 
 // js/features/supportMorphDom.js
-interceptMessage(({ message, onSuccess }) => {
+interceptMessage2(({ message, onSuccess }) => {
   onSuccess(({ payload, onMorph }) => {
     onMorph(() => {
       let html = payload.effects.html;
@@ -12499,30 +12565,34 @@ on("effect", ({ component, effects }) => {
 });
 
 // js/features/supportStreaming.js
-on("stream", (payload) => {
-  let { id, name, el, ref, content, mode: mode2 } = payload;
-  let component = findComponent(id);
-  let targetEl = null;
-  if (name) {
-    replaceEl = component.el.querySelector(`[wire\\:stream.replace="${name}"]`);
-    if (replaceEl) {
-      targetEl = replaceEl;
-      mode2 = "replace";
-    } else {
-      targetEl = component.el.querySelector(`[wire\\:stream="${name}"]`);
+interceptMessage(({ message, onStream }) => {
+  onStream(({ streamedJson }) => {
+    let { id, type, name, el, ref, content, mode: mode2 } = streamedJson;
+    if (type === "island")
+      return;
+    let component = findComponent(id);
+    let targetEl = null;
+    if (type === "directive") {
+      replaceEl = component.el.querySelector(`[wire\\:stream.replace="${name}"]`);
+      if (replaceEl) {
+        targetEl = replaceEl;
+        mode2 = "replace";
+      } else {
+        targetEl = component.el.querySelector(`[wire\\:stream="${name}"]`);
+      }
+    } else if (type === "ref") {
+      targetEl = findRefEl(component, ref);
+    } else if (type === "element") {
+      targetEl = component.el.querySelector(el);
     }
-  } else if (ref) {
-    targetEl = findRefEl(component, ref);
-  } else if (el) {
-    targetEl = component.el.querySelector(el);
-  }
-  if (!targetEl)
-    return;
-  if (mode2 === "replace") {
-    targetEl.innerHTML = content;
-  } else {
-    targetEl.insertAdjacentHTML("beforeend", content);
-  }
+    if (!targetEl)
+      return;
+    if (mode2 === "replace") {
+      targetEl.innerHTML = content;
+    } else {
+      targetEl.insertAdjacentHTML("beforeend", content);
+    }
+  });
 });
 
 // js/features/supportNavigate.js
@@ -12565,7 +12635,152 @@ on("effect", ({ effects }) => {
   });
 });
 
+// js/directives/wire-poll.js
+directive("poll", ({ el, directive: directive2, component }) => {
+  let interval = extractDurationFrom(directive2.modifiers, 2e3);
+  let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+    triggerComponentRequest(el, directive2, component);
+  }, interval);
+  start2();
+  throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive2));
+  pauseWhile(() => theDirectiveHasVisible(directive2) && theElementIsNotInTheViewport(el));
+  pauseWhile(() => theDirectiveIsOffTheElement(el));
+  pauseWhile(() => livewireIsOffline());
+  stopWhen(() => theElementIsDisconnected(el));
+});
+on("component.init", ({ component }) => {
+  return;
+  let islands = component.islands;
+  if (!islands || Object.keys(islands).length === 0)
+    return;
+  Object.values(islands).forEach((island) => {
+    if (!island.poll)
+      return;
+    let interval = extractDurationFrom([island.poll], 2e3);
+    let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+      fireAction2(component, "$refresh", [], {
+        type: "poll",
+        island: { name: island.name }
+      });
+    }, interval);
+    start2();
+    pauseWhile(() => livewireIsOffline());
+    stopWhen(() => theElementIsDisconnected(component.el));
+  });
+});
+function triggerComponentRequest(el, directive2, component) {
+  setNextActionOrigin({ el, directive: directive2 });
+  setNextActionMetadata({ type: "poll" });
+  let fullMethod = directive2.expression ? directive2.expression : "$refresh";
+  evaluateActionExpression(component, el, fullMethod);
+}
+function poll(callback, interval = 2e3) {
+  let pauseConditions = [];
+  let throttleConditions = [];
+  let stopConditions = [];
+  return {
+    start() {
+      let clear = syncronizedInterval(interval, () => {
+        if (stopConditions.some((i) => i()))
+          return clear();
+        if (pauseConditions.some((i) => i()))
+          return;
+        if (throttleConditions.some((i) => i()) && Math.random() < 0.95)
+          return;
+        callback();
+      });
+    },
+    pauseWhile(condition) {
+      pauseConditions.push(condition);
+    },
+    throttleWhile(condition) {
+      throttleConditions.push(condition);
+    },
+    stopWhen(condition) {
+      stopConditions.push(condition);
+    }
+  };
+}
+var clocks = [];
+function syncronizedInterval(ms, callback) {
+  if (!clocks[ms]) {
+    let clock = {
+      timer: setInterval(() => clock.callbacks.forEach((i) => i()), ms),
+      callbacks: /* @__PURE__ */ new Set()
+    };
+    clocks[ms] = clock;
+  }
+  clocks[ms].callbacks.add(callback);
+  return () => {
+    clocks[ms].callbacks.delete(callback);
+    if (clocks[ms].callbacks.size === 0) {
+      clearInterval(clocks[ms].timer);
+      delete clocks[ms];
+    }
+  };
+}
+var isOffline = false;
+window.addEventListener("offline", () => isOffline = true);
+window.addEventListener("online", () => isOffline = false);
+function livewireIsOffline() {
+  return isOffline;
+}
+var inBackground = false;
+document.addEventListener("visibilitychange", () => {
+  inBackground = document.hidden;
+}, false);
+function theTabIsInTheBackground() {
+  return inBackground;
+}
+function theDirectiveIsOffTheElement(el) {
+  return !getDirectives(el).has("poll");
+}
+function theDirectiveIsMissingKeepAlive(directive2) {
+  return !directive2.modifiers.includes("keep-alive");
+}
+function theDirectiveHasVisible(directive2) {
+  return directive2.modifiers.includes("visible");
+}
+function theElementIsNotInTheViewport(el) {
+  let bounding = el.getBoundingClientRect();
+  return !(bounding.top < (window.innerHeight || document.documentElement.clientHeight) && bounding.left < (window.innerWidth || document.documentElement.clientWidth) && bounding.bottom > 0 && bounding.right > 0);
+}
+function theElementIsDisconnected(el) {
+  return el.isConnected === false;
+}
+function extractDurationFrom(modifiers, defaultDuration) {
+  let durationInMilliSeconds;
+  let durationInMilliSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)ms/));
+  let durationInSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)s/));
+  if (durationInMilliSecondsString) {
+    durationInMilliSeconds = Number(durationInMilliSecondsString.replace("ms", ""));
+  } else if (durationInSecondsString) {
+    durationInMilliSeconds = Number(durationInSecondsString.replace("s", "")) * 1e3;
+  }
+  return durationInMilliSeconds || defaultDuration;
+}
+
 // js/features/supportIslands.js
+on("component.init", ({ component }) => {
+  let islands = component.islands;
+  if (!islands || Object.keys(islands).length === 0)
+    return;
+  Object.values(islands).forEach((island) => {
+    let poll2 = island.poll;
+    if (!poll2)
+      return;
+    let interval = extractDurationFrom([island.poll], 2e3);
+    let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll2(() => {
+      fireAction(component, "$refresh", [], {
+        type: "poll",
+        island: { name: island.name }
+      });
+    }, interval);
+    start2();
+    pauseWhile(() => livewireIsOffline());
+    stopWhen(() => theElementIsDisconnected(component.el));
+  });
+});
 interceptAction(({ action }) => {
   let origin = action.origin;
   if (!origin)
@@ -12602,7 +12817,13 @@ interceptAction(({ action }) => {
     }
   });
 });
-interceptMessage(({ message, onSuccess }) => {
+interceptMessage2(({ message, onSuccess, onStream }) => {
+  onStream(({ streamedJson }) => {
+    let fragment = streamedJson.islandFragment;
+    if (!fragment)
+      return;
+    renderIsland(message.component, fragment);
+  });
   onSuccess(({ payload, onMorph }) => {
     onMorph(() => {
       let fragments = payload.effects.islandFragments || [];
@@ -12639,7 +12860,7 @@ function renderIsland(component, islandHtml) {
 }
 
 // js/features/supportDataLoading.js
-interceptMessage(({ actions, onSend, onFinish }) => {
+interceptMessage2(({ actions, onSend, onFinish }) => {
   let undos = [];
   onSend(() => {
     actions.forEach((action) => {
@@ -12769,6 +12990,9 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   let attribute = directive2.rawName.replace("wire:", "x-on:");
   if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
     attribute = attribute + ".prevent";
+  }
+  if (directive2.modifiers.includes("async")) {
+    attribute = attribute.replace(".async", "");
   }
   let cleanupBinding = import_alpinejs14.default.bind(el, {
     [attribute](e) {
@@ -12997,14 +13221,18 @@ function applyDelay(directive2) {
   ];
 }
 function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
-  return on("commit", ({ component: iComponent, commit: payload, respond }) => {
-    if (iComponent !== component)
+  interceptMessage2(({ message, onSend, onFinish }) => {
+    if (component !== message.component)
       return;
-    if (targets.length > 0 && containsTargets(payload, targets) === inverted)
-      return;
-    startLoading();
-    respond(() => {
-      endLoading();
+    let matches = true;
+    onSend(({ payload }) => {
+      if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
+        matches = false;
+      }
+      matches && startLoading();
+    });
+    onFinish(() => {
+      matches && endLoading();
     });
   });
 }
@@ -13254,130 +13482,6 @@ directive("init", ({ component, el, directive: directive2 }) => {
   evaluateActionExpression(component, el, fullMethod);
 });
 
-// js/directives/wire-poll.js
-directive("poll", ({ el, directive: directive2, component }) => {
-  let interval = extractDurationFrom(directive2.modifiers, 2e3);
-  let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-    triggerComponentRequest(el, directive2, component);
-  }, interval);
-  start2();
-  throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive2));
-  pauseWhile(() => theDirectiveHasVisible(directive2) && theElementIsNotInTheViewport(el));
-  pauseWhile(() => theDirectiveIsOffTheElement(el));
-  pauseWhile(() => livewireIsOffline());
-  stopWhen(() => theElementIsDisconnected(el));
-});
-on("component.init", ({ component }) => {
-  let islands = component.islands;
-  if (!islands || Object.keys(islands).length === 0)
-    return;
-  Object.values(islands).forEach((island) => {
-    if (!island.poll)
-      return;
-    let interval = extractDurationFrom([island.poll], 2e3);
-    let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-      fireAction(component, "$refresh", [], {
-        type: "poll",
-        island: { name: island.name }
-      });
-    }, interval);
-    start2();
-    pauseWhile(() => livewireIsOffline());
-    stopWhen(() => theElementIsDisconnected(component.el));
-  });
-});
-function triggerComponentRequest(el, directive2, component) {
-  setNextActionOrigin({ el, directive: directive2 });
-  setNextActionMetadata({ type: "poll" });
-  let fullMethod = directive2.expression ? directive2.expression : "$refresh";
-  evaluateActionExpression(component, el, fullMethod);
-}
-function poll(callback, interval = 2e3) {
-  let pauseConditions = [];
-  let throttleConditions = [];
-  let stopConditions = [];
-  return {
-    start() {
-      let clear = syncronizedInterval(interval, () => {
-        if (stopConditions.some((i) => i()))
-          return clear();
-        if (pauseConditions.some((i) => i()))
-          return;
-        if (throttleConditions.some((i) => i()) && Math.random() < 0.95)
-          return;
-        callback();
-      });
-    },
-    pauseWhile(condition) {
-      pauseConditions.push(condition);
-    },
-    throttleWhile(condition) {
-      throttleConditions.push(condition);
-    },
-    stopWhen(condition) {
-      stopConditions.push(condition);
-    }
-  };
-}
-var clocks = [];
-function syncronizedInterval(ms, callback) {
-  if (!clocks[ms]) {
-    let clock = {
-      timer: setInterval(() => clock.callbacks.forEach((i) => i()), ms),
-      callbacks: /* @__PURE__ */ new Set()
-    };
-    clocks[ms] = clock;
-  }
-  clocks[ms].callbacks.add(callback);
-  return () => {
-    clocks[ms].callbacks.delete(callback);
-    if (clocks[ms].callbacks.size === 0) {
-      clearInterval(clocks[ms].timer);
-      delete clocks[ms];
-    }
-  };
-}
-var isOffline = false;
-window.addEventListener("offline", () => isOffline = true);
-window.addEventListener("online", () => isOffline = false);
-function livewireIsOffline() {
-  return isOffline;
-}
-var inBackground = false;
-document.addEventListener("visibilitychange", () => {
-  inBackground = document.hidden;
-}, false);
-function theTabIsInTheBackground() {
-  return inBackground;
-}
-function theDirectiveIsOffTheElement(el) {
-  return !getDirectives(el).has("poll");
-}
-function theDirectiveIsMissingKeepAlive(directive2) {
-  return !directive2.modifiers.includes("keep-alive");
-}
-function theDirectiveHasVisible(directive2) {
-  return directive2.modifiers.includes("visible");
-}
-function theElementIsNotInTheViewport(el) {
-  let bounding = el.getBoundingClientRect();
-  return !(bounding.top < (window.innerHeight || document.documentElement.clientHeight) && bounding.left < (window.innerWidth || document.documentElement.clientWidth) && bounding.bottom > 0 && bounding.right > 0);
-}
-function theElementIsDisconnected(el) {
-  return el.isConnected === false;
-}
-function extractDurationFrom(modifiers, defaultDuration) {
-  let durationInMilliSeconds;
-  let durationInMilliSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)ms/));
-  let durationInSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)s/));
-  if (durationInMilliSecondsString) {
-    durationInMilliSeconds = Number(durationInMilliSecondsString.replace("ms", ""));
-  } else if (durationInSecondsString) {
-    durationInMilliSeconds = Number(durationInSecondsString.replace("s", "")) * 1e3;
-  }
-  return durationInMilliSeconds || defaultDuration;
-}
-
 // js/directives/wire-show.js
 var import_alpinejs19 = __toESM(require_module_cjs());
 import_alpinejs19.default.interceptInit((el) => {
@@ -13416,9 +13520,9 @@ import_alpinejs20.default.interceptInit((el) => {
 var Livewire2 = {
   directive,
   dispatchTo,
-  interceptMessage: (callback) => interceptMessage(callback),
+  interceptMessage: (callback) => interceptMessage2(callback),
   interceptRequest: (callback) => interceptRequest(callback),
-  fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),
+  fireAction: (component, method, params = [], metadata = {}) => fireAction2(component, method, params, metadata),
   start,
   first,
   find,

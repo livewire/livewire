@@ -1,4 +1,67 @@
 
+let componentSymbols = new WeakMap
+let componentIslandSymbols = new WeakMap
+
+export function scopeSymbolFromMessage(message) {
+    let component = message.component
+
+    let hasAllIslands = Array.from(message.actions).every(action => action.metadata.island)
+
+    if (hasAllIslands) {
+        let islandName = Array.from(message.actions).map(action => action.metadata.island.name).sort().join('|')
+
+        let islandSymbols = componentIslandSymbols.get(component)
+
+        if (! islandSymbols) {
+            islandSymbols = { [islandName]: Symbol() }
+
+            componentIslandSymbols.set(component, islandSymbols)
+        }
+
+        if (! islandSymbols[islandName]) {
+            islandSymbols[islandName] = Symbol()
+        }
+
+        return islandSymbols[islandName]
+    }
+
+    if (! componentSymbols.has(component)) {
+        componentSymbols.set(component, Symbol())
+    }
+
+    return componentSymbols.get(component)
+}
+
+export function scopeSymbolFromAction(action) {
+    let component = action.component
+
+    let isIsland = !! action.metadata.island
+
+    if (isIsland) {
+        let islandName = action.metadata.island.name
+
+        let islandSymbols = componentIslandSymbols.get(component)
+
+        if (! islandSymbols) {
+            islandSymbols = { [islandName]: Symbol() }
+
+            componentIslandSymbols.add(component, islandSymbols)
+        }
+
+        if (! islandSymbols[islandName]) {
+            islandSymbols[islandName] = Symbol()
+        }
+
+        return islandSymbols[islandName]
+    }
+
+    if (! componentSymbols.has(component)) {
+        componentSymbols.set(component, Symbol())
+    }
+
+    return componentSymbols.get(component)
+}
+
 export class MessageBus {
     pendingMessages = new Set
     activeMessages = new Set
@@ -51,26 +114,28 @@ export class MessageBus {
     }
 
     matchesScope(message, action) {
-        let isSameComponent = message.component === action.component
-        let isIslandMessage = Array.from(message.actions).every(action => action.metadata.island)
-        let isIslandAction = !! action.metadata.island
-        let isSameIsland = !! isIslandMessage && isIslandAction && Array.from(message.actions).every(action => action.metadata.island.name === action.metadata.island.name)
+        return message.scope === scopeSymbolFromAction(action)
 
-        if (! isSameComponent) return false
+        // let isSameComponent = message.component === action.component
+        // let isIslandMessage = Array.from(message.actions).every(action => action.metadata.island)
+        // let isIslandAction = !! action.metadata.island
+        // let isSameIsland = !! isIslandMessage && isIslandAction && Array.from(message.actions).every(action => action.metadata.island.name === action.metadata.island.name)
 
-        if (isIslandMessage && isIslandAction) {
-            return isSameIsland
-        }
+        // if (! isSameComponent) return false
 
-        if (isIslandMessage && ! isIslandAction) {
-            return false
-        }
+        // if (isIslandMessage && isIslandAction) {
+        //     return isSameIsland
+        // }
 
-        if (! isIslandMessage && isIslandAction) {
-            return false
-        }
+        // if (isIslandMessage && ! isIslandAction) {
+        //     return false
+        // }
 
-        return true
+        // if (! isIslandMessage && isIslandAction) {
+        //     return false
+        // }
+
+        // return true
     }
 
     allScopedMessages(action) {

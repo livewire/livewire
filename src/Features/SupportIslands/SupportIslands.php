@@ -47,25 +47,24 @@ class SupportIslands extends ComponentHook
 
             $islands = array_filter($islands, fn ($island) => $island['name'] === $name);
 
-            if (! $island) return;
+            if (empty($islands)) return;
 
             $this->component->skipRender();
 
-            foreach ($islands as $island) {
-                $html = $this->component->renderIsland(
-                    name: $name,
-                    token: $island['token'],
-                    mode: $mode,
-                );
-
-                $componentContext->pushEffect('islandFragments', $html);
-            }
+            $this->component->renderIsland(
+                name: $name,
+                mode: $mode,
+            );
         };
     }
 
     public function dehydrate($context)
     {
         $context->addMemo('islands', $this->component->getIslands());
+
+        if ($this->component->hasRenderedIslandFragments()) {
+            $context->addEffect('islandFragments', $this->component->getRenderedIslandFragments());
+        }
     }
 
     public function hydrate($memo)

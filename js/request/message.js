@@ -10,6 +10,20 @@ export default class Message {
     interceptors = []
     cancelled = false
     request = null
+    _scope = null
+
+    // Ensure scope isn't accessed until it's been set...
+    get scope() {
+        if (! this._scope) {
+            throw new Error('Message scope has not been set yet')
+        }
+
+        return this._scope
+    }
+
+    set scope(scope) {
+        this._scope = scope
+    }
 
     constructor(component) {
         this.component = component
@@ -119,6 +133,10 @@ export default class Message {
         this.rejectActionPromises('Request failed')
 
         this.onFinish()
+    }
+
+    onStream({ streamedJson }) {
+        this.interceptors.forEach(interceptor => interceptor.onStream({ streamedJson }))
     }
 
     onSuccess() {

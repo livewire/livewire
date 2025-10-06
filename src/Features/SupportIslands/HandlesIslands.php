@@ -2,8 +2,9 @@
 
 namespace Livewire\Features\SupportIslands;
 
-use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
+use Livewire\Features\SupportStreaming\SupportStreaming;
+use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Livewire\Drawer\Utils;
 
 trait HandlesIslands
@@ -11,6 +12,7 @@ trait HandlesIslands
     protected $islands = [];
     protected $islandsHaveMounted = false;
     protected $islandIsTopLevelRender = false;
+    protected $renderedIslandFragments = [];
 
     public function islandIsMounting()
     {
@@ -32,13 +34,37 @@ trait HandlesIslands
         $this->islands = $islands;
     }
 
-    public function renderIslandDirective($name = null, $token = null, $lazy = false, $defer = false, $always = false)
+    public function getRenderedIslandFragments()
+    {
+        return $this->renderedIslandFragments;
+    }
+
+    public function hasRenderedIslandFragments()
+    {
+        return ! empty($this->renderedIslandFragments);
+    }
+
+    public function renderIslandDirective($name = null, $token = null, $lazy = false, $defer = false, $always = false, $skip = false)
     {
         // If no name is provided, use the token...
         $name = $name ?? $token;
 
         if ($this->islandIsMounting()) {
             $this->storeIsland($name, $token);
+
+            if ($skip) {
+                // Just render the placeholder...
+                $renderedContent = $this->renderIslandView($token, [
+                    '__placeholder' => '',
+                ]);
+
+                return $this->wrapWithFragmentMarkers($renderedContent,[
+                    'type' => 'island',
+                    'name' => $name,
+                    'token' => $token,
+                    'mode' => 'morph',
+                ]);
+            }
         } else {
             if (! $always) {
                 return $this->renderSkippedIsland($name, $token);
@@ -79,13 +105,56 @@ trait HandlesIslands
         ]);
     }
 
-    public function renderIsland($name, $token, $mode)
+    public function renderIsland($name, $content = null, $mode = 'morph')
     {
-        return $this->wrapWithFragmentMarkers($this->renderIslandView($token), [
+        $islands = $this->getIslands();
+
+        foreach ($islands as $island) {
+            if ($island['name'] === $name) {
+                $token = $island['token'];
+
+                if (! $token) continue;
+
+                $renderedContent = $this->wrapWithFragmentMarkers($content ?? $this->renderIslandView($token), [
+                    'type' => 'island',
+                    'name' => $name,
+                    'token' => $token,
+                    'mode' => $mode,
+                ]);
+
+                $this->renderedIslandFragments[] = $renderedContent;
+            }
+        }
+    }
+
+    public function streamIsland($name, $content = null, $mode = 'morph')
+    {
+        $islands = $this->getIslands();
+
+        foreach ($islands as $island) {
+            if ($island['name'] === $name) {
+                $token = $island['token'];
+                break;
+            }
+        }
+
+        if (! $token) return;
+
+        $content = $content ?? $this->renderIslandView($token);
+
+        $renderedContent = $this->wrapWithFragmentMarkers($content, [
             'type' => 'island',
             'name' => $name,
             'token' => $token,
             'mode' => $mode,
+        ]);
+
+        SupportStreaming::ensureStreamResponseStarted();
+
+        SupportStreaming::streamContent([
+            'id' => $this->getId(),
+            'type' => 'island',
+            'islandFragment' => $renderedContent,
         ]);
     }
 

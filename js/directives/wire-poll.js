@@ -20,6 +20,7 @@ directive('poll', ({ el, directive, component }) => {
 })
 
 on('component.init', ({ component }) => {
+    return
     let islands = component.islands
 
     if (! islands || Object.keys(islands).length === 0) return
@@ -52,7 +53,7 @@ function triggerComponentRequest(el, directive, component) {
     evaluateActionExpression(component, el, fullMethod)
 }
 
-function poll(callback, interval = 2000) {
+export function poll(callback, interval = 2000) {
     let pauseConditions = []
     let throttleConditions = []
     let stopConditions = []
@@ -108,7 +109,7 @@ let isOffline = false
 window.addEventListener('offline', () => isOffline = true)
 window.addEventListener('online', () => isOffline = false)
 
-function livewireIsOffline() {
+export function livewireIsOffline() {
     return isOffline
 }
 
@@ -143,11 +144,11 @@ function theElementIsNotInTheViewport(el) {
     )
 }
 
-function theElementIsDisconnected(el) {
+export function theElementIsDisconnected(el) {
     return el.isConnected === false
 }
 
-function extractDurationFrom(modifiers, defaultDuration) {
+export function extractDurationFrom(modifiers, defaultDuration) {
     let durationInMilliSeconds
     let durationInMilliSecondsString = modifiers.find(mod => mod.match(/([0-9]+)ms/))
     let durationInSecondsString = modifiers.find(mod => mod.match(/([0-9]+)s/))

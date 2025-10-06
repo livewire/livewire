@@ -4,7 +4,7 @@ import { MessageRequest, PageRequest } from './request.js'
 import { InterceptorRegistry } from './interceptor.js'
 import { trigger, triggerAsync } from '@/hooks.js'
 import { showHtmlModal } from '@/utils/modal.js'
-import { MessageBus } from './messageBus.js'
+import { MessageBus, scopeSymbolFromMessage } from './messageBus.js'
 import Message from './message.js'
 import Action from './action.js'
 
@@ -180,6 +180,13 @@ function sendMessages() {
         })
     })
 
+    // Assign scope symbols to messages...
+    requests.forEach(request => {
+        request.messages.forEach(message => {
+            message.scope = scopeSymbolFromMessage(message)
+        })
+    })
+
     requests.forEach(request => {
         request.uri = getUpdateUri()
 
@@ -225,16 +232,26 @@ function sendMessages() {
                 request.onResponse({ response })
             },
             stream: async ({ response }) => {
+                request.onStream({ response })
+
                 let finalResponse = ''
 
                 try {
-                    finalResponse = await interceptStreamAndReturnFinalResponse(response, streamed => {
-                        trigger('stream', streamed)
+                    finalResponse = await interceptStreamAndReturnFinalResponse(response, streamedJson => {
+                        let componentId = streamedJson.id
+
+                        request.messages.forEach(message => {
+                            if (message.component.id === componentId) {
+                                message.onStream({ streamedJson })
+                            }
+                        })
+
+                        trigger('stream', streamedJson)
                     })
                 } catch (e) {
-                    throw e
-
                     request.abort()
+
+                    throw e
                 }
 
                 return finalResponse
