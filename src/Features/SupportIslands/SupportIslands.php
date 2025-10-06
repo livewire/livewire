@@ -17,7 +17,7 @@ class SupportIslands extends ComponentHook
     public static function registerIslandDirective()
     {
         Blade::directive('island', function ($expression) {
-            return "<?php if (isset(\$__livewire)) echo \$__livewire->renderIslandExpression({$expression}); ?>";
+            return "<?php if (isset(\$__livewire)) echo \$__livewire->renderIslandDirective({$expression}); ?>";
         });
     }
 
@@ -33,41 +33,44 @@ class SupportIslands extends ComponentHook
         });
     }
 
-    function call($method, $params, $returnEarly, $context, $componentContext)
+    function call($method, $params, $returnEarly, $metadata, $componentContext)
     {
-        if (! isset($context['island'])) return;
+        if (! isset($metadata['island'])) return;
 
-        $island = $context['island'];
+        $island = $metadata['island'];
 
-        // if context contains an island, then we should render it...
+        // if metadata contains an island, then we should render it...
         return function (...$params) use ($island, $componentContext) {
             ['name' => $name, 'mode' => $mode] = $island;
 
             $islands = $this->component->getIslands();
 
-            $token = $islands[$name] ?? null;
+            $islands = array_filter($islands, fn ($island) => $island['name'] === $name);
 
-            if (! $token) return;
+            if (empty($islands)) return;
 
             $this->component->skipRender();
 
-            $html = $this->component->renderIslandExpression(token: $token);
-
-            $componentContext->pushEffect('islands', [
-                'key' => $name,
-                'content' => $html,
-                'mode' => $mode,
-            ]);
+            $this->component->renderIsland(
+                name: $name,
+                mode: $mode,
+            );
         };
     }
 
     public function dehydrate($context)
     {
         $context->addMemo('islands', $this->component->getIslands());
+
+        if ($this->component->hasRenderedIslandFragments()) {
+            $context->addEffect('islandFragments', $this->component->getRenderedIslandFragments());
+        }
     }
 
     public function hydrate($memo)
     {
+        $this->component->markIslandsAsMounted();
+
         $islands = $memo['islands'] ?? null;
 
         if (! $islands) return;

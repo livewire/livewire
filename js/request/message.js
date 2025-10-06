@@ -10,7 +10,20 @@ export default class Message {
     interceptors = []
     cancelled = false
     request = null
-    isolate = false
+    _scope = null
+
+    // Ensure scope isn't accessed until it's been set...
+    get scope() {
+        if (! this._scope) {
+            throw new Error('Message scope has not been set yet')
+        }
+
+        return this._scope
+    }
+
+    set scope(scope) {
+        this._scope = scope
+    }
 
     constructor(component) {
         this.component = component
@@ -110,11 +123,16 @@ export default class Message {
         this.onFinish()
     }
 
+    onStream({ streamedJson }) {
+        this.interceptors.forEach(interceptor => interceptor.onStream({ streamedJson }))
+    }
+
     onSuccess() {
         this.interceptors.forEach(interceptor => {
             interceptor.onSuccess({
                 payload: this.responsePayload,
                 onSync: callback => interceptor.onSync = callback,
+                onEffect: callback => interceptor.onEffect = callback,
                 onMorph: callback => interceptor.onMorph = callback,
                 onRender: callback => interceptor.onRender = callback
             })
@@ -130,6 +148,10 @@ export default class Message {
 
     onSync() {
         this.interceptors.forEach(interceptor => interceptor.onSync())
+    }
+
+    onEffect() {
+        this.interceptors.forEach(interceptor => interceptor.onEffect())
     }
 
     onMorph() {

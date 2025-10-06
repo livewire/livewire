@@ -1,6 +1,6 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
-import { on } from '@/hooks'
+import { interceptMessage } from '@/request'
 import { listen } from '@/utils'
 
 directive('loading', ({ el, directive, component, cleanup }) => {
@@ -70,15 +70,21 @@ function applyDelay(directive) {
 }
 
 function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoading, endLoading ]) {
-    return on('commit', ({ component: iComponent, commit: payload, respond }) => {
-        if (iComponent !== component) return
+    interceptMessage(({ message, onSend, onFinish }) => {
+        if (component !== message.component) return
 
-        if (targets.length > 0 && containsTargets(payload, targets) === inverted) return
+        let matches = true
 
-        startLoading()
+        onSend(({ payload }) => {
+            if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
+                matches = false
+            }
 
-        respond(() => {
-            endLoading()
+            matches && startLoading()
+        })
+
+        onFinish(() => {
+            matches && endLoading()
         })
     })
 }

@@ -95,6 +95,16 @@ When `wire:confirm` is added to an element containing a Livewire action, when a 
 
 For more information, visit the [`wire:confirm` documentation page](/docs/wire-confirm).
 
+## Async actions
+
+By default, actions within the same component scope are serialized: if one is in-flight, subsequent actions are queued until it finishes.
+
+Appending the `.async` modifier allows actions to run in parallel instead of being queued. This is helpful for fire-and-forget operations or when you don't want to block subsequent clicks.
+
+```blade
+<button type="button" wire:click.async="process">Process</button>
+```
+
 ## Event listeners
 
 Livewire supports a variety of event listeners, allowing you to respond to various types of user interactions:

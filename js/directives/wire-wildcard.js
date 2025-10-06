@@ -16,6 +16,11 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
         attribute = attribute + '.prevent'
     }
 
+    // Strip .async from Alpine expression because it only concerns Livewire and trips up Alpine...
+    if (directive.modifiers.includes('async')) {
+        attribute = attribute.replace('.async', '')
+    }
+
     let cleanupBinding = Alpine.bind(el, {
         [attribute](e) {
             directive.eventContext = e

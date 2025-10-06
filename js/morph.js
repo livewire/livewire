@@ -1,8 +1,7 @@
 import { trigger } from "@/hooks"
 import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
-import { skipSlotContents } from "./features/supportSlots"
-import { skipIslandContents } from "./features/supportIslands"
+import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFragmentMarker } from "./fragment"
 
 export function morph(component, el, html) {
     let wrapperTag = el.parentElement
@@ -69,7 +68,7 @@ export function morph(component, el, html) {
     trigger('morphed', { el, component })
 }
 
-export function morphIsland(component, startNode, endNode, toHTML) {
+export function morphFragment(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement
     let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
 
@@ -103,8 +102,22 @@ export function morphIsland(component, startNode, endNode, toHTML) {
 function getMorphConfig(component) {
     return {
         updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
-            skipSlotContents(el, toEl, skipUntil)
-            skipIslandContents(component, el, toEl, skipUntil)
+            // Skip fragments...
+            if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
+                let metadata = extractFragmentMetadataFromMarkerNode(toEl)
+
+                if (metadata.mode !== 'morph') {
+                    skipUntil(node => {
+                        if (isEndFragmentMarker(node)) {
+                            let endMarkerMetadata = extractFragmentMetadataFromMarkerNode(node)
+
+                            return endMarkerMetadata.token === metadata.token
+                        }
+
+                        return false
+                    })
+                }
+            }
 
             if (isntElement(el)) return
 

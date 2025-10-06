@@ -77,9 +77,14 @@ export class MessageRequest {
         this.interceptors.forEach(interceptor => interceptor.onResponse({ response }))
     }
 
+    onStream({ response }) {
+        this.interceptors.forEach(interceptor => interceptor.onStream({ response }))
+    }
+
     onParsed({ response, responseBody }) {
         this.interceptors.forEach(interceptor => interceptor.onParsed({ response, responseBody }))
     }
+
 
     onRedirect({ url, preventDefault }) {
         this.interceptors.forEach(interceptor => interceptor.onRedirect({ url, preventDefault }))

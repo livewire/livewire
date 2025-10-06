@@ -546,7 +546,7 @@ class HandleComponents extends Mechanism
         foreach ($calls as $idx => $call) {
             $method = $call['method'];
             $params = $call['params'];
-            $context = $call['context'] ?? [];
+            $metadata = $call['metadata'] ?? [];
 
             $earlyReturnCalled = false;
             $earlyReturn = null;
@@ -555,7 +555,7 @@ class HandleComponents extends Mechanism
                 $earlyReturn = $return;
             };
 
-            $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $context);
+            $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $metadata);
 
             if ($earlyReturnCalled) {
                 $returns[] = $finish($earlyReturn);

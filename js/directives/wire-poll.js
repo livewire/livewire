@@ -1,6 +1,5 @@
 import { directive, getDirectives } from "@/directives"
-import { on } from '@/hooks'
-import { fireAction, setNextActionMetadata, setNextActionOrigin } from '@/request'
+import { setNextActionMetadata, setNextActionOrigin } from '@/request'
 import { evaluateActionExpression } from '../evaluator'
 
 directive('poll', ({ el, directive, component }) => {
@@ -19,30 +18,6 @@ directive('poll', ({ el, directive, component }) => {
     stopWhen(() => theElementIsDisconnected(el))
 })
 
-on('component.init', ({ component }) => {
-    let islands = component.islands
-
-    if (! islands || Object.keys(islands).length === 0) return
-
-    Object.values(islands).forEach(island => {
-        if (!island.poll) return
-
-        let interval = extractDurationFrom([island.poll], 2000)
-
-        let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-            fireAction(component, '$refresh', [], {
-                type: 'poll',
-                island: { name: island.name },
-            })
-        }, interval)
-
-        start()
-
-        pauseWhile(() => livewireIsOffline())
-        stopWhen(() => theElementIsDisconnected(component.el))
-    })
-})
-
 function triggerComponentRequest(el, directive, component) {
     setNextActionOrigin({ el, directive })
     setNextActionMetadata({ type: 'poll' })
@@ -52,7 +27,7 @@ function triggerComponentRequest(el, directive, component) {
     evaluateActionExpression(component, el, fullMethod)
 }
 
-function poll(callback, interval = 2000) {
+export function poll(callback, interval = 2000) {
     let pauseConditions = []
     let throttleConditions = []
     let stopConditions = []
@@ -108,7 +83,7 @@ let isOffline = false
 window.addEventListener('offline', () => isOffline = true)
 window.addEventListener('online', () => isOffline = false)
 
-function livewireIsOffline() {
+export function livewireIsOffline() {
     return isOffline
 }
 
@@ -143,11 +118,11 @@ function theElementIsNotInTheViewport(el) {
     )
 }
 
-function theElementIsDisconnected(el) {
+export function theElementIsDisconnected(el) {
     return el.isConnected === false
 }
 
-function extractDurationFrom(modifiers, defaultDuration) {
+export function extractDurationFrom(modifiers, defaultDuration) {
     let durationInMilliSeconds
     let durationInMilliSecondsString = modifiers.find(mod => mod.match(/([0-9]+)ms/))
     let durationInSecondsString = modifiers.find(mod => mod.match(/([0-9]+)s/))

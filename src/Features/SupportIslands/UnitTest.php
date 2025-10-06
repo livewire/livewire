@@ -9,16 +9,20 @@ class UnitTest extends TestCase
 {
     public function test_render_island_directives()
     {
-        $this->markTestSkipped();
-
-        $component = Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends \Livewire\Component {
             public function render() {
                 return <<<'HTML'
                 <div>
                     Outside island
 
                     @island
-                        Inside island
+                        before
+
+                        @island
+                            Nested island
+                        @endisland
+
+                        after
                     @endisland
                 </div>
                 HTML;
@@ -28,7 +32,7 @@ class UnitTest extends TestCase
             ->assertDontSee('@endisland')
             ->assertSee('Outside island')
             ->assertSee('Inside island')
-            ->assertSee('!--[if ISLAND:')
-            ->assertSee('!--[if ENDISLAND:');
+            ->assertSee('!--[if FRAGMENT:')
+            ->assertSee('!--[if ENDFRAGMENT:');
     }
 }

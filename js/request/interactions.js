@@ -1,6 +1,6 @@
 import { constructAction, createOrAddToOutstandingMessage, fireActionInstance, interceptAction, interceptPartition } from '@/request'
 
-export function coordinateNetworkInteractions(bus) {
+export function coordinateNetworkInteractions(messageBus) {
     // Handle isolated components...
     interceptPartition(({ message, compileRequest }) => {
         if (! message.component.isIsolated) return
@@ -38,10 +38,19 @@ export function coordinateNetworkInteractions(bus) {
     })
 
     // If a request is in-flight, queue up the action to fire after the in-flight request has finished...
-    interceptAction(({ action, scopedMessages, reject, defer }) => {
-        let message = bus.activeMessageMatchingScope(action)
+    interceptAction(({ action, reject, defer }) => {
+        let message = messageBus.activeMessageMatchingScope(action)
 
         if (message) {
+            // Wire:click.async:
+            // - allow async actions incoming to pass through...
+            // - if active message actions are async, allow the incoming async action to pass through as well...
+            let isAsync = action => action.origin?.directive?.modifiers.includes('async')
+            let messageIsAsync = Array.from(message?.actions || []).every(isAsync)
+            let actionIsAsync = isAsync(action)
+
+            if (messageIsAsync || actionIsAsync) return
+
             // Wire:poll:
             // - Throw away new polls if a request of any kind is in-flight...
             if (action.metadata.type === 'poll') {

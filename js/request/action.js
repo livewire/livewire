@@ -25,6 +25,10 @@ export default class Action {
         return window.btoa(componentId + method + params + metadata)
     }
 
+    mergeMetadata(metadata) {
+        this.metadata = { ...this.metadata, ...metadata }
+    }
+
     rejectPromise(error) {
         // Resolving instead of rejecting to avoid unhandled promise rejection errors...
         // Should think about how we can handle this better...

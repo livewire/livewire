@@ -4,10 +4,9 @@ import { MessageRequest, PageRequest } from './request.js'
 import { InterceptorRegistry } from './interceptor.js'
 import { trigger, triggerAsync } from '@/hooks.js'
 import { showHtmlModal } from '@/utils/modal.js'
-import { MessageBus } from './messageBus.js'
+import { MessageBus, scopeSymbolFromMessage } from './messageBus.js'
 import Message from './message.js'
 import Action from './action.js'
-import { morph } from '@/morph'
 
 let outstandingActionOrigin = null
 let outstandingActionMetadata = {}
@@ -50,7 +49,10 @@ interceptMessage(({ message, onFinish }) => {
     onFinish(() => messageBus.removeActiveMessage(message))
 })
 
-coordinateNetworkInteractions(messageBus)
+// Ensure that other parts of the codebase are able to intercept actions before the default handling...
+queueMicrotask(() => {
+    coordinateNetworkInteractions(messageBus)
+})
 
 export function fireAction(component, method, params = [], metadata = {}) {
     let action = constructAction(component, method, params, metadata)
@@ -166,7 +168,7 @@ function sendMessages() {
             message.calls = Array.from(message.actions).map(i => ({
                 method: i.method,
                 params: i.params,
-                context: i.metadata,
+                metadata: i.metadata,
             }))
 
             message.payload = {
@@ -175,6 +177,13 @@ function sendMessages() {
                 // @todo: Rename to "actions"...
                 calls: message.calls,
             }
+        })
+    })
+
+    // Assign scope symbols to messages...
+    requests.forEach(request => {
+        request.messages.forEach(message => {
+            message.scope = scopeSymbolFromMessage(message)
         })
     })
 
@@ -223,16 +232,26 @@ function sendMessages() {
                 request.onResponse({ response })
             },
             stream: async ({ response }) => {
+                request.onStream({ response })
+
                 let finalResponse = ''
 
                 try {
-                    finalResponse = await interceptStreamAndReturnFinalResponse(response, streamed => {
-                        trigger('stream', streamed)
+                    finalResponse = await interceptStreamAndReturnFinalResponse(response, streamedJson => {
+                        let componentId = streamedJson.id
+
+                        request.messages.forEach(message => {
+                            if (message.component.id === componentId) {
+                                message.onStream({ streamedJson })
+                            }
+                        })
+
+                        trigger('stream', streamedJson)
                     })
                 } catch (e) {
-                    throw e
-
                     request.abort()
+
+                    throw e
                 }
 
                 return finalResponse
@@ -303,18 +322,17 @@ function sendMessages() {
                             // Trigger any side effects from the payload like "morph" and "dispatch event"...
                             message.component.processEffects(effects)
 
-                            let html = effects['html']
+                            message.onEffect()
+                            if (message.isCancelled()) return
 
                             queueMicrotask(() => {
-                                if (html) {
-                                    if (message.isCancelled()) return
-                                    applyMorph(message, html)
+                                if (message.isCancelled()) return
 
-                                    message.onMorph()
-                                }
+                                message.onMorph()
 
                                 setTimeout(() => {
                                     if (message.isCancelled()) return
+
                                     message.onRender()
                                 })
                             })
@@ -428,13 +446,6 @@ function extractStreamObjects(raw) {
     let remaining = raw.replace(regex, '');
 
     return [ parsed, remaining ];
-}
-
-function applyMorph(message, html) {
-    // check if testing environment and skip...
-    if (process.env.NODE_ENV === 'test') return
-
-    morph(message.component, message.component.el, html)
 }
 
 export async function sendNavigateRequest(uri, callback, errorCallback) {
