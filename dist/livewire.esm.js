@@ -11866,26 +11866,6 @@ directive("poll", ({ el, directive: directive2, component }) => {
   pauseWhile(() => livewireIsOffline());
   stopWhen(() => theElementIsDisconnected(el));
 });
-on("component.init", ({ component }) => {
-  return;
-  let islands = component.islands;
-  if (!islands || Object.keys(islands).length === 0)
-    return;
-  Object.values(islands).forEach((island) => {
-    if (!island.poll)
-      return;
-    let interval = extractDurationFrom([island.poll], 2e3);
-    let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-      fireAction2(component, "$refresh", [], {
-        type: "poll",
-        island: { name: island.name }
-      });
-    }, interval);
-    start2();
-    pauseWhile(() => livewireIsOffline());
-    stopWhen(() => theElementIsDisconnected(component.el));
-  });
-});
 function triggerComponentRequest(el, directive2, component) {
   setNextActionOrigin({ el, directive: directive2 });
   setNextActionMetadata({ type: "poll" });

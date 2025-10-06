@@ -10980,26 +10980,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     pauseWhile(() => livewireIsOffline());
     stopWhen(() => theElementIsDisconnected(el));
   });
-  on2("component.init", ({ component }) => {
-    return;
-    let islands = component.islands;
-    if (!islands || Object.keys(islands).length === 0)
-      return;
-    Object.values(islands).forEach((island) => {
-      if (!island.poll)
-        return;
-      let interval = extractDurationFrom([island.poll], 2e3);
-      let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-        fireAction2(component, "$refresh", [], {
-          type: "poll",
-          island: { name: island.name }
-        });
-      }, interval);
-      start3();
-      pauseWhile(() => livewireIsOffline());
-      stopWhen(() => theElementIsDisconnected(component.el));
-    });
-  });
   function triggerComponentRequest(el, directive3, component) {
     setNextActionOrigin({ el, directive: directive3 });
     setNextActionMetadata({ type: "poll" });
