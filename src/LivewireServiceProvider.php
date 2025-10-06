@@ -193,8 +193,8 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportEvents\SupportEvents::class,
             // Islands should be before placeholders otherwise the island placeholders will be compiled as component placeholders...
             Features\SupportIslands\SupportIslands::class,
+            Features\SupportSlots\SupportSlots::class,
             \Livewire\V4\Placeholders\SupportPlaceholders::class,
-            \Livewire\V4\Slots\SupportSlots::class,
             \Livewire\V4\HtmlAttributes\SupportsHtmlAttributes::class,
             \Livewire\V4\JsModules\SupportJsModules::class,
             \Livewire\V4\WithMethod\SupportWithMethod::class,

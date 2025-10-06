@@ -1,13 +1,14 @@
 <?php
 
-namespace Livewire\V4\Slots;
+namespace Livewire\Features\SupportSlots;
 
 use Illuminate\Contracts\Support\Htmlable;
 
-class PlaceholderSlot implements Htmlable
+class Slot implements Htmlable
 {
     public function __construct(
         public string $name,
+        public string $content,
         public ?string $parentComponentId = null,
     ) {}
 
@@ -23,19 +24,19 @@ class PlaceholderSlot implements Htmlable
 
     public function toHtml(): string
     {
-        return $this->wrapInCommentMarkers('');
+        return $this->wrapInCommentMarkers($this->content);
     }
 
-    protected function wrapInCommentMarkers(): string
+    protected function wrapInCommentMarkers(string $content): string
     {
         if ($this->parentComponentId) {
             return "<!--[if SLOT:{$this->name}:{$this->parentComponentId}]><![endif]-->"
-                . ''
+                . $content
                 . "<!--[if ENDSLOT:{$this->name}:{$this->parentComponentId}]><![endif]-->";
         }
 
         return "<!--[if SLOT:{$this->name}]><![endif]-->"
-            . ''
+            . $content
             . "<!--[if ENDSLOT:{$this->name}]><![endif]-->";
     }
 }

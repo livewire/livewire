@@ -2,12 +2,12 @@
 
 namespace Livewire;
 
-use Livewire\V4\Slots\HandlesSlots;
 use Livewire\V4\Paginators\HandlesPaginators;
 use Livewire\V4\JsModules\HandleJsModules;
 use Livewire\V4\HtmlAttributes\HandlesHtmlAttributes;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
+use Livewire\Features\SupportSlots\HandlesSlots;
 use Livewire\Features\SupportReleaseTokens\HandlesReleaseTokens;
 use Livewire\Features\SupportRedirects\HandlesRedirects;
 use Livewire\Features\SupportPageComponents\HandlesPageComponents;

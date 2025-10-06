@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\V4\Slots;
+namespace Livewire\Features\SupportSlots;
 
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
