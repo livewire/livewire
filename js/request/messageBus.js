@@ -115,27 +115,6 @@ export class MessageBus {
 
     matchesScope(message, action) {
         return message.scope === scopeSymbolFromAction(action)
-
-        // let isSameComponent = message.component === action.component
-        // let isIslandMessage = Array.from(message.actions).every(action => action.metadata.island)
-        // let isIslandAction = !! action.metadata.island
-        // let isSameIsland = !! isIslandMessage && isIslandAction && Array.from(message.actions).every(action => action.metadata.island.name === action.metadata.island.name)
-
-        // if (! isSameComponent) return false
-
-        // if (isIslandMessage && isIslandAction) {
-        //     return isSameIsland
-        // }
-
-        // if (isIslandMessage && ! isIslandAction) {
-        //     return false
-        // }
-
-        // if (! isIslandMessage && isIslandAction) {
-        //     return false
-        // }
-
-        // return true
     }
 
     allScopedMessages(action) {
