@@ -8494,13 +8494,13 @@ function interceptAction(callback) {
 function interceptPartition(callback) {
   partitionInterceptors.push(callback);
 }
-function interceptMessage2(callback) {
+function interceptMessage(callback) {
   interceptors.addMessageInterceptor(callback);
 }
 function interceptRequest(callback) {
   interceptors.addRequestInterceptor(callback);
 }
-interceptMessage2(({ message, onFinish }) => {
+interceptMessage(({ message, onFinish }) => {
   messageBus.addActiveMessage(message);
   onFinish(() => messageBus.removeActiveMessage(message));
 });
@@ -8885,7 +8885,7 @@ interceptRequest(({
     }));
   });
 });
-interceptMessage2(({
+interceptMessage(({
   message,
   onCancel,
   onError,
@@ -11525,7 +11525,7 @@ on("effect", ({ component, effects }) => {
 });
 
 // js/features/supportMorphDom.js
-interceptMessage2(({ message, onSuccess }) => {
+interceptMessage(({ message, onSuccess }) => {
   onSuccess(({ payload, onMorph }) => {
     onMorph(() => {
       let html = payload.effects.html;
@@ -12005,7 +12005,7 @@ interceptAction(({ action }) => {
     }
   });
 });
-interceptMessage2(({ message, onSuccess, onStream }) => {
+interceptMessage(({ message, onSuccess, onStream }) => {
   onStream(({ streamedJson }) => {
     let { type, islandFragment } = streamedJson;
     if (type !== "island")
@@ -12048,7 +12048,7 @@ function renderIsland(component, islandHtml) {
 }
 
 // js/features/supportDataLoading.js
-interceptMessage2(({ actions, onSend, onFinish }) => {
+interceptMessage(({ actions, onSend, onFinish }) => {
   let undos = [];
   onSend(() => {
     actions.forEach((action) => {
@@ -12409,7 +12409,7 @@ function applyDelay(directive2) {
   ];
 }
 function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
-  interceptMessage2(({ message, onSend, onFinish }) => {
+  interceptMessage(({ message, onSend, onFinish }) => {
     if (component !== message.component)
       return;
     let matches = true;
@@ -12708,7 +12708,7 @@ import_alpinejs20.default.interceptInit((el) => {
 var Livewire2 = {
   directive,
   dispatchTo,
-  interceptMessage: (callback) => interceptMessage2(callback),
+  interceptMessage: (callback) => interceptMessage(callback),
   interceptRequest: (callback) => interceptRequest(callback),
   fireAction: (component, method, params = [], metadata = {}) => fireAction2(component, method, params, metadata),
   start,
