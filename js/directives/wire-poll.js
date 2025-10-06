@@ -1,6 +1,5 @@
 import { directive, getDirectives } from "@/directives"
-import { on } from '@/hooks'
-import { fireAction, setNextActionMetadata, setNextActionOrigin } from '@/request'
+import { setNextActionMetadata, setNextActionOrigin } from '@/request'
 import { evaluateActionExpression } from '../evaluator'
 
 directive('poll', ({ el, directive, component }) => {
@@ -17,31 +16,6 @@ directive('poll', ({ el, directive, component }) => {
     pauseWhile(() => theDirectiveIsOffTheElement(el))
     pauseWhile(() => livewireIsOffline())
     stopWhen(() => theElementIsDisconnected(el))
-})
-
-on('component.init', ({ component }) => {
-    return
-    let islands = component.islands
-
-    if (! islands || Object.keys(islands).length === 0) return
-
-    Object.values(islands).forEach(island => {
-        if (!island.poll) return
-
-        let interval = extractDurationFrom([island.poll], 2000)
-
-        let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-            fireAction(component, '$refresh', [], {
-                type: 'poll',
-                island: { name: island.name },
-            })
-        }, interval)
-
-        start()
-
-        pauseWhile(() => livewireIsOffline())
-        stopWhen(() => theElementIsDisconnected(component.el))
-    })
 })
 
 function triggerComponentRequest(el, directive, component) {
