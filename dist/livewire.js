@@ -11131,10 +11131,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   interceptMessage2(({ message, onSuccess, onStream }) => {
     onStream(({ streamedJson }) => {
-      let fragment = streamedJson.islandFragment;
-      if (!fragment)
+      let { type, islandFragment } = streamedJson;
+      if (type !== "island")
         return;
-      renderIsland(message.component, fragment);
+      renderIsland(message.component, islandFragment);
     });
     onSuccess(({ payload, onMorph }) => {
       onMorph(() => {

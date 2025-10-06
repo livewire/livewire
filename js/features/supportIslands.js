@@ -77,11 +77,11 @@ interceptAction(({ action }) => {
 
 interceptMessage(({ message, onSuccess, onStream }) => {
     onStream(({ streamedJson }) => {
-        let fragment = streamedJson.islandFragment
+        let { type, islandFragment } = streamedJson
 
-        if (! fragment) return
+        if (type !== 'island') return
 
-        renderIsland(message.component, fragment)
+        renderIsland(message.component, islandFragment)
     })
 
     onSuccess(({ payload, onMorph }) => {
