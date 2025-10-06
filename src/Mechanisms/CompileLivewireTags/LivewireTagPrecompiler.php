@@ -10,6 +10,14 @@ class LivewireTagPrecompiler extends ComponentTagCompiler
 {
     public function __invoke($value)
     {
+        $value = $this->compileOpeningTags($value);
+        $value = $this->compileSelfClosingTags($value);
+
+        return $value;
+    }
+
+    public function compileSelfClosingTags($value)
+    {
         $pattern = '/'.Regexes::$livewireOpeningTagOrSelfClosingTag.'/x';
 
         return preg_replace_callback($pattern, function (array $matches) {
@@ -63,6 +71,66 @@ class LivewireTagPrecompiler extends ComponentTagCompiler
                 $component = "'{$component}'";
             }
 
+            return $this->componentString($component, $attributes);
+        }, $value);
+    }
+
+    public function compileOpeningTags($value)
+    {
+        $pattern = '/'.Regexes::$livewireOpeningTag.'/x';
+
+        return preg_replace_callback($pattern, function (array $matches) {
+            $attributes = $this->getAttributesFromAttributeString($matches['attributes']);
+
+            $keys = array_keys($attributes);
+            $values = array_values($attributes);
+            $attributesCount = count($attributes);
+
+            for ($i=0; $i < $attributesCount; $i++) {
+                if ($keys[$i] === ':' && $values[$i] === 'true') {
+                    if (isset($values[$i + 1]) && $values[$i + 1] === 'true') {
+                        $attributes[$keys[$i + 1]] = '$'.$keys[$i + 1];
+                        unset($attributes[':']);
+                    }
+                }
+            }
+
+            // Convert all kebab-cased to camelCase.
+            $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {
+                // Skip snake_cased attributes.
+                if (str($key)->contains('_')) return [$key => $value];
+
+                return [(string) str($key)->camel() => $value];
+            })->toArray();
+
+            // Convert all snake_cased attributes to camelCase, and merge with
+            // existing attributes so both snake and camel are available.
+            $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {
+                // Skip snake_cased attributes
+                if (! str($key)->contains('_')) return [$key => false];
+
+                return [(string) str($key)->camel() => $value];
+            })->filter()->merge($attributes)->toArray();
+
+            $component = $matches[1];
+
+            if ($component === 'styles') return '@livewireStyles';
+            if ($component === 'scripts') return '@livewireScripts';
+            if ($component === 'dynamic-component' || $component === 'is') {
+                if (! isset($attributes['component']) && ! isset($attributes['is'])) {
+                    throw new ComponentAttributeMissingOnDynamicComponentException;
+                }
+
+                // Does not need quotes as resolved with quotes already.
+                $component = $attributes['component'] ?? $attributes['is'];
+
+                unset($attributes['component'], $attributes['is']);
+            } else {
+                // Add single quotes to the component name to compile it as string in quotes
+                $component = "'{$component}'";
+            }
+
+            dd($component, $attributes);
             return $this->componentString($component, $attributes);
         }, $value);
     }
