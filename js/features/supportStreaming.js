@@ -1,4 +1,5 @@
 import { findRefEl } from '@/features/supportRefs'
+import { interceptMessage } from '@/request'
 import { findComponent } from '@/store'
 
 interceptMessage(({ message, onStream }) => {

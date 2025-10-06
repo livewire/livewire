@@ -4690,13 +4690,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function interceptPartition(callback) {
     partitionInterceptors.push(callback);
   }
-  function interceptMessage2(callback) {
+  function interceptMessage(callback) {
     interceptors2.addMessageInterceptor(callback);
   }
   function interceptRequest(callback) {
     interceptors2.addRequestInterceptor(callback);
   }
-  interceptMessage2(({ message, onFinish }) => {
+  interceptMessage(({ message, onFinish }) => {
     messageBus.addActiveMessage(message);
     onFinish(() => messageBus.removeActiveMessage(message));
   });
@@ -5081,7 +5081,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }));
     });
   });
-  interceptMessage2(({
+  interceptMessage(({
     message,
     onCancel,
     onError,
@@ -10641,7 +10641,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportMorphDom.js
-  interceptMessage2(({ message, onSuccess }) => {
+  interceptMessage(({ message, onSuccess }) => {
     onSuccess(({ payload, onMorph }) => {
       onMorph(() => {
         let html = payload.effects.html;
@@ -11119,7 +11119,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
   });
-  interceptMessage2(({ message, onSuccess, onStream }) => {
+  interceptMessage(({ message, onSuccess, onStream }) => {
     onStream(({ streamedJson }) => {
       let { type, islandFragment } = streamedJson;
       if (type !== "island")
@@ -11162,7 +11162,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportDataLoading.js
-  interceptMessage2(({ actions, onSend, onFinish }) => {
+  interceptMessage(({ actions, onSend, onFinish }) => {
     let undos = [];
     onSend(() => {
       actions.forEach((action) => {
@@ -11518,7 +11518,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     ];
   }
   function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
-    interceptMessage2(({ message, onSend, onFinish }) => {
+    interceptMessage(({ message, onSend, onFinish }) => {
       if (component !== message.component)
         return;
       let matches2 = true;
@@ -11813,7 +11813,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var Livewire2 = {
     directive: directive2,
     dispatchTo,
-    interceptMessage: (callback) => interceptMessage2(callback),
+    interceptMessage: (callback) => interceptMessage(callback),
     interceptRequest: (callback) => interceptRequest(callback),
     fireAction: (component, method, params = [], metadata = {}) => fireAction2(component, method, params, metadata),
     start: start2,
