@@ -4523,16 +4523,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       this.actions.add(action);
     }
-    actionMatchesMessageScope(action) {
-      let actionIsIsland = action.metadata.island;
-      let messageIsIsland = Array.from(this.actions).every((action2) => action2.metadata.island);
-      let messageContainsIdenticalIslands = messageIsIsland && new Set(Array.from(this.actions).map((action2) => action2.metadata.island.name)).size === 1;
-      let messageAndActionIslandsMatch = messageIsIsland && actionIsIsland && Array.from(this.actions).every((a) => a.metadata.island.name === action.metadata.island.name);
-      let isSameComponent = this.component === action.component;
-      if (actionIsIsland)
-        return messageAndActionIslandsMatch;
-      return !messageIsIsland && isSameComponent;
-    }
     getActions() {
       return Array.from(this.actions);
     }
