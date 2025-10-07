@@ -99,6 +99,7 @@ class HandleComponents extends Mechanism
             if ($this->isReservedParam($key)) {
                 $componentParams[$key] = $value;
             }
+
             // Check if this maps to a component property or mount param
             elseif (
                 array_key_exists($camelKey, $componentProperties)

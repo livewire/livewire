@@ -71,22 +71,22 @@ class LivewireTagPrecompiler extends ComponentTagCompiler
                 }
             }
 
-            // Convert all kebab-cased to camelCase.
-            $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {
-                // Skip snake_cased attributes.
-                if (str($key)->contains('_')) return [$key => $value];
+            // // Convert all kebab-cased to camelCase.
+            // $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {
+            //     // Skip snake_cased attributes.
+            //     if (str($key)->contains('_')) return [$key => $value];
 
-                return [(string) str($key)->camel() => $value];
-            })->toArray();
+            //     return [(string) str($key)->camel() => $value];
+            // })->toArray();
 
-            // Convert all snake_cased attributes to camelCase, and merge with
-            // existing attributes so both snake and camel are available.
-            $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {
-                // Skip snake_cased attributes
-                if (! str($key)->contains('_')) return [$key => false];
+            // // Convert all snake_cased attributes to camelCase, and merge with
+            // // existing attributes so both snake and camel are available.
+            // $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {
+            //     // Skip snake_cased attributes
+            //     if (! str($key)->contains('_')) return [$key => false];
 
-                return [(string) str($key)->camel() => $value];
-            })->filter()->merge($attributes)->toArray();
+            //     return [(string) str($key)->camel() => $value];
+            // })->filter()->merge($attributes)->toArray();
 
             $component = $matches[1];
 
@@ -175,22 +175,22 @@ class LivewireTagPrecompiler extends ComponentTagCompiler
                 }
             }
 
-            // Convert all kebab-cased to camelCase.
-            $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {
-                // Skip snake_cased attributes.
-                if (str($key)->contains('_')) return [$key => $value];
+            // // Convert all kebab-cased to camelCase.
+            // $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {
+            //     // Skip snake_cased attributes.
+            //     if (str($key)->contains('_')) return [$key => $value];
 
-                return [(string) str($key)->camel() => $value];
-            })->toArray();
+            //     return [(string) str($key)->camel() => $value];
+            // })->toArray();
 
-            // Convert all snake_cased attributes to camelCase, and merge with
-            // existing attributes so both snake and camel are available.
-            $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {
-                // Skip snake_cased attributes
-                if (! str($key)->contains('_')) return [$key => false];
+            // // Convert all snake_cased attributes to camelCase, and merge with
+            // // existing attributes so both snake and camel are available.
+            // $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {
+            //     // Skip snake_cased attributes
+            //     if (! str($key)->contains('_')) return [$key => false];
 
-                return [(string) str($key)->camel() => $value];
-            })->filter()->merge($attributes)->toArray();
+            //     return [(string) str($key)->camel() => $value];
+            // })->filter()->merge($attributes)->toArray();
 
             $component = $matches[1];
 
