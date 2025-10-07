@@ -4350,12 +4350,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     requestInterceptorCallbacks = [];
     addInterceptor(component, callback) {
       this.messageInterceptorCallbacksByComponent.add(component, callback);
+      return () => {
+        this.messageInterceptorCallbacksByComponent.delete(component, callback);
+      };
     }
     addMessageInterceptor(callback) {
       this.messageInterceptorCallbacks.push(callback);
+      return () => {
+        this.messageInterceptorCallbacks.splice(this.messageInterceptorCallbacks.indexOf(callback), 1);
+      };
     }
     addRequestInterceptor(callback) {
       this.requestInterceptorCallbacks.push(callback);
+      return () => {
+        this.requestInterceptorCallbacks.splice(this.requestInterceptorCallbacks.indexOf(callback), 1);
+      };
     }
     getMessageInterceptors(message) {
       let callbacks = [
@@ -4704,19 +4713,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     outstandingActionMetadata = metadata;
   }
   function intercept(component, callback) {
-    interceptors2.addInterceptor(component, callback);
+    return interceptors2.addInterceptor(component, callback);
   }
   function interceptAction(callback) {
     actionInterceptors.push(callback);
+    return () => {
+      actionInterceptors.splice(actionInterceptors.indexOf(callback), 1);
+    };
   }
   function interceptPartition(callback) {
     partitionInterceptors.push(callback);
+    return () => {
+      partitionInterceptors.splice(partitionInterceptors.indexOf(callback), 1);
+    };
   }
   function interceptMessage(callback) {
-    interceptors2.addMessageInterceptor(callback);
+    return interceptors2.addMessageInterceptor(callback);
   }
   function interceptRequest(callback) {
-    interceptors2.addRequestInterceptor(callback);
+    return interceptors2.addRequestInterceptor(callback);
   }
   interceptMessage(({ message, onFinish }) => {
     messageBus.addActiveMessage(message);
@@ -11349,7 +11364,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     ];
   }
   function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
-    interceptMessage(({ message, onSend, onFinish }) => {
+    return interceptMessage(({ message, onSend, onFinish }) => {
       if (component !== message.component)
         return;
       let matches2 = true;

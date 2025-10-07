@@ -8154,12 +8154,21 @@ var InterceptorRegistry = class {
   requestInterceptorCallbacks = [];
   addInterceptor(component, callback) {
     this.messageInterceptorCallbacksByComponent.add(component, callback);
+    return () => {
+      this.messageInterceptorCallbacksByComponent.delete(component, callback);
+    };
   }
   addMessageInterceptor(callback) {
     this.messageInterceptorCallbacks.push(callback);
+    return () => {
+      this.messageInterceptorCallbacks.splice(this.messageInterceptorCallbacks.indexOf(callback), 1);
+    };
   }
   addRequestInterceptor(callback) {
     this.requestInterceptorCallbacks.push(callback);
+    return () => {
+      this.requestInterceptorCallbacks.splice(this.requestInterceptorCallbacks.indexOf(callback), 1);
+    };
   }
   getMessageInterceptors(message) {
     let callbacks = [
@@ -8508,19 +8517,25 @@ function setNextActionMetadata(metadata) {
   outstandingActionMetadata = metadata;
 }
 function intercept(component, callback) {
-  interceptors.addInterceptor(component, callback);
+  return interceptors.addInterceptor(component, callback);
 }
 function interceptAction(callback) {
   actionInterceptors.push(callback);
+  return () => {
+    actionInterceptors.splice(actionInterceptors.indexOf(callback), 1);
+  };
 }
 function interceptPartition(callback) {
   partitionInterceptors.push(callback);
+  return () => {
+    partitionInterceptors.splice(partitionInterceptors.indexOf(callback), 1);
+  };
 }
 function interceptMessage(callback) {
-  interceptors.addMessageInterceptor(callback);
+  return interceptors.addMessageInterceptor(callback);
 }
 function interceptRequest(callback) {
-  interceptors.addRequestInterceptor(callback);
+  return interceptors.addRequestInterceptor(callback);
 }
 interceptMessage(({ message, onFinish }) => {
   messageBus.addActiveMessage(message);
@@ -12238,7 +12253,7 @@ function applyDelay(directive2) {
   ];
 }
 function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
-  interceptMessage(({ message, onSend, onFinish }) => {
+  return interceptMessage(({ message, onSend, onFinish }) => {
     if (component !== message.component)
       return;
     let matches = true;
