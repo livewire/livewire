@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportSlots;
 
 use Livewire\ComponentHook;
-use Livewire\Drawer\Utils;
 
 use function Livewire\on;
 
@@ -20,7 +19,7 @@ class SupportSlots extends ComponentHook
     {
         $slots = $this->component->getSlots();
 
-        $view->with(['slot' => new SlotProxy($slots)]);
+        $view->with(['slot' => new SlotProxy($this->component, $slots)]);
     }
 
     function hydrate($memo)
@@ -44,7 +43,7 @@ class SupportSlots extends ComponentHook
         $slots = $this->component->getSlotsForSkippedChildRenders();
 
         if (! empty($slots)) {
-            $context->addEffect('slots', $slots);
+            $context->addEffect('slotFragments', $slots);
         }
     }
 
@@ -54,9 +53,10 @@ class SupportSlots extends ComponentHook
 
         $slotMemo = [];
 
-        foreach ($slots as $name => $slot) {
-            $slotMemo[$name] = [
+        foreach ($slots as $slot) {
+            $slotMemo[] = [
                 'name' => $slot->getName(),
+                'componentId' => $slot->getComponentId(),
                 'parentId' => $slot->getParentId(),
             ];
         }

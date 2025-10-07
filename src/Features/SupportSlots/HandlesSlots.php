@@ -18,7 +18,7 @@ trait HandlesSlots
         $parentId = $parent && method_exists($parent, 'getId') ? $parent->getId() : null;
 
         foreach ($slots as $name => $content) {
-            $this->slots[$name] = new Slot($name, $content, $parentId);
+            $this->slots[] = new Slot($name, $content, $this->getId(), $parentId);
         }
 
         return $this;
@@ -26,8 +26,12 @@ trait HandlesSlots
 
     public function withPlaceholderSlots(array $slots): self
     {
-        foreach ($slots as $name => $slot) {
-            $this->slots[$name] = new PlaceholderSlot($name, $slot['parentId']);
+        foreach ($slots as $slot) {
+            $this->slots[] = new PlaceholderSlot(
+                $slot['name'],
+                $slot['componentId'],
+                $slot['parentId'],
+            );
         }
 
         return $this;
@@ -35,10 +39,8 @@ trait HandlesSlots
 
     public function withChildSlots(array $slots, $childId)
     {
-        $this->slotsForSkippedChildRenders[$childId] = [];
-
         foreach ($slots as $name => $content) {
-            $this->slotsForSkippedChildRenders[$childId][$name] = (new Slot($name, $content, $this->getId()))->toHtml();
+            $this->slotsForSkippedChildRenders[] = (new Slot($name, $content, $childId, $this->getId()))->toHtml();
         }
     }
 

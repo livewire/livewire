@@ -8278,6 +8278,28 @@ function splitDumpFromContent(content) {
   let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
   return [dump, content.replace(dump, "")];
 }
+function walkUpwards(el, callback) {
+  let current = el;
+  while (current) {
+    let stop = void 0;
+    callback(current, { stop: (value) => value === void 0 ? stop = current : stop = value });
+    if (stop !== void 0)
+      return stop;
+    if (current._x_teleportBack)
+      current = current._x_teleportBack;
+    current = current.parentElement;
+  }
+}
+function walkBackwards(el, callback) {
+  let current = el;
+  while (current) {
+    let stop = void 0;
+    callback(current, { stop: (value) => value === void 0 ? stop = current : stop = value });
+    if (stop !== void 0)
+      return stop;
+    current = current.previousSibling;
+  }
+}
 
 // js/features/supportFileUploads.js
 var uploadManagers = /* @__PURE__ */ new WeakMap();
@@ -9289,7 +9311,7 @@ interceptMessage(({ message, onFinish }) => {
 queueMicrotask(() => {
   coordinateNetworkInteractions(messageBus);
 });
-function fireAction2(component, method, params = [], metadata = {}) {
+function fireAction(component, method, params = [], metadata = {}) {
   let action = constructAction(component, method, params, metadata);
   let prevented = false;
   actionInterceptors.forEach((callback) => {
@@ -9992,7 +10014,7 @@ import_alpinejs2.default.magic("wire", (el, { cleanup }) => {
   return new Proxy({}, {
     get(target, property) {
       if (!component)
-        component = closestComponent(el);
+        component = findComponentByEl(el);
       if (["$entangle", "entangle"].includes(property)) {
         return generateEntangleFunction(component, cleanup);
       }
@@ -10000,7 +10022,7 @@ import_alpinejs2.default.magic("wire", (el, { cleanup }) => {
     },
     set(target, property, value) {
       if (!component)
-        component = closestComponent(el);
+        component = findComponentByEl(el);
       component.$wire[property] = value;
       return true;
     }
@@ -10026,7 +10048,7 @@ wireProperty("$set", (component) => async (property, value, live = true) => {
   dataSet(component.reactive, property, value);
   if (live) {
     component.queueUpdate(property, value);
-    return fireAction2(component, "$set");
+    return fireAction(component, "$set");
   }
   return Promise.resolve();
 });
@@ -10074,7 +10096,7 @@ wireProperty("$call", (component) => async (method, ...params) => {
   return await component.$wire[method](...params);
 });
 wireProperty("$island", (component) => async (name, mode2 = null) => {
-  return fireAction2(component, "$refresh", [], {
+  return fireAction(component, "$refresh", [], {
     island: { name, mode: mode2 }
   });
 });
@@ -10092,10 +10114,10 @@ wireProperty("$watch", (component) => (path, callback) => {
   component.addCleanup(unwatch);
 });
 wireProperty("$refresh", (component) => async () => {
-  return fireAction2(component, "$refresh");
+  return fireAction(component, "$refresh");
 });
 wireProperty("$commit", (component) => async () => {
-  return fireAction2(component, "$commit");
+  return fireAction(component, "$commit");
 });
 wireProperty("$on", (component) => (...params) => listen2(component, ...params));
 wireProperty("$hook", (component) => (name, callback) => {
@@ -10142,7 +10164,7 @@ wireFallback((component) => (property) => async (...params) => {
       return overrides[property](params);
     }
   }
-  return fireAction2(component, property, params);
+  return fireAction(component, property, params);
 });
 
 // js/component.js
@@ -10247,7 +10269,7 @@ var Component = class {
     return islands;
   }
   get parent() {
-    return closestComponent(this.el.parentElement);
+    return findComponentByEl(this.el.parentElement);
   }
   get isIsolated() {
     return this.snapshot.memo.isolate;
@@ -10330,11 +10352,10 @@ var Component = class {
   }
 };
 
-// js/morph.js
-var import_alpinejs3 = __toESM(require_module_cjs());
-
 // js/fragment.js
 function closestFragment(el, { isMatch, hasReachedBoundary }) {
+  if (!hasReachedBoundary)
+    hasReachedBoundary = () => false;
   let current = el;
   while (current) {
     let sibling = current.previousSibling;
@@ -10363,6 +10384,8 @@ function closestFragment(el, { isMatch, hasReachedBoundary }) {
   return null;
 }
 function findFragment(el, { isMatch, hasReachedBoundary }) {
+  if (!hasReachedBoundary)
+    hasReachedBoundary = () => false;
   let startNode = null;
   let rootEl = el;
   walkElements(rootEl, (el2, { skip, stop }) => {
@@ -10469,246 +10492,6 @@ function decodeMetadata(encodedMetadata) {
   return metadata;
 }
 
-// js/morph.js
-function morph(component, el, html) {
-  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-  let customElement = customElements.get(wrapperTag);
-  wrapperTag = customElement ? customElement.name : wrapperTag;
-  let wrapper = document.createElement(wrapperTag);
-  wrapper.innerHTML = html;
-  let parentComponent;
-  try {
-    parentComponent = closestComponent(el.parentElement);
-  } catch (e) {
-  }
-  parentComponent && (wrapper.__livewire = parentComponent);
-  let to = wrapper.firstElementChild;
-  to.setAttribute("wire:snapshot", component.snapshotEncoded);
-  let effects = { ...component.effects };
-  delete effects.html;
-  to.setAttribute("wire:effects", JSON.stringify(effects));
-  to.__livewire = component;
-  trigger("morph", { el, toEl: to, component });
-  let existingComponentsMap = {};
-  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
-    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
-  });
-  to.querySelectorAll("[wire\\:id]").forEach((child) => {
-    if (child.hasAttribute("wire:snapshot"))
-      return;
-    let wireId = child.getAttribute("wire:id");
-    let existingComponent = existingComponentsMap[wireId];
-    if (existingComponent) {
-      child.replaceWith(existingComponent.cloneNode(true));
-    }
-  });
-  import_alpinejs3.default.morph(el, to, getMorphConfig(component));
-  trigger("morphed", { el, component });
-}
-function morphFragment(component, startNode, endNode, toHTML) {
-  let fromContainer = startNode.parentElement;
-  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
-  let toContainer = document.createElement(fromContainerTag);
-  toContainer.innerHTML = toHTML;
-  toContainer.__livewire = component;
-  let parentElement = component.el.parentElement;
-  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-  let parentComponent;
-  try {
-    parentComponent = parentElement ? closestComponent(parentElement) : null;
-  } catch (e) {
-  }
-  if (parentComponent) {
-    let parentProviderWrapper = document.createElement(parentElementTag);
-    parentProviderWrapper.appendChild(toContainer);
-    parentProviderWrapper.__livewire = parentComponent;
-  }
-  trigger("island.morph", { startNode, endNode, component });
-  import_alpinejs3.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
-  trigger("island.morphed", { startNode, endNode, component });
-}
-function getMorphConfig(component) {
-  return {
-    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
-      if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
-        let metadata = extractFragmentMetadataFromMarkerNode(toEl);
-        if (metadata.mode !== "morph") {
-          skipUntil((node) => {
-            if (isEndFragmentMarker(node)) {
-              let endMarkerMetadata = extractFragmentMetadataFromMarkerNode(node);
-              return endMarkerMetadata.token === metadata.token;
-            }
-            return false;
-          });
-        }
-      }
-      if (isntElement(el))
-        return;
-      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
-      if (el.__livewire_replace === true)
-        el.innerHTML = toEl.innerHTML;
-      if (el.__livewire_replace_self === true) {
-        el.outerHTML = toEl.outerHTML;
-        return skip();
-      }
-      if (el.__livewire_ignore === true)
-        return skip();
-      if (el.__livewire_ignore_self === true)
-        childrenOnly();
-      if (el.__livewire_ignore_children === true)
-        return skipChildren();
-      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
-        return skip();
-      if (isComponentRootEl(el))
-        toEl.__livewire = component;
-    },
-    updated: (el) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.updated", { el, component });
-    },
-    removing: (el, skip) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.removing", { el, component, skip });
-    },
-    removed: (el) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.removed", { el, component });
-    },
-    adding: (el) => {
-      trigger("morph.adding", { el, component });
-    },
-    added: (el) => {
-      if (isntElement(el))
-        return;
-      const closestComponentId = closestComponent(el).id;
-      trigger("morph.added", { el });
-    },
-    key: (el) => {
-      if (isntElement(el))
-        return;
-      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
-    },
-    lookahead: false
-  };
-}
-function isntElement(el) {
-  return typeof el.hasAttribute !== "function";
-}
-function isComponentRootEl(el) {
-  return el.hasAttribute("wire:id");
-}
-
-// js/features/supportSlots.js
-on("effect", ({ component, effects }) => {
-  let slots = effects.slots;
-  if (!slots)
-    return;
-  let parentId = component.el.getAttribute("wire:id");
-  Object.entries(slots).forEach(([childId, childSlots]) => {
-    let childComponent = findComponent(childId);
-    if (!childComponent)
-      return;
-    Object.entries(childSlots).forEach(([name, content]) => {
-      queueMicrotask(() => {
-        queueMicrotask(() => {
-          queueMicrotask(() => {
-            let fullName = parentId ? `${name}:${parentId}` : name;
-            let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
-            if (!startNode || !endNode)
-              return;
-            let strippedContent = stripSlotComments(content, fullName);
-            morphFragment(childComponent, startNode, endNode, strippedContent);
-          });
-        });
-      });
-    });
-  });
-});
-function stripSlotComments(content, slotName) {
-  let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
-  let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
-  let stripped = content.replace(startComment, "").replace(endComment, "");
-  return stripped.trim();
-}
-function findSlotComments(rootEl, slotName) {
-  let startNode = null;
-  let endNode = null;
-  walkElements2(rootEl, (el, skip) => {
-    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-      return skip();
-    }
-    Array.from(el.childNodes).forEach((node) => {
-      if (node.nodeType === Node.COMMENT_NODE) {
-        if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
-          startNode = node;
-        }
-        if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
-          endNode = node;
-        }
-      }
-    });
-  });
-  return { startNode, endNode };
-}
-function walkElements2(el, callback) {
-  let skip = false;
-  callback(el, () => skip = true);
-  if (skip)
-    return;
-  Array.from(el.children).forEach((child) => {
-    walkElements2(child, callback);
-  });
-}
-function isStartMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
-}
-function isEndMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
-}
-function extractSlotData(el) {
-  let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
-  let match = el.textContent.match(regex);
-  if (!match)
-    return;
-  return {
-    name: match[1],
-    parentId: match[2] || null
-  };
-}
-function checkPreviousSiblingForSlotStartMarker(el) {
-  function searchInPreviousSiblings(node) {
-    let sibling = node.previousSibling;
-    while (sibling) {
-      if (isEndMarker(sibling)) {
-        return null;
-      }
-      if (isStartMarker(sibling)) {
-        return sibling;
-      }
-      sibling = sibling.previousSibling;
-    }
-    return null;
-  }
-  function searchRecursively(currentEl) {
-    let found = searchInPreviousSiblings(currentEl);
-    if (found !== null) {
-      return found;
-    }
-    let parent = currentEl.parentElement;
-    if (!parent) {
-      return null;
-    }
-    if (parent.hasAttribute && parent.hasAttribute("wire:id")) {
-      return null;
-    }
-    return searchRecursively(parent);
-  }
-  return searchRecursively(el);
-}
-
 // js/store.js
 var components = {};
 function initComponent(el) {
@@ -10736,21 +10519,40 @@ function findComponent(id) {
     throw "Component not found: " + id;
   return component;
 }
-function closestComponent(el, strict = true) {
-  let slotStartMarker = checkPreviousSiblingForSlotStartMarker(el);
-  if (slotStartMarker) {
-    let { name, parentId } = extractSlotData(slotStartMarker);
-    if (parentId) {
-      return findComponent(parentId);
-    }
-  }
-  let closestRoot = Alpine.findClosest(el, (i) => i.__livewire);
-  if (!closestRoot) {
+function findComponentByEl(el, strict = true) {
+  let componentId = walkUpwards(el, (node, { stop }) => {
+    if (node.__livewire)
+      return stop(node.__livewire.id);
+    let endMarkers = [];
+    let slotParentId = walkBackwards(node, (siblingNode, { stop: stop2 }) => {
+      if (isEndFragmentMarker(siblingNode)) {
+        let metadata = extractFragmentMetadataFromMarkerNode(siblingNode);
+        if (metadata.type !== "slot")
+          return;
+        endMarkers.push("a");
+        return;
+      }
+      if (isStartFragmentMarker(siblingNode)) {
+        let metadata = extractFragmentMetadataFromMarkerNode(siblingNode);
+        if (metadata.type !== "slot")
+          return;
+        if (endMarkers.length > 0) {
+          endMarkers.pop();
+        } else {
+          return stop2(metadata.parent);
+        }
+      }
+    });
+    if (slotParentId)
+      return stop(slotParentId);
+  });
+  let component = findComponent(componentId);
+  if (!component) {
     if (strict)
       throw "Could not find Livewire component in DOM tree";
     return;
   }
-  return closestRoot.__livewire;
+  return component;
 }
 function componentsByName(name) {
   return Object.values(components).filter((component) => {
@@ -11219,19 +11021,19 @@ function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
 }
 
 // js/plugins/navigate/teleport.js
-var import_alpinejs4 = __toESM(require_module_cjs());
+var import_alpinejs3 = __toESM(require_module_cjs());
 function packUpPersistedTeleports(persistedEl) {
-  import_alpinejs4.default.mutateDom(() => {
+  import_alpinejs3.default.mutateDom(() => {
     persistedEl.querySelectorAll("[data-teleport-template]").forEach((i) => i._x_teleport.remove());
   });
 }
 function removeAnyLeftOverStaleTeleportTargets(body) {
-  import_alpinejs4.default.mutateDom(() => {
+  import_alpinejs3.default.mutateDom(() => {
     body.querySelectorAll("[data-teleport-target]").forEach((i) => i.remove());
   });
 }
 function unPackPersistedTeleports(persistedEl) {
-  import_alpinejs4.default.walk(persistedEl, (el, skip) => {
+  import_alpinejs3.default.walk(persistedEl, (el, skip) => {
     if (!el._x_teleport)
       return;
     el._x_teleportPutBack();
@@ -11274,14 +11076,14 @@ function restoreScrollPositionOrScrollToTop() {
 }
 
 // js/plugins/navigate/persist.js
-var import_alpinejs5 = __toESM(require_module_cjs());
+var import_alpinejs4 = __toESM(require_module_cjs());
 var els = {};
 function storePersistantElementsForLater(callback) {
   els = {};
   document.querySelectorAll("[x-persist]").forEach((i) => {
     els[i.getAttribute("x-persist")] = i;
     callback(i);
-    import_alpinejs5.default.mutateDom(() => {
+    import_alpinejs4.default.mutateDom(() => {
       i.remove();
     });
   });
@@ -11295,14 +11097,14 @@ function putPersistantElementsBack(callback) {
     usedPersists.push(i.getAttribute("x-persist"));
     old._x_wasPersisted = true;
     callback(old, i);
-    import_alpinejs5.default.mutateDom(() => {
+    import_alpinejs4.default.mutateDom(() => {
       i.replaceWith(old);
     });
   });
   Object.entries(els).forEach(([key, el]) => {
     if (usedPersists.includes(key))
       return;
-    import_alpinejs5.default.destroyTree(el);
+    import_alpinejs4.default.destroyTree(el);
   });
   els = {};
 }
@@ -12026,28 +11828,28 @@ function fromQueryString(search, queryKey) {
 }
 
 // js/lifecycle.js
-var import_morph2 = __toESM(require_module_cjs7());
+var import_morph = __toESM(require_module_cjs7());
 var import_mask = __toESM(require_module_cjs8());
-var import_alpinejs6 = __toESM(require_module_cjs());
+var import_alpinejs5 = __toESM(require_module_cjs());
 function start() {
   setTimeout(() => ensureLivewireScriptIsntMisplaced());
   dispatch(document, "livewire:init");
   dispatch(document, "livewire:initializing");
-  import_alpinejs6.default.plugin(import_morph2.default);
-  import_alpinejs6.default.plugin(history2);
-  import_alpinejs6.default.plugin(import_intersect.default);
-  import_alpinejs6.default.plugin(import_resize.default);
-  import_alpinejs6.default.plugin(import_collapse.default);
-  import_alpinejs6.default.plugin(import_anchor.default);
-  import_alpinejs6.default.plugin(import_focus.default);
-  import_alpinejs6.default.plugin(module_default);
-  import_alpinejs6.default.plugin(navigate_default);
-  import_alpinejs6.default.plugin(import_mask.default);
-  import_alpinejs6.default.addRootSelector(() => "[wire\\:id]");
-  import_alpinejs6.default.onAttributesAdded((el, attributes) => {
+  import_alpinejs5.default.plugin(import_morph.default);
+  import_alpinejs5.default.plugin(history2);
+  import_alpinejs5.default.plugin(import_intersect.default);
+  import_alpinejs5.default.plugin(import_resize.default);
+  import_alpinejs5.default.plugin(import_collapse.default);
+  import_alpinejs5.default.plugin(import_anchor.default);
+  import_alpinejs5.default.plugin(import_focus.default);
+  import_alpinejs5.default.plugin(module_default);
+  import_alpinejs5.default.plugin(navigate_default);
+  import_alpinejs5.default.plugin(import_mask.default);
+  import_alpinejs5.default.addRootSelector(() => "[wire\\:id]");
+  import_alpinejs5.default.onAttributesAdded((el, attributes) => {
     if (!Array.from(attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
       return;
-    let component = closestComponent(el, false);
+    let component = findComponentByEl(el, false);
     if (!component)
       return;
     attributes.forEach((attribute) => {
@@ -12055,33 +11857,33 @@ function start() {
         return;
       let directive2 = extractDirective(el, attribute.name);
       trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-        import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
+        import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
       } });
     });
   });
-  import_alpinejs6.default.interceptInit(
-    import_alpinejs6.default.skipDuringClone(
+  import_alpinejs5.default.interceptInit(
+    import_alpinejs5.default.skipDuringClone(
       (el) => {
         if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
           return;
         if (el.hasAttribute("wire:id") && !el.__livewire && !hasComponent(el.getAttribute("wire:id"))) {
           let component2 = initComponent(el);
-          import_alpinejs6.default.onAttributeRemoved(el, "wire:id", () => {
+          import_alpinejs5.default.onAttributeRemoved(el, "wire:id", () => {
             destroyComponent(component2.id);
           });
         }
         let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
         directives.forEach((directive2) => {
           trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
-            import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
+            import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
           } });
         });
-        let component = closestComponent(el, false);
+        let component = findComponentByEl(el, false);
         if (component) {
           trigger("element.init", { el, component });
           directives.forEach((directive2) => {
             trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-              import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
+              import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
             } });
           });
         }
@@ -12092,13 +11894,13 @@ function start() {
         let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
         directives.forEach((directive2) => {
           trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
-            import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
+            import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
           } });
         });
       }
     )
   );
-  import_alpinejs6.default.start();
+  import_alpinejs5.default.start();
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   dispatch(document, "livewire:initialized");
 }
@@ -12141,10 +11943,10 @@ function registerListeners(component, listeners2) {
 }
 
 // js/features/supportScriptsAndAssets.js
-var import_alpinejs8 = __toESM(require_module_cjs());
+var import_alpinejs7 = __toESM(require_module_cjs());
 
 // js/evaluator.js
-var import_alpinejs7 = __toESM(require_module_cjs());
+var import_alpinejs6 = __toESM(require_module_cjs());
 function evaluateExpression(component, el, expression, options = {}) {
   options = {
     ...{
@@ -12157,7 +11959,7 @@ function evaluateExpression(component, el, expression, options = {}) {
     },
     ...options
   };
-  return import_alpinejs7.default.evaluate(el, expression, options);
+  return import_alpinejs6.default.evaluate(el, expression, options);
 }
 function evaluateActionExpression(component, el, expression, options = {}) {
   let negated = false;
@@ -12166,7 +11968,7 @@ function evaluateActionExpression(component, el, expression, options = {}) {
     expression = expression.slice(1).trim();
   }
   let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`;
-  return import_alpinejs7.default.evaluate(el, contextualExpression, options);
+  return import_alpinejs6.default.evaluate(el, contextualExpression, options);
 }
 function evaluateActionExpressionWithoutComponentScope(el, expression, options = {}) {
   let negated = false;
@@ -12175,7 +11977,7 @@ function evaluateActionExpressionWithoutComponentScope(el, expression, options =
     expression = expression.slice(1).trim();
   }
   let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`;
-  return import_alpinejs7.default.evaluate(el, contextualExpression, options);
+  return import_alpinejs6.default.evaluate(el, contextualExpression, options);
 }
 
 // js/features/supportScriptsAndAssets.js
@@ -12206,7 +12008,7 @@ on("effect", ({ component, effects }) => {
     Object.entries(scripts).forEach(([key, content]) => {
       onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
         let scriptContent = extractScriptTagContent(content);
-        import_alpinejs8.default.dontAutoEvaluateFunctions(() => {
+        import_alpinejs7.default.dontAutoEvaluateFunctions(() => {
           evaluateExpression(component, component.el, scriptContent, {
             scope: {
               "$js": component.$wire.$js
@@ -12283,9 +12085,9 @@ function cloneScriptTag2(el) {
 }
 
 // js/features/supportJsEvaluation.js
-var import_alpinejs9 = __toESM(require_module_cjs());
-import_alpinejs9.default.magic("js", (el) => {
-  let component = closestComponent(el);
+var import_alpinejs8 = __toESM(require_module_cjs());
+import_alpinejs8.default.magic("js", (el) => {
+  let component = findComponentByEl(el);
   return component.$wire.js;
 });
 on("effect", ({ component, effects }) => {
@@ -12306,6 +12108,139 @@ on("effect", ({ component, effects }) => {
   }
 });
 
+// js/morph.js
+var import_alpinejs9 = __toESM(require_module_cjs());
+function morph2(component, el, html) {
+  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+  let customElement = customElements.get(wrapperTag);
+  wrapperTag = customElement ? customElement.name : wrapperTag;
+  let wrapper = document.createElement(wrapperTag);
+  wrapper.innerHTML = html;
+  let parentComponent;
+  try {
+    parentComponent = findComponentByEl(el.parentElement);
+  } catch (e) {
+  }
+  parentComponent && (wrapper.__livewire = parentComponent);
+  let to = wrapper.firstElementChild;
+  to.setAttribute("wire:snapshot", component.snapshotEncoded);
+  let effects = { ...component.effects };
+  delete effects.html;
+  to.setAttribute("wire:effects", JSON.stringify(effects));
+  to.__livewire = component;
+  trigger("morph", { el, toEl: to, component });
+  let existingComponentsMap = {};
+  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
+    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
+  });
+  to.querySelectorAll("[wire\\:id]").forEach((child) => {
+    if (child.hasAttribute("wire:snapshot"))
+      return;
+    let wireId = child.getAttribute("wire:id");
+    let existingComponent = existingComponentsMap[wireId];
+    if (existingComponent) {
+      child.replaceWith(existingComponent.cloneNode(true));
+    }
+  });
+  import_alpinejs9.default.morph(el, to, getMorphConfig(component));
+  trigger("morphed", { el, component });
+}
+function morphFragment(component, startNode, endNode, toHTML) {
+  let fromContainer = startNode.parentElement;
+  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+  let toContainer = document.createElement(fromContainerTag);
+  toContainer.innerHTML = toHTML;
+  toContainer.__livewire = component;
+  let parentElement = component.el.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  let parentComponent;
+  try {
+    parentComponent = parentElement ? findComponentByEl(parentElement) : null;
+  } catch (e) {
+  }
+  if (parentComponent) {
+    let parentProviderWrapper = document.createElement(parentElementTag);
+    parentProviderWrapper.appendChild(toContainer);
+    parentProviderWrapper.__livewire = parentComponent;
+  }
+  trigger("island.morph", { startNode, endNode, component });
+  import_alpinejs9.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+  trigger("island.morphed", { startNode, endNode, component });
+}
+function getMorphConfig(component) {
+  return {
+    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+      if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
+        let metadata = extractFragmentMetadataFromMarkerNode(toEl);
+        if (metadata.mode !== "morph") {
+          skipUntil((node) => {
+            if (isEndFragmentMarker(node)) {
+              let endMarkerMetadata = extractFragmentMetadataFromMarkerNode(node);
+              return endMarkerMetadata.token === metadata.token;
+            }
+            return false;
+          });
+        }
+      }
+      if (isntElement(el))
+        return;
+      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
+      if (el.__livewire_replace === true)
+        el.innerHTML = toEl.innerHTML;
+      if (el.__livewire_replace_self === true) {
+        el.outerHTML = toEl.outerHTML;
+        return skip();
+      }
+      if (el.__livewire_ignore === true)
+        return skip();
+      if (el.__livewire_ignore_self === true)
+        childrenOnly();
+      if (el.__livewire_ignore_children === true)
+        return skipChildren();
+      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
+        return skip();
+      if (isComponentRootEl(el))
+        toEl.__livewire = component;
+    },
+    updated: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.updated", { el, component });
+    },
+    removing: (el, skip) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removing", { el, component, skip });
+    },
+    removed: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removed", { el, component });
+    },
+    adding: (el) => {
+      trigger("morph.adding", { el, component });
+    },
+    added: (el) => {
+      if (isntElement(el))
+        return;
+      const findComponentByElId = findComponentByEl(el).id;
+      trigger("morph.added", { el });
+    },
+    key: (el) => {
+      if (isntElement(el))
+        return;
+      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
+    },
+    lookahead: false
+  };
+}
+function isntElement(el) {
+  return typeof el.hasAttribute !== "function";
+}
+function isComponentRootEl(el) {
+  return el.hasAttribute("wire:id");
+}
+
 // js/features/supportMorphDom.js
 interceptMessage(({ message, onSuccess }) => {
   onSuccess(({ payload, onMorph }) => {
@@ -12313,7 +12248,7 @@ interceptMessage(({ message, onSuccess }) => {
       let html = payload.effects.html;
       if (!html)
         return;
-      morph(message.component, message.component.el, html);
+      morph2(message.component, message.component.el, html);
     });
   });
 });
@@ -12625,132 +12560,7 @@ on("effect", ({ effects }) => {
   });
 });
 
-// js/directives/wire-poll.js
-directive("poll", ({ el, directive: directive2, component }) => {
-  let interval = extractDurationFrom(directive2.modifiers, 2e3);
-  let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-    triggerComponentRequest(el, directive2, component);
-  }, interval);
-  start2();
-  throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive2));
-  pauseWhile(() => theDirectiveHasVisible(directive2) && theElementIsNotInTheViewport(el));
-  pauseWhile(() => theDirectiveIsOffTheElement(el));
-  pauseWhile(() => livewireIsOffline());
-  stopWhen(() => theElementIsDisconnected(el));
-});
-function triggerComponentRequest(el, directive2, component) {
-  setNextActionOrigin({ el, directive: directive2 });
-  setNextActionMetadata({ type: "poll" });
-  let fullMethod = directive2.expression ? directive2.expression : "$refresh";
-  evaluateActionExpression(component, el, fullMethod);
-}
-function poll(callback, interval = 2e3) {
-  let pauseConditions = [];
-  let throttleConditions = [];
-  let stopConditions = [];
-  return {
-    start() {
-      let clear = syncronizedInterval(interval, () => {
-        if (stopConditions.some((i) => i()))
-          return clear();
-        if (pauseConditions.some((i) => i()))
-          return;
-        if (throttleConditions.some((i) => i()) && Math.random() < 0.95)
-          return;
-        callback();
-      });
-    },
-    pauseWhile(condition) {
-      pauseConditions.push(condition);
-    },
-    throttleWhile(condition) {
-      throttleConditions.push(condition);
-    },
-    stopWhen(condition) {
-      stopConditions.push(condition);
-    }
-  };
-}
-var clocks = [];
-function syncronizedInterval(ms, callback) {
-  if (!clocks[ms]) {
-    let clock = {
-      timer: setInterval(() => clock.callbacks.forEach((i) => i()), ms),
-      callbacks: /* @__PURE__ */ new Set()
-    };
-    clocks[ms] = clock;
-  }
-  clocks[ms].callbacks.add(callback);
-  return () => {
-    clocks[ms].callbacks.delete(callback);
-    if (clocks[ms].callbacks.size === 0) {
-      clearInterval(clocks[ms].timer);
-      delete clocks[ms];
-    }
-  };
-}
-var isOffline = false;
-window.addEventListener("offline", () => isOffline = true);
-window.addEventListener("online", () => isOffline = false);
-function livewireIsOffline() {
-  return isOffline;
-}
-var inBackground = false;
-document.addEventListener("visibilitychange", () => {
-  inBackground = document.hidden;
-}, false);
-function theTabIsInTheBackground() {
-  return inBackground;
-}
-function theDirectiveIsOffTheElement(el) {
-  return !getDirectives(el).has("poll");
-}
-function theDirectiveIsMissingKeepAlive(directive2) {
-  return !directive2.modifiers.includes("keep-alive");
-}
-function theDirectiveHasVisible(directive2) {
-  return directive2.modifiers.includes("visible");
-}
-function theElementIsNotInTheViewport(el) {
-  let bounding = el.getBoundingClientRect();
-  return !(bounding.top < (window.innerHeight || document.documentElement.clientHeight) && bounding.left < (window.innerWidth || document.documentElement.clientWidth) && bounding.bottom > 0 && bounding.right > 0);
-}
-function theElementIsDisconnected(el) {
-  return el.isConnected === false;
-}
-function extractDurationFrom(modifiers, defaultDuration) {
-  let durationInMilliSeconds;
-  let durationInMilliSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)ms/));
-  let durationInSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)s/));
-  if (durationInMilliSecondsString) {
-    durationInMilliSeconds = Number(durationInMilliSecondsString.replace("ms", ""));
-  } else if (durationInSecondsString) {
-    durationInMilliSeconds = Number(durationInSecondsString.replace("s", "")) * 1e3;
-  }
-  return durationInMilliSeconds || defaultDuration;
-}
-
 // js/features/supportIslands.js
-on("component.init", ({ component }) => {
-  let islands = component.islands;
-  if (!islands || Object.keys(islands).length === 0)
-    return;
-  Object.values(islands).forEach((island) => {
-    let poll2 = island.poll;
-    if (!poll2)
-      return;
-    let interval = extractDurationFrom([island.poll], 2e3);
-    let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll2(() => {
-      fireAction(component, "$refresh", [], {
-        type: "poll",
-        island: { name: island.name }
-      });
-    }, interval);
-    start2();
-    pauseWhile(() => livewireIsOffline());
-    stopWhen(() => theElementIsDisconnected(component.el));
-  });
-});
 interceptAction(({ action }) => {
   let origin = action.origin;
   if (!origin)
@@ -12773,9 +12583,6 @@ interceptAction(({ action }) => {
   let fragment = closestFragment(origin.el, {
     isMatch: ({ type }) => {
       return type === "island";
-    },
-    hasReachedBoundary: ({ el: el2 }) => {
-      return el2.hasAttribute("wire:id");
     }
   });
   if (!fragment)
@@ -12808,9 +12615,6 @@ function renderIsland(component, islandHtml) {
   let fragment = findFragment(component.el, {
     isMatch: ({ type, token }) => {
       return type === metadata.type && token === metadata.token;
-    },
-    hasReachedBoundary: ({ el }) => {
-      return el.hasAttribute("wire:id");
     }
   });
   if (!fragment)
@@ -12827,6 +12631,31 @@ function renderIsland(component, islandHtml) {
   } else if (mode === "prepend") {
     fragment.prepend(parentElementTag, strippedContent);
   }
+}
+
+// js/features/supportSlots.js
+interceptMessage(({ message, onSuccess, onStream }) => {
+  onSuccess(({ payload, onMorph }) => {
+    onMorph(() => {
+      let fragments = payload.effects.slotFragments || [];
+      fragments.forEach((fragmentHtml) => {
+        renderSlot(message.component, fragmentHtml);
+      });
+    });
+  });
+});
+function renderSlot(component, fragmentHtml) {
+  let metadata = extractFragmentMetadataFromHtml(fragmentHtml);
+  let targetComponent = findComponent(metadata.id);
+  let fragment = findFragment(targetComponent.el, {
+    isMatch: ({ name, token }) => {
+      return name === metadata.name && token === metadata.token;
+    }
+  });
+  if (!fragment)
+    return;
+  let strippedContent = extractInnerHtmlFromFragmentHtml(fragmentHtml);
+  morphFragment(targetComponent, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
 }
 
 // js/features/supportDataLoading.js
@@ -13367,7 +13196,7 @@ function dirtyTargets(el) {
 // js/directives/wire-model.js
 var import_alpinejs18 = __toESM(require_module_cjs());
 directive("model", ({ el, directive: directive2, component, cleanup }) => {
-  component = closestComponent(el);
+  component = findComponentByEl(el);
   let { expression, modifiers } = directive2;
   if (!expression) {
     return console.warn("Livewire: [wire:model] is missing a value.", el);
@@ -13424,7 +13253,7 @@ function isTextInput(el) {
 }
 function componentIsMissingProperty(component, property) {
   if (property.startsWith("$parent")) {
-    let parent = closestComponent(component.el.parentElement, false);
+    let parent = findComponentByEl(component.el.parentElement, false);
     if (!parent)
       return true;
     return componentIsMissingProperty(parent, property.split("$parent.")[1]);
@@ -13451,6 +13280,111 @@ directive("init", ({ component, el, directive: directive2 }) => {
   setNextActionOrigin({ el, directive: directive2 });
   evaluateActionExpression(component, el, fullMethod);
 });
+
+// js/directives/wire-poll.js
+directive("poll", ({ el, directive: directive2, component }) => {
+  let interval = extractDurationFrom(directive2.modifiers, 2e3);
+  let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+    triggerComponentRequest(el, directive2, component);
+  }, interval);
+  start2();
+  throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive2));
+  pauseWhile(() => theDirectiveHasVisible(directive2) && theElementIsNotInTheViewport(el));
+  pauseWhile(() => theDirectiveIsOffTheElement(el));
+  pauseWhile(() => livewireIsOffline());
+  stopWhen(() => theElementIsDisconnected(el));
+});
+function triggerComponentRequest(el, directive2, component) {
+  setNextActionOrigin({ el, directive: directive2 });
+  setNextActionMetadata({ type: "poll" });
+  let fullMethod = directive2.expression ? directive2.expression : "$refresh";
+  evaluateActionExpression(component, el, fullMethod);
+}
+function poll(callback, interval = 2e3) {
+  let pauseConditions = [];
+  let throttleConditions = [];
+  let stopConditions = [];
+  return {
+    start() {
+      let clear = syncronizedInterval(interval, () => {
+        if (stopConditions.some((i) => i()))
+          return clear();
+        if (pauseConditions.some((i) => i()))
+          return;
+        if (throttleConditions.some((i) => i()) && Math.random() < 0.95)
+          return;
+        callback();
+      });
+    },
+    pauseWhile(condition) {
+      pauseConditions.push(condition);
+    },
+    throttleWhile(condition) {
+      throttleConditions.push(condition);
+    },
+    stopWhen(condition) {
+      stopConditions.push(condition);
+    }
+  };
+}
+var clocks = [];
+function syncronizedInterval(ms, callback) {
+  if (!clocks[ms]) {
+    let clock = {
+      timer: setInterval(() => clock.callbacks.forEach((i) => i()), ms),
+      callbacks: /* @__PURE__ */ new Set()
+    };
+    clocks[ms] = clock;
+  }
+  clocks[ms].callbacks.add(callback);
+  return () => {
+    clocks[ms].callbacks.delete(callback);
+    if (clocks[ms].callbacks.size === 0) {
+      clearInterval(clocks[ms].timer);
+      delete clocks[ms];
+    }
+  };
+}
+var isOffline = false;
+window.addEventListener("offline", () => isOffline = true);
+window.addEventListener("online", () => isOffline = false);
+function livewireIsOffline() {
+  return isOffline;
+}
+var inBackground = false;
+document.addEventListener("visibilitychange", () => {
+  inBackground = document.hidden;
+}, false);
+function theTabIsInTheBackground() {
+  return inBackground;
+}
+function theDirectiveIsOffTheElement(el) {
+  return !getDirectives(el).has("poll");
+}
+function theDirectiveIsMissingKeepAlive(directive2) {
+  return !directive2.modifiers.includes("keep-alive");
+}
+function theDirectiveHasVisible(directive2) {
+  return directive2.modifiers.includes("visible");
+}
+function theElementIsNotInTheViewport(el) {
+  let bounding = el.getBoundingClientRect();
+  return !(bounding.top < (window.innerHeight || document.documentElement.clientHeight) && bounding.left < (window.innerWidth || document.documentElement.clientWidth) && bounding.bottom > 0 && bounding.right > 0);
+}
+function theElementIsDisconnected(el) {
+  return el.isConnected === false;
+}
+function extractDurationFrom(modifiers, defaultDuration) {
+  let durationInMilliSeconds;
+  let durationInMilliSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)ms/));
+  let durationInSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)s/));
+  if (durationInMilliSecondsString) {
+    durationInMilliSeconds = Number(durationInMilliSecondsString.replace("ms", ""));
+  } else if (durationInSecondsString) {
+    durationInMilliSeconds = Number(durationInSecondsString.replace("s", "")) * 1e3;
+  }
+  return durationInMilliSeconds || defaultDuration;
+}
 
 // js/directives/wire-show.js
 var import_alpinejs19 = __toESM(require_module_cjs());
@@ -13492,7 +13426,7 @@ var Livewire2 = {
   dispatchTo,
   interceptMessage: (callback) => interceptMessage(callback),
   interceptRequest: (callback) => interceptRequest(callback),
-  fireAction: (component, method, params = [], metadata = {}) => fireAction2(component, method, params, metadata),
+  fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),
   start,
   first,
   find,

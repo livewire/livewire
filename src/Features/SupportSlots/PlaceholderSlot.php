@@ -8,12 +8,18 @@ class PlaceholderSlot implements Htmlable
 {
     public function __construct(
         public string $name,
+        public string $componentId,
         public ?string $parentComponentId = null,
     ) {}
 
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function getComponentId(): string
+    {
+        return $this->componentId;
     }
 
     public function getParentId(): ?string
@@ -23,19 +29,36 @@ class PlaceholderSlot implements Htmlable
 
     public function toHtml(): string
     {
-        return $this->wrapInCommentMarkers('');
+        $parentPart = $this->parentComponentId ? ['parent' => $this->parentComponentId] : [];
+
+        return $this->wrapWithFragmentMarkers('', [
+            'name' => $this->name,
+            'type' => 'slot',
+            'id' => $this->componentId,
+            // This is here for JS to match opening and close markers...
+            'token' => crc32($this->name . $this->componentId . $this->parentComponentId ?? ''),
+            'mode' => 'skip',
+            ...$parentPart,
+        ]);
     }
 
-    protected function wrapInCommentMarkers(): string
+    protected function wrapWithFragmentMarkers($output, $metadata)
     {
-        if ($this->parentComponentId) {
-            return "<!--[if SLOT:{$this->name}:{$this->parentComponentId}]><![endif]-->"
-                . ''
-                . "<!--[if ENDSLOT:{$this->name}:{$this->parentComponentId}]><![endif]-->";
+        $startFragment = "<!--[if FRAGMENT:{$this->encodeFragmentMetadata($metadata)}]><![endif]-->";
+
+        $endFragment = "<!--[if ENDFRAGMENT:{$this->encodeFragmentMetadata($metadata)}]><![endif]-->";
+
+        return $startFragment . $output . $endFragment;
+    }
+
+    protected function encodeFragmentMetadata($metadata)
+    {
+        $output = '';
+
+        foreach ($metadata as $key => $value) {
+            $output .= "{$key}={$value}|";
         }
 
-        return "<!--[if SLOT:{$this->name}]><![endif]-->"
-            . ''
-            . "<!--[if ENDSLOT:{$this->name}]><![endif]-->";
+        return rtrim($output, '|');
     }
 }
