@@ -26,9 +26,7 @@ class SupportWireModelingNestedComponents extends ComponentHook
 
             if (! $outer) return;
 
-            $camelOuter = (string) str($outer)->camel();
-
-            static::$outersByComponentId[$id] = [$camelOuter => data_get($parent, $camelOuter)];
+            static::$outersByComponentId[$id] = [$outer => data_get($parent, $outer)];
         });
     }
 

@@ -25,8 +25,6 @@ class SupportReactiveProps extends ComponentHook
     static function getPassedInProp($id, $name) {
         $params = static::$pendingChildParams[$id] ?? [];
 
-        $camelName = (string) str($name)->camel();
-
-        return $params[$camelName] ?? null;
+        return $params[$name] ?? null;
     }
 }
