@@ -4,13 +4,31 @@ namespace Livewire\Features\SupportSlots;
 
 trait HandlesSlots
 {
-    protected array $slots = [];
-
+    /**
+     * Parent concerns...
+     */
     protected array $slotsForSkippedChildRenders = [];
 
     public function getSlotsForSkippedChildRenders()
     {
         return $this->slotsForSkippedChildRenders;
+    }
+
+    public function withChildSlots(array $slots, $childId)
+    {
+        foreach ($slots as $name => $content) {
+            $this->slotsForSkippedChildRenders[] = (new Slot($name, $content, $childId, $this->getId()))->toHtml();
+        }
+    }
+
+    /**
+     * Child concerns...
+     */
+    protected array $slots = [];
+
+    public function getSlots()
+    {
+        return $this->slots;
     }
 
     public function withSlots(array $slots, $parent = null): self
@@ -37,15 +55,5 @@ trait HandlesSlots
         return $this;
     }
 
-    public function withChildSlots(array $slots, $childId)
-    {
-        foreach ($slots as $name => $content) {
-            $this->slotsForSkippedChildRenders[] = (new Slot($name, $content, $childId, $this->getId()))->toHtml();
-        }
-    }
 
-    public function getSlots()
-    {
-        return $this->slots;
-    }
 }
