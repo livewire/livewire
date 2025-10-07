@@ -1,8 +1,8 @@
 <?php
 
-namespace Livewire\V4\HtmlAttributes;
+namespace Livewire\Features\SupportHtmlAttributeForwarding;
 
-trait HandlesHtmlAttributes
+trait HandlesHtmlAttributeForwarding
 {
     protected array $htmlAttributes = [];
 

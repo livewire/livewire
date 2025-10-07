@@ -423,6 +423,27 @@ You can check if a slot was provided by the parent using the `has()` method on t
 </div>
 ```
 
+## Forwarding HTML attributes
+
+Like Blade components, Livewire components support forwarding HTML attributes from a parent to a child using the `$attributes` variable.
+
+Below is an example of a parent component passing a `class` attribute to a child component:
+
+```blade
+<livewire:comment :$comment class="border-b" />
+```
+
+You can apply these attributes in the child component using the `$attributes` variable:
+
+```blade
+<div {{ $attributes->class('bg-white rounded-md') }}>
+    <p>{{ $comment->author }}</p>
+    <p>{{ $comment->body }}</p>
+</div>
+```
+
+Attributes that match public property names are automatically passed as props and excluded from `$attributes`. Any remaining attributes like `class`, `id`, or `data-*` are available through `$attributes`.
+
 ## Listening for events from children
 
 Another powerful parent-child component communication technique is Livewire's event system, which allows you to dispatch an event on the server or client that can be intercepted by other components.

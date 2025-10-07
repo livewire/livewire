@@ -1,11 +1,11 @@
 <?php
 
-namespace Livewire\V4\HtmlAttributes;
+namespace Livewire\Features\SupportHtmlAttributeForwarding;
 
 use Livewire\ComponentHook;
 use Illuminate\View\ComponentAttributeBag;
 
-class SupportsHtmlAttributes extends ComponentHook
+class SupportHtmlAttributeForwarding extends ComponentHook
 {
     public function render($view, $properties)
     {

@@ -4,7 +4,6 @@ namespace Livewire;
 
 use Livewire\V4\Paginators\HandlesPaginators;
 use Livewire\V4\JsModules\HandleJsModules;
-use Livewire\V4\HtmlAttributes\HandlesHtmlAttributes;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
 use Livewire\Features\SupportSlots\HandlesSlots;
@@ -15,6 +14,7 @@ use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
 use Livewire\Features\SupportIslands\HandlesIslands;
 use Livewire\Features\SupportFormObjects\HandlesFormObjects;
 use Livewire\Features\SupportEvents\HandlesEvents;
+use Livewire\Features\SupportHtmlAttributeForwarding\HandlesHtmlAttributeForwarding;
 use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
 use Livewire\Features\SupportAttributes\HandlesAttributes;
 use Livewire\Exceptions\PropertyNotFoundException;
@@ -41,7 +41,7 @@ abstract class Component
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;
     use HandlesSlots;
-    use HandlesHtmlAttributes;
+    use HandlesHtmlAttributeForwarding;
     use HandlesPaginators;
     use HandleJsModules;
 
