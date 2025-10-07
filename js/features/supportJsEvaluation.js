@@ -1,11 +1,11 @@
 import { evaluateExpression } from '../evaluator'
-import { closestComponent } from '@/store'
+import { findComponentByEl } from '@/store'
 import { overrideMethod } from '@/$wire'
 import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 
 Alpine.magic('js', el => {
-    let component = closestComponent(el)
+    let component = findComponentByEl(el)
 
     return component.$wire.js
 })

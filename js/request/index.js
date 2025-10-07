@@ -24,23 +24,31 @@ export function setNextActionMetadata(metadata) {
 }
 
 export function intercept(component, callback) {
-    interceptors.addInterceptor(component, callback)
+    return interceptors.addInterceptor(component, callback)
 }
 
 export function interceptAction(callback) {
     actionInterceptors.push(callback)
+
+    return () => {
+        actionInterceptors.splice(actionInterceptors.indexOf(callback), 1)
+    }
 }
 
 export function interceptPartition(callback) {
     partitionInterceptors.push(callback)
+
+    return () => {
+        partitionInterceptors.splice(partitionInterceptors.indexOf(callback), 1)
+    }
 }
 
 export function interceptMessage(callback) {
-    interceptors.addMessageInterceptor(callback)
+    return interceptors.addMessageInterceptor(callback)
 }
 
 export function interceptRequest(callback) {
-    interceptors.addRequestInterceptor(callback)
+    return interceptors.addRequestInterceptor(callback)
 }
 
 interceptMessage(({ message, onFinish }) => {

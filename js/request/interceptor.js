@@ -110,14 +110,26 @@ export class InterceptorRegistry {
 
     addInterceptor(component, callback) {
         this.messageInterceptorCallbacksByComponent.add(component, callback)
+
+        return () => {
+            this.messageInterceptorCallbacksByComponent.delete(component, callback)
+        }
     }
 
     addMessageInterceptor(callback) {
         this.messageInterceptorCallbacks.push(callback)
+
+        return () => {
+            this.messageInterceptorCallbacks.splice(this.messageInterceptorCallbacks.indexOf(callback), 1)
+        }
     }
 
     addRequestInterceptor(callback) {
         this.requestInterceptorCallbacks.push(callback)
+
+        return () => {
+            this.requestInterceptorCallbacks.splice(this.requestInterceptorCallbacks.indexOf(callback), 1)
+        }
     }
 
     getMessageInterceptors(message) {

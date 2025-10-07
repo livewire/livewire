@@ -1,5 +1,7 @@
 
 export function closestFragment(el, { isMatch, hasReachedBoundary }) {
+    if (! hasReachedBoundary) hasReachedBoundary = () => false
+
     let current = el
 
     while (current) {
@@ -42,6 +44,8 @@ export function closestFragment(el, { isMatch, hasReachedBoundary }) {
 }
 
 export function findFragment(el, { isMatch, hasReachedBoundary }) {
+    if (! hasReachedBoundary) hasReachedBoundary = () => false
+
     let startNode = null
 
     let rootEl = el

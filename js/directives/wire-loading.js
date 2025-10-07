@@ -70,7 +70,7 @@ function applyDelay(directive) {
 }
 
 function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoading, endLoading ]) {
-    interceptMessage(({ message, onSend, onFinish }) => {
+    return interceptMessage(({ message, onSend, onFinish }) => {
         if (component !== message.component) return
 
         let matches = true

@@ -1,5 +1,5 @@
 import { trigger } from "@/hooks"
-import { closestComponent } from "@/store"
+import { findComponentByEl } from "@/store"
 import Alpine from 'alpinejs'
 import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFragmentMarker } from "./fragment"
 
@@ -21,7 +21,7 @@ export function morph(component, el, html) {
     let parentComponent
 
     try {
-        parentComponent = closestComponent(el.parentElement)
+        parentComponent = findComponentByEl(el.parentElement)
     } catch (e) {}
 
     parentComponent && (wrapper.__livewire = parentComponent)
@@ -83,7 +83,7 @@ export function morphFragment(component, startNode, endNode, toHTML) {
     let parentComponent
 
     try {
-        parentComponent = parentElement ? closestComponent(parentElement) : null
+        parentComponent = parentElement ? findComponentByEl(parentElement) : null
     } catch (e) {}
 
     if (parentComponent) {
@@ -166,7 +166,7 @@ function getMorphConfig(component) {
         added: (el) => {
             if (isntElement(el)) return
 
-            const closestComponentId = closestComponent(el).id
+            const findComponentByElId = findComponentByEl(el).id
 
             trigger('morph.added', { el })
         },

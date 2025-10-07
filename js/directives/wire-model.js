@@ -1,6 +1,6 @@
 import { directive } from '@/directives'
 import { handleFileUpload } from '@/features/supportFileUploads'
-import { closestComponent } from '@/store'
+import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import { setNextActionMetadata, setNextActionOrigin } from '@/request'
 import Alpine from 'alpinejs'
@@ -9,7 +9,7 @@ import Alpine from 'alpinejs'
 directive('model', ({ el, directive, component, cleanup }) => {
     // @todo: will need to probaby do this further upstream i just don't want to bog down the entire lifecycle right now...
     // this is to support slots properly...
-    component = closestComponent(el)
+    component = findComponentByEl(el)
 
     let { expression, modifiers } = directive
 
@@ -99,7 +99,7 @@ function isDirty(subject, dirty) {
 
 function componentIsMissingProperty(component, property) {
     if (property.startsWith('$parent')) {
-        let parent = closestComponent(component.el.parentElement, false)
+        let parent = findComponentByEl(component.el.parentElement, false)
 
         if (! parent) return true
 

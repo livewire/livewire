@@ -298,6 +298,131 @@ Now the parent `TodoList` component can treat `TodoInput` like any other input e
 > Currently Livewire only supports a single `#[Modelable]` attribute, so only the first one will be bound.
 
 
+## Slots
+
+Slots allow you to pass Blade content from a parent component into a child component. This is useful when a child component needs to render its own content while also allowing the parent to inject custom content in specific places.
+
+Below is an example of a parent component that renders a list of comments. Each comment is rendered by a `Comment` child component, but the parent passes in a "Remove" button via a slot:
+
+```php
+<?php
+
+use Livewire\Attributes\Computed;
+use Livewire\Component;
+use App\Models\Post;
+
+new class extends Component
+{
+    public Post $post;
+
+    #[Computed]
+    public function comments()
+    {
+        return $this->post->comments;
+    }
+
+    public function removeComment($id)
+    {
+        $this->post->comments()->find($id)->delete();
+    }
+};
+?>
+
+<div>
+    @foreach ($this->comments as $comment)
+        <livewire:comment :$comment :key="$comment->id">
+            <button wire:click="removeComment({{ $comment->id }})">
+                Remove
+            </button>
+        </livewire:comment>
+    @endforeach
+</div>
+```
+
+Now that content has been passed to the `Comment` child component, you can render it using the `$slot` variable:
+
+```php
+<?php
+
+use Livewire\Component;
+use App\Models\Comment;
+
+new class extends Component
+{
+    public Comment $comment;
+};
+?>
+
+<div>
+    <p>{{ $comment->author }}</p>
+    <p>{{ $comment->body }}</p>
+
+    {{ $slot }}
+</div>
+```
+
+When the `Comment` component renders `$slot`, Livewire will inject the content passed from the parent.
+
+It's important to understand that slots are evaluated in the context of the parent component. This means any properties or methods referenced inside the slot belong to the parent, not the child. In the example above, the `removeComment()` method is called on the parent component, not the `Comment` child.
+
+### Named slots
+
+In addition to the default slot, you may also pass multiple named slots into a child component. This is useful when you want to provide content for multiple areas of a child component.
+
+Below is an example of passing both a default slot and a named `actions` slot to the `Comment` component:
+
+```blade
+<div>
+    @foreach ($this->comments as $comment)
+        <livewire:comment :$comment :key="$comment->id">
+            <livewire:slot name="actions">
+                <button wire:click="removeComment({{ $comment->id }})">
+                    Remove
+                </button>
+            </livewire:slot>
+
+            <span>Posted on {{ $comment->created_at }}</span>
+        </livewire:comment>
+    @endforeach
+</div>
+```
+
+You can access named slots in the child component by passing the slot name to the `$slot` variable:
+
+```blade
+<div>
+    <p>{{ $comment->author }}</p>
+    <p>{{ $comment->body }}</p>
+
+    <div class="actions">
+        {{ $slot('actions') }}
+    </div>
+
+    <div class="metadata">
+        {{ $slot }}
+    </div>
+</div>
+```
+
+### Checking if a slot was provided
+
+You can check if a slot was provided by the parent using the `has()` method on the `$slot` variable. This is helpful when you want to conditionally render content based on whether or not a slot is present:
+
+```blade
+<div>
+    <p>{{ $comment->author }}</p>
+    <p>{{ $comment->body }}</p>
+
+    @if ($slot->has('actions'))
+        <div class="actions">
+            {{ $slot('actions') }}
+        </div>
+    @endif
+
+    {{ $slot }}
+</div>
+```
+
 ## Listening for events from children
 
 Another powerful parent-child component communication technique is Livewire's event system, which allows you to dispatch an event on the server or client that can be intercepted by other components.
@@ -545,7 +670,7 @@ If you prefer, you can use the alternative syntax:
 
 > [!warning]
 > Don't forget to assign each child component a unique key. Although Livewire automatically generates a key for `<livewire:dynamic-child />` and `<livewire:is />`, that same key will apply to _all_ your child components, meaning subsequent renders will be skipped.
-> 
+>
 > See [forcing a child component to re-render](#forcing-a-child-component-to-re-render) for a deeper understanding of how keys affect component rendering.
 
 ## Recursive components

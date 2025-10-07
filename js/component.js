@@ -1,6 +1,6 @@
 import { dataSet, deepClone, diff, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
-import { closestComponent, findComponent, hasComponent } from '@/store'
+import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
 import { setNextActionOrigin } from '@/request'
 
@@ -179,7 +179,7 @@ export class Component {
     }
 
     get parent() {
-        return closestComponent(this.el.parentElement)
+        return findComponentByEl(this.el.parentElement)
     }
 
     get isIsolated() {
