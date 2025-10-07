@@ -7,14 +7,14 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [x] wire:ref
 - [x] CSP-safe
 - [ ] Support wire:model on dialog and popover elements
-- [ ] Interceptors
-- [ ] data-loading
-- [ ] Slots
-- [ ] Attributes
+- [x] Interceptors
+- [x] data-loading
+- [x] Slots
+- [x] Attributes
 - [ ] Getters/setter properties
 - [x] Multi-file components
 - [x] Single file components
-- [ ] Islands
+- [x] Islands
 - [ ] Streaming
 - [x] Make command
 - [x] Convert commands to Prompts
