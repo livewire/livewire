@@ -764,7 +764,7 @@
     );
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -5047,13 +5047,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       signal: request.controller.signal
     };
     trigger2("navigate.request", {
-      uri,
+      url: uri,
       options
     });
     let response;
     try {
       response = await fetch(uri, options);
-      let destination = getDestination(response);
+      let destination = getDestination(uri, response);
       let html = await response.text();
       callback(html, destination);
     } catch (error2) {
@@ -5061,8 +5061,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       throw error2;
     }
   }
-  function getDestination(response) {
-    let destination = createUrlObjectFromString(this.uri);
+  function getDestination(uri, response) {
+    let destination = createUrlObjectFromString(uri);
     let finalDestination = createUrlObjectFromString(response.url);
     if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
       finalDestination.hash = destination.hash;
@@ -5942,10 +5942,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function hasComponent(id) {
     return !!components[id];
   }
-  function findComponent(id) {
+  function findComponent(id, strict = true) {
     let component = components[id];
-    if (!component)
-      throw "Component not found: " + id;
+    if (!component) {
+      if (strict)
+        throw "Component not found: " + id;
+      return;
+    }
     return component;
   }
   function findComponentByEl(el, strict = true) {
@@ -5975,7 +5978,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (slotParentId)
         return stop2(slotParentId);
     });
-    let component = findComponent(componentId);
+    let component = findComponent(componentId, strict);
     if (!component) {
       if (strict)
         throw "Could not find Livewire component in DOM tree";
@@ -9633,7 +9636,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -10364,6 +10367,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           module_default.dontAutoEvaluateFunctions(() => {
             evaluateExpression(component, component.el, scriptContent, {
               scope: {
+                "$wire": component.$wire,
                 "$js": component.$wire.$js
               }
             });
