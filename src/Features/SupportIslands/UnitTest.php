@@ -16,7 +16,7 @@ class UnitTest extends TestCase
                     Outside island
 
                     @island
-                        before
+                        Inside island
 
                         @island
                             Nested island
@@ -32,6 +32,7 @@ class UnitTest extends TestCase
             ->assertDontSee('@endisland')
             ->assertSee('Outside island')
             ->assertSee('Inside island')
+            ->assertSee('Nested island')
             ->assertSee('!--[if FRAGMENT:')
             ->assertSee('!--[if ENDFRAGMENT:');
     }
