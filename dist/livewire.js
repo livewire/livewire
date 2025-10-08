@@ -5494,6 +5494,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("$intercept", (component) => (method, callback = null) => {
     if (callback === null && typeof method === "function") {
+      callback = method;
       return intercept(component, callback);
     }
     return intercept(component, (options) => {
