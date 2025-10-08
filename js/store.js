@@ -33,10 +33,14 @@ export function hasComponent(id) {
     return !! components[id]
 }
 
-export function findComponent(id) {
+export function findComponent(id, strict = true) {
     let component = components[id]
 
-    if (! component) throw 'Component not found: ' + id
+    if (! component) {
+        if (strict) throw 'Component not found: ' + id
+
+        return
+    }
 
     return component
 }
@@ -75,7 +79,7 @@ export function findComponentByEl(el, strict = true) {
         if (slotParentId) return stop(slotParentId)
     })
 
-    let component = findComponent(componentId)
+    let component = findComponent(componentId, strict)
 
     if (! component) {
         if (strict) throw "Could not find Livewire component in DOM tree"
