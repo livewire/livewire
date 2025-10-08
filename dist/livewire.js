@@ -4681,7 +4681,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let method = this.method;
       let params = JSON.stringify(this.params);
       let metadata = JSON.stringify(this.metadata);
-      return window.btoa(componentId + method + params + metadata);
+      return window.btoa(String.fromCharCode(...new TextEncoder().encode(componentId + method + params + metadata)));
     }
     mergeMetadata(metadata) {
       this.metadata = { ...this.metadata, ...metadata };
