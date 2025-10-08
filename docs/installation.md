@@ -67,7 +67,7 @@ In those cases, you can register your own endpoint however you like, and as long
 
 ```php
 Livewire::setUpdateRoute(function ($handle) {
-	return Route::post('/custom/livewire/update', $handle)->name('livewire.update.custom');
+	return Route::post('/custom/livewire/update', $handle)->name('custom.livewire.update');
 });
 ```
 
