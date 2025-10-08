@@ -168,6 +168,8 @@ wireProperty('$refs', (component) => {
 
 wireProperty('$intercept', (component) => (method, callback = null) => {
     if (callback === null && typeof method === 'function') {
+        callback = method
+
         return intercept(component, callback)
     }
 

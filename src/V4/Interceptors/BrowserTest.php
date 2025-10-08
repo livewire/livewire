@@ -20,7 +20,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        Livewire.intercept(() => {
+                        Livewire.interceptMessage(() => {
                             window.intercepts.push('intercept')
                             console.log('intercept', window.intercepts)
                         })
@@ -172,7 +172,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                         window.intercepts = []
 
                         this.intercept(({ actions, onSend, onCancel, onError, onSuccess, cancel }) => {
-                            let action = actions[0]
+                            let action = [...actions][0]
                             let method = action.method
                             let directive = action.origin.directive
 
@@ -296,7 +296,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                         window.intercepts = []
 
                         this.intercept(({ actions, onSend, onCancel, onError, onSuccess, cancel }) => {
-                            let action = actions[0]
+                            let action = [...actions][0]
                             let method = action.method
                             let directive = action.origin.directive
 
@@ -372,7 +372,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                         window.intercepts = []
 
                         this.intercept(({ actions, onSend, onCancel, onError, onSuccess, cancel }) => {
-                            let action = actions[0]
+                            let action = [...actions][0]
                             let method = action.method
                             let directive = action.origin.directive
 
@@ -417,8 +417,9 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewireToLoad()
         ->assertScript('window.intercepts.length', 0)
 
+        ->click('@slow-request')
         // The interceptor has a timeout set to cancel the request after 200ms...
-        ->waitForLivewire()->click('@slow-request')
+        ->pause(250)
         ->assertScript('window.intercepts.length', 3)
         ->assertScript('window.intercepts', [
             'onInit-slowRequest',
