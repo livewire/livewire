@@ -29,12 +29,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`))
-                            request.onCancel(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`))
-                            request.onSuccess(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`))
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`))
+                            onCancel(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`))
+                            onSuccess(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`))
                         })
                     </script>
                     @endscript
@@ -88,12 +90,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`))
-                            request.onCancel(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`))
-                            request.onSuccess(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`))
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`))
+                            onCancel(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`))
+                            onSuccess(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`))
                         })
                     </script>
                     @endscript
@@ -145,12 +149,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`))
-                            request.onCancel(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`))
-                            request.onSuccess(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`))
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`))
+                            onCancel(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`))
+                            onSuccess(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`))
                         })
                     </script>
                     @endscript
@@ -210,19 +216,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`)
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onCancel(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`)
+                            onCancel(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onSuccess(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`)
+                            onSuccess(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
                         })
@@ -286,12 +294,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`))
-                            request.onCancel(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`))
-                            request.onSuccess(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`))
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`))
+                            onCancel(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`))
+                            onSuccess(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`))
                         })
                     </script>
                     @endscript
@@ -349,12 +359,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`))
-                            request.onCancel(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`))
-                            request.onSuccess(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`))
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`))
+                            onCancel(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`))
+                            onSuccess(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`))
                         })
                     </script>
                     @endscript
@@ -411,12 +423,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`))
-                            request.onCancel(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`))
-                            request.onSuccess(() => window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`))
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`))
+                            onCancel(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`))
+                            onSuccess(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`))
                         })
                     </script>
                     @endscript
@@ -472,12 +486,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => window.intercepts.push(`${action.method}-${action.context.island?.name} sent`))
-                            request.onCancel(() => window.intercepts.push(`${action.method}-${action.context.island?.name} cancelled`))
-                            request.onSuccess(() => window.intercepts.push(`${action.method}-${action.context.island?.name} succeeded`))
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`))
+                            onCancel(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`))
+                            onSuccess(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`))
                         })
                     </script>
                     @endscript
@@ -542,12 +558,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => window.intercepts.push(`${action.method}-${action.context.island?.name} sent`))
-                            request.onCancel(() => window.intercepts.push(`${action.method}-${action.context.island?.name} cancelled`))
-                            request.onSuccess(() => window.intercepts.push(`${action.method}-${action.context.island?.name} succeeded`))
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`))
+                            onCancel(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`))
+                            onSuccess(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`))
                         })
                     </script>
                     @endscript
@@ -611,19 +629,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`)
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onCancel(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`)
+                            onCancel(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onSuccess(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`)
+                            onSuccess(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
                         })
@@ -684,24 +704,25 @@ class BrowserTest extends \Tests\BrowserTestCase
                         window.intercepts = []
                         window.count = 0
 
-                        this.intercept(({ action, request}) => {
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
                             window.count++
 
                             // Use a local count so that the count is not shared between interceptors
                             let count = window.count
 
-                            window.intercepts.push(`${action.method}-${count}-${action.context.island?.name || 'component'} started`)
+                            window.intercepts.push(`${action.method}-${count}-${action.metadata.island?.name || 'component'} started`)
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`${action.method}-${count}-${action.context.island?.name || 'component'} sent`)
+                            onSend(() => {
+                                window.intercepts.push(`${action.method}-${count}-${action.metadata.island?.name || 'component'} sent`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onCancel(() => {
-                                window.intercepts.push(`${action.method}-${count}-${action.context.island?.name || 'component'} cancelled`)
+                            onCancel(() => {
+                                window.intercepts.push(`${action.method}-${count}-${action.metadata.island?.name || 'component'} cancelled`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onSuccess(() => {
-                                window.intercepts.push(`${action.method}-${count}-${action.context.island?.name || 'component'} succeeded`)
+                            onSuccess(() => {
+                                window.intercepts.push(`${action.method}-${count}-${action.metadata.island?.name || 'component'} succeeded`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
                         })
@@ -759,19 +780,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`)
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onCancel(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`)
+                            onCancel(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onSuccess(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`)
+                            onSuccess(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
                         })
@@ -843,19 +866,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`)
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onCancel(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`)
+                            onCancel(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onSuccess(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`)
+                            onSuccess(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
                         })
@@ -928,19 +953,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`)
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onCancel(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`)
+                            onCancel(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onSuccess(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`)
+                            onSuccess(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
                         })
@@ -1010,19 +1037,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`)
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onCancel(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`)
+                            onCancel(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onSuccess(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`)
+                            onSuccess(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
                         })
@@ -1096,19 +1125,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`)
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onCancel(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`)
+                            onCancel(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onSuccess(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`)
+                            onSuccess(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
                         })
@@ -1185,19 +1216,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`)
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onCancel(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`)
+                            onCancel(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onSuccess(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`)
+                            onSuccess(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
                         })
@@ -1280,19 +1313,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`)
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onCancel(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`)
+                            onCancel(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onSuccess(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`)
+                            onSuccess(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
                         })
@@ -1375,19 +1410,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ action, request}) => {
-                            window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} started`)
+                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
+                            let action = [...actions][0]
 
-                            request.afterSend(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} sent`)
+                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
+
+                            onSend(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onCancel(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} cancelled`)
+                            onCancel(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
-                            request.onSuccess(() => {
-                                window.intercepts.push(`${action.method}-${action.context.island?.name || 'component'} succeeded`)
+                            onSuccess(() => {
+                                window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`)
                                 console.log(JSON.stringify(window.intercepts))
                             })
                         })
