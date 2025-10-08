@@ -468,7 +468,7 @@ export async function sendNavigateRequest(uri, callback, errorCallback) {
     }
 
     trigger('navigate.request', {
-        uri,
+        url: uri,
         options,
     })
 
@@ -477,7 +477,7 @@ export async function sendNavigateRequest(uri, callback, errorCallback) {
     try {
         response = await fetch(uri, options)
 
-        let destination = getDestination(response)
+        let destination = getDestination(uri, response)
 
         let html = await response.text()
 
@@ -489,8 +489,8 @@ export async function sendNavigateRequest(uri, callback, errorCallback) {
     }
 }
 
-function getDestination(response) {
-    let destination = createUrlObjectFromString(this.uri)
+function getDestination(uri, response) {
+    let destination = createUrlObjectFromString(uri)
     let finalDestination = createUrlObjectFromString(response.url)
 
     // If there was no redirect triggered by the URL that was fetched...
