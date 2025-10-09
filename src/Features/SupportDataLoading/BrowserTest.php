@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\V4\DataLoading;
+namespace Livewire\Features\SupportDataLoading;
 
 use Livewire\Livewire;
 
