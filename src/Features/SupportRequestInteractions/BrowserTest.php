@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\V4\Requests;
+namespace Livewire\Features\SupportRequestInteractions;
 
 use Livewire\Component;
 use Livewire\Livewire;
