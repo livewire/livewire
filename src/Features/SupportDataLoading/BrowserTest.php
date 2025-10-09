@@ -32,7 +32,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         ->click('@refresh2')
         // Wait for the second request to start...
-        ->pause(6)
+        ->pause(10)
         ->assertAttributeMissing('@refresh1', 'data-loading')
         ->assertAttribute('@refresh2', 'data-loading', 'true')
 
@@ -71,7 +71,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->click('@slow-request')
 
         // Wait for the first request to start...
-        ->pause(6)
+        ->pause(10)
         ->assertAttribute('@slow-request', 'data-loading', 'true')
         ->assertAttributeMissing('@slow-request2', 'data-loading')
 
