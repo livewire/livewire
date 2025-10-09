@@ -10,6 +10,9 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         Livewire::visit([
             new class extends \Livewire\Component {
+                public function hydrate() {
+                    usleep(250 * 1000); // 50ms
+                }
                 public function render() { return <<<'HTML'
                 <div>
                     <button wire:click="$refresh" dusk="refresh1">Refresh</button>
@@ -28,7 +31,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertAttributeMissing('@refresh2', 'data-loading')
 
         // Wait for the first request to finish...
-        ->pause(100)
+        ->pause(350)
 
         ->click('@refresh2')
         // Wait for the second request to start...
@@ -37,7 +40,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertAttribute('@refresh2', 'data-loading', 'true')
 
         // Wait for the second request to finish...
-        ->pause(100)
+        ->pause(350)
 
         ->assertAttributeMissing('@refresh1', 'data-loading')
         ->assertAttributeMissing('@refresh2', 'data-loading')
@@ -53,7 +56,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
 
                 public function slowRequest2() {
-                    usleep(150 * 1000); // 500ms
+                    usleep(250 * 1000); // 500ms
                 }
 
                 public function render() { return <<<'HTML'
@@ -82,7 +85,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->click('@slow-request2')
 
         // Pause for a moment to ensure Livewire has removed the attribute...
-        ->pause(300)
+        ->pause(350)
         ->assertAttributeMissing('@slow-request', 'data-loading')
         ->assertAttribute('@slow-request2', 'data-loading', 'true')
         ;
