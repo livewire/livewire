@@ -468,7 +468,7 @@ export async function sendNavigateRequest(uri, callback, errorCallback) {
     }
 
     trigger('navigate.request', {
-        url: uri,
+        uri,
         options,
     })
 
