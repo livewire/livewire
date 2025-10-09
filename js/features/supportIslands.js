@@ -28,11 +28,7 @@ interceptAction(({ action }) => {
         return
     }
 
-    let fragment = closestFragment(origin.el, {
-        isMatch: ({ type }) => {
-            return type === 'island'
-        },
-    })
+    let fragment = closestIsland(origin.el)
 
     if (! fragment) return
 
@@ -63,6 +59,14 @@ interceptMessage(({ message, onSuccess, onStream }) => {
         })
     })
 })
+
+export function closestIsland(el) {
+    return closestFragment(el, {
+        isMatch: ({ type }) => {
+            return type === 'island'
+        },
+    })
+}
 
 export function renderIsland(component, islandHtml) {
     let metadata = extractFragmentMetadataFromHtml(islandHtml)

@@ -1,5 +1,6 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
+import { closestIsland } from '@/features/supportIslands'
 import { interceptMessage } from '@/request'
 import { listen } from '@/utils'
 
@@ -8,7 +9,7 @@ directive('loading', ({ el, directive, component, cleanup }) => {
 
     let [delay, abortDelay] = applyDelay(directive)
 
-    let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
+    let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
     ])
@@ -69,9 +70,21 @@ function applyDelay(directive) {
     ]
 }
 
-function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoading, endLoading ]) {
+function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLoading, endLoading ]) {
     return interceptMessage(({ message, onSend, onFinish }) => {
         if (component !== message.component) return
+
+        let island = closestIsland(el)
+
+        // If an island is found, see if the message has an action for the island and return if not...
+        if (island && ! message.hasActionForFragment(island)) {
+            return
+        }
+
+        // If no island is found, see if the message has an action for the component and return if not...
+        if (! island && ! message.hasActionForComponent()) {
+            return
+        }
 
         let matches = true
 

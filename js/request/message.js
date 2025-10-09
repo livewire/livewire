@@ -49,6 +49,24 @@ export default class Message {
         return Array.from(this.actions)
     }
 
+    hasActionForFragment(fragment) {
+        if (! fragment) return false
+
+        return this.getActions().some(action => {
+            let actionFragmentData = action.metadata[fragment.metadata.type]
+
+            if (! actionFragmentData) return false
+
+            return actionFragmentData.name === fragment.metadata.name
+        })
+    }
+
+    hasActionForComponent() {
+        return this.getActions().some(action => {
+            return Object.keys(action.metadata).length === 0
+        })
+    }
+
     setInterceptors(interceptors) {
         this.interceptors = interceptors
     }
