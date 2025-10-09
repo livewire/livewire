@@ -8713,7 +8713,7 @@ function coordinateNetworkInteractions(messageBus2) {
         return reject();
       }
       if (Array.from(message.actions).every((action2) => action2.metadata.type === "poll")) {
-        message.cancel();
+        return message.cancel();
       }
       if (Array.from(message.actions).every((action2) => action2.metadata.type === "model.live")) {
         if (action.metadata.type === "model.live") {
@@ -9043,7 +9043,7 @@ function scopeSymbolFromAction(action) {
     let islandSymbols = componentIslandSymbols.get(component);
     if (!islandSymbols) {
       islandSymbols = { [islandName]: Symbol() };
-      componentIslandSymbols.add(component, islandSymbols);
+      componentIslandSymbols.set(component, islandSymbols);
     }
     if (!islandSymbols[islandName]) {
       islandSymbols[islandName] = Symbol();
