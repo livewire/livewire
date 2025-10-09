@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\V4\Interceptors;
+namespace Livewire\Features\SupportInterceptors;
 
 use Livewire\Livewire;
 
