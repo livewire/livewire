@@ -22,6 +22,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertAttributeMissing('@refresh1', 'data-loading')
         ->assertAttributeMissing('@refresh2', 'data-loading')
         ->click('@refresh1')
+        // Wait for the first request to start...
+        ->pause(6)
         ->assertAttribute('@refresh1', 'data-loading', 'true')
         ->assertAttributeMissing('@refresh2', 'data-loading')
 
@@ -29,6 +31,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->pause(100)
 
         ->click('@refresh2')
+        // Wait for the second request to start...
+        ->pause(6)
         ->assertAttributeMissing('@refresh1', 'data-loading')
         ->assertAttribute('@refresh2', 'data-loading', 'true')
 
@@ -40,40 +44,47 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_data_loading_attribute_is_removed_from_an_element_when_the_request_is_cancelled()
+    public function test_data_loading_attribute_is_removed_from_an_element_when_its_request_has_finished_but_not_other_elements()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
                 public function slowRequest() {
-                    sleep(1);
+                    usleep(200 * 1000); // 500ms
+                }
+
+                public function slowRequest2() {
+                    usleep(150 * 1000); // 500ms
                 }
 
                 public function render() { return <<<'HTML'
                 <div>
                     <button wire:click="slowRequest" dusk="slow-request">Slow request</button>
-                    <button wire:click="$refresh" dusk="refresh">Refresh</button>
+                    <button wire:click="slowRequest2" dusk="slow-request2">Slow request 2</button>
                 </div>
                 HTML; }
             }
         ])
         ->waitForLivewireToLoad()
         ->assertAttributeMissing('@slow-request', 'data-loading')
-        ->assertAttributeMissing('@refresh', 'data-loading')
+        ->assertAttributeMissing('@slow-request2', 'data-loading')
 
         ->click('@slow-request')
+
+        // Wait for the first request to start...
+        ->pause(6)
         ->assertAttribute('@slow-request', 'data-loading', 'true')
-        ->assertAttributeMissing('@refresh', 'data-loading')
+        ->assertAttributeMissing('@slow-request2', 'data-loading')
 
         // Wait for the first request to start...
         ->pause(50)
 
-        // Trigger the refresh request...
-        ->click('@refresh')
+        // Trigger the second request...
+        ->click('@slow-request2')
 
         // Pause for a moment to ensure Livewire has removed the attribute...
-        ->pause(5)
+        ->pause(250)
         ->assertAttributeMissing('@slow-request', 'data-loading')
-        ->assertAttribute('@refresh', 'data-loading', 'true')
+        ->assertAttribute('@slow-request2', 'data-loading', 'true')
         ;
     }
 
