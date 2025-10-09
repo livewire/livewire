@@ -4127,7 +4127,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return reject();
         }
         if (Array.from(message.actions).every((action2) => action2.metadata.type === "poll")) {
-          message.cancel();
+          return message.cancel();
         }
         if (Array.from(message.actions).every((action2) => action2.metadata.type === "model.live")) {
           if (action.metadata.type === "model.live") {
@@ -4457,7 +4457,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let islandSymbols = componentIslandSymbols.get(component);
       if (!islandSymbols) {
         islandSymbols = { [islandName]: Symbol() };
-        componentIslandSymbols.add(component, islandSymbols);
+        componentIslandSymbols.set(component, islandSymbols);
       }
       if (!islandSymbols[islandName]) {
         islandSymbols[islandName] = Symbol();
@@ -4556,6 +4556,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     getActions() {
       return Array.from(this.actions);
+    }
+    hasActionForIsland(island) {
+      return this.getActions().some((action) => {
+        return action.metadata.island?.name === island.metadata.name;
+      });
+    }
+    hasActionForComponent() {
+      return this.getActions().some((action) => {
+        return action.metadata.island === void 0;
+      });
     }
     setInterceptors(interceptors3) {
       this.interceptors = interceptors3;
@@ -10934,11 +10944,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       return;
     }
-    let fragment = closestFragment(origin.el, {
-      isMatch: ({ type }) => {
-        return type === "island";
-      }
-    });
+    let fragment = closestIsland(origin.el);
     if (!fragment)
       return;
     action.mergeMetadata({
@@ -10964,6 +10970,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   });
+  function closestIsland(el) {
+    return closestFragment(el, {
+      isMatch: ({ type }) => {
+        return type === "island";
+      }
+    });
+  }
   function renderIsland(component, islandHtml) {
     let metadata = extractFragmentMetadataFromHtml(islandHtml);
     let fragment = findFragment(component.el, {
@@ -11317,7 +11330,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive2("loading", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
     let { targets, inverted } = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive3);
-    let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
+    let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
       () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
     ]);
@@ -11368,10 +11381,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     ];
   }
-  function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
+  function whenTargetsArePartOfRequest(component, el, targets, inverted, [startLoading, endLoading]) {
     return interceptMessage(({ message, onSend, onFinish }) => {
       if (component !== message.component)
         return;
+      let island = closestIsland(el);
+      if (island && !message.hasActionForIsland(island)) {
+        return;
+      }
+      if (!island && !message.hasActionForComponent()) {
+        return;
+      }
       let matches2 = true;
       onSend(({ payload }) => {
         if (targets.length > 0 && containsTargets(payload, targets) === inverted) {

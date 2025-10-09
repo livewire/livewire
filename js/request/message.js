@@ -49,6 +49,18 @@ export default class Message {
         return Array.from(this.actions)
     }
 
+    hasActionForIsland(island) {
+        return this.getActions().some(action => {
+            return action.metadata.island?.name === island.metadata.name
+        })
+    }
+
+    hasActionForComponent() {
+        return this.getActions().some(action => {
+            return action.metadata.island === undefined
+        })
+    }
+
     setInterceptors(interceptors) {
         this.interceptors = interceptors
     }

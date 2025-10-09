@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\V4\Interceptors;
+namespace Livewire\Features\SupportInterceptors;
 
 use Livewire\Livewire;
 
@@ -136,8 +136,11 @@ class BrowserTest extends \Tests\BrowserTestCase
         // The interceptor should not be triggered when the component is refreshed...
         ->click('@refresh')
         // Wait for the requests to be corralled...
-        ->pause(6)
+        ->pause(7)
         ->assertScript('window.intercepts.length', 0)
+
+        // Wait for the first request to finish...
+        ->pause(100)
 
         // The interceptor should be triggered when the action is performed...
         ->click('@do-something')
@@ -244,13 +247,16 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@refresh')
         // Wait for the requests to be corralled...
         ->pause(6)
-        ->assertScript('window.intercepts.length', 9)
+        ->assertScript('window.intercepts.length', 12)
         // The below results are the combination of the slow request and the refresh request...
         ->assertScript('window.intercepts', [
             'onInit-slowRequest',
             'onSend-slowRequest',
+            'onSuccess-slowRequest',
+            'onSync-slowRequest',
+            'onMorph-slowRequest',
+            'onRender-slowRequest',
             'onInit-$refresh',
-            'onCancel-slowRequest',
             'onSend-$refresh',
             'onSuccess-$refresh',
             'onSync-$refresh',
