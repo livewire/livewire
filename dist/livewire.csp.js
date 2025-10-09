@@ -5980,6 +5980,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     getActions() {
       return Array.from(this.actions);
     }
+    hasActionForFragment(fragment) {
+      if (!fragment)
+        return false;
+      return this.getActions().some((action) => {
+        let actionFragmentData = action.metadata[fragment.metadata.type];
+        if (!actionFragmentData)
+          return false;
+        return actionFragmentData.name === fragment.metadata.name;
+      });
+    }
+    hasActionForComponent() {
+      return this.getActions().some((action) => {
+        return Object.keys(action.metadata).length === 0;
+      });
+    }
     setInterceptors(interceptors2) {
       this.interceptors = interceptors2;
     }
@@ -12371,11 +12386,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       return;
     }
-    let fragment = closestFragment(origin.el, {
-      isMatch: ({ type }) => {
-        return type === "island";
-      }
-    });
+    let fragment = closestIsland(origin.el);
     if (!fragment)
       return;
     action.mergeMetadata({
@@ -12401,6 +12412,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   });
+  function closestIsland(el) {
+    return closestFragment(el, {
+      isMatch: ({ type }) => {
+        return type === "island";
+      }
+    });
+  }
   function renderIsland(component, islandHtml) {
     let metadata = extractFragmentMetadataFromHtml(islandHtml);
     let fragment = findFragment(component.el, {
@@ -12759,7 +12777,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive("loading", ({ el, directive: directive2, component, cleanup }) => {
     let { targets, inverted } = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive2);
-    let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
+    let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
       () => delay3(() => toggleBooleanStateDirective(el, directive2, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
     ]);
@@ -12810,10 +12828,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     ];
   }
-  function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
+  function whenTargetsArePartOfRequest(component, el, targets, inverted, [startLoading, endLoading]) {
     return interceptMessage(({ message, onSend, onFinish }) => {
       if (component !== message.component)
         return;
+      let island = closestIsland(el);
+      if (island && !message.hasActionForFragment(island)) {
+        return;
+      }
+      if (!island && !message.hasActionForComponent()) {
+        return;
+      }
       let matches2 = true;
       onSend(({ payload }) => {
         if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
