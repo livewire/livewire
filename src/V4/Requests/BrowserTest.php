@@ -7,7 +7,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    public function test_a_new_component_level_user_action_cancels_an_old_component_level_user_action_for_the_same_component()
+    public function test_a_new_component_level_user_action_does_not_cancel_an_old_component_level_user_action_for_the_same_component_it_is_instead_queued_for_execution_after_the_old_action()
     {
         Livewire::visit(
             new class extends Component {
@@ -61,8 +61,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.intercepts', [
                 'firstRequest-component started',
                 'firstRequest-component sent',
+                'firstRequest-component succeeded',
                 'secondRequest-component started',
-                'firstRequest-component cancelled',
                 'secondRequest-component sent',
                 'secondRequest-component succeeded',
             ])
@@ -120,8 +120,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
                 'pollRequest-component sent',
-                'userRequest-component started',
                 'pollRequest-component cancelled',
+                'userRequest-component started',
                 'userRequest-component sent',
                 'userRequest-component succeeded',
             ])
@@ -183,13 +183,11 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for the poll to have started and be cancelled, and then the user request to finish..
-            ->pause(250)
-            ->assertScript('window.intercepts.length', 5)
+            ->pause(400)
+            ->assertScript('window.intercepts.length', 3)
             ->assertScript('window.intercepts', [
                 'userRequest-component started',
                 'userRequest-component sent',
-                'pollRequest-component started',
-                'pollRequest-component cancelled',
                 'userRequest-component succeeded',
             ])
             ;
@@ -256,21 +254,17 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for the second poll to have started and be cancelled, and then the first poll request to finish..
-            ->pause(250)
-            ->assertScript('window.intercepts.length', 5)
+            ->pause(300)
+            ->assertScript('window.intercepts.length', 3)
             ->assertScript('window.intercepts', [
                 'firstPollRequest-component started',
                 'firstPollRequest-component sent',
-                'secondPollRequest-component started',
-                'secondPollRequest-component cancelled',
                 'firstPollRequest-component succeeded',
             ])
             ;
     }
 
-    // Do islands for the 4 tests above...
-
-    public function test_a_new_island_level_user_action_cancels_an_old_island_level_user_action_for_the_same_island()
+    public function test_a_new_island_level_user_action_does_not_cancel_an_old_island_level_user_action_for_the_same_island_it_is_instead_queued_for_execution_after_the_old_action()
     {
         Livewire::visit(
             new class extends Component {
@@ -326,8 +320,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.intercepts', [
                 'firstRequest-foo started',
                 'firstRequest-foo sent',
+                'firstRequest-foo succeeded',
                 'secondRequest-foo started',
-                'firstRequest-foo cancelled',
                 'secondRequest-foo sent',
                 'secondRequest-foo succeeded',
             ])
@@ -389,8 +383,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
                 'pollRequest-foo sent',
-                'userRequest-foo started',
                 'pollRequest-foo cancelled',
+                'userRequest-foo started',
                 'userRequest-foo sent',
                 'userRequest-foo succeeded',
             ])
@@ -520,13 +514,11 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for the poll to have started and be cancelled, and then the user request to finish..
-            ->pause(250)
-            ->assertScript('window.intercepts.length', 5)
+            ->pause(400)
+            ->assertScript('window.intercepts.length', 3)
             ->assertScript('window.intercepts', [
                 'userRequest-foo started',
                 'userRequest-foo sent',
-                'pollRequest-foo started',
-                'pollRequest-foo cancelled',
                 'userRequest-foo succeeded',
             ])
             ;
@@ -669,13 +661,11 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for the second poll to have started and be cancelled, and then the first poll request to finish..
-            ->pause(250)
-            ->assertScript('window.intercepts.length', 5)
+            ->pause(300)
+            ->assertScript('window.intercepts.length', 3)
             ->assertScript('window.intercepts', [
                 'firstPollRequest-foo started',
                 'firstPollRequest-foo sent',
-                'secondPollRequest-foo started',
-                'secondPollRequest-foo cancelled',
                 'firstPollRequest-foo succeeded',
             ])
             ;
@@ -833,7 +823,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(200)
+            ->pause(500)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'userRequest-component started',
@@ -919,7 +909,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(200)
+            ->pause(500)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'userRequest-foo started',
@@ -942,9 +932,9 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function render() {
                     return <<<'HTML'
-                    <div wire:poll.400ms="pollRequest">
+                    <div wire:poll.700ms="pollRequest">
                         @island('foo')
-                            <div wire:poll.500ms="pollRequest">
+                            <div wire:poll.750ms="pollRequest">
                                 Island content
                             </div>
                         @endisland
@@ -980,7 +970,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
 
             // Wait for the component poll to have started...
-            ->pause(410)
+            ->pause(710)
             ->assertScript('window.intercepts.length', 2)
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
@@ -988,7 +978,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ])
 
             // Wait for the island poll to have started...
-            ->pause(100)
+            ->pause(50)
             ->assertScript('window.intercepts.length', 4)
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
@@ -1003,7 +993,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(200)
+            ->pause(500)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
@@ -1026,9 +1016,9 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function render() {
                     return <<<'HTML'
-                    <div wire:poll.500ms="pollRequest">
+                    <div wire:poll.750ms="pollRequest">
                         @island('foo')
-                            <div wire:poll.400ms="pollRequest">
+                            <div wire:poll.700ms="pollRequest">
                                 Island content
                             </div>
                         @endisland
@@ -1064,7 +1054,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
 
             // Wait for the island poll to have started...
-            ->pause(410)
+            ->pause(710)
             ->assertScript('window.intercepts.length', 2)
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
@@ -1087,7 +1077,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(200)
+            ->pause(500)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
@@ -1114,7 +1104,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function render() {
                     return <<<'HTML'
-                    <div wire:poll.400ms="pollRequest">
+                    <div wire:poll.500ms="pollRequest">
                         @island('foo')
                             <div>
                                 <button wire:click="userRequest" dusk="island-request">Island Request</button>
@@ -1152,7 +1142,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
 
             // Wait for the component poll to have started...
-            ->pause(410)
+            ->pause(510)
             ->assertScript('window.intercepts.length', 2)
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
@@ -1177,7 +1167,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(150)
+            ->pause(300)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
@@ -1207,7 +1197,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div>
                         <button wire:click="userRequest" dusk="component-request">Component Request</button>
                         @island('foo')
-                            <div wire:poll.400ms="pollRequest">
+                            <div wire:poll.500ms="pollRequest">
                                 Island content
                             </div>
                         @endisland
@@ -1243,7 +1233,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
 
             // Wait for the island poll to have started...
-            ->pause(410)
+            ->pause(510)
             ->assertScript('window.intercepts.length', 2)
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
@@ -1268,7 +1258,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(150)
+            ->pause(300)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
@@ -1298,7 +1288,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div>
 
                         @island('foo')
-                            <div wire:poll.400ms="pollRequest">
+                            <div wire:poll.500ms="pollRequest">
                                 Island content
                             </div>
                         @endisland
@@ -1340,7 +1330,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
 
             // Wait for the foo island poll to have started...
-            ->pause(410)
+            ->pause(510)
             ->assertScript('window.intercepts.length', 2)
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
@@ -1365,7 +1355,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(150)
+            ->pause(300)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
@@ -1465,7 +1455,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(300)
+            ->pause(500)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'userRequest-bar started',

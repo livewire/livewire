@@ -60,7 +60,7 @@ export function coordinateNetworkInteractions(messageBus) {
             // Wire:poll:
             // - Cancel in-flight polls to prioritize the new poll...
             if (Array.from(message.actions).every(action => action.metadata.type === 'poll')) {
-                message.cancel()
+                return message.cancel()
             }
 
             // Wire:model.live:
