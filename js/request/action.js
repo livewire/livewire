@@ -22,7 +22,8 @@ export default class Action {
         let params = JSON.stringify(this.params)
         let metadata = JSON.stringify(this.metadata)
 
-        return window.btoa(componentId + method + params + metadata)
+        // btoa only supports Latin-1 characters, not UTF-8, so we need to encode the string first...
+        return window.btoa(String.fromCharCode(...new TextEncoder().encode(componentId + method + params + metadata)))
     }
 
     mergeMetadata(metadata) {

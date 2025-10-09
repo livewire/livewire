@@ -20,9 +20,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../alpine/packages/alpinejs/dist/module.cjs.js
+// node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -6721,9 +6721,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8485,7 +8485,7 @@ var Action = class {
     let method = this.method;
     let params = JSON.stringify(this.params);
     let metadata = JSON.stringify(this.metadata);
-    return window.btoa(componentId + method + params + metadata);
+    return window.btoa(String.fromCharCode(...new TextEncoder().encode(componentId + method + params + metadata)));
   }
   mergeMetadata(metadata) {
     this.metadata = { ...this.metadata, ...metadata };
@@ -8857,7 +8857,7 @@ async function sendNavigateRequest(uri, callback, errorCallback) {
   let response;
   try {
     response = await fetch(uri, options);
-    let destination = getDestination(response);
+    let destination = getDestination(uri, response);
     let html = await response.text();
     callback(html, destination);
   } catch (error2) {
@@ -8865,8 +8865,8 @@ async function sendNavigateRequest(uri, callback, errorCallback) {
     throw error2;
   }
 }
-function getDestination(response) {
-  let destination = createUrlObjectFromString(this.uri);
+function getDestination(uri, response) {
+  let destination = createUrlObjectFromString(uri);
   let finalDestination = createUrlObjectFromString(response.url);
   if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
     finalDestination.hash = destination.hash;
@@ -9298,6 +9298,7 @@ wireProperty("$refs", (component) => {
 });
 wireProperty("$intercept", (component) => (method, callback = null) => {
   if (callback === null && typeof method === "function") {
+    callback = method;
     return intercept(component, callback);
   }
   return intercept(component, (options) => {
@@ -9746,10 +9747,13 @@ function destroyComponent(id) {
 function hasComponent(id) {
   return !!components[id];
 }
-function findComponent(id) {
+function findComponent(id, strict = true) {
   let component = components[id];
-  if (!component)
-    throw "Component not found: " + id;
+  if (!component) {
+    if (strict)
+      throw "Component not found: " + id;
+    return;
+  }
   return component;
 }
 function findComponentByEl(el, strict = true) {
@@ -9779,7 +9783,7 @@ function findComponentByEl(el, strict = true) {
     if (slotParentId)
       return stop(slotParentId);
   });
-  let component = findComponent(componentId);
+  let component = findComponent(componentId, strict);
   if (!component) {
     if (strict)
       throw "Could not find Livewire component in DOM tree";
@@ -11244,6 +11248,7 @@ on("effect", ({ component, effects }) => {
         import_alpinejs7.default.dontAutoEvaluateFunctions(() => {
           evaluateExpression(component, component.el, scriptContent, {
             scope: {
+              "$wire": component.$wire,
               "$js": component.$wire.$js
             }
           });

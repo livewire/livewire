@@ -40,6 +40,7 @@ on('effect', ({ component, effects }) => {
                 Alpine.dontAutoEvaluateFunctions(() => {
                     evaluateExpression(component, component.el, scriptContent, {
                         scope: {
+                            '$wire': component.$wire,
                             '$js': component.$wire.$js,
                         },
                     })
