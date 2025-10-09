@@ -35,9 +35,10 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, LazyInputsWithUpdatesDisplayedComponent::class)
                 ->type('@name', 'bob')
                 ->waitForLivewire()->check('@is_active')
-                ->assertSeeIn('@totalNumberUpdates', 3)
+                ->assertSeeIn('@totalNumberUpdates', 4)
                 ->assertSeeIn('@updatesList', 'syncInput - name')
                 ->assertSeeIn('@updatesList', 'syncInput - is_active')
+                ->assertSeeIn('@updatesList', 'callMethod - $commit')
                 ->assertSeeIn('@updatesList', 'callMethod - $commit')
             ;
         });
