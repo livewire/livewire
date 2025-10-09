@@ -604,7 +604,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ;
     }
 
-    public function test_a_new_component_level_poll_directive_action_does_not_cancel_an_old_component_level_poll_directive_action_instead_it_is_cancelled_for_the_same_component()
+    public function test_a_new_island_level_poll_directive_action_does_not_cancel_an_old_island_level_poll_directive_action_instead_it_is_cancelled_for_the_same_island()
     {
         Livewire::visit(
             new class extends Component {
@@ -681,7 +681,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ;
     }
 
-    public function test_a_new_component_level_poll_parameter_action_does_not_cancel_an_old_component_level_poll_parameter_action_instead_it_is_cancelled_for_the_same_component()
+    public function test_a_new_island_level_poll_parameter_action_does_not_cancel_an_old_island_level_poll_parameter_action_instead_it_is_cancelled_for_the_same_island()
     {
         Livewire::visit(
             new class extends Component {
