@@ -623,9 +623,9 @@ class BrowserTest extends BrowserTestCase
                     </div>
                     @script
                     <script>
-                        this.intercept(({ request }) => {
+                        this.intercept(({ cancel }) => {
                             setTimeout(() => {
-                                request.cancel();
+                                cancel();
                             }, 200);
                         })
                     </script>
@@ -674,9 +674,9 @@ class BrowserTest extends BrowserTestCase
                     </div>
                     @script
                     <script>
-                        this.intercept(({ request }) => {
+                        this.intercept(({ cancel }) => {
                             setTimeout(() => {
-                                request.cancel();
+                                cancel();
                             }, 200);
                         })
                     </script>
