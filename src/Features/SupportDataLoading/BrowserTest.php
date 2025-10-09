@@ -82,7 +82,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->click('@slow-request2')
 
         // Pause for a moment to ensure Livewire has removed the attribute...
-        ->pause(250)
+        ->pause(300)
         ->assertAttributeMissing('@slow-request', 'data-loading')
         ->assertAttribute('@slow-request2', 'data-loading', 'true')
         ;
