@@ -1170,7 +1170,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div>
 
                         @island('foo')
-                            <div wire:poll.550ms="pollRequest">
+                            <div wire:poll.600ms="pollRequest">
                                 Island content
                             </div>
                         @endisland
@@ -1212,7 +1212,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
 
             // Wait a bit before starting the bar island user request, so the poll happens soon after...
-            ->pause(300)
+            ->pause(450)
 
             // Start the bar island user request...
             ->click('@bar-island-request')
@@ -1225,7 +1225,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ])
 
             // Wait for the foo island poll to have started...
-            ->pause(210)
+            ->pause(110)
             ->assertScript('window.intercepts.length', 4)
             ->assertScript('window.intercepts', [
                 'userRequest-bar started',
@@ -1240,7 +1240,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(400)
+            ->pause(450)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'userRequest-bar started',
