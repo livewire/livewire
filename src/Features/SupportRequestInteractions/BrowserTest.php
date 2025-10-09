@@ -1240,7 +1240,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(500)
+            ->pause(450)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'userRequest-bar started',
