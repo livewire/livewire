@@ -1170,7 +1170,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div>
 
                         @island('foo')
-                            <div wire:poll.450ms="pollRequest">
+                            <div wire:poll.550ms="pollRequest">
                                 Island content
                             </div>
                         @endisland
@@ -1225,7 +1225,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ])
 
             // Wait for the foo island poll to have started...
-            ->pause(110)
+            ->pause(210)
             ->assertScript('window.intercepts.length', 4)
             ->assertScript('window.intercepts', [
                 'userRequest-bar started',
@@ -1240,7 +1240,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(450)
+            ->pause(400)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'userRequest-bar started',
