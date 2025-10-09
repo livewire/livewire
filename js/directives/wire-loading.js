@@ -77,7 +77,7 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
         let island = closestIsland(el)
 
         // If an island is found, see if the message has an action for the island and return if not...
-        if (island && ! message.hasActionForFragment(island)) {
+        if (island && ! message.hasActionForIsland(island)) {
             return
         }
 
