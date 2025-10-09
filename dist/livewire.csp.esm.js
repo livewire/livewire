@@ -9633,7 +9633,7 @@ async function sendNavigateRequest(uri, callback, errorCallback) {
     signal: request.controller.signal
   };
   trigger("navigate.request", {
-    url: uri,
+    uri,
     options
   });
   let response;

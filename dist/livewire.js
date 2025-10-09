@@ -5047,7 +5047,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       signal: request.controller.signal
     };
     trigger2("navigate.request", {
-      url: uri,
+      uri,
       options
     });
     let response;
