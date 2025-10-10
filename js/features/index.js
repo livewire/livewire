@@ -27,4 +27,5 @@ import './supportDataLoading';
 import './supportPaginators';
 import './supportPreserveScroll';
 import './supportWireIntersect';
+import './supportWireSort';
 import './supportJsModules';

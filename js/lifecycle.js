@@ -5,6 +5,7 @@ import collapse from '@alpinejs/collapse'
 import focus from '@alpinejs/focus'
 import persist from '@alpinejs/persist'
 import intersect from '@alpinejs/intersect'
+import sort from '@alpinejs/sort'
 import resize from '@alpinejs/resize'
 import anchor from '@alpinejs/anchor'
 import navigate from './plugins/navigate'
@@ -23,6 +24,7 @@ export function start() {
     Alpine.plugin(morph)
     Alpine.plugin(history)
     Alpine.plugin(intersect)
+    Alpine.plugin(sort)
     Alpine.plugin(resize)
     Alpine.plugin(collapse)
     Alpine.plugin(anchor)
