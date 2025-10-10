@@ -14,6 +14,13 @@ class SupportHtmlAttributeForwarding extends ComponentHook
         $view->with(['attributes' => new ComponentAttributeBag($attributes)]);
     }
 
+    public function renderIsland($name, $view, $properties)
+    {
+        $attributes = $this->component->getHtmlAttributes();
+
+        $view->with(['attributes' => new ComponentAttributeBag($attributes)]);
+    }
+
     function hydrate($memo)
     {
         $attributes = $memo['attributes'] ?? [];

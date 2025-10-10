@@ -25,6 +25,13 @@ class SupportSlots extends ComponentHook
         $view->with(['slot' => new SlotProxy($this->component, $slots)]);
     }
 
+    public function renderIsland($name, $view, $properties)
+    {
+        $slots = $this->component->getSlots();
+
+        $view->with(['slot' => new SlotProxy($this->component, $slots)]);
+    }
+
     function hydrate($memo)
     {
         // When a child component re-renders, we will need to stub out the known slots

@@ -7,6 +7,8 @@ use Livewire\Features\SupportStreaming\SupportStreaming;
 use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Livewire\Drawer\Utils;
 
+use function Livewire\trigger;
+
 trait HandlesIslands
 {
     protected $islands = [];
@@ -54,7 +56,7 @@ trait HandlesIslands
 
             if ($skip) {
                 // Just render the placeholder...
-                $renderedContent = $this->renderIslandView($token, [
+                $renderedContent = $this->renderIslandView($name, $token, [
                     '__placeholder' => '',
                 ]);
 
@@ -72,19 +74,19 @@ trait HandlesIslands
         }
 
         if ($lazy) {
-            $renderedContent = $this->renderIslandView($token, [
+            $renderedContent = $this->renderIslandView($name, $token, [
                 '__placeholder' => '',
             ]);
 
             $renderedContent = '<div wire:intersect="$refresh">' . $renderedContent . '</div>';
         } elseif ($defer) {
-            $renderedContent = $this->renderIslandView($token, [
+            $renderedContent = $this->renderIslandView($name, $token, [
                 '__placeholder' => '',
             ]);
 
             $renderedContent = '<div wire:init="$refresh">' . $renderedContent . '</div>';
         } else {
-            $renderedContent = $this->renderIslandView($token);
+            $renderedContent = $this->renderIslandView($name, $token);
         }
 
         return $this->wrapWithFragmentMarkers($renderedContent,[
@@ -115,7 +117,7 @@ trait HandlesIslands
 
                 if (! $token) continue;
 
-                $renderedContent = $this->wrapWithFragmentMarkers($content ?? $this->renderIslandView($token), [
+                $renderedContent = $this->wrapWithFragmentMarkers($content ?? $this->renderIslandView($name, $token), [
                     'type' => 'island',
                     'name' => $name,
                     'token' => $token,
@@ -140,7 +142,7 @@ trait HandlesIslands
 
         if (! $token) return;
 
-        $content = $content ?? $this->renderIslandView($token);
+        $content = $content ?? $this->renderIslandView($name, $token);
 
         $renderedContent = $this->wrapWithFragmentMarkers($content, [
             'type' => 'island',
@@ -158,7 +160,7 @@ trait HandlesIslands
         ]);
     }
 
-    public function renderIslandView($token, $data = [])
+    public function renderIslandView($name, $token)
     {
         $path = IslandCompiler::getCachedPathFromToken($token);
 
@@ -166,15 +168,25 @@ trait HandlesIslands
 
         app(ExtendBlade::class)->startLivewireRendering($this);
 
-        $componentData = Utils::getPublicPropertiesDefinedOnSubclass($this);
+        $properties = Utils::getPublicPropertiesDefinedOnSubclass($this);
 
-        $scope = array_merge(['__livewire' => $this], $componentData, $data);
+        $scope = array_merge(['__livewire' => $this], $properties);
 
-        $output = $view->with($scope)->render();
+        $view->with($scope);
+
+        $finish = trigger('renderIsland', $this, $name, $view, $properties);
+
+        $html = $view->render();
+
+        $replaceHtml = function ($newHtml) use (&$html) {
+            $html = $newHtml;
+        };
+
+        $finish($html, $replaceHtml);
 
         app(ExtendBlade::class)->endLivewireRendering();
 
-        return $output;
+        return $html;
     }
 
     protected function wrapWithFragmentMarkers($output, $metadata)
