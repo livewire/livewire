@@ -39,6 +39,12 @@ export function coordinateNetworkInteractions(messageBus) {
 
     // If a request is in-flight, queue up the action to fire after the in-flight request has finished...
     interceptAction(({ action, reject, defer }) => {
+        // Wire:click.renderless
+        let isRenderless = action?.origin?.directive?.modifiers.includes('renderless')
+        if (isRenderless) {
+            action.metadata.renderless = true
+        }
+
         let message = messageBus.activeMessageMatchingScope(action)
 
         if (message) {
