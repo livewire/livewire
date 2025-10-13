@@ -73,7 +73,16 @@ abstract class Component
 
     function skipRender($html = null)
     {
+        if (store($this)->has('forceRender')) {
+            return;
+        }
+
         store($this)->set('skipRender', $html ?: true);
+    }
+
+    function forceRender()
+    {
+        store($this)->set('forceRender', true);
     }
 
     function skipMount()
