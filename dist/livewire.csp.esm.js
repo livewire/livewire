@@ -11224,8 +11224,13 @@ wireProperty("$intercept", (component) => (method, callback = null) => {
     return intercept(component, callback);
   }
   return intercept(component, (options) => {
-    if (options.message.getActions().some((action) => action.method === method)) {
-      callback(options);
+    let action = options.message.getActions().find((action2) => action2.method === method);
+    if (action) {
+      let el = action?.origin?.el;
+      callback({
+        ...options,
+        el
+      });
     }
   });
 });
@@ -13173,7 +13178,8 @@ on("effect", ({ component, effects }) => {
           evaluateExpression(component, component.el, scriptContent, {
             scope: {
               "$wire": component.$wire,
-              "$js": component.$wire.$js
+              "$js": component.$wire.$js,
+              "$intercept": component.$wire.$intercept
             }
           });
         });
@@ -13921,10 +13927,15 @@ import_alpinejs13.default.interceptInit((el) => {
 
 // js/features/supportJsModules.js
 on("effect", ({ component, effects }) => {
-  let hasModule = effects.hasJsModule;
+  let hasModule = effects.hasScriptModule;
   if (hasModule) {
-    import(`/livewire/js/${component.name.replace(".", "--")}.js`).then((module) => {
-      module.run.bind(component.$wire)();
+    let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+    import(`/livewire/js/${encodedName}.js`).then((module) => {
+      module.run(
+        component.$wire,
+        component.$wire.$js,
+        component.$wire.$intercept
+      );
     });
   }
 });

@@ -3,7 +3,6 @@
 namespace Livewire;
 
 use Livewire\V4\Paginators\HandlesPaginators;
-use Livewire\V4\JsModules\HandleJsModules;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
 use Livewire\Features\SupportSlots\HandlesSlots;
@@ -43,7 +42,6 @@ abstract class Component
     use HandlesSlots;
     use HandlesHtmlAttributeForwarding;
     use HandlesPaginators;
-    use HandleJsModules;
 
     protected $__id;
     protected $__name;

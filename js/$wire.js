@@ -174,8 +174,15 @@ wireProperty('$intercept', (component) => (method, callback = null) => {
     }
 
     return intercept(component, (options) => {
-        if (options.message.getActions().some(action => action.method === method)) {
-            callback(options)
+        let action = options.message.getActions().find(action => action.method === method)
+
+        if (action) {
+            let el = action?.origin?.el
+
+            callback({
+                ...options,
+                el,
+            })
         }
     })
 })

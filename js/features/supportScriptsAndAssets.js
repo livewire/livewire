@@ -42,6 +42,7 @@ on('effect', ({ component, effects }) => {
                         scope: {
                             '$wire': component.$wire,
                             '$js': component.$wire.$js,
+                            '$intercept': component.$wire.$intercept,
                         },
                     })
                 })

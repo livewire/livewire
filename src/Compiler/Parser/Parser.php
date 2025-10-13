@@ -121,6 +121,28 @@ PHP
         return $contents;
     }
 
+    protected function injectScriptMethod(string $contents, string $scriptFileName): string
+    {
+        $pattern = '/}(\s*);/';
+        preg_match_all($pattern, $contents, $matches, PREG_OFFSET_CAPTURE);
+        $lastMatch = end($matches[0]);
+
+        if ($lastMatch) {
+            $position = $lastMatch[1];
+            return substr_replace($contents, <<<PHP
+
+    public function scriptModuleSrc()
+    {
+        return '{$scriptFileName}';
+    }
+}
+PHP
+            , $position, 1);
+        }
+
+        return $contents;
+    }
+
     protected function injectUseStatementsFromClassPortion(string $contents, string $classPortion): string
     {
         // Extract everything between <?php and "new"
