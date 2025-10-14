@@ -51,11 +51,7 @@ export function coordinateNetworkInteractions(messageBus) {
             // Wire:click.async:
             // - allow async actions incoming to pass through...
             // - if active message actions are async, allow the incoming async action to pass through as well...
-            let isAsync = action => action.origin?.directive?.modifiers.includes('async')
-            let messageIsAsync = Array.from(message?.actions || []).every(isAsync)
-            let actionIsAsync = isAsync(action)
-
-            if (messageIsAsync || actionIsAsync) return
+            if (message.isAsync() || action.isAsync()) return
 
             // Wire:poll:
             // - Throw away new polls if a request of any kind is in-flight...

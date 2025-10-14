@@ -26,6 +26,16 @@ export default class Action {
         return window.btoa(String.fromCharCode(...new TextEncoder().encode(componentId + method + params + metadata)))
     }
 
+    isAsync() {
+        let asyncMethods = this.component.snapshot.memo?.async || []
+
+        let methodIsMarkedAsync = asyncMethods.includes(this.method)
+
+        let actionIsAsync = this.origin?.directive?.modifiers.includes('async')
+
+        return methodIsMarkedAsync || actionIsAsync
+    }
+
     mergeMetadata(metadata) {
         this.metadata = { ...this.metadata, ...metadata }
     }
