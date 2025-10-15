@@ -7,11 +7,11 @@ on('effect', ({ component, effects }) => {
         let encodedName = component.name.replace('.', '--').replace('::', '---').replace(':', '----')
 
         import(`/livewire/js/${encodedName}.js`).then(module => {
-            module.run(
+            module.run.call(component.$wire, [
                 component.$wire,
                 component.$wire.$js,
                 component.$wire.$intercept
-            );
+            ]);
         });
     }
 })
