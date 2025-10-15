@@ -131,20 +131,22 @@ export class Component {
     getUpdates() {
         let propertiesDiff = diff(this.canonical, this.ephemeral)
 
-        // Fix for race condition: If diff() returned nested objects instead of flat paths
-        // (due to type mismatches between canonical and ephemeral), flatten them to prevent
-        // the server from replacing entire objects and losing sibling properties.
+        // Fix for race condition: If diff() returned nested objects on paths that already
+        // contain dots (e.g., "foo.0" instead of "foo.0.bar"), it means we hit a type
+        // mismatch and diff() stopped early. Flatten these to prevent data loss.
+        // Root properties (no dots) can legitimately be objects, so leave those alone.
         let hasNestedObjects = false
         let flattenedDiff = {}
 
         Object.entries(propertiesDiff).forEach(([key, value]) => {
-            // Check if this is a nested object (not a primitive, not __rm__ marker)
-            if (isObject(value) && value !== '__rm__') {
+            // Only flatten if: (1) it's a nested path (contains dots),
+            // (2) the value is an object, and (3) it's not a removal marker
+            if (key.includes('.') && isObject(value) && value !== '__rm__') {
                 hasNestedObjects = true
                 // Flatten the nested object into dot-notated paths
                 Object.assign(flattenedDiff, flattenObject(value, key))
             } else {
-                // Keep primitives and __rm__ markers as-is
+                // Keep everything else as-is (root properties, primitives, arrays, __rm__)
                 flattenedDiff[key] = value
             }
         })
