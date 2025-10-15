@@ -94,14 +94,17 @@ class SingleFileParser extends Parser
         return false;
     }
 
-    public function generateClassContents(string $viewFileName, ?string $placeholderFileName = null, ?string $scriptFileName = null): string
+    public function generateClassContents(?string $viewFileName = null, ?string $placeholderFileName = null, ?string $scriptFileName = null): string
     {
         $classContents = trim($this->classPortion);
 
         $classContents = $this->stripTrailingPhpTag($classContents);
         $classContents = $this->ensureAnonymousClassHasReturn($classContents);
         $classContents = $this->ensureAnonymousClassHasTrailingSemicolon($classContents);
-        $classContents = $this->injectViewMethod($classContents, $viewFileName);
+
+        if ($viewFileName) {
+            $classContents = $this->injectViewMethod($classContents, $viewFileName);
+        }
 
         if ($placeholderFileName) {
             $classContents = $this->injectPlaceholderMethod($classContents, $placeholderFileName);
@@ -114,11 +117,31 @@ class SingleFileParser extends Parser
         return $classContents;
     }
 
+    /**
+     * Generate the class contents for a multi-file component (this is used for the upgrade command).
+     */
+    public function generateClassContentsForMultiFile(): string
+    {
+        $classContents = trim($this->classPortion);
+
+        $classContents = $this->stripTrailingPhpTag($classContents);
+        $classContents = $this->ensureAnonymousClassHasTrailingSemicolon($classContents);
+
+        return $classContents;
+    }
+
     public function generateViewContents(): string
     {
         $viewContents = trim($this->viewPortion);
 
         $viewContents = $this->injectUseStatementsFromClassPortion($viewContents, $this->classPortion);
+
+        return $viewContents;
+    }
+
+    public function generateViewContentsForMultiFile(): string
+    {
+        $viewContents = trim($this->viewPortion);
 
         return $viewContents;
     }
@@ -158,5 +181,61 @@ export function run(\$wire, \$js, \$intercept) {
     {$scriptContents}
 }
 JS;
+    }
+
+    public function generateScriptContentsForMultiFile(): ?string
+    {
+        if ($this->scriptPortion === null) return null;
+
+        $scriptContents = '';
+
+        $pattern = '/<script\b([^>]*)>(.*?)<\/script>/s';
+
+        if (preg_match($pattern, $this->scriptPortion, $matches)) {
+            $scriptContents = $matches[2];
+        }
+
+        return $this->cleanupJavaScriptIndentation($scriptContents);
+    }
+
+    protected function cleanupJavaScriptIndentation(string $source): string
+    {
+        $lines = explode("\n", $source);
+
+        if (empty($lines)) {
+            return $source;
+        }
+
+        // Find the minimum indentation level (excluding empty lines)
+        $minIndentation = null;
+        foreach ($lines as $line) {
+            if (trim($line) === '') {
+                continue; // Skip empty lines
+            }
+
+            // Count leading whitespace
+            $indentation = strlen($line) - strlen(ltrim($line));
+
+            if ($minIndentation === null || $indentation < $minIndentation) {
+                $minIndentation = $indentation;
+            }
+        }
+
+        // If no indentation found, return as-is
+        if ($minIndentation === null || $minIndentation === 0) {
+            return $source;
+        }
+
+        // Remove the minimum indentation from all lines
+        $cleanedLines = [];
+        foreach ($lines as $line) {
+            if (trim($line) === '') {
+                $cleanedLines[] = $line; // Keep empty lines as-is
+            } else {
+                $cleanedLines[] = substr($line, $minIndentation);
+            }
+        }
+
+        return implode("\n", $cleanedLines);
     }
 }

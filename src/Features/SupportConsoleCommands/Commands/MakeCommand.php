@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Livewire\Finder\Finder;
+use Livewire\Compiler\Parser\SingleFileParser;
 use Livewire\Compiler\Compiler;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Inspiring;
@@ -227,18 +228,20 @@ class MakeCommand extends Command
         $testPath = $directory . '/' . $componentName . '.test.php';
         $jsPath = $directory . '/' . $componentName . '.js';
 
-        $sfcContents = $this->files->get($sfcPath);
-        $parsed = app(SingleFileComponentCompiler::class)->parseComponent($sfcContents);
+        $parser = SingleFileParser::parse($sfcPath);
 
         $this->ensureDirectoryExists($directory);
 
-        $this->files->put($classPath, $parsed->getClassSource());
-        $this->files->put($viewPath, $parsed->getViewSource());
+        $scriptContents = $parser->generateScriptContentsForMultiFile();
+        $classContents = $parser->generateClassContentsForMultiFile();
+        $viewContents = $parser->generateViewContentsForMultiFile();
+
+        $this->files->put($classPath, $classContents);
+        $this->files->put($viewPath, $viewContents);
         $this->files->put($testPath, $this->buildMultiFileComponentTest($name));
 
-        if ($parsed->hasScripts()) {
-            $jsSource = $this->cleanupJavaScriptIndentation($parsed->getScriptSource());
-            $this->files->put($jsPath, $jsSource);
+        if ($scriptContents !== null) {
+            $this->files->put($jsPath, $scriptContents);
         }
 
         $this->files->delete($sfcPath);
@@ -255,42 +258,6 @@ class MakeCommand extends Command
         }
 
         return config('livewire.make_command.emoji', true);
-    }
-
-    protected function cleanupJavaScriptIndentation(string $source): string
-    {
-        // Remove leading line break
-        $source = ltrim($source, "\r\n");
-
-        // Detect and remove common indentation
-        $lines = explode("\n", $source);
-
-        if (! empty($lines)) {
-            // Find the indentation of the first non-empty line
-            $firstLineIndent = 0;
-
-            foreach ($lines as $line) {
-                if (trim($line) !== '') {
-                    $firstLineIndent = strlen($line) - strlen(ltrim($line));
-                    break;
-                }
-            }
-
-            // Remove that amount of indentation from all lines
-            if ($firstLineIndent > 0) {
-                $lines = array_map(function($line) use ($firstLineIndent) {
-                    // Only remove indentation if the line has at least that much whitespace
-                    if (strlen($line) >= $firstLineIndent && substr($line, 0, $firstLineIndent) === str_repeat(' ', $firstLineIndent)) {
-                        return substr($line, $firstLineIndent);
-                    }
-                    return $line;
-                }, $lines);
-            }
-
-            $source = implode("\n", $lines);
-        }
-
-        return $source;
     }
 
     protected function buildClassBasedComponentClass(string $name): string
