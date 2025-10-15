@@ -1,4 +1,4 @@
-import { dataSet, deepClone, diff, extractData} from '@/utils'
+import { dataSet, deepClone, diff, extractData, flattenObject, isObject} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
@@ -130,6 +130,31 @@ export class Component {
 
     getUpdates() {
         let propertiesDiff = diff(this.canonical, this.ephemeral)
+
+        // Fix for race condition: If diff() returned nested objects on paths that already
+        // contain dots (e.g., "foo.0" instead of "foo.0.bar"), it means we hit a type
+        // mismatch and diff() stopped early. Flatten these to prevent data loss.
+        // Root properties (no dots) can legitimately be objects, so leave those alone.
+        let hasNestedObjects = false
+        let flattenedDiff = {}
+
+        Object.entries(propertiesDiff).forEach(([key, value]) => {
+            // Only flatten if: (1) it's a nested path (contains dots),
+            // (2) the value is an object, and (3) it's not a removal marker
+            if (key.includes('.') && isObject(value) && value !== '__rm__') {
+                hasNestedObjects = true
+                // Flatten the nested object into dot-notated paths
+                Object.assign(flattenedDiff, flattenObject(value, key))
+            } else {
+                // Keep everything else as-is (root properties, primitives, arrays, __rm__)
+                flattenedDiff[key] = value
+            }
+        })
+
+        // If we detected and flattened any nested objects, use the flattened version
+        if (hasNestedObjects) {
+            propertiesDiff = flattenedDiff
+        }
 
         return this.mergeQueuedUpdates(propertiesDiff)
     }

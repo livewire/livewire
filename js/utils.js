@@ -145,6 +145,30 @@ export function diff(left, right, diffs = {}, path = '') {
 }
 
 /**
+ * Flatten a nested object into dot-notated key-value pairs.
+ * This is used to fix race condition bugs where diff() returns nested objects
+ * instead of flat paths, which causes the server to replace entire objects
+ * and lose sibling properties.
+ */
+export function flattenObject(obj, prefix = '') {
+    let flattened = {}
+
+    Object.entries(obj).forEach(([key, value]) => {
+        let fullPath = prefix ? `${prefix}.${key}` : key
+
+        if (isObject(value) || isArray(value)) {
+            // Recursively flatten nested objects/arrays
+            Object.assign(flattened, flattenObject(value, fullPath))
+        } else {
+            // Leaf node - add to flattened result
+            flattened[fullPath] = value
+        }
+    })
+
+    return flattened
+}
+
+/**
  * The data that's passed between the browser and server is in the form of
  * nested tuples consisting of the schema: [rawValue, metadata]. In this
  * method we're extracting the plain JS object of only the raw values.
