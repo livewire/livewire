@@ -255,6 +255,9 @@ class Finder
 
                 $fileBaseName = str_contains($baseName, 'index') ? 'index' : $baseName;
 
+                // Strip out the emoji from folder name to derive the file name...
+                $fileBaseName = preg_replace('/⚡[\x{FE0E}\x{FE0F}]?/u', '', $fileBaseName);
+
                 if (
                     is_dir($dir)
                     && $this->hasValidMultiFileComponentSource($dir, $fileBaseName)
