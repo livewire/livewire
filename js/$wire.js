@@ -135,7 +135,13 @@ wireProperty('$js', (component) => {
         fn[name] = component.getJsAction(name)
     })
 
-    return fn
+    return new Proxy(fn, {
+        set(target, property, value) {
+            component.addJsAction(property, value)
+
+            return true
+        }
+    })
 })
 
 wireProperty('$set', (component) => async (property, value, live = true) => {
