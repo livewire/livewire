@@ -43,6 +43,9 @@ export class Component {
         // this.$wire = this.reactive
         this.$wire = generateWireObject(this, this.reactive)
 
+        // Set the $wire property on the root element...
+        el.$wire = this.$wire
+
         this.cleanups = []
 
         // Effects will be processed after every request, but we'll also handle them on initialization.

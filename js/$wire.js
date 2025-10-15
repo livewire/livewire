@@ -8,7 +8,7 @@ import { on as hook } from './hooks'
 import { fireAction, intercept } from '@/request'
 import { getErrorsObject } from '@/features/supportErrors'
 import { getPaginatorObject } from '@/features/supportPaginators'
-import { findRef } from '@/features/supportRefs'
+import { findRefEl } from '@/features/supportRefs'
 
 let properties = {}
 let fallback
@@ -159,7 +159,7 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
 })
 
 wireProperty('$refs', (component) => {
-    let fn = (name) => findRef(component, name)
+    let fn = (name) => findRefEl(component, name)
 
     return new Proxy(fn, {
         get(target, property) {

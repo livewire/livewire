@@ -151,7 +151,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div>
                         <livewire:child wire:ref="child1" name="child1" />
                         <livewire:child wire:ref="child2" name="child2" />
-                        <button wire:click="$refs['child1'].dispatch('test')" dusk="send-button">Send</button>
+                        <button wire:click="$refs['child1'].$wire.dispatchSelf('test')" dusk="send-button">Send</button>
                     </div>
                     HTML;
                 }
@@ -178,6 +178,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             }
         ])
             ->waitForLivewireToLoad()
+            ->tinker()
             ->waitForLivewire()->click('@send-button')
             // Wait for children to update...
             ->pause(50)
@@ -195,7 +196,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     return <<<'HTML'
                     <div>
                         <livewire:child wire:ref="child" />
-                        <p wire:text="$refs.child.el.textContent" dusk="child-ref-output"></p>
+                        <p wire:text="$refs.child.textContent" dusk="child-ref-output"></p>
                     </div>
                     HTML;
                 }
@@ -244,7 +245,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 {
                     return <<<'HTML'
                     <div>
-                        <p wire:text="$refs.child?.el?.textContent" dusk="child-ref-output"></p>
+                        <p wire:text="$refs.child?.textContent" dusk="child-ref-output"></p>
                     </div>
                     HTML;
                 }
