@@ -160,7 +160,7 @@ trait HandlesIslands
         ]);
     }
 
-    public function renderIslandView($name, $token)
+    public function renderIslandView($name, $token, $data = [])
     {
         $path = IslandCompiler::getCachedPathFromToken($token);
 
@@ -173,6 +173,8 @@ trait HandlesIslands
         $scope = array_merge(['__livewire' => $this], $properties);
 
         $view->with($scope);
+
+        $view->with($data);
 
         $finish = trigger('renderIsland', $this, $name, $view, $properties);
 
