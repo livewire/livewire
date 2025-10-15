@@ -22,6 +22,7 @@ class SingleFileParser extends Parser
         $scriptPortion = static::extractScriptPortion($mutableContents);
         $classPortion = static::extractClassPortion($mutableContents);
         $placeholderPortion = static::extractPlaceholderPortion($mutableContents);
+
         $viewPortion = trim($mutableContents);
 
         return new self(
@@ -143,7 +144,16 @@ class SingleFileParser extends Parser
     {
         $viewContents = trim($this->viewPortion);
 
+        if ($this->placeholderPortion) {
+            $viewContents = $this->injectPlaceholderDirective($viewContents, $this->placeholderPortion);
+        }
+
         return $viewContents;
+    }
+
+    protected function injectPlaceholderDirective(string $viewContents, string $placeholderPortion): string
+    {
+        return '@placeholder' . $placeholderPortion . '@endplaceholder' . "\n\n" . $viewContents;
     }
 
     public function generateScriptContents(): ?string
