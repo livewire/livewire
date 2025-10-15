@@ -196,7 +196,6 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportSlots\SupportSlots::class,
             // Islands should be before placeholders otherwise the island placeholders will be compiled as component placeholders...
             Features\SupportIslands\SupportIslands::class,
-            \Livewire\V4\Placeholders\SupportPlaceholders::class,
             \Livewire\V4\WithMethod\SupportWithMethod::class,
             \Livewire\V4\MagicActions\SupportMagicActions::class,
             \Livewire\V4\Paginators\SupportPaginators::class,
