@@ -9013,10 +9013,7 @@ function coordinateNetworkInteractions(messageBus2) {
     }
     let message = messageBus2.activeMessageMatchingScope(action);
     if (message) {
-      let isAsync = (action2) => action2.origin?.directive?.modifiers.includes("async");
-      let messageIsAsync = Array.from(message?.actions || []).every(isAsync);
-      let actionIsAsync = isAsync(action);
-      if (messageIsAsync || actionIsAsync)
+      if (message.isAsync() || action.isAsync())
         return;
       if (action.metadata.type === "poll") {
         return reject();
@@ -9478,6 +9475,9 @@ var Message = class {
   isCancelled() {
     return this.cancelled;
   }
+  isAsync() {
+    return Array.from(this.actions).every((action) => action.isAsync());
+  }
   onSend() {
     this.interceptors.forEach((interceptor) => interceptor.onSend({
       payload: this.payload
@@ -9577,6 +9577,12 @@ var Action = class {
     let params = JSON.stringify(this.params);
     let metadata = JSON.stringify(this.metadata);
     return window.btoa(String.fromCharCode(...new TextEncoder().encode(componentId + method + params + metadata)));
+  }
+  isAsync() {
+    let asyncMethods = this.component.snapshot.memo?.async || [];
+    let methodIsMarkedAsync = asyncMethods.includes(this.method);
+    let actionIsAsync = this.origin?.directive?.modifiers.includes("async");
+    return methodIsMarkedAsync || actionIsAsync;
   }
   mergeMetadata(metadata) {
     this.metadata = { ...this.metadata, ...metadata };
@@ -10239,34 +10245,11 @@ function newPaginatorObject(component) {
 }
 
 // js/features/supportRefs.js
-function findRef(component, name) {
+function findRefEl(component, name) {
   let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`);
   if (!refEl)
     return console.error(`Ref "${name}" not found in component "${component.id}"`);
-  let $wire = refEl.__livewire?.$wire;
-  return new Proxy({
-    el: refEl,
-    dispatch(eventName, params) {
-      dispatchRef(component, name, eventName, params);
-    }
-  }, {
-    get(target, property) {
-      if (property in target)
-        return target[property];
-      if (!$wire)
-        return console.error(`Ref "${name}" is not a component`);
-      return $wire[property];
-    },
-    set(target, property, value) {
-      if (!$wire)
-        return console.error(`Ref "${name}" is not a component`);
-      $wire[property] = value;
-      return true;
-    }
-  });
-}
-function findRefEl(component, name) {
-  return findRef(component, name).el;
+  return refEl;
 }
 
 // js/$wire.js
@@ -10366,7 +10349,12 @@ wireProperty("$js", (component) => {
   Object.keys(jsActions).forEach((name) => {
     fn[name] = component.getJsAction(name);
   });
-  return fn;
+  return new Proxy(fn, {
+    set(target, property, value) {
+      component.addJsAction(property, value);
+      return true;
+    }
+  });
 });
 wireProperty("$set", (component) => async (property, value, live = true) => {
   dataSet(component.reactive, property, value);
@@ -10377,7 +10365,7 @@ wireProperty("$set", (component) => async (property, value, live = true) => {
   return Promise.resolve();
 });
 wireProperty("$refs", (component) => {
-  let fn = (name) => findRef(component, name);
+  let fn = (name) => findRefEl(component, name);
   return new Proxy(fn, {
     get(target, property) {
       if (property in target) {
@@ -10520,6 +10508,7 @@ var Component = class {
     this.queuedUpdates = {};
     this.jsActions = {};
     this.$wire = generateWireObject(this, this.reactive);
+    el.$wire = this.$wire;
     this.cleanups = [];
     this.processEffects(this.effects);
   }
@@ -13100,11 +13089,11 @@ on("effect", ({ component, effects }) => {
   if (hasModule) {
     let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
     import(`/livewire/js/${encodedName}.js`).then((module) => {
-      module.run(
+      module.run.call(component.$wire, [
         component.$wire,
         component.$wire.$js,
         component.$wire.$intercept
-      );
+      ]);
     });
   }
 });
