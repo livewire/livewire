@@ -411,6 +411,18 @@
     });
     return diffs;
   }
+  function flattenObject(obj, prefix2 = "") {
+    let flattened = {};
+    Object.entries(obj).forEach(([key, value]) => {
+      let fullPath = prefix2 ? `${prefix2}.${key}` : key;
+      if (isObject(value) || isArray(value)) {
+        Object.assign(flattened, flattenObject(value, fullPath));
+      } else {
+        flattened[fullPath] = value;
+      }
+    });
+    return flattened;
+  }
   function extractData(payload) {
     let value = isSynthetic(payload) ? payload[0] : payload;
     let meta = isSynthetic(payload) ? payload[1] : void 0;
@@ -764,7 +776,7 @@
     );
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -2430,8 +2442,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = false ? Object.freeze({}) : {};
-  var EMPTY_ARR = false ? Object.freeze([]) : [];
+  var EMPTY_OBJ = true ? Object.freeze({}) : {};
+  var EMPTY_ARR = true ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2464,8 +2476,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect;
-  var ITERATE_KEY = Symbol(false ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(true ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2555,7 +2567,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (false) {
+      if (activeEffect.options.onTrack) {
         activeEffect.options.onTrack({
           effect: activeEffect,
           target,
@@ -2619,7 +2631,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect3) => {
-      if (false) {
+      if (effect3.options.onTrigger) {
         effect3.options.onTrigger({
           effect: effect3,
           target,
@@ -2756,13 +2768,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2824,7 +2836,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3.call(target, key);
@@ -2843,7 +2855,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2856,7 +2868,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger(target, "clear", void 0, void 0, oldTarget);
@@ -2901,7 +2913,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (false) {
+      if (true) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -3019,6 +3031,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
+  function checkIdentityKeys(target, has2, key) {
+    const rawKey = toRaw(key);
+    if (rawKey !== key && has2.call(target, rawKey)) {
+      const type = toRawType(target);
+      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+    }
+  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -3051,7 +3070,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (false) {
+      if (true) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -5659,6 +5678,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     getUpdates() {
       let propertiesDiff = diff(this.canonical, this.ephemeral);
+      let hasNestedObjects = false;
+      let flattenedDiff = {};
+      Object.entries(propertiesDiff).forEach(([key, value]) => {
+        if (key.includes(".") && isObject(value) && value !== "__rm__") {
+          hasNestedObjects = true;
+          Object.assign(flattenedDiff, flattenObject(value, key));
+        } else {
+          flattenedDiff[key] = value;
+        }
+      });
+      if (hasNestedObjects) {
+        propertiesDiff = flattenedDiff;
+      }
       return this.mergeQueuedUpdates(propertiesDiff);
     }
     applyUpdates(object, updates) {
@@ -7332,7 +7364,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // ../alpine/packages/sort/dist/module.esm.js
+  // node_modules/@alpinejs/sort/dist/module.esm.js
   function ownKeys3(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -9530,21 +9562,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   Sortable.mount(new AutoScrollPlugin());
   Sortable.mount(Remove, Revert);
   var sortable_esm_default = Sortable;
-  function walk2(el, callback) {
-    if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
-      Array.from(el.children).forEach((el2) => walk2(el2, callback));
-      return;
-    }
-    let skip = false;
-    callback(el, () => skip = true);
-    if (skip)
-      return;
-    let node = el.firstElementChild;
-    while (node) {
-      walk2(node, callback, false);
-      node = node.nextElementSibling;
-    }
-  }
   function src_default6(Alpine22) {
     Alpine22.directive("sort", (el, { value, modifiers, expression }, { effect: effect3, evaluate: evaluate3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       if (value === "config") {
@@ -9564,7 +9581,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let preferences = {
         hideGhost: !modifiers.includes("ghost"),
-        useHandles: !!el.querySelector("[x-sort\\:handle],[wire\\:sort\\:handle]"),
+        useHandles: !!el.querySelector("[x-sort\\:handle]"),
         group: getGroupName(el, modifiers)
       };
       let handleSort = generateSortHandler(expression, evaluateLater2);
@@ -9597,24 +9614,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
   function getConfigurationOverrides(el, modifiers, evaluate3) {
-    if (el.hasAttribute("x-sort:config")) {
-      return evaluate3(el.getAttribute("x-sort:config"));
-    }
-    if (el.hasAttribute("wire:sort:config")) {
-      return evaluate3(el.getAttribute("wire:sort:config"));
-    }
-    return {};
+    return el.hasAttribute("x-sort:config") ? evaluate3(el.getAttribute("x-sort:config")) : {};
   }
   function initSortable(el, config, preferences, handle) {
     let ghostRef;
     let options = {
       animation: 150,
-      handle: preferences.useHandles ? "[x-sort\\:handle],[wire\\:sort\\:handle]" : null,
+      handle: preferences.useHandles ? "[x-sort\\:handle]" : null,
       group: preferences.group,
       filter(e) {
-        if (!el.querySelector("[x-sort\\:item],[wire\\:sort\\:item]"))
+        if (!el.querySelector("[x-sort\\:item]"))
           return false;
-        let itemHasAttribute = e.target.closest("[x-sort\\:item],[wire\\:sort\\:item]");
+        let itemHasAttribute = e.target.closest("[x-sort\\:item]");
         return itemHasAttribute ? false : true;
       },
       onSort(e) {
@@ -9623,15 +9634,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             return;
           }
         }
-        let key = void 0;
-        walk2(e.item, (el2, skip) => {
-          if (key !== void 0)
-            return;
-          if (el2._x_sort_key) {
-            key = el2._x_sort_key;
-            skip();
-          }
-        });
+        let key = e.item._x_sort_key;
         let position = e.newIndex;
         if (key !== void 0 || key !== null) {
           handle(key, position);
@@ -9666,9 +9669,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getGroupName(el, modifiers) {
     if (el.hasAttribute("x-sort:group")) {
       return el.getAttribute("x-sort:group");
-    }
-    if (el.hasAttribute("wire:sort:group")) {
-      return el.getAttribute("wire:sort:group");
     }
     return modifiers.indexOf("group") !== -1 ? modifiers[modifiers.indexOf("group") + 1] : null;
   }
@@ -11970,7 +11970,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);

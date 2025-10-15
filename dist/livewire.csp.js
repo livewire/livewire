@@ -2016,9 +2016,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           })
         );
       }
-      function walk2(el, callback) {
+      function walk(el, callback) {
         if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
-          Array.from(el.children).forEach((el2) => walk2(el2, callback));
+          Array.from(el.children).forEach((el2) => walk(el2, callback));
           return;
         }
         let skip = false;
@@ -2027,7 +2027,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return;
         let node = el.firstElementChild;
         while (node) {
-          walk2(node, callback, false);
+          walk(node, callback, false);
           node = node.nextElementSibling;
         }
       }
@@ -2044,7 +2044,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         dispatch3(document, "alpine:init");
         dispatch3(document, "alpine:initializing");
         startObservingMutations();
-        onElAdded((el) => initTree(el, walk2));
+        onElAdded((el) => initTree(el, walk));
         onElRemoved((el) => destroyTree(el));
         onAttributesAdded((el, attrs) => {
           directives(el, attrs).forEach((handle) => handle());
@@ -2098,7 +2098,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         initInterceptors2.push(callback);
       }
       var markerDispenser = 1;
-      function initTree(el, walker = walk2, intercept2 = () => {
+      function initTree(el, walker = walk, intercept2 = () => {
       }) {
         if (findClosest(el, (i) => i._x_ignore))
           return;
@@ -2115,7 +2115,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           });
         });
       }
-      function destroyTree(root, walker = walk2) {
+      function destroyTree(root, walker = walk) {
         walker(root, (el) => {
           cleanupElement(el);
           cleanupAttributes(el);
@@ -2567,7 +2567,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       function cloneTree(el) {
         let hasRunThroughFirstEl = false;
         let shallowWalker = (el2, callback) => {
-          walk2(el2, (el3, skip) => {
+          walk(el2, (el3, skip) => {
             if (hasRunThroughFirstEl && isRoot(el3))
               return skip();
             hasRunThroughFirstEl = true;
@@ -2970,7 +2970,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         bound: getBinding,
         $data: scope,
         watch,
-        walk: walk2,
+        walk,
         data,
         bind: bind2
       };
@@ -5065,6 +5065,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     return diffs;
   }
+  function flattenObject(obj, prefix = "") {
+    let flattened = {};
+    Object.entries(obj).forEach(([key, value]) => {
+      let fullPath = prefix ? `${prefix}.${key}` : key;
+      if (isObject(value) || isArray(value)) {
+        Object.assign(flattened, flattenObject(value, fullPath));
+      } else {
+        flattened[fullPath] = value;
+      }
+    });
+    return flattened;
+  }
   function extractData(payload) {
     let value = isSynthetic(payload) ? payload[0] : payload;
     let meta = isSynthetic(payload) ? payload[1] : void 0;
@@ -7089,6 +7101,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     getUpdates() {
       let propertiesDiff = diff(this.canonical, this.ephemeral);
+      let hasNestedObjects = false;
+      let flattenedDiff = {};
+      Object.entries(propertiesDiff).forEach(([key, value]) => {
+        if (key.includes(".") && isObject(value) && value !== "__rm__") {
+          hasNestedObjects = true;
+          Object.assign(flattenedDiff, flattenObject(value, key));
+        } else {
+          flattenedDiff[key] = value;
+        }
+      });
+      if (hasNestedObjects) {
+        propertiesDiff = flattenedDiff;
+      }
       return this.mergeQueuedUpdates(propertiesDiff);
     }
     applyUpdates(object, updates) {
@@ -8762,7 +8787,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/sort/dist/module.esm.js
+  // node_modules/@alpinejs/sort/dist/module.esm.js
   function ownKeys2(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -10960,21 +10985,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   Sortable.mount(new AutoScrollPlugin());
   Sortable.mount(Remove, Revert);
   var sortable_esm_default = Sortable;
-  function walk(el, callback) {
-    if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
-      Array.from(el.children).forEach((el2) => walk(el2, callback));
-      return;
-    }
-    let skip = false;
-    callback(el, () => skip = true);
-    if (skip)
-      return;
-    let node = el.firstElementChild;
-    while (node) {
-      walk(node, callback, false);
-      node = node.nextElementSibling;
-    }
-  }
   function src_default5(Alpine24) {
     Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate: evaluate2, evaluateLater, cleanup }) => {
       if (value === "config") {
@@ -10994,7 +11004,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let preferences = {
         hideGhost: !modifiers.includes("ghost"),
-        useHandles: !!el.querySelector("[x-sort\\:handle],[wire\\:sort\\:handle]"),
+        useHandles: !!el.querySelector("[x-sort\\:handle]"),
         group: getGroupName(el, modifiers)
       };
       let handleSort = generateSortHandler(expression, evaluateLater);
@@ -11027,24 +11037,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
   function getConfigurationOverrides(el, modifiers, evaluate2) {
-    if (el.hasAttribute("x-sort:config")) {
-      return evaluate2(el.getAttribute("x-sort:config"));
-    }
-    if (el.hasAttribute("wire:sort:config")) {
-      return evaluate2(el.getAttribute("wire:sort:config"));
-    }
-    return {};
+    return el.hasAttribute("x-sort:config") ? evaluate2(el.getAttribute("x-sort:config")) : {};
   }
   function initSortable(el, config, preferences, handle) {
     let ghostRef;
     let options = {
       animation: 150,
-      handle: preferences.useHandles ? "[x-sort\\:handle],[wire\\:sort\\:handle]" : null,
+      handle: preferences.useHandles ? "[x-sort\\:handle]" : null,
       group: preferences.group,
       filter(e) {
-        if (!el.querySelector("[x-sort\\:item],[wire\\:sort\\:item]"))
+        if (!el.querySelector("[x-sort\\:item]"))
           return false;
-        let itemHasAttribute = e.target.closest("[x-sort\\:item],[wire\\:sort\\:item]");
+        let itemHasAttribute = e.target.closest("[x-sort\\:item]");
         return itemHasAttribute ? false : true;
       },
       onSort(e) {
@@ -11053,15 +11057,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             return;
           }
         }
-        let key = void 0;
-        walk(e.item, (el2, skip) => {
-          if (key !== void 0)
-            return;
-          if (el2._x_sort_key) {
-            key = el2._x_sort_key;
-            skip();
-          }
-        });
+        let key = e.item._x_sort_key;
         let position = e.newIndex;
         if (key !== void 0 || key !== null) {
           handle(key, position);
@@ -11096,9 +11092,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getGroupName(el, modifiers) {
     if (el.hasAttribute("x-sort:group")) {
       return el.getAttribute("x-sort:group");
-    }
-    if (el.hasAttribute("wire:sort:group")) {
-      return el.getAttribute("wire:sort:group");
     }
     return modifiers.indexOf("group") !== -1 ? modifiers[modifiers.indexOf("group") + 1] : null;
   }
@@ -13402,7 +13395,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);

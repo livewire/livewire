@@ -5890,9 +5890,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/sort/dist/module.cjs.js
+// node_modules/@alpinejs/sort/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/sort/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/sort/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -6880,21 +6880,6 @@ var require_module_cjs5 = __commonJS({
     });
     module.exports = __toCommonJS(module_exports);
     var import_sortablejs = __toESM2(require_Sortable_min());
-    function walk(el, callback) {
-      if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
-        Array.from(el.children).forEach((el2) => walk(el2, callback));
-        return;
-      }
-      let skip = false;
-      callback(el, () => skip = true);
-      if (skip)
-        return;
-      let node = el.firstElementChild;
-      while (node) {
-        walk(node, callback, false);
-        node = node.nextElementSibling;
-      }
-    }
     function src_default2(Alpine24) {
       Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate, evaluateLater, cleanup }) => {
         if (value === "config") {
@@ -6914,7 +6899,7 @@ var require_module_cjs5 = __commonJS({
         }
         let preferences = {
           hideGhost: !modifiers.includes("ghost"),
-          useHandles: !!el.querySelector("[x-sort\\:handle],[wire\\:sort\\:handle]"),
+          useHandles: !!el.querySelector("[x-sort\\:handle]"),
           group: getGroupName(el, modifiers)
         };
         let handleSort = generateSortHandler(expression, evaluateLater);
@@ -6947,24 +6932,18 @@ var require_module_cjs5 = __commonJS({
       };
     }
     function getConfigurationOverrides(el, modifiers, evaluate) {
-      if (el.hasAttribute("x-sort:config")) {
-        return evaluate(el.getAttribute("x-sort:config"));
-      }
-      if (el.hasAttribute("wire:sort:config")) {
-        return evaluate(el.getAttribute("wire:sort:config"));
-      }
-      return {};
+      return el.hasAttribute("x-sort:config") ? evaluate(el.getAttribute("x-sort:config")) : {};
     }
     function initSortable(el, config, preferences, handle) {
       let ghostRef;
       let options = {
         animation: 150,
-        handle: preferences.useHandles ? "[x-sort\\:handle],[wire\\:sort\\:handle]" : null,
+        handle: preferences.useHandles ? "[x-sort\\:handle]" : null,
         group: preferences.group,
         filter(e) {
-          if (!el.querySelector("[x-sort\\:item],[wire\\:sort\\:item]"))
+          if (!el.querySelector("[x-sort\\:item]"))
             return false;
-          let itemHasAttribute = e.target.closest("[x-sort\\:item],[wire\\:sort\\:item]");
+          let itemHasAttribute = e.target.closest("[x-sort\\:item]");
           return itemHasAttribute ? false : true;
         },
         onSort(e) {
@@ -6973,15 +6952,7 @@ var require_module_cjs5 = __commonJS({
               return;
             }
           }
-          let key = void 0;
-          walk(e.item, (el2, skip) => {
-            if (key !== void 0)
-              return;
-            if (el2._x_sort_key) {
-              key = el2._x_sort_key;
-              skip();
-            }
-          });
+          let key = e.item._x_sort_key;
           let position = e.newIndex;
           if (key !== void 0 || key !== null) {
             handle(key, position);
@@ -7016,9 +6987,6 @@ var require_module_cjs5 = __commonJS({
     function getGroupName(el, modifiers) {
       if (el.hasAttribute("x-sort:group")) {
         return el.getAttribute("x-sort:group");
-      }
-      if (el.hasAttribute("wire:sort:group")) {
-        return el.getAttribute("wire:sort:group");
       }
       return modifiers.indexOf("group") !== -1 ? modifiers[modifiers.indexOf("group") + 1] : null;
     }
@@ -8639,9 +8607,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -9363,6 +9331,18 @@ function diff(left, right, diffs = {}, path = "") {
     diffs[`${path}.${key}`] = "__rm__";
   });
   return diffs;
+}
+function flattenObject(obj, prefix = "") {
+  let flattened = {};
+  Object.entries(obj).forEach(([key, value]) => {
+    let fullPath = prefix ? `${prefix}.${key}` : key;
+    if (isObject(value) || isArray(value)) {
+      Object.assign(flattened, flattenObject(value, fullPath));
+    } else {
+      flattened[fullPath] = value;
+    }
+  });
+  return flattened;
 }
 function extractData(payload) {
   let value = isSynthetic(payload) ? payload[0] : payload;
@@ -11388,6 +11368,19 @@ var Component = class {
   }
   getUpdates() {
     let propertiesDiff = diff(this.canonical, this.ephemeral);
+    let hasNestedObjects = false;
+    let flattenedDiff = {};
+    Object.entries(propertiesDiff).forEach(([key, value]) => {
+      if (key.includes(".") && isObject(value) && value !== "__rm__") {
+        hasNestedObjects = true;
+        Object.assign(flattenedDiff, flattenObject(value, key));
+      } else {
+        flattenedDiff[key] = value;
+      }
+    });
+    if (hasNestedObjects) {
+      propertiesDiff = flattenedDiff;
+    }
     return this.mergeQueuedUpdates(propertiesDiff);
   }
   applyUpdates(object, updates) {
