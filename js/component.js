@@ -1,4 +1,4 @@
-import { dataSet, deepClone, diff, extractData} from '@/utils'
+import { dataSet, deepClone, diff, extractData, flattenObject, isObject} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
@@ -130,6 +130,29 @@ export class Component {
 
     getUpdates() {
         let propertiesDiff = diff(this.canonical, this.ephemeral)
+
+        // Fix for race condition: If diff() returned nested objects instead of flat paths
+        // (due to type mismatches between canonical and ephemeral), flatten them to prevent
+        // the server from replacing entire objects and losing sibling properties.
+        let hasNestedObjects = false
+        let flattenedDiff = {}
+
+        Object.entries(propertiesDiff).forEach(([key, value]) => {
+            // Check if this is a nested object (not a primitive, not __rm__ marker)
+            if (isObject(value) && value !== '__rm__') {
+                hasNestedObjects = true
+                // Flatten the nested object into dot-notated paths
+                Object.assign(flattenedDiff, flattenObject(value, key))
+            } else {
+                // Keep primitives and __rm__ markers as-is
+                flattenedDiff[key] = value
+            }
+        })
+
+        // If we detected and flattened any nested objects, use the flattened version
+        if (hasNestedObjects) {
+            propertiesDiff = flattenedDiff
+        }
 
         return this.mergeQueuedUpdates(propertiesDiff)
     }
