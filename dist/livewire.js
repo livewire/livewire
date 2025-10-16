@@ -5595,6 +5595,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el.__livewire = this;
       this.el = el;
       this.id = el.getAttribute("wire:id");
+      this.key = el.getAttribute("wire:key");
       this.__livewireId = this.id;
       this.snapshotEncoded = el.getAttribute("wire:snapshot");
       this.snapshot = JSON.parse(this.snapshotEncoded);
@@ -5681,9 +5682,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     get children() {
-      let meta = this.snapshot.memo;
-      let childIds = Object.values(meta.children).map((i) => i[1]);
-      return childIds.filter((id) => hasComponent(id)).map((id) => findComponent(id));
+      let componentEl = this.el;
+      let children = [];
+      componentEl.querySelectorAll("[wire\\:id]").forEach((el) => {
+        let parentComponentEl = el.parentElement.closest("[wire\\:id]");
+        if (parentComponentEl !== componentEl)
+          return;
+        let componentInstance = el.__livewire;
+        if (!componentInstance)
+          return;
+        children.push(componentInstance);
+      });
+      return children;
     }
     get islands() {
       let islands = this.snapshot.memo.islands;
@@ -5729,13 +5739,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     getEncodedSnapshotWithLatestChildrenMergedIn() {
       let { snapshotEncoded, children, snapshot } = this;
-      let childIds = children.map((child) => child.id);
-      let filteredChildren = Object.fromEntries(
-        Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1]))
-      );
+      let childrenMemo = {};
+      children.forEach((child) => {
+        childrenMemo[child.key] = [child.el.tagName.toLowerCase(), child.id];
+      });
       return snapshotEncoded.replace(
         /"children":\{[^}]*\}/,
-        `"children":${JSON.stringify(filteredChildren)}`
+        `"children":${JSON.stringify(childrenMemo)}`
       );
     }
     inscribeSnapshotAndEffectsOnElement() {
@@ -9614,8 +9624,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       filter(e) {
         if (!el.querySelector("[x-sort\\:item],[wire\\:sort\\:item]"))
           return false;
-        let itemHasAttribute = e.target.closest("[x-sort\\:item],[wire\\:sort\\:item]");
-        return itemHasAttribute ? false : true;
+        let closestItem = e.target.closest("[x-sort\\:item],[wire\\:sort\\:item]");
+        let itemIsInsideCurrentSortable = closestItem !== el && el.contains(closestItem);
+        return closestItem && itemIsInsideCurrentSortable ? false : true;
+      },
+      onMove(e) {
+        let targetElement = e.related;
+        if (targetElement && !targetElement.hasAttribute("x-sort:item") && !targetElement.hasAttribute("wire:sort:item")) {
+          return false;
+        }
+        return true;
       },
       onSort(e) {
         if (e.from !== e.to) {
@@ -9632,7 +9650,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             skip();
           }
         });
-        let position = e.newIndex;
+        let position = calculateSortablePosition(e.target, e.newIndex);
         if (key !== void 0 || key !== null) {
           handle(key, position);
         }
@@ -9652,6 +9670,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
     return new sortable_esm_default(el, { ...options, ...config });
+  }
+  function calculateSortablePosition(container, newIndex2) {
+    let positionLookup = {};
+    let sortableElements = Array.from(container.querySelectorAll("[x-sort\\:item],[wire\\:sort\\:item]")).filter((el) => {
+      let closestSortable = el.closest("[x-sort],[wire\\:sort]");
+      return closestSortable === container;
+    });
+    let sortableIndex = 0;
+    for (let i = 0; i < container.children.length; i++) {
+      let child = container.children[i];
+      if (child.hasAttribute("x-sort:item") || child.hasAttribute("wire:sort:item")) {
+        positionLookup[i] = sortableIndex;
+        sortableIndex++;
+      }
+    }
+    return positionLookup[newIndex2] !== void 0 ? positionLookup[newIndex2] : sortableIndex;
   }
   function keepElementsWithinMorphMarkers(el) {
     let cursor = el.firstChild;
@@ -12920,7 +12954,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       key: (el) => {
         if (isntElement(el))
           return;
-        return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
+        return el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.id;
       },
       lookahead: false
     };
