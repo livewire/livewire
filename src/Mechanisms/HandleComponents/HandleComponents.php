@@ -582,6 +582,11 @@ class HandleComponents extends Mechanism
             if (config('app.debug')) trigger('profile', 'call'.$idx, $root->getId(), [$start, microtime(true)]);
 
             $returns[] = $finish($return);
+
+            // Support `Wire:click.renderless`...
+            if ($metadata['renderless'] ?? false) {
+                $root->skipRender();
+            }
         }
 
         $componentContext->addEffect('returns', $returns);

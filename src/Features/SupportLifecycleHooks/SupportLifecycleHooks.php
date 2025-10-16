@@ -90,6 +90,7 @@ class SupportLifecycleHooks extends ComponentHook
             'dehydrate*',
             'updating*',
             'updated*',
+            'scriptSrc',
         ];
 
         throw_if(

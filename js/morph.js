@@ -174,11 +174,11 @@ function getMorphConfig(component) {
         key: (el) => {
             if (isntElement(el)) return
 
-            return el.hasAttribute(`wire:key`)
-                ? el.getAttribute(`wire:key`)
-                : // If no "key", then first check for "wire:id", then "id"
-                el.hasAttribute(`wire:id`)
-                    ? el.getAttribute(`wire:id`)
+            return el.hasAttribute(`wire:id`)
+                ? el.getAttribute(`wire:id`)
+                : // If no component "id", then first check for "wire:key", then "id"
+                el.hasAttribute(`wire:key`)
+                    ? el.getAttribute(`wire:key`)
                     : el.id
         },
 

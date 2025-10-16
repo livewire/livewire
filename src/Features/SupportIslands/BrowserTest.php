@@ -544,4 +544,40 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@foo-island', 'Hi, how are you? I hope things are going well. I just wanted to check in.')
             ;
     }
+
+    public function test_island_works_with_error_bag()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $foo = '';
+
+            public function validateFoo()
+            {
+                $this->validate(['foo' => 'required']);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island
+                        <button type="button" wire:click="validateFoo" dusk="island-validate-foo">Validate Foo</button>
+
+                        <div>
+                            Error: <div dusk="island-error">{{ $errors->first('foo') }}</div>
+                        </div>
+                    @endisland
+
+                    <div>
+                        Error: <div dusk="root-error">{{ $errors->first('foo') }}</div>
+                    </div>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertDontSeeIn('@island-error', 'The foo field is required.')
+            ->assertDontSeeIn('@root-error', 'The foo field is required.')
+            ->waitForLivewire()->click('@island-validate-foo')
+            ->assertSeeIn('@island-error', 'The foo field is required.')
+            ->assertDontSeeIn('@root-error', 'The foo field is required.')
+            ;
+    }
 }

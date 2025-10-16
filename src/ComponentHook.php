@@ -59,6 +59,18 @@ abstract class ComponentHook
         };
     }
 
+    function callRenderIsland(...$params) {
+        $callbacks = [];
+
+        if (method_exists($this, 'renderIsland')) $callbacks[] = $this->renderIsland(...$params);
+
+        return function (...$params) use ($callbacks) {
+            foreach ($callbacks as $callback) {
+                if (is_callable($callback)) $callback(...$params);
+            }
+        };
+    }
+
     function callDehydrate(...$params) {
         if (method_exists($this, 'dehydrate')) $this->dehydrate(...$params);
     }

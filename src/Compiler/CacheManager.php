@@ -109,6 +109,8 @@ class CacheManager
         File::ensureDirectoryExists($this->cacheDirectory . '/views');
 
         File::put($viewPath, $contents);
+
+        $this->mutateFileModificationTime($viewPath);
     }
 
     public function writeScriptFile(string $sourcePath, string $contents): void
@@ -127,6 +129,19 @@ class CacheManager
         File::ensureDirectoryExists($this->cacheDirectory . '/placeholders');
 
         File::put($placeholderPath, $contents);
+
+        $this->mutateFileModificationTime($placeholderPath);
+    }
+
+    public function writeIslandFile(string $sourcePath, string $contents): void
+    {
+        $viewPath = $this->getViewPath($sourcePath);
+
+        File::ensureDirectoryExists($this->cacheDirectory . '/views');
+
+        File::put($viewPath, $contents);
+
+        $this->mutateFileModificationTime($viewPath);
     }
 
     public function invalidateOpCache(string $sourcePath): void
@@ -134,5 +149,18 @@ class CacheManager
         if (function_exists('opcache_invalidate')) {
             opcache_invalidate($sourcePath, true);
         }
+    }
+
+    public function mutateFileModificationTime(string $path): void
+    {
+        // This is a fix for a gnarly issue: blade's compiler uses filemtimes to determine if a compiled view has become expired.
+        // AND it's comparison includes equals like this: $path >= $cachedPath
+        // AND file_put_contents won't update the filemtime if the contents are the same
+        // THEREFORE because we are creating a blade file at the same "second" that it is compiled
+        // both the source file and the cached file's filemtime's match, therefore it become's in a perpetual state
+        // of always being expired. So we mutate the source file to be one second behind so that the cached
+        // view file is one second ahead. Phew. this one took a minute to find lol.
+        $original = filemtime($path);
+        touch($path, $original - 1);
     }
 }

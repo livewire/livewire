@@ -16,6 +16,9 @@ class MultiFileParser extends Parser
     {
         $name = basename($path);
 
+        // Strip out the emoji if it exists...
+        $name = preg_replace('/⚡[\x{FE0E}\x{FE0F}]?/u', '', $name);
+
         $classPath = $path . '/' . $name . '.php';
         $viewPath = $path . '/' . $name . '.blade.php';
         $scriptPath = $path . '/' . $name . '.js';
@@ -42,14 +45,25 @@ class MultiFileParser extends Parser
         );
     }
 
-    public function generateClassContents(string $viewFileName): string
+    public function generateClassContents(?string $viewFileName = null, ?string $placeholderFileName = null, ?string $scriptFileName = null): string
     {
         $classContents = trim($this->classPortion);
 
         $classContents = $this->stripTrailingPhpTag($classContents);
         $classContents = $this->ensureAnonymousClassHasReturn($classContents);
         $classContents = $this->ensureAnonymousClassHasTrailingSemicolon($classContents);
-        $classContents = $this->injectViewMethod($classContents, $viewFileName);
+
+        if ($viewFileName) {
+            $classContents = $this->injectViewMethod($classContents, $viewFileName);
+        }
+
+        if ($placeholderFileName) {
+            $classContents = $this->injectPlaceholderMethod($classContents, $placeholderFileName);
+        }
+
+        if ($scriptFileName) {
+            $classContents = $this->injectScriptMethod($classContents, $scriptFileName);
+        }
 
         return $classContents;
     }

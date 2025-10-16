@@ -8,7 +8,7 @@ import { on as hook } from './hooks'
 import { fireAction, intercept } from '@/request'
 import { getErrorsObject } from '@/features/supportErrors'
 import { getPaginatorObject } from '@/features/supportPaginators'
-import { findRef } from '@/features/supportRefs'
+import { findRefEl } from '@/features/supportRefs'
 
 let properties = {}
 let fallback
@@ -135,7 +135,13 @@ wireProperty('$js', (component) => {
         fn[name] = component.getJsAction(name)
     })
 
-    return fn
+    return new Proxy(fn, {
+        set(target, property, value) {
+            component.addJsAction(property, value)
+
+            return true
+        }
+    })
 })
 
 wireProperty('$set', (component) => async (property, value, live = true) => {
@@ -153,7 +159,7 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
 })
 
 wireProperty('$refs', (component) => {
-    let fn = (name) => findRef(component, name)
+    let fn = (name) => findRefEl(component, name)
 
     return new Proxy(fn, {
         get(target, property) {
@@ -174,8 +180,15 @@ wireProperty('$intercept', (component) => (method, callback = null) => {
     }
 
     return intercept(component, (options) => {
-        if (options.message.getActions().some(action => action.method === method)) {
-            callback(options)
+        let action = options.message.getActions().find(action => action.method === method)
+
+        if (action) {
+            let el = action?.origin?.el
+
+            callback({
+                ...options,
+                el,
+            })
         }
     })
 })

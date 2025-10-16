@@ -95,6 +95,8 @@ class IslandCompiler
         // Write the cached island to the file system...
         file_put_contents($cachedPath, $innerContent);
 
+        app('livewire.compiler')->cacheManager->mutateFileModificationTime($cachedPath);
+
         return $output;
     }
 

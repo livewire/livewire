@@ -17,46 +17,11 @@ class IntegrateV4
         // @todo: Remove this once islands and placeholders are updated to use the cache manager...
         app('view')->addNamespace('livewire-compiled', storage_path('framework/views/livewire/views'));
 
-
-        $this->registerSlotDirectives();
-        $this->registerSlotsSupport();
         $this->hookIntoViewClear();
 
         \Illuminate\Console\Application::starting(fn (\Illuminate\Console\Application $artisan) => $artisan->resolveCommands([
             \Livewire\V4\Compiler\Commands\LivewireClearCommand::class,
         ]));
-    }
-
-    protected function registerSlotDirectives()
-    {
-        Blade::directive('wireSlot', function ($expression) {
-            return "<?php
-                ob_start();
-                \$__slotName = {$expression};
-                // \$__slotAttributes = func_num_args() > 1 ? func_get_arg(1) : [];
-                \$__previousSlotName = \$__slotName ?? null;
-
-                // Track slot stack for nesting support
-                \$__slotStack = \$__slotStack ?? [];
-                array_push(\$__slotStack, \$__previousSlotName);
-            ?>";
-        });
-
-        Blade::directive('endWireSlot', function () {
-            return "<?php
-                \$__slotContent = ob_get_clean();
-                \$__slots = \$__slots ?? [];
-                \$__slots[\$__slotName] = \$__slotContent;
-
-                // Restore previous slot name from stack for nesting
-                \$__slotName = array_pop(\$__slotStack);
-            ?>";
-        });
-    }
-
-    protected function registerSlotsSupport()
-    {
-        // app('livewire')->componentHook(SupportSlots::class);
     }
 
     protected function hookIntoViewClear()

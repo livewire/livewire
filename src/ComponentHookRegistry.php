@@ -69,6 +69,10 @@ class ComponentHookRegistry
             return static::proxyCallToHooks($component, 'callRender')($view, $data);
         });
 
+        on('renderIsland', function ($component, $name, $view, $data) {
+            return static::proxyCallToHooks($component, 'callRenderIsland')($name, $view, $data);
+        });
+
         on('dehydrate', function ($component, $context) {
             static::proxyCallToHooks($component, 'callDehydrate')($context);
         });

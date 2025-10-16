@@ -14,6 +14,8 @@ export class Component {
 
         this.id = el.getAttribute('wire:id')
 
+        this.key = el.getAttribute('wire:key')
+
         this.__livewireId = this.id // @legacy
 
         this.snapshotEncoded = el.getAttribute('wire:snapshot')
@@ -42,6 +44,9 @@ export class Component {
 
         // this.$wire = this.reactive
         this.$wire = generateWireObject(this, this.reactive)
+
+        // Set the $wire property on the root element...
+        el.$wire = this.$wire
 
         this.cleanups = []
 
@@ -164,12 +169,23 @@ export class Component {
     }
 
     get children() {
-        let meta = this.snapshot.memo
-        let childIds = Object.values(meta.children).map(i => i[1])
+        let componentEl = this.el
 
-        return childIds
-            .filter(id => hasComponent(id))
-            .map(id => findComponent(id))
+        let children = []
+
+        componentEl.querySelectorAll('[wire\\:id]').forEach(el => {
+            let parentComponentEl = el.parentElement.closest('[wire\\:id]')
+
+            if (parentComponentEl !== componentEl) return
+
+            let componentInstance = el.__livewire
+
+            if (! componentInstance) return
+
+            children.push(componentInstance)
+        })
+
+        return children
     }
 
     get islands() {
@@ -230,16 +246,16 @@ export class Component {
 
     getEncodedSnapshotWithLatestChildrenMergedIn() {
         let { snapshotEncoded, children, snapshot } = this
-        let childIds = children.map(child => child.id)
 
-        let filteredChildren = Object.fromEntries(
-            Object.entries(snapshot.memo.children)
-                .filter(([key, value]) => childIds.includes(value[1]))
-        )
+        let childrenMemo = {}
+
+        children.forEach(child => {
+            childrenMemo[child.key] = [child.el.tagName.toLowerCase(), child.id]
+        })
 
         return snapshotEncoded.replace(
             /"children":\{[^}]*\}/,
-            `"children":${JSON.stringify(filteredChildren)}`
+            `"children":${JSON.stringify(childrenMemo)}`
         )
     }
 

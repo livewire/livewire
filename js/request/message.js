@@ -97,6 +97,10 @@ export default class Message {
         return this.cancelled
     }
 
+    isAsync() {
+        return Array.from(this.actions).every(action => action.isAsync())
+    }
+
     /**
      * Lifecycle methods...
      */
