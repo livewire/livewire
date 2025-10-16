@@ -20,9 +20,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1314,8 +1314,8 @@ var require_module_cjs = __commonJS({
     });
     var module_exports = {};
     __export(module_exports, {
-      Alpine: () => src_default2,
-      default: () => module_default2
+      Alpine: () => src_default,
+      default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
     var flushPending = false;
@@ -1776,7 +1776,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function generateEvaluatorFromFunction(dataStack, func) {
       return (receiver = () => {
-      }, { scope: scope2 = {}, params = [], context } = {}) => {
+      }, { scope: scope2 = {}, params = [] } = {}) => {
         let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
         runIfTypeOfFunction(receiver, result);
       };
@@ -1811,12 +1811,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function generateEvaluatorFromString(dataStack, expression, el) {
       let func = generateFunctionFromString(expression, el);
       return (receiver = () => {
-      }, { scope: scope2 = {}, params = [], context } = {}) => {
+      }, { scope: scope2 = {}, params = [] } = {}) => {
         func.result = void 0;
         func.finished = false;
         let completeScope = mergeProxies([scope2, ...dataStack]);
         if (typeof func === "function") {
-          let promise = func.call(context, func, completeScope).catch((error2) => handleError(error2, el, expression));
+          let promise = func(func, completeScope).catch((error2) => handleError(error2, el, expression));
           if (func.finished) {
             runIfTypeOfFunction(receiver, func.result, completeScope, params, el);
             func.result = void 0;
@@ -2768,10 +2768,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return el.type === "radio" || el.localName === "ui-radio";
     }
     function debounce2(func, wait) {
-      let timeout;
+      var timeout;
       return function() {
-        const context = this, args = arguments;
-        const later = function() {
+        var context = this, args = arguments;
+        var later = function() {
           timeout = null;
           func.apply(context, args);
         };
@@ -2920,7 +2920,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.15.0",
+      version: "3.14.9",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3259,7 +3259,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
       let keyModifiers = modifiers.filter((i) => {
-        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
+        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
       });
       if (keyModifiers.includes("debounce")) {
         let debounceIndex = keyModifiers.indexOf("debounce");
@@ -3356,7 +3356,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             el.setAttribute("name", expression);
         });
       }
-      let event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
+      var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
       let removeListener = isCloning ? () => {
       } : on3(el, event, modifiers, (e) => {
         setValue(getInputValue(el, modifiers, e, getValue()));
@@ -3887,14 +3887,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     alpine_default.setEvaluator(normalEvaluator);
     alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
-    var src_default2 = alpine_default;
-    var module_default2 = src_default2;
+    var src_default = alpine_default;
+    var module_default = src_default;
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3914,11 +3914,11 @@ var require_module_cjs2 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      collapse: () => src_default2,
-      default: () => module_default2
+      collapse: () => src_default,
+      default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default2(Alpine24) {
+    function src_default(Alpine24) {
       Alpine24.directive("collapse", collapse3);
       collapse3.inline = (el, { modifiers }) => {
         if (!modifiers.includes("min"))
@@ -4009,13 +4009,13 @@ var require_module_cjs2 = __commonJS({
       }
       return rawValue;
     }
-    var module_default2 = src_default2;
+    var module_default = src_default;
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4809,13 +4809,13 @@ var require_module_cjs3 = __commonJS({
     });
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default2,
-      focus: () => src_default2
+      default: () => module_default,
+      focus: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
     var import_focus_trap = __toESM2(require_focus_trap());
     var import_tabbable = __toESM2(require_dist());
-    function src_default2(Alpine24) {
+    function src_default(Alpine24) {
       let lastFocused;
       let currentFocused;
       window.addEventListener("focusin", () => {
@@ -4935,8 +4935,6 @@ var require_module_cjs3 = __commonJS({
             allowOutsideClick: true,
             fallbackFocus: () => el
           };
-          let undoInert = () => {
-          };
           if (modifiers.includes("noautofocus")) {
             options.initialFocus = false;
           } else {
@@ -4944,14 +4942,9 @@ var require_module_cjs3 = __commonJS({
             if (autofocusEl)
               options.initialFocus = autofocusEl;
           }
-          if (modifiers.includes("inert")) {
-            options.onPostActivate = () => {
-              Alpine24.nextTick(() => {
-                undoInert = setInert(el);
-              });
-            };
-          }
           let trap = (0, import_focus_trap.createFocusTrap)(el, options);
+          let undoInert = () => {
+          };
           let undoDisableScrolling = () => {
           };
           const releaseFocus = () => {
@@ -4971,6 +4964,8 @@ var require_module_cjs3 = __commonJS({
             if (value && !oldValue) {
               if (modifiers.includes("noscroll"))
                 undoDisableScrolling = disableScrolling();
+              if (modifiers.includes("inert"))
+                undoInert = setInert(el);
               setTimeout(() => {
                 trap.activate();
               }, 15);
@@ -5022,13 +5017,13 @@ var require_module_cjs3 = __commonJS({
         document.documentElement.style.paddingRight = paddingRight;
       };
     }
-    var module_default2 = src_default2;
+    var module_default = src_default;
   }
 });
 
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5048,11 +5043,100 @@ var require_module_cjs4 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default2,
-      intersect: () => src_default2
+      default: () => module_default,
+      persist: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default2(Alpine24) {
+    function src_default(Alpine24) {
+      let persist3 = () => {
+        let alias;
+        let storage;
+        try {
+          storage = localStorage;
+        } catch (e) {
+          console.error(e);
+          console.warn("Alpine: $persist is using temporary storage since localStorage is unavailable.");
+          let dummy = /* @__PURE__ */ new Map();
+          storage = {
+            getItem: dummy.get.bind(dummy),
+            setItem: dummy.set.bind(dummy)
+          };
+        }
+        return Alpine24.interceptor((initialValue, getter, setter, path, key) => {
+          let lookup = alias || `_x_${path}`;
+          let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
+          setter(initial);
+          Alpine24.effect(() => {
+            let value = getter();
+            storageSet(lookup, value, storage);
+            setter(value);
+          });
+          return initial;
+        }, (func) => {
+          func.as = (key) => {
+            alias = key;
+            return func;
+          }, func.using = (target) => {
+            storage = target;
+            return func;
+          };
+        });
+      };
+      Object.defineProperty(Alpine24, "$persist", { get: () => persist3() });
+      Alpine24.magic("persist", persist3);
+      Alpine24.persist = (key, { get, set }, storage = localStorage) => {
+        let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
+        set(initial);
+        Alpine24.effect(() => {
+          let value = get();
+          storageSet(key, value, storage);
+          set(value);
+        });
+      };
+    }
+    function storageHas(key, storage) {
+      return storage.getItem(key) !== null;
+    }
+    function storageGet(key, storage) {
+      let value = storage.getItem(key, storage);
+      if (value === void 0)
+        return;
+      return JSON.parse(value);
+    }
+    function storageSet(key, value, storage) {
+      storage.setItem(key, JSON.stringify(value));
+    }
+    var module_default = src_default;
+  }
+});
+
+// ../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js
+var require_module_cjs5 = __commonJS({
+  "../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+    var __defProp2 = Object.defineProperty;
+    var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __hasOwnProp2 = Object.prototype.hasOwnProperty;
+    var __export = (target, all2) => {
+      for (var name in all2)
+        __defProp2(target, name, { get: all2[name], enumerable: true });
+    };
+    var __copyProps2 = (to, from, except, desc) => {
+      if (from && typeof from === "object" || typeof from === "function") {
+        for (let key of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key) && key !== except)
+            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+      }
+      return to;
+    };
+    var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
+    var module_exports = {};
+    __export(module_exports, {
+      default: () => module_default,
+      intersect: () => src_default
+    });
+    module.exports = __toCommonJS(module_exports);
+    function src_default(Alpine24) {
       Alpine24.directive("intersect", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
         let evaluate = evaluateLater(expression);
         let options = {
@@ -5104,13 +5188,13 @@ var require_module_cjs4 = __commonJS({
       values = values.filter((v) => v !== void 0);
       return values.length ? values.join(" ").trim() : fallback2;
     }
-    var module_default2 = src_default2;
+    var module_default = src_default;
   }
 });
 
-// node_modules/@alpinejs/sort/dist/module.cjs.js
-var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/sort/dist/module.cjs.js"(exports, module) {
+// ../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/sort/dist/module.cjs.js
+var require_module_cjs6 = __commonJS({
+  "../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/sort/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -6093,12 +6177,12 @@ var require_module_cjs5 = __commonJS({
     });
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default2,
-      sort: () => src_default2
+      default: () => module_default,
+      sort: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
     var import_sortablejs = __toESM2(require_Sortable_min());
-    function src_default2(Alpine24) {
+    function src_default(Alpine24) {
       Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate, evaluateLater, cleanup }) => {
         if (value === "config") {
           return;
@@ -6208,13 +6292,13 @@ var require_module_cjs5 = __commonJS({
       }
       return modifiers.indexOf("group") !== -1 ? modifiers[modifiers.indexOf("group") + 1] : null;
     }
-    var module_default2 = src_default2;
+    var module_default = src_default;
   }
 });
 
-// node_modules/@alpinejs/resize/dist/module.cjs.js
-var require_module_cjs6 = __commonJS({
-  "node_modules/@alpinejs/resize/dist/module.cjs.js"(exports, module) {
+// ../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/resize/dist/module.cjs.js
+var require_module_cjs7 = __commonJS({
+  "../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/resize/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6234,11 +6318,11 @@ var require_module_cjs6 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default2,
-      resize: () => src_default2
+      default: () => module_default,
+      resize: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default2(Alpine24) {
+    function src_default(Alpine24) {
       Alpine24.directive("resize", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
         let evaluator = evaluateLater(expression);
         let evaluate = (width, height) => {
@@ -6280,13 +6364,13 @@ var require_module_cjs6 = __commonJS({
       }
       return [width, height];
     }
-    var module_default2 = src_default2;
+    var module_default = src_default;
   }
 });
 
-// node_modules/@alpinejs/anchor/dist/module.cjs.js
-var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
+// ../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/anchor/dist/module.cjs.js
+var require_module_cjs8 = __commonJS({
+  "../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6306,8 +6390,8 @@ var require_module_cjs7 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      anchor: () => src_default2,
-      default: () => module_default2
+      anchor: () => src_default,
+      default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
     var min = Math.min;
@@ -7483,7 +7567,7 @@ var require_module_cjs7 = __commonJS({
         platform: platformWithCache
       });
     };
-    function src_default2(Alpine24) {
+    function src_default(Alpine24) {
       Alpine24.magic("anchor", (el) => {
         if (!el._x_anchor)
           throw "Alpine: No x-anchor directive found on element using $anchor...";
@@ -7544,7 +7628,7 @@ var require_module_cjs7 = __commonJS({
       let unstyled = modifiers.includes("no-style");
       return { placement, offsetValue, unstyled };
     }
-    var module_default2 = src_default2;
+    var module_default = src_default;
   }
 });
 
@@ -7825,9 +7909,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
-var require_module_cjs8 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+// ../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/morph/dist/module.cjs.js
+var require_module_cjs9 = __commonJS({
+  "../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7847,161 +7931,119 @@ var require_module_cjs8 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default2,
-      morph: () => src_default2
+      default: () => module_default,
+      morph: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
     function morph3(from, toHtml, options) {
       monkeyPatchDomSetAttributeToAllowAtSymbols();
-      let context = createMorphContext(options);
-      let toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
-      if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
-        toEl._x_dataStack = window.Alpine.closestDataStack(from);
-        toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
+      let fromEl;
+      let toEl;
+      let key, lookahead, updating, updated, removing, removed, adding, added;
+      function assignOptions(options2 = {}) {
+        let defaultGetKey = (el) => el.getAttribute("key");
+        let noop = () => {
+        };
+        updating = options2.updating || noop;
+        updated = options2.updated || noop;
+        removing = options2.removing || noop;
+        removed = options2.removed || noop;
+        adding = options2.adding || noop;
+        added = options2.added || noop;
+        key = options2.key || defaultGetKey;
+        lookahead = options2.lookahead || false;
       }
-      context.patch(from, toEl);
-      return from;
-    }
-    function morphBetween(startMarker, endMarker, toHtml, options = {}) {
-      monkeyPatchDomSetAttributeToAllowAtSymbols();
-      let context = createMorphContext(options);
-      let fromContainer = startMarker.parentNode;
-      let fromBlock = new Block(startMarker, endMarker);
-      let toContainer = typeof toHtml === "string" ? (() => {
-        let container = document.createElement("div");
-        container.insertAdjacentHTML("beforeend", toHtml);
-        return container;
-      })() : toHtml;
-      let toStartMarker = document.createComment("[morph-start]");
-      let toEndMarker = document.createComment("[morph-end]");
-      toContainer.insertBefore(toStartMarker, toContainer.firstChild);
-      toContainer.appendChild(toEndMarker);
-      let toBlock = new Block(toStartMarker, toEndMarker);
-      if (window.Alpine && window.Alpine.closestDataStack) {
-        toContainer._x_dataStack = window.Alpine.closestDataStack(fromContainer);
-        toContainer._x_dataStack && window.Alpine.cloneNode(fromContainer, toContainer);
-      }
-      context.patchChildren(fromBlock, toBlock);
-    }
-    function createMorphContext(options = {}) {
-      let defaultGetKey = (el) => el.getAttribute("key");
-      let noop = () => {
-      };
-      let context = {
-        key: options.key || defaultGetKey,
-        lookahead: options.lookahead || false,
-        updating: options.updating || noop,
-        updated: options.updated || noop,
-        removing: options.removing || noop,
-        removed: options.removed || noop,
-        adding: options.adding || noop,
-        added: options.added || noop
-      };
-      context.patch = function(from, to) {
-        if (context.differentElementNamesTypesOrKeys(from, to)) {
-          return context.swapElements(from, to);
+      function patch(from2, to) {
+        if (differentElementNamesTypesOrKeys(from2, to)) {
+          return swapElements(from2, to);
         }
         let updateChildrenOnly = false;
         let skipChildren = false;
-        let skipUntil = (predicate) => context.skipUntilCondition = predicate;
-        if (shouldSkipChildren(context.updating, () => skipChildren = true, skipUntil, from, to, () => updateChildrenOnly = true))
+        if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
           return;
-        if (from.nodeType === 1 && window.Alpine) {
-          window.Alpine.cloneNode(from, to);
-          if (from._x_teleport && to._x_teleport) {
-            context.patch(from._x_teleport, to._x_teleport);
+        if (from2.nodeType === 1 && window.Alpine) {
+          window.Alpine.cloneNode(from2, to);
+          if (from2._x_teleport && to._x_teleport) {
+            patch(from2._x_teleport, to._x_teleport);
           }
         }
         if (textOrComment(to)) {
-          context.patchNodeValue(from, to);
-          context.updated(from, to);
+          patchNodeValue(from2, to);
+          updated(from2, to);
           return;
         }
         if (!updateChildrenOnly) {
-          context.patchAttributes(from, to);
+          patchAttributes(from2, to);
         }
-        context.updated(from, to);
+        updated(from2, to);
         if (!skipChildren) {
-          context.patchChildren(from, to);
+          patchChildren(from2, to);
         }
-      };
-      context.differentElementNamesTypesOrKeys = function(from, to) {
-        return from.nodeType != to.nodeType || from.nodeName != to.nodeName || context.getKey(from) != context.getKey(to);
-      };
-      context.swapElements = function(from, to) {
-        if (shouldSkip(context.removing, from))
+      }
+      function differentElementNamesTypesOrKeys(from2, to) {
+        return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
+      }
+      function swapElements(from2, to) {
+        if (shouldSkip(removing, from2))
           return;
         let toCloned = to.cloneNode(true);
-        if (shouldSkip(context.adding, toCloned))
+        if (shouldSkip(adding, toCloned))
           return;
-        from.replaceWith(toCloned);
-        context.removed(from);
-        context.added(toCloned);
-      };
-      context.patchNodeValue = function(from, to) {
+        from2.replaceWith(toCloned);
+        removed(from2);
+        added(toCloned);
+      }
+      function patchNodeValue(from2, to) {
         let value = to.nodeValue;
-        if (from.nodeValue !== value) {
-          from.nodeValue = value;
+        if (from2.nodeValue !== value) {
+          from2.nodeValue = value;
         }
-      };
-      context.patchAttributes = function(from, to) {
-        if (from._x_transitioning)
+      }
+      function patchAttributes(from2, to) {
+        if (from2._x_transitioning)
           return;
-        if (from._x_isShown && !to._x_isShown) {
-          return;
-        }
-        if (!from._x_isShown && to._x_isShown) {
+        if (from2._x_isShown && !to._x_isShown) {
           return;
         }
-        let domAttributes = Array.from(from.attributes);
+        if (!from2._x_isShown && to._x_isShown) {
+          return;
+        }
+        let domAttributes = Array.from(from2.attributes);
         let toAttributes = Array.from(to.attributes);
         for (let i = domAttributes.length - 1; i >= 0; i--) {
           let name = domAttributes[i].name;
           if (!to.hasAttribute(name)) {
-            from.removeAttribute(name);
+            from2.removeAttribute(name);
           }
         }
         for (let i = toAttributes.length - 1; i >= 0; i--) {
           let name = toAttributes[i].name;
           let value = toAttributes[i].value;
-          if (from.getAttribute(name) !== value) {
-            from.setAttribute(name, value);
+          if (from2.getAttribute(name) !== value) {
+            from2.setAttribute(name, value);
           }
         }
-      };
-      context.patchChildren = function(from, to) {
-        let fromKeys = context.keyToMap(from.children);
+      }
+      function patchChildren(from2, to) {
+        let fromKeys = keyToMap(from2.children);
         let fromKeyHoldovers = {};
         let currentTo = getFirstNode(to);
-        let currentFrom = getFirstNode(from);
+        let currentFrom = getFirstNode(from2);
         while (currentTo) {
           seedingMatchingId(currentTo, currentFrom);
-          let toKey = context.getKey(currentTo);
-          let fromKey = context.getKey(currentFrom);
-          if (context.skipUntilCondition) {
-            let fromDone = !currentFrom || context.skipUntilCondition(currentFrom);
-            let toDone = !currentTo || context.skipUntilCondition(currentTo);
-            if (fromDone && toDone) {
-              context.skipUntilCondition = null;
-            } else {
-              if (!fromDone)
-                currentFrom = currentFrom && getNextSibling(from, currentFrom);
-              if (!toDone)
-                currentTo = currentTo && getNextSibling(to, currentTo);
-              continue;
-            }
-          }
+          let toKey = getKey(currentTo);
+          let fromKey = getKey(currentFrom);
           if (!currentFrom) {
             if (toKey && fromKeyHoldovers[toKey]) {
               let holdover = fromKeyHoldovers[toKey];
-              from.appendChild(holdover);
+              from2.appendChild(holdover);
               currentFrom = holdover;
-              fromKey = context.getKey(currentFrom);
+              fromKey = getKey(currentFrom);
             } else {
-              if (!shouldSkip(context.adding, currentTo)) {
+              if (!shouldSkip(adding, currentTo)) {
                 let clone = currentTo.cloneNode(true);
-                from.appendChild(clone);
-                context.added(clone);
+                from2.appendChild(clone);
+                added(clone);
               }
               currentTo = getNextSibling(to, currentTo);
               continue;
@@ -8013,7 +8055,7 @@ var require_module_cjs8 = __commonJS({
             let nestedIfCount = 0;
             let fromBlockStart = currentFrom;
             while (currentFrom) {
-              let next = getNextSibling(from, currentFrom);
+              let next = getNextSibling(from2, currentFrom);
               if (isIf(next)) {
                 nestedIfCount++;
               } else if (isEnd(next) && nestedIfCount > 0) {
@@ -8042,17 +8084,17 @@ var require_module_cjs8 = __commonJS({
             let toBlockEnd = currentTo;
             let fromBlock = new Block(fromBlockStart, fromBlockEnd);
             let toBlock = new Block(toBlockStart, toBlockEnd);
-            context.patchChildren(fromBlock, toBlock);
+            patchChildren(fromBlock, toBlock);
             continue;
           }
-          if (currentFrom.nodeType === 1 && context.lookahead && !currentFrom.isEqualNode(currentTo)) {
+          if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
             let nextToElementSibling = getNextSibling(to, currentTo);
             let found = false;
             while (!found && nextToElementSibling) {
               if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
                 found = true;
-                currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
-                fromKey = context.getKey(currentFrom);
+                currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+                fromKey = getKey(currentFrom);
               }
               nextToElementSibling = getNextSibling(to, nextToElementSibling);
             }
@@ -8060,9 +8102,9 @@ var require_module_cjs8 = __commonJS({
           if (toKey !== fromKey) {
             if (!toKey && fromKey) {
               fromKeyHoldovers[fromKey] = currentFrom;
-              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
               fromKeyHoldovers[fromKey].remove();
-              currentFrom = getNextSibling(from, currentFrom);
+              currentFrom = getNextSibling(from2, currentFrom);
               currentTo = getNextSibling(to, currentTo);
               continue;
             }
@@ -8070,7 +8112,7 @@ var require_module_cjs8 = __commonJS({
               if (fromKeys[toKey]) {
                 currentFrom.replaceWith(fromKeys[toKey]);
                 currentFrom = fromKeys[toKey];
-                fromKey = context.getKey(currentFrom);
+                fromKey = getKey(currentFrom);
               }
             }
             if (toKey && fromKey) {
@@ -8079,57 +8121,67 @@ var require_module_cjs8 = __commonJS({
                 fromKeyHoldovers[fromKey] = currentFrom;
                 currentFrom.replaceWith(fromKeyNode);
                 currentFrom = fromKeyNode;
-                fromKey = context.getKey(currentFrom);
+                fromKey = getKey(currentFrom);
               } else {
                 fromKeyHoldovers[fromKey] = currentFrom;
-                currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+                currentFrom = addNodeBefore(from2, currentTo, currentFrom);
                 fromKeyHoldovers[fromKey].remove();
-                currentFrom = getNextSibling(from, currentFrom);
+                currentFrom = getNextSibling(from2, currentFrom);
                 currentTo = getNextSibling(to, currentTo);
                 continue;
               }
             }
           }
-          let currentFromNext = currentFrom && getNextSibling(from, currentFrom);
-          context.patch(currentFrom, currentTo);
+          let currentFromNext = currentFrom && getNextSibling(from2, currentFrom);
+          patch(currentFrom, currentTo);
           currentTo = currentTo && getNextSibling(to, currentTo);
           currentFrom = currentFromNext;
         }
         let removals = [];
         while (currentFrom) {
-          if (!shouldSkip(context.removing, currentFrom))
+          if (!shouldSkip(removing, currentFrom))
             removals.push(currentFrom);
-          currentFrom = getNextSibling(from, currentFrom);
+          currentFrom = getNextSibling(from2, currentFrom);
         }
         while (removals.length) {
           let domForRemoval = removals.shift();
           domForRemoval.remove();
-          context.removed(domForRemoval);
+          removed(domForRemoval);
         }
-      };
-      context.getKey = function(el) {
-        return el && el.nodeType === 1 && context.key(el);
-      };
-      context.keyToMap = function(els2) {
+      }
+      function getKey(el) {
+        return el && el.nodeType === 1 && key(el);
+      }
+      function keyToMap(els2) {
         let map = {};
         for (let el of els2) {
-          let theKey = context.getKey(el);
+          let theKey = getKey(el);
           if (theKey) {
             map[theKey] = el;
           }
         }
         return map;
-      };
-      context.addNodeBefore = function(parent, node, beforeMe) {
-        if (!shouldSkip(context.adding, node)) {
+      }
+      function addNodeBefore(parent, node, beforeMe) {
+        if (!shouldSkip(adding, node)) {
           let clone = node.cloneNode(true);
           parent.insertBefore(clone, beforeMe);
-          context.added(clone);
+          added(clone);
           return clone;
         }
         return node;
-      };
-      return context;
+      }
+      assignOptions(options);
+      fromEl = from;
+      toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
+      if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
+        toEl._x_dataStack = window.Alpine.closestDataStack(from);
+        toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
+      }
+      patch(from, toEl);
+      fromEl = void 0;
+      toEl = void 0;
+      return from;
     }
     morph3.step = () => {
     };
@@ -8140,9 +8192,9 @@ var require_module_cjs8 = __commonJS({
       hook(...args, () => skip = true);
       return skip;
     }
-    function shouldSkipChildren(hook, skipChildren, skipUntil, ...args) {
+    function shouldSkipChildren(hook, skipChildren, ...args) {
       let skip = false;
-      hook(...args, () => skip = true, skipChildren, skipUntil);
+      hook(...args, () => skip = true, skipChildren);
       return skip;
     }
     var patched = false;
@@ -8225,17 +8277,16 @@ var require_module_cjs8 = __commonJS({
       to.setAttribute("id", fromId);
       to.id = fromId;
     }
-    function src_default2(Alpine24) {
+    function src_default(Alpine24) {
       Alpine24.morph = morph3;
-      Alpine24.morphBetween = morphBetween;
     }
-    var module_default2 = src_default2;
+    var module_default = src_default;
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
-var require_module_cjs9 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+// ../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/mask/dist/module.cjs.js
+var require_module_cjs10 = __commonJS({
+  "../../../Library/Application Support/Herd/config/nvm/versions/node/v22.13.0/lib/node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8255,12 +8306,12 @@ var require_module_cjs9 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default2,
-      mask: () => src_default2,
+      default: () => module_default,
+      mask: () => src_default,
       stripDown: () => stripDown
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default2(Alpine24) {
+    function src_default(Alpine24) {
       Alpine24.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
@@ -8433,7 +8484,7 @@ var require_module_cjs9 = __commonJS({
       });
       return template;
     }
-    var module_default2 = src_default2;
+    var module_default = src_default;
   }
 });
 
@@ -11102,74 +11153,11 @@ var Directive = class {
 // js/lifecycle.js
 var import_collapse = __toESM(require_module_cjs2());
 var import_focus = __toESM(require_module_cjs3());
-
-// node_modules/@alpinejs/persist/dist/module.esm.js
-function src_default(Alpine24) {
-  let persist = () => {
-    let alias;
-    let storage;
-    try {
-      storage = localStorage;
-    } catch (e) {
-      console.error(e);
-      console.warn("Alpine: $persist is using temporary storage since localStorage is unavailable.");
-      let dummy = /* @__PURE__ */ new Map();
-      storage = {
-        getItem: dummy.get.bind(dummy),
-        setItem: dummy.set.bind(dummy)
-      };
-    }
-    return Alpine24.interceptor((initialValue, getter, setter, path, key) => {
-      let lookup = alias || `_x_${path}`;
-      let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
-      setter(initial);
-      Alpine24.effect(() => {
-        let value = getter();
-        storageSet(lookup, value, storage);
-        setter(value);
-      });
-      return initial;
-    }, (func) => {
-      func.as = (key) => {
-        alias = key;
-        return func;
-      }, func.using = (target) => {
-        storage = target;
-        return func;
-      };
-    });
-  };
-  Object.defineProperty(Alpine24, "$persist", { get: () => persist() });
-  Alpine24.magic("persist", persist);
-  Alpine24.persist = (key, { get, set }, storage = localStorage) => {
-    let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
-    set(initial);
-    Alpine24.effect(() => {
-      let value = get();
-      storageSet(key, value, storage);
-      set(value);
-    });
-  };
-}
-function storageHas(key, storage) {
-  return storage.getItem(key) !== null;
-}
-function storageGet(key, storage) {
-  let value = storage.getItem(key);
-  if (value === void 0)
-    return;
-  return JSON.parse(value);
-}
-function storageSet(key, value, storage) {
-  storage.setItem(key, JSON.stringify(value));
-}
-var module_default = src_default;
-
-// js/lifecycle.js
-var import_intersect = __toESM(require_module_cjs4());
-var import_sort = __toESM(require_module_cjs5());
-var import_resize = __toESM(require_module_cjs6());
-var import_anchor = __toESM(require_module_cjs7());
+var import_persist2 = __toESM(require_module_cjs4());
+var import_intersect = __toESM(require_module_cjs5());
+var import_sort = __toESM(require_module_cjs6());
+var import_resize = __toESM(require_module_cjs7());
+var import_anchor = __toESM(require_module_cjs8());
 
 // js/plugins/navigate/history.js
 var Snapshot = class {
@@ -12188,8 +12176,8 @@ function fromQueryString(search, queryKey) {
 }
 
 // js/lifecycle.js
-var import_morph = __toESM(require_module_cjs8());
-var import_mask = __toESM(require_module_cjs9());
+var import_morph = __toESM(require_module_cjs9());
+var import_mask = __toESM(require_module_cjs10());
 var import_alpinejs5 = __toESM(require_module_cjs());
 function start() {
   setTimeout(() => ensureLivewireScriptIsntMisplaced());
@@ -12203,7 +12191,7 @@ function start() {
   import_alpinejs5.default.plugin(import_collapse.default);
   import_alpinejs5.default.plugin(import_anchor.default);
   import_alpinejs5.default.plugin(import_focus.default);
-  import_alpinejs5.default.plugin(module_default);
+  import_alpinejs5.default.plugin(import_persist2.default);
   import_alpinejs5.default.plugin(navigate_default);
   import_alpinejs5.default.plugin(import_mask.default);
   import_alpinejs5.default.addRootSelector(() => "[wire\\:id]");
