@@ -45,7 +45,7 @@ export function scopeSymbolFromAction(action) {
         if (! islandSymbols) {
             islandSymbols = { [islandName]: Symbol() }
 
-            componentIslandSymbols.add(component, islandSymbols)
+            componentIslandSymbols.set(component, islandSymbols)
         }
 
         if (! islandSymbols[islandName]) {

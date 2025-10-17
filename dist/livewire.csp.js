@@ -5551,7 +5551,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return reject();
         }
         if (Array.from(message.actions).every((action2) => action2.metadata.type === "poll")) {
-          message.cancel();
+          return message.cancel();
         }
         if (Array.from(message.actions).every((action2) => action2.metadata.type === "model.live")) {
           if (action.metadata.type === "model.live") {
@@ -5881,7 +5881,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let islandSymbols = componentIslandSymbols.get(component);
       if (!islandSymbols) {
         islandSymbols = { [islandName]: Symbol() };
-        componentIslandSymbols.add(component, islandSymbols);
+        componentIslandSymbols.set(component, islandSymbols);
       }
       if (!islandSymbols[islandName]) {
         islandSymbols[islandName] = Symbol();
@@ -5980,6 +5980,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     getActions() {
       return Array.from(this.actions);
+    }
+    hasActionForIsland(island) {
+      return this.getActions().some((action) => {
+        return action.metadata.island?.name === island.metadata.name;
+      });
+    }
+    hasActionForComponent() {
+      return this.getActions().some((action) => {
+        return action.metadata.island === void 0;
+      });
     }
     setInterceptors(interceptors2) {
       this.interceptors = interceptors2;
@@ -11051,19 +11061,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       animation: 150,
       handle: preferences.useHandles ? "[x-sort\\:handle],[wire\\:sort\\:handle]" : null,
       group: preferences.group,
+      scroll: true,
+      forceAutoScrollFallback: true,
+      scrollSensitivity: 50,
       filter(e) {
         if (!el.querySelector("[x-sort\\:item],[wire\\:sort\\:item]"))
           return false;
-        let closestItem = e.target.closest("[x-sort\\:item],[wire\\:sort\\:item]");
-        let itemIsInsideCurrentSortable = closestItem !== el && el.contains(closestItem);
-        return closestItem && itemIsInsideCurrentSortable ? false : true;
-      },
-      onMove(e) {
-        let targetElement = e.related;
-        if (targetElement && !targetElement.hasAttribute("x-sort:item") && !targetElement.hasAttribute("wire:sort:item")) {
-          return false;
-        }
-        return true;
+        let itemHasAttribute = e.target.closest("[x-sort\\:item],[wire\\:sort\\:item]");
+        return itemHasAttribute ? false : true;
       },
       onSort(e) {
         if (e.from !== e.to) {
@@ -11080,7 +11085,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             skip();
           }
         });
-        let position = calculateSortablePosition(e.target, e.newIndex);
+        let position = e.newIndex;
         if (key !== void 0 || key !== null) {
           handle(key, position);
         }
@@ -11100,22 +11105,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
     return new sortable_esm_default(el, { ...options, ...config });
-  }
-  function calculateSortablePosition(container, newIndex2) {
-    let positionLookup = {};
-    let sortableElements = Array.from(container.querySelectorAll("[x-sort\\:item],[wire\\:sort\\:item]")).filter((el) => {
-      let closestSortable = el.closest("[x-sort],[wire\\:sort]");
-      return closestSortable === container;
-    });
-    let sortableIndex = 0;
-    for (let i = 0; i < container.children.length; i++) {
-      let child = container.children[i];
-      if (child.hasAttribute("x-sort:item") || child.hasAttribute("wire:sort:item")) {
-        positionLookup[i] = sortableIndex;
-        sortableIndex++;
-      }
-    }
-    return positionLookup[newIndex2] !== void 0 ? positionLookup[newIndex2] : sortableIndex;
   }
   function keepElementsWithinMorphMarkers(el) {
     let cursor = el.firstChild;
@@ -14747,11 +14736,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       return;
     }
-    let fragment = closestFragment(origin.el, {
-      isMatch: ({ type }) => {
-        return type === "island";
-      }
-    });
+    let fragment = closestIsland(origin.el);
     if (!fragment)
       return;
     action.mergeMetadata({
@@ -14777,6 +14762,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   });
+  function closestIsland(el) {
+    return closestFragment(el, {
+      isMatch: ({ type }) => {
+        return type === "island";
+      }
+    });
+  }
   function renderIsland(component, islandHtml) {
     let metadata = extractFragmentMetadataFromHtml(islandHtml);
     let fragment = findFragment(component.el, {
@@ -15181,7 +15173,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive("loading", ({ el, directive: directive2, component, cleanup }) => {
     let { targets, inverted } = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive2);
-    let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
+    let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
       () => delay3(() => toggleBooleanStateDirective(el, directive2, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
     ]);
@@ -15232,10 +15224,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     ];
   }
-  function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
+  function whenTargetsArePartOfRequest(component, el, targets, inverted, [startLoading, endLoading]) {
     return interceptMessage(({ message, onSend, onFinish }) => {
       if (component !== message.component)
         return;
+      let island = closestIsland(el);
+      if (island && !message.hasActionForIsland(island)) {
+        return;
+      }
+      if (!island && !message.hasActionForComponent()) {
+        return;
+      }
       let matches3 = true;
       onSend(({ payload }) => {
         if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
