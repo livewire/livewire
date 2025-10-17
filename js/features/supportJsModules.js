@@ -1,12 +1,13 @@
 import { on } from '@/hooks'
 
 on('effect', ({ component, effects }) => {
-    let hasModule = effects.hasScriptModule
+    let scriptModuleHash = effects.scriptModule
 
-    if (hasModule) {
+    if (scriptModuleHash) {
         let encodedName = component.name.replace('.', '--').replace('::', '---').replace(':', '----')
+        let path = `/livewire/js/${encodedName}.js?v=${scriptModuleHash}`
 
-        import(`/livewire/js/${encodedName}.js`).then(module => {
+        import(path).then(module => {
             module.run.call(component.$wire, [
                 component.$wire,
                 component.$wire.$js,

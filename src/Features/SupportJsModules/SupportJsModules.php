@@ -44,7 +44,13 @@ class SupportJsModules extends ComponentHook
         if (! $context->isMounting()) return;
 
         if (method_exists($this->component, 'scriptModuleSrc')) {
-            $context->addEffect('hasScriptModule', true);
+            $path = $this->component->scriptModuleSrc();
+
+            $filemtime = filemtime($path);
+
+            $hash = crc32($filemtime);
+
+            $context->addEffect('scriptModule', $hash);
         }
     }
 }
