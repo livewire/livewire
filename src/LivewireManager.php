@@ -229,11 +229,6 @@ class LivewireManager
 
     function visit($name, $args = [])
     {
-        // @todo: Remove this once Laracon US 2025 is over...
-        if (class_exists(\Livewire\V4\PestLivewireOverride::class) && class_exists(\Pest\Browser\Api\TestableLivewire::class)) {
-            return \Livewire\V4\PestLivewireOverride::test($name, $args);
-        }
-
         if (class_exists(\Pest\Browser\Api\Livewire::class)) {
             return \Pest\Browser\Api\Livewire::test($name, $args);
         }
