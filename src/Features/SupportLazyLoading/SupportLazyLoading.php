@@ -36,28 +36,47 @@ class SupportLazyLoading extends ComponentHook
 
             return $this;
         });
+
+        Route::macro('defer', function ($enabled = true) {
+            $this->defaults['defer'] = $enabled;
+
+            return $this;
+        });
     }
 
     public function mount($params)
     {
-        $hasLazyParam = isset($params['lazy']) || isset($params['defer']);
-        $lazyProperty = $params['lazy'] ?? false;
-        if (isset($params['defer'])) $lazyProperty = 'on-load';
-
+        $shouldBeLazy = false;
+        $isDeferred = false;
         $isolate = true;
+
+        if (isset($params['lazy']) && $params['lazy']) $shouldBeLazy = true;
+        if (isset($params['defer']) && $params['defer']) $shouldBeLazy = true;
+
+        if (isset($params['lazy']) && $params['lazy'] === 'on-load') $isDeferred = true;
+        if (isset($params['defer']) && $params['defer']) $isDeferred = true;
 
         $reflectionClass = new \ReflectionClass($this->component);
         $lazyAttribute = $reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)[0] ?? null;
+        $deferAttribute = $reflectionClass->getAttributes(\Livewire\Attributes\Defer::class)[0] ?? null;
+
+        if ($lazyAttribute) $shouldBeLazy = true;
+        if ($deferAttribute) $shouldBeLazy = true;
+        if ($deferAttribute) $isDeferred = true;
 
         // If Livewire::withoutLazyLoading()...
         if (static::$disableWhileTesting) return;
-        // If `:lazy="false"` disable lazy loading...
-        if ($hasLazyParam && ! $lazyProperty) return;
-        // If no lazy loading is included at all...
-        if (! $hasLazyParam && ! $lazyAttribute) return;
+        // If `:lazy="false"` or no lazy loading is included at all...
+        if (! $shouldBeLazy) return;
 
         if ($lazyAttribute) {
             $attribute = $lazyAttribute->newInstance();
+
+            $isolate = $attribute->isolate;
+        }
+
+        if ($deferAttribute) {
+            $attribute = $deferAttribute->newInstance();
 
             $isolate = $attribute->isolate;
         }
@@ -68,7 +87,7 @@ class SupportLazyLoading extends ComponentHook
         store($this->component)->set('isLazyIsolated', $isolate);
 
         $this->component->skipRender(
-            $this->generatePlaceholderHtml($params)
+            $this->generatePlaceholderHtml($params, $isDeferred)
         );
     }
 
@@ -105,7 +124,7 @@ class SupportLazyLoading extends ComponentHook
         $returnEarly();
     }
 
-    public function generatePlaceholderHtml($params)
+    public function generatePlaceholderHtml($params, $isDeferred = false)
     {
         $this->registerContainerComponent();
 
@@ -132,12 +151,8 @@ class SupportLazyLoading extends ComponentHook
             $viewContext->extractFromEnvironment($view->getFactory());
         });
 
-        $hasLazyParam = isset($params['lazy']) || isset($params['defer']);
-        $lazyProperty = $params['lazy'] ?? false;
-        if (isset($params['defer'])) $lazyProperty = 'on-load';
-
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
-            (($hasLazyParam and $lazyProperty === 'on-load') ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\''.$encoded.'\')',
+            ($isDeferred ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\''.$encoded.'\')',
         ]);
 
         $replaceHtml = function ($newHtml) use (&$html) {

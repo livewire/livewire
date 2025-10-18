@@ -128,11 +128,58 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function can_defer_lazy_load_full_page_component_using_attribute()
+    {
+        Livewire::visit(new #[\Livewire\Attributes\Defer] class extends Component {
+            public function mount() {
+                sleep(1);
+            }
+
+            public function placeholder() { return <<<HTML
+                <div id="loading">
+                    Loading...
+                </div>
+                HTML; }
+
+            public function render() { return <<<HTML
+                <div id="page">
+                    Hello World
+                </div>
+                HTML; }
+        })
+        ->assertSee('Loading...')
+        ->assertDontSee('Hello World')
+        ->waitFor('#page')
+        ->assertDontSee('Loading...')
+        ->assertSee('Hello World')
+        ;
+    }
+
     public function test_can_lazy_load_component_using_route()
     {
         $this->beforeServingApplication(function() {
             Livewire::component('page', Page::class);
             Route::get('/', Page::class)->lazy()->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('Loading...')
+                ->assertDontSee('Hello World')
+                ->waitFor('#page')
+                ->assertDontSee('Loading...')
+                ->assertSee('Hello World');
+        });
+    }
+
+    public function test_can_defer_lazy_load_component_using_route()
+    {
+        $this->beforeServingApplication(function() {
+            Livewire::component('page', Page::class);
+            Route::get('/', Page::class)->defer()->middleware('web');
         });
 
         $this->browse(function ($browser) {
