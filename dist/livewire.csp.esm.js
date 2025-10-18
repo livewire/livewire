@@ -6961,19 +6961,19 @@ var require_module_cjs5 = __commonJS({
         animation: 150,
         handle: preferences.useHandles ? "[x-sort\\:handle],[wire\\:sort\\:handle]" : null,
         group: preferences.group,
+        scroll: true,
+        forceAutoScrollFallback: true,
+        scrollSensitivity: 50,
+        preventOnFilter: false,
         filter(e) {
+          if (e.target.hasAttribute("x-sort:ignore") || e.target.hasAttribute("wire:sort:ignore"))
+            return true;
+          if (e.target.closest("[x-sort\\:ignore]") || e.target.closest("[wire\\:sort\\:ignore]"))
+            return true;
           if (!el.querySelector("[x-sort\\:item],[wire\\:sort\\:item]"))
             return false;
-          let closestItem = e.target.closest("[x-sort\\:item],[wire\\:sort\\:item]");
-          let itemIsInsideCurrentSortable = closestItem !== el && el.contains(closestItem);
-          return closestItem && itemIsInsideCurrentSortable ? false : true;
-        },
-        onMove(e) {
-          let targetElement = e.related;
-          if (targetElement && !targetElement.hasAttribute("x-sort:item") && !targetElement.hasAttribute("wire:sort:item")) {
-            return false;
-          }
-          return true;
+          let itemHasAttribute = e.target.closest("[x-sort\\:item],[wire\\:sort\\:item]");
+          return itemHasAttribute ? false : true;
         },
         onSort(e) {
           if (e.from !== e.to) {
@@ -6990,7 +6990,7 @@ var require_module_cjs5 = __commonJS({
               skip();
             }
           });
-          let position = calculateSortablePosition(e.target, e.newIndex);
+          let position = e.newIndex;
           if (key !== void 0 || key !== null) {
             handle(key, position);
           }
@@ -7010,22 +7010,6 @@ var require_module_cjs5 = __commonJS({
         }
       };
       return new import_sortablejs.default(el, { ...options, ...config });
-    }
-    function calculateSortablePosition(container, newIndex) {
-      let positionLookup = {};
-      let sortableElements = Array.from(container.querySelectorAll("[x-sort\\:item],[wire\\:sort\\:item]")).filter((el) => {
-        let closestSortable = el.closest("[x-sort],[wire\\:sort]");
-        return closestSortable === container;
-      });
-      let sortableIndex = 0;
-      for (let i = 0; i < container.children.length; i++) {
-        let child = container.children[i];
-        if (child.hasAttribute("x-sort:item") || child.hasAttribute("wire:sort:item")) {
-          positionLookup[i] = sortableIndex;
-          sortableIndex++;
-        }
-      }
-      return positionLookup[newIndex] !== void 0 ? positionLookup[newIndex] : sortableIndex;
     }
     function keepElementsWithinMorphMarkers(el) {
       let cursor = el.firstChild;
@@ -10204,7 +10188,7 @@ function scopeSymbolFromAction(action) {
     let islandSymbols = componentIslandSymbols.get(component);
     if (!islandSymbols) {
       islandSymbols = { [islandName]: Symbol() };
-      componentIslandSymbols.add(component, islandSymbols);
+      componentIslandSymbols.set(component, islandSymbols);
     }
     if (!islandSymbols[islandName]) {
       islandSymbols[islandName] = Symbol();
@@ -10683,7 +10667,7 @@ function sendMessages() {
         request.onDump({ content, preventDefault });
         if (preventDefault)
           return;
-        showHtmlModal(dumpContent);
+        showHtmlModal(content);
       },
       success: async ({ response, responseBody, responseJson }) => {
         request.onSuccess({ response, responseBody, responseJson });
@@ -13232,8 +13216,8 @@ function extractScriptTagContent(rawHtml) {
 async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
   if (executedAssets.has(key))
     return;
-  await callback();
   executedAssets.add(key);
+  await callback();
 }
 async function addAssetsToHeadTagOfPage(rawHtml) {
   let newDocument = new DOMParser().parseFromString(rawHtml, "text/html");
@@ -13950,10 +13934,11 @@ import_alpinejs13.default.interceptInit((el) => {
 
 // js/features/supportJsModules.js
 on("effect", ({ component, effects }) => {
-  let hasModule = effects.hasScriptModule;
-  if (hasModule) {
+  let scriptModuleHash = effects.scriptModule;
+  if (scriptModuleHash) {
     let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
-    import(`/livewire/js/${encodedName}.js`).then((module) => {
+    let path = `/livewire/js/${encodedName}.js?v=${scriptModuleHash}`;
+    import(path).then((module) => {
       module.run.call(component.$wire, [
         component.$wire,
         component.$wire.$js,
