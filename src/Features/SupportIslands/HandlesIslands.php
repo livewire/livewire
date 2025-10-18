@@ -46,7 +46,7 @@ trait HandlesIslands
         return ! empty($this->renderedIslandFragments);
     }
 
-    public function renderIslandDirective($name = null, $token = null, $lazy = false, $defer = false, $always = false, $skip = false)
+    public function renderIslandDirective($name = null, $token = null, $lazy = false, $defer = false, $always = false, $skip = false, $with = [])
     {
         // If no name is provided, use the token...
         $name = $name ?? $token;
@@ -86,7 +86,8 @@ trait HandlesIslands
 
             $renderedContent = '<div wire:init="$refresh">' . $renderedContent . '</div>';
         } else {
-            $renderedContent = $this->renderIslandView($name, $token);
+            // Don't pass directive's $with - it's extracted in the compiled island
+            $renderedContent = $this->renderIslandView($name, $token, []);
         }
 
         return $this->wrapWithFragmentMarkers($renderedContent,[
@@ -107,7 +108,7 @@ trait HandlesIslands
         ]);
     }
 
-    public function renderIsland($name, $content = null, $mode = 'morph')
+    public function renderIsland($name, $content = null, $mode = 'morph', $with = [])
     {
         $islands = $this->getIslands();
 
@@ -117,7 +118,10 @@ trait HandlesIslands
 
                 if (! $token) continue;
 
-                $renderedContent = $this->wrapWithFragmentMarkers($content ?? $this->renderIslandView($name, $token), [
+                // Pass runtime $with as __runtimeWith so it overrides directive's with
+                $data = empty($with) ? [] : ['__runtimeWith' => $with];
+
+                $renderedContent = $this->wrapWithFragmentMarkers($content ?? $this->renderIslandView($name, $token, $data), [
                     'type' => 'island',
                     'name' => $name,
                     'token' => $token,
@@ -129,35 +133,35 @@ trait HandlesIslands
         }
     }
 
-    public function streamIsland($name, $content = null, $mode = 'morph')
+    public function streamIsland($name, $content = null, $mode = 'morph', $with = [])
     {
         $islands = $this->getIslands();
 
         foreach ($islands as $island) {
             if ($island['name'] === $name) {
                 $token = $island['token'];
-                break;
+
+                // Pass runtime $with as __runtimeWith so it overrides directive's with
+                $data = empty($with) ? [] : ['__runtimeWith' => $with];
+
+                $content = $content ?? $this->renderIslandView($name, $token, $data);
+
+                $renderedContent = $this->wrapWithFragmentMarkers($content, [
+                    'type' => 'island',
+                    'name' => $name,
+                    'token' => $token,
+                    'mode' => $mode,
+                ]);
+
+                SupportStreaming::ensureStreamResponseStarted();
+
+                SupportStreaming::streamContent([
+                    'id' => $this->getId(),
+                    'type' => 'island',
+                    'islandFragment' => $renderedContent,
+                ]);
             }
         }
-
-        if (! $token) return;
-
-        $content = $content ?? $this->renderIslandView($name, $token);
-
-        $renderedContent = $this->wrapWithFragmentMarkers($content, [
-            'type' => 'island',
-            'name' => $name,
-            'token' => $token,
-            'mode' => $mode,
-        ]);
-
-        SupportStreaming::ensureStreamResponseStarted();
-
-        SupportStreaming::streamContent([
-            'id' => $this->getId(),
-            'type' => 'island',
-            'islandFragment' => $renderedContent,
-        ]);
     }
 
     public function renderIslandView($name, $token, $data = [])
