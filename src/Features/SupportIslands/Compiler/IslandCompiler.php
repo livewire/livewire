@@ -106,12 +106,11 @@ class IslandCompiler
 
     protected function generateScopeProviderCode(string $expression): string
     {
-        if (trim($expression) === '') {
-            return '';
-        }
+        $directiveWithExtraction = '';
 
-        return <<<PHP
-<?php
+        // Only extract directive's "with" if there's an expression
+        if (trim($expression) !== '') {
+            $directiveWithExtraction = <<<PHP
 // Extract directive's "with" parameter (overrides component properties)
 \$__islandScope = (function(\$name = null, \$token = null, \$lazy = false, \$defer = false, \$always = false, \$skip = false, \$with = []) {
     return \$with;
@@ -120,7 +119,14 @@ if (!empty(\$__islandScope)) {
     extract(\$__islandScope, EXTR_OVERWRITE);
 }
 
-// Extract runtime "with" parameter if provided (overrides everything)
+
+PHP;
+        }
+
+        // Always include runtime "with" extraction (even if directive has no parameters)
+        return <<<PHP
+<?php
+{$directiveWithExtraction}// Extract runtime "with" parameter if provided (overrides everything)
 if (isset(\$__runtimeWith) && is_array(\$__runtimeWith) && !empty(\$__runtimeWith)) {
     extract(\$__runtimeWith, EXTR_OVERWRITE);
 }

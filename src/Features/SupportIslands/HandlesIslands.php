@@ -144,9 +144,9 @@ trait HandlesIslands
                 // Pass runtime $with as __runtimeWith so it overrides directive's with
                 $data = empty($with) ? [] : ['__runtimeWith' => $with];
 
-                $content = $content ?? $this->renderIslandView($name, $token, $data);
+                $output = $content ?? $this->renderIslandView($name, $token, $data);
 
-                $renderedContent = $this->wrapWithFragmentMarkers($content, [
+                $renderedContent = $this->wrapWithFragmentMarkers($output, [
                     'type' => 'island',
                     'name' => $name,
                     'token' => $token,

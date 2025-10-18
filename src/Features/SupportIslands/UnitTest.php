@@ -159,4 +159,58 @@ class UnitTest extends TestCase
             ->assertSee('value: directive')
             ->assertDontSee('value: component');
     }
+
+    public function test_runtime_with_works_on_island_without_directive_with()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public function refreshWithData()
+            {
+                $this->renderIsland('plain', null, 'morph', ['data' => 'runtime']);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'plain')
+                        <div>data: {{ $data ?? 'not set' }}</div>
+                    @endisland
+
+                    <button wire:click="refreshWithData">Refresh</button>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSee('data: not set')
+            ->call('refreshWithData');
+    }
+
+    public function test_runtime_with_works_on_island_with_no_parameters()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public function refreshWithData()
+            {
+                // Find the token for the unnamed island
+                $islands = $this->getIslands();
+                $token = $islands[0]['token'] ?? null;
+
+                if ($token) {
+                    $this->renderIsland($token, null, 'morph', ['data' => 'runtime']);
+                }
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island
+                        <div>data: {{ $data ?? 'not set' }}</div>
+                    @endisland
+
+                    <button wire:click="refreshWithData">Refresh</button>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSee('data: not set')
+            ->call('refreshWithData');
+    }
 }
