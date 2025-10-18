@@ -116,9 +116,31 @@ class MultiFileParser extends Parser
 
         // Add script section if present
         if ($this->scriptPortion !== null && trim($this->scriptPortion) !== '') {
-            $sfcContents .= "\n\n<script>\n" . trim($this->scriptPortion) . "\n</script>";
+            $indentedScript = $this->addJavaScriptIndentation(trim($this->scriptPortion));
+            $sfcContents .= "\n\n<script>\n" . $indentedScript . "\n</script>";
         }
 
         return $sfcContents;
+    }
+
+    protected function addJavaScriptIndentation(string $source): string
+    {
+        $lines = explode("\n", $source);
+
+        if (empty($lines)) {
+            return $source;
+        }
+
+        // Add 4 spaces to each non-empty line
+        $indentedLines = [];
+        foreach ($lines as $line) {
+            if (trim($line) === '') {
+                $indentedLines[] = $line; // Keep empty lines as-is
+            } else {
+                $indentedLines[] = '    ' . $line;
+            }
+        }
+
+        return implode("\n", $indentedLines);
     }
 }

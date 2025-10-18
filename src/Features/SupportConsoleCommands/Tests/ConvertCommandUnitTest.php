@@ -187,4 +187,23 @@ BLADE
         $this->assertEquals(0, $exitCode);
         $this->assertTrue(File::exists($this->livewireComponentsPath('⚡with-test/with-test.test.php')));
     }
+
+    public function test_javascript_is_indented_when_converting_mfc_to_sfc()
+    {
+        // Create a multi-file component with JavaScript
+        Artisan::call('make:livewire', ['name' => 'js-indent', '--mfc' => true, '--js' => true]);
+
+        // Add JavaScript content to the .js file
+        $jsPath = $this->livewireComponentsPath('⚡js-indent/js-indent.js');
+        File::put($jsPath, "console.log('Line 1');\nconsole.log('Line 2');");
+
+        // Convert to single-file
+        $exitCode = Artisan::call('livewire:convert', ['name' => 'js-indent', '--sfc' => true]);
+
+        $this->assertEquals(0, $exitCode);
+        $sfcContent = File::get($this->livewireComponentsPath('⚡js-indent.blade.php'));
+
+        // Verify JavaScript is present and indented with 4 spaces
+        $this->assertStringContainsString("<script>\n    console.log('Line 1');\n    console.log('Line 2');\n</script>", $sfcContent);
+    }
 }
