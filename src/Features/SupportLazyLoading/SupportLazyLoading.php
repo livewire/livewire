@@ -40,8 +40,10 @@ class SupportLazyLoading extends ComponentHook
 
     public function mount($params)
     {
-        $hasLazyParam = isset($params['lazy']);
+        $hasLazyParam = isset($params['lazy']) || isset($params['defer']);
         $lazyProperty = $params['lazy'] ?? false;
+        if (isset($params['defer'])) $lazyProperty = 'on-load';
+
         $isolate = true;
 
         $reflectionClass = new \ReflectionClass($this->component);
@@ -109,7 +111,7 @@ class SupportLazyLoading extends ComponentHook
 
         $container = app('livewire')->new('__mountParamsContainer');
 
-        $container->forMount = array_diff_key($params, array_flip(['lazy']));
+        $container->forMount = array_diff_key($params, array_flip(['lazy', 'defer']));
 
         $context = new ComponentContext($container, mounting: true);
 
@@ -130,8 +132,12 @@ class SupportLazyLoading extends ComponentHook
             $viewContext->extractFromEnvironment($view->getFactory());
         });
 
+        $hasLazyParam = isset($params['lazy']) || isset($params['defer']);
+        $lazyProperty = $params['lazy'] ?? false;
+        if (isset($params['defer'])) $lazyProperty = 'on-load';
+
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
-            ((isset($params['lazy']) and $params['lazy'] === 'on-load') ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\''.$encoded.'\')',
+            (($hasLazyParam and $lazyProperty === 'on-load') ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\''.$encoded.'\')',
         ]);
 
         $replaceHtml = function ($newHtml) use (&$html) {

@@ -37,7 +37,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    public function test_can_lazy_load_a_component_on_intersect_outside_viewport()
+    public function test_can_defer_lazy_load_a_component()
     {
         Livewire::visit([new class extends Component {
             public function render()
@@ -45,7 +45,7 @@ class BrowserTest extends BrowserTestCase
                 return <<<HTML
             <div>
                 <div style="height: 200vh"></div>
-                <livewire:child lazy="on-load" />
+                <livewire:child defer />
             </div>
             HTML;
             }
