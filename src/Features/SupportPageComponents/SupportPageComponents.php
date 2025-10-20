@@ -233,8 +233,8 @@ class SupportPageComponents extends ComponentHook
         if (! $uses) return;
 
         if (is_string($uses)) {
-            $class = str($uses)->before('@')->toString();
-            $method = str($uses)->after('@')->toString();
+            $class = str($uses)->beforeLast('@')->toString();
+            $method = str($uses)->afterLast('@')->toString();
 
             if (is_subclass_of($class, \Livewire\Component::class) && $method === '__invoke') {
                 return $class;
