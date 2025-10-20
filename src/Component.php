@@ -2,7 +2,6 @@
 
 namespace Livewire;
 
-use Livewire\V4\Paginators\HandlesPaginators;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
 use Livewire\Features\SupportSlots\HandlesSlots;
@@ -41,7 +40,6 @@ abstract class Component
     use HandlesDisablingBackButtonCache;
     use HandlesSlots;
     use HandlesHtmlAttributeForwarding;
-    use HandlesPaginators;
 
     protected $__id;
     protected $__name;
