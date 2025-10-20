@@ -10976,123 +10976,6 @@ function getErrorsObject(component) {
   };
 }
 
-// js/features/supportPaginators.js
-var paginatorObjects = /* @__PURE__ */ new WeakMap();
-function getPaginatorObject(component, paginatorName) {
-  let componentPaginatorObjects = paginatorObjects.get(component);
-  if (!componentPaginatorObjects) {
-    componentPaginatorObjects = /* @__PURE__ */ new Map();
-    paginatorObjects.set(component, componentPaginatorObjects);
-  }
-  let paginatorObject = componentPaginatorObjects.get(paginatorName);
-  if (!paginatorObject) {
-    paginatorObject = newPaginatorObject(component);
-    componentPaginatorObjects.set(paginatorName, paginatorObject);
-  }
-  return paginatorObject;
-}
-on("effect", ({ component, effects, cleanup }) => {
-  let paginators = effects["paginators"];
-  if (!paginators)
-    return;
-  for (let paginatorName in paginators) {
-    let paginator = paginators[paginatorName];
-    let paginatorObject = getPaginatorObject(component, paginatorName);
-    paginatorObject.paginator = paginator;
-  }
-});
-function newPaginatorObject(component) {
-  return Alpine.reactive({
-    renderedPages: [],
-    paginator: {},
-    firstItem() {
-      return this.paginator.from;
-    },
-    lastItem() {
-      return this.paginator.to;
-    },
-    perPage() {
-      return this.paginator.perPage;
-    },
-    onFirstPage() {
-      return this.paginator.onFirstPage;
-    },
-    onLastPage() {
-      return this.paginator.onLastPage;
-    },
-    getPageName() {
-      return this.paginator.pageName;
-    },
-    getCursorName() {
-      return this.paginator.cursorName;
-    },
-    currentPage() {
-      return this.paginator.currentPage;
-    },
-    currentCursor() {
-      return this.paginator.currentCursor;
-    },
-    count() {
-      return this.paginator.count;
-    },
-    total() {
-      return this.paginator.total;
-    },
-    hasPages() {
-      return this.paginator.hasPages;
-    },
-    hasMorePages() {
-      return this.paginator.hasMorePages;
-    },
-    hasPreviousPage() {
-      return this.hasPages() && !this.onFirstPage();
-    },
-    hasNextPage() {
-      return this.hasPages() && !this.onLastPage();
-    },
-    hasPreviousCursor() {
-      return !!this.paginator.previousCursor;
-    },
-    hasNextCursor() {
-      return !!this.paginator.nextCursor;
-    },
-    firstPage() {
-      return this.paginator.firstPage;
-    },
-    lastPage() {
-      return this.paginator.lastPage;
-    },
-    previousPage() {
-      if (this.hasPreviousCursor()) {
-        return this.setPage(this.previousCursor());
-      }
-      if (this.hasPreviousPage()) {
-        component.$wire.call("previousPage", this.getPageName());
-      }
-    },
-    nextPage() {
-      if (this.hasNextCursor()) {
-        return this.setPage(this.nextCursor());
-      }
-      if (this.hasNextPage()) {
-        component.$wire.call("nextPage", this.getPageName());
-      }
-    },
-    resetPage() {
-      component.$wire.call("resetPage", this.getPageName());
-    },
-    setPage(page) {
-      component.$wire.call("setPage", page, this.getCursorName() ?? this.getPageName());
-    },
-    previousCursor() {
-      return this.paginator.previousCursor;
-    },
-    nextCursor() {
-      return this.paginator.nextCursor;
-    }
-  });
-}
-
 // js/features/supportRefs.js
 function findRefEl(component, name) {
   let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`);
@@ -11128,7 +11011,6 @@ var aliases = {
   "entangle": "$entangle",
   "dispatch": "$dispatch",
   "intercept": "$intercept",
-  "paginator": "$paginator",
   "dispatchTo": "$dispatchTo",
   "dispatchSelf": "$dispatchSelf",
   "removeUpload": "$removeUpload",
@@ -11241,24 +11123,6 @@ wireProperty("$intercept", (component) => (method, callback = null) => {
   });
 });
 wireProperty("$errors", (component) => getErrorsObject(component));
-wireProperty("$paginator", (component) => {
-  let fn = (name = "page") => getPaginatorObject(component, name);
-  let defaultPaginator = fn();
-  for (let key of Object.keys(defaultPaginator)) {
-    let value = defaultPaginator[key];
-    if (typeof value === "function") {
-      fn[key] = (...args) => defaultPaginator[key](...args);
-    } else {
-      Object.defineProperty(fn, key, {
-        get: () => defaultPaginator[key],
-        set: (val) => {
-          defaultPaginator[key] = val;
-        }
-      });
-    }
-  }
-  return fn;
-});
 wireProperty("$call", (component) => async (method, ...params) => {
   return await component.$wire[method](...params);
 });

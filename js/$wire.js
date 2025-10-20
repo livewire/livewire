@@ -7,7 +7,6 @@ import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
 import { fireAction, intercept } from '@/request'
 import { getErrorsObject } from '@/features/supportErrors'
-import { getPaginatorObject } from '@/features/supportPaginators'
 import { findRefEl } from '@/features/supportRefs'
 
 let properties = {}
@@ -41,7 +40,6 @@ let aliases = {
     'entangle': '$entangle',
     'dispatch': '$dispatch',
     'intercept': '$intercept',
-    'paginator': '$paginator',
     'dispatchTo': '$dispatchTo',
     'dispatchSelf': '$dispatchSelf',
     'removeUpload': '$removeUpload',
@@ -194,27 +192,6 @@ wireProperty('$intercept', (component) => (method, callback = null) => {
 })
 
 wireProperty('$errors', (component) => getErrorsObject(component))
-
-wireProperty('$paginator', (component) => {
-    let fn = (name = 'page') => getPaginatorObject(component, name)
-
-    let defaultPaginator = fn()
-
-    for (let key of Object.keys(defaultPaginator)) {
-        let value = defaultPaginator[key]
-
-        if (typeof value === 'function') {
-            fn[key] = (...args) => defaultPaginator[key](...args)
-        } else {
-            Object.defineProperty(fn, key, {
-                get: () => defaultPaginator[key],
-                set: val => { defaultPaginator[key] = val },
-            })
-        }
-    }
-
-    return fn
-})
 
 wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
