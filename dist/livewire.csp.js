@@ -21,9 +21,9 @@
     mod
   ));
 
-  // node_modules/@alpinejs/csp/dist/module.cjs.js
+  // ../alpine/packages/csp/dist/module.cjs.js
   var require_module_cjs = __commonJS({
-    "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
+    "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
       var __create2 = Object.create;
       var __defProp2 = Object.defineProperty;
       var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -3740,7 +3740,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let evaluate22 = generateRuntimeFunction(expression);
           let returnValue = evaluate22({
             scope: completeScope,
-            allowGlobal: true,
+            allowGlobal: false,
             forceBindingRootScopeToFunctions: true
           });
           if (shouldAutoEvaluateFunctions && typeof returnValue === "function") {
@@ -5551,7 +5551,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return reject();
         }
         if (Array.from(message.actions).every((action2) => action2.metadata.type === "poll")) {
-          message.cancel();
+          return message.cancel();
         }
         if (Array.from(message.actions).every((action2) => action2.metadata.type === "model.live")) {
           if (action.metadata.type === "model.live") {
@@ -5980,6 +5980,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     getActions() {
       return Array.from(this.actions);
+    }
+    hasActionForIsland(island) {
+      return this.getActions().some((action) => {
+        return action.metadata.island?.name === island.metadata.name;
+      });
+    }
+    hasActionForComponent() {
+      return this.getActions().some((action) => {
+        return action.metadata.island === void 0;
+      });
     }
     setInterceptors(interceptors2) {
       this.interceptors = interceptors2;
@@ -7604,7 +7614,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // node_modules/@alpinejs/collapse/dist/module.esm.js
+  // ../alpine/packages/collapse/dist/module.esm.js
   function src_default(Alpine24) {
     Alpine24.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -7698,7 +7708,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default = src_default;
 
-  // node_modules/@alpinejs/focus/dist/module.esm.js
+  // ../alpine/packages/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -8655,7 +8665,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // node_modules/@alpinejs/persist/dist/module.esm.js
+  // ../alpine/packages/persist/dist/module.esm.js
   function src_default3(Alpine24) {
     let persist = () => {
       let alias;
@@ -8717,7 +8727,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // node_modules/@alpinejs/intersect/dist/module.esm.js
+  // ../alpine/packages/intersect/dist/module.esm.js
   function src_default4(Alpine24) {
     Alpine24.directive("intersect", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
       let evaluate2 = evaluateLater(expression);
@@ -11122,7 +11132,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // node_modules/@alpinejs/resize/dist/module.esm.js
+  // ../alpine/packages/resize/dist/module.esm.js
   function src_default6(Alpine24) {
     Alpine24.directive("resize", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
       let evaluator = evaluateLater(expression);
@@ -11167,7 +11177,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // node_modules/@alpinejs/anchor/dist/module.esm.js
+  // ../alpine/packages/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -13801,7 +13811,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // node_modules/@alpinejs/mask/dist/module.esm.js
+  // ../alpine/packages/mask/dist/module.esm.js
   function src_default9(Alpine24) {
     Alpine24.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
       let templateFn = () => expression;
@@ -14731,11 +14741,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       return;
     }
-    let fragment = closestFragment(origin.el, {
-      isMatch: ({ type }) => {
-        return type === "island";
-      }
-    });
+    let fragment = closestIsland(origin.el);
     if (!fragment)
       return;
     action.mergeMetadata({
@@ -14761,6 +14767,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   });
+  function closestIsland(el) {
+    return closestFragment(el, {
+      isMatch: ({ type }) => {
+        return type === "island";
+      }
+    });
+  }
   function renderIsland(component, islandHtml) {
     let metadata = extractFragmentMetadataFromHtml(islandHtml);
     let fragment = findFragment(component.el, {
@@ -15166,7 +15179,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive("loading", ({ el, directive: directive2, component, cleanup }) => {
     let { targets, inverted } = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive2);
-    let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
+    let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
       () => delay3(() => toggleBooleanStateDirective(el, directive2, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
     ]);
@@ -15217,10 +15230,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     ];
   }
-  function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
+  function whenTargetsArePartOfRequest(component, el, targets, inverted, [startLoading, endLoading]) {
     return interceptMessage(({ message, onSend, onFinish }) => {
       if (component !== message.component)
         return;
+      let island = closestIsland(el);
+      if (island && !message.hasActionForIsland(island)) {
+        return;
+      }
+      if (!island && !message.hasActionForComponent()) {
+        return;
+      }
       let matches3 = true;
       onSend(({ payload }) => {
         if (targets.length > 0 && containsTargets(payload, targets) === inverted) {

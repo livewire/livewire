@@ -426,180 +426,6 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
-    public function test_a_second_component_request_with_a_different_target_cancels_loading()
-    {
-        Livewire::visit([
-            new class extends \Livewire\Component {
-                public function slowRequest() {
-                    usleep(500 * 1000); // 500ms
-                }
-
-                public function otherRequest() {
-                    usleep(500 * 1000); // 500ms
-                }
-
-                public function render() {
-                    return <<<'HTML'
-                    <div>
-                        <button wire:click="slowRequest" dusk="component-slow-request">Component slow request</button>
-                        <button wire:click="otherRequest" dusk="component-other-request">Component other request</button>
-                        <div wire:loading.block dusk="component-loading">Loading...</div>
-                        <div wire:loading.block wire:target="slowRequest" dusk="component-loading-targeted">Component loading targeted...</div>
-                        <div wire:loading.block wire:target="otherRequest" dusk="component-loading-targeted-other">Component loading targeted other...</div>
-
-                        <div>
-                            @island
-                                <button wire:click="slowRequest" dusk="island-slow-request">Island slow request</button>
-                                <button wire:click="otherRequest" dusk="island-other-request">Island other request</button>
-                                <div wire:loading.block dusk="island-loading">Island loading...</div>
-                                <div wire:loading.block wire:target="slowRequest" dusk="island-loading-targeted">Island loading targeted...</div>
-                                <div wire:loading.block wire:target="otherRequest" dusk="island-loading-targeted-other">Island loading targeted other...</div>
-                            @endisland
-                        </div>
-                    </div>
-                    HTML;
-                }
-            }
-        ])
-            ->waitForLivewireToLoad()
-            ->assertMissing('@component-loading')
-            ->assertMissing('@component-loading-targeted')
-            ->assertMissing('@component-loading-targeted-other')
-            ->assertMissing('@island-loading')
-            ->assertMissing('@island-loading-targeted')
-            ->assertMissing('@island-loading-targeted-other')
-
-            ->click('@component-slow-request')
-            // Wait for the component request to start...
-            ->pause(10)
-            ->assertVisible('@component-loading')
-            ->assertVisible('@component-loading-targeted')
-            ->assertMissing('@component-loading-targeted-other')
-            ->assertMissing('@island-loading')
-            ->assertMissing('@island-loading-targeted')
-            ->assertMissing('@island-loading-targeted-other')
-
-            // Pause for a bit before starting the second request...
-            ->pause(300)
-
-            ->click('@component-other-request')
-            // Wait for the component request to start...
-            ->pause(10)
-            ->assertVisible('@component-loading')
-            ->assertMissing('@component-loading-targeted')
-            ->assertVisible('@component-loading-targeted-other')
-            ->assertMissing('@island-loading')
-            ->assertMissing('@island-loading-targeted')
-            ->assertMissing('@island-loading-targeted-other')
-
-            // Pause for long enough for the first request to finish if it were to continue to run...
-            ->pause(300)
-            ->assertVisible('@component-loading')
-            ->assertMissing('@component-loading-targeted')
-            ->assertVisible('@component-loading-targeted-other')
-            ->assertMissing('@island-loading')
-            ->assertMissing('@island-loading-targeted')
-            ->assertMissing('@island-loading-targeted-other')
-
-            // Pause for long enough for the second request to finish if it were to continue to run...
-            ->pause(300)
-            ->waitUntilMissingText('Loading...')
-            ->assertMissing('@component-loading')
-            ->assertMissing('@component-loading-targeted')
-            ->assertMissing('@component-loading-targeted-other')
-            ->assertMissing('@island-loading')
-            ->assertMissing('@island-loading-targeted')
-            ->assertMissing('@island-loading-targeted-other')
-            ;
-    }
-
-    public function test_a_second_island_request_with_a_different_target_cancels_loading()
-    {
-        Livewire::visit([
-            new class extends \Livewire\Component {
-                public function slowRequest() {
-                    usleep(500 * 1000); // 500ms
-                }
-
-                public function otherRequest() {
-                    usleep(500 * 1000); // 500ms
-                }
-
-                public function render() {
-                    return <<<'HTML'
-                    <div>
-                        <button wire:click="slowRequest" dusk="component-slow-request">Component slow request</button>
-                        <button wire:click="otherRequest" dusk="component-other-request">Component other request</button>
-                        <div wire:loading.block dusk="component-loading">Loading...</div>
-                        <div wire:loading.block wire:target="slowRequest" dusk="component-loading-targeted">Component loading targeted...</div>
-                        <div wire:loading.block wire:target="otherRequest" dusk="component-loading-targeted-other">Component loading targeted other...</div>
-
-                        <div>
-                            @island
-                                <button wire:click="slowRequest" dusk="island-slow-request">Island slow request</button>
-                                <button wire:click="otherRequest" dusk="island-other-request">Island other request</button>
-                                <div wire:loading.block dusk="island-loading">Island loading...</div>
-                                <div wire:loading.block wire:target="slowRequest" dusk="island-loading-targeted">Island loading targeted...</div>
-                                <div wire:loading.block wire:target="otherRequest" dusk="island-loading-targeted-other">Island loading targeted other...</div>
-                            @endisland
-                        </div>
-                    </div>
-                    HTML;
-                }
-            }
-        ])
-            ->waitForLivewireToLoad()
-            ->assertMissing('@component-loading')
-            ->assertMissing('@component-loading-targeted')
-            ->assertMissing('@component-loading-targeted-other')
-            ->assertMissing('@island-loading')
-            ->assertMissing('@island-loading-targeted')
-            ->assertMissing('@island-loading-targeted-other')
-
-            ->click('@island-slow-request')
-            // Wait for the island request to start...
-            ->pause(10)
-            ->assertMissing('@component-loading')
-            ->assertMissing('@component-loading-targeted')
-            ->assertMissing('@component-loading-targeted-other')
-            ->assertVisible('@island-loading')
-            ->assertVisible('@island-loading-targeted')
-            ->assertMissing('@island-loading-targeted-other')
-
-            // Pause for a bit before starting the second request...
-            ->pause(300)
-
-            ->click('@island-other-request')
-            // Wait for the island request to start...
-            ->pause(10)
-            ->assertMissing('@component-loading')
-            ->assertMissing('@component-loading-targeted')
-            ->assertMissing('@component-loading-targeted-other')
-            ->assertVisible('@island-loading')
-            ->assertMissing('@island-loading-targeted')
-            ->assertVisible('@island-loading-targeted-other')
-
-            // Pause for long enough for the first request to finish if it were to continue to run...
-            ->pause(300)
-            ->assertMissing('@component-loading')
-            ->assertMissing('@component-loading-targeted')
-            ->assertMissing('@component-loading-targeted-other')
-            ->assertVisible('@island-loading')
-            ->assertMissing('@island-loading-targeted')
-            ->assertVisible('@island-loading-targeted-other')
-
-            // Pause for long enough for the second request to finish if it were to continue to run...
-            ->pause(300)
-            ->waitUntilMissingText('Island loading...')
-            ->assertMissing('@component-loading')
-            ->assertMissing('@component-loading-targeted')
-            ->assertMissing('@component-loading-targeted-other')
-            ->assertMissing('@island-loading')
-            ->assertMissing('@island-loading-targeted')
-            ->assertMissing('@island-loading-targeted-other')
-            ;
-    }
-
     public function test_a_cancelled_component_request_cancels_loading()
     {
         Livewire::visit([
@@ -623,9 +449,9 @@ class BrowserTest extends BrowserTestCase
                     </div>
                     @script
                     <script>
-                        this.intercept(({ request }) => {
+                        this.intercept(({ cancel }) => {
                             setTimeout(() => {
-                                request.cancel();
+                                cancel();
                             }, 200);
                         })
                     </script>
@@ -674,9 +500,9 @@ class BrowserTest extends BrowserTestCase
                     </div>
                     @script
                     <script>
-                        this.intercept(({ request }) => {
+                        this.intercept(({ cancel }) => {
                             setTimeout(() => {
-                                request.cancel();
+                                cancel();
                             }, 200);
                         })
                     </script>

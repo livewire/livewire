@@ -1,13 +1,13 @@
 <?php
 
-namespace Livewire\V4\Requests;
+namespace Livewire\Features\SupportRequestInteractions;
 
 use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    public function test_a_new_component_level_user_action_cancels_an_old_component_level_user_action_for_the_same_component()
+    public function test_a_new_component_level_user_action_does_not_cancel_an_old_component_level_user_action_for_the_same_component_it_is_instead_queued_for_execution_after_the_old_action()
     {
         Livewire::visit(
             new class extends Component {
@@ -61,8 +61,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.intercepts', [
                 'firstRequest-component started',
                 'firstRequest-component sent',
+                'firstRequest-component succeeded',
                 'secondRequest-component started',
-                'firstRequest-component cancelled',
                 'secondRequest-component sent',
                 'secondRequest-component succeeded',
             ])
@@ -120,8 +120,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
                 'pollRequest-component sent',
-                'userRequest-component started',
                 'pollRequest-component cancelled',
+                'userRequest-component started',
                 'userRequest-component sent',
                 'userRequest-component succeeded',
             ])
@@ -183,13 +183,11 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for the poll to have started and be cancelled, and then the user request to finish..
-            ->pause(250)
-            ->assertScript('window.intercepts.length', 5)
+            ->pause(400)
+            ->assertScript('window.intercepts.length', 3)
             ->assertScript('window.intercepts', [
                 'userRequest-component started',
                 'userRequest-component sent',
-                'pollRequest-component started',
-                'pollRequest-component cancelled',
                 'userRequest-component succeeded',
             ])
             ;
@@ -256,21 +254,17 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for the second poll to have started and be cancelled, and then the first poll request to finish..
-            ->pause(250)
-            ->assertScript('window.intercepts.length', 5)
+            ->pause(300)
+            ->assertScript('window.intercepts.length', 3)
             ->assertScript('window.intercepts', [
                 'firstPollRequest-component started',
                 'firstPollRequest-component sent',
-                'secondPollRequest-component started',
-                'secondPollRequest-component cancelled',
                 'firstPollRequest-component succeeded',
             ])
             ;
     }
 
-    // Do islands for the 4 tests above...
-
-    public function test_a_new_island_level_user_action_cancels_an_old_island_level_user_action_for_the_same_island()
+    public function test_a_new_island_level_user_action_does_not_cancel_an_old_island_level_user_action_for_the_same_island_it_is_instead_queued_for_execution_after_the_old_action()
     {
         Livewire::visit(
             new class extends Component {
@@ -326,8 +320,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.intercepts', [
                 'firstRequest-foo started',
                 'firstRequest-foo sent',
+                'firstRequest-foo succeeded',
                 'secondRequest-foo started',
-                'firstRequest-foo cancelled',
                 'secondRequest-foo sent',
                 'secondRequest-foo succeeded',
             ])
@@ -389,72 +383,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
                 'pollRequest-foo sent',
-                'userRequest-foo started',
                 'pollRequest-foo cancelled',
-                'userRequest-foo sent',
-                'userRequest-foo succeeded',
-            ])
-            ;
-    }
-
-    public function test_a_new_island_level_user_action_cancels_an_old_island_level_poll_parameter_action_for_the_same_island()
-    {
-        Livewire::visit(
-            new class extends Component {
-                // Need to use hydrate because we can't target a method for polling...
-                public function hydrate() {
-                    usleep(100 * 1000); // 100ms
-                }
-
-                public function userRequest() {
-                    // Don't sleep the user request...
-                }
-
-                public function render() {
-                    return <<<'HTML'
-                    <div>
-                        @island('foo', poll: '400ms')
-                            <div>
-                                <button wire:click="userRequest" dusk="user-request">User Request</button>
-                            </div>
-                        @endisland
-                    </div>
-                    @script
-                    <script>
-                        window.intercepts = []
-
-                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
-                            let action = [...actions][0]
-
-                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
-
-                            onSend(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`))
-                            onCancel(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`))
-                            onSuccess(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`))
-                        })
-                    </script>
-                    @endscript
-                    HTML;
-                }
-            }
-        )
-            ->waitForLivewireToLoad()
-
-            // Wait for the poll to have started..
-            ->pause(410)
-            ->assertScript('window.intercepts.length', 2)
-            ->assertScript('window.intercepts', [
-                '$refresh-foo started',
-                '$refresh-foo sent',
-            ])
-
-            ->waitForLivewire()->click('@user-request')
-            ->assertScript('window.intercepts.length', 6)
-            ->assertScript('window.intercepts', [
-                '$refresh-foo started',
-                '$refresh-foo sent',
                 'userRequest-foo started',
-                '$refresh-foo cancelled',
                 'userRequest-foo sent',
                 'userRequest-foo succeeded',
             ])
@@ -520,91 +450,17 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for the poll to have started and be cancelled, and then the user request to finish..
-            ->pause(250)
-            ->assertScript('window.intercepts.length', 5)
+            ->pause(400)
+            ->assertScript('window.intercepts.length', 3)
             ->assertScript('window.intercepts', [
                 'userRequest-foo started',
                 'userRequest-foo sent',
-                'pollRequest-foo started',
-                'pollRequest-foo cancelled',
                 'userRequest-foo succeeded',
             ])
             ;
     }
 
-    public function test_a_new_island_level_poll_parameter_action_does_not_cancel_an_old_island_level_user_action_for_the_same_island()
-    {
-        Livewire::visit(
-            new class extends Component {
-                // Need to use hydrate because we can't target a method for polling...
-                public function hydrate() {
-                    // Don't sleep the hydrate request...
-                }
-
-                public function userRequest() {
-                    usleep(200 * 1000); // 500ms
-                }
-
-                public function render() {
-                    return <<<'HTML'
-                    <div>
-                        @island('foo', poll: '400ms')
-                            <div>
-                                <button wire:click="userRequest" dusk="user-request">User Request</button>
-                            </div>
-                        @endisland
-                    </div>
-                    @script
-                    <script>
-                        window.intercepts = []
-
-                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
-                            let action = [...actions][0]
-
-                            window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} started`)
-
-                            onSend(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} sent`))
-                            onCancel(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} cancelled`))
-                            onSuccess(() => window.intercepts.push(`${action.method}-${action.metadata.island?.name || 'component'} succeeded`))
-                        })
-                    </script>
-                    @endscript
-                    HTML;
-                }
-            }
-        )
-            ->waitForLivewireToLoad()
-
-            ->pause(250)
-            ->click('@user-request')
-
-            // Wait for the user request to have started...
-            ->pause(10)
-            ->assertScript('window.intercepts.length', 2)
-            ->assertScript('window.intercepts', [
-                'userRequest-foo started',
-                'userRequest-foo sent',
-            ])
-
-            // Timing is essential in this test as dusk is single threaded, so even if a request is cancelled,
-            // the server will still handle it and take however long it needs. So we need to calculate the
-            // time it takes for the first request to finished as if it was successful, plus the time for
-            // the second request...
-
-            // Wait for the poll to have started and be cancelled, and then the user request to finish..
-            ->pause(250)
-            ->assertScript('window.intercepts.length', 5)
-            ->assertScript('window.intercepts', [
-                'userRequest-foo started',
-                'userRequest-foo sent',
-                '$refresh-foo started',
-                '$refresh-foo cancelled',
-                'userRequest-foo succeeded',
-            ])
-            ;
-    }
-
-    public function test_a_new_component_level_poll_directive_action_does_not_cancel_an_old_component_level_poll_directive_action_instead_it_is_cancelled_for_the_same_component()
+    public function test_a_new_island_level_poll_directive_action_does_not_cancel_an_old_island_level_poll_directive_action_instead_it_is_cancelled_for_the_same_island()
     {
         Livewire::visit(
             new class extends Component {
@@ -669,93 +525,12 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for the second poll to have started and be cancelled, and then the first poll request to finish..
-            ->pause(250)
-            ->assertScript('window.intercepts.length', 5)
+            ->pause(300)
+            ->assertScript('window.intercepts.length', 3)
             ->assertScript('window.intercepts', [
                 'firstPollRequest-foo started',
                 'firstPollRequest-foo sent',
-                'secondPollRequest-foo started',
-                'secondPollRequest-foo cancelled',
                 'firstPollRequest-foo succeeded',
-            ])
-            ;
-    }
-
-    public function test_a_new_component_level_poll_parameter_action_does_not_cancel_an_old_component_level_poll_parameter_action_instead_it_is_cancelled_for_the_same_component()
-    {
-        Livewire::visit(
-            new class extends Component {
-                // Need to use hydrate because we can't target a method for polling...
-                public function hydrate() {
-                    usleep(250 * 1000); // 250ms
-                }
-
-                public function render() {
-                    return <<<'HTML'
-                    <div>
-                        @island('foo', poll: '200ms')
-                            <div>
-                                Island content
-                            </div>
-                        @endisland
-                    </div
-                    @script
-                    <script>
-                        window.intercepts = []
-                        window.count = 0
-
-                        this.intercept(({ actions, onSend, onCancel, onSuccess }) => {
-                            let action = [...actions][0]
-                            window.count++
-
-                            // Use a local count so that the count is not shared between interceptors
-                            let count = window.count
-
-                            window.intercepts.push(`${action.method}-${count}-${action.metadata.island?.name || 'component'} started`)
-
-                            onSend(() => {
-                                window.intercepts.push(`${action.method}-${count}-${action.metadata.island?.name || 'component'} sent`)
-                                console.log(JSON.stringify(window.intercepts))
-                            })
-                            onCancel(() => {
-                                window.intercepts.push(`${action.method}-${count}-${action.metadata.island?.name || 'component'} cancelled`)
-                                console.log(JSON.stringify(window.intercepts))
-                            })
-                            onSuccess(() => {
-                                window.intercepts.push(`${action.method}-${count}-${action.metadata.island?.name || 'component'} succeeded`)
-                                console.log(JSON.stringify(window.intercepts))
-                            })
-                        })
-                    </script>
-                    @endscript
-                    HTML;
-                }
-            }
-        )
-            ->waitForLivewireToLoad()
-
-            // Wait for the first poll request to have started...
-            ->pause(210)
-            ->assertScript('window.intercepts.length', 2)
-            ->assertScript('window.intercepts', [
-                '$refresh-1-foo started',
-                '$refresh-1-foo sent',
-            ])
-
-            // Timing is essential in this test as dusk is single threaded, so even if a request is cancelled,
-            // the server will still handle it and take however long it needs. So we need to calculate the
-            // time it takes for the first request to finished as if it was successful, plus the time for
-            // the second request...
-
-            // Wait for the second poll to have started and be cancelled, and then the first poll request to finish..
-            ->pause(250)
-            ->assertScript('window.intercepts.length', 5)
-            ->assertScript('window.intercepts', [
-                '$refresh-1-foo started',
-                '$refresh-1-foo sent',
-                '$refresh-2-foo started',
-                '$refresh-2-foo cancelled',
-                '$refresh-1-foo succeeded',
             ])
             ;
     }
@@ -833,7 +608,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(200)
+            ->pause(500)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'userRequest-component started',
@@ -919,7 +694,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(200)
+            ->pause(500)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'userRequest-foo started',
@@ -942,9 +717,9 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function render() {
                     return <<<'HTML'
-                    <div wire:poll.400ms="pollRequest">
+                    <div wire:poll.700ms="pollRequest">
                         @island('foo')
-                            <div wire:poll.500ms="pollRequest">
+                            <div wire:poll.750ms="pollRequest">
                                 Island content
                             </div>
                         @endisland
@@ -980,7 +755,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
 
             // Wait for the component poll to have started...
-            ->pause(410)
+            ->pause(710)
             ->assertScript('window.intercepts.length', 2)
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
@@ -988,7 +763,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ])
 
             // Wait for the island poll to have started...
-            ->pause(100)
+            ->pause(50)
             ->assertScript('window.intercepts.length', 4)
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
@@ -1003,7 +778,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(200)
+            ->pause(500)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
@@ -1026,9 +801,9 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function render() {
                     return <<<'HTML'
-                    <div wire:poll.500ms="pollRequest">
+                    <div wire:poll.750ms="pollRequest">
                         @island('foo')
-                            <div wire:poll.400ms="pollRequest">
+                            <div wire:poll.700ms="pollRequest">
                                 Island content
                             </div>
                         @endisland
@@ -1064,7 +839,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
 
             // Wait for the island poll to have started...
-            ->pause(410)
+            ->pause(710)
             ->assertScript('window.intercepts.length', 2)
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
@@ -1087,7 +862,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(200)
+            ->pause(500)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
@@ -1114,7 +889,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function render() {
                     return <<<'HTML'
-                    <div wire:poll.400ms="pollRequest">
+                    <div wire:poll.500ms="pollRequest">
                         @island('foo')
                             <div>
                                 <button wire:click="userRequest" dusk="island-request">Island Request</button>
@@ -1152,7 +927,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
 
             // Wait for the component poll to have started...
-            ->pause(410)
+            ->pause(510)
             ->assertScript('window.intercepts.length', 2)
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
@@ -1177,7 +952,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(150)
+            ->pause(300)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
@@ -1207,7 +982,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div>
                         <button wire:click="userRequest" dusk="component-request">Component Request</button>
                         @island('foo')
-                            <div wire:poll.400ms="pollRequest">
+                            <div wire:poll.500ms="pollRequest">
                                 Island content
                             </div>
                         @endisland
@@ -1243,7 +1018,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
 
             // Wait for the island poll to have started...
-            ->pause(410)
+            ->pause(510)
             ->assertScript('window.intercepts.length', 2)
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
@@ -1268,7 +1043,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(150)
+            ->pause(300)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
@@ -1298,7 +1073,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div>
 
                         @island('foo')
-                            <div wire:poll.400ms="pollRequest">
+                            <div wire:poll.500ms="pollRequest">
                                 Island content
                             </div>
                         @endisland
@@ -1340,7 +1115,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
 
             // Wait for the foo island poll to have started...
-            ->pause(410)
+            ->pause(510)
             ->assertScript('window.intercepts.length', 2)
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
@@ -1365,7 +1140,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(150)
+            ->pause(300)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
@@ -1395,7 +1170,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div>
 
                         @island('foo')
-                            <div wire:poll.450ms="pollRequest">
+                            <div wire:poll.600ms="pollRequest">
                                 Island content
                             </div>
                         @endisland
@@ -1437,7 +1212,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
 
             // Wait a bit before starting the bar island user request, so the poll happens soon after...
-            ->pause(300)
+            ->pause(450)
 
             // Start the bar island user request...
             ->click('@bar-island-request')
@@ -1465,7 +1240,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // the second request...
 
             // Wait for both requests to have finished...
-            ->pause(300)
+            ->pause(450)
             ->assertScript('window.intercepts.length', 6)
             ->assertScript('window.intercepts', [
                 'userRequest-bar started',

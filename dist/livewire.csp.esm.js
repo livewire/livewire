@@ -20,9 +20,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// node_modules/@alpinejs/csp/dist/module.cjs.js
+// ../alpine/packages/csp/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -3739,7 +3739,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let evaluate2 = generateRuntimeFunction(expression);
         let returnValue = evaluate2({
           scope: completeScope,
-          allowGlobal: true,
+          allowGlobal: false,
           forceBindingRootScopeToFunctions: true
         });
         if (shouldAutoEvaluateFunctions && typeof returnValue === "function") {
@@ -4674,9 +4674,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../alpine/packages/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4795,9 +4795,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../alpine/packages/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5808,9 +5808,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../alpine/packages/intersect/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7034,9 +7034,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/resize/dist/module.cjs.js
+// ../alpine/packages/resize/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "node_modules/@alpinejs/resize/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/resize/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7106,9 +7106,9 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/anchor/dist/module.cjs.js
+// ../alpine/packages/anchor/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -9055,9 +9055,9 @@ var require_module_cjs8 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
+// ../alpine/packages/mask/dist/module.cjs.js
 var require_module_cjs9 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -9858,7 +9858,7 @@ function coordinateNetworkInteractions(messageBus2) {
         return reject();
       }
       if (Array.from(message.actions).every((action2) => action2.metadata.type === "poll")) {
-        message.cancel();
+        return message.cancel();
       }
       if (Array.from(message.actions).every((action2) => action2.metadata.type === "model.live")) {
         if (action.metadata.type === "model.live") {
@@ -10287,6 +10287,16 @@ var Message = class {
   }
   getActions() {
     return Array.from(this.actions);
+  }
+  hasActionForIsland(island) {
+    return this.getActions().some((action) => {
+      return action.metadata.island?.name === island.metadata.name;
+    });
+  }
+  hasActionForComponent() {
+    return this.getActions().some((action) => {
+      return action.metadata.island === void 0;
+    });
   }
   setInterceptors(interceptors2) {
     this.interceptors = interceptors2;
@@ -11915,7 +11925,7 @@ var Directive = class {
 var import_collapse = __toESM(require_module_cjs2());
 var import_focus = __toESM(require_module_cjs3());
 
-// node_modules/@alpinejs/persist/dist/module.esm.js
+// ../alpine/packages/persist/dist/module.esm.js
 function src_default(Alpine24) {
   let persist = () => {
     let alias;
@@ -13755,11 +13765,7 @@ interceptAction(({ action }) => {
     });
     return;
   }
-  let fragment = closestFragment(origin.el, {
-    isMatch: ({ type }) => {
-      return type === "island";
-    }
-  });
+  let fragment = closestIsland(origin.el);
   if (!fragment)
     return;
   action.mergeMetadata({
@@ -13785,6 +13791,13 @@ interceptMessage(({ message, onSuccess, onStream }) => {
     });
   });
 });
+function closestIsland(el) {
+  return closestFragment(el, {
+    isMatch: ({ type }) => {
+      return type === "island";
+    }
+  });
+}
 function renderIsland(component, islandHtml) {
   let metadata = extractFragmentMetadataFromHtml(islandHtml);
   let fragment = findFragment(component.el, {
@@ -14190,7 +14203,7 @@ directive("offline", ({ el, directive: directive2, cleanup }) => {
 directive("loading", ({ el, directive: directive2, component, cleanup }) => {
   let { targets, inverted } = getTargets(el);
   let [delay, abortDelay] = applyDelay(directive2);
-  let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
+  let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
     () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
     () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
   ]);
@@ -14241,10 +14254,17 @@ function applyDelay(directive2) {
     }
   ];
 }
-function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
+function whenTargetsArePartOfRequest(component, el, targets, inverted, [startLoading, endLoading]) {
   return interceptMessage(({ message, onSend, onFinish }) => {
     if (component !== message.component)
       return;
+    let island = closestIsland(el);
+    if (island && !message.hasActionForIsland(island)) {
+      return;
+    }
+    if (!island && !message.hasActionForComponent()) {
+      return;
+    }
     let matches = true;
     onSend(({ payload }) => {
       if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
