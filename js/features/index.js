@@ -24,7 +24,6 @@ import './supportSlots';
 
 // V4-specific features
 import './supportDataLoading';
-import './supportPaginators';
 import './supportPreserveScroll';
 import './supportWireIntersect';
 import './supportWireSort';
