@@ -80,9 +80,9 @@ function extractScriptTagContent(rawHtml) {
 async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
     if (executedAssets.has(key)) return
 
-    await callback()
-
     executedAssets.add(key)
+
+    await callback()
 }
 
 async function addAssetsToHeadTagOfPage(rawHtml) {

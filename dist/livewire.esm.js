@@ -3892,9 +3892,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../alpine/packages/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4013,9 +4013,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../alpine/packages/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5026,9 +5026,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../alpine/packages/intersect/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6182,7 +6182,12 @@ var require_module_cjs5 = __commonJS({
         scroll: true,
         forceAutoScrollFallback: true,
         scrollSensitivity: 50,
+        preventOnFilter: false,
         filter(e) {
+          if (e.target.hasAttribute("x-sort:ignore") || e.target.hasAttribute("wire:sort:ignore"))
+            return true;
+          if (e.target.closest("[x-sort\\:ignore]") || e.target.closest("[wire\\:sort\\:ignore]"))
+            return true;
           if (!el.querySelector("[x-sort\\:item],[wire\\:sort\\:item]"))
             return false;
           let itemHasAttribute = e.target.closest("[x-sort\\:item],[wire\\:sort\\:item]");
@@ -6247,9 +6252,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/resize/dist/module.cjs.js
+// ../alpine/packages/resize/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "node_modules/@alpinejs/resize/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/resize/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6319,9 +6324,9 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/anchor/dist/module.cjs.js
+// ../alpine/packages/anchor/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8268,9 +8273,9 @@ var require_module_cjs8 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
+// ../alpine/packages/mask/dist/module.cjs.js
 var require_module_cjs9 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -9890,7 +9895,7 @@ function sendMessages() {
         request.onDump({ content, preventDefault });
         if (preventDefault)
           return;
-        showHtmlModal(dumpContent);
+        showHtmlModal(content);
       },
       success: async ({ response, responseBody, responseJson }) => {
         request.onSuccess({ response, responseBody, responseJson });
@@ -11138,7 +11143,7 @@ var Directive = class {
 var import_collapse = __toESM(require_module_cjs2());
 var import_focus = __toESM(require_module_cjs3());
 
-// node_modules/@alpinejs/persist/dist/module.esm.js
+// ../alpine/packages/persist/dist/module.esm.js
 function src_default(Alpine24) {
   let persist = () => {
     let alias;
@@ -12439,8 +12444,8 @@ function extractScriptTagContent(rawHtml) {
 async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
   if (executedAssets.has(key))
     return;
-  await callback();
   executedAssets.add(key);
+  await callback();
 }
 async function addAssetsToHeadTagOfPage(rawHtml) {
   let newDocument = new DOMParser().parseFromString(rawHtml, "text/html");
@@ -13160,10 +13165,11 @@ import_alpinejs13.default.interceptInit((el) => {
 
 // js/features/supportJsModules.js
 on("effect", ({ component, effects }) => {
-  let hasModule = effects.hasScriptModule;
-  if (hasModule) {
+  let scriptModuleHash = effects.scriptModule;
+  if (scriptModuleHash) {
     let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
-    import(`/livewire/js/${encodedName}.js`).then((module) => {
+    let path = `/livewire/js/${encodedName}.js?v=${scriptModuleHash}`;
+    import(path).then((module) => {
       module.run.call(component.$wire, [
         component.$wire,
         component.$wire.$js,

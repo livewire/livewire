@@ -125,6 +125,25 @@ class MakeCommand extends Command
     {
         $path = $this->finder->resolveSingleFileComponentPathForCreation($name);
 
+        // Check if we're converting from a multi-file component
+        $mfcPath = $this->finder->resolveMultiFileComponentPath($name);
+        if ($mfcPath && $this->files->exists($mfcPath) && $this->files->isDirectory($mfcPath)) {
+            // Skip interactive prompts in testing environment
+            if (app()->runningUnitTests()) {
+                $this->components->error('Component already exists.');
+                return 1;
+            }
+
+            $convert = confirm('Component already exists as a multi-file component. Would you like to convert it to a single-file component?');
+
+            if ($convert) {
+                return $this->call('livewire:convert', ['name' => $name, '--sfc' => true]);
+            }
+
+            $this->components->error('Component already exists.');
+            return 1;
+        }
+
         if ($this->files->exists($path)) {
             // Skip interactive prompts in testing environment
             if (app()->runningUnitTests()) {
@@ -135,7 +154,7 @@ class MakeCommand extends Command
             $upgrade = confirm('Component already exists. Would you like to upgrade this component to a multi-file component?');
 
             if ($upgrade) {
-                return $this->upgradeSingleFileToMultiFile($name, $path);
+                return $this->call('livewire:convert', ['name' => $name, '--mfc' => true]);
             }
 
             $this->components->error('Component already exists.');
@@ -181,7 +200,7 @@ class MakeCommand extends Command
             $upgrade = confirm('Component already exists as a single-file component. Would you like to upgrade it to a multi-file component?');
 
             if ($upgrade) {
-                return $this->upgradeSingleFileToMultiFile($name, $sfcPath);
+                return $this->call('livewire:convert', ['name' => $name, '--mfc' => true]);
             }
 
             $this->components->error('Component already exists.');
@@ -202,7 +221,10 @@ class MakeCommand extends Command
 
         $this->files->put($classPath, $classContent);
         $this->files->put($viewPath, $viewContent);
-        $this->files->put($testPath, $testContent);
+
+        if ($this->option('test')) {
+            $this->files->put($testPath, $testContent);
+        }
 
         if ($this->option('js')) {
             $this->files->put($jsPath, $jsContent);
@@ -213,43 +235,6 @@ class MakeCommand extends Command
         return 0;
     }
 
-    protected function upgradeSingleFileToMultiFile(string $name, string $sfcPath): int
-    {
-        $directory = $this->finder->resolveMultiFileComponentPathForCreation($name);
-
-        $componentName = basename($directory);
-
-        if ($this->shouldUseEmoji()) {
-            $componentName = str_replace(['⚡', '⚡︎', '⚡️'], '', $componentName);
-        }
-
-        $classPath = $directory . '/' . $componentName . '.php';
-        $viewPath = $directory . '/' . $componentName . '.blade.php';
-        $testPath = $directory . '/' . $componentName . '.test.php';
-        $jsPath = $directory . '/' . $componentName . '.js';
-
-        $parser = SingleFileParser::parse($sfcPath);
-
-        $this->ensureDirectoryExists($directory);
-
-        $scriptContents = $parser->generateScriptContentsForMultiFile();
-        $classContents = $parser->generateClassContentsForMultiFile();
-        $viewContents = $parser->generateViewContentsForMultiFile();
-
-        $this->files->put($classPath, $classContents);
-        $this->files->put($viewPath, $viewContents);
-        $this->files->put($testPath, $this->buildMultiFileComponentTest($name));
-
-        if ($scriptContents !== null) {
-            $this->files->put($jsPath, $scriptContents);
-        }
-
-        $this->files->delete($sfcPath);
-
-        $this->components->info(sprintf('Livewire component [%s] upgraded successfully.', $directory));
-
-        return 0;
-    }
 
     protected function shouldUseEmoji(): bool
     {
@@ -410,6 +395,7 @@ class MakeCommand extends Command
             ['mfc', null, InputOption::VALUE_NONE, 'Create a multi-file component'],
             ['class', null, InputOption::VALUE_NONE, 'Create a class-based component'],
             ['type', null, InputOption::VALUE_REQUIRED, 'Component type (sfc, mfc, or class)'],
+            ['test', null, InputOption::VALUE_NONE, 'Create a test file for multi-file components'],
             ['emoji', null, InputOption::VALUE_REQUIRED, 'Use emoji in file/directory names (true or false)'],
             ['js', null, InputOption::VALUE_NONE, 'Create a JavaScript file for multi-file components'],
         ];

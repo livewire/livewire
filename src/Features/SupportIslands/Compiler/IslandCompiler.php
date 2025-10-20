@@ -89,6 +89,10 @@ class IslandCompiler
             $output .= '(' . $expression . ', token: \'' . $token . '\')';
         }
 
+        // Inject scope provider code at the top of the island view...
+        $scopeProviderCode = $this->generateScopeProviderCode($expression);
+        $innerContent = $scopeProviderCode . $innerContent;
+
         // Ensure the cached directory exists...
         File::ensureDirectoryExists(dirname($cachedPath));
 
@@ -98,6 +102,37 @@ class IslandCompiler
         app('livewire.compiler')->cacheManager->mutateFileModificationTime($cachedPath);
 
         return $output;
+    }
+
+    protected function generateScopeProviderCode(string $expression): string
+    {
+        $directiveWithExtraction = '';
+
+        // Only extract directive's "with" if there's an expression
+        if (trim($expression) !== '') {
+            $directiveWithExtraction = <<<PHP
+// Extract directive's "with" parameter (overrides component properties)
+\$__islandScope = (function(\$name = null, \$token = null, \$lazy = false, \$defer = false, \$always = false, \$skip = false, \$with = []) {
+    return \$with;
+})({$expression});
+if (!empty(\$__islandScope)) {
+    extract(\$__islandScope, EXTR_OVERWRITE);
+}
+
+
+PHP;
+        }
+
+        // Always include runtime "with" extraction (even if directive has no parameters)
+        return <<<PHP
+<?php
+{$directiveWithExtraction}// Extract runtime "with" parameter if provided (overrides everything)
+if (isset(\$__runtimeWith) && is_array(\$__runtimeWith) && !empty(\$__runtimeWith)) {
+    extract(\$__runtimeWith, EXTR_OVERWRITE);
+}
+?>
+
+PHP;
     }
 
     public static function getCachedPathFromToken(string $token): string

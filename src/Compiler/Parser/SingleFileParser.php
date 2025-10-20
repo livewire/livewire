@@ -186,11 +186,11 @@ class SingleFileParser extends Parser
         $hoistedImports = empty($imports) ? '' : implode("\n", $imports) . "\n";
 
         return <<<JS
-{$hoistedImports}
-export function run(\$wire, \$js, \$intercept) {
-    {$scriptContents}
-}
-JS;
+        {$hoistedImports}
+        export function run(\$wire, \$js, \$intercept) {
+            {$scriptContents}
+        }
+        JS;
     }
 
     public function generateScriptContentsForMultiFile(): ?string

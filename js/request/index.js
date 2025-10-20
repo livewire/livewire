@@ -300,7 +300,7 @@ function sendMessages() {
 
                 if (preventDefault) return
 
-                showHtmlModal(dumpContent)
+                showHtmlModal(content)
             },
             success: async ({ response, responseBody, responseJson }) => {
                 request.onSuccess({ response, responseBody, responseJson })

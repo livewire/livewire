@@ -4947,7 +4947,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           request.onDump({ content, preventDefault });
           if (preventDefault)
             return;
-          showHtmlModal(dumpContent);
+          showHtmlModal(content);
         },
         success: async ({ response, responseBody, responseJson }) => {
           request.onSuccess({ response, responseBody, responseJson });
@@ -6191,7 +6191,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // node_modules/@alpinejs/collapse/dist/module.esm.js
+  // ../alpine/packages/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -6285,7 +6285,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // node_modules/@alpinejs/focus/dist/module.esm.js
+  // ../alpine/packages/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -7242,7 +7242,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // node_modules/@alpinejs/persist/dist/module.esm.js
+  // ../alpine/packages/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -7304,7 +7304,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // node_modules/@alpinejs/intersect/dist/module.esm.js
+  // ../alpine/packages/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -9641,7 +9641,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       scroll: true,
       forceAutoScrollFallback: true,
       scrollSensitivity: 50,
+      preventOnFilter: false,
       filter(e) {
+        if (e.target.hasAttribute("x-sort:ignore") || e.target.hasAttribute("wire:sort:ignore"))
+          return true;
+        if (e.target.closest("[x-sort\\:ignore]") || e.target.closest("[wire\\:sort\\:ignore]"))
+          return true;
         if (!el.querySelector("[x-sort\\:item],[wire\\:sort\\:item]"))
           return false;
         let itemHasAttribute = e.target.closest("[x-sort\\:item],[wire\\:sort\\:item]");
@@ -9704,7 +9709,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // node_modules/@alpinejs/resize/dist/module.esm.js
+  // ../alpine/packages/resize/dist/module.esm.js
   function src_default7(Alpine3) {
     Alpine3.directive("resize", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluator = evaluateLater2(expression);
@@ -9749,7 +9754,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default7 = src_default7;
 
-  // node_modules/@alpinejs/anchor/dist/module.esm.js
+  // ../alpine/packages/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -12381,7 +12386,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default9 = src_default9;
 
-  // node_modules/@alpinejs/mask/dist/module.esm.js
+  // ../alpine/packages/mask/dist/module.esm.js
   function src_default10(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
@@ -12764,8 +12769,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
     if (executedAssets.has(key))
       return;
-    await callback();
     executedAssets.add(key);
+    await callback();
   }
   async function addAssetsToHeadTagOfPage(rawHtml) {
     let newDocument = new DOMParser().parseFromString(rawHtml, "text/html");
@@ -13479,10 +13484,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportJsModules.js
   on2("effect", ({ component, effects }) => {
-    let hasModule = effects.hasScriptModule;
-    if (hasModule) {
+    let scriptModuleHash = effects.scriptModule;
+    if (scriptModuleHash) {
       let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
-      import(`/livewire/js/${encodedName}.js`).then((module) => {
+      let path = `/livewire/js/${encodedName}.js?v=${scriptModuleHash}`;
+      import(path).then((module) => {
         module.run.call(component.$wire, [
           component.$wire,
           component.$wire.$js,

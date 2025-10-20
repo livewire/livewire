@@ -108,14 +108,16 @@ class ComponentHookRegistry
 
     static function proxyCallToHooks($target, $method) {
         return function (...$params) use ($target, $method) {
-            $callbacks = [];
+            $forwardCallbacks = [];
 
             foreach (static::$components[$target] ?? [] as $hook) {
-                $callbacks[] = $hook->{$method}(...$params);
+                if ($callback = $hook->{$method}(...$params)) {
+                    $forwardCallbacks[] = $callback;
+                }
             }
 
-            return function (...$forwards) use ($callbacks) {
-                foreach ($callbacks as $callback) {
+            return function (...$forwards) use ($forwardCallbacks) {
+                foreach ($forwardCallbacks as $callback) {
                     $callback(...$forwards);
                 }
             };
