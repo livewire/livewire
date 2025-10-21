@@ -23,6 +23,7 @@ class UnitTest extends \Tests\TestCase
                 'updatingFoo',
                 'updated',
                 'updatedFoo',
+                'scriptSrc',
             ])->every(function ($method) {
                 return $this->cannotCallMethod($method);
             })
@@ -298,6 +299,11 @@ class ForProtectedLifecycleHooks extends TestComponent
     }
 
     public function updatedFoo($value)
+    {
+        //
+    }
+
+    public function scriptSrc()
     {
         //
     }

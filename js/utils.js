@@ -235,3 +235,33 @@ export function splitDumpFromContent(content) {
 
     return [dump, content.replace(dump, '')]
 }
+
+export function walkUpwards(el, callback) {
+    let current = el
+
+    while (current) {
+        let stop = undefined
+
+        callback(current, { stop: (value) => value === undefined ? stop = current : stop = value })
+
+        if (stop !== undefined) return stop
+
+        if (current._x_teleportBack) current = current._x_teleportBack
+
+        current = current.parentElement
+    }
+}
+
+export function walkBackwards(el, callback) {
+    let current = el
+
+    while (current) {
+        let stop = undefined
+
+        callback(current, { stop: (value) => value === undefined ? stop = current : stop = value })
+
+        if (stop !== undefined) return stop
+
+        current = current.previousSibling
+    }
+}

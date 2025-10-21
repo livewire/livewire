@@ -66,6 +66,92 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringNotContainsString('<div>{{ $message }}</div>', $scriptContents);
     }
 
+    public function test_wont_parse_blade_script()
+    {
+        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component-with-blade-script.blade.php');
+
+        $classContents = $parser->generateClassContents('view-path.blade.php');
+        $scriptContents = $parser->generateScriptContents();
+        $viewContents = $parser->generateViewContents();
+
+        $this->assertStringContainsString('new class extends Component', $classContents);
+        $this->assertStringContainsString('use Livewire\Component;', $classContents);
+        $this->assertStringContainsString("return app('view')->file('view-path.blade.php');", $classContents);
+        $this->assertStringNotContainsString('new class extends Component', $viewContents);
+        // Script should NOT be extracted when wrapped in @script/@endscript
+        $this->assertNull($scriptContents);
+        $this->assertStringNotContainsString("console.log('Hello from script');", $classContents);
+        // The script content should remain in the view portion when wrapped in @script/@endscript
+        $this->assertStringContainsString("console.log('Hello from script');", $viewContents);
+        $this->assertStringContainsString('<div>{{ $message }}</div>', $viewContents);
+        // Ensure that use statements are also available inside the view...
+        $this->assertStringContainsString('use Livewire\Component;', $viewContents);
+        $this->assertStringNotContainsString('<div>{{ $message }}</div>', $classContents);
+    }
+
+    public function test_wont_parse_nested_script()
+    {
+        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component-with-nested-script.blade.php');
+
+        $classContents = $parser->generateClassContents('view-path.blade.php');
+        $scriptContents = $parser->generateScriptContents();
+        $viewContents = $parser->generateViewContents();
+
+        $this->assertStringContainsString('new class extends Component', $classContents);
+        $this->assertStringContainsString('use Livewire\Component;', $classContents);
+        $this->assertStringContainsString("return app('view')->file('view-path.blade.php');", $classContents);
+        $this->assertStringNotContainsString('new class extends Component', $viewContents);
+
+        // Only the root-level script should be extracted
+        $this->assertStringContainsString("console.log('This SHOULD be extracted - it is at root level');", $scriptContents);
+        $this->assertStringNotContainsString("console.log('This should NOT be extracted - it is nested inside div');", $scriptContents);
+
+        // The nested script should remain in the view portion
+        $this->assertStringContainsString("console.log('This should NOT be extracted - it is nested inside div');", $viewContents);
+        $this->assertStringContainsString('<div>', $viewContents);
+        $this->assertStringContainsString('{{ $message }}', $viewContents);
+    }
+
+    public function test_script_hoists_imports_and_wraps_in_export_function()
+    {
+        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component-with-imports.blade.php');
+
+        $scriptContents = $parser->generateScriptContents();
+
+        // Check that imports are hoisted to the top
+        $this->assertStringContainsString("import { Alpine } from 'alpinejs'", $scriptContents);
+        $this->assertStringContainsString("import { debounce } from './utils'", $scriptContents);
+
+        // Check that the script is wrapped in export function run()
+        $this->assertMatchesRegularExpression('/export function run\([^)]*\) \{/', $scriptContents);
+        $this->assertStringContainsString("console.log('Component initialized');", $scriptContents);
+
+        // Ensure imports appear before the export function
+        $importPos = strpos($scriptContents, 'import');
+        $exportPos = strpos($scriptContents, 'export function run');
+        $this->assertLessThan($exportPos, $importPos, 'Imports should appear before export function');
+
+        // Ensure the function body contains the actual logic (not the imports)
+        preg_match('/export function run\([^)]*\) \{(.+)\}/s', $scriptContents, $matches);
+        $functionBody = $matches[1] ?? '';
+        $this->assertStringNotContainsString('import', $functionBody, 'Import statements should not be in function body');
+        $this->assertStringContainsString("console.log('Component initialized');", $functionBody);
+    }
+
+    public function test_script_wraps_in_export_function_even_without_imports()
+    {
+        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component.blade.php');
+
+        $scriptContents = $parser->generateScriptContents();
+
+        // Check that the script is wrapped in export function run() even without imports
+        $this->assertMatchesRegularExpression('/export function run\([^)]*\) \{/', $scriptContents);
+        $this->assertStringContainsString("console.log('Hello from script');", $scriptContents);
+
+        // Ensure no import statements are present
+        $this->assertStringNotContainsString('import', $scriptContents);
+    }
+
     public function test_parser_adds_trailing_semicolon_to_class_contents()
     {
         $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component-without-trailing-semicolon.blade.php');
@@ -120,6 +206,19 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringNotContainsString('@placeholder', $viewContents);
         $this->assertStringContainsString('public function placeholder()', $classContents);
         $this->assertStringContainsString('Loading...', $placeholderContents);
+    }
+
+    public function test_ignores_placeholders_in_islands()
+    {
+        $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
+
+        $class = $compiler->compile(__DIR__ . '/Fixtures/sfc-component-with-placeholder-in-island.blade.php');
+
+        $classContents = file_get_contents($cacheManager->getClassPath(__DIR__ . '/Fixtures/sfc-component-with-placeholder-in-island.blade.php'));
+        $viewContents = file_get_contents($cacheManager->getViewPath(__DIR__ . '/Fixtures/sfc-component-with-placeholder-in-island.blade.php'));
+
+        $this->assertStringContainsString('@placeholder', $viewContents);
+        $this->assertStringNotContainsString('public function placeholder()', $classContents);
     }
 
     public function test_can_re_compile_simple_sfc_component()

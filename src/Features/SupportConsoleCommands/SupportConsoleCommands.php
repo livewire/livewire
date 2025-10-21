@@ -14,6 +14,7 @@ class SupportConsoleCommands extends ComponentHook
         static::commands([
             Commands\MakeCommand::class,         // make:livewire
             Commands\LivewireMakeCommand::class, // livewire:make (alias)
+            Commands\ConvertCommand::class,      // livewire:convert
             Commands\FormCommand::class,         // livewire:form
             Commands\AttributeCommand::class,    // livewire:attribute
             Commands\LayoutCommand::class,       // livewire:layout

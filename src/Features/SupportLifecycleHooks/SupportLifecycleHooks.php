@@ -81,7 +81,7 @@ class SupportLifecycleHooks extends ComponentHook
         };
     }
 
-    public function call($methodName, $params, $returnEarly)
+    public function call($methodName, $params, $returnEarly, $metadata)
     {
         $protectedMethods = [
             'mount',
@@ -90,6 +90,7 @@ class SupportLifecycleHooks extends ComponentHook
             'dehydrate*',
             'updating*',
             'updated*',
+            'scriptSrc',
         ];
 
         throw_if(
@@ -97,9 +98,9 @@ class SupportLifecycleHooks extends ComponentHook
             new DirectlyCallingLifecycleHooksNotAllowedException($methodName, $this->component->getName())
         );
 
-        $this->callTraitHook('call', ['methodName' => $methodName, 'params' => $params, 'returnEarly' => $returnEarly]);
+        $this->callTraitHook('call', ['methodName' => $methodName, 'params' => $params, 'returnEarly' => $returnEarly, 'metadata' => $metadata]);
     }
-    
+
     public function exception($e, $stopPropagation)
     {
         $this->callHook('exception', ['e' => $e, 'stopPropagation' => $stopPropagation]);

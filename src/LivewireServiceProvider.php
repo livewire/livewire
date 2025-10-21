@@ -23,8 +23,6 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->bootConfig();
         $this->bootMechanisms();
         $this->bootFeatures();
-
-        (new \Livewire\V4\IntegrateV4)();
     }
 
     protected function registerLivewireServices()
@@ -82,6 +80,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Mechanisms\FrontendAssets\FrontendAssets::class,
             Mechanisms\ExtendBlade\ExtendBlade::class,
             Mechanisms\CompileLivewireTags\CompileLivewireTags::class,
+            Mechanisms\ClearCachedFiles::class,
             Mechanisms\RenderComponent::class,
             Mechanisms\DataStore::class,
         ];
@@ -160,6 +159,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportMorphAwareBladeCompilation\SupportMorphAwareBladeCompilation::class,
             Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
             Features\SupportNestedComponentListeners\SupportNestedComponentListeners::class,
+            Features\SupportHtmlAttributeForwarding\SupportHtmlAttributeForwarding::class,
             Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             Features\SupportComputed\SupportLegacyComputedPropertySyntax::class,
             Features\SupportNestingComponents\SupportNestingComponents::class,
@@ -172,6 +172,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportReleaseTokens\SupportReleaseTokens::class,
             Features\SupportFileDownloads\SupportFileDownloads::class,
             Features\SupportJsEvaluation\SupportJsEvaluation::class,
+            Features\SupportMagicActions\SupportMagicActions::class,
             Features\SupportQueryString\SupportQueryString::class,
             Features\SupportFileUploads\SupportFileUploads::class,
             Features\SupportTeleporting\SupportTeleporting::class,
@@ -180,26 +181,21 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportAttributes\SupportAttributes::class,
             Features\SupportPagination\SupportPagination::class,
             Features\SupportValidation\SupportValidation::class,
+            Features\SupportWithMethod\SupportWithMethod::class,
             Features\SupportIsolating\SupportIsolating::class,
             Features\SupportRedirects\SupportRedirects::class,
             Features\SupportStreaming\SupportStreaming::class,
+            Features\SupportJsModules\SupportJsModules::class,
             Features\SupportNavigate\SupportNavigate::class,
             Features\SupportEntangle\SupportEntangle::class,
             Features\SupportWireRef\SupportWireRef::class,
             Features\SupportRouting\SupportRouting::class,
             Features\SupportLocales\SupportLocales::class,
             Features\SupportTesting\SupportTesting::class,
+            Features\SupportIslands\SupportIslands::class,
             Features\SupportModels\SupportModels::class,
             Features\SupportEvents\SupportEvents::class,
-            // Islands should be before placeholders otherwise the island placeholders will be compiled as component placeholders...
-            \Livewire\V4\Islands\SupportIslands::class,
-            \Livewire\V4\Placeholders\SupportPlaceholders::class,
-            \Livewire\V4\Slots\SupportSlots::class,
-            \Livewire\V4\HtmlAttributes\SupportsHtmlAttributes::class,
-            \Livewire\V4\JsModules\SupportJsModules::class,
-            \Livewire\V4\WithMethod\SupportWithMethod::class,
-            \Livewire\V4\MagicActions\SupportMagicActions::class,
-            \Livewire\V4\Paginators\SupportPaginators::class,
+            Features\SupportSlots\SupportSlots::class,
 
             // Some features we want to have priority over others...
             Features\SupportLifecycleHooks\SupportLifecycleHooks::class,

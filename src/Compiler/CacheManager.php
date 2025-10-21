@@ -109,6 +109,8 @@ class CacheManager
         File::ensureDirectoryExists($this->cacheDirectory . '/views');
 
         File::put($viewPath, $contents);
+
+        $this->mutateFileModificationTime($viewPath);
     }
 
     public function writeScriptFile(string $sourcePath, string $contents): void
@@ -127,12 +129,83 @@ class CacheManager
         File::ensureDirectoryExists($this->cacheDirectory . '/placeholders');
 
         File::put($placeholderPath, $contents);
+
+        $this->mutateFileModificationTime($placeholderPath);
+    }
+
+    public function writeIslandFile(string $sourcePath, string $contents): void
+    {
+        $viewPath = $this->getViewPath($sourcePath);
+
+        File::ensureDirectoryExists($this->cacheDirectory . '/views');
+
+        File::put($viewPath, $contents);
+
+        $this->mutateFileModificationTime($viewPath);
     }
 
     public function invalidateOpCache(string $sourcePath): void
     {
         if (function_exists('opcache_invalidate')) {
             opcache_invalidate($sourcePath, true);
+        }
+    }
+
+    public function mutateFileModificationTime(string $path): void
+    {
+        // This is a fix for a gnarly issue: blade's compiler uses filemtimes to determine if a compiled view has become expired.
+        // AND it's comparison includes equals like this: $path >= $cachedPath
+        // AND file_put_contents won't update the filemtime if the contents are the same
+        // THEREFORE because we are creating a blade file at the same "second" that it is compiled
+        // both the source file and the cached file's filemtime's match, therefore it become's in a perpetual state
+        // of always being expired. So we mutate the source file to be one second behind so that the cached
+        // view file is one second ahead. Phew. this one took a minute to find lol.
+        $original = filemtime($path);
+        touch($path, $original - 1);
+    }
+
+    public function clearCompiledFiles($output = null): void
+    {
+        try {
+            $cacheDirectory = $this->cacheDirectory;
+
+            if (is_dir($cacheDirectory)) {
+                // Count files before clearing for informative output
+                $totalFiles = 0;
+                foreach (['classes', 'views', 'scripts', 'placeholders'] as $subdir) {
+                    $path = $cacheDirectory . '/' . $subdir;
+                    if (is_dir($path)) {
+                        $totalFiles += count(glob($path . '/*'));
+                    }
+                }
+
+                // Use the same cleanup approach as our clear command
+                File::deleteDirectory($cacheDirectory);
+
+                // Recreate the directory structure
+                File::makeDirectory($cacheDirectory . '/classes', 0755, true);
+                File::makeDirectory($cacheDirectory . '/views', 0755, true);
+                File::makeDirectory($cacheDirectory . '/scripts', 0755, true);
+                File::makeDirectory($cacheDirectory . '/placeholders', 0755, true);
+
+                // Recreate .gitignore
+                File::put($cacheDirectory . '/.gitignore', "*\n!.gitignore");
+
+                // Output success message if we have access to output
+                if ($output && method_exists($output, 'writeln')) {
+                    if ($totalFiles > 0) {
+                        $output->writeln("<info>1Livewire compiled files cleared ({$totalFiles} files removed).</info>");
+                    } else {
+                        $output->writeln("<info>1Livewire compiled files directory cleared.</info>");
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently fail to avoid breaking view:clear if there's an issue
+            // But we can log it if output is available
+            if ($output && method_exists($output, 'writeln')) {
+                $output->writeln("<comment>1Note: Could not clear Livewire compiled files.</comment>");
+            }
         }
     }
 }

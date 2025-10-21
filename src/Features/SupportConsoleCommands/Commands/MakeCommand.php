@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Livewire\Finder\Finder;
+use Livewire\Compiler\Parser\SingleFileParser;
 use Livewire\Compiler\Compiler;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Inspiring;
@@ -124,6 +125,25 @@ class MakeCommand extends Command
     {
         $path = $this->finder->resolveSingleFileComponentPathForCreation($name);
 
+        // Check if we're converting from a multi-file component
+        $mfcPath = $this->finder->resolveMultiFileComponentPath($name);
+        if ($mfcPath && $this->files->exists($mfcPath) && $this->files->isDirectory($mfcPath)) {
+            // Skip interactive prompts in testing environment
+            if (app()->runningUnitTests()) {
+                $this->components->error('Component already exists.');
+                return 1;
+            }
+
+            $convert = confirm('Component already exists as a multi-file component. Would you like to convert it to a single-file component?');
+
+            if ($convert) {
+                return $this->call('livewire:convert', ['name' => $name, '--sfc' => true]);
+            }
+
+            $this->components->error('Component already exists.');
+            return 1;
+        }
+
         if ($this->files->exists($path)) {
             // Skip interactive prompts in testing environment
             if (app()->runningUnitTests()) {
@@ -134,7 +154,7 @@ class MakeCommand extends Command
             $upgrade = confirm('Component already exists. Would you like to upgrade this component to a multi-file component?');
 
             if ($upgrade) {
-                return $this->upgradeSingleFileToMultiFile($name, $path);
+                return $this->call('livewire:convert', ['name' => $name, '--mfc' => true]);
             }
 
             $this->components->error('Component already exists.');
@@ -180,7 +200,7 @@ class MakeCommand extends Command
             $upgrade = confirm('Component already exists as a single-file component. Would you like to upgrade it to a multi-file component?');
 
             if ($upgrade) {
-                return $this->upgradeSingleFileToMultiFile($name, $sfcPath);
+                return $this->call('livewire:convert', ['name' => $name, '--mfc' => true]);
             }
 
             $this->components->error('Component already exists.');
@@ -201,7 +221,10 @@ class MakeCommand extends Command
 
         $this->files->put($classPath, $classContent);
         $this->files->put($viewPath, $viewContent);
-        $this->files->put($testPath, $testContent);
+
+        if ($this->option('test')) {
+            $this->files->put($testPath, $testContent);
+        }
 
         if ($this->option('js')) {
             $this->files->put($jsPath, $jsContent);
@@ -212,41 +235,6 @@ class MakeCommand extends Command
         return 0;
     }
 
-    protected function upgradeSingleFileToMultiFile(string $name, string $sfcPath): int
-    {
-        $directory = $this->finder->resolveMultiFileComponentPathForCreation($name);
-
-        $componentName = basename($directory);
-
-        if ($this->shouldUseEmoji()) {
-            $componentName = str_replace(['⚡', '⚡︎', '⚡️'], '', $componentName);
-        }
-
-        $classPath = $directory . '/' . $componentName . '.php';
-        $viewPath = $directory . '/' . $componentName . '.blade.php';
-        $testPath = $directory . '/' . $componentName . '.test.php';
-        $jsPath = $directory . '/' . $componentName . '.js';
-
-        $sfcContents = $this->files->get($sfcPath);
-        $parsed = app(SingleFileComponentCompiler::class)->parseComponent($sfcContents);
-
-        $this->ensureDirectoryExists($directory);
-
-        $this->files->put($classPath, $parsed->getClassSource());
-        $this->files->put($viewPath, $parsed->getViewSource());
-        $this->files->put($testPath, $this->buildMultiFileComponentTest($name));
-
-        if ($parsed->hasScripts()) {
-            $jsSource = $this->cleanupJavaScriptIndentation($parsed->getScriptSource());
-            $this->files->put($jsPath, $jsSource);
-        }
-
-        $this->files->delete($sfcPath);
-
-        $this->components->info(sprintf('Livewire component [%s] upgraded successfully.', $directory));
-
-        return 0;
-    }
 
     protected function shouldUseEmoji(): bool
     {
@@ -255,42 +243,6 @@ class MakeCommand extends Command
         }
 
         return config('livewire.make_command.emoji', true);
-    }
-
-    protected function cleanupJavaScriptIndentation(string $source): string
-    {
-        // Remove leading line break
-        $source = ltrim($source, "\r\n");
-
-        // Detect and remove common indentation
-        $lines = explode("\n", $source);
-
-        if (! empty($lines)) {
-            // Find the indentation of the first non-empty line
-            $firstLineIndent = 0;
-
-            foreach ($lines as $line) {
-                if (trim($line) !== '') {
-                    $firstLineIndent = strlen($line) - strlen(ltrim($line));
-                    break;
-                }
-            }
-
-            // Remove that amount of indentation from all lines
-            if ($firstLineIndent > 0) {
-                $lines = array_map(function($line) use ($firstLineIndent) {
-                    // Only remove indentation if the line has at least that much whitespace
-                    if (strlen($line) >= $firstLineIndent && substr($line, 0, $firstLineIndent) === str_repeat(' ', $firstLineIndent)) {
-                        return substr($line, $firstLineIndent);
-                    }
-                    return $line;
-                }, $lines);
-            }
-
-            $source = implode("\n", $lines);
-        }
-
-        return $source;
     }
 
     protected function buildClassBasedComponentClass(string $name): string
@@ -443,6 +395,7 @@ class MakeCommand extends Command
             ['mfc', null, InputOption::VALUE_NONE, 'Create a multi-file component'],
             ['class', null, InputOption::VALUE_NONE, 'Create a class-based component'],
             ['type', null, InputOption::VALUE_REQUIRED, 'Component type (sfc, mfc, or class)'],
+            ['test', null, InputOption::VALUE_NONE, 'Create a test file for multi-file components'],
             ['emoji', null, InputOption::VALUE_REQUIRED, 'Use emoji in file/directory names (true or false)'],
             ['js', null, InputOption::VALUE_NONE, 'Create a JavaScript file for multi-file components'],
         ];

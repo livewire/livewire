@@ -1,17 +1,13 @@
 import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
 import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
-import { closestComponent } from '@/store'
-import { requestCommit, requestCall } from '@/request'
+import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
-import messageBroker from './v4/requests/messageBroker'
-import { getErrorsObject } from './v4/features/supportErrors'
-import { getPaginatorObject } from './v4/features/supportPaginators'
-import interceptorRegistry from './v4/interceptors/interceptorRegistry'
-import { findRef } from './v4/features/supportRefs'
-import Action from './v4/requests/action'
+import { fireAction, intercept } from '@/request'
+import { getErrorsObject } from '@/features/supportErrors'
+import { findRefEl } from '@/features/supportRefs'
 
 let properties = {}
 let fallback
@@ -44,7 +40,6 @@ let aliases = {
     'entangle': '$entangle',
     'dispatch': '$dispatch',
     'intercept': '$intercept',
-    'paginator': '$paginator',
     'dispatchTo': '$dispatchTo',
     'dispatchSelf': '$dispatchSelf',
     'removeUpload': '$removeUpload',
@@ -98,7 +93,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
     // we would want the entangle effect freed if the element was removed from the DOM...
     return new Proxy({}, {
         get(target, property) {
-            if (! component) component = closestComponent(el)
+            if (! component) component = findComponentByEl(el)
 
             if (['$entangle', 'entangle'].includes(property)) {
                 return generateEntangleFunction(component, cleanup)
@@ -108,7 +103,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
         },
 
         set(target, property, value) {
-            if (! component) component = closestComponent(el)
+            if (! component) component = findComponentByEl(el)
 
             component.$wire[property] = value
 
@@ -138,7 +133,13 @@ wireProperty('$js', (component) => {
         fn[name] = component.getJsAction(name)
     })
 
-    return fn
+    return new Proxy(fn, {
+        set(target, property, value) {
+            component.addJsAction(property, value)
+
+            return true
+        }
+    })
 })
 
 wireProperty('$set', (component) => async (property, value, live = true) => {
@@ -147,24 +148,16 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     // If "live", send a request, queueing the property update to happen first
     // on the server, then trickle back down to the client and get merged...
     if (live) {
-        if (window.livewireV4) {
-            component.queueUpdate(property, value)
-
-            let action = new Action(component, '$set')
-
-            return action.fire()
-        }
-
         component.queueUpdate(property, value)
 
-        return await requestCommit(component)
+        return fireAction(component, '$set')
     }
 
     return Promise.resolve()
 })
 
 wireProperty('$refs', (component) => {
-    let fn = (name) => findRef(component, name)
+    let fn = (name) => findRefEl(component, name)
 
     return new Proxy(fn, {
         get(target, property) {
@@ -178,49 +171,36 @@ wireProperty('$refs', (component) => {
 })
 
 wireProperty('$intercept', (component) => (method, callback = null) => {
-    if (callback === null) {
+    if (callback === null && typeof method === 'function') {
         callback = method
-        method = null
+
+        return intercept(component, callback)
     }
 
-    return interceptorRegistry.add(callback, component, method)
+    return intercept(component, (options) => {
+        let action = options.message.getActions().find(action => action.method === method)
+
+        if (action) {
+            let el = action?.origin?.el
+
+            callback({
+                ...options,
+                el,
+            })
+        }
+    })
 })
 
 wireProperty('$errors', (component) => getErrorsObject(component))
-
-wireProperty('$paginator', (component) => {
-    let fn = (name = 'page') => getPaginatorObject(component, name)
-
-    let defaultPaginator = fn()
-
-    for (let key of Object.keys(defaultPaginator)) {
-        let value = defaultPaginator[key]
-
-        if (typeof value === 'function') {
-            fn[key] = (...args) => defaultPaginator[key](...args)
-        } else {
-            Object.defineProperty(fn, key, {
-                get: () => defaultPaginator[key],
-                set: val => { defaultPaginator[key] = val },
-            })
-        }
-    }
-
-    return fn
-})
 
 wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
 })
 
 wireProperty('$island', (component) => async (name, mode = null) => {
-    let action = new Action(component, '$refresh')
-
-    action.addContext({
+    return fireAction(component, '$refresh', [], {
         island: { name, mode },
     })
-
-    return action.fire()
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {
@@ -242,22 +222,11 @@ wireProperty('$watch', (component) => (path, callback) => {
 })
 
 wireProperty('$refresh', (component) => async () => {
-    if (window.livewireV4) {
-        let action = new Action(component, '$refresh')
-
-        return action.fire()
-    }
-
-    return component.$wire.$commit()
+    return fireAction(component, '$refresh')
 })
+
 wireProperty('$commit', (component) => async () => {
-    if (window.livewireV4) {
-        let action = new Action(component, '$commit')
-
-        return action.fire()
-    }
-
-    return await requestCommit(component)
+    return fireAction(component, '$commit')
 })
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
@@ -327,11 +296,5 @@ wireFallback((component) => (property) => async (...params) => {
         }
     }
 
-    if (window.livewireV4) {
-        let action = new Action(component, property, params)
-
-        return action.fire()
-    }
-
-    return await requestCall(component, property, params)
+    return fireAction(component, property, params)
 })

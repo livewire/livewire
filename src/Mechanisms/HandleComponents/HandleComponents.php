@@ -38,12 +38,13 @@ class HandleComponents extends Mechanism
     {
         $parent = app('livewire')->current();
 
-        if ($html = $this->shortCircuitMount($name, $params, $key, $parent, $slots)) return $html;
-
         $component = app('livewire')->new($name);
 
-        // Separate params into component properties and HTML attributes
+        // Separate params into component properties and HTML attributes...
         [$componentParams, $htmlAttributes] = $this->separateParamsAndAttributes($component, $params);
+
+        if ($html = $this->shortCircuitMount($name, $componentParams, $key, $parent, $slots)) return $html;
+
 
         if (! empty($slots)) {
             $component->withSlots($slots, $parent);
@@ -99,6 +100,7 @@ class HandleComponents extends Mechanism
             if ($this->isReservedParam($key)) {
                 $componentParams[$key] = $value;
             }
+
             // Check if this maps to a component property or mount param
             elseif (
                 array_key_exists($camelKey, $componentProperties)
@@ -117,7 +119,7 @@ class HandleComponents extends Mechanism
 
     protected function isReservedParam($key)
     {
-        $exact = ['lazy', 'wire:ref'];
+        $exact = ['lazy', 'defer', 'wire:ref'];
         $startsWith = ['@', 'wire:model'];
 
         // Check exact matches
@@ -546,7 +548,7 @@ class HandleComponents extends Mechanism
         foreach ($calls as $idx => $call) {
             $method = $call['method'];
             $params = $call['params'];
-            $context = $call['context'] ?? [];
+            $metadata = $call['metadata'] ?? [];
 
             $earlyReturnCalled = false;
             $earlyReturn = null;
@@ -555,7 +557,7 @@ class HandleComponents extends Mechanism
                 $earlyReturn = $return;
             };
 
-            $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $context);
+            $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $metadata);
 
             if ($earlyReturnCalled) {
                 $returns[] = $finish($earlyReturn);
@@ -580,6 +582,11 @@ class HandleComponents extends Mechanism
             if (config('app.debug')) trigger('profile', 'call'.$idx, $root->getId(), [$start, microtime(true)]);
 
             $returns[] = $finish($return);
+
+            // Support `Wire:click.renderless`...
+            if ($metadata['renderless'] ?? false) {
+                $root->skipRender();
+            }
         }
 
         $componentContext->addEffect('returns', $returns);

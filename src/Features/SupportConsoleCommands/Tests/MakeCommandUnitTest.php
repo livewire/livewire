@@ -49,7 +49,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::isDirectory($this->livewireComponentsPath('⚡foo')));
         $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.php')));
         $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.blade.php')));
-        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.test.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡foo/foo.test.php')));
         $this->assertFalse(File::exists($this->livewireComponentsPath('⚡foo/foo.js')));
     }
 
@@ -60,7 +60,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::isDirectory($this->livewireComponentsPath('⚡foo')));
         $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.php')));
         $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.blade.php')));
-        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.test.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡foo/foo.test.php')));
         $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.js')));
     }
 
@@ -227,7 +227,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
 
     public function test_multi_file_component_content_structure()
     {
-        Artisan::call('make:livewire', ['name' => 'test-component', '--mfc' => true]);
+        Artisan::call('make:livewire', ['name' => 'test-component', '--mfc' => true, '--test' => true]);
 
         $classContent = File::get($this->livewireComponentsPath('⚡test-component/test-component.php'));
         $viewContent = File::get($this->livewireComponentsPath('⚡test-component/test-component.blade.php'));
