@@ -1,21 +1,31 @@
-import { intercept } from '@/request'
+import { interceptMessage } from '@/request'
 
-intercept(({ action, component, request, el, directive }) => {
-    if (! directive || ! directive.modifiers.includes('preserve-scroll')) return
+interceptMessage(({ actions, onSuccess }) => {
+    onSuccess(({ onSync, onMorph, onRender }) => {
+        actions.forEach(action => {
+            let origin = action.origin
 
-    let oldHeight
-    let oldScroll
+            if (! origin || ! origin.directive) return
 
-    request.beforeRender(() => {
-        oldHeight = document.body.scrollHeight;
-        oldScroll = window.scrollY;
-    })
+            let directive = origin.directive
 
-    request.afterRender(() => {
-        let heightDiff = document.body.scrollHeight - oldHeight
-        window.scrollTo(0, oldScroll + heightDiff)
+            if (! directive.modifiers.includes('preserve-scroll')) return
 
-        oldHeight = null
-        oldScroll = null
+            let oldHeight
+            let oldScroll
+
+            onSync(() => {
+                oldHeight = document.body.scrollHeight
+                oldScroll = window.scrollY
+            })
+
+            onMorph(() => {
+                let heightDiff = document.body.scrollHeight - oldHeight
+                window.scrollTo(0, oldScroll + heightDiff)
+
+                oldHeight = null
+                oldScroll = null
+            })
+        })
     })
 })

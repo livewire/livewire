@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\V4\PreserveScroll;
+namespace Livewire\Features\SupportPreserveScroll;
 
 use Livewire\Livewire;
 
@@ -8,15 +8,13 @@ class BrowserTest extends \Tests\BrowserTestCase
 {
     public function test_the_scroll_position_is_preserved_when_a_request_is_triggered()
     {
-        $this->markTestSkipped();
-
         Livewire::visit([
             new class extends \Livewire\Component {
                 public function render() { return <<<'HTML'
                 <div>
-                    <button wire:click.preserve-scroll="$refresh" dusk="refresh">Refresh</button>
+                    <button wire:click.preserve-scroll="$refresh" wire:island.prepend="foo" dusk="refresh">Refresh</button>
 
-                    @island(mode: 'prepend', render: 'always')
+                    @island(name: 'foo', always: true)
                         @foreach(range(1, 100) as $i)
                             <div>{{ $i }}</div>
                         @endforeach
