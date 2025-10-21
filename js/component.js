@@ -280,6 +280,8 @@ export class Component {
         }
 
         el.setAttribute('wire:effects', JSON.stringify(effects))
+
+        el.setAttribute('wire:key', this.key)
     }
 
     addJsAction(name, action) {
