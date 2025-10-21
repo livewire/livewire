@@ -163,4 +163,49 @@ class CacheManager
         $original = filemtime($path);
         touch($path, $original - 1);
     }
+
+    public function clearCompiledFiles($output = null): void
+    {
+        try {
+            $cacheDirectory = $this->cacheDirectory;
+
+            if (is_dir($cacheDirectory)) {
+                // Count files before clearing for informative output
+                $totalFiles = 0;
+                foreach (['classes', 'views', 'scripts', 'placeholders'] as $subdir) {
+                    $path = $cacheDirectory . '/' . $subdir;
+                    if (is_dir($path)) {
+                        $totalFiles += count(glob($path . '/*'));
+                    }
+                }
+
+                // Use the same cleanup approach as our clear command
+                File::deleteDirectory($cacheDirectory);
+
+                // Recreate the directory structure
+                File::makeDirectory($cacheDirectory . '/classes', 0755, true);
+                File::makeDirectory($cacheDirectory . '/views', 0755, true);
+                File::makeDirectory($cacheDirectory . '/scripts', 0755, true);
+                File::makeDirectory($cacheDirectory . '/placeholders', 0755, true);
+
+                // Recreate .gitignore
+                File::put($cacheDirectory . '/.gitignore', "*\n!.gitignore");
+
+                // Output success message if we have access to output
+                if ($output && method_exists($output, 'writeln')) {
+                    if ($totalFiles > 0) {
+                        $output->writeln("<info>1Livewire compiled files cleared ({$totalFiles} files removed).</info>");
+                    } else {
+                        $output->writeln("<info>1Livewire compiled files directory cleared.</info>");
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently fail to avoid breaking view:clear if there's an issue
+            // But we can log it if output is available
+            if ($output && method_exists($output, 'writeln')) {
+                $output->writeln("<comment>1Note: Could not clear Livewire compiled files.</comment>");
+            }
+        }
+    }
 }

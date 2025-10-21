@@ -23,8 +23,6 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->bootConfig();
         $this->bootMechanisms();
         $this->bootFeatures();
-
-        (new \Livewire\V4\IntegrateV4)();
     }
 
     protected function registerLivewireServices()
@@ -82,6 +80,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Mechanisms\FrontendAssets\FrontendAssets::class,
             Mechanisms\ExtendBlade\ExtendBlade::class,
             Mechanisms\CompileLivewireTags\CompileLivewireTags::class,
+            Mechanisms\ClearCachedFiles::class,
             Mechanisms\RenderComponent::class,
             Mechanisms\DataStore::class,
         ];

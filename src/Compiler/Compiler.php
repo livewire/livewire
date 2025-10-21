@@ -61,4 +61,9 @@ class Compiler
 
         $this->cacheManager->writeViewFile($path, $parser->generateViewContents());
     }
+
+    public function clearCompiled($output = null)
+    {
+        $this->cacheManager->clearCompiledFiles($output);
+    }
 }
