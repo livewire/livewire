@@ -343,6 +343,34 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    function test_wire_target_works_with_multiple_function_multiple_params_using_js_helper()
+    {
+        Livewire::visit(new class extends Component {
+            public function mountAction(string $action, array $params = [], array $context = [])
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="mountAction('add', {{ \Illuminate\Support\Js::from(['block' => 'name']) }}, { schemaComponent: 'tableFiltersForm.queryBuilder.rules' })" dusk="mountButton">Mount</button>
+                        <div wire:loading wire:target="mountAction('add', {{ \Illuminate\Support\Js::from(['block' => 'name']) }}, { schemaComponent: 'tableFiltersForm.queryBuilder.rules' })">
+                            Mounting...
+                        </div>
+                    </div>
+                    HTML;
+            }
+        })
+            ->assertDontSee('Mounting...')
+            ->press('@mountButton')
+            ->assertSee('Mounting...')
+            ->waitUntilMissingText('Mounting...')
+            ->assertDontSee('Mounting...')
+        ;
+    }
+
     function test_wire_target_works_with_function_JSONparse_params()
     {
         Livewire::visit(new class extends Component {

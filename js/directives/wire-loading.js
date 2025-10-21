@@ -156,22 +156,14 @@ function getTargets(el) {
     if (directives.has('target')) {
         let directive = directives.get('target')
 
-        let raw = directive.expression
-
         if (directive.modifiers.includes("except")) inverted = true
 
-        if (raw.includes('(') && raw.includes(')')) {
-            targets = targets.concat(
-                directive.methods.map(
-                    method => ({ target: method.method, params: quickHash(JSON.stringify(method.params)) })
-            ))
-        } else if (raw.includes(',')) {
-            raw.split(',').map(i => i.trim()).forEach(target => {
-                targets.push({ target })
+        directive.methods.forEach(({ method, params }) => {
+            targets.push({
+                target: method,
+                params: params && params.length > 0 ? quickHash(JSON.stringify(params)) : undefined
             })
-        } else {
-            targets.push({ target: raw })
-        }
+        })
     } else {
         // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
         // and automatically scope this loading directive to that action.
