@@ -6111,65 +6111,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         paramString
       };
     }
-    splitAndParseMethods(methodExpression) {
-      let methods = [];
-      let current = "";
-      let parenCount = 0;
-      let inString = false;
-      let stringChar = null;
-      let trimmedExpression = methodExpression.trim();
-      for (let i = 0; i < trimmedExpression.length; i++) {
-        let char = trimmedExpression[i];
-        if (!inString) {
-          if (char === '"' || char === "'") {
-            inString = true;
-            stringChar = char;
-            current += char;
-          } else if (char === "(") {
-            parenCount++;
-            current += char;
-          } else if (char === ")") {
-            parenCount--;
-            current += char;
-          } else if (char === "," && parenCount === 0) {
-            methods.push(this.parseMethodCall(current.trim()));
-            current = "";
-          } else {
-            current += char;
-          }
-        } else {
-          if (char === stringChar && trimmedExpression[i - 1] !== "\\") {
-            inString = false;
-            stringChar = null;
-          }
-          current += char;
-        }
-      }
-      if (current.trim().length > 0) {
-        methods.push(this.parseMethodCall(current.trim()));
-      }
-      return methods;
-    }
-    parseMethodCall(methodString) {
-      let methodMatch = methodString.match(/^([^(]+)\(/);
-      if (!methodMatch) {
-        return {
-          method: methodString.trim(),
-          paramString: ""
-        };
-      }
-      let method = methodMatch[1].trim();
-      let paramStart = methodMatch[0].length - 1;
-      let lastParenIndex = methodString.lastIndexOf(")");
-      if (lastParenIndex === -1) {
-        throw new Error(`Missing closing parenthesis for method "${method}"`);
-      }
-      let paramString = methodString.slice(paramStart + 1, lastParenIndex).trim();
-      return {
-        method,
-        paramString
-      };
-    }
   };
 
   // ../alpine/packages/collapse/dist/module.esm.js
