@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\V4\MagicErrors;
+namespace Livewire\Features\SupportMagicErrors;
 
 use Livewire\Attributes\Validate;
 use Livewire\Livewire;

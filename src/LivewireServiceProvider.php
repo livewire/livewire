@@ -173,6 +173,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportReleaseTokens\SupportReleaseTokens::class,
             Features\SupportFileDownloads\SupportFileDownloads::class,
             Features\SupportJsEvaluation\SupportJsEvaluation::class,
+            Features\SupportMagicActions\SupportMagicActions::class,
             Features\SupportQueryString\SupportQueryString::class,
             Features\SupportFileUploads\SupportFileUploads::class,
             Features\SupportTeleporting\SupportTeleporting::class,
@@ -181,6 +182,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportAttributes\SupportAttributes::class,
             Features\SupportPagination\SupportPagination::class,
             Features\SupportValidation\SupportValidation::class,
+            Features\SupportWithMethod\SupportWithMethod::class,
             Features\SupportIsolating\SupportIsolating::class,
             Features\SupportRedirects\SupportRedirects::class,
             Features\SupportStreaming\SupportStreaming::class,
@@ -191,13 +193,10 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportRouting\SupportRouting::class,
             Features\SupportLocales\SupportLocales::class,
             Features\SupportTesting\SupportTesting::class,
+            Features\SupportIslands\SupportIslands::class,
             Features\SupportModels\SupportModels::class,
             Features\SupportEvents\SupportEvents::class,
             Features\SupportSlots\SupportSlots::class,
-            // Islands should be before placeholders otherwise the island placeholders will be compiled as component placeholders...
-            Features\SupportIslands\SupportIslands::class,
-            \Livewire\V4\WithMethod\SupportWithMethod::class,
-            \Livewire\V4\MagicActions\SupportMagicActions::class,
 
             // Some features we want to have priority over others...
             Features\SupportLifecycleHooks\SupportLifecycleHooks::class,

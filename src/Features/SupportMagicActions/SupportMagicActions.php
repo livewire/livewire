@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\V4\MagicActions;
+namespace Livewire\Features\SupportMagicActions;
 
 use Livewire\ComponentHook;
 

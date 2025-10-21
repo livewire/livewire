@@ -1,12 +1,12 @@
 <?php
 
-namespace Livewire\V4\WithMethod;
+namespace Livewire\Features\SupportWithMethod;
 
 use Livewire\Component;
 use Livewire\Livewire;
 use Tests\TestCase;
 
-class SupportWithMethodTest extends TestCase
+class UnitTest extends TestCase
 {
     public function test_with_method_provides_data_to_view()
     {

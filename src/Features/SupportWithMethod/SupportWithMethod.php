@@ -1,9 +1,8 @@
 <?php
 
-namespace Livewire\V4\WithMethod;
+namespace Livewire\Features\SupportWithMethod;
 
 use Livewire\ComponentHook;
-use Livewire\Drawer\Utils;
 use function Livewire\wrap;
 
 class SupportWithMethod extends ComponentHook
