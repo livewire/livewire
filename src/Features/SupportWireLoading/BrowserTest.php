@@ -365,7 +365,9 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
             ->assertDontSee('Mounting...')
             ->press('@mountButton')
+            ->waitForText('Mounting...')
             ->assertSee('Mounting...')
+            ->pause(400)
             ->waitUntilMissingText('Mounting...')
             ->assertDontSee('Mounting...')
         ;
