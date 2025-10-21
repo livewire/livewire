@@ -13745,7 +13745,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         targets.push({ target: raw2 });
       }
     } else {
-      let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
+      let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "navigate", "target", "loading", "poll", "ignore", "key", "id"];
       directives2.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
     }
     return { targets, inverted };
