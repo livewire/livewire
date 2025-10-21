@@ -107,42 +107,119 @@ export class Directive {
     }
 
     parseOutMethodsAndParams(rawMethod) {
-        // regex selects first method it encounters including possible commas indicating more methods
-        let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
+        let methods = []
 
-        let method = rawMethod
-        let params = []
-        let methodAndParamString = method.match(methodRegex)
+        // Split methods string into individual methods and their parameters
+        let parsedMethods = this.splitAndParseMethods(rawMethod)
 
-        let methods = [];
-        let slicedLength = 0;
-        // If there's a method and params, we need to parse them out.
-        // If there's multiple methods, parse them one at a time.
-        while (methodAndParamString) {
-            method = methodAndParamString[1]
+        // Evaluate parameters for each method and build the methods array
+        for (let { method, paramString } of parsedMethods) {
+            let params = []
 
-            // Use a function that returns it's arguments to parse and eval all params
-            // This "$event" is for use inside the livewire event handler.
-            let func = new Function('$event', `return (function () {
-                for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
-                    p[k] = arguments[k];
+            if (paramString.length > 0) {
+                function argumentsToArray() {
+                    for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
+                        p[k] = arguments[k]
+                    }
+                    return [].concat(p)
                 }
-                return [].concat(p);
-            })(${methodAndParamString[2]})`)
 
-            params = func(this.eventContext)
+                try {
+                    params = Alpine.evaluate(
+                        document,
+                        'argumentsToArray(' + paramString + ')',
+                        {
+                            scope: { argumentsToArray },
+                        },
+                    )
+                } catch (error) {
+                    console.warn('Failed to parse parameters:', paramString, error)
+                    params = []
+                }
+            }
 
-            methods.push({ method, params })
-            slicedLength += methodAndParamString[0].length;
-
-            // remove all parsed functions from rawMethod string.
-            methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex)
-        }
-
-        if(methods.length === 0) {
             methods.push({ method, params })
         }
 
         return methods;
+    }
+
+    splitAndParseMethods(methodExpression) {
+        let methods = []
+        let current = ''
+        let parenCount = 0
+        let inString = false
+        let stringChar = null
+
+        let trimmedExpression = methodExpression.trim()
+
+        // Parse the expression character by character, splitting on commas only at the top level
+        // This handles nested parentheses and strings correctly: foo(bar(1,2), 'hello, world')
+        for (let i = 0; i < trimmedExpression.length; i++) {
+            let char = trimmedExpression[i]
+
+            if (!inString) {
+                if (char === '"' || char === "'") {
+                    inString = true
+                    stringChar = char
+                    current += char
+                } else if (char === '(') {
+                    parenCount++
+                    current += char
+                } else if (char === ')') {
+                    parenCount--
+                    current += char
+                } else if (char === ',' && parenCount === 0) {
+                    // Found a comma at the top level - parse and add this method
+                    methods.push(this.parseMethodCall(current.trim()))
+                    current = ''
+                } else {
+                    current += char
+                }
+            } else {
+                // Inside a string - only exit on matching quote that's not escaped
+                if (char === stringChar && trimmedExpression[i-1] !== '\\') {
+                    inString = false
+                    stringChar = null
+                }
+                current += char
+            }
+        }
+
+        // Add the last method if there's anything left
+        if (current.trim().length > 0) {
+            methods.push(this.parseMethodCall(current.trim()))
+        }
+
+        return methods
+    }
+
+    parseMethodCall(methodString) {
+        // Find the method name - everything before the first opening parenthesis
+        let methodMatch = methodString.match(/^([^(]+)\(/)
+        if (!methodMatch) {
+            // No parentheses found, treat as method with no params
+            return {
+                method: methodString.trim(),
+                paramString: ''
+            }
+        }
+
+        let method = methodMatch[1].trim()
+        let paramStart = methodMatch[0].length - 1 // Position of opening parenthesis
+
+        // Since splitAndParseMethods already validated balanced parentheses,
+        // we can safely find the last closing parenthesis in the string
+        let lastParenIndex = methodString.lastIndexOf(')')
+        if (lastParenIndex === -1) {
+            throw new Error(`Missing closing parenthesis for method "${method}"`)
+        }
+
+        let paramString = methodString.slice(paramStart + 1, lastParenIndex).trim()
+
+        return {
+            method,
+            paramString
+        }
     }
 }
