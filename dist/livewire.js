@@ -13269,20 +13269,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportPreserveScroll.js
-  intercept(({ action, component, request, el, directive: directive3 }) => {
-    if (!directive3 || !directive3.modifiers.includes("preserve-scroll"))
-      return;
-    let oldHeight;
-    let oldScroll;
-    request.beforeRender(() => {
-      oldHeight = document.body.scrollHeight;
-      oldScroll = window.scrollY;
-    });
-    request.afterRender(() => {
-      let heightDiff = document.body.scrollHeight - oldHeight;
-      window.scrollTo(0, oldScroll + heightDiff);
-      oldHeight = null;
-      oldScroll = null;
+  interceptMessage(({ actions, onSuccess }) => {
+    onSuccess(({ onSync, onMorph, onRender }) => {
+      actions.forEach((action) => {
+        let origin = action.origin;
+        if (!origin || !origin.directive)
+          return;
+        let directive3 = origin.directive;
+        if (!directive3.modifiers.includes("preserve-scroll"))
+          return;
+        let oldHeight;
+        let oldScroll;
+        onSync(() => {
+          oldHeight = document.body.scrollHeight;
+          oldScroll = window.scrollY;
+        });
+        onMorph(() => {
+          let heightDiff = document.body.scrollHeight - oldHeight;
+          window.scrollTo(0, oldScroll + heightDiff);
+          oldHeight = null;
+          oldScroll = null;
+        });
+      });
     });
   });
 
