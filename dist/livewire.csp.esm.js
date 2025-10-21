@@ -11370,6 +11370,7 @@ var Component = class {
       effects.scripts = this.originalEffects.scripts;
     }
     el.setAttribute("wire:effects", JSON.stringify(effects));
+    el.setAttribute("wire:key", this.key);
   }
   addJsAction(name, action) {
     this.jsActions[name] = action;
