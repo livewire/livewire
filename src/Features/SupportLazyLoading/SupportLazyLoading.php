@@ -56,6 +56,9 @@ class SupportLazyLoading extends ComponentHook
         if (isset($params['lazy']) && $params['lazy'] === 'on-load') $isDeferred = true;
         if (isset($params['defer']) && $params['defer']) $isDeferred = true;
 
+        if (isset($params['lazy:bundle']) && $params['lazy:bundle']) $isolate = false;
+        if (isset($params['defer:bundle']) && $params['defer:bundle']) $isolate = false;
+
         $reflectionClass = new \ReflectionClass($this->component);
         $lazyAttribute = $reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)[0] ?? null;
         $deferAttribute = $reflectionClass->getAttributes(\Livewire\Attributes\Defer::class)[0] ?? null;
@@ -72,13 +75,15 @@ class SupportLazyLoading extends ComponentHook
         if ($lazyAttribute) {
             $attribute = $lazyAttribute->newInstance();
 
-            $isolate = $attribute->isolate;
+            if ($attribute->bundle !== null) $isolate = ! $attribute->bundle;
+            if ($attribute->isolate !== null) $isolate = $attribute->isolate;
         }
 
         if ($deferAttribute) {
             $attribute = $deferAttribute->newInstance();
 
-            $isolate = $attribute->isolate;
+            if ($attribute->bundle !== null) $isolate = ! $attribute->bundle;
+            if ($attribute->isolate !== null) $isolate = $attribute->isolate;
         }
 
         $this->component->skipMount();
