@@ -24,6 +24,9 @@ class HandleComponents extends Mechanism
         Synthesizers\FloatSynth::class
     ];
 
+    // Performance optimization: Cache which synthesizer matches which type
+    protected $synthesizerTypeCache = [];
+
     public static $renderStack = [];
     public static $componentStack = [];
 
@@ -622,13 +625,22 @@ class HandleComponents extends Mechanism
 
     protected function getSynthesizerByTarget($target, $context, $path)
     {
-        foreach ($this->propertySynthesizers as $synth) {
-            if ($synth::match($target)) {
-                return new $synth($context, $path);
+        // Performance optimization: Cache synthesizer matches by runtime type...
+        $type = get_debug_type($target);
+
+        if (! isset($this->synthesizerTypeCache[$type])) {
+            foreach ($this->propertySynthesizers as $synth) {
+                if ($synth::match($target)) {
+                    $this->synthesizerTypeCache[$type] = $synth;
+
+                    return new $synth($context, $path);
+                }
             }
+
+            throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
         }
 
-        throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
+        return new $this->synthesizerTypeCache[$type]($context, $path);
     }
 
     protected function getSynthesizerByType($type, $context, $path)

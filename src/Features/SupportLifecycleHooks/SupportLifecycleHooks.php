@@ -8,11 +8,12 @@ use Livewire\ComponentHook;
 
 class SupportLifecycleHooks extends ComponentHook
 {
-    // Performance optimization: Cache trait lookups per component class
+    // Performance optimization: Cache trait lookups per component class...
     protected static $traitCache = [];
 
-    // Performance optimization: Cache method existence checks per component class
+    // Performance optimization: Cache method existence checks per component class...
     protected static $methodCache = [];
+
     public function mount($params)
     {
         if (store($this->component)->has('skipMount')) { return; }
