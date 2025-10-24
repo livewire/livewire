@@ -157,14 +157,15 @@ export class Component {
      * server and use them to update the existing data that
      * users interact with, triggering reactive effects.
      */
-    processEffects(effects) {
+    processEffects(effects, request) {
         // This is for BC.
         trigger('effects', this, effects)
 
         trigger('effect', {
             component: this,
             effects,
-            cleanup: i => this.addCleanup(i)
+            cleanup: i => this.addCleanup(i),
+            request,
         })
     }
 

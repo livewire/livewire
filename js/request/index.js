@@ -270,7 +270,7 @@ function sendMessages() {
             error: ({ response, responseBody }) => {
                 let preventDefault = false
 
-                request.onError({ response, responseBody, preventDefault })
+                request.onError({ response, responseBody, preventDefault: () => preventDefault = true })
 
                 if (preventDefault) return
 
@@ -287,7 +287,7 @@ function sendMessages() {
             redirect: (url) => {
                 let preventDefault = false
 
-                request.onRedirect({ url, preventDefault })
+                request.onRedirect({ url, preventDefault: () => preventDefault = true })
 
                 if (preventDefault) return
 
@@ -296,7 +296,7 @@ function sendMessages() {
             dump: (content) => {
                 let preventDefault = false
 
-                request.onDump({ content, preventDefault })
+                request.onDump({ content, preventDefault: () => preventDefault = true })
 
                 if (preventDefault) return
 
@@ -328,7 +328,7 @@ function sendMessages() {
                             if (message.isCancelled()) return
 
                             // Trigger any side effects from the payload like "morph" and "dispatch event"...
-                            message.component.processEffects(effects)
+                            message.component.processEffects(effects, request)
 
                             message.onEffect()
                             if (message.isCancelled()) return
