@@ -4923,7 +4923,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         },
         error: ({ response, responseBody }) => {
           let preventDefault = false;
-          request.onError({ response, responseBody, preventDefault });
+          request.onError({ response, responseBody, preventDefault: () => preventDefault = true });
           if (preventDefault)
             return;
           if (response.status === 419) {
@@ -4937,14 +4937,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         },
         redirect: (url) => {
           let preventDefault = false;
-          request.onRedirect({ url, preventDefault });
+          request.onRedirect({ url, preventDefault: () => preventDefault = true });
           if (preventDefault)
             return;
           window.location.href = url;
         },
         dump: (content) => {
           let preventDefault = false;
-          request.onDump({ content, preventDefault });
+          request.onDump({ content, preventDefault: () => preventDefault = true });
           if (preventDefault)
             return;
           showHtmlModal(content);
@@ -4968,7 +4968,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 message.onSync();
                 if (message.isCancelled())
                   return;
-                message.component.processEffects(effects);
+                message.component.processEffects(effects, request);
                 message.onEffect();
                 if (message.isCancelled())
                   return;
@@ -5554,12 +5554,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.mergeNewSnapshot(JSON.stringify(snapshot), effects);
       this.processEffects({ html });
     }
-    processEffects(effects) {
+    processEffects(effects, request) {
       trigger2("effects", this, effects);
       trigger2("effect", {
         component: this,
         effects,
-        cleanup: (i) => this.addCleanup(i)
+        cleanup: (i) => this.addCleanup(i),
+        request
       });
     }
     get children() {
@@ -13197,8 +13198,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportRedirects.js
-  on2("effect", ({ effects }) => {
+  on2("effect", ({ effects, request }) => {
     if (!effects["redirect"])
+      return;
+    let preventDefault = false;
+    request.onRedirect({ url: effects["redirect"], preventDefault: () => preventDefault = true });
+    if (preventDefault)
       return;
     let url = effects["redirect"];
     shouldRedirectUsingNavigateOr(effects, url, () => {
