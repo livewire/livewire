@@ -580,4 +580,89 @@ class BrowserTest extends BrowserTestCase
             ->assertDontSeeIn('@root-error', 'The foo field is required.')
             ;
     }
+
+    public function test_islands_inside_a_lazy_island_get_rendered_when_the_lazy_island_is_mounted()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function hydrate() { usleep(250000); } // 250ms
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div style="height: 200vh" dusk="long-content">Long content to push the island off the page...</div>
+
+                    @island(lazy: true)
+                        <button type="button" wire:click="increment" dusk="outer-island-increment">Outer Island Count: {{ $count }}</button>
+
+                        @island
+                            <button type="button" wire:click="increment" dusk="inner-island-increment">Inner Island Count: {{ $count }}</button>
+                        @endisland
+                    @endisland
+
+                    <button type="button" wire:click="increment" dusk="root-increment">Root count: {{ $count }}</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertNotPresent('@outer-island-increment')
+            ->assertNotPresent('@inner-island-increment')
+            ->assertPresent('@root-increment')
+            ->scrollTo('@root-increment')
+            ->waitForText('Outer Island Count: 0')
+            ->assertPresent('@outer-island-increment')
+            ->assertPresent('@inner-island-increment')
+            ->assertPresent('@root-increment')
+            ;
+    }
+
+    public function test_lazy_islands_inside_a_lazy_island_get_mounted_after_the_outer_lazy_island_is_mounted()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function hydrate() { usleep(250000); } // 250ms
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div style="height: 200vh" dusk="long-content">Long content to push the island off the page...</div>
+
+                    @island(lazy: true)
+                        <button type="button" wire:click="increment" dusk="outer-island-increment">Outer Island Count: {{ $count }}</button>
+
+                        @island(lazy: true)
+                            <button type="button" wire:click="increment" dusk="inner-island-increment">Inner Island Count: {{ $count }}</button>
+                        @endisland
+                    @endisland
+
+                    <button type="button" wire:click="increment" dusk="root-increment">Root count: {{ $count }}</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertNotPresent('@outer-island-increment')
+            ->assertNotPresent('@inner-island-increment')
+            ->assertPresent('@root-increment')
+            ->scrollTo('@root-increment')
+            ->waitForText('Outer Island Count: 0')
+            ->assertPresent('@outer-island-increment')
+            ->assertNotPresent('@inner-island-increment')
+            ->assertPresent('@root-increment')
+            ->waitForText('Inner Island Count: 0')
+            ->assertPresent('@inner-island-increment')
+            ->assertPresent('@root-increment')
+            ;
+    }
 }
