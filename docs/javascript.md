@@ -32,9 +32,9 @@ Here's a more full example where you can do something like register a JavaScript
 
 @script
 <script>
-    $js('increment', () => {
+    $js.increment = () => {
         console.log('increment')
-    })
+    }
 </script>
 @endscript
 ```
@@ -330,6 +330,7 @@ let $wire = {
 
     // Define a JavaScript action...
     // Usage: $wire.$js('increment', () => { ... })
+    // Usage: $wire.$js.increment = () => { ... }
     $js(name, callback) { ... },
 
     // Entangle the value of a Livewire property with a different,

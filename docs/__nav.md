@@ -47,6 +47,7 @@ HTML Directives:
     wire:ignore: { uri: /docs/wire-ignore, file: /wire-ignore.md }
     wire:replace: { uri: /docs/wire-replace, file: /wire-replace.md }
     wire:show: { uri: /docs/wire-show, file: /wire-show.md }
+    wire:sort: { uri: /docs/wire-sort, file: /wire-sort.md }
     wire:stream: { uri: /docs/wire-stream, file: /wire-stream.md }
     wire:text: { uri: /docs/wire-text, file: /wire-text.md }
 Concepts:

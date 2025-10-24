@@ -66,23 +66,58 @@ resources/views/components/⚡create-post/
 └── create-post.test.php   # Pest test (optional)
 ```
 
-**Upgrading components**
+### Converting between formats
 
-If you have an existing single-file component and you wish to upgrade it to a multi-file one, you can run the make command and Livewire will automatically convert the component for you:
+Livewire provides the `livewire:convert` command to seamlessly convert components between single-file and multi-file formats.
+
+**Auto-detect and convert:**
+
+If you don't specify a format, Livewire will automatically detect the current format and convert to the opposite:
 
 ```shell
-php artisan make:livewire create-post --mfc
-# If the component already exists as a single-file component.
-# You will be prompted to upgrade it to a multi-file one.
+php artisan livewire:convert create-post
+# Single-file → Multi-file (or vice versa)
 ```
 
-Running this command will automatically:
+**Explicitly convert to multi-file:**
+
+```shell
+php artisan livewire:convert create-post --mfc
+```
+
+This will:
 * Parse your single-file component
 * Create a new directory for the multi-file component
 * Split the PHP and Blade code into separate files
 * Extract any JavaScript into its own file
-* Generate a test file
 * Delete the original single-file component
+
+You can also create a test file during conversion by adding the `--test` flag:
+
+```shell
+php artisan livewire:convert create-post --mfc --test
+```
+
+**Explicitly convert to single-file:**
+
+```shell
+php artisan livewire:convert create-post --sfc
+```
+
+This will:
+* Parse your multi-file component
+* Combine the PHP class and Blade view into a single file
+* Embed any JavaScript into a `<script>` tag
+* Delete the multi-file directory
+
+> [!warning] Test files are deleted when converting to single-file
+> If your multi-file component has a test file, you'll be prompted to confirm before conversion since test files cannot be preserved in the single-file format.
+
+The convert command works with nested components too:
+
+```shell
+php artisan livewire:convert admin.user-form --mfc
+```
 
 ## Rendering components
 

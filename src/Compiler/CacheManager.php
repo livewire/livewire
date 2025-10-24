@@ -190,15 +190,6 @@ class CacheManager
 
                 // Recreate .gitignore
                 File::put($cacheDirectory . '/.gitignore', "*\n!.gitignore");
-
-                // Output success message if we have access to output
-                if ($output && method_exists($output, 'writeln')) {
-                    if ($totalFiles > 0) {
-                        $output->writeln("<info>1Livewire compiled files cleared ({$totalFiles} files removed).</info>");
-                    } else {
-                        $output->writeln("<info>1Livewire compiled files directory cleared.</info>");
-                    }
-                }
             }
         } catch (\Exception $e) {
             // Silently fail to avoid breaking view:clear if there's an issue

@@ -178,10 +178,10 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                         @script
                         <script>
-                            $js('test', (param1, param2) => {
+                            $js.test = (param1, param2) => {
                                 console.log('test', param1, param2);
                                 window.test = `through wire:click with params: ${param1}, ${param2}`
-                            })
+                            }
                         </script>
                         @endscript
                     HTML;
