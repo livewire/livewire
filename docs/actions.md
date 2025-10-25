@@ -944,6 +944,18 @@ class SearchPosts extends Component
 
 Because the suggestions are stored purely in Alpine's `suggestions` data and never in Livewire's component state, it's safe to fetch them asynchronously.
 
+## Preserving scroll position
+
+When updating content, the browser may jump to a different scroll position. The `.preserve-scroll` modifier maintains the current scroll position during updates:
+
+```blade
+<button wire:click.preserve-scroll="loadMore">Load More</button>
+
+<select wire:model.live.preserve-scroll="category">...</select>
+```
+
+This is useful for infinite scroll, filters, and dynamic content updates where you don't want the page to jump.
+
 ## Security concerns
 
 Remember that any public method in your Livewire component can be called from the client-side, even without an associated `wire:click` handler that invokes it. In these scenarios, users can still trigger the action from the browser's DevTools.

@@ -588,6 +588,46 @@ streamIsland(
 )
 ```
 
+## Triggering islands from the template
+
+In addition to calling `renderIsland()` from your component actions, you can trigger island renders directly from your template using the `$island()` magic method.
+
+### Basic usage
+
+```blade
+<div>
+    @island(name: 'stats')
+        <div>Statistics: {{ $this->stats }}</div>
+    @endisland
+
+    <button wire:click="$island('stats')">
+        Refresh Stats
+    </button>
+</div>
+```
+
+When the button is clicked, the `stats` island will re-render without requiring a component action.
+
+### Specifying render mode
+
+You can pass options to control how the island renders:
+
+```blade
+<button wire:click="$island('feed', { mode: 'append' })">
+    Load More
+</button>
+
+<button wire:click="$island('feed', { mode: 'prepend' })">
+    Add to Top
+</button>
+
+<button wire:click="$island('feed', { mode: 'morph' })">
+    Refresh Feed
+</button>
+```
+
+This is particularly useful for building interfaces where users can trigger specific island updates without writing component actions for each interaction.
+
 ## Considerations
 
 While islands provide powerful isolation, keep in mind:

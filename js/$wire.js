@@ -197,9 +197,9 @@ wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
 })
 
-wireProperty('$island', (component) => async (name, mode = null) => {
+wireProperty('$island', (component) => async (name, options = {}) => {
     return fireAction(component, '$refresh', [], {
-        island: { name, mode },
+        island: { name, ...options },
     })
 })
 

@@ -286,13 +286,13 @@ Now, if there are ten `Revenue` components on the same page, when the page loads
 You can also enable bundling inline when rendering a component:
 
 ```blade
-<livewire:revenue lazy:bundle />
+<livewire:revenue lazy lazy:bundle />
 ```
 
 This also works with deferred components:
 
 ```blade
-<livewire:revenue defer:bundle />
+<livewire:revenue defer defer:bundle />
 ```
 
 Or using the attribute:

@@ -2,15 +2,18 @@
 
 Livewire v4 introduces several improvements and optimizations while maintaining backward compatibility wherever possible. This guide will help you upgrade from Livewire v3 to v4.
 
+> [!warning] Livewire v4 is currently in beta
+> Livewire v4 is still in active development and not yet stable. It's recommended to test thoroughly in a development environment before upgrading production applications. Breaking changes may occur between beta releases.
+
 > [!tip] Smooth upgrade path
 > Most applications can upgrade to v4 with minimal changes. The breaking changes are primarily configuration updates and method signature changes that only affect advanced usage.
 
 ## Installation
 
-Update your `composer.json` to require Livewire v4:
+Update your `composer.json` to require Livewire v4 beta:
 
 ```bash
-composer require livewire/livewire:^4.0
+composer require livewire/livewire:^4.0@beta
 ```
 
 After updating, clear your application's cache:
@@ -20,13 +23,18 @@ php artisan config:clear
 php artisan view:clear
 ```
 
+> [!info] View all changes on GitHub
+> For a complete overview of all code changes between v3 and v4, you can review the full diff on GitHub: [Compare 3.x to main →](https://github.com/livewire/livewire/compare/3.x...main)
+
 ## High-impact changes
 
 These changes are most likely to affect your application and should be reviewed carefully.
 
 ### Config file updates
 
-Several configuration keys have been renamed or reorganized. Update your `config/livewire.php` file:
+Several configuration keys have been renamed, reorganized, or have new defaults. Update your `config/livewire.php` file:
+
+#### Renamed configuration keys
 
 **Layout configuration:**
 ```php
@@ -37,7 +45,9 @@ Several configuration keys have been renamed or reorganized. Update your `config
 'component_layout' => 'layouts::app',
 ```
 
-**Lazy placeholder configuration:**
+The layout now uses the `layouts::` namespace by default, pointing to `resources/views/layouts/app.blade.php`.
+
+**Placeholder configuration:**
 ```php
 // Before (v3)
 'lazy_placeholder' => 'livewire.placeholder',
@@ -46,59 +56,156 @@ Several configuration keys have been renamed or reorganized. Update your `config
 'component_placeholder' => 'livewire.placeholder',
 ```
 
-**New configuration options:**
+#### Changed defaults
 
+**Smart wire:key behavior:**
 ```php
-// Define custom component locations
+// Now defaults to true (was false in v3)
+'smart_wire_keys' => true,
+```
+
+This enables automatic intelligent wire:key generation for loops, reducing the need for manual wire:key attributes.
+
+[Learn more about wire:key →](/docs/nesting#wire-key)
+
+#### New configuration options
+
+**Component locations:**
+```php
 'component_locations' => [
-    resource_path('views/admin/components'),
-],
-
-// Define custom component namespaces
-'component_namespaces' => [
-    'admin' => resource_path('views/admin/components'),
-],
-
-// Configure make command defaults
-'make_command' => [
-    'type' => 'sfc',  // 'sfc', 'mfc', or 'class'
-    'emoji' => true,  // Whether to use emoji prefix (⚡)
+    resource_path('views/components'),
+    resource_path('views/livewire'),
 ],
 ```
+
+Defines where Livewire looks for single-file and multi-file (view-based) components.
+
+**Component namespaces:**
+```php
+'component_namespaces' => [
+    'layouts' => resource_path('views/layouts'),
+    'pages' => resource_path('views/pages'),
+],
+```
+
+Creates custom namespaces for organizing view-based components (e.g., `<livewire:pages::dashboard />`).
+
+**Make command defaults:**
+```php
+'make_command' => [
+    'type' => 'sfc',  // Options: 'sfc', 'mfc', or 'class'
+    'emoji' => true,   // Whether to use ⚡ emoji prefix
+],
+```
+
+Configure default component format and emoji usage. Set `type` to `'class'` to match v3 behavior.
+
+**CSP-safe mode:**
+```php
+'csp_safe' => false,
+```
+
+Enable Content Security Policy mode to avoid `unsafe-eval` violations. When enabled, Livewire uses the Alpine CSP build. Note: This mode restricts complex JavaScript expressions in directives like `wire:click="addToCart($event.detail.productId)"` or global references like `window.location`.
+
+### Routing changes
+
+For full-page components, the recommended routing approach has changed:
+
+```php
+// Before (v3) - still works but not recommended
+Route::get('/dashboard', Dashboard::class);
+
+// After (v4) - recommended for all component types
+Route::livewire('/dashboard', Dashboard::class);
+
+// For view-based components, you can use the component name
+Route::livewire('/dashboard', 'pages::dashboard');
+```
+
+Using `Route::livewire()` is now the preferred method and is required for single-file and multi-file components to work correctly as full-page components.
+
+[Learn more about routing →](/docs/components#full-page-components)
 
 ## Medium-impact changes
 
 These changes may affect certain parts of your application depending on which features you use.
 
+### Performance improvements
+
+Livewire v4 includes significant performance improvements to the request handling system:
+
+- **Non-blocking polling**: `wire:poll` no longer blocks other requests or is blocked by them
+- **Parallel live updates**: `wire:model.live` requests now run in parallel, allowing faster typing and quicker results
+
+These improvements happen automatically—no changes needed to your code.
+
 ### Method signature changes
 
-If you're extending Livewire's core functionality, these method signatures have changed:
-
-**Component mounting:**
-```php
-// Before (v3)
-mount($name, $params = [], $key = null)
-
-// After (v4)
-mount($name, $params = [], $key = null, $slots = [])
-```
+If you're extending Livewire's core functionality or using these methods directly, note these signature changes:
 
 **Streaming:**
+
+The `stream()` method parameter order has changed:
+
 ```php
 // Before (v3)
-stream($name, $content, $replace = false)
+$this->stream(to: '#container', content: 'Hello', replace: true);
 
 // After (v4)
-stream($content, $replace = false, $name = null)
+$this->stream(content: 'Hello', replace: true, el: '#container');
 ```
 
-The parameter order has changed to make `$name` optional, as it's typically not needed.
+If you're using named parameters (as shown above), note that `to:` has been renamed to `el:`. If you're using positional parameters, you'll need to update to the following:
+
+```php
+// Before (v3) - positional parameters
+$this->stream('#container', 'Hello');
+
+// After (v4) - positional/named parameters
+$this->stream('Hello', el: '#container');
+```
+
+[Learn more about streaming →](/docs/wire-stream)
+
+**Component mounting (internal):**
+
+If you're extending `LivewireManager` or calling the `mount()` method directly:
+
+```php
+// Before (v3)
+public function mount($name, $params = [], $key = null)
+
+// After (v4)
+public function mount($name, $params = [], $key = null, $slots = [])
+```
+
+This change adds support for passing slots when mounting components and generally won't affect most applications.
 
 ## Low-impact changes
 
-These changes only affect applications using advanced JavaScript customization.
+These changes only affect applications using advanced features or customization.
 
-### JavaScript hooks: New interceptor system
+### JavaScript deprecations
+
+#### Deprecated: `$wire.$js()` method
+
+The `$wire.$js()` method for defining JavaScript actions has been deprecated:
+
+```js
+// Deprecated (v3)
+$wire.$js('bookmark', () => {
+    // Toggle bookmark...
+})
+
+// New (v4)
+$wire.$js.bookmark = () => {
+    // Toggle bookmark...
+}
+```
+
+The new syntax is cleaner and more intuitive.
+
+#### Deprecated: `commit` and `request` hooks
 
 The `commit` and `request` hooks have been deprecated in favor of a new interceptor system that provides more granular control and better performance.
 
@@ -213,33 +320,74 @@ Livewire.interceptRequest(({ request, onResponse, onSuccess, onError, onFailure 
 
 For complete documentation on the new interceptor system, see the [JavaScript Interceptors documentation](/docs/javascript#interceptors).
 
+### New JavaScript hooks for partial morphing
+
+The existing `Livewire.hook('morph', ...)` hook continues to work for full component morphs. However, for islands and slots that use partial morphing, you'll need to use the new partial morph hooks:
+
+```js
+// Runs before a partial is morphed (islands, slots, etc.)
+Livewire.hook('partial.morph', ({ startNode, endNode, component }) => {
+    // startNode: comment node marking the beginning of the partial
+    // endNode: comment node marking the end of the partial
+})
+
+// Runs after a partial is morphed
+Livewire.hook('partial.morphed', ({ startNode, endNode, component }) => {
+    // Use this for cleanup or initialization after partial updates
+})
+```
+
+These hooks are essential if you're integrating third-party libraries that need to know when specific DOM regions are updated.
+
 ## New features in v4
 
 Livewire v4 introduces several powerful new features you can start using immediately:
 
-### Single-file and multi-file components
+### Component features
 
-v4 introduces new component formats alongside the traditional class-based approach:
+**Single-file and multi-file components**
 
-- **Single-file components (SFC)**: Combine PHP and Blade in one file
-- **Multi-file components (MFC)**: Separate PHP, Blade, JavaScript, and tests into a directory
+v4 introduces new component formats alongside the traditional class-based approach. Single-file components combine PHP and Blade in one file, while multi-file components organize PHP, Blade, JavaScript, and tests in a directory.
+
+By default, view-based component files are prefixed with a ⚡ emoji to distinguish them from regular Blade files in your editor and searches. This can be disabled via the `make_command.emoji` config.
 
 ```bash
-# Create a single-file component (default)
-php artisan make:livewire create-post
-
-# Create a multi-file component
-php artisan make:livewire create-post --mfc
-
-# Convert between formats
-php artisan livewire:convert create-post
+php artisan make:livewire create-post        # Single-file (default)
+php artisan make:livewire create-post --mfc  # Multi-file
+php artisan livewire:convert create-post     # Convert between formats
 ```
 
 [Learn more about component formats →](/docs/components)
 
+**Slots and attribute forwarding**
+
+Components now support slots and automatic attribute bag forwarding using `{{ $attributes }}`, making component composition more flexible.
+
+[Learn more about nesting components →](/docs/nesting)
+
+**JavaScript in view-based components**
+
+View-based components can now include `<script>` tags without the `@script` wrapper. These scripts are served as separate cached files for better performance and automatic `$wire` binding:
+
+```blade
+<div>
+    <!-- Your component template -->
+</div>
+
+<script>
+    // $wire is automatically bound as 'this'
+    this.count++  // Same as $wire.count++
+
+    // $wire is still available if preferred
+    $wire.save()
+</script>
+```
+
+[Learn more about JavaScript in components →](/docs/javascript)
+
 ### Islands
 
-Islands allow you to create isolated regions within a component that update independently, improving performance without creating separate child components:
+Islands allow you to create isolated regions within a component that update independently, dramatically improving performance without creating separate child components.
 
 ```blade
 @island(name: 'stats', lazy: true)
@@ -247,11 +395,15 @@ Islands allow you to create isolated regions within a component that update inde
 @endisland
 ```
 
+Islands also support imperative rendering and streaming from your component actions.
+
 [Learn more about islands →](/docs/islands)
 
-### Deferred loading
+### Loading improvements
 
-In addition to lazy loading (viewport-based), you can now defer components to load immediately after the page:
+**Deferred loading**
+
+In addition to lazy loading (viewport-based), components can now be deferred to load immediately after the initial page load:
 
 ```blade
 <livewire:revenue defer />
@@ -262,24 +414,25 @@ In addition to lazy loading (viewport-based), you can now defer components to lo
 class Revenue extends Component { ... }
 ```
 
-[Learn more about lazy and deferred loading →](/docs/lazy)
+**Bundled loading**
 
-### Bundled lazy loading
+Control whether multiple lazy/deferred components load in parallel or bundled together:
 
-Control whether multiple lazy/deferred components load in parallel or bundled:
+```blade
+<livewire:revenue lazy lazy:bundle />
+<livewire:expenses defer defer:bundle />
+```
 
 ```php
 #[Lazy(bundle: true)]
 class Revenue extends Component { ... }
 ```
 
-```blade
-<livewire:revenue lazy:bundle />
-```
+[Learn more about lazy and deferred loading →](/docs/lazy)
 
 ### Async actions
 
-Run actions in parallel without blocking other requests:
+Run actions in parallel without blocking other requests using the `.async` modifier or `#[Async]` attribute:
 
 ```blade
 <button wire:click.async="logActivity">Track</button>
@@ -292,9 +445,11 @@ public function logActivity() { ... }
 
 [Learn more about async actions →](/docs/actions#parallel-execution-with-async)
 
-### Drag-and-drop sorting
+### New directives and modifiers
 
-Built-in support for sortable lists:
+**`wire:sort` - Drag-and-drop sorting**
+
+Built-in support for sortable lists with drag-and-drop:
 
 ```blade
 <ul wire:sort="updateOrder">
@@ -305,6 +460,126 @@ Built-in support for sortable lists:
 ```
 
 [Learn more about wire:sort →](/docs/wire-sort)
+
+**`wire:intersect` - Viewport intersection**
+
+Run actions when elements enter or leave the viewport, similar to Alpine's `x-intersect`:
+
+```blade
+<!-- Basic usage -->
+<div wire:intersect="loadMore">...</div>
+
+<!-- With modifiers -->
+<div wire:intersect.once="trackView">...</div>
+<div wire:intersect:leave="pauseVideo">...</div>
+<div wire:intersect.half="loadMore">...</div>
+<div wire:intersect.full="startAnimation">...</div>
+
+<!-- With options -->
+<div wire:intersect.margin.200px="loadMore">...</div>
+<div wire:intersect.threshold.50="trackScroll">...</div>
+```
+
+Available modifiers:
+- `.once` - Fire only once
+- `.half` - Wait until half is visible
+- `.full` - Wait until fully visible
+- `.threshold.X` - Custom visibility percentage (0-100)
+- `.margin.Xpx` or `.margin.X%` - Intersection margin
+
+[Learn more about wire:intersect →](/docs/wire-intersect)
+
+**`wire:ref` - Element references**
+
+Easily reference and interact with elements in your template:
+
+```blade
+@foreach ($comments as $comment)
+    <div wire:ref="comment-{{ $comment->id }}">
+        {{ $comment->body }}
+    </div>
+@endforeach
+
+<button wire:click="$refs['comment-123'].scrollIntoView()">
+    Scroll to Comment
+</button>
+```
+
+[Learn more about wire:ref →](/docs/wire-ref)
+
+**`.renderless` modifier**
+
+Skip component re-rendering directly from the template:
+
+```blade
+<button wire:click.renderless="trackClick">Track</button>
+```
+
+This is an alternative to the `#[Renderless]` attribute for actions that don't need to update the UI.
+
+[Learn more about actions →](/docs/actions)
+
+**`.preserve-scroll` modifier**
+
+Preserve scroll position during updates to prevent layout jumps:
+
+```blade
+<button wire:click.preserve-scroll="loadMore">Load More</button>
+```
+
+**`data-loading` attribute**
+
+Every element that triggers a network request automatically receives a `data-loading` attribute, making it easy to style loading states with Tailwind:
+
+```blade
+<button wire:click="save" class="data-[loading]:opacity-50 data-[loading]:pointer-events-none">
+    Save Changes
+</button>
+```
+
+[Learn more about loading states →](/docs/wire-loading)
+
+### JavaScript improvements
+
+**`$errors` magic property**
+
+Access your component's error bag from JavaScript:
+
+```blade
+<div x-show="$wire.$errors.has('email')">
+    <span x-text="$wire.$errors.first('email')"></span>
+</div>
+```
+
+[Learn more about validation →](/docs/validation)
+
+**`$intercept` magic**
+
+Intercept and modify Livewire requests from JavaScript:
+
+```blade
+<script>
+$wire.$intercept('save', ({ proceed }) => {
+    if (confirm('Save changes?')) {
+        proceed()
+    }
+})
+</script>
+```
+
+[Learn more about JavaScript interceptors →](/docs/javascript#interceptors)
+
+**Island targeting from JavaScript**
+
+Trigger island renders directly from the template:
+
+```blade
+<button wire:click="$island('stats', { mode: 'prepend' })">
+    Update Stats
+</button>
+```
+
+[Learn more about islands →](/docs/islands)
 
 ## Getting help
 
