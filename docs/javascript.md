@@ -591,27 +591,6 @@ Livewire.hook('morphed',  ({ el, component }) => {
 })
 ```
 
-**Partial morph hooks**
-
-Partials are morphed differently than standard Livewire requests. Here are the additional Livewire events triggered by partial DOM updates:
-
-```js
-Livewire.hook('partial.morph',  ({ startNode, endNode, component }) => {
-	// Runs just before partials in `component` are morphed
-    //
-    // startNode: the comment node marking the beginning of a partial in the DOM.
-    // endNode: the comment node marking the end of a partial in the DOM.
-})
-
-Livewire.hook('partial.morphed',  ({ startNode, endNode, component }) => {
-    // Runs after partials in `component` are morphed
-    //
-    // startNode: the comment node marking the beginning of a partial in the DOM.
-    // endNode: the comment node marking the end of a partial in the DOM.
-})
-```
-
-
 ## Interceptors
 
 > [!info] Looking for the old `commit` and `request` hooks?

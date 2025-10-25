@@ -64,8 +64,8 @@ These features exist in v4 but may need dedicated documentation pages or section
     - Examples: `<livewire:pages::dashboard />`
     - Suggested location: Components.md
 
-12. **Partial morph hooks**
-    - `Livewire.hook('partial.morph', ...)` and `partial.morphed`
+12. **Fragment morph hooks**
+    - `Livewire.hook('fragment.morph', ...)` and `fragment.morphed`
     - When to use vs regular morph hooks
     - Suggested location: JavaScript.md (hooks section)
 

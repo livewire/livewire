@@ -78,7 +78,7 @@ class MultiFileParser extends Parser
         $scriptContents = trim($this->scriptPortion);
 
         return <<<JS
-        export function run(\$wire, \$js, \$intercept) {
+        export function run(\$wire) {
             {$scriptContents}
         }
         JS;

@@ -187,7 +187,7 @@ class SingleFileParser extends Parser
 
         return <<<JS
         {$hoistedImports}
-        export function run(\$wire, \$js, \$intercept) {
+        export function run(\$wire) {
             {$scriptContents}
         }
         JS;

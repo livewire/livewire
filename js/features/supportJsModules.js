@@ -10,8 +10,6 @@ on('effect', ({ component, effects }) => {
         import(path).then(module => {
             module.run.call(component.$wire, [
                 component.$wire,
-                component.$wire.$js,
-                component.$wire.$intercept
             ]);
         });
     }

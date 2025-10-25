@@ -320,25 +320,6 @@ Livewire.interceptRequest(({ request, onResponse, onSuccess, onError, onFailure 
 
 For complete documentation on the new interceptor system, see the [JavaScript Interceptors documentation](/docs/javascript#interceptors).
 
-### New JavaScript hooks for partial morphing
-
-The existing `Livewire.hook('morph', ...)` hook continues to work for full component morphs. However, for islands and slots that use partial morphing, you'll need to use the new partial morph hooks:
-
-```js
-// Runs before a partial is morphed (islands, slots, etc.)
-Livewire.hook('partial.morph', ({ startNode, endNode, component }) => {
-    // startNode: comment node marking the beginning of the partial
-    // endNode: comment node marking the end of the partial
-})
-
-// Runs after a partial is morphed
-Livewire.hook('partial.morphed', ({ startNode, endNode, component }) => {
-    // Use this for cleanup or initialization after partial updates
-})
-```
-
-These hooks are essential if you're integrating third-party libraries that need to know when specific DOM regions are updated.
-
 ## New features in v4
 
 Livewire v4 introduces several powerful new features you can start using immediately:
