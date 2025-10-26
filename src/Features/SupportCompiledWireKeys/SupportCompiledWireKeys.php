@@ -116,9 +116,32 @@ class SupportCompiledWireKeys extends ComponentHook
             // The above view is then compiled into a compiled view in the cache directory, so we need to
             // remove that compiled view as well, after the key string has been rendered...
             @unlink($compiler->getCompiledPath($keyStringPath));
+
+            // The `deleteCachedView: true` will remove the view file from the cache directory, but it will
+            // not remove the compiled view file name from the component $bladeViewCache property, so we
+            // need to do that manually otherwise it throws an exception...
+            static::removeBladeComponentViewCacheForView($keyStringPath);
         }
 
         static::$currentLoop['key'] = $key;
+    }
+
+    public static function removeBladeComponentViewCacheForView($viewPath)
+    {
+        $reflectionProperty = new \ReflectionProperty(\Illuminate\View\Component::class, 'bladeViewCache');
+        $reflectionProperty->setAccessible(true);
+
+        $bladeViewCache = $reflectionProperty->getValue();
+
+        collect($bladeViewCache)->each(function($value, $key) use ($viewPath, &$bladeViewCache) {
+            $filename = '__components::'.basename($viewPath, '.blade.php');
+
+            if ($value === $filename) {
+                unset($bladeViewCache[$key]);
+            }
+        });
+
+        $reflectionProperty->setValue($bladeViewCache);
     }
 
     public static function processComponentKey($component)
