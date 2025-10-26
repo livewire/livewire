@@ -377,7 +377,7 @@ class Finder
     protected function hasValidMultiFileComponentSource(string $dir, string $fileBaseName): bool
     {
         return file_exists($dir . '/' . $fileBaseName . '.php')
-            || file_exists($dir . '/' . $fileBaseName . '.blade.php');
+            && file_exists($dir . '/' . $fileBaseName . '.blade.php');
     }
 
     public function resolveSingleFileComponentPathForCreation(string $name): string

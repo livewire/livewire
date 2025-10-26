@@ -228,6 +228,36 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(__DIR__ . '/Fixtures/self-named-component/self-named-component.blade.php', $path);
     }
 
+    public function test_can_add_and_resolve_nested_index_single_file_component()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(path: __DIR__ . '/Fixtures');
+
+        $name = $finder->normalizeName('nested-view-based.index-named-component');
+
+        $this->assertEquals('nested-view-based.index-named-component', $name);
+
+        $path = $finder->resolveSingleFileComponentPath('nested-view-based.index-named-component');
+
+        $this->assertEquals(__DIR__ . '/Fixtures/nested-view-based/index-named-component/index.blade.php', $path);
+    }
+
+    public function test_can_add_and_resolve_nested_self_named_single_file_component()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(path: __DIR__ . '/Fixtures');
+
+        $name = $finder->normalizeName('nested-view-based.self-named-component');
+
+        $this->assertEquals('nested-view-based.self-named-component', $name);
+
+        $path = $finder->resolveSingleFileComponentPath('nested-view-based.self-named-component');
+
+        $this->assertEquals(__DIR__ . '/Fixtures/nested-view-based/self-named-component/self-named-component.blade.php', $path);
+    }
+
     public function test_can_add_and_resolve_named_multi_file_component()
     {
         $finder = new Finder();
@@ -318,6 +348,21 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(__DIR__ . '/Fixtures/⚡︎multi-file-zap-component', $path);
     }
 
+    public function test_it_does_not_resolve_a_multi_file_component_for_a_nested_single_file_self_named_component()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(path: __DIR__ . '/Fixtures');
+
+        $name = $finder->normalizeName('nested-view-based.self-named-component');
+
+        $this->assertEquals('nested-view-based.self-named-component', $name);
+
+        $path = $finder->resolveMultiFileComponentPath('nested-view-based.self-named-component');
+
+        $this->assertEquals('', $path);
+    }
+
     public function test_can_resolve_class_component_with_namespace()
     {
         $finder = new Finder();
@@ -404,6 +449,28 @@ class UnitTest extends \Tests\TestCase
         $path = $finder->resolveSingleFileComponentPath('admin::self-named-component');
 
         $this->assertEquals(__DIR__ . '/Fixtures/self-named-component/self-named-component.blade.php', $path);
+    }
+
+    public function test_can_resolve_nested_index_single_file_component_with_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', path: __DIR__ . '/Fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('admin::nested-view-based.index-named-component');
+
+        $this->assertEquals(__DIR__ . '/Fixtures/nested-view-based/index-named-component/index.blade.php', $path);
+    }
+
+    public function test_can_resolve_nested_self_named_single_file_component_with_namespace()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', path: __DIR__ . '/Fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('admin::nested-view-based.self-named-component');
+
+        $this->assertEquals(__DIR__ . '/Fixtures/nested-view-based/self-named-component/self-named-component.blade.php', $path);
     }
 
     public function test_returns_null_for_single_file_component_with_unknown_namespace()
