@@ -665,4 +665,50 @@ class BrowserTest extends BrowserTestCase
             ->assertPresent('@root-increment')
             ;
     }
+
+    public function test_island_with_lazy_and_always_updates_with_the_component_when_the_component_makes_a_request()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <button type="button" wire:click="increment" dusk="root-increment">Count: {{ $count }}</button>
+
+                    @island(lazy: true, always: true)
+                        <button type="button" wire:click="increment" dusk="island-increment">Island Count: {{ $count }}</button>
+                    @endisland
+                </div>
+
+                @script
+                <script>
+                    window.requestCount = 0
+
+                    this.intercept(() => {
+                        window.requestCount++
+                    })
+                </script>
+                @endscript
+                HTML;
+            }
+        }])
+            ->waitForLivewireToLoad()
+            ->waitForText('Island Count: 0')
+            ->assertScript('window.requestCount', 1) // Initial lazy island load
+            ->assertSeeIn('@root-increment', 'Count: 0')
+            ->assertSeeIn('@island-increment', 'Island Count: 0')
+            ->tap(fn ($b) => $b->script('window.requestCount = 0')) // Reset counter
+            ->waitForLivewire()->click('@root-increment')
+            ->pause(100)
+            ->assertScript('window.requestCount', 1) // Should be only 1 request for both component and island
+            ->assertSeeIn('@root-increment', 'Count: 1')
+            ->assertSeeIn('@island-increment', 'Island Count: 1')
+            ;
+    }
 }

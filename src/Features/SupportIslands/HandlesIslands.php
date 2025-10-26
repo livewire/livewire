@@ -51,6 +51,8 @@ trait HandlesIslands
         // If no name is provided, use the token...
         $name = $name ?? $token;
 
+        ray('renderIslandDirective', $name, $token, $lazy, $always, $this->islandIsMounting());
+
         if ($this->islandIsMounting()) {
             $this->storeIsland($name, $token);
 
@@ -73,13 +75,13 @@ trait HandlesIslands
             }
         }
 
-        if ($lazy) {
+        if ($lazy && $this->islandIsMounting()) {
             $renderedContent = $this->renderIslandView($name, $token, [
                 '__placeholder' => '',
             ]);
 
             $renderedContent = '<div wire:intersect="__lazyLoadIsland">' . $renderedContent . '</div>';
-        } elseif ($defer) {
+        } elseif ($defer && $this->islandIsMounting()) {
             $renderedContent = $this->renderIslandView($name, $token, [
                 '__placeholder' => '',
             ]);
