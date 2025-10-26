@@ -51,8 +51,6 @@ trait HandlesIslands
         // If no name is provided, use the token...
         $name = $name ?? $token;
 
-        ray('renderIslandDirective', $name, $token, $lazy, $always, $this->islandIsMounting());
-
         if ($this->islandIsMounting()) {
             $this->storeIsland($name, $token);
 
