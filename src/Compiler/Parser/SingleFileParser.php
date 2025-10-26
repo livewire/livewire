@@ -56,6 +56,9 @@ class SingleFileParser extends Parser
         // Remove @script/@endscript blocks (let Livewire handle these normally)
         $viewContents = preg_replace('/@script\s*.*?@endscript/s', '', $viewContents);
 
+        // Remove @assets/@endassets blocks (let Livewire handle these normally)
+        $viewContents = preg_replace('/@assets\s*.*?@endassets/s', '', $viewContents);
+
         // Find script tags that are at the start of a line
         $pattern = '/(?:^|\n)\s*(<script\b[^>]*>.*?<\/script>)/s';
         preg_match_all($pattern, $viewContents, $matches);

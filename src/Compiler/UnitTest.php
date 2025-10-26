@@ -112,6 +112,33 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('{{ $message }}', $viewContents);
     }
 
+    public function test_wont_parse_scripts_inside_assets_or_script_directives()
+    {
+        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component-with-assets-and-script-directives.blade.php');
+
+        $classContents = $parser->generateClassContents('view-path.blade.php');
+        $scriptContents = $parser->generateScriptContents();
+        $viewContents = $parser->generateViewContents();
+
+        $this->assertStringContainsString('new class extends Component', $classContents);
+        $this->assertStringContainsString('use Livewire\Component;', $classContents);
+        $this->assertStringContainsString("return app('view')->file('view-path.blade.php');", $classContents);
+        $this->assertStringNotContainsString('new class extends Component', $viewContents);
+
+        // Scripts inside @assets/@endassets should NOT be extracted
+        $this->assertNull($scriptContents);
+        $this->assertStringNotContainsString("console.log('This should NOT be extracted - it is inside @assets');", $classContents);
+        $this->assertStringNotContainsString("console.log('This should NOT be extracted - it is inside @script');", $classContents);
+
+        // Both scripts should remain in the view portion when wrapped in directives
+        $this->assertStringContainsString("console.log('This should NOT be extracted - it is inside @assets');", $viewContents);
+        $this->assertStringContainsString("console.log('This should NOT be extracted - it is inside @script');", $viewContents);
+        $this->assertStringContainsString('@assets', $viewContents);
+        $this->assertStringContainsString('@endassets', $viewContents);
+        $this->assertStringContainsString('@script', $viewContents);
+        $this->assertStringContainsString('@endscript', $viewContents);
+    }
+
     public function test_script_hoists_imports_and_wraps_in_export_function()
     {
         $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component-with-imports.blade.php');

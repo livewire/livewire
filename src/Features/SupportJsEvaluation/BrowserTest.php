@@ -152,7 +152,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                         @script
                         <script>
-                            $js('test', () => {
+                            this.$js('test', () => {
                                 window.test = 'through wire:click'
                             })
                         </script>
@@ -178,7 +178,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                         @script
                         <script>
-                            $js.test = (param1, param2) => {
+                            this.$js.test = (param1, param2) => {
                                 console.log('test', param1, param2);
                                 window.test = `through wire:click with params: ${param1}, ${param2}`
                             }
@@ -208,7 +208,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                         @script
                         <script>
-                            $js('test', () => {
+                            this.$js('test', () => {
                                 window.test = 'through backend js method'
                             })
                         </script>
@@ -237,7 +237,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                         @script
                         <script>
-                            $js('test', (param1, param2) => {
+                            this.$js('test', (param1, param2) => {
                                 window.test = `through backend js method with params: ${param1}, ${param2}`
                             })
                         </script>
