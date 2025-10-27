@@ -1,9 +1,12 @@
 Livewire is a Laravel package, so you will need to have a Laravel application up and running before you can install and use Livewire. If you need help setting up a new Laravel application, please see the [official Laravel documentation](https://laravel.com/docs/installation).
 
+> [!warning] Livewire v4 is currently in beta
+> Livewire v4 is still in active development and not yet stable. It's recommended to test thoroughly in a development environment before upgrading production applications. Breaking changes may occur between beta releases.
+
 To install Livewire, open your terminal and navigate to your Laravel application directory, then run the following command:
 
 ```shell
-composer require livewire/livewire
+composer require livewire/livewire:^4.0@beta
 ```
 
 That's it — really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
