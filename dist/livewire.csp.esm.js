@@ -2920,7 +2920,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.15.0",
+      version: "3.15.1",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3739,7 +3739,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let evaluate2 = generateRuntimeFunction(expression);
         let returnValue = evaluate2({
           scope: completeScope,
-          allowGlobal: true,
+          allowGlobal: false,
           forceBindingRootScopeToFunctions: true
         });
         if (shouldAutoEvaluateFunctions && typeof returnValue === "function") {
@@ -5890,9 +5890,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/sort/dist/module.cjs.js
+// node_modules/@alpinejs/sort/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/sort/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/sort/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -8647,9 +8647,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
