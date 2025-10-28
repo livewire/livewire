@@ -91,6 +91,46 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_data_loading_attribute_is_removed_from_an_element_when_its_request_is_cancelled()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    usleep(400 * 1000); // 500ms
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="slowRequest" dusk="slow-request">Slow Request</button>
+                    </div>
+
+                    @script
+                    <script>
+                        this.intercept(({ actions, cancel }) => {
+                            setTimeout(() => cancel(), 50)
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+        ->assertAttributeMissing('@slow-request', 'data-loading')
+
+        ->click('@slow-request')
+
+        // Wait for the request to start...
+        ->pause(10)
+        ->assertAttribute('@slow-request', 'data-loading', 'true')
+
+        // The interceptor cancels the request after 200ms...
+        ->pause(50)
+        ->assertAttributeMissing('@slow-request', 'data-loading')
+        ;
+    }
+
     public function test_data_loading_attribute_is_not_added_to_poll_directives()
     {
         Livewire::visit([
