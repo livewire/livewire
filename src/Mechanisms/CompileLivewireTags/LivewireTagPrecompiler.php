@@ -127,7 +127,7 @@ class LivewireTagPrecompiler extends ComponentTagCompiler
 
             $output .= "<?php \$__slots['default'] = ob_get_clean(); ?>" . PHP_EOL;
 
-            $output .= '@livewire($__component, $__attributes, $__key, $__slots ?? [])' . PHP_EOL;
+            $output .= '@livewire($__component, $__attributes, key($__key), $__slots ?? [])' . PHP_EOL;
 
             $output .= '<?php if (isset($__componentOriginal)) { $__component = $__componentOriginal; unset($__componentOriginal); } ?>' . PHP_EOL;
             $output .= '<?php if (isset($__keyOriginal)) { $__key = $__keyOriginal; unset($__keyOriginal); } ?>' . PHP_EOL;
