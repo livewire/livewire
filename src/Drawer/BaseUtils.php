@@ -4,6 +4,8 @@ namespace Livewire\Drawer;
 
 class BaseUtils
 {
+    protected static $reflectionCache = [];
+
     static function isSyntheticTuple($payload) {
         return is_array($payload)
             && count($payload) === 2
@@ -19,10 +21,59 @@ class BaseUtils
     }
 
     static function getPublicPropertiesDefinedOnSubclass($target) {
-        return static::getPublicProperties($target, function ($property) {
-            // Filter out any properties from the first-party Component class...
-            return $property->getDeclaringClass()->getName() !== \Livewire\Component::class && $property->getDeclaringClass()->getName() !== \Livewire\Volt\Component::class;
-        });
+        $class = get_class($target);
+
+        if (!isset(static::$reflectionCache[$class])) {
+            static::$reflectionCache[$class] = static::reflectAndCachePropertyMetadata($target, function ($property) {
+                return $property->getDeclaringClass()->getName() !== \Livewire\Component::class
+                    && $property->getDeclaringClass()->getName() !== \Livewire\Volt\Component::class;
+            });
+        }
+
+        return static::extractPropertyValuesFromInstance($target, static::$reflectionCache[$class]);
+    }
+
+    protected static function reflectAndCachePropertyMetadata($target, $filter = null)
+    {
+        return collect((new \ReflectionObject($target))->getProperties())
+            ->filter(function ($property) {
+                return $property->isPublic() && ! $property->isStatic() && $property->isDefault();
+            })
+            ->filter($filter ?? fn () => true)
+            ->mapWithKeys(function ($property) {
+                $type = null;
+                if (method_exists($property, 'getType') && $property->getType()) {
+                    $type = method_exists($property->getType(), 'getName')
+                        ? $property->getType()->getName()
+                        : null;
+                }
+
+                return [$property->getName() => [
+                    'name' => $property->getName(),
+                    'type' => $type,
+                ]];
+            })
+            ->all();
+    }
+
+    protected static function extractPropertyValuesFromInstance($target, $cachedMetadata)
+    {
+        $properties = [];
+        $reflection = new \ReflectionObject($target); // One reflection object for all properties
+
+        foreach ($cachedMetadata as $propertyName => $meta) {
+            $property = $reflection->getProperty($propertyName);
+
+            if (method_exists($property, 'isInitialized') && !$property->isInitialized($target)) {
+                $value = ($meta['type'] === 'array') ? [] : null;
+            } else {
+                $value = $property->getValue($target);
+            }
+
+            $properties[$propertyName] = $value;
+        }
+
+        return $properties;
     }
 
     static function getPublicProperties($target, $filter = null)

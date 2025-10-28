@@ -646,6 +646,33 @@ public function test_cant_create_post_without_title_and_content()
 
 For more information on other testing utilities provided by Livewire, check out the [testing documentation](/docs/testing).
 
+## Accessing errors in JavaScript
+
+Livewire provides a `$errors` magic property for client-side access to validation errors:
+
+```blade
+<form wire:submit="save">
+    <input type="email" wire:model="email">
+
+    <div wire:show="$errors.has('email')">
+        <span wire:text="$errors.first('email')"></span>
+    </div>
+
+    <button type="submit">Save</button>
+</form>
+```
+
+### Available methods
+
+- `$errors.has('field')` - Check if a field has errors
+- `$errors.first('field')` - Get the first error message for a field
+- `$errors.get('field')` - Get all error messages for a field
+- `$errors.all()` - Get all errors for all fields
+- `$errors.clear()` - Clear all errors
+- `$errors.clear('field')` - Clear errors for a specific field
+
+When using Alpine.js, access `$errors` through `$wire.$errors`.
+
 ## Deprecated `[#Rule]` attribute
 
 When Livewire v3 first launched, it used the term "Rule" instead of "Validate" for it's validation attributes (`#[Rule]`).

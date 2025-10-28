@@ -212,3 +212,57 @@ To customize the amount of time to delay the loading indicator, you can use one 
 <div wire:loading.delay.longer>...</div>   <!-- 500ms -->
 <div wire:loading.delay.longest>...</div>  <!-- 1000ms -->
 ```
+
+## Styling with data-loading
+
+Livewire automatically adds a `data-loading` attribute to any element that triggers a network request. This allows you to style loading states directly with CSS or Tailwind without using `wire:loading` directives.
+
+### Using Tailwind's data attribute variant
+
+You can use Tailwind's `data-[loading]` variant to apply styles when an element is loading:
+
+```blade
+<button
+    wire:click="save"
+    class="data-[loading]:opacity-50 data-[loading]:pointer-events-none"
+>
+    Save Changes
+</button>
+```
+
+When the button is clicked and the request is in-flight, it will automatically become semi-transparent and unclickable.
+
+### Using CSS
+
+If you're not using Tailwind, you can target the `data-loading` attribute with standard CSS:
+
+```css
+[data-loading] {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+button[data-loading] {
+    background-color: #ccc;
+    cursor: wait;
+}
+```
+
+### Styling parent and child elements
+
+You can style parent elements when a child has `data-loading` using the `has-data-loading:` variant:
+
+```blade
+<div class="has-data-[loading]:opacity-50">
+    <button wire:click="save">Save</button>
+</div>
+```
+
+Or style child elements from a parent with `data-loading` using the `in-data-loading:` variant:
+
+```blade
+<button wire:click="save">
+    <span class="in-data-[loading]:hidden">Save</span>
+    <span class="hidden in-data-[loading]:block">Saving...</span>
+</button>
+```

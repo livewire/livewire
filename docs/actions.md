@@ -95,6 +95,18 @@ When `wire:confirm` is added to an element containing a Livewire action, when a 
 
 For more information, visit the [`wire:confirm` documentation page](/docs/wire-confirm).
 
+## Parallel execution
+
+By default, actions within the same component are serialized: if one is in-flight, subsequent actions are queued until it finishes.
+
+Appending the `.async` modifier allows actions to run in parallel instead of being queued. This is helpful for fire-and-forget operations where you don't want to block subsequent actions.
+
+```blade
+<button type="button" wire:click.async="logActivity">Track Event</button>
+```
+
+For more information about when and how to use async actions safely, see the [parallel execution section](/docs/actions#parallel-execution-with-async).
+
 ## Event listeners
 
 Livewire supports a variety of event listeners, allowing you to respond to various types of user interactions:
@@ -536,11 +548,11 @@ class ShowPost extends Component
 
 @script
 <script>
-    $js('bookmark', () => {
+    $js.bookmark = () => {
         $wire.bookmarked = !$wire.bookmarked
 
         $wire.bookmarkPost()
-    })
+    }
 </script>
 @endscript
 ```
@@ -594,9 +606,9 @@ class CreatePost extends Component
 
 @script
 <script>
-    $js('onPostSaved', () => {
+    $js.onPostSaved = () => {
         alert('Your post has been saved successfully!')
-    })
+    }
 </script>
 @endscript
 ```
@@ -757,6 +769,192 @@ class ShowPost extends Component
     }
 }
 ```
+
+You can also skip render from an element directly using the `.renderless` modifier:
+
+```blade
+<button type="button" wire:click.renderless="incrementViewCount">
+```
+
+## Parallel execution with async
+
+By default, Livewire serializes actions within the same component to ensure predictable state updates. If one action is in-flight, subsequent actions are queued and wait for it to finish. While this prevents race conditions and keeps your component's state consistent, there are times when you want actions to run immediately without waiting—in parallel rather than sequentially.
+
+The `#[Async]` attribute and `wire:click.async` modifier tell Livewire to execute an action in parallel, bypassing the normal request queue.
+
+### Using the async modifier
+
+You can make any action async by adding the `.async` modifier to your event listener:
+
+```blade
+<button wire:click.async="logActivity">Track Event</button>
+```
+
+When this button is clicked, the `logActivity` action will fire immediately, even if other requests are in-flight. It won't block subsequent requests, and other requests won't block it.
+
+### Using the Async attribute
+
+Alternatively, you can mark a method as async using the `#[Async]` attribute. This makes the action async regardless of where it's called from:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Attributes\Async;
+use Livewire\Component;
+
+class ShowPost extends Component
+{
+    public Post $post;
+
+    #[Async]
+    public function logActivity()
+    {
+        Activity::log('post-viewed', $this->post);
+    }
+
+    // ...
+}
+```
+
+```blade
+<div x-intersect="$wire.logActivity()">
+    <!-- ... -->
+</div>
+```
+
+In this example, when the element enters the viewport, `logActivity()` is called asynchronously without blocking any other in-flight requests.
+
+### When to use async actions
+
+Async actions are useful for fire-and-forget operations where the result doesn't affect what's displayed on the page. Common use cases include:
+
+- **Analytics and logging:** Tracking user behavior, page views, or interactions
+- **Background operations:** Triggering jobs, sending notifications, or updating external services
+- **JavaScript-only results:** Fetching data via `await $wire.getData()` that will be consumed purely by JavaScript
+
+Here's an example of tracking when a user clicks on an external link:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Attributes\Async;
+use Livewire\Component;
+
+class ExternalLink extends Component
+{
+    public $url;
+
+    #[Async]
+    public function trackClick()
+    {
+        Analytics::track('external-link-clicked', [
+            'url' => $this->url,
+            'user_id' => auth()->id(),
+        ]);
+    }
+
+    // ...
+}
+```
+
+```blade
+<a href="{{ $url }}" target="_blank" wire:click.async="trackClick">
+    Visit External Site
+</a>
+```
+
+Because the tracking happens asynchronously, the user's click isn't delayed by the network request.
+
+### When NOT to use async actions
+
+> [!warning] Async actions and state mutations don't mix
+> **Never use async actions if they modify component state that's reflected in your UI.** Because async actions run in parallel, you can end up with unpredictable race conditions where your component's state diverges across multiple simultaneous requests.
+
+Consider this dangerous example:
+
+```php
+// Warning: This snippet demonstrates what NOT to do...
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Attributes\Async;
+use Livewire\Component;
+
+class Counter extends Component
+{
+    public $count = 0;
+
+    #[Async] // Don't do this!
+    public function increment()
+    {
+        $this->count++; // State mutation in an async action
+    }
+
+    // ...
+}
+```
+
+If a user rapidly clicks the increment button, multiple async requests will fire simultaneously. Each request starts with the same initial `$count` value, leading to lost updates. You might click 5 times but only see the counter increment by 1.
+
+**The rule of thumb:** Only use async for actions that perform pure side effects—operations that don't change any properties that affect your component's view.
+
+### Fetching data for JavaScript
+
+Another valid use case is fetching data from the server that will be consumed entirely by JavaScript, without affecting your component's rendered state:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Attributes\Async;
+use Livewire\Component;
+
+class SearchPosts extends Component
+{
+    #[Async]
+    public function fetchSuggestions($query)
+    {
+        return Post::where('title', 'like', "%{$query}%")
+            ->limit(5)
+            ->pluck('title');
+    }
+
+    // ...
+}
+```
+
+```blade
+<div x-data="{ suggestions: [] }">
+    <input
+        type="text"
+        x-on:input.debounce="suggestions = await $wire.fetchSuggestions($event.target.value)"
+    >
+
+    <template x-for="suggestion in suggestions">
+        <div x-text="suggestion"></div>
+    </template>
+</div>
+```
+
+Because the suggestions are stored purely in Alpine's `suggestions` data and never in Livewire's component state, it's safe to fetch them asynchronously.
+
+## Preserving scroll position
+
+When updating content, the browser may jump to a different scroll position. The `.preserve-scroll` modifier maintains the current scroll position during updates:
+
+```blade
+<button wire:click.preserve-scroll="loadMore">Load More</button>
+
+<select wire:model.live.preserve-scroll="category">...</select>
+```
+
+This is useful for infinite scroll, filters, and dynamic content updates where you don't want the page to jump.
 
 ## Security concerns
 

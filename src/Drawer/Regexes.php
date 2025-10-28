@@ -123,7 +123,7 @@ class Regexes
     static $slotOpeningTag = "
         <
             \s*
-            x[\-\:]slot
+            livewire[\-\:]slot
             (?:\:(?<inlineName>\w+(?:-\w+)*))?
             (?:\s+(:?)name=(?<name>(\"[^\"]+\"|\\\'[^\\\']+\\\'|[^\s>]+)))?
             (?<attributes>
@@ -159,7 +159,7 @@ class Regexes
         >
     ";
 
-    static $slotClosingTag = '<\/\s*x[\-\:]slot[^>]*>';
+    static $slotClosingTag = '<\/\s*livewire[\-\:]slot[^>]*>';
 
     static $bladeDirective = "\B@(@?\w+(?:::\w+)?)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?";
 

@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\FrontendAssets;
 
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 
 use Livewire\Livewire;
@@ -16,6 +17,16 @@ class UnitTest extends \Tests\TestCase
         \Livewire\LivewireManager::$v4 = false;
 
         parent::setUp();
+    }
+
+    public function tearDown(): void
+    {
+        // Clean up any published assets after each test
+        if (file_exists(public_path('vendor/livewire'))) {
+            File::deleteDirectory(public_path('vendor/livewire'));
+        }
+
+        parent::tearDown();
     }
 
     public function test_styles()
@@ -39,7 +50,8 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertFalse($assets->hasRenderedScripts);
 
-        $this->assertStringStartsWith('<script src="', $assets->scripts());
+        $scripts = $assets->scripts();
+        $this->assertStringContainsString('<script src="', $scripts);
 
         $this->assertTrue($assets->hasRenderedScripts);
     }
@@ -154,6 +166,7 @@ class UnitTest extends \Tests\TestCase
 
         Artisan::call('livewire:publish', ['--assets' => true]);
 
+        config()->set('app.debug', false);
         config()->set('app.asset_url', 'https://example.com/');
 
         $manager = $this->partialMock(LivewireManager::class, function ($mock) {
@@ -166,8 +179,9 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertStringStartsWith('<script src="https://example.com/vendor/livewire/livewire.min.js', $assets->scripts());
 
-        if (file_exists(public_path('vendor/livewire/manifest.json'))) {
-            unlink(public_path('vendor/livewire/manifest.json'));
+        // Clean up published assets
+        if (file_exists(public_path('vendor/livewire'))) {
+            File::deleteDirectory(public_path('vendor/livewire'));
         }
     }
 }

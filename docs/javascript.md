@@ -32,9 +32,9 @@ Here's a more full example where you can do something like register a JavaScript
 
 @script
 <script>
-    $js('increment', () => {
+    $js.increment = () => {
         console.log('increment')
-    })
+    }
 </script>
 @endscript
 ```
@@ -330,6 +330,7 @@ let $wire = {
 
     // Define a JavaScript action...
     // Usage: $wire.$js('increment', () => { ... })
+    // Usage: $wire.$js.increment = () => { ... }
     $js(name, callback) { ... },
 
     // Entangle the value of a Livewire property with a different,
@@ -384,6 +385,11 @@ let $wire = {
 
     // Remove an upload after it's been temporarily uploaded but not saved...
     $removeUpload(name, tmpFilename, finish, error) { ... },
+
+    // Register an interceptor for this component instance
+    // Usage: $wire.intercept(({ onSend, onSuccess }) => { ... })
+    // Or scope to specific action: $wire.intercept('save', ({ onSuccess }) => { ... })
+    intercept(methodOrCallback, callback) { ... },
 
     // Retrieve the underlying "component" object...
     __instance() { ... },
@@ -585,113 +591,244 @@ Livewire.hook('morphed',  ({ el, component }) => {
 })
 ```
 
-**Partial morph hooks**
+## Interceptors
 
-Partials are morphed differently than standard Livewire requests. Here are the additional Livewire events triggered by partial DOM updates:
+> [!info] Looking for the old `commit` and `request` hooks?
+> These have been replaced by the more powerful interceptor system. See the [upgrade guide](/docs/upgrading#javascript-hook-changes) for migration details.
 
-```js
-Livewire.hook('partial.morph',  ({ startNode, endNode, component }) => {
-	// Runs just before partials in `component` are morphed
-    //
-    // startNode: the comment node marking the beginning of a partial in the DOM.
-    // endNode: the comment node marking the end of a partial in the DOM.
-})
+Livewire's interceptor system provides powerful hooks into the request lifecycle, allowing you to intercept and manipulate network requests at various stages.
 
-Livewire.hook('partial.morphed',  ({ startNode, endNode, component }) => {
-    // Runs after partials in `component` are morphed
-    //
-    // startNode: the comment node marking the beginning of a partial in the DOM.
-    // endNode: the comment node marking the end of a partial in the DOM.
-})
-```
+The interceptor system is organized into multiple layers:
+- **Message interceptors** - Hook into component state updates before they're bundled into requests
+- **Request interceptors** - Hook into the actual HTTP requests to the server
+- **Component interceptors** - Scope interceptors to specific components
 
-### Commit hooks
+### Message interceptors
 
-Because Livewire requests contain multiple components, _request_ is too broad of a term to refer to an individual component's request and response payload. Instead, internally, Livewire refers to component updates as _commits_ — in reference to _committing_ component state to the server.
-
-These hooks expose `commit` objects. You can learn more about their schema by reading [the commit object documentation](#the-commit-payload).
-
-#### Preparing commits
-
-The `commit.prepare` hook will be triggered immediately before a request is sent to the server. This gives you a chance to add any last minute updates or actions to the outgoing request:
+Message interceptors allow you to hook into the lifecycle of individual component updates before they are sent to the server. A "message" represents a single component's state changes and method calls.
 
 ```js
-Livewire.hook('commit.prepare', ({ component }) => {
-    // Runs before commit payloads are collected and sent to the server...
-})
-```
+Livewire.interceptMessage(({ message, component, onSend, onCancel, onFailure, onError, onSuccess, onFinish, cancel }) => {
+    // This runs when a component message is created, but before
+    // it's bundled into a request and sent to the server
 
-#### Intercepting commits
+    // Cancel the message if needed
+    if (shouldCancel) {
+        cancel()
 
-Every time a Livewire component is sent to the server, a _commit_ is made. To hook into the lifecycle and contents of an individual commit, Livewire exposes a `commit` hook.
+        return
+    }
 
-This hook is extremely powerful as it provides methods for hooking into both the request and response of a Livewire commit:
-
-```js
-Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
-    // Runs immediately before a commit's payload is sent to the server...
-
-    respond(() => {
-        // Runs after a response is received but before it's processed...
+    onSend(({ payload }) => {
+        // Runs immediately after the request containing this message is sent
     })
 
-    succeed(({ snapshot, effects }) => {
-        // Runs after a successful response is received and processed
-        // with a new snapshot and list of effects...
+    onCancel(() => {
+        // Runs if the message is cancelled for any reason
     })
 
-    fail(() => {
-        // Runs if some part of the request failed...
-    })
-})
-```
-
-## Request hooks
-
-If you would like to instead hook into the entire HTTP request going and returning from the server, you can do so using the `request` hook:
-
-```js
-Livewire.hook('request', ({ url, options, payload, respond, succeed, fail }) => {
-    // Runs after commit payloads are compiled, but before a network request is sent...
-
-    respond(({ status, response }) => {
-        // Runs when the response is received...
-        // "response" is the raw HTTP response object
-        // before await response.text() is run...
+    onFailure(({ error }) => {
+        // Runs when there's a network-level error
     })
 
-    succeed(({ status, json }) => {
-        // Runs when the response is received...
-        // "json" is the JSON response object...
+    onError(({ response, responseBody, preventDefault }) => {
+        // Runs when the server returns an error status (400, 500, etc.)
+
+        if (response.status === 403) {
+            // Handle authorization errors specially
+            preventDefault() // Prevent Livewire's default error handling
+
+            showCustomAuthDialog()
+        }
     })
 
-    fail(({ status, content, preventDefault }) => {
-        // Runs when the response has an error status code...
-        // "preventDefault" allows you to disable Livewire's
-        // default error handling...
-        // "content" is the raw response content...
+    onSuccess(({ payload, onSync, onMorph, onRender }) => {
+        // Runs after a successful response, before processing
+
+        onSync(() => {
+            // Runs after server data is merged into component state
+        })
+
+        onMorph(() => {
+            // Runs after HTML is morphed into the DOM
+        })
+
+        onRender(() => {
+            // Runs after rendering is complete (after a browser tick)
+        })
+    })
+
+    onFinish(() => {
+        // Always runs when message processing is complete
+        // (whether successful, failed, or cancelled)
     })
 })
 ```
 
-### Customizing page expiration behavior
+#### Real-world example: Loading states
 
-If the default page expired dialog isn't suitable for your application, you can implement a custom solution using the `request` hook:
+Here's how you might implement custom loading indicators for specific components:
 
-```html
+```js
+Livewire.interceptMessage(({ component, onSend, onFinish }) => {
+    onSend(() => {
+        component.el.classList.add('is-loading')
+    })
+
+    onFinish(() => {
+        component.el.classList.remove('is-loading')
+    })
+})
+```
+
+### Request interceptors
+
+Request interceptors operate at the HTTP level, allowing you to intercept the actual network requests that may contain multiple component messages. This is useful for implementing features like request queuing, retry logic, or global error handling.
+
+```js
+Livewire.interceptRequest(({ request, onSend, onAbort, onFailure, onResponse, onParsed, onError, onRedirect, onDump, onSuccess, abort }) => {
+    // Runs when a request is created but before it's sent
+
+    // Abort the request if needed
+    if (shouldAbort) {
+        abort()
+
+        return
+    }
+
+    onSend(({ responsePromise }) => {
+        // Runs immediately after fetch() is called
+    })
+
+    onAbort(() => {
+        // Runs if the request is aborted
+    })
+
+    onFailure(({ error }) => {
+        // Runs on network-level failures
+    })
+
+    onResponse(({ response }) => {
+        // Runs when any response is received
+    })
+
+    onParsed(({ response, responseBody }) => {
+        // Runs after the response body is parsed
+    })
+
+    onError(({ response, responseBody, preventDefault }) => {
+        // Runs on error status codes (400, 500, etc.)
+
+        if (response.status === 419) {
+            // Custom session expiration handling
+            preventDefault()
+
+            handleSessionExpired()
+        }
+    })
+
+    onRedirect(({ url, preventDefault }) => {
+        // Runs when the response triggers a redirect
+
+        // Optionally prevent the redirect
+        if (shouldPreventRedirect) {
+            preventDefault()
+        }
+    })
+
+    onDump(({ content, preventDefault }) => {
+        // Runs when the response contains debug dump content
+
+        // Optionally prevent the dump modal
+        preventDefault()
+
+        showCustomDumpViewer(content)
+    })
+
+    onSuccess(({ response, responseBody, responseJson }) => {
+        // Runs on successful responses before processing
+    })
+})
+```
+
+#### Real-world example: Global error handling
+
+Implement custom error handling for specific status codes:
+
+```js
+Livewire.interceptRequest(({ onError }) => {
+    onError(({ response, preventDefault }) => {
+        if (response.status === 419) {
+            // Session expired
+            preventDefault()
+
+            if (confirm('Your session has expired. Refresh the page?')) {
+                window.location.reload()
+            }
+        }
+
+        if (response.status === 403) {
+            // Forbidden
+            preventDefault()
+
+            alert('You do not have permission to perform this action')
+        }
+    })
+})
+```
+
+### Component interceptors
+
+Component interceptors allow you to register interceptors that only apply to specific component instances. This is useful for component-specific behaviors without affecting the global scope.
+
+```blade
+@script
 <script>
-    document.addEventListener('livewire:init', () => {
-        Livewire.hook('request', ({ fail }) => {
-            fail(({ status, preventDefault }) => {
-                if (status === 419) {
-                    confirm('Your custom page expiration behavior...')
+    // This interceptor only affects this component instance
+    $wire.intercept(({ onSend, onSuccess }) => {
+        onSend(() => {
+            $wire.$el.style.opacity = '0.5'
+        })
 
-                    preventDefault()
-                }
-            })
+        onSuccess(() => {
+            $wire.$el.style.opacity = '1'
         })
     })
 </script>
+@endscript
 ```
 
-With the above code in your application, users will receive a custom dialog when their session has expired.
+You can also scope interceptors to specific actions by passing the method name as the first argument:
+
+```blade
+@script
+<script>
+    // This interceptor only runs when $refresh is called
+    $wire.intercept('$refresh', ({ onSend, onSuccess }) => {
+        onSend(() => {
+            // Custom loading state for refresh actions
+            $wire.$el.classList.add('refreshing')
+        })
+
+        onSuccess(() => {
+            $wire.$el.classList.remove('refreshing')
+        })
+    })
+
+    // This interceptor only runs when the save method is called
+    $wire.intercept('save', ({ onSuccess, onError }) => {
+        onSuccess(() => {
+            // Show success message for save actions
+            showNotification('Saved successfully!')
+        })
+
+        onError(() => {
+            // Show error message for save actions
+            showNotification('Save failed!', 'error')
+        })
+    })
+</script>
+@endscript
+```
+
+This is particularly useful when you want different behaviors for different actions within the same component.

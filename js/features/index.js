@@ -11,16 +11,20 @@ import './supportDispatches';
  * Features where order does NOT matter:
  */
 import './supportDisablingFormsDuringRequest';
-import './supportPropsAndModelables';
 import './supportFileDownloads';
-import './supportLazyLoading';
 import './supportFileUploads';
 import './supportQueryString';
 import './supportLaravelEcho';
-import './supportIsolating';
 import './supportStreaming';
 import './supportRedirects';
 import './supportIslands';
 import './supportNavigate';
 import './supportEntangle';
 import './supportSlots';
+
+// V4-specific features
+import './supportDataLoading';
+import './supportPreserveScroll';
+import './supportWireIntersect';
+import './supportWireSort';
+import './supportJsModules';

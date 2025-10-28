@@ -1,8 +1,7 @@
 import { trigger } from "@/hooks"
-import { closestComponent } from "@/store"
+import { findComponentByEl } from "@/store"
 import Alpine from 'alpinejs'
-import { skipSlotContents } from "./features/supportSlots"
-import { skipIslandContents } from "./features/supportIslands"
+import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFragmentMarker } from "./fragment"
 
 export function morph(component, el, html) {
     let wrapperTag = el.parentElement
@@ -10,13 +9,19 @@ export function morph(component, el, html) {
         ? el.parentElement.tagName.toLowerCase()
         : 'div'
 
+    let customElement = customElements.get(wrapperTag)
+
+    // If the wrapper tag is a custom element, we can't instantiate it using the hyphenated
+    // tag name, so we need to get the name off the custom element instead...
+    wrapperTag = customElement ? customElement.name : wrapperTag
+
     let wrapper = document.createElement(wrapperTag)
 
     wrapper.innerHTML = html
     let parentComponent
 
     try {
-        parentComponent = closestComponent(el.parentElement)
+        parentComponent = findComponentByEl(el.parentElement)
     } catch (e) {}
 
     parentComponent && (wrapper.__livewire = parentComponent)
@@ -63,7 +68,7 @@ export function morph(component, el, html) {
     trigger('morphed', { el, component })
 }
 
-export function morphIsland(component, startNode, endNode, toHTML) {
+export function morphFragment(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement
     let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
 
@@ -78,7 +83,7 @@ export function morphIsland(component, startNode, endNode, toHTML) {
     let parentComponent
 
     try {
-        parentComponent = parentElement ? closestComponent(parentElement) : null
+        parentComponent = parentElement ? findComponentByEl(parentElement) : null
     } catch (e) {}
 
     if (parentComponent) {
@@ -97,8 +102,22 @@ export function morphIsland(component, startNode, endNode, toHTML) {
 function getMorphConfig(component) {
     return {
         updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
-            skipSlotContents(el, toEl, skipUntil)
-            skipIslandContents(component, el, toEl, skipUntil)
+            // Skip fragments...
+            if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
+                let metadata = extractFragmentMetadataFromMarkerNode(toEl)
+
+                if (metadata.mode !== 'morph') {
+                    skipUntil(node => {
+                        if (isEndFragmentMarker(node)) {
+                            let endMarkerMetadata = extractFragmentMetadataFromMarkerNode(node)
+
+                            return endMarkerMetadata.token === metadata.token
+                        }
+
+                        return false
+                    })
+                }
+            }
 
             if (isntElement(el)) return
 
@@ -147,7 +166,7 @@ function getMorphConfig(component) {
         added: (el) => {
             if (isntElement(el)) return
 
-            const closestComponentId = closestComponent(el).id
+            const findComponentByElId = findComponentByEl(el).id
 
             trigger('morph.added', { el })
         },
@@ -155,11 +174,11 @@ function getMorphConfig(component) {
         key: (el) => {
             if (isntElement(el)) return
 
-            return el.hasAttribute(`wire:key`)
-                ? el.getAttribute(`wire:key`)
-                : // If no "key", then first check for "wire:id", then "id"
-                el.hasAttribute(`wire:id`)
-                    ? el.getAttribute(`wire:id`)
+            return el.hasAttribute(`wire:id`)
+                ? el.getAttribute(`wire:id`)
+                : // If no component "id", then first check for "wire:key", then "id"
+                el.hasAttribute(`wire:key`)
+                    ? el.getAttribute(`wire:key`)
                     : el.id
         },
 

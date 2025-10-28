@@ -307,7 +307,7 @@ class CreatePost extends Component
     {
 		// ...
 
-		$this->dispatch('post-created')->to(Dashboard::class);
+		$this->dispatch('post-created')->to(component: Dashboard::class);
     }
 }
 ```

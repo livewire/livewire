@@ -32,6 +32,16 @@ You can trigger the `download()` method from the class above when a user clicks 
 </button>
 ```
 
+## Async requests
+
+By default, Livewire serializes actions within the same component scope: if an action is in-flight, subsequent actions are queued until the current request finishes.
+
+Adding the `.async` modifier to `wire:click` allows actions to run in parallel instead of being queued. This is useful when you want to fire multiple requests without waiting for the previous one to complete (for example: batching background operations, optimistic UI, or rapid-fire buttons).
+
+```html
+<button type="button" wire:click.async="process">Process</button>
+```
+
 ## Using `wire:click` on links
 
 When using `wire:click` on `<a>` tags, you must append `.prevent` to prevent the default handling of a link in the browser. Otherwise, the browser will visit the provided link and update the page's URL.

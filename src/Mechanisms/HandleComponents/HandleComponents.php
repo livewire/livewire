@@ -24,6 +24,9 @@ class HandleComponents extends Mechanism
         Synthesizers\FloatSynth::class
     ];
 
+    // Performance optimization: Cache which synthesizer matches which type
+    protected $synthesizerTypeCache = [];
+
     public static $renderStack = [];
     public static $componentStack = [];
 
@@ -38,12 +41,13 @@ class HandleComponents extends Mechanism
     {
         $parent = app('livewire')->current();
 
-        if ($html = $this->shortCircuitMount($name, $params, $key, $parent, $slots)) return $html;
-
         $component = app('livewire')->new($name);
 
-        // Separate params into component properties and HTML attributes
+        // Separate params into component properties and HTML attributes...
         [$componentParams, $htmlAttributes] = $this->separateParamsAndAttributes($component, $params);
+
+        if ($html = $this->shortCircuitMount($name, $componentParams, $key, $parent, $slots)) return $html;
+
 
         if (! empty($slots)) {
             $component->withSlots($slots, $parent);
@@ -99,6 +103,7 @@ class HandleComponents extends Mechanism
             if ($this->isReservedParam($key)) {
                 $componentParams[$key] = $value;
             }
+
             // Check if this maps to a component property or mount param
             elseif (
                 array_key_exists($camelKey, $componentProperties)
@@ -117,7 +122,7 @@ class HandleComponents extends Mechanism
 
     protected function isReservedParam($key)
     {
-        $exact = ['lazy', 'wire:ref'];
+        $exact = ['lazy', 'defer', 'lazy:bundle', 'defer:bundle', 'wire:ref'];
         $startsWith = ['@', 'wire:model'];
 
         // Check exact matches
@@ -295,7 +300,7 @@ class HandleComponents extends Mechanism
         });
     }
 
-    protected function hydratePropertyUpdate($valueOrTuple, $context, $path, $raw)
+    protected function hydratePropertyUpdate($valueOrTuple, $context, $path)
     {
         if (! Utils::isSyntheticTuple($value = $tuple = $valueOrTuple)) return $value;
 
@@ -308,8 +313,8 @@ class HandleComponents extends Mechanism
 
         $synth = $this->propertySynth($meta['s'], $context, $path);
 
-        return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path, $raw) {
-            return $this->hydrateForUpdate($raw, "{$path}.{$name}", $child, $context);
+        return $synth->hydrate($value, $meta, function ($name, $child) {
+            return $child;
         });
     }
 
@@ -366,9 +371,15 @@ class HandleComponents extends Mechanism
 
         $fileName = str($dotName)->replace('.', '/')->__toString();
 
-        $viewOrString = method_exists($component, 'render')
-            ? wrap($component)->render()
-            : View::file($viewPath . '/' . $fileName . '.blade.php');
+       $viewOrString = null;
+
+        if (method_exists($component, 'render')) {
+            $viewOrString = wrap($component)->render();
+        } elseif ($component->hasProvidedView()) {
+            $viewOrString = $component->getProvidedView();
+        } else {
+            $viewOrString = View::file($viewPath . '/' . $fileName . '.blade.php');
+        }
 
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
 
@@ -438,7 +449,7 @@ class HandleComponents extends Mechanism
 
         // If we have meta data already for this property, let's use that to get a synth...
         if ($meta) {
-            return $this->hydratePropertyUpdate([$value, $meta], $context, $path, $raw);
+            return $this->hydratePropertyUpdate([$value, $meta], $context, $path);
         }
 
         // If we don't, let's check to see if it's a typed property and fetch the synth that way...
@@ -540,7 +551,7 @@ class HandleComponents extends Mechanism
         foreach ($calls as $idx => $call) {
             $method = $call['method'];
             $params = $call['params'];
-            $context = $call['context'] ?? [];
+            $metadata = $call['metadata'] ?? [];
 
             $earlyReturnCalled = false;
             $earlyReturn = null;
@@ -549,7 +560,7 @@ class HandleComponents extends Mechanism
                 $earlyReturn = $return;
             };
 
-            $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $context);
+            $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $metadata);
 
             if ($earlyReturnCalled) {
                 $returns[] = $finish($earlyReturn);
@@ -574,6 +585,11 @@ class HandleComponents extends Mechanism
             if (config('app.debug')) trigger('profile', 'call'.$idx, $root->getId(), [$start, microtime(true)]);
 
             $returns[] = $finish($return);
+
+            // Support `Wire:click.renderless`...
+            if ($metadata['renderless'] ?? false) {
+                $root->skipRender();
+            }
         }
 
         $componentContext->addEffect('returns', $returns);
@@ -609,13 +625,22 @@ class HandleComponents extends Mechanism
 
     protected function getSynthesizerByTarget($target, $context, $path)
     {
-        foreach ($this->propertySynthesizers as $synth) {
-            if ($synth::match($target)) {
-                return new $synth($context, $path);
+        // Performance optimization: Cache synthesizer matches by runtime type...
+        $type = get_debug_type($target);
+
+        if (! isset($this->synthesizerTypeCache[$type])) {
+            foreach ($this->propertySynthesizers as $synth) {
+                if ($synth::match($target)) {
+                    $this->synthesizerTypeCache[$type] = $synth;
+
+                    return new $synth($context, $path);
+                }
             }
+
+            throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
         }
 
-        throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
+        return new $this->synthesizerTypeCache[$type]($context, $path);
     }
 
     protected function getSynthesizerByType($type, $context, $path)

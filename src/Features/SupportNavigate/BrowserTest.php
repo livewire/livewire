@@ -462,10 +462,10 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->visit('/first-asset')
                 ->assertScript('return _lw_dusk_asset_count', 1)
                 ->assertSee('On first')
-                ->click('@link.to.second')
+                ->waitForNavigate()->click('@link.to.second')
                 ->waitForText('On second')
                 ->assertScript('return _lw_dusk_asset_count', 1)
-                ->click('@link.to.third')
+                ->waitForNavigate()->click('@link.to.third')
                 ->waitForText('On third')
                 ->assertScript('return _lw_dusk_asset_count', 2);
         });
@@ -697,7 +697,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->click('@link.to.first') // second attempt baz -> bat
                 ->assertScript('window.foo', 'bat')
                 ->assertSee('On fourth')
-                ->click('@link.to.first') // finally navigate
+                ->waitForNavigate()->click('@link.to.first') // finally navigate
                 ->assertSee('On first')
             ;
         });
@@ -1365,6 +1365,10 @@ class FourthPage extends Component
 
             <script>
                 document.addEventListener('livewire:navigate', (event) => {
+                    if (window.foo === 'bob') {
+                        return
+                    }
+
                     event.preventDefault();
                     if (window.foo === 'bar') {
                         window.foo = 'baz'
@@ -1372,6 +1376,7 @@ class FourthPage extends Component
                     else if (window.foo === 'baz') {
                         window.foo ='bat'
                     } else {
+                        window.foo = 'bob'
                         Alpine.navigate(event.detail.url)
                     }
                 })
