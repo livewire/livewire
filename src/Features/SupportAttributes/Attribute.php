@@ -3,6 +3,8 @@
 namespace Livewire\Features\SupportAttributes;
 
 use Livewire\Component;
+use Livewire\Exceptions\PropertyAssignmentTypeException;
+use TypeError;
 
 abstract class Attribute
 {
@@ -66,21 +68,24 @@ abstract class Attribute
         }
 
         if ($enum = $this->tryingToSetStringOrIntegerToEnum($value)) {
-            if($nullable) {
+            if ($nullable) {
                 $value = $enum::tryFrom($value);
-            }
-
-            else {
+            } else {
                 $value = $enum::from($value);
             }
         }
 
-        data_set($this->component, $this->levelName, $value);
+        try {
+            data_set($this->component, $this->levelName, $value);
+        } catch (TypeError $e) {
+            throw new PropertyAssignmentTypeException($this->component, $this->levelName, $value);
+        }
     }
 
     protected function tryingToSetStringOrIntegerToEnum($subject)
     {
-        if (! is_string($subject) && ! is_int($subject)) return;
+        if (! is_string($subject) && ! is_int($subject))
+            return;
 
         $target = $this->subTarget ?? $this->component;
 
