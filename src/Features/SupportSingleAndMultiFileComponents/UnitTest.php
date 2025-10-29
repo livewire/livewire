@@ -25,4 +25,12 @@ class UnitTest extends \Tests\TestCase
             ->call('increment')
             ->assertSee('Count: 2');
     }
+
+    public function test_sfc_component_includes_the_view_method_and_data_is_passed_to_the_view()
+    {
+        app('livewire.finder')->addLocation(path: __DIR__ . '/fixtures');
+
+        Livewire::test('sfc-component-with-render-and-data')
+            ->assertSee('Message: Hello World');
+    }
 }
