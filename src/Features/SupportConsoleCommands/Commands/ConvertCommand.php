@@ -181,7 +181,7 @@ class ConvertCommand extends Command
             }
         }
 
-        $parser = MultiFileParser::parse($mfcPath);
+        $parser = MultiFileParser::parse(app('livewire.compiler'), $mfcPath);
 
         // Generate the single-file component contents
         $sfcContents = $parser->generateContentsForSingleFile();
