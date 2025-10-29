@@ -361,7 +361,7 @@ Route::livewire('/dashboard', \App\Livewire\Dashboard::class)->defer(enabled: fa
 If you want to set a default placeholder view for all your components you can do so by referencing the view in the `/config/livewire.php` config file:
 
 ```php
-'lazy_placeholder' => 'livewire.placeholder',
+'component_placeholder' => 'livewire.placeholder',
 ```
 
 Now, when a component is lazy-loaded and no `placeholder()` is defined, Livewire will use the configured Blade view (`livewire.placeholder` in this case.)
