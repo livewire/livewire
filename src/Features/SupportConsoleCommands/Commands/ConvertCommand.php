@@ -116,7 +116,7 @@ class ConvertCommand extends Command
         $testPath = $directory . '/' . $componentName . '.test.php';
         $jsPath = $directory . '/' . $componentName . '.js';
 
-        $parser = SingleFileParser::parse($sfcPath);
+        $parser = SingleFileParser::parse(app('livewire.compiler'), $sfcPath);
 
         $this->ensureDirectoryExists($directory);
 
