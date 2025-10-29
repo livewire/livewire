@@ -82,9 +82,7 @@ Here's a brief explanation of the code above:
 Open the `routes/web.php` file in your Laravel application and add the following code:
 
 ```php
-use App\Livewire\Counter;
-
-Route::livewire('/counter', Counter::class);
+Route::livewire('/counter', 'counter');
 ```
 
 Now, our _counter_ component is assigned to the `/counter` route, so that when a user visits the `/counter` endpoint in your application, this component will be rendered by the browser.
