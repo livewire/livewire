@@ -74,10 +74,10 @@ class Compiler
         $this->prepareViewsForCompilationUsing[] = $callback;
     }
 
-    public function prepareViewForCompilation($contents)
+    public function prepareViewForCompilation($contents, $path)
     {
         foreach ($this->prepareViewsForCompilationUsing as $callback) {
-            $contents = $callback($contents);
+            $contents = $callback($contents, $path);
         }
 
         return $contents;

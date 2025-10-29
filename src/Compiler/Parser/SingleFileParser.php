@@ -19,7 +19,7 @@ class SingleFileParser extends Parser
     {
         $contents = file_get_contents($path);
 
-        $mutableContents = $compiler->prepareViewForCompilation($contents);
+        $mutableContents = $compiler->prepareViewForCompilation($contents, $path);
 
         $scriptPortion = static::extractScriptPortion($mutableContents);
         $classPortion = static::extractClassPortion($mutableContents);

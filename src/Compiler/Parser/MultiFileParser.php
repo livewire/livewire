@@ -35,7 +35,8 @@ class MultiFileParser extends Parser
 
         $scriptPortion = file_exists($scriptPath) ? file_get_contents($scriptPath) : null;
         $classPortion = file_get_contents($classPath);
-        $viewPortion = $compiler->prepareViewForCompilation(file_get_contents($viewPath));
+        $viewPortion = $compiler->prepareViewForCompilation(file_get_contents($viewPath), $viewPath);
+
         $placeholderPortion = static::extractPlaceholderPortion($viewPortion);
 
         return new self(
