@@ -31,7 +31,7 @@ export default class Action {
 
         let methodIsMarkedAsync = asyncMethods.includes(this.method)
 
-        let actionIsAsync = this.origin?.directive?.modifiers.includes('async')
+        let actionIsAsync = this.origin?.directive?.modifiers.includes('async') || (!! this.metadata.async)
 
         return methodIsMarkedAsync || actionIsAsync
     }
