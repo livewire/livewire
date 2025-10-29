@@ -116,7 +116,7 @@ class ConvertCommand extends Command
         $testPath = $directory . '/' . $componentName . '.test.php';
         $jsPath = $directory . '/' . $componentName . '.js';
 
-        $parser = SingleFileParser::parse($sfcPath);
+        $parser = SingleFileParser::parse(app('livewire.compiler'), $sfcPath);
 
         $this->ensureDirectoryExists($directory);
 
@@ -181,7 +181,7 @@ class ConvertCommand extends Command
             }
         }
 
-        $parser = MultiFileParser::parse($mfcPath);
+        $parser = MultiFileParser::parse(app('livewire.compiler'), $mfcPath);
 
         // Generate the single-file component contents
         $sfcContents = $parser->generateContentsForSingleFile();

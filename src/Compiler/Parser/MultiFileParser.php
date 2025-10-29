@@ -2,6 +2,8 @@
 
 namespace Livewire\Compiler\Parser;
 
+use Livewire\Compiler\Compiler;
+
 class MultiFileParser extends Parser
 {
     public function __construct(
@@ -12,7 +14,7 @@ class MultiFileParser extends Parser
         public ?string $placeholderPortion,
     ) {}
 
-    public static function parse(string $path): self
+    public static function parse(Compiler $compiler, string $path): self
     {
         $name = basename($path);
 
@@ -33,7 +35,8 @@ class MultiFileParser extends Parser
 
         $scriptPortion = file_exists($scriptPath) ? file_get_contents($scriptPath) : null;
         $classPortion = file_get_contents($classPath);
-        $viewPortion = file_get_contents($viewPath);
+        $viewPortion = $compiler->prepareViewForCompilation(file_get_contents($viewPath), $viewPath);
+
         $placeholderPortion = static::extractPlaceholderPortion($viewPortion);
 
         return new self(

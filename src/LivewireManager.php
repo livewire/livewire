@@ -69,6 +69,11 @@ class LivewireManager
         app(ExtendBlade::class)->livewireOnlyPrecompiler($callback);
     }
 
+    function prepareViewsForCompilationUsing(callable $callback)
+    {
+        app('livewire.compiler')->prepareViewsForCompilationUsing($callback);
+    }
+
     function new($name, $id = null)
     {
         return app('livewire.factory')->create($name, $id);

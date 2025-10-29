@@ -45,7 +45,9 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_parse_sfc_component()
     {
-        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component.blade.php');
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component.blade.php');
 
         $classContents = $parser->generateClassContents('view-path.blade.php');
         $scriptContents = $parser->generateScriptContents();
@@ -68,7 +70,9 @@ class UnitTest extends \Tests\TestCase
 
     public function test_wont_parse_blade_script()
     {
-        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component-with-blade-script.blade.php');
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-blade-script.blade.php');
 
         $classContents = $parser->generateClassContents('view-path.blade.php');
         $scriptContents = $parser->generateScriptContents();
@@ -91,7 +95,9 @@ class UnitTest extends \Tests\TestCase
 
     public function test_wont_parse_nested_script()
     {
-        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component-with-nested-script.blade.php');
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-nested-script.blade.php');
 
         $classContents = $parser->generateClassContents('view-path.blade.php');
         $scriptContents = $parser->generateScriptContents();
@@ -114,7 +120,9 @@ class UnitTest extends \Tests\TestCase
 
     public function test_wont_parse_scripts_inside_assets_or_script_directives()
     {
-        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component-with-assets-and-script-directives.blade.php');
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-assets-and-script-directives.blade.php');
 
         $classContents = $parser->generateClassContents('view-path.blade.php');
         $scriptContents = $parser->generateScriptContents();
@@ -141,7 +149,9 @@ class UnitTest extends \Tests\TestCase
 
     public function test_script_hoists_imports_and_wraps_in_export_function()
     {
-        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component-with-imports.blade.php');
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-imports.blade.php');
 
         $scriptContents = $parser->generateScriptContents();
 
@@ -167,7 +177,9 @@ class UnitTest extends \Tests\TestCase
 
     public function test_script_wraps_in_export_function_even_without_imports()
     {
-        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component.blade.php');
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component.blade.php');
 
         $scriptContents = $parser->generateScriptContents();
 
@@ -181,7 +193,9 @@ class UnitTest extends \Tests\TestCase
 
     public function test_parser_adds_trailing_semicolon_to_class_contents()
     {
-        $parser = SingleFileParser::parse(__DIR__ . '/Fixtures/sfc-component-without-trailing-semicolon.blade.php');
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-without-trailing-semicolon.blade.php');
 
         $classContents = $parser->generateClassContents('view-path.blade.php');
 
@@ -199,7 +213,9 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_parse_mfc_component()
     {
-        $parser = MultiFileParser::parse(__DIR__ . '/Fixtures/mfc-component');
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        
+        $parser = MultiFileParser::parse($compiler, __DIR__ . '/Fixtures/mfc-component');
 
         $classContents = $parser->generateClassContents('view-path.blade.php');
         $scriptContents = $parser->generateScriptContents();
@@ -288,5 +304,35 @@ class UnitTest extends \Tests\TestCase
         $compiler->compile($sourcePath);
 
         $this->assertEquals($freshFileMtime, filemtime($compiledPath));
+    }
+
+    public function test_can_hook_into_sfc_compilation()
+    {
+        $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
+
+        $compiler->prepareViewsForCompilationUsing(function ($contents) {
+            return str_replace('div', 'span', $contents);
+        });
+
+        $compiler->compile($sourcePath = __DIR__ . '/Fixtures/sfc-component.blade.php');
+
+        $viewContents = file_get_contents($cacheManager->getViewPath($sourcePath));
+
+        $this->assertStringContainsString('<span>{{ $message }}</span>', $viewContents);
+    }
+
+    public function test_can_hook_into_mfc_compilation()
+    {
+        $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
+
+        $compiler->prepareViewsForCompilationUsing(function ($contents) {
+            return str_replace('div', 'span', $contents);
+        });
+
+        $compiler->compile($sourcePath = __DIR__ . '/Fixtures/mfc-component');
+
+        $viewContents = file_get_contents($cacheManager->getViewPath($sourcePath));
+
+        $this->assertStringContainsString('<span>{{ $message }}</span>', $viewContents);
     }
 }
