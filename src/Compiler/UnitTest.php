@@ -53,7 +53,7 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertStringContainsString('new class extends Component', $classContents);
         $this->assertStringContainsString('use Livewire\Component;', $classContents);
-        $this->assertStringContainsString("return app('view')->file('view-path.blade.php');", $classContents);
+        $this->assertStringContainsString("return app('view')->file('view-path.blade.php', \$data);", $classContents);
         $this->assertStringNotContainsString('new class extends Component', $viewContents);
         $this->assertStringNotContainsString('new class extends Component', $scriptContents);
         $this->assertStringContainsString("console.log('Hello from script');", $scriptContents);
@@ -76,7 +76,7 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertStringContainsString('new class extends Component', $classContents);
         $this->assertStringContainsString('use Livewire\Component;', $classContents);
-        $this->assertStringContainsString("return app('view')->file('view-path.blade.php');", $classContents);
+        $this->assertStringContainsString("return app('view')->file('view-path.blade.php', \$data);", $classContents);
         $this->assertStringNotContainsString('new class extends Component', $viewContents);
         // Script should NOT be extracted when wrapped in @script/@endscript
         $this->assertNull($scriptContents);
@@ -99,7 +99,7 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertStringContainsString('new class extends Component', $classContents);
         $this->assertStringContainsString('use Livewire\Component;', $classContents);
-        $this->assertStringContainsString("return app('view')->file('view-path.blade.php');", $classContents);
+        $this->assertStringContainsString("return app('view')->file('view-path.blade.php', \$data);", $classContents);
         $this->assertStringNotContainsString('new class extends Component', $viewContents);
 
         // Only the root-level script should be extracted
@@ -122,7 +122,7 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertStringContainsString('new class extends Component', $classContents);
         $this->assertStringContainsString('use Livewire\Component;', $classContents);
-        $this->assertStringContainsString("return app('view')->file('view-path.blade.php');", $classContents);
+        $this->assertStringContainsString("return app('view')->file('view-path.blade.php', \$data);", $classContents);
         $this->assertStringNotContainsString('new class extends Component', $viewContents);
 
         // Scripts inside @assets/@endassets should NOT be extracted
@@ -207,7 +207,7 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertStringContainsString('new class extends Component', $classContents);
         $this->assertStringContainsString('use Livewire\Component;', $classContents);
-        $this->assertStringContainsString("return app('view')->file('view-path.blade.php');", $classContents);
+        $this->assertStringContainsString("return app('view')->file('view-path.blade.php', \$data);", $classContents);
         $this->assertStringNotContainsString('new class extends Component', $viewContents);
         $this->assertStringNotContainsString('new class extends Component', $scriptContents);
         $this->assertStringContainsString("console.log('Hello from script');", $scriptContents);
