@@ -2921,7 +2921,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         get raw() {
           return raw;
         },
-        version: "3.15.1",
+        version: "3.15.0",
         flushAndStopDeferringMutations,
         dontAutoEvaluateFunctions,
         disableEffectScheduling,
@@ -3740,7 +3740,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let evaluate22 = generateRuntimeFunction(expression);
           let returnValue = evaluate22({
             scope: completeScope,
-            allowGlobal: false,
+            allowGlobal: true,
             forceBindingRootScopeToFunctions: true
           });
           if (shouldAutoEvaluateFunctions && typeof returnValue === "function") {
@@ -6123,7 +6123,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     isAsync() {
       let asyncMethods = this.component.snapshot.memo?.async || [];
       let methodIsMarkedAsync = asyncMethods.includes(this.method);
-      let actionIsAsync = this.origin?.directive?.modifiers.includes("async");
+      let actionIsAsync = this.origin?.directive?.modifiers.includes("async") || !!this.metadata.async;
       return methodIsMarkedAsync || actionIsAsync;
     }
     mergeMetadata(metadata) {
@@ -8705,7 +8705,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // node_modules/@alpinejs/sort/dist/module.esm.js
+  // ../alpine/packages/sort/dist/module.esm.js
   function ownKeys2(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -13353,7 +13353,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data;
   }
 
-  // node_modules/@alpinejs/morph/dist/module.esm.js
+  // ../alpine/packages/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);

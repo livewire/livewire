@@ -20,9 +20,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5108,9 +5108,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/sort/dist/module.cjs.js
+// ../alpine/packages/sort/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/sort/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/sort/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -7865,9 +7865,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
+// ../alpine/packages/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -9648,7 +9648,7 @@ var Action = class {
   isAsync() {
     let asyncMethods = this.component.snapshot.memo?.async || [];
     let methodIsMarkedAsync = asyncMethods.includes(this.method);
-    let actionIsAsync = this.origin?.directive?.modifiers.includes("async");
+    let actionIsAsync = this.origin?.directive?.modifiers.includes("async") || !!this.metadata.async;
     return methodIsMarkedAsync || actionIsAsync;
   }
   mergeMetadata(metadata) {
