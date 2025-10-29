@@ -56,7 +56,7 @@ This command will generate a file called `resources/views/layouts/app.blade.php`
 Ensure you have created a Blade file at this location and included a `{{ $slot }}` placeholder:
 
 ```blade
-<!-- resources/views/components/layouts/app.blade.php -->
+<!-- resources/views/layouts/app.blade.php -->
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
