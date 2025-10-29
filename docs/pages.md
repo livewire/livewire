@@ -127,7 +127,7 @@ To set a custom page title for a page component, first, make sure your layout fi
 </head>
 ```
 
-Next, above your Livewire component's `render()` method, add the `#[Title]` attribute and pass it your page title:
+Next, above your Livewire component's class, add the `#[Title]` attribute and pass it your page title:
 
 ```php
 <?php
