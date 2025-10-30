@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportAttributes;
 
 use Livewire\Component;
+use Livewire\Features\SupportFormObjects\Form;
 
 abstract class Attribute
 {
@@ -75,7 +76,11 @@ abstract class Attribute
             }
         }
 
-        data_set($this->component, $this->levelName, $value);
+        if (data_get($this->component, $this->levelName) instanceof Form) {
+            $this->component->{$this->levelName}->fill($value);
+        } else {
+            data_set($this->component, $this->levelName, $value);
+        }
     }
 
     protected function tryingToSetStringOrIntegerToEnum($subject)
