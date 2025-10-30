@@ -142,7 +142,7 @@ You can easily listen for the `post-created` event inside your component's templ
 
 The above snippet would listen for the `post-created` from the component it's registered within. If the component is no longer on the page, the event listener will no longer be triggered.
 
-[Read more about using JavaScript inside your Livewire components →](/docs/javascript#using-javascript-in-livewire-components)
+[Read more about using JavaScript inside your Livewire components →](/docs/4.x/javascript#using-javascript-in-livewire-components)
 
 ### Dispatching events from component scripts
 
@@ -204,7 +204,7 @@ You can also access the `refreshPosts` parameter from a JavaScript event listene
 @endscript
 ```
 
-[Read more about using JavaScript inside your Livewire components →](/docs/javascript#using-javascript-in-livewire-components)
+[Read more about using JavaScript inside your Livewire components →](/docs/4.x/javascript#using-javascript-in-livewire-components)
 
 ### Listening for Livewire events from global JavaScript
 
@@ -290,7 +290,7 @@ To learn more about dispatching events using Alpine, consult the [Alpine documen
 > <button wire:click="$parent.showCreatePostForm()">Create Post</button>
 > ```
 >
-> [Learn more about $parent](/docs/nesting#directly-accessing-the-parent-from-the-child).
+> [Learn more about $parent](/docs/4.x/nesting#directly-accessing-the-parent-from-the-child).
 
 ## Dispatching directly to another component
 

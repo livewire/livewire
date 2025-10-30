@@ -66,7 +66,7 @@ The layout now uses the `layouts::` namespace by default, pointing to `resources
 
 This enables automatic intelligent wire:key generation for loops, reducing the need for manual wire:key attributes.
 
-[Learn more about wire:key →](/docs/nesting#wire-key)
+[Learn more about wire:key →](/docs/4.x/nesting#wire-key)
 
 #### New configuration options
 
@@ -124,7 +124,7 @@ Route::livewire('/dashboard', 'pages::dashboard');
 
 Using `Route::livewire()` is now the preferred method and is required for single-file and multi-file components to work correctly as full-page components.
 
-[Learn more about routing →](/docs/components#full-page-components)
+[Learn more about routing →](/docs/4.x/components#full-page-components)
 
 ## Medium-impact changes
 
@@ -165,7 +165,7 @@ $this->stream('#container', 'Hello');
 $this->stream('Hello', el: '#container');
 ```
 
-[Learn more about streaming →](/docs/wire-stream)
+[Learn more about streaming →](/docs/4.x/wire-stream)
 
 **Component mounting (internal):**
 
@@ -318,7 +318,7 @@ Livewire.interceptRequest(({ request, onResponse, onSuccess, onError, onFailure 
 3. **Cancellation support**: Both messages and requests can be cancelled/aborted
 4. **Component scoping**: Interceptors can be scoped to specific components using `Livewire.intercept($wire, ...)`
 
-For complete documentation on the new interceptor system, see the [JavaScript Interceptors documentation](/docs/javascript#interceptors).
+For complete documentation on the new interceptor system, see the [JavaScript Interceptors documentation](/docs/4.x/javascript#interceptors).
 
 ## New features in v4
 
@@ -338,13 +338,13 @@ php artisan make:livewire create-post --mfc  # Multi-file
 php artisan livewire:convert create-post     # Convert between formats
 ```
 
-[Learn more about component formats →](/docs/components)
+[Learn more about component formats →](/docs/4.x/components)
 
 **Slots and attribute forwarding**
 
 Components now support slots and automatic attribute bag forwarding using `{{ $attributes }}`, making component composition more flexible.
 
-[Learn more about nesting components →](/docs/nesting)
+[Learn more about nesting components →](/docs/4.x/nesting)
 
 **JavaScript in view-based components**
 
@@ -364,7 +364,7 @@ View-based components can now include `<script>` tags without the `@script` wrap
 </script>
 ```
 
-[Learn more about JavaScript in components →](/docs/javascript)
+[Learn more about JavaScript in components →](/docs/4.x/javascript)
 
 ### Islands
 
@@ -378,7 +378,7 @@ Islands allow you to create isolated regions within a component that update inde
 
 Islands also support imperative rendering and streaming from your component actions.
 
-[Learn more about islands →](/docs/islands)
+[Learn more about islands →](/docs/4.x/islands)
 
 ### Loading improvements
 
@@ -409,7 +409,7 @@ Control whether multiple lazy/deferred components load in parallel or bundled to
 class Revenue extends Component { ... }
 ```
 
-[Learn more about lazy and deferred loading →](/docs/lazy)
+[Learn more about lazy and deferred loading →](/docs/4.x/lazy)
 
 ### Async actions
 
@@ -424,7 +424,7 @@ Run actions in parallel without blocking other requests using the `.async` modif
 public function logActivity() { ... }
 ```
 
-[Learn more about async actions →](/docs/actions#parallel-execution-with-async)
+[Learn more about async actions →](/docs/4.x/actions#parallel-execution-with-async)
 
 ### New directives and modifiers
 
@@ -440,7 +440,7 @@ Built-in support for sortable lists with drag-and-drop:
 </ul>
 ```
 
-[Learn more about wire:sort →](/docs/wire-sort)
+[Learn more about wire:sort →](/docs/4.x/wire-sort)
 
 **`wire:intersect` - Viewport intersection**
 
@@ -468,7 +468,7 @@ Available modifiers:
 - `.threshold.X` - Custom visibility percentage (0-100)
 - `.margin.Xpx` or `.margin.X%` - Intersection margin
 
-[Learn more about wire:intersect →](/docs/wire-intersect)
+[Learn more about wire:intersect →](/docs/4.x/wire-intersect)
 
 **`wire:ref` - Element references**
 
@@ -486,7 +486,7 @@ Easily reference and interact with elements in your template:
 </button>
 ```
 
-[Learn more about wire:ref →](/docs/wire-ref)
+[Learn more about wire:ref →](/docs/4.x/wire-ref)
 
 **`.renderless` modifier**
 
@@ -498,7 +498,7 @@ Skip component re-rendering directly from the template:
 
 This is an alternative to the `#[Renderless]` attribute for actions that don't need to update the UI.
 
-[Learn more about actions →](/docs/actions)
+[Learn more about actions →](/docs/4.x/actions)
 
 **`.preserve-scroll` modifier**
 
@@ -518,7 +518,7 @@ Every element that triggers a network request automatically receives a `data-loa
 </button>
 ```
 
-[Learn more about loading states →](/docs/wire-loading)
+[Learn more about loading states →](/docs/4.x/wire-loading)
 
 ### JavaScript improvements
 
@@ -532,7 +532,7 @@ Access your component's error bag from JavaScript:
 </div>
 ```
 
-[Learn more about validation →](/docs/validation)
+[Learn more about validation →](/docs/4.x/validation)
 
 **`$intercept` magic**
 
@@ -548,7 +548,7 @@ $wire.$intercept('save', ({ proceed }) => {
 </script>
 ```
 
-[Learn more about JavaScript interceptors →](/docs/javascript#interceptors)
+[Learn more about JavaScript interceptors →](/docs/4.x/javascript#interceptors)
 
 **Island targeting from JavaScript**
 
@@ -560,7 +560,7 @@ Trigger island renders directly from the template:
 </button>
 ```
 
-[Learn more about islands →](/docs/islands)
+[Learn more about islands →](/docs/4.x/islands)
 
 ## Getting help
 

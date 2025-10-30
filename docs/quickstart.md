@@ -75,7 +75,7 @@ Here's a brief explanation of the code above:
 
 > [!warning] Livewire components MUST have a single root element
 > In order for Livewire to work, components must have just **one** single element as its root. If multiple root elements are detected, an exception is thrown. It is recommended to use a `<div>` element as in the example. HTML comments count as separate elements and should be put inside the root element.
-> When rendering [full-page components](/docs/components#full-page-components), named slots for the layout file may be put outside the root element. These are removed before the component is rendered.
+> When rendering [full-page components](/docs/4.x/components#full-page-components), named slots for the layout file may be put outside the root element. These are removed before the component is rendered.
 
 ## Register a route for the component
 

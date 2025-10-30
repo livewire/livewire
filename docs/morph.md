@@ -191,4 +191,4 @@ Now that the conditional has been wrapped in a persistent element, Livewire will
 
 #### Bypassing morphing
 
-If you need to bypass morphing entirely for an element, you can use [wire:replace](/docs/wire-replace) to instruct livewire to replace all children of an element instead of attempting to morph the existing elements.
+If you need to bypass morphing entirely for an element, you can use [wire:replace](/docs/4.x/wire-replace) to instruct livewire to replace all children of an element instead of attempting to morph the existing elements.

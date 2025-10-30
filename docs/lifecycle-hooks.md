@@ -71,9 +71,9 @@ class UpdatePost extends Component
 
 The `mount()` method is a crucial part of using Livewire. The following documentation provides further examples of using the `mount()` method to accomplish common tasks:
 
-* [Initializing properties](/docs/properties#initializing-properties)
-* [Receiving data from parent components](/docs/nesting#passing-props-to-children)
-* [Accessing route parameters](/docs/components#accessing-route-parameters)
+* [Initializing properties](/docs/4.x/properties#initializing-properties)
+* [Receiving data from parent components](/docs/4.x/nesting#passing-props-to-children)
+* [Accessing route parameters](/docs/4.x/components#accessing-route-parameters)
 
 ## Boot
 
@@ -107,12 +107,12 @@ class ShowPost extends Component
 You can use this technique to have complete control over initializing a component property in your Livewire component.
 
 > [!tip] Most of the time, you can use a computed property instead
-> The technique used above is powerful; however, it's often better to use [Livewire's computed properties](/docs/computed-properties) to solve this use case.
+> The technique used above is powerful; however, it's often better to use [Livewire's computed properties](/docs/4.x/computed-properties) to solve this use case.
 
 > [!warning] Always lock sensitive public properties
 > As you can see above, we are using the `#[Locked]` attribute on the `$postId` property. In a scenario like the above, where you want to ensure the `$postId` property isn't tampered with by users on the client-side, it's important to authorize the property's value before using it or add `#[Locked]` to the property ensure it is never changed.
 >
-> For more information, check out the [documentation on Locked properties](/docs/locked).
+> For more information, check out the [documentation on Locked properties](/docs/4.x/locked).
 
 
 ## Update
@@ -123,7 +123,7 @@ Livewire provides convenient hooks to intercept the updating of a public propert
 
 Below is an example of using `updating` to prevent the modification of the `$postId` property.
 
-It's worth noting that for this particular example, in an actual application, you should use the [`#[Locked]` attribute](/docs/locked) instead, like in the above example.
+It's worth noting that for this particular example, in an actual application, you should use the [`#[Locked]` attribute](/docs/4.x/locked) instead, like in the above example.
 
 ```php
 use Exception;
@@ -224,7 +224,7 @@ Hydrate and dehydrate are lesser-known and lesser-utilized hooks. However, there
 
 The terms "dehydrate" and "hydrate" refer to a Livewire component being serialized to JSON for the client-side and then unserialized back into a PHP object on the subsequent request.
 
-We often use the terms "hydrate" and "dehydrate" to refer to this process throughout Livewire's codebase and the documentation. If you'd like more clarity on these terms, you can learn more by [consulting our hydration documentation](/docs/hydration).
+We often use the terms "hydrate" and "dehydrate" to refer to this process throughout Livewire's codebase and the documentation. If you'd like more clarity on these terms, you can learn more by [consulting our hydration documentation](/docs/4.x/hydration).
 
 Let's look at an example that uses both `mount()` , `hydrate()`, and `dehydrate()` all together to support using a custom [data transfer object (DTO)](https://en.wikipedia.org/wiki/Data_transfer_object) instead of an Eloquent model to store the post data in the component:
 
@@ -266,7 +266,7 @@ class ShowPost extends Component
 
 Now, from actions and other places inside your component, you can access the `PostDto` object instead of the primitive data.
 
-The above example mainly demonstrates the abilities and nature of the `hydrate()` and `dehydrate()` hooks. However, it is recommended that you use [Wireables or Synthesizers](/docs/properties#supporting-custom-types) to accomplish this instead.
+The above example mainly demonstrates the abilities and nature of the `hydrate()` and `dehydrate()` hooks. However, it is recommended that you use [Wireables or Synthesizers](/docs/4.x/properties#supporting-custom-types) to accomplish this instead.
 
 ## Render
 

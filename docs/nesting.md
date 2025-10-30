@@ -4,7 +4,7 @@ Livewire allows you to nest additional Livewire components inside of a parent co
 > [!warning] You might not need a Livewire component
 > Before you extract a portion of your template into a nested Livewire component, ask yourself: Does this content in this component need to be "live"? If not, we recommend that you create a simple [Blade component](https://laravel.com/docs/blade#components) instead. Only create a Livewire component if the component benefits from Livewire's dynamic nature or if there is a direct performance benefit.
 
-Consult our [in-depth, technical examination of Livewire component nesting](/docs/understanding-nesting) for more information on the performance, usage implications, and constraints of nested Livewire components.
+Consult our [in-depth, technical examination of Livewire component nesting](/docs/4.x/understanding-nesting) for more information on the performance, usage implications, and constraints of nested Livewire components.
 
 ## Nesting a component
 
@@ -34,9 +34,9 @@ class Dashboard extends Component
 </div>
 ```
 
-On this page's initial render, the `Dashboard` component will encounter `<livewire:todo-list />` and render it in place. On a subsequent network request to `Dashboard`, the nested `todo-list` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are "islands"](/docs/understanding-nesting#every-component-is-an-island).
+On this page's initial render, the `Dashboard` component will encounter `<livewire:todo-list />` and render it in place. On a subsequent network request to `Dashboard`, the nested `todo-list` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are "islands"](/docs/4.x/understanding-nesting#every-component-is-an-island).
 
-For more information about the syntax for rendering components, consult our documentation on [Rendering Components](/docs/components#rendering-components).
+For more information about the syntax for rendering components, consult our documentation on [Rendering Components](/docs/4.x/components#rendering-components).
 
 ## Passing props to children
 
@@ -164,7 +164,7 @@ As you can see, each child component will have a unique key set to the ID of eac
 
 Developers new to Livewire expect that props are "reactive" by default. In other words, they expect that when a parent changes the value of a prop being passed into a child component, the child component will automatically be updated. However, by default, Livewire props are not reactive.
 
-When using Livewire, [every component is an island](/docs/understanding-nesting#every-component-is-an-island). This means that when an update is triggered on the parent and a network request is dispatched, only the parent component's state is sent to the server to re-render - not the child component's. The intention behind this behavior is to only send the minimal amount of data back and forth between the server and client, making updates as performant as possible.
+When using Livewire, [every component is an island](/docs/4.x/understanding-nesting#every-component-is-an-island). This means that when an update is triggered on the parent and a network request is dispatched, only the parent component's state is sent to the server to re-render - not the child component's. The intention behind this behavior is to only send the minimal amount of data back and forth between the server and client, making updates as performant as possible.
 
 But, if you want or need a prop to be reactive, you can easily enable this behavior using the `#[Reactive]` attribute parameter.
 
@@ -448,7 +448,7 @@ Attributes that match public property names are automatically passed as props an
 
 Another powerful parent-child component communication technique is Livewire's event system, which allows you to dispatch an event on the server or client that can be intercepted by other components.
 
-Our [complete documentation on Livewire's event system](/docs/events) provides more detailed information on events, but below we'll discuss a simple example of using an event to trigger an update in a parent component.
+Our [complete documentation on Livewire's event system](/docs/4.x/events) provides more detailed information on events, but below we'll discuss a simple example of using an event to trigger an update in a parent component.
 
 Consider a `TodoList` component with functionality to show and remove todos:
 
@@ -760,7 +760,7 @@ When the parent component is rendering and encounters a child component like the
 'children' => ['lska'],
 ```
 
-Livewire uses this list for reference on subsequent renders in order to detect if a child component has already been rendered in a previous request. If it has already been rendered, the component is skipped. Remember, [nested components are islands](/docs/understanding-nesting#every-component-is-an-island). However, if the child key is not in the list, meaning it hasn't been rendered already, Livewire will create a new instance of the component and render it in place.
+Livewire uses this list for reference on subsequent renders in order to detect if a child component has already been rendered in a previous request. If it has already been rendered, the component is skipped. Remember, [nested components are islands](/docs/4.x/understanding-nesting#every-component-is-an-island). However, if the child key is not in the list, meaning it hasn't been rendered already, Livewire will create a new instance of the component and render it in place.
 
 These nuances are all behind-the-scenes behavior that most users don't need to be aware of; however, the concept of setting a key on a child is a powerful tool for controlling child rendering.
 

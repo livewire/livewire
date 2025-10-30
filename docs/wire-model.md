@@ -46,7 +46,7 @@ class CreatePost extends Component
 Because both inputs use `wire:model`, their values will be synchronized with the server's properties when the "Save" button is pressed.
 
 > [!warning] "Why isn't my component live updating as I type?"
-> If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](/docs/properties#data-binding).
+> If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](/docs/4.x/properties#data-binding).
 
 ## Customizing update timing
 
@@ -267,4 +267,4 @@ If you are using a "multiple" select menu, Livewire works as expected. In this e
 
 ## Going deeper
 
-For a more complete documentation on using `wire:model` in the context of HTML forms, visit the [Livewire forms documentation page](/docs/forms).
+For a more complete documentation on using `wire:model` in the context of HTML forms, visit the [Livewire forms documentation page](/docs/4.x/forms).

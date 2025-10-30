@@ -170,7 +170,7 @@ new class extends Component
 };
 ```
 
-You can think of the `mount()` method as a class constructor. It runs when the component initializes, but not on subsequent requests within a page's session. You can learn more about `mount()` and other helpful lifecycle hooks within the [lifecycle documentation](/docs/lifecycle-hooks).
+You can think of the `mount()` method as a class constructor. It runs when the component initializes, but not on subsequent requests within a page's session. You can learn more about `mount()` and other helpful lifecycle hooks within the [lifecycle documentation](/docs/4.x/lifecycle-hooks).
 
 To reduce boilerplate code in your components, you can alternatively omit the `mount()` method and Livewire will automatically set any properties on your component with names matching the passed in values:
 
@@ -190,7 +190,7 @@ new class extends Component
 This is effectively the same as assigning `$title` inside a `mount()` method.
 
 > [!warning] These properties are not reactive by default
-> The `$title` property will not update automatically if the outer `:title="$initialValue"` changes after the initial page load. This is a common point of confusion when using Livewire, especially for developers who have used JavaScript frameworks like Vue or React and assume these "parameters" behave like "reactive props" in those frameworks. But, don't worry, Livewire allows you to opt-in to [making your props reactive](/docs/nesting#reactive-props).
+> The `$title` property will not update automatically if the outer `:title="$initialValue"` changes after the initial page load. This is a common point of confusion when using Livewire, especially for developers who have used JavaScript frameworks like Vue or React and assume these "parameters" behave like "reactive props" in those frameworks. But, don't worry, Livewire allows you to opt-in to [making your props reactive](/docs/4.x/nesting#reactive-props).
 
 ### Page components
 
@@ -200,7 +200,7 @@ Components can also be routed to directly as full pages using `Route::livewire()
 Route::livewire('/posts/create', 'create-post');
 ```
 
-For complete information about using components as pages, including layouts, titles, and route parameters, see the [Pages documentation](/docs/pages).
+For complete information about using components as pages, including layouts, titles, and route parameters, see the [Pages documentation](/docs/4.x/pages).
 
 ## Accessing data from view
 
@@ -266,7 +266,7 @@ new class extends Component
 
 Notice that computed properties must be accessed using `$this->` in your Blade template. This tells Livewire to call the method and cache the result.
 
-For more details about computed properties, see the [computed properties section](/docs/properties#computed-properties) in the properties documentation.
+For more details about computed properties, see the [computed properties section](/docs/4.x/properties#computed-properties) in the properties documentation.
 
 ### Component properties
 
@@ -291,7 +291,7 @@ new class extends Component
 </div>
 ```
 
-For complete information about properties, including security considerations, persistence behavior, and advanced features, see the [properties documentation](/docs/properties).
+For complete information about properties, including security considerations, persistence behavior, and advanced features, see the [properties documentation](/docs/4.x/properties).
 
 ## Registering components
 

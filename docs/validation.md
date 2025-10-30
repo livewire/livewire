@@ -267,7 +267,7 @@ public function save()
 }
 ```
 
-Form objects are a useful abstraction for most larger datasets and a variety of additional features that make them even more powerful. For more information, check out the comprehensive [form object documentation](/docs/forms#extracting-a-form-object).
+Form objects are a useful abstraction for most larger datasets and a variety of additional features that make them even more powerful. For more information, check out the comprehensive [form object documentation](/docs/4.x/forms#extracting-a-form-object).
 
 ## Real-time validation
 
@@ -644,7 +644,7 @@ public function test_cant_create_post_without_title_and_content()
 }
 ```
 
-For more information on other testing utilities provided by Livewire, check out the [testing documentation](/docs/testing).
+For more information on other testing utilities provided by Livewire, check out the [testing documentation](/docs/4.x/testing).
 
 ## Accessing errors in JavaScript
 

@@ -52,4 +52,4 @@ When using `wire:click` on `<a>` tags, you must append `.prevent` to prevent the
 
 ## Going deeper
 
-The `wire:click` directive is just one of many different available event listeners in Livewire. For full documentation on its (and other event listeners) capabilities, visit [the Livewire actions documentation page](/docs/actions).
+The `wire:click` directive is just one of many different available event listeners in Livewire. For full documentation on its (and other event listeners) capabilities, visit [the Livewire actions documentation page](/docs/4.x/actions).

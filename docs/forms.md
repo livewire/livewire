@@ -119,7 +119,7 @@ We'll also modify our Blade template to show any validation errors on the page.
 
 Now, if the user tries to submit the form without filling in any of the fields, they will see validation messages telling them which fields are required before saving the post.
 
-Livewire has a lot more validation features to offer. For more information, visit our [dedicated documentation page on Validation](/docs/validation).
+Livewire has a lot more validation features to offer. For more information, visit our [dedicated documentation page on Validation](/docs/4.x/validation).
 
 ### Extracting a form object
 
@@ -514,7 +514,7 @@ class PostForm extends Form
 }
 ```
 
-Now if the `$title` property is updated before the form is submitted—like when using [`wire:model.blur`](/docs/wire-model#updating-on-blur-event)—the validation for `$title` will be run.
+Now if the `$title` property is updated before the form is submitted—like when using [`wire:model.blur`](/docs/4.x/wire-model#updating-on-blur-event)—the validation for `$title` will be run.
 
 ### Showing a loading indicator
 
@@ -536,11 +536,11 @@ Here's an example of adding a small loading spinner to the "Save" button via `wi
 
 Now, when a user presses "Save", a small, inline spinner will show up.
 
-Livewire's `wire:loading` feature has a lot more to offer. Visit the [Loading documentation to learn more.](/docs/wire-loading)
+Livewire's `wire:loading` feature has a lot more to offer. Visit the [Loading documentation to learn more.](/docs/4.x/wire-loading)
 
 ## Live-updating fields
 
-By default, Livewire only sends a network request when the form is submitted (or any other [action](/docs/actions) is called), not while the form is being filled out.
+By default, Livewire only sends a network request when the form is submitted (or any other [action](/docs/4.x/actions) is called), not while the form is being filled out.
 
 Take the `CreatePost` component, for example. If you want to make sure the "title" input field is synchronized with the `$title` property on the backend as the user types, you may add the `.live` modifier to `wire:model` like so:
 
@@ -583,7 +583,7 @@ public $title = '';
 
 Now, if the user only types three characters into the "title" input, then clicks on the next input in the form, a validation message will be shown to them indicating there is a five character minimum for that field.
 
-For more information, check out the [validation documentation page](/docs/validation).
+For more information, check out the [validation documentation page](/docs/4.x/validation).
 
 ## Real-time form saving
 
@@ -649,7 +649,7 @@ We can use this hook to update only that specific field in the database.
 
 Additionally, because we have the `#[Validate]` attributes attached to those properties, the validation rules will be run before the property is updated and the `updated()` hook is called.
 
-To learn more about the "updated" lifecycle hook and other hooks, [visit the lifecycle hooks documentation](/docs/lifecycle-hooks).
+To learn more about the "updated" lifecycle hook and other hooks, [visit the lifecycle hooks documentation](/docs/4.x/lifecycle-hooks).
 
 ## Showing dirty indicators
 

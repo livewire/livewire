@@ -293,7 +293,7 @@ You can display a loading indicator scoped to the file upload like so:
 
 Now, while the file is uploading, the "Uploading..." message will be shown and then hidden when the upload is finished.
 
-For more information on loading states, check out our comprehensive [loading state documentation](/docs/wire-loading).
+For more information on loading states, check out our comprehensive [loading state documentation](/docs/4.x/wire-loading).
 
 ## Progress indicators
 

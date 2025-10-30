@@ -73,7 +73,7 @@ You can also trigger a component refresh using AlpineJS in your Livewire compone
 <button type="button" x-on:click="$wire.$refresh()">...</button>
 ```
 
-Learn more by reading the [documentation for using Alpine inside Livewire](/docs/alpine).
+Learn more by reading the [documentation for using Alpine inside Livewire](/docs/4.x/alpine).
 
 ## Confirming an action
 
@@ -93,7 +93,7 @@ Livewire makes this easy by providing a simple directive called `wire:confirm`:
 
 When `wire:confirm` is added to an element containing a Livewire action, when a user tries to trigger that action, they will be presented with a confirmation dialog containing the provided message. They can either press "OK" to confirm the action, or press "Cancel" or hit the escape key.
 
-For more information, visit the [`wire:confirm` documentation page](/docs/wire-confirm).
+For more information, visit the [`wire:confirm` documentation page](/docs/4.x/wire-confirm).
 
 ## Parallel execution
 
@@ -105,7 +105,7 @@ Appending the `.async` modifier allows actions to run in parallel instead of bei
 <button type="button" wire:click.async="logActivity">Track Event</button>
 ```
 
-For more information about when and how to use async actions safely, see the [parallel execution section](/docs/actions#parallel-execution-with-async).
+For more information about when and how to use async actions safely, see the [parallel execution section](/docs/4.x/actions#parallel-execution-with-async).
 
 ## Event listeners
 
@@ -286,7 +286,7 @@ Livewire provides a `wire:loading` directive that makes it trivial to show and h
 </form>
 ```
 
-`wire:loading` is a powerful feature with a variety of more powerful features. [Check out the full loading documentation for more information](/docs/wire-loading).
+`wire:loading` is a powerful feature with a variety of more powerful features. [Check out the full loading documentation for more information](/docs/4.x/wire-loading).
 
 ## Passing parameters
 
@@ -347,10 +347,10 @@ When this button is clicked, the `delete()` method will be called and `$id` will
 > [!warning] Don't trust action parameters
 > Action parameters should be treated just like HTTP request input, meaning action parameter values should not be trusted. You should always authorize ownership of an entity before updating it in the database.
 >
-> For more information, consult our documentation regarding [security concerns and best practices](/docs/actions#security-concerns).
+> For more information, consult our documentation regarding [security concerns and best practices](/docs/4.x/actions#security-concerns).
 
 
-As an added convenience, you may automatically resolve Eloquent models by a corresponding model ID that is provided to an action as a parameter. This is very similar to [route model binding](/docs/components#using-route-model-binding). To get started, type-hint an action parameter with a model class and the appropriate model will automatically be retrieved from the database and passed to the action instead of the ID:
+As an added convenience, you may automatically resolve Eloquent models by a corresponding model ID that is provided to an action as a parameter. This is very similar to [route model binding](/docs/4.x/components#using-route-model-binding). To get started, type-hint an action parameter with a model class and the appropriate model will automatically be retrieved from the database and passed to the action instead of the ID:
 
 ```php
 <?php
@@ -427,7 +427,7 @@ In this example, the `delete()` method receives an instance of `PostRepository` 
 
 Livewire integrates seamlessly with [Alpine](https://alpinejs.dev/). In fact, under the hood, every Livewire component is also an Alpine component. This means you can take full advantage of Alpine within your components to add JavaScript powered client-side interactivity.
 
-To make this pairing even more powerful, Livewire exposes a magic `$wire` object to Alpine that can be treated as a JavaScript representation of your PHP component. In addition to [accessing and mutating public properties via `$wire`](/docs/properties#accessing-properties-from-javascript), you can call actions. When an action is invoked on the `$wire` object, the corresponding PHP method will be invoked on your backend Livewire component:
+To make this pairing even more powerful, Livewire exposes a magic `$wire` object to Alpine that can be treated as a JavaScript representation of your PHP component. In addition to [accessing and mutating public properties via `$wire`](/docs/4.x/properties#accessing-properties-from-javascript), you can call actions. When an action is invoked on the `$wire` object, the corresponding PHP method will be invoked on your backend Livewire component:
 
 ```blade
 <button x-on:click="$wire.save()">Save Post</button>
@@ -1133,7 +1133,7 @@ With this change, only administrators can delete a post from this component.
 
 Every public method inside your Livewire component is callable from the client. Even methods you haven't referenced inside a `wire:click` handler. To prevent a user from calling a method that isn't intended to be callable client-side, you should mark them as `protected` or `private`. By doing so, you restrict the visibility of that sensitive method to the component's class and its subclasses, ensuring they cannot be called from the client-side.
 
-Consider the `BrowsePosts` example that we previously discussed, where users can view all posts in your application, but only administrators can delete posts. In the [Always authorize server-side](/docs/actions#always-authorize-server-side) section, we made the action secure by adding server-side authorization. Now imagine we refactor the actual deletion of the post into a dedicated method like you might do in order to simplify your code:
+Consider the `BrowsePosts` example that we previously discussed, where users can view all posts in your application, but only administrators can delete posts. In the [Always authorize server-side](/docs/4.x/actions#always-authorize-server-side) section, we made the action secure by adding server-side authorization. Now imagine we refactor the actual deletion of the post into a dedicated method like you might do in order to simplify your code:
 
 ```php
 // Warning: This snippet demonstrates what NOT to do...
