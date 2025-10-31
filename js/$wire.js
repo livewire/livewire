@@ -142,10 +142,6 @@ wireProperty('$js', (component) => {
     })
 })
 
-// need a way to specificy that this is async
-Livewire.setNextActionMetadata({ async: true})
-$wire.call('foo')
-
 wireProperty('$set', (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value)
 
