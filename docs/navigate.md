@@ -141,7 +141,7 @@ Simply pass any CSS classes you want to apply to the currently active link to `w
 
 Now, when the `/posts` page is visited, the "Posts" link will have a stronger font treatment than the other links.
 
-Read more in the [`wire:current` documentation](/docs/wire-current).
+Read more in the [`wire:current` documentation](/docs/4.x/wire-current).
 
 ### Preserving scroll position
 

@@ -277,7 +277,7 @@ Now, because we are providing the posts to the template using a computed propert
 
 ### Using inline templates
 
-Another scenario when computed properties are helpful is using [inline templates](/docs/components#inline-components) in your component.
+Another scenario when computed properties are helpful is using [inline templates](/docs/4.x/components#inline-components) in your component.
 
 Below is an example of an inline component where, because we are returning a template string directly inside `render()`, we never have an opportunity to pass data into the view:
 

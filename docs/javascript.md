@@ -39,13 +39,13 @@ Here's a more full example where you can do something like register a JavaScript
 @endscript
 ```
 
-To learn more about JavaScript actions, [visit the actions documentation](/docs/actions#javascript-actions).
+To learn more about JavaScript actions, [visit the actions documentation](/docs/4.x/actions#javascript-actions).
 
 ### Using `$wire` from scripts
 
 Another helpful feature of using `@script` for your JavaScript is that you automatically have access to your Livewire component's `$wire` object.
 
-Here's an example of using a simple `setInterval` to refresh the component every 2 seconds (You could easily do this with [`wire:poll`](/docs/wire-poll), but it's a simple way to demonstrate the point):
+Here's an example of using a simple `setInterval` to refresh the component every 2 seconds (You could easily do this with [`wire:poll`](/docs/4.x/wire-poll), but it's a simple way to demonstrate the point):
 
 You can learn more about `$wire` on the [`$wire` documentation](#the-wire-object).
 
@@ -170,7 +170,7 @@ let components = Livewire.all()
 
 ### Interacting with events
 
-In addition to dispatching and listening for events from individual components in PHP, the global `Livewire` object allows you to interact with [Livewire's event system](/docs/events) from anywhere in your application:
+In addition to dispatching and listening for events from individual components in PHP, the global `Livewire` object allows you to interact with [Livewire's event system](/docs/4.x/events) from anywhere in your application:
 
 ```js
 // Dispatch an event to any Livewire components listening...
@@ -396,7 +396,7 @@ let $wire = {
 }
 ```
 
-You can learn more about `$wire` in [Livewire's documentation on accessing properties in JavaScript](/docs/properties#accessing-properties-from-javascript).
+You can learn more about `$wire` in [Livewire's documentation on accessing properties in JavaScript](/docs/4.x/properties#accessing-properties-from-javascript).
 
 ### The `snapshot` object
 
@@ -594,7 +594,7 @@ Livewire.hook('morphed',  ({ el, component }) => {
 ## Interceptors
 
 > [!info] Looking for the old `commit` and `request` hooks?
-> These have been replaced by the more powerful interceptor system. See the [upgrade guide](/docs/upgrading#javascript-hook-changes) for migration details.
+> These have been replaced by the more powerful interceptor system. See the [upgrade guide](/docs/4.x/upgrading#javascript-hook-changes) for migration details.
 
 Livewire's interceptor system provides powerful hooks into the request lifecycle, allowing you to intercept and manipulate network requests at various stages.
 

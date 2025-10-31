@@ -56,5 +56,5 @@ In the above example, when a user submits the form by clicking "Save", `wire:sub
 
 `wire:submit` is just one of many event listeners that Livewire provides. The following two pages provide much more complete documentation on using `wire:submit` in your application:
 
-* [Responding to browser events with Livewire](/docs/actions)
-* [Creating forms in Livewire](/docs/forms)
+* [Responding to browser events with Livewire](/docs/4.x/actions)
+* [Creating forms in Livewire](/docs/4.x/forms)

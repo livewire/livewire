@@ -78,7 +78,7 @@ Notice two different portions of the snapshot: `memo`, and `state`.
 The `memo` portion is used to store the information needed to identify and re-create the component, while the `state` portion stores the values of all the component's public properties.
 
 > [!info]
-> The above snapshot is a condensed version of an actual snapshot in Livewire. In live applications, the snapshot contains much more information, such as validation errors, a list of child components, locales, and much more. For a more detailed look at a snapshot object you may reference the [snapshot schema documentation](/docs/javascript#the-snapshot-object).
+> The above snapshot is a condensed version of an actual snapshot in Livewire. In live applications, the snapshot contains much more information, such as validation errors, a list of child components, locales, and much more. For a more detailed look at a snapshot object you may reference the [snapshot schema documentation](/docs/4.x/javascript#the-snapshot-object).
 
 ### Embedding the snapshot in the HTML
 
@@ -240,5 +240,4 @@ As you can see, the third item in the collection has been dehydrated into a meta
 
 ### Supporting custom property types
 
-Internally, Livewire has hydration support for the most common PHP and Laravel types. However, if you wish to support un-supported types, you can do so using [Synthesizers](/docs/synthesizers) — Livewire's internal mechanism for hydrating/dehydrating non-primitive property types.
-
+Internally, Livewire has hydration support for the most common PHP and Laravel types. However, if you wish to support un-supported types, you can do so using [Synthesizers](/docs/4.x/synthesizers) — Livewire's internal mechanism for hydrating/dehydrating non-primitive property types.

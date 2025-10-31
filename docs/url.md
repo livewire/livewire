@@ -231,7 +231,7 @@ class ShowUsers extends Component
 
 ## Trait hooks
 
-Livewire offers [hooks](/docs/lifecycle-hooks) for query strings as well.
+Livewire offers [hooks](/docs/4.x/lifecycle-hooks) for query strings as well.
 
 ```php
 trait WithSorting

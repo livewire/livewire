@@ -2,7 +2,7 @@ Every component update in Livewire triggers a network request. By default, when 
 
 This results in fewer network connections to the server and can drastically reduce server load.
 
-In addition to the performance gains, this also unlocks features internally that require collaboration between multiple components ([Reactive Properties](/docs/nesting#reactive-props), [Modelable Properties](/docs/nesting#binding-to-child-data-using-wiremodel), etc.)
+In addition to the performance gains, this also unlocks features internally that require collaboration between multiple components ([Reactive Properties](/docs/4.x/nesting#reactive-props), [Modelable Properties](/docs/4.x/nesting#binding-to-child-data-using-wiremodel), etc.)
 
 However, there are times when disabling this bundling is desired for performance reasons. The following page outlines various ways to customize this behavior in Livewire.
 

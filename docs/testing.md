@@ -257,7 +257,7 @@ class UpdatePost extends Component
 
 If your Livewire component depends on specific query parameters in the URL of the page it's loaded on, you can use the `withQueryParams()` method to set the query parameters manually for your test.
 
-Below is a basic `SearchPosts` component that uses [Livewire's URL feature](/docs/url) to store and track the current search query in the query string:
+Below is a basic `SearchPosts` component that uses [Livewire's URL feature](/docs/4.x/url) to store and track the current search query in the query string:
 
 ```php
 <?php
@@ -442,7 +442,7 @@ $this->assertHasErrors(['title' => ['The title field is required.']]);
 
 ### Authorization
 
-Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides `assertUnauthorized()` and `assertForbidden()` methods to ensure that an authentication or authorization check has failed:
+Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/4.x/properties#authorizing-the-input). Livewire provides `assertUnauthorized()` and `assertForbidden()` methods to ensure that an authentication or authorization check has failed:
 
 ```php
 <?php
@@ -633,7 +633,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `Livewire::test(CreatePost::class)`                      | Test the `CreatePost` component |
 | `Livewire::test(UpdatePost::class, ['post' => $post])`                      | Test the `UpdatePost` component with the `post` parameter (To be received through the `mount()` method) |
 | `Livewire::actingAs($user)`                      | Set the provided user as the session's authenticated user |
-| `Livewire::withQueryParams(['search' => '...'])`                      | Set the test's `search` URL query parameter to the provided value (ex. `?search=...`). Typically in the context of a property using Livewire's [`#[Url]` attribute](/docs/url) |
+| `Livewire::withQueryParams(['search' => '...'])`                      | Set the test's `search` URL query parameter to the provided value (ex. `?search=...`). Typically in the context of a property using Livewire's [`#[Url]` attribute](/docs/4.x/url) |
 | `Livewire::withCookie('color', 'blue')`                      | Set the test's `color` cookie to the provided value (`blue`). |
 | `Livewire::withCookies(['color' => 'blue', 'name' => 'Taylor])`                      | Set the test's `color` and `name` cookies to the provided values (`blue`, `Taylor`). |
 | `Livewire::withHeaders(['X-COLOR' => 'blue', 'X-NAME' => 'Taylor])`                      | Set the test's `X-COLOR` and `X-NAME` headers to the provided values (`blue`, `Taylor`). |

@@ -114,7 +114,7 @@ class TodoList extends Component
 
 In the above example, the text input's value will synchronize with the `$todo` property on the server when the "Add Todo" button is clicked.
 
-This is just scratching the surface of `wire:model`. For deeper information on data binding, check out our [documentation on forms](/docs/forms).
+This is just scratching the surface of `wire:model`. For deeper information on data binding, check out our [documentation on forms](/docs/4.x/forms).
 
 ## Resetting properties
 
@@ -264,7 +264,7 @@ Livewire allows your application to support custom types through two powerful me
 * Wireables
 * Synthesizers
 
-Wireables are simple and easy to use for most applications, so we'll explore them below. If you're an advanced user or package author wanting more flexibility, [Synthesizers are the way to go](/docs/synthesizers).
+Wireables are simple and easy to use for most applications, so we'll explore them below. If you're an advanced user or package author wanting more flexibility, [Synthesizers are the way to go](/docs/4.x/synthesizers).
 
 #### Wireables
 
@@ -336,7 +336,7 @@ class Customer implements Wireable
 
 Now you can freely set `Customer` objects on your Livewire components and Livewire will know how to convert these objects into JSON and back into PHP.
 
-As mentioned earlier, if you want to support types more globally and powerfully, Livewire offers Synthesizers, its advanced internal mechanism for handling different property types. [Learn more about Synthesizers](/docs/synthesizers).
+As mentioned earlier, if you want to support types more globally and powerfully, Livewire offers Synthesizers, its advanced internal mechanism for handling different property types. [Learn more about Synthesizers](/docs/4.x/synthesizers).
 
 ## Accessing properties from JavaScript
 
@@ -525,7 +525,7 @@ Now, if a user tries to modify `$id` on the front end, an error will be thrown.
 
 By using `#[Locked]`, you can assume this property has not been manipulated anywhere outside your component's class.
 
-For more information on locking properties, [consult the Locked properties documentation](/docs/locked).
+For more information on locking properties, [consult the Locked properties documentation](/docs/4.x/locked).
 
 #### Eloquent models and locking
 
@@ -658,7 +658,7 @@ When this component is initially loaded, the `$todos` property will be set to an
 
 When Livewire _hydrates_ the JSON of this property back into PHP on a subsequent request, the select constraint will have been lost.
 
-To ensure the integrity of Eloquent queries, we recommend that you use [computed properties](/docs/computed-properties) instead of properties.
+To ensure the integrity of Eloquent queries, we recommend that you use [computed properties](/docs/4.x/computed-properties) instead of properties.
 
 Computed properties are methods in your component marked with the `#[Computed]` attribute. They can be accessed as a dynamic property that isn't stored as part of the component's state but is instead evaluated on-the-fly.
 
@@ -741,4 +741,4 @@ You might wonder why not just call `$this->todos()` as a method directly where y
 
 The reason is that computed properties have a performance advantage, since they are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once, so that you don't run an expensive query multiple times in the same request.
 
-For more information, [visit the computed properties documentation](/docs/computed-properties).
+For more information, [visit the computed properties documentation](/docs/4.x/computed-properties).

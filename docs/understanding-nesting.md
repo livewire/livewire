@@ -4,7 +4,7 @@ Like many other component-based frameworks, Livewire components are nestable —
 However, because Livewire's nesting system is built differently than other frameworks, there are certain implications and constraints that are important to be aware of.
 
 > [!tip] Make sure you understand hydration first
-> Before learning more about Livewire's nesting system, it's helpful to fully understand how Livewire hydrates components. You can learn more by reading the [hydration documentation](/docs/hydration).
+> Before learning more about Livewire's nesting system, it's helpful to fully understand how Livewire hydrates components. You can learn more by reading the [hydration documentation](/docs/4.x/hydration).
 
 ## Every component is an island
 
@@ -210,9 +210,6 @@ However, the biggest drawback of this approach is that because components are en
 
 For example, if you had a property passed down from the above parent `Posts` component to the nested `ShowPost` component, it wouldn't be "reactive". Because each component is an island, if a request to the parent component changed the value of the property being passed into `ShowPost`, it wouldn't update inside `ShowPost`.
 
-Livewire has overcome a number of these hurdles and provides dedicated APIs for these scenarios like: [Reactive properties](/docs/nesting#reactive-props), [Modelable components](/docs/nesting#binding-to-child-data-using-wiremodel), and [the `$parent` object](/docs/nesting#directly-accessing-the-parent-from-the-child).
+Livewire has overcome a number of these hurdles and provides dedicated APIs for these scenarios like: [Reactive properties](/docs/4.x/nesting#reactive-props), [Modelable components](/docs/4.x/nesting#binding-to-child-data-using-wiremodel), and [the `$parent` object](/docs/4.x/nesting#directly-accessing-the-parent-from-the-child).
 
 Armed with this knowledge of how nested Livewire components operate, you will be able to make more informed decisions about when and how to nest components within your application.
-
-
-

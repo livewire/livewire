@@ -9,4 +9,4 @@ Livewire offers a `wire:init` directive to run an action as soon as the componen
 
 The `loadPosts` action will be run immediately after the Livewire component renders on the page.
 
-In most cases however, [Livewire's lazy loading feature](/docs/lazy) is preferable to using `wire:init`.
+In most cases however, [Livewire's lazy loading feature](/docs/4.x/lazy) is preferable to using `wire:init`.
