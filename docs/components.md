@@ -48,7 +48,7 @@ new class extends Component
 
 As your component or project grows, you might find the single-file approach limiting. Therefore Livewire offers a multi-file alternative that allows you to split your component into separate files.
 
-This gives you better _separation of concerns_ and IDE support without sacraficing the benefits of colocation.
+This gives you better _separation of concerns_ and IDE support without sacrificing the benefits of colocation.
 
 To create a multi-file component, pass the `--mfc` flag to the make command like so:
 
