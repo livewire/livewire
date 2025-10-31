@@ -97,7 +97,12 @@ class HandleComponents extends Mechanism
         $mountParams = $this->getMountMethodParameters($component);
 
         foreach ($params as $key => $value) {
-            $camelKey = str($key)->camel()->toString();
+            $processedKey = $key;
+            
+            // Convert only kebab-case params to camelCase for matching...
+            if (str($processedKey)->contains('-')) {
+                $processedKey = str($processedKey)->camel()->toString();
+            }
 
             // Check if this is a reserved param
             if ($this->isReservedParam($key)) {
@@ -106,11 +111,11 @@ class HandleComponents extends Mechanism
 
             // Check if this maps to a component property or mount param
             elseif (
-                array_key_exists($camelKey, $componentProperties)
-                || in_array($camelKey, $mountParams)
+                array_key_exists($processedKey, $componentProperties)
+                || in_array($processedKey, $mountParams)
                 || is_numeric($key) // if the key is numeric, it's likely a mount parameter...
             ) {
-                $componentParams[$camelKey] = $value;
+                $componentParams[$processedKey] = $value;
             } else {
                 // Keep as HTML attribute (preserve kebab-case)
                 $htmlAttributes[$key] = $value;
