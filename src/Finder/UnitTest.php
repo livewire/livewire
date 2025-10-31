@@ -345,7 +345,7 @@ class UnitTest extends \Tests\TestCase
 
         $path = $finder->resolveMultiFileComponentPath('multi-file-zap-component');
 
-        $this->assertEquals(__DIR__ . '/Fixtures/⚡︎multi-file-zap-component', $path);
+        $this->assertEquals(__DIR__ . '/Fixtures/⚡multi-file-zap-component', $path);
     }
 
     public function test_it_does_not_resolve_a_multi_file_component_for_a_nested_single_file_self_named_component()
