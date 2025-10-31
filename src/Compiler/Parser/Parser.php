@@ -87,9 +87,9 @@ class Parser
             $position = $lastMatch[1];
             return substr_replace($contents, <<<PHP
 
-    protected function view()
+    protected function view(\$data = [])
     {
-        return app('view')->file('{$viewFileName}');
+        return app('view')->file('{$viewFileName}', \$data);
     }
 }
 PHP
