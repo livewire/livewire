@@ -42,8 +42,8 @@ HTML Directives:
     wire:confirm: { uri: /docs/4.x/wire-confirm, file: /wire-confirm.md }
     wire:transition: { uri: /docs/4.x/wire-transition, file: /wire-transition.md }
     wire:init: { uri: /docs/4.x/wire-init, file: /wire-init.md }
+    wire:intersect: { uri: /docs/4.x/wire-intersect, file: /wire-intersect.md }
     wire:poll: { uri: /docs/4.x/wire-poll, file: /wire-poll.md }
-    wire:intersect: {uri: /docs/4.x/wire-intersect, file: /wire-intersect.md}
     wire:offline: { uri: /docs/4.x/wire-offline, file: /wire-offline.md }
     wire:ignore: { uri: /docs/4.x/wire-ignore, file: /wire-ignore.md }
     wire:ref: { uri: /docs/4.x/wire-ref, file: /wire-ref.md }
