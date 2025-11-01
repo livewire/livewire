@@ -322,11 +322,16 @@ class MakeCommandUnitTest extends \Tests\TestCase
 
     public function test_custom_namespace_from_config_works()
     {
-        $this->app['config']->set('livewire.component_namespaces.admin', resource_path('views/admin'));
+        // Set the custom namespace in config
+        $adminPath = resource_path('views/admin');
+        $this->app['config']->set('livewire.component_namespaces.admin', $adminPath);
+        
+        // Also register it with the view namespace (needed for namespace resolution)
+        app('view')->addNamespace('admin', $adminPath);
 
         Artisan::call('make:livewire', ['name' => 'admin::users-table']);
 
-        $this->assertTrue(File::exists(resource_path('views/admin/⚡users-table.blade.php')));
+        $this->assertTrue(File::exists($adminPath . '/⚡users-table.blade.php'));
     }
 
     public function test_namespace_works_without_emoji()
@@ -339,16 +344,16 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists(resource_path('views/pages/⚡settings.blade.php')));
     }
 
-    public function test_class_based_component_with_namespace_creates_class_in_app_livewire()
+    public function test_class_based_component_with_namespace_creates_view_in_namespace_directory()
     {
-        Artisan::call('make:livewire', ['name' => 'pages::dashboard', '--class' => true]);
+        Artisan::call('make:livewire', ['name' => 'pages::user-profile', '--class' => true]);
 
-        // Class-based components still go in App\Livewire, but the view uses the namespace
-        $this->assertTrue(File::exists($this->livewireClassesPath('Pages/Dashboard.php')));
-        $this->assertTrue(File::exists(resource_path('views/pages/dashboard.blade.php')));
+        // Class-based components with namespace: class goes to App\Livewire\Pages, view to pages namespace
+        $this->assertTrue(File::exists($this->livewireClassesPath('Pages/UserProfile.php')));
+        $this->assertTrue(File::exists(resource_path('views/pages/user-profile.blade.php')));
 
-        $classContent = File::get($this->livewireClassesPath('Pages/Dashboard.php'));
-        $this->assertStringContainsString("view('pages.dashboard')", $classContent);
+        $classContent = File::get($this->livewireClassesPath('Pages/UserProfile.php'));
+        $this->assertStringContainsString("view('pages.user-profile')", $classContent);
     }
 
     public function test_namespace_with_deeply_nested_components()
