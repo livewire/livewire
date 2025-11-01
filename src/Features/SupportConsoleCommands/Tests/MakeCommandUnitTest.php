@@ -288,4 +288,73 @@ class MakeCommandUnitTest extends \Tests\TestCase
         // The SFC should NOT have been created
         $this->assertFalse(File::exists($this->livewireComponentsPath('⚡existing-class.blade.php')));
     }
+
+    public function test_single_file_component_is_created_in_pages_namespace()
+    {
+        Artisan::call('make:livewire', ['name' => 'pages::create-post']);
+
+        $this->assertTrue(File::exists(resource_path('views/pages/⚡create-post.blade.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡create-post.blade.php')));
+    }
+
+    public function test_nested_component_is_created_in_pages_namespace()
+    {
+        Artisan::call('make:livewire', ['name' => 'pages::blog.create-post']);
+
+        $this->assertTrue(File::exists(resource_path('views/pages/blog/⚡create-post.blade.php')));
+    }
+
+    public function test_multi_file_component_is_created_in_pages_namespace()
+    {
+        Artisan::call('make:livewire', ['name' => 'pages::dashboard', '--mfc' => true]);
+
+        $this->assertTrue(File::isDirectory(resource_path('views/pages/⚡dashboard')));
+        $this->assertTrue(File::exists(resource_path('views/pages/⚡dashboard/dashboard.php')));
+        $this->assertTrue(File::exists(resource_path('views/pages/⚡dashboard/dashboard.blade.php')));
+    }
+
+    public function test_component_is_created_in_layouts_namespace()
+    {
+        Artisan::call('make:livewire', ['name' => 'layouts::sidebar']);
+
+        $this->assertTrue(File::exists(resource_path('views/layouts/⚡sidebar.blade.php')));
+    }
+
+    public function test_custom_namespace_from_config_works()
+    {
+        $this->app['config']->set('livewire.component_namespaces.admin', resource_path('views/admin'));
+
+        Artisan::call('make:livewire', ['name' => 'admin::users-table']);
+
+        $this->assertTrue(File::exists(resource_path('views/admin/⚡users-table.blade.php')));
+    }
+
+    public function test_namespace_works_without_emoji()
+    {
+        $this->app['config']->set('livewire.make_command.emoji', false);
+
+        Artisan::call('make:livewire', ['name' => 'pages::settings']);
+
+        $this->assertTrue(File::exists(resource_path('views/pages/settings.blade.php')));
+        $this->assertFalse(File::exists(resource_path('views/pages/⚡settings.blade.php')));
+    }
+
+    public function test_class_based_component_with_namespace_creates_class_in_app_livewire()
+    {
+        Artisan::call('make:livewire', ['name' => 'pages::dashboard', '--class' => true]);
+
+        // Class-based components still go in App\Livewire, but the view uses the namespace
+        $this->assertTrue(File::exists($this->livewireClassesPath('Pages/Dashboard.php')));
+        $this->assertTrue(File::exists(resource_path('views/pages/dashboard.blade.php')));
+
+        $classContent = File::get($this->livewireClassesPath('Pages/Dashboard.php'));
+        $this->assertStringContainsString("view('pages.dashboard')", $classContent);
+    }
+
+    public function test_namespace_with_deeply_nested_components()
+    {
+        Artisan::call('make:livewire', ['name' => 'pages::blog.posts.create-post']);
+
+        $this->assertTrue(File::exists(resource_path('views/pages/blog/posts/⚡create-post.blade.php')));
+    }
 }
