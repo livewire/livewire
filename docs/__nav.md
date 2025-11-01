@@ -43,8 +43,10 @@ HTML Directives:
     wire:transition: { uri: /docs/4.x/wire-transition, file: /wire-transition.md }
     wire:init: { uri: /docs/4.x/wire-init, file: /wire-init.md }
     wire:poll: { uri: /docs/4.x/wire-poll, file: /wire-poll.md }
+    wire:intersect: {uri: /docs/4.x/wire-intersect, file: /wire-intersect.md}
     wire:offline: { uri: /docs/4.x/wire-offline, file: /wire-offline.md }
     wire:ignore: { uri: /docs/4.x/wire-ignore, file: /wire-ignore.md }
+    wire:ref: { uri: /docs/4.x/wire-ref, file: /wire-ref.md }
     wire:replace: { uri: /docs/4.x/wire-replace, file: /wire-replace.md }
     wire:show: { uri: /docs/4.x/wire-show, file: /wire-show.md }
     wire:sort: { uri: /docs/4.x/wire-sort, file: /wire-sort.md }
