@@ -56,7 +56,7 @@ This command will generate a file called `resources/views/layouts/app.blade.php`
 Ensure you have created a Blade file at this location and included a `{{ $slot }}` placeholder:
 
 ```blade
-<!-- resources/views/components/layouts/app.blade.php -->
+<!-- resources/views/layouts/app.blade.php -->
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -77,6 +77,9 @@ You may customize the default layout by updating the `component_layout` configur
 ```php
 'component_layout' => 'layouts::dashboard',
 ```
+
+> [!warning] `View \[app\] not found.`
+> If you get an `InvalidArgumentException` related to `\[app\]` check to see that you have created the `app.blade.php` file in `resources/views/layouts/` where Livewire expects to find it. Also see [Migrating blade templates to the new layouts location](#migrating-blade-templates-to-the-new-layouts-location) below.
 
 ### Component-specific layouts
 
@@ -114,6 +117,10 @@ new class extends Component
     }
 };
 ```
+
+### Migrating blade templates to the new layouts location
+
+In order to use the layouts location that Livewire expects with blade templates you can move your `resources/views/components/layouts` directory to `resources/views/layout` and update your blade templates to replace `<x-layouts.app ... >` with `<x-layouts::app ...>`.
 
 ## Setting the page title
 
