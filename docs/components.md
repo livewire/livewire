@@ -46,32 +46,7 @@ new class extends Component
 
 ### Creating components with namespaces
 
-Livewire supports component namespaces, allowing you to organize components into specific directories. You can use namespace prefixes when creating components:
-
-```shell
-# Create in resources/views/pages/
-php artisan make:livewire pages::create-post
-
-# Create in resources/views/layouts/
-php artisan make:livewire layouts::sidebar
-```
-
-This works with nested paths as well:
-
-```shell
-php artisan make:livewire pages::blog.posts.create-post
-# Creates: resources/views/pages/blog/posts/⚡create-post.blade.php
-```
-
-Namespaces work with all component types:
-
-```shell
-php artisan make:livewire pages::dashboard --sfc   # Single-file (default)
-php artisan make:livewire pages::dashboard --mfc   # Multi-file
-php artisan make:livewire pages::dashboard --class # Class-based
-```
-
-#### Custom namespaces
+Livewire supports component namespaces, allowing you to organize components into specific directories.
 
 By default, Livewire provides two namespaces:
 - `pages::` — Points to `resources/views/pages/`
@@ -98,12 +73,11 @@ php artisan make:livewire widgets::stats-card
 These namespaces also work when rendering components and defining routes:
 
 ```blade
-<livewire:pages::create-post />
 <livewire:admin::users-table />
 ```
 
 ```php
-Route::livewire('/posts/create', 'pages::create-post');
+Route::livewire('/admin/users-table', 'admin::users-table');
 ```
 
 ### Multi-file components
