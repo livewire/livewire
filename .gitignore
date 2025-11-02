@@ -8,6 +8,7 @@ composer.lock
 .phpunit.result.cache
 .idea
 phpunit.xml
+.env
 
 # Files used to upload zips for early access folks
 upload-bin.sh
