@@ -123,7 +123,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_can_define_js_actions_though_dollar_js_magic_on_using_script_directive()
+    public function test_can_define_js_actions_though_dollar_js_magic_in_a_script()
     {
         Livewire::visit(
             new class extends \Livewire\Component {
@@ -147,7 +147,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_can_define_js_actions_though_dollar_js_magic_on_a_sfc()
+    public function test_can_define_js_actions_though_dollar_js_magic_in_a_sfc_script()
     {        
         Livewire::visit('sfc-component-with-dollar-js-magic')
             ->click('@test')
@@ -155,7 +155,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_can_define_js_actions_though_dollar_js_magic_on_a_mfc()
+    public function test_can_define_js_actions_though_dollar_js_magic_on_a_mfc_script()
     {   
         Livewire::visit('mfc-component-with-dollar-js-magic')
             ->click('@test')
