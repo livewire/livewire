@@ -9042,9 +9042,9 @@ function runFinishers(finishers, result) {
 // js/request/interactions.js
 function coordinateNetworkInteractions(messageBus2) {
   interceptPartition(({ message, compileRequest }) => {
-    if (!message.component.isIsolated)
-      return;
-    compileRequest([message]);
+    if (message.isIsolated() || message.isAsync()) {
+      compileRequest([message]);
+    }
   });
   interceptPartition(({ message, compileRequest }) => {
     if (message.component.isLazy && !message.component.hasBeenLazyLoaded && message.component.isLazyIsolated) {
@@ -9136,6 +9136,9 @@ var MessageRequest = class {
   }
   isAborted() {
     return this.aborted;
+  }
+  isAsync() {
+    return [...this.messages].every((message) => message.isAsync() || message.isIsolated());
   }
   onSend({ responsePromise }) {
     this.interceptors.forEach((interceptor) => interceptor.onSend({ responsePromise }));
@@ -9542,6 +9545,9 @@ var Message = class {
   isCancelled() {
     return this.cancelled;
   }
+  isIsolated() {
+    return this.component.isIsolated;
+  }
   isAsync() {
     return Array.from(this.actions).every((action) => action.isAsync());
   }
@@ -9776,7 +9782,7 @@ function sendMessages() {
     }
     let hasFoundRequest = false;
     requests.forEach((request) => {
-      if (!hasFoundRequest) {
+      if (!hasFoundRequest && !request.isAsync()) {
         request.addMessage(message);
         hasFoundRequest = true;
       }

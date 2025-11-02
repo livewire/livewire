@@ -97,6 +97,10 @@ export default class Message {
         return this.cancelled
     }
 
+    isIsolated() {
+        return this.component.isIsolated
+    }
+
     isAsync() {
         return Array.from(this.actions).every(action => action.isAsync())
     }

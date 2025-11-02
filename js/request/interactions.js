@@ -3,9 +3,9 @@ import { constructAction, createOrAddToOutstandingMessage, fireActionInstance, i
 export function coordinateNetworkInteractions(messageBus) {
     // Handle isolated components...
     interceptPartition(({ message, compileRequest }) => {
-        if (! message.component.isIsolated) return
-
-        compileRequest([message])
+        if (message.isIsolated() || message.isAsync()) {
+            compileRequest([message])
+        }
     })
 
     // Handle lazy components...

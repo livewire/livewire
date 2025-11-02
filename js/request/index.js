@@ -153,7 +153,7 @@ function sendMessages() {
         let hasFoundRequest = false
 
         requests.forEach(request => {
-            if (! hasFoundRequest) {
+            if (! hasFoundRequest && ! request.isAsync()) {
                 request.addMessage(message)
 
                 hasFoundRequest = true

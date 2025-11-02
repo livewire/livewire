@@ -56,6 +56,10 @@ export class MessageRequest {
         return this.aborted
     }
 
+    isAsync() {
+        return [...this.messages].every(message => message.isAsync() || message.isIsolated())
+    }
+
     /**
      * Lifecycle methods
      */
