@@ -13885,9 +13885,7 @@ on("effect", ({ component, effects }) => {
     let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
     let path = `/livewire/js/${encodedName}.js?v=${scriptModuleHash}`;
     import(path).then((module) => {
-      module.run.call(component.$wire, [
-        component.$wire
-      ]);
+      module.run.call(component.$wire, component.$wire);
     });
   }
 });

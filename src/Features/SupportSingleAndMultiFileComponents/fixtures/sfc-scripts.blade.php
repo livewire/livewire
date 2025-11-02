@@ -11,9 +11,9 @@ new class extends Livewire\Component {
 ?>
 
 <div>
-    <div dusk="foo">bar</div>
+    <div dusk="foo" wire:text="count"></div>
 </div>
 
 <script>
-    this.$el.querySelector('[dusk="foo"]').textContent = 'baz';
+    $wire.count++
 </script>

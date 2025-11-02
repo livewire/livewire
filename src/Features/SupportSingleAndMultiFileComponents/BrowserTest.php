@@ -18,6 +18,6 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         Livewire::visit('sfc-scripts')
             ->waitForLivewireToLoad()
-            ->assertSeeIn('@foo', 'baz');
+            ->assertSeeIn('@foo', '2');
     }
 }
