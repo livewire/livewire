@@ -10,7 +10,7 @@ use Livewire\Attributes\On;
 
 class BrowserTest extends BrowserTestCase
 {
-    public function test_parallel_async_requests_are_isolated()
+    public function test_parallel_async_requests_are_not_bundled()
     {
         Livewire::visit([new class extends Component {
             public function render() { return <<<'HTML'
