@@ -101,7 +101,7 @@ Any changes made to the text input will be automatically synchronized with the `
 ## All available modifiers
 
  Modifier          | Description
--------------------|-------------------------------------------------------------------------
+-------------------|------------------------------------------------------------------------------------
  `.live`           | Send updates as a user types
  `.blur`           | Only send updates on the `blur` event
  `.change`         | Only send updates on the `change` event
@@ -110,7 +110,7 @@ Any changes made to the text input will be automatically synchronized with the `
  `.throttle.[?]ms` | Throttle network request updates by the specified millisecond interval
  `.number`         | Cast the text value of an input to `int` on the server
  `.boolean`        | Cast the text value of an input to `bool` on the server
- `.fill`           | Use the initial value provided by a "value" HTML attribute on page-load
+ `.fill`           | Use the initial value provided by a "value" HTML attribute or autofill on page-load
 
 ## Input fields
 
