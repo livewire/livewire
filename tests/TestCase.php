@@ -4,6 +4,7 @@ namespace Tests;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Orchestra\Testbench\Dusk\Options;
 
 class TestCase extends \Orchestra\Testbench\Dusk\TestCase
 {
@@ -11,6 +12,10 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
     {
         $this->afterApplicationCreated(function () {
             $this->makeACleanSlate();
+
+            if (env('DUSK_HEADLESS_DISABLED', true) == false) {
+                Options::withoutUI();
+            } 
         });
 
         $this->beforeApplicationDestroyed(function () {
@@ -84,5 +89,10 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
     protected function livewireTestsPath($path = '')
     {
         return base_path('tests/Feature/Livewire'.($path ? '/'.$path : ''));
+    }
+
+    protected function resolveApplication()
+    {
+        return parent::resolveApplication()->useEnvironmentPath(__DIR__.'/..');
     }
 }
