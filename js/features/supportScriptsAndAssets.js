@@ -41,6 +41,7 @@ on('effect', ({ component, effects }) => {
                     evaluateExpression(component, component.el, scriptContent, {
                         scope: {
                             '$wire': component.$wire,
+                            '$js': component.$wire.js,
                         },
                     })
                 })
