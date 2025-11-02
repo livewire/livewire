@@ -71,39 +71,43 @@ class BrowserTest extends BrowserTestCase
                 <livewire:child />
                 <livewire:child-isolated />
 
-                <button wire:click="\$dispatch('trigger')" dusk="trigger">Dispatch trigger</button>
+                <button x-on:click="\$dispatch('trigger')" dusk="trigger">Dispatch trigger</button>
             </div>
             HTML; }
         }, 'child' => new class extends Component {
-            public $time;
+            public $time1;
             public function mount() {
-                $this->time = LARAVEL_START;
+                $this->time1 = LARAVEL_START;
             }
-            #[On('trigger')]
-            public function react() {
-                $this->time = LARAVEL_START;
+            public function react1() {
+                $this->time1 = LARAVEL_START;
             }
             public function render() { return <<<'HTML'
-            <div>
+            <div x-on:trigger.window="$wire.react1()">
                 Child 1
 
-                <span dusk="time-1">{{ $time }}</span>
+                <div dusk="time-1">{{ $time1 }}</div>
             </div>
             HTML; }
         }, 'child-isolated' => new #[Isolate] class extends Component {
-            public $time;
+            public $time2;
+            public $time3;
             public function mount() {
-                $this->time = LARAVEL_START;
+                $this->time2 = LARAVEL_START;
+                $this->time3 = LARAVEL_START;
             }
-            #[On('trigger')]
-            public function react() {
-                $this->time = LARAVEL_START;
+            public function react2() {
+                $this->time2 = LARAVEL_START;
+            }
+            public function react3() {
+                $this->time3 = LARAVEL_START;
             }
             public function render() { return <<<'HTML'
-            <div>
+            <div x-on:trigger.window="$wire.react2(), $wire.react3()">
                 Child 2
 
-                <span dusk="time-2">{{ $time }}</span>
+                <div dusk="time-2">{{ $time2 }}</div>
+                <div dusk="time-3">{{ $time3 }}</div>
             </div>
             HTML; }
         },])
@@ -112,15 +116,19 @@ class BrowserTest extends BrowserTestCase
         ->tap(function ($b) {
             $time1 = (float) $b->text('@time-1');
             $time2 = (float) $b->text('@time-2');
+            $time3 = (float) $b->text('@time-3');
 
             $this->assertEquals($time1, $time2);
+            $this->assertEquals($time2, $time3);
         })
         ->waitForLivewire()->click('@trigger')
         ->tap(function ($b) {
             $time1 = (float) $b->waitFor('@time-1')->text('@time-1');
             $time2 = (float) $b->waitFor('@time-2')->text('@time-2');
+            $time3 = (float) $b->waitFor('@time-3')->text('@time-3');
 
             $this->assertNotEquals($time1, $time2);
+            $this->assertEquals($time2, $time3);
         })
         ;
     }
