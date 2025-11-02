@@ -219,6 +219,8 @@ wireProperty('$watch', (component) => (path, callback) => {
     let unwatch = Alpine.watch(getter, callback)
 
     component.addCleanup(unwatch)
+
+    return unwatch
 })
 
 wireProperty('$refresh', (component) => async () => {
