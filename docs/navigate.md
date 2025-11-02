@@ -90,10 +90,10 @@ Here is an example of an `<audio>` player element being persisted across pages u
 
 If the above HTML appears on both pages — the current page, and the next one — the original element will be re-used on the new page. In the case of an audio player, the audio playback won't be interrupted when navigating from one page to another.
 
-Please be aware that the persisted element must be placed outside your Livewire components. A common practice is to position the persisted element in your main layout, such as `resources/views/components/layouts/app.blade.php`.
+Please be aware that the persisted element must be placed outside your Livewire components. A common practice is to position the persisted element in your main layout, such as `resources/views/layouts/app.blade.php`.
 
 ```html
-<!-- resources/views/components/layouts/app.blade.php -->
+<!-- resources/views/layouts/app.blade.php -->
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -102,6 +102,8 @@ Please be aware that the persisted element must be placed outside your Livewire 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <title>{{ $title ?? 'Page Title' }}</title>
+
+        @livewireStyles
     </head>
     <body>
         <main>
@@ -111,6 +113,8 @@ Please be aware that the persisted element must be placed outside your Livewire 
         @persist('player') <!-- [tl! highlight:2] -->
             <audio src="{{ $episode->file }}" controls></audio>
         @endpersist
+
+        @livewireScripts
     </body>
 </html>
 ```

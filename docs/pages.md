@@ -56,7 +56,7 @@ This command will generate a file called `resources/views/layouts/app.blade.php`
 Ensure you have created a Blade file at this location and included a `{{ $slot }}` placeholder:
 
 ```blade
-<!-- resources/views/components/layouts/app.blade.php -->
+<!-- resources/views/layouts/app.blade.php -->
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -65,9 +65,13 @@ Ensure you have created a Blade file at this location and included a `{{ $slot }
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <title>{{ $title ?? 'Page Title' }}</title>
+
+        @livewireStyles
     </head>
     <body>
         {{ $slot }}
+
+        @livewireScripts
     </body>
 </html>
 ```
@@ -160,7 +164,7 @@ public function render()
 If your layout file has any named slots in addition to `$slot`, you can set their content in your Blade view by defining `<x-slot>`s outside your root element. For example, if you want to be able to set the page language for each component individually, you can add a dynamic `$lang` slot into the opening HTML tag in your layout file:
 
 ```blade
-<!-- resources/views/components/layouts/app.blade.php -->
+<!-- resources/views/layouts/app.blade.php -->
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', $lang ?? app()->getLocale()) }}"> <!-- [tl! highlight] -->
@@ -169,9 +173,13 @@ If your layout file has any named slots in addition to `$slot`, you can set thei
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <title>{{ $title ?? 'Page Title' }}</title>
+
+        @livewireStyles
     </head>
     <body>
         {{ $slot }}
+
+        @livewireScripts
     </body>
 </html>
 ```
