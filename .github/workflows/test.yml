@@ -33,7 +33,7 @@ jobs:
 
       - name: Install Alpine.js packages from main branch
         run: |
-          git clone --depth=1 --branch=main https://github.com/alpinejs/alpine.git /tmp/alpine
+          git clone --depth=1 --branch=lw-ci-test https://github.com/alpinejs/alpine.git /tmp/alpine
           cd /tmp/alpine
           npm install
           npm run build
@@ -123,7 +123,7 @@ jobs:
 
       - name: Install Alpine.js packages from main branch
         run: |
-          git clone --depth=1 --branch=main https://github.com/alpinejs/alpine.git /tmp/alpine
+          git clone --depth=1 --branch=lw-ci-test https://github.com/alpinejs/alpine.git /tmp/alpine
           cd /tmp/alpine
           npm install
           npm run build
