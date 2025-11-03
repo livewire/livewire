@@ -48,7 +48,7 @@ jobs:
       - name: Link Alpine packages to Livewire
         run: npm link /tmp/alpine/packages/alpinejs /tmp/alpine/packages/anchor /tmp/alpine/packages/collapse /tmp/alpine/packages/focus /tmp/alpine/packages/intersect /tmp/alpine/packages/mask /tmp/alpine/packages/morph /tmp/alpine/packages/persist /tmp/alpine/packages/resize /tmp/alpine/packages/csp /tmp/alpine/packages/sort
 
-      - name: Check Alpine packages are linked
+      - name: Check Alpine packages are linked!
         run: npm list
 
       - name: Build Livewire assets
