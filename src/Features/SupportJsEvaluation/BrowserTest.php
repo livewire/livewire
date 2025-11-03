@@ -6,6 +6,13 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
+    public static function tweakApplicationHook()
+    {
+        return function () {
+            app('livewire.finder')->addLocation(path: __DIR__ . '/fixtures');
+        };
+    }
+
     public function test_can_toggle_a_purely_js_property_with_a_purely_js_function()
     {
         Livewire::visit(
@@ -116,7 +123,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_can_define_js_actions_though_dollar_js_magic_on_a_component()
+    public function test_can_define_js_actions_though_dollar_js_magic_in_a_script()
     {
         Livewire::visit(
             new class extends \Livewire\Component {
@@ -137,6 +144,22 @@ class BrowserTest extends \Tests\BrowserTestCase
         )
         ->click('@test')
         ->assertScript('window.test === "through dollar js"')
+        ;
+    }
+
+    public function test_can_define_js_actions_though_dollar_js_magic_in_a_sfc_script()
+    {        
+        Livewire::visit('sfc-component-with-dollar-js-magic')
+            ->click('@test')
+            ->assertScript('window.test === "through dollar js"')
+        ;
+    }
+
+    public function test_can_define_js_actions_though_dollar_js_magic_on_a_mfc_script()
+    {   
+        Livewire::visit('mfc-component-with-dollar-js-magic')
+            ->click('@test')
+            ->assertScript('window.test === "through dollar js"')
         ;
     }
 
