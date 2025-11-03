@@ -9919,6 +9919,9 @@ var MessageRequest = class {
   isAborted() {
     return this.aborted;
   }
+  isIsolated() {
+    return Array.from(this.messages).every((message) => message.component.isIsolated);
+  }
   onSend({ responsePromise }) {
     this.interceptors.forEach((interceptor) => interceptor.onSend({ responsePromise }));
     this.messages.forEach((message) => message.onSend());
@@ -10558,7 +10561,7 @@ function sendMessages() {
     }
     let hasFoundRequest = false;
     requests.forEach((request) => {
-      if (!hasFoundRequest) {
+      if (!hasFoundRequest && !request.isIsolated()) {
         request.addMessage(message);
         hasFoundRequest = true;
       }

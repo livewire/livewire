@@ -4189,6 +4189,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     isAborted() {
       return this.aborted;
     }
+    isIsolated() {
+      return Array.from(this.messages).every((message) => message.component.isIsolated);
+    }
     onSend({ responsePromise }) {
       this.interceptors.forEach((interceptor2) => interceptor2.onSend({ responsePromise }));
       this.messages.forEach((message) => message.onSend());
@@ -4828,7 +4831,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let hasFoundRequest = false;
       requests.forEach((request) => {
-        if (!hasFoundRequest) {
+        if (!hasFoundRequest && !request.isIsolated()) {
           request.addMessage(message);
           hasFoundRequest = true;
         }

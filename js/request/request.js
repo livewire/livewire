@@ -56,6 +56,10 @@ export class MessageRequest {
         return this.aborted
     }
 
+    isIsolated() {
+        return Array.from(this.messages).every(message => message.component.isIsolated)
+    }
+
     /**
      * Lifecycle methods
      */
