@@ -391,7 +391,7 @@ class Testable
             return;
         }
 
-        $this->instance()->$property = $value;
+        $this->setProperty($property, $value);
     }
 
     /**
