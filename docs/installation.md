@@ -20,7 +20,7 @@ composer require livewire/livewire:^4.0@beta
 
 That's it! Livewire uses Laravel's package auto-discovery, so no additional setup is required.
 
-**Ready to build your first component?** Head over to the [Quickstart guide](/docs/quickstart) to create your first Livewire component in minutes.
+**Ready to build your first component?** Head over to the [Quickstart guide](/docs/4.x/quickstart) to create your first Livewire component in minutes.
 
 ## Create a layout file
 
@@ -269,4 +269,4 @@ Alternatively, [manually bundle Livewire and Alpine](#manually-bundling-livewire
 - Verify you're running a supported PHP version (8.1+) and Laravel version (10+)
 - Clear your application cache: `php artisan cache:clear`
 
-If issues persist, check the [troubleshooting documentation](/docs/troubleshooting) for more detailed debugging steps.
+If issues persist, check the [troubleshooting documentation](/docs/4.x/troubleshooting) for more detailed debugging steps.

@@ -6,17 +6,15 @@ If you prefer, you can use [Laravel's built-in redirect utilities](https://larav
 
 ## Basic usage
 
-Below is an example of a `CreatePost` Livewire component that redirects the user to another page after they submit the form to create a post:
+Below is an example of a `post.create` Livewire component that redirects the user to another page after they submit the form to create a post:
 
 ```php
 <?php
 
-namespace App\Livewire;
-
 use Livewire\Component;
 use App\Models\Post;
 
-class CreatePost extends Component
+new class extends Component
 {
 	public $title = '';
 
@@ -31,12 +29,12 @@ class CreatePost extends Component
 
 		$this->redirect('/posts'); // [tl! highlight]
     }
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
+<form wire:submit="save">
+    <!-- Form fields... -->
+</form>
 ```
 
 As you can see, when the `save` action is triggered, a redirect will also be triggered to `/posts`. When Livewire receives this response, it will redirect the user to the new URL on the frontend.
@@ -80,19 +78,17 @@ Because Livewire uses Laravel's built-in redirection feature, you can use all of
 For example, if you are using a Livewire component as a full-page component for a route like so:
 
 ```php
-use App\Livewire\ShowPosts;
-
-Route::livewire('/posts', ShowPosts::class);
+Route::livewire('/posts', 'pages::show-posts');
 ```
 
-You can redirect to the component by providing the component name to the `redirect()` method:
+You can redirect to it simply by using the route path:
 
 ```php
 public function save()
 {
     // ...
 
-    $this->redirect(ShowPosts::class);
+    $this->redirect('/posts');
 }
 ```
 
@@ -103,9 +99,11 @@ In addition to allowing you to use Laravel's built-in redirection methods, Livew
 To pass flash data along with a redirect, you can use Laravel's `session()->flash()` method like so:
 
 ```php
+<?php
+
 use Livewire\Component;
 
-class UpdatePost extends Component
+new class extends Component
 {
     // ...
 
@@ -117,7 +115,8 @@ class UpdatePost extends Component
 
         $this->redirect('/posts');
     }
-}
+};
+?>
 ```
 
 Assuming the page being redirected to contain the following Blade snippet, the user will see a "Post successfully updated." message after updating the post:

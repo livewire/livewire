@@ -1,7 +1,7 @@
 
 Livewire allows you to build dynamic, reactive interfaces using only PHP—no JavaScript required. Instead of writing frontend code in JavaScript frameworks, you write simple PHP classes and Blade templates, and Livewire handles all the complex JavaScript behind the scenes.
 
-To demonstrate, we'll build a simple create-post form with real-time validation. You'll see how Livewire can validate inputs and update the page dynamically without writing a single line of JavaScript or manually handling AJAX requests.
+To demonstrate, we'll build a simple post creation form with real-time validation. You'll see how Livewire can validate inputs and update the page dynamically without writing a single line of JavaScript or manually handling AJAX requests.
 
 ## Prerequisites
 
@@ -67,7 +67,7 @@ Since this component will be used as a full page, we use the `pages::` prefix to
 This command will generate a new single-file component at `resources/views/pages/post/⚡create.blade.php`.
 
 > [!info] What's with the ⚡ emoji?
-> The lightning bolt makes Livewire components instantly recognizable in your editor. It's completely optional and can be disabled in your config if you prefer. See the [components documentation](/docs/components#creating-components) for more details.
+> The lightning bolt makes Livewire components instantly recognizable in your editor. It's completely optional and can be disabled in your config if you prefer. See the [components documentation](/docs/4.x/components#creating-components) for more details.
 
 ## Write the component
 
@@ -132,7 +132,7 @@ Here's what's happening in the code above:
 - `@error('title')` and `@error('content')` — Display validation error messages when validation fails
 
 > [!warning] Livewire components MUST have a single root element
-> Components must have exactly one root HTML element. In this example, the `<form>` element is the single root. Multiple root elements or HTML comments outside the root element will cause an error. When rendering [full-page components](/docs/pages), named slots for the layout can be placed outside the root element.
+> Components must have exactly one root HTML element. In this example, the `<form>` element is the single root. Multiple root elements or HTML comments outside the root element will cause an error. When rendering [full-page components](/docs/4.x/pages), named slots for the layout can be placed outside the root element.
 
 > [!tip] In a real application
 > The `save()` method uses `dd()` to dump the values for testing purposes. In a production application, you would typically save the data to a database and redirect:
@@ -201,10 +201,10 @@ This demonstrates Livewire's core power: reactive data binding, real-time valida
 
 Now that you've built your first Livewire component, here are some key concepts to explore:
 
-- **[Components](/docs/components)** — Learn about single-file vs multi-file components, passing data, and more
-- **[Properties](/docs/properties)** — Understand how component properties work and their lifecycle
-- **[Actions](/docs/actions)** — Dive deeper into methods, parameters, and event handling
-- **[Forms](/docs/forms)** — Explore Livewire's powerful form features including real-time validation
-- **[Validation](/docs/validation)** — Master all of Livewire's validation capabilities
+- **[Components](/docs/4.x/components)** — Learn about single-file vs multi-file components, passing data, and more
+- **[Properties](/docs/4.x/properties)** — Understand how component properties work and their lifecycle
+- **[Actions](/docs/4.x/actions)** — Dive deeper into methods, parameters, and event handling
+- **[Forms](/docs/4.x/forms)** — Explore Livewire's powerful form features including real-time validation
+- **[Validation](/docs/4.x/validation)** — Master all of Livewire's validation capabilities
 
 We've barely scratched the surface of what Livewire is capable of. Keep reading the documentation to see everything Livewire has to offer.

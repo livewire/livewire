@@ -4,27 +4,26 @@
 By appending the `--test` flag to the `make:livewire` command, you can generate a test file along with a component:
 
 ```shell
-php artisan make:livewire create-post --test
+php artisan make:livewire post.create --test
 ```
 
-In addition to generating the component files themselves, the above command will generate the following test file `tests/Feature/Livewire/CreatePostTest.php`:
+In addition to generating the component files themselves, the above command will generate the following test file `tests/Feature/Livewire/Post/CreateTest.php`:
 
 If you would like to create a [Pest PHP](https://pestphp.com/) test, you may provide the `--pest` option to the make:livewire command:
 
 ```php
 <?php
 
-namespace Tests\Feature\Livewire;
+namespace Tests\Feature\Livewire\Post;
 
-use App\Livewire\CreatePost;
 use Livewire\Livewire;
 use Tests\TestCase;
 
-class CreatePostTest extends TestCase
+class CreateTest extends TestCase
 {
     public function test_renders_successfully()
     {
-        Livewire::test(CreatePost::class)
+        Livewire::test('post.create')
             ->assertStatus(200);
     }
 }
@@ -43,17 +42,16 @@ Livewire provides an `assertSeeLivewire()` method that can be used from any Lara
 ```php
 <?php
 
-namespace Tests\Feature\Livewire;
+namespace Tests\Feature\Livewire\Post;
 
-use App\Livewire\CreatePost;
 use Tests\TestCase;
 
-class CreatePostTest extends TestCase
+class CreateTest extends TestCase
 {
     public function test_component_exists_on_the_page()
     {
         $this->get('/posts/create')
-            ->assertSeeLivewire(CreatePost::class);
+            ->assertSeeLivewire('post.create');
     }
 }
 ```
@@ -176,22 +174,22 @@ Livewire also provides helpful testing utilities for setting and asserting prope
 
 Component properties are typically updated in your application when users interact with form inputs containing `wire:model`. But, because tests don't typically type into an actual browser, Livewire allows you to set properties directly using the `set()` method.
 
-Below is an example of using `set()` to update the `$title` property of a `CreatePost` component:
+Below is an example of using `set()` to update the `$title` property of a `post.create` component:
 
 ```php
 <?php
 
 namespace Tests\Feature\Livewire;
 
-use App\Livewire\CreatePost;
+
 use Livewire\Livewire;
 use Tests\TestCase;
 
-class CreatePostTest extends TestCase
+class PostCreateTest extends TestCase
 {
     public function test_can_set_title()
     {
-        Livewire::test(CreatePost::class)
+        Livewire::test('post.create')
             ->set('title', 'Confessions of a serial soaker')
             ->assertSet('title', 'Confessions of a serial soaker');
     }
@@ -367,25 +365,25 @@ Livewire actions are typically called from the frontend using something like `wi
 
 Because Livewire component tests don't use an actual browser, you can instead trigger actions in your tests using the `call()` method.
 
-Below is an example of a `CreatePost` component using the `call()` method to trigger the `save()` action:
+Below is an example of a `post.create` component using the `call()` method to trigger the `save()` action:
 
 ```php
 <?php
 
 namespace Tests\Feature\Livewire;
 
-use App\Livewire\CreatePost;
+
 use Livewire\Livewire;
 use App\Models\Post;
 use Tests\TestCase;
 
-class CreatePostTest extends TestCase
+class PostCreateTest extends TestCase
 {
     public function test_can_create_post()
     {
         $this->assertEquals(0, Post::count());
 
-        Livewire::test(CreatePost::class)
+        Livewire::test('post.create')
             ->set('title', 'Wrinkly fingers? Try this one weird trick')
             ->set('content', '...')
             ->call('save');
@@ -412,15 +410,15 @@ To test that a validation error has been thrown, you can use Livewire's `assertH
 
 namespace Tests\Feature\Livewire;
 
-use App\Livewire\CreatePost;
+
 use Livewire\Livewire;
 use Tests\TestCase;
 
-class CreatePostTest extends TestCase
+class PostCreateTest extends TestCase
 {
     public function test_title_field_is_required()
     {
-        Livewire::test(CreatePost::class)
+        Livewire::test('post.create')
             ->set('title', '')
             ->call('save')
             ->assertHasErrors('title');
@@ -495,15 +493,15 @@ You can test that a Livewire action performed a redirect using the `assertRedire
 
 namespace Tests\Feature\Livewire;
 
-use App\Livewire\CreatePost;
+
 use Livewire\Livewire;
 use Tests\TestCase;
 
-class CreatePostTest extends TestCase
+class PostCreateTest extends TestCase
 {
     public function test_redirected_to_all_posts_after_creating_a_post()
     {
-        Livewire::test(CreatePost::class)
+        Livewire::test('post.create')
             ->set('title', 'Using a loofah doesn\'t make you aloof...ugh')
             ->set('content', '...')
             ->call('save')
@@ -515,7 +513,7 @@ class CreatePostTest extends TestCase
 As an added convenience, you can assert that the user was redirected to a specific page component instead of a hard-coded URL.
 
 ```php
-->assertRedirect(CreatePost::class);
+->assertRedirect('/posts');
 ```
 
 ### Events
@@ -527,15 +525,15 @@ To assert that an event was dispatched from within your component, you can use t
 
 namespace Tests\Feature\Livewire;
 
-use App\Livewire\CreatePost;
+
 use Livewire\Livewire;
 use Tests\TestCase;
 
-class CreatePostTest extends TestCase
+class PostCreateTest extends TestCase
 {
     public function test_creating_a_post_dispatches_event()
     {
-        Livewire::test(CreatePost::class)
+        Livewire::test('post.create')
             ->set('title', 'Top 100 bubble bath brands')
             ->set('content', '...')
             ->call('save')
@@ -544,7 +542,7 @@ class CreatePostTest extends TestCase
 }
 ```
 
-It is often helpful to test that two components can communicate with each other by dispatching and listening for events. Using the `dispatch()` method, let's simulate a `CreatePost` component dispatching a `create-post` event. Then, we will assert that a `PostCountBadge` component, which listens for that event, updates its post count appropriately:
+It is often helpful to test that two components can communicate with each other by dispatching and listening for events. Using the `dispatch()` method, let's simulate a `post.create` component dispatching a `post-created` event. Then, we will assert that a `PostCountBadge` component, which listens for that event, updates its post count appropriately:
 
 ```php
 <?php
@@ -552,7 +550,7 @@ It is often helpful to test that two components can communicate with each other 
 namespace Tests\Feature\Livewire;
 
 use App\Livewire\PostCountBadge;
-use App\Livewire\CreatePost;
+
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -563,7 +561,7 @@ class PostCountBadgeTest extends TestCase
         $badge = Livewire::test(PostCountBadge::class)
             ->assertSee("0");
 
-        Livewire::test(CreatePost::class)
+        Livewire::test('post.create')
             ->set('title', 'Tear-free: the greatest lie ever told')
             ->set('content', '...')
             ->call('save')
@@ -630,7 +628,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 ### Setup methods
 | Method                                                  | Description                                                                                                      |
 |---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
-| `Livewire::test(CreatePost::class)`                      | Test the `CreatePost` component |
+| `Livewire::test('post.create')`                      | Test the `post.create` component |
 | `Livewire::test(UpdatePost::class, ['post' => $post])`                      | Test the `UpdatePost` component with the `post` parameter (To be received through the `mount()` method) |
 | `Livewire::actingAs($user)`                      | Set the provided user as the session's authenticated user |
 | `Livewire::withQueryParams(['search' => '...'])`                      | Set the test's `search` URL query parameter to the provided value (ex. `?search=...`). Typically in the context of a property using Livewire's [`#[Url]` attribute](/docs/4.x/url) |

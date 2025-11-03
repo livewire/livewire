@@ -336,7 +336,7 @@ You can lazy load or defer full-page Livewire components using route methods.
 Use `->lazy()` to load the component when it enters the viewport:
 
 ```php
-Route::livewire('/dashboard', \App\Livewire\Dashboard::class)->lazy();
+Route::livewire('/dashboard', 'pages::dashboard')->lazy();
 ```
 
 ### Deferring full pages
@@ -344,7 +344,7 @@ Route::livewire('/dashboard', \App\Livewire\Dashboard::class)->lazy();
 Use `->defer()` to load the component immediately after the page loads:
 
 ```php
-Route::livewire('/dashboard', \App\Livewire\Dashboard::class)->defer();
+Route::livewire('/dashboard', 'pages::dashboard')->defer();
 ```
 
 ### Disabling lazy/defer loading
@@ -352,8 +352,8 @@ Route::livewire('/dashboard', \App\Livewire\Dashboard::class)->defer();
 If a component is lazy or deferred by default (via the `#[Lazy]` or `#[Defer]` attribute), you can opt-out using `enabled: false`:
 
 ```php
-Route::livewire('/dashboard', \App\Livewire\Dashboard::class)->lazy(enabled: false);
-Route::livewire('/dashboard', \App\Livewire\Dashboard::class)->defer(enabled: false);
+Route::livewire('/dashboard', 'pages::dashboard')->lazy(enabled: false);
+Route::livewire('/dashboard', 'pages::dashboard')->defer(enabled: false);
 ```
 
 ## Default placeholder view

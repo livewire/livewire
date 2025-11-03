@@ -7,7 +7,7 @@ Livewire components can be used as entire pages by assigning them directly to ro
 To route to a component, use the `Route::livewire()` method in your `routes/web.php` file:
 
 ```php
-Route::livewire('/posts/create', 'pages::create-post');
+Route::livewire('/posts/create', 'pages::post.create');
 ```
 
 When you visit the specified URL, the component will be rendered as a complete page using your application's layout.
