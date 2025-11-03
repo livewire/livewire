@@ -139,20 +139,20 @@ jobs:
           RUNNING_IN_CI: true
 
       - name: Run Browser tests
-        if: steps.build-assets.outcome == 'success'
+        if: (success() || failure()) && steps.build-assets.outcome == 'success'
         run: vendor/bin/phpunit --testsuite Browser
         env:
           RUNNING_IN_CI: true
 
       - name: Run Cancel Upload test
-        if: steps.build-assets.outcome == 'success'
+        if: (success() || failure()) && steps.build-assets.outcome == 'success'
         run: FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
         env:
           RUNNING_IN_CI: true
           FORCE_RUN: 1
 
       - name: Run Legacy Browser tests
-        if: steps.build-assets.outcome == 'success'
+        if: (success() || failure()) && steps.build-assets.outcome == 'success'
         run: vendor/bin/phpunit --testsuite LegacyBrowser
         env:
           RUNNING_IN_CI: true
