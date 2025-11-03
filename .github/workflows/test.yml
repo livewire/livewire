@@ -35,12 +35,12 @@ jobs:
         run: |
           git clone --depth=1 --branch=lw-ci-test https://github.com/alpinejs/alpine.git /tmp/alpine
           cd /tmp/alpine
-          npm install
+          npm ci
           npm run build
           cd ${{ github.workspace }}
           npm link /tmp/alpine/packages/alpinejs /tmp/alpine/packages/anchor /tmp/alpine/packages/collapse /tmp/alpine/packages/focus /tmp/alpine/packages/intersect /tmp/alpine/packages/mask /tmp/alpine/packages/morph /tmp/alpine/packages/persist /tmp/alpine/packages/resize /tmp/alpine/packages/csp /tmp/alpine/packages/sort
 
-      - name: Check
+      - name: Run npm list to ensure Alpine packages are linked
         run: npm list
 
       - name: Build Livewire assets
