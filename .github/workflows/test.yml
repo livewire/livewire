@@ -37,7 +37,7 @@ jobs:
       - name: Clone Alpine ${{ env.ALPINE_BRANCH }} branch
         run: git clone --depth=1 --branch=${{ env.ALPINE_BRANCH }} https://github.com/alpinejs/alpine.git /tmp/alpine
 
-      - name: Build Alpine assets!
+      - name: Build Alpine assets
         run: |
           cd /tmp/alpine
           npm ci
