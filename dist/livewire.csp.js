@@ -5612,9 +5612,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     isAborted() {
       return this.aborted;
     }
-    isIsolated() {
-      return Array.from(this.messages).every((message) => message.component.isIsolated);
-    }
     onSend({ responsePromise }) {
       this.interceptors.forEach((interceptor) => interceptor.onSend({ responsePromise }));
       this.messages.forEach((message) => message.onSend());
@@ -6254,7 +6251,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let hasFoundRequest = false;
       requests.forEach((request) => {
-        if (!hasFoundRequest && !request.isIsolated()) {
+        if (!hasFoundRequest) {
           request.addMessage(message);
           hasFoundRequest = true;
         }
@@ -14096,8 +14093,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           import_alpinejs7.default.dontAutoEvaluateFunctions(() => {
             evaluateExpression(component, component.el, scriptContent, {
               scope: {
-                "$wire": component.$wire,
-                "$js": component.$wire.js
+                "$wire": component.$wire
               }
             });
           });
@@ -14865,7 +14861,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
       let path = `/livewire/js/${encodedName}.js?v=${scriptModuleHash}`;
       import(path).then((module) => {
-        module.run.call(component.$wire, component.$wire, component.$wire.js);
+        module.run.call(component.$wire, [
+          component.$wire
+        ]);
       });
     }
   });
