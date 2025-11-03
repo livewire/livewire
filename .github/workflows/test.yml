@@ -32,7 +32,7 @@ jobs:
         run: npm ci
 
       - name: Clone Alpine main branch
-        run: git clone --depth=1 --branch=lw-ci-test https://github.com/alpinejs/alpine.git /tmp/alpine
+        run: git clone --depth=1 --branch=main https://github.com/alpinejs/alpine.git /tmp/alpine
 
       - name: Build Alpine assets
         run: |
@@ -107,7 +107,7 @@ jobs:
         run: npm ci
 
       - name: Clone Alpine main branch
-        run: git clone --depth=1 --branch=lw-ci-test https://github.com/alpinejs/alpine.git /tmp/alpine
+        run: git clone --depth=1 --branch=main https://github.com/alpinejs/alpine.git /tmp/alpine
 
       - name: Build Alpine assets
         run: |
