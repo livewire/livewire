@@ -35,7 +35,9 @@ jobs:
         run: npm ci
 
       - name: Clone Alpine ${{ env.ALPINE_BRANCH }} branch
-        run: git clone --depth=1 --branch=${{ env.ALPINE_BRANCH }} https://github.com/alpinejs/alpine.git /tmp/alpine
+        run: |
+          rm -rf /tmp/alpine
+          git clone --depth=1 --branch=${{ env.ALPINE_BRANCH }} https://github.com/alpinejs/alpine.git /tmp/alpine
 
       - name: Build Alpine assets
         run: |
@@ -110,7 +112,9 @@ jobs:
         run: npm ci
 
       - name: Clone Alpine ${{ env.ALPINE_BRANCH }} branch
-        run: git clone --depth=1 --branch=${{ env.ALPINE_BRANCH }} https://github.com/alpinejs/alpine.git /tmp/alpine
+        run: |
+          rm -rf /tmp/alpine
+          git clone --depth=1 --branch=${{ env.ALPINE_BRANCH }} https://github.com/alpinejs/alpine.git /tmp/alpine
 
       - name: Build Alpine assets
         run: |
