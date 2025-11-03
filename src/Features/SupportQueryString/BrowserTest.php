@@ -1041,11 +1041,8 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_it_handles_query_string_params_without_values()
     {
-        $id = 'a'.str()->random(10);
-
-        DuskTestable::createBrowser($id, [
-            $id => new class extends Component
-            {
+        DuskTestable::create([
+            new class extends Component {
                 #[Url]
                 public $foo;
 
@@ -1064,8 +1061,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     HTML;
                 }
             }
-        ])
-        ->visit('/livewire-dusk/'.$id.'?flag')
+        ], queryParams: ['flag' => true])
         ->assertQueryStringMissing('foo')
         ->waitForLivewire()->click('@setButton')
         ->assertSeeIn('@output', '\'bar\'')
