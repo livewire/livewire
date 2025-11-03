@@ -1,5 +1,14 @@
 Livewire is a Laravel package, so you will need to have a Laravel application up and running before you can install and use Livewire. If you need help setting up a new Laravel application, please see the [official Laravel documentation](https://laravel.com/docs/installation).
 
+## Prerequisites
+
+Before installing Livewire, make sure you have:
+
+- Laravel version 10 or later
+- PHP version 8.1 or later
+
+## Install Livewire
+
 > [!warning] Livewire v4 is currently in beta
 > Livewire v4 is still in active development and not yet stable. It's recommended to test thoroughly in a development environment before upgrading production applications. Breaking changes may occur between beta releases.
 
@@ -9,140 +18,91 @@ To install Livewire, open your terminal and navigate to your Laravel application
 composer require livewire/livewire:^4.0@beta
 ```
 
-That's it — really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
+That's it! Livewire uses Laravel's package auto-discovery, so no additional setup is required.
 
-> [!warning] `/livewire/livewire.js` returning a 404 status code
-> By default, Livewire exposes a route in your application to serve its JavaScript assets from: `/livewire/livewire.js`. This is fine for most applications, however, if you are using Nginx with a custom configuration, you may receive a 404 from this endpoint. To fix this issue, you can either [compile Livewire's JavaScript assets yourself](#manually-bundling-livewire-and-alpine), or [configure Nginx to allow for this](https://benjamincrozat.com/livewire-js-404-not-found).
+**Ready to build your first component?** Head over to the [Quickstart guide](/docs/quickstart) to create your first Livewire component in minutes.
+
+## Create a layout file
+
+When using Livewire components as full pages, you'll need a layout file. You can generate one using the Livewire command:
+
+```shell
+php artisan livewire:layout
+```
+
+This creates a layout file at `resources/views/layouts/app.blade.php` with the following contents:
+
+```blade
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>{{ $title ?? 'Page Title' }}</title>
+
+        @livewireStyles
+    </head>
+    <body>
+        {{ $slot }}
+
+        @livewireScripts
+    </body>
+</html>
+```
+
+The `@livewireStyles` and `@livewireScripts` directives include the necessary JavaScript and CSS assets for Livewire to function. Livewire bundles Alpine.js with its JavaScript, so both are loaded together.
+
+> [!info] Asset injection is automatic
+> Even without these directives, Livewire will automatically inject its assets into pages that contain Livewire components. However, including the directives gives you explicit control over where the assets are placed, which can be helpful for performance optimization or compatibility with other packages.
 
 ## Publishing the configuration file
 
-Livewire is "zero-config", meaning you can use it by following conventions, without any additional configuration. However, if needed, you can publish and customize Livewire's configuration file by running the following Artisan command:
+Livewire is "zero-config", meaning you can use it by following conventions without any additional configuration. However, if needed, you can publish and customize Livewire's configuration file:
 
 ```shell
 php artisan livewire:publish --config
 ```
 
-This will create a new `livewire.php` file in your Laravel application's `config` directory.
+This will create a new `livewire.php` file in your Laravel application's `config` directory where you can customize various Livewire settings.
 
-## Manually including Livewire's frontend assets
+---
 
-By default, Livewire injects the JavaScript and CSS assets it needs into each page that includes a Livewire component.
+# Advanced configuration
 
-If you want more control over this behavior, you can manually include the assets on a page using the following Blade directives:
-
-```blade
-<html>
-<head>
-	...
-	@livewireStyles
-</head>
-<body>
-	...
-	@livewireScripts
-</body>
-</html>
-```
-
-By including these assets manually on a page, Livewire knows not to inject the assets automatically.
-
-> [!warning] AlpineJS is bundled with Livewire
-> Because Alpine is bundled with Livewire's JavaScript assets, you must include @verbatim`@livewireScripts`@endverbatim on every page you wish to use Alpine. Even if you're not using Livewire on that page.
-
-Though rarely required, you may disable Livewire's auto-injecting asset behavior by updating the `inject_assets` [configuration option](#publishing-the-configuration-file) in your application's `config/livewire.php` file:
-
-```php
-'inject_assets' => false,
-```
-
-If you'd rather force Livewire to inject its assets on a single page or multiple pages, you can call the following global method from the current route or from a service provider.
-
-```php
-\Livewire\Livewire::forceAssetInjection();
-```
-
-## Configuring Livewire's update endpoint
-
-Every update in a Livewire component sends a network request to the server at the following endpoint: `https://example.com/livewire/update`
-
-This can be a problem for some applications that use localization or multi-tenancy.
-
-In those cases, you can register your own endpoint however you like, and as long as you do it inside `Livewire::setUpdateRoute()`,  Livewire will know to use this endpoint for all component updates:
-
-```php
-Livewire::setUpdateRoute(function ($handle) {
-	return Route::post('/custom/livewire/update', $handle);
-});
-```
-
-Now, instead of using `/livewire/update`, Livewire will send component updates to `/custom/livewire/update`.
-
-Because Livewire allows you to register your own update route, you can declare any additional middleware you want Livewire to use directly inside `setUpdateRoute()`:
-
-```php
-Livewire::setUpdateRoute(function ($handle) {
-	return Route::post('/custom/livewire/update', $handle)
-        ->middleware([...]); // [tl! highlight]
-});
-```
-
-## Customizing the asset URL
-
-By default, Livewire will serve its JavaScript assets from the following URL: `https://example.com/livewire/livewire.js`. Additionally, Livewire will reference this asset from a script tag like so:
-
-```blade
-<script src="/livewire/livewire.js" ...
-```
-
-If your application has global route prefixes due to localization or multi-tenancy, you can register your own endpoint that Livewire should use internally when fetching its JavaScript.
-
-To use a custom JavaScript asset endpoint, you can register your own route inside `Livewire::setScriptRoute()`:
-
-```php
-Livewire::setScriptRoute(function ($handle) {
-    return Route::get('/custom/livewire/livewire.js', $handle);
-});
-```
-
-Now, Livewire will load its JavaScript like so:
-
-```blade
-<script src="/custom/livewire/livewire.js" ...
-```
+The following sections cover advanced scenarios that most applications won't need. Only configure these if you have a specific requirement.
 
 ## Manually bundling Livewire and Alpine
 
-By default, Alpine and Livewire are loaded using the `<script src="livewire.js">` tag, which means you have no control over the order in which these libraries are loaded. Consequently, importing and registering Alpine plugins, as shown in the example below, will no longer function:
+**When you need this:** If you want to use Alpine.js plugins or have fine-grained control over when Alpine and Livewire initialize.
 
-```js
-// Warning: This snippet demonstrates what NOT to do...
+By default, Livewire automatically loads Alpine.js bundled with its JavaScript. However, if you need to register Alpine plugins or customize the initialization order, you can manually bundle Livewire and Alpine using your JavaScript build tool.
 
-import Alpine from 'alpinejs'
-import Clipboard from '@ryangjchandler/alpine-clipboard'
-
-Alpine.plugin(Clipboard)
-Alpine.start()
-```
-
-To address this issue, we need to inform Livewire that we want to use the ESM (ECMAScript module) version ourselves and prevent the injection of the `livewire.js` script tag. To achieve this, we must add the `@livewireScriptConfig` directive to our layout file (`resources/views/components/layouts/app.blade.php`):
+First, add the `@livewireScriptConfig` directive to your layout file:
 
 ```blade
-<html>
-<head>
-    <!-- ... -->
-    @livewireStyles
-    @vite(['resources/js/app.js'])
-</head>
-<body>
-    {{ $slot }}
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    @livewireScriptConfig <!-- [tl! highlight] -->
-</body>
+        <title>{{ $title ?? 'Page Title' }}</title>
+
+        @livewireStyles
+        @vite(['resources/js/app.js'])
+    </head>
+    <body>
+        {{ $slot }}
+
+        @livewireScriptConfig
+    </body>
 </html>
 ```
 
-When Livewire detects the `@livewireScriptConfig` directive, it will refrain from injecting the Livewire and Alpine scripts. If you are using the `@livewireScripts` directive to manually load Livewire, be sure to remove it. Make sure to add the `@livewireStyles` directive if it is not already present.
+The `@livewireScriptConfig` directive injects configuration and runtime globals that Livewire needs, but without the actual Livewire and Alpine JavaScript (since you're bundling those yourself). Replace `@livewireScripts` with `@livewireScriptConfig` when manually bundling.
 
-The final step is importing Alpine and Livewire in our `app.js` file, allowing us to register any custom resources, and ultimately starting Livewire and Alpine:
+Next, import and start Livewire and Alpine in your `resources/js/app.js` file:
 
 ```js
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
@@ -153,33 +113,160 @@ Alpine.plugin(Clipboard)
 Livewire.start()
 ```
 
-> [!tip] Rebuild your assets after composer update
-> Make sure that if you are manually bundling Livewire and Alpine, that you rebuild your assets whenever you run `composer update`.
+> [!tip] Rebuild assets after Livewire updates
+> When manually bundling, remember to rebuild your JavaScript assets (`npm run build`) whenever you update Livewire via Composer.
 
-> [!warning] Not compatible with Laravel Mix
-> Laravel Mix will not work if you are manually bundling Livewire and AlpineJS. Instead, we recommend that you [switch to Vite](https://laravel.com/docs/vite).
+## Customizing Livewire's update endpoint
 
-## Publishing Livewire's frontend assets
+**When you need this:** If your application uses route prefixes for localization (like `/en/`, `/fr/`) or multi-tenancy (like `/tenant-1/`, `/tenant-2/`), you may need to customize Livewire's update endpoint to match your routing structure.
 
-> [!warning] Publishing assets isn't necessary
-> Publishing Livewire's assets isn't necessary for Livewire to run. Only do this if you have a specific need for it.
+By default, Livewire sends component updates to `/livewire/update`. To customize this, register your own route in a service provider (typically `App\Providers\AppServiceProvider`):
 
-If you prefer the JavaScript assets to be served by your web server not through Laravel, use the `livewire:publish` command:
+```php
+use Livewire\Livewire;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        Livewire::setUpdateRoute(function ($handle) {
+            return Route::post('/custom/livewire/update', $handle);
+        });
+    }
+}
+```
+
+You can also add middleware to the update route:
+
+```php
+Livewire::setUpdateRoute(function ($handle) {
+    return Route::post('/custom/livewire/update', $handle)
+        ->middleware(['web', 'auth']);
+});
+```
+
+## Customizing the JavaScript asset URL
+
+**When you need this:** If your application uses route prefixes for localization or multi-tenancy, you may need to customize where Livewire serves its JavaScript from to match your routing structure.
+
+By default, Livewire serves its JavaScript from `/livewire/livewire.js`. To customize this, register your own route in a service provider:
+
+```php
+use Livewire\Livewire;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        Livewire::setScriptRoute(function ($handle) {
+            return Route::get('/custom/livewire/livewire.js', $handle);
+        });
+    }
+}
+```
+
+## Publishing Livewire's assets to public directory
+
+**When you need this:** If you want to serve Livewire's JavaScript through your web server directly (e.g., for CDN distribution or specific caching strategies) instead of Laravel routing.
+
+You can publish Livewire's JavaScript assets to your `public` directory:
 
 ```bash
 php artisan livewire:publish --assets
 ```
 
-To keep assets up-to-date and avoid issues in future updates, we strongly recommend that you add the following command to your composer.json file:
+To ensure assets stay up-to-date when you update Livewire, add this to your `composer.json`:
 
 ```json
 {
     "scripts": {
         "post-update-cmd": [
-            // Other scripts
             "@php artisan vendor:publish --tag=livewire:assets --ansi --force"
         ]
     }
 }
 ```
 
+> [!warning] Most applications don't need this
+> Publishing assets is rarely necessary. Only do this if you have a specific architectural requirement that prevents Laravel from serving the assets dynamically.
+
+## Disabling automatic asset injection
+
+**When you need this:** If you want complete control over when and how Livewire's assets are loaded, you can disable automatic injection.
+
+Update the `inject_assets` configuration option in your `config/livewire.php` file:
+
+```php
+'inject_assets' => false,
+```
+
+When disabled, you must manually include `@livewireStyles` and `@livewireScripts` in your layouts, or Livewire won't function.
+
+Alternatively, you can force asset injection on specific pages:
+
+```php
+\Livewire\Livewire::forceAssetInjection();
+```
+
+Call this in a route or controller where you want to ensure assets are injected.
+
+---
+
+# Troubleshooting
+
+## Livewire JavaScript not loading (404 error)
+
+**Symptom:** Visiting `/livewire/livewire.js` returns a 404 error, or Livewire features don't work.
+
+**Common causes:**
+
+**Nginx configuration blocking the route:**
+If you're using Nginx with a custom configuration, it may be blocking Laravel's route for `/livewire/livewire.js`. You can either:
+- Configure Nginx to allow this route (see [this guide](https://benjamincrozat.com/livewire-js-404-not-found))
+- [Manually bundle Livewire](#manually-bundling-livewire-and-alpine) to avoid serving through Laravel
+
+**Route caching:**
+If you've run `php artisan route:cache`, Laravel may not recognize Livewire's routes. Clear the cache:
+
+```shell
+php artisan route:clear
+```
+
+**Missing @livewireScripts:**
+If you've disabled automatic asset injection, ensure `@livewireScripts` is in your layout file before `</body>`.
+
+## Alpine.js not available on pages without Livewire components
+
+**Symptom:** You want to use Alpine.js on a page that doesn't have any Livewire components.
+
+**Solution:** Since Alpine is bundled with Livewire, you need to include `@livewireScripts` even on pages without Livewire components:
+
+```blade
+<!DOCTYPE html>
+<html>
+    <head>
+        @livewireStyles
+    </head>
+    <body>
+        <!-- No Livewire components, but we want Alpine -->
+        <div x-data="{ open: false }">
+            <button @click="open = !open">Toggle</button>
+        </div>
+
+        @livewireScripts
+    </body>
+</html>
+```
+
+Alternatively, [manually bundle Livewire and Alpine](#manually-bundling-livewire-and-alpine) and import Alpine in your JavaScript.
+
+## Components not updating or errors in browser console
+
+**Check the following:**
+- Ensure `@livewireStyles` is in the `<head>` of your layout
+- Ensure `@livewireScripts` is before `</body>` in your layout
+- Check your browser's developer console for JavaScript errors
+- Verify you're running a supported PHP version (8.1+) and Laravel version (10+)
+- Clear your application cache: `php artisan cache:clear`
+
+If issues persist, check the [troubleshooting documentation](/docs/troubleshooting) for more detailed debugging steps.

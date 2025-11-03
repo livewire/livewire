@@ -7,6 +7,7 @@ use Laravel\Dusk\Browser;
 use PHPUnit\Framework\TestCase;
 use function Livewire\{ invade, on };
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class DuskTestable
 {
@@ -53,23 +54,20 @@ class DuskTestable
      */
     static function create($components, $params = [], $queryParams = [])
     {
-        if (static::$shortCircuitCreateCall) {
-            throw new class ($components) extends \Exception {
-                public $components;
-                public $isDuskShortcircuit = true;
-                function __construct($components) {
-                    $this->components = $components;
-                }
-            };
-        }
-
-        $components = (array) $components;
+        $components = is_array($components) ? $components : [$components];
 
         $firstComponent = array_shift($components);
 
-        $id = 'a'.str()->random(10);
+        if (is_string($firstComponent) && ! class_exists($firstComponent)) {
+            $id = $firstComponent;
 
-        $components = [$id => $firstComponent, ...$components];
+            $components = [$firstComponent, ...$components];
+        } else {
+            $class = is_string($firstComponent) ? $firstComponent : $firstComponent::class;
+            $id = 'a' . substr(md5(Str::beforeLast($class, '$')), 0, 8);
+
+            $components = [$id => $firstComponent, ...$components];
+        }
 
         return static::createBrowser($id, $components, $params, $queryParams)->visit('/livewire-dusk/'.$id.'?'.Arr::query($queryParams));
     }
@@ -139,12 +137,6 @@ class DuskTestable
                 if (! $e->isDuskShortcircuit) throw $e;
                 $components = $e->components;
             }
-
-            $components = is_array($components) ? $components : [$components];
-
-            $firstComponent = array_shift($components);
-
-            $components = [$id => $firstComponent, ...$components];
 
             static::$shortCircuitCreateCall = false;
 

@@ -527,8 +527,8 @@ Every element that triggers a network request automatically receives a `data-loa
 Access your component's error bag from JavaScript:
 
 ```blade
-<div x-show="$wire.$errors.has('email')">
-    <span x-text="$wire.$errors.first('email')"></span>
+<div wire:show="$errors.has('email')">
+    <span wire:text="$errors.first('email')"></span>
 </div>
 ```
 
@@ -540,7 +540,7 @@ Intercept and modify Livewire requests from JavaScript:
 
 ```blade
 <script>
-$wire.$intercept('save', ({ proceed }) => {
+this.$intercept('save', ({ proceed }) => {
     if (confirm('Save changes?')) {
         proceed()
     }
@@ -555,7 +555,7 @@ $wire.$intercept('save', ({ proceed }) => {
 Trigger island renders directly from the template:
 
 ```blade
-<button wire:click="$island('stats', { mode: 'prepend' })">
+<button wire:click="$refresh" wire:island.prepend="stats">
     Update Stats
 </button>
 ```
