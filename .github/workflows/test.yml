@@ -31,6 +31,39 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Alpine.js packages from main branch
+        run: |
+          git clone --depth=1 --branch=main https://github.com/alpinejs/alpine.git /tmp/alpine
+          cd /tmp/alpine
+          npm install
+          npm run build
+          cd packages/alpinejs && npm link && cd ../..
+          cd packages/anchor && npm link && cd ../..
+          cd packages/collapse && npm link && cd ../..
+          cd packages/csp && npm link && cd ../..
+          cd packages/focus && npm link && cd ../..
+          cd packages/intersect && npm link && cd ../..
+          cd packages/mask && npm link && cd ../..
+          cd packages/morph && npm link && cd ../..
+          cd packages/persist && npm link && cd ../..
+          cd packages/resize && npm link && cd ../..
+          cd packages/sort && npm link && cd ../..
+          cd ${{ github.workspace }}
+          npm link alpinejs
+          npm link @alpinejs/anchor
+          npm link @alpinejs/collapse
+          npm link @alpinejs/csp
+          npm link @alpinejs/focus
+          npm link @alpinejs/intersect
+          npm link @alpinejs/mask
+          npm link @alpinejs/morph
+          npm link @alpinejs/persist
+          npm link @alpinejs/resize
+          npm link @alpinejs/sort
+
+      - name: Build Livewire assets
+        run: npm run build
+
       - name: Run JavaScript tests
         run: npm run test:run
 
@@ -78,6 +111,48 @@ jobs:
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
           composer update --prefer-stable --no-interaction
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install Alpine.js packages from main branch
+        run: |
+          git clone --depth=1 --branch=main https://github.com/alpinejs/alpine.git /tmp/alpine
+          cd /tmp/alpine
+          npm install
+          npm run build
+          cd packages/alpinejs && npm link && cd ../..
+          cd packages/anchor && npm link && cd ../..
+          cd packages/collapse && npm link && cd ../..
+          cd packages/csp && npm link && cd ../..
+          cd packages/focus && npm link && cd ../..
+          cd packages/intersect && npm link && cd ../..
+          cd packages/mask && npm link && cd ../..
+          cd packages/morph && npm link && cd ../..
+          cd packages/persist && npm link && cd ../..
+          cd packages/resize && npm link && cd ../..
+          cd packages/sort && npm link && cd ../..
+          cd ${{ github.workspace }}
+          npm link alpinejs
+          npm link @alpinejs/anchor
+          npm link @alpinejs/collapse
+          npm link @alpinejs/csp
+          npm link @alpinejs/focus
+          npm link @alpinejs/intersect
+          npm link @alpinejs/mask
+          npm link @alpinejs/morph
+          npm link @alpinejs/persist
+          npm link @alpinejs/resize
+          npm link @alpinejs/sort
+
+      - name: Build Livewire assets
+        run: npm run build
 
       - name: Setup dusk/chrome
         run: vendor/bin/dusk-updater detect --no-interaction
