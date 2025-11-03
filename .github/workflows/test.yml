@@ -13,6 +13,9 @@ on:
       - "docs/**"
       - "README.md"
 
+env:
+  ALPINE_BRANCH: main
+
 jobs:
   js-tests:
     runs-on: ubuntu-latest
@@ -31,8 +34,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Clone Alpine main branch
-        run: git clone --depth=1 --branch=main https://github.com/alpinejs/alpine.git /tmp/alpine
+      - name: Clone Alpine ${{ env.ALPINE_BRANCH }} branch
+        run: git clone --depth=1 --branch=${{ env.ALPINE_BRANCH }} https://github.com/alpinejs/alpine.git /tmp/alpine
 
       - name: Build Alpine assets
         run: |
@@ -106,8 +109,8 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Clone Alpine main branch
-        run: git clone --depth=1 --branch=main https://github.com/alpinejs/alpine.git /tmp/alpine
+      - name: Clone Alpine ${{ env.ALPINE_BRANCH }} branch
+        run: git clone --depth=1 --branch=${{ env.ALPINE_BRANCH }} https://github.com/alpinejs/alpine.git /tmp/alpine
 
       - name: Build Alpine assets
         run: |
