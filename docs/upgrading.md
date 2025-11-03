@@ -205,6 +205,29 @@ $wire.$js.bookmark = () => {
 
 The new syntax is cleaner and more intuitive.
 
+#### Deprecated: `$js` without prefix
+
+The use of `$js` in scripts without `$wire.$js` or `this.$js` prefix has been deprecated:
+
+```js
+// Deprecated (v3)
+$js('bookmark', () => {
+    // Toggle bookmark...
+})
+
+// New (v4)
+$wire.$js.bookmark = () => {
+    // Toggle bookmark...
+}
+// Or
+this.$js.bookmark = () => {
+    // Toggle bookmark...
+}
+```
+
+> [!tip] Old syntax still works
+> Both `$wire.$js('bookmark', ...)` and `$js('bookmark', ...)` will continue to work in v4 for backward compatibility, but you should migrate to the new syntax when convenient.
+
 #### Deprecated: `commit` and `request` hooks
 
 The `commit` and `request` hooks have been deprecated in favor of a new interceptor system that provides more granular control and better performance.

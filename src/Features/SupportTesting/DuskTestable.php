@@ -7,7 +7,6 @@ use Laravel\Dusk\Browser;
 use PHPUnit\Framework\TestCase;
 use function Livewire\{ invade, on };
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 
 class DuskTestable
 {
@@ -55,17 +54,24 @@ class DuskTestable
     static function create($components, $params = [], $queryParams = [])
     {
         $components = is_array($components) ? $components : [$components];
-
         $firstComponent = array_shift($components);
 
         if (is_string($firstComponent) && ! class_exists($firstComponent)) {
+            // Simple component name (eg. `counter`)
             $id = $firstComponent;
-
             $components = [$firstComponent, ...$components];
         } else {
-            $class = is_string($firstComponent) ? $firstComponent : $firstComponent::class;
-            $id = 'a' . substr(md5(Str::beforeLast($class, '$')), 0, 8);
+            if (is_string($firstComponent)) {
+                // Component class name (eg. `App\Livewire\Counter`)
+                $className = $firstComponent;
+            } else {
+                // Anonymous class instance (eg. `new class extends Component {}`)
+                // Remove the runtime '$123' suffix to make the class name stable
+                $className = str()->beforeLast($firstComponent::class, '$');
+            }
 
+            // A string ID that can be used in the URL
+            $id = 'a' . substr(md5($className), 0, 8);
             $components = [$id => $firstComponent, ...$components];
         }
 
