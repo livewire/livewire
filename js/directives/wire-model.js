@@ -9,7 +9,16 @@ import Alpine from 'alpinejs'
 directive('model', ({ el, directive, component, cleanup }) => {
     // @todo: will need to probaby do this further upstream i just don't want to bog down the entire lifecycle right now...
     // this is to support slots properly...
-    component = findComponentByEl(el)
+    
+    // For elements inside a dialog, check if there's a stored component reference
+    // This is needed because showModal() moves dialogs to the top layer, breaking parent traversal
+    let dialog = el.closest('dialog')
+    
+    if (dialog && dialog.__livewireComponent) {
+        component = dialog.__livewireComponent
+    } else {
+        component = findComponentByEl(el)
+    }
 
     let { expression, modifiers } = directive
 

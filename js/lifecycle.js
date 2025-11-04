@@ -84,6 +84,12 @@ export function start() {
             if (component) {
                 trigger('element.init', { el, component })
 
+                // Store component reference on dialog elements so children can find it
+                // This is needed because dialogs move to the top layer, breaking parent traversal
+                if (el.tagName && el.tagName.toLowerCase() === 'dialog') {
+                    el.__livewireComponent = component
+                }
+
                 directives.forEach(directive => {
                     trigger('directive.init', { el, component, directive, cleanup: (callback) => {
                         Alpine.onAttributeRemoved(el, directive.raw, callback)

@@ -121,6 +121,12 @@ function getMorphConfig(component) {
 
             if (isntElement(el)) return
 
+            // Preserve dialog open state during morphing
+            // Dialog elements in the top layer lose their open state if we don't preserve it
+            if (el.tagName && el.tagName.toLowerCase() === 'dialog' && el.open) {
+                toEl.setAttribute('open', '')
+            }
+
             trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil })
 
             // bypass DOM diffing for children by overwriting the content
