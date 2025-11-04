@@ -59,6 +59,7 @@ Concepts:
 Advanced:
     Troubleshooting: { uri: /docs/4.x/troubleshooting, file: /troubleshooting.md }
     Security: { uri: /docs/4.x/security, file: /security.md }
+    CSP: { uri: /docs/4.x/csp, file: /csp.md }
     JavaScript: { uri: /docs/4.x/javascript, file: /javascript.md }
     Synthesizers: { uri: /docs/4.x/synthesizers, file: /synthesizers.md }
     Contribution Guide: { uri: /docs/4.x/contribution-guide, file: /contribution-guide.md }
