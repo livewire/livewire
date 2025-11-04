@@ -9,17 +9,17 @@ To create a computed property, you can add the `#[Computed]` attribute above any
 > [!warning] Make sure you import attribute classes
 > Make sure you import any attribute classes. For example, the below `#[Computed]` attribute requires the following import `use Livewire\Attributes\Computed;`.
 
-For example, here's a `ShowUser` component that uses a computed property named `user()` to access a `User` Eloquent model based on a property named `$userId`:
+For example, here's a `show-user` component that uses a computed property named `user()` to access a `User` Eloquent model based on a property named `$userId`:
 
 ```php
-<?php
+<?php // resources/views/components/⚡show-user.blade.php
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\User;
 
-class ShowUser extends Component
+new class extends Component
 {
     public $userId;
 
@@ -33,12 +33,7 @@ class ShowUser extends Component
     {
         Auth::user()->follow($this->user);
     }
-
-    public function render()
-    {
-        return view('livewire.show-user');
-    }
-}
+};
 ```
 
 ```blade
@@ -82,13 +77,13 @@ To clear, or "bust", the stored cache, you can use PHP's `unset()` function.
 Below is an example of an action called `createPost()` that, by creating a new post in the application, makes the `posts()` computed stale — meaning the computed property `posts()` needs to be re-computed to include the newly added post:
 
 ```php
-<?php
+<?php // resources/views/components/⚡show-posts.blade.php
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-class ShowPosts extends Component
+new class extends Component
 {
     public function createPost()
     {
@@ -108,7 +103,7 @@ class ShowPosts extends Component
     }
 
     // ...
-}
+};
 ```
 
 In the above component, the computed property is cached before a new post is created because the `createPost()` method accesses `$this->posts` before the new post is created. To ensure that `$this->posts` contains the most up-to-date contents when accessed inside the view, the cache is invalidated using `unset($this->posts)`.
@@ -120,14 +115,14 @@ Sometimes you would like to cache the value of a computed property for the lifes
 Below is an example of a computed property named `user()`, where instead of executing the Eloquent query directly, we wrap the query in `Cache::remember()` to ensure that any future requests retrieve it from Laravel's cache instead of re-executing the query:
 
 ```php
-<?php
+<?php // resources/views/components/⚡show-user.blade.php
 
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\User;
 
-class ShowUser extends Component
+new class extends Component
 {
     public $userId;
 
@@ -143,7 +138,7 @@ class ShowUser extends Component
     }
 
     // ...
-}
+};
 ```
 
 Because each unique instance of a Livewire component has a unique ID, we can use `$this->getId()` to generate a unique cache key that will only be applied to future requests for this same component instance.
@@ -282,13 +277,13 @@ Another scenario when computed properties are helpful is using [inline templates
 Below is an example of an inline component where, because we are returning a template string directly inside `render()`, we never have an opportunity to pass data into the view:
 
 ```php
-<?php
+<?php // resources/views/components/⚡show-posts.blade.php
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-class ShowPosts extends Component
+new class extends Component
 {
     #[Computed]
     public function posts()
@@ -306,7 +301,7 @@ class ShowPosts extends Component
         </div>
         HTML;
     }
-}
+};
 ```
 
 In the above example, without a computed property, we would have no way to explicitly pass data into the Blade template.
@@ -320,20 +315,20 @@ In these case, you obviously don't have a `render()` method from which you can p
 Rather than re-introducing the `render()` method into your component, you can instead provide that data to the view via computed properties:
 
 ```php
-<?php
+<?php // resources/views/components/⚡show-posts.blade.php
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-class ShowPosts extends Component
+new class extends Component
 {
     #[Computed]
     public function posts()
     {
         return Post::all();
     }
-}
+};
 ```
 
 ```blade

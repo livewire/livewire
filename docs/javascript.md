@@ -65,16 +65,14 @@ In addition to designating entire methods to be evaluated in JavaScript, you can
 
 This is generally useful for performing some kind of client-side follow-up after a server-side action is performed.
 
-For example, here is an example of a `CreatePost` component that triggers a client-side alert dialog after the post is saved to the database:
+For example, here is an example of a `post.create` component that triggers a client-side alert dialog after the post is saved to the database:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡create.blade.php
 
 use Livewire\Component;
 
-class CreatePost extends Component
+new class extends Component
 {
     public $title = '';
 
@@ -84,7 +82,7 @@ class CreatePost extends Component
 
         $this->js("alert('Post saved!')"); // [tl! highlight:6]
     }
-}
+};
 ```
 
 The JavaScript expression `alert('Post saved!')` will now be executed on the client after the post has been saved to the database on the server.

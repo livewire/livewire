@@ -11,17 +11,15 @@ Both approaches prevent slow components from blocking your initial page render, 
 
 ## Basic example
 
-For example, imagine you have a `Revenue` component which contains a slow database query in `mount()`:
+For example, imagine you have a `revenue` component which contains a slow database query in `mount()`:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡revenue.blade.php
 
 use Livewire\Component;
 use App\Models\Transaction;
 
-class Revenue extends Component
+new class extends Component
 {
     public $amount;
 
@@ -30,15 +28,9 @@ class Revenue extends Component
         // Slow database query...
         $this->amount = Transaction::monthToDate()->sum('amount');
     }
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.revenue');
-    }
-}
-```
-
-```blade
 <div>
     Revenue this month: {{ $amount }}
 </div>
@@ -64,14 +56,12 @@ By default, Livewire will insert an empty `<div></div>` for your component befor
 To signal to your users that the component is being loaded, you can define a `placeholder()` method to render any kind of placeholder HTML you like, including loading spinners and skeleton placeholders:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡revenue.blade.php
 
 use Livewire\Component;
 use App\Models\Transaction;
 
-class Revenue extends Component
+new class extends Component
 {
     public $amount;
 
@@ -90,12 +80,12 @@ class Revenue extends Component
         </div>
         HTML;
     }
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.revenue');
-    }
-}
+<div>
+    Revenue this month: {{ $amount }}
+</div>
 ```
 
 Because the above component specifies a "placeholder" by returning HTML from a `placeholder()` method, the user will see an SVG loading spinner on the page until the component is fully loaded.
@@ -164,14 +154,12 @@ For example, here's a scenario where you might pass a time interval into the `Re
 You can accept this data in `mount()` just like any other component:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡revenue.blade.php
 
 use Livewire\Component;
 use App\Models\Transaction;
 
-class Revenue extends Component
+new class extends Component
 {
     public $amount;
 
@@ -190,23 +178,23 @@ class Revenue extends Component
         </div>
         HTML;
     }
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.revenue');
-    }
-}
+<div>
+    Revenue this month: {{ $amount }}
+</div>
 ```
 
 However, unlike a normal component load, a `lazy` component has to serialize or "dehydrate" any passed-in properties and temporarily store them on the client-side until the component is fully loaded.
 
-For example, you might want to pass in an Eloquent model to the `Revenue` component like so:
+For example, you might want to pass in an Eloquent model to the `revenue` component like so:
 
 ```blade
 <livewire:revenue lazy :$user />
 ```
 
-In a normal component, the actual PHP in-memory `$user` model would be passed into the `mount()` method of `Revenue`. However, because we won't run `mount()` until the next network request, Livewire will internally serialize `$user` to JSON and then re-query it from the database before the next request is handled.
+In a normal component, the actual PHP in-memory `$user` model would be passed into the `mount()` method of `revenue`. However, because we won't run `mount()` until the next network request, Livewire will internally serialize `$user` to JSON and then re-query it from the database before the next request is handled.
 
 Typically, this serialization should not cause any behavioral differences in your application.
 

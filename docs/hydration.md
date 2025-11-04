@@ -20,10 +20,14 @@ When Livewire _dehydrates_ a server-side component, it does two things:
 
 After a component is mounted or an update has been made, Livewire calls a component's `render()` method to convert the Blade template to raw HTML.
 
-Take the following `Counter` component for example:
+Take the following `counter` component for example:
 
 ```php
-class Counter extends Component
+<?php
+
+use Livewire\Component;
+
+new class extends Component
 {
     public $count = 1;
 
@@ -42,10 +46,10 @@ class Counter extends Component
         </div>
         HTML;
     }
-}
+};
 ```
 
-After each mount or update, Livewire would render the above `Counter` component to the following HTML:
+After each mount or update, Livewire would render the above `counter` component to the following HTML:
 
 ```html
 <div>
@@ -57,7 +61,7 @@ After each mount or update, Livewire would render the above `Counter` component 
 
 ### The snapshot
 
-In order to re-create the `Counter` component on the server during the next request, a JSON snapshot is created, attempting to capture as much of the state of the component as possible:
+In order to re-create the `counter` component on the server during the next request, a JSON snapshot is created, attempting to capture as much of the state of the component as possible:
 
 ```js
 {
@@ -94,7 +98,7 @@ When a component is first rendered, Livewire stores the snapshot as JSON inside 
 
 ## Hydrating
 
-When a component update is triggered, for example, the "+" button is pressed in the `Counter` component, a payload like the following is sent to the server:
+When a component update is triggered, for example, the "+" button is pressed in the `counter` component, a payload like the following is sent to the server:
 
 ```js
 {
@@ -116,7 +120,7 @@ When a component update is triggered, for example, the "+" button is pressed in 
 }
 ```
 
-Before Livewire can call the `increment` method, it must first create a new `Counter` instance and seed it with the snapshot's state.
+Before Livewire can call the `increment` method, it must first create a new `counter` instance and seed it with the snapshot's state.
 
 Here is some PHP pseudo-code that achieves this result:
 
@@ -131,18 +135,22 @@ foreach ($state as $property => $value) {
 }
 ```
 
-If you follow the above script, you will see that after creating a `Counter` object, its public properties are set based on the state provided from the snapshot.
+If you follow the above script, you will see that after creating a `counter` object, its public properties are set based on the state provided from the snapshot.
 
 ## Advanced hydration
 
-The above `Counter` example works well to demonstrate the concept of hydration; however, it only demonstrates how Livewire handles hydrating simple values like integers (`1`).
+The above `counter` example works well to demonstrate the concept of hydration; however, it only demonstrates how Livewire handles hydrating simple values like integers (`1`).
 
 As you may know, Livewire supports many more sophisticated property types beyond integers.
 
-Let's take a look at a slightly more complex example - a `Todos` component:
+Let's take a look at a slightly more complex example - a `todos` component:
 
 ```php
-class Todos extends Component
+<?php
+
+use Livewire\Component;
+
+new class extends Component
 {
     public $todos;
 
@@ -153,14 +161,14 @@ class Todos extends Component
             'third',
         ]);
     }
-}
+};
 ```
 
 As you can see, we are setting the `$todos` property to a [Laravel collection](https://laravel.com/docs/collections#main-content) with three strings as its content.
 
 JSON alone has no way of representing Laravel collections, so instead, Livewire has created its own pattern of associating metadata with pure data inside a snapshot.
 
-Here is the snapshot's state object for this `Todos` component:
+Here is the snapshot's state object for this `todos` component:
 
 ```js
 state: {
@@ -206,10 +214,14 @@ As you can see, Livewire uses the metadata associated with the state to derive t
 
 One distinct advantage of this approach is the ability to dehydrate and hydrate deeply nested properties.
 
-For example, consider the above `Todos` example, except now with a [Laravel Stringable](https://laravel.com/docs/helpers#method-str) instead of a plain string as the third item in the collection:
+For example, consider the above `todos` example, except now with a [Laravel Stringable](https://laravel.com/docs/helpers#method-str) instead of a plain string as the third item in the collection:
 
 ```php
-class Todos extends Component
+<?php
+
+use Livewire\Component;
+
+new class extends Component
 {
     public $todos;
 
@@ -220,7 +232,7 @@ class Todos extends Component
             str('third'),
         ]);
     }
-}
+};
 ```
 
 The dehydrated snapshot for this component's state would now look like this:

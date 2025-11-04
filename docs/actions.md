@@ -299,7 +299,7 @@ new class extends Component
     #[Computed]
     public function posts()
     {
-        return Auth::user()->posts,
+        return Auth::user()->posts;
     }
 
     public function delete($id)
@@ -355,7 +355,7 @@ new class extends Component
     #[Computed]
     public function posts()
     {
-        return Auth::user()->posts,
+        return Auth::user()->posts;
     }
 
     public function delete(Post $post) // [tl! highlight]
@@ -384,7 +384,7 @@ new class extends Component
     #[Computed]
     public function posts()
     {
-        return Auth::user()->posts,
+        return Auth::user()->posts;
     }
 
     public function delete(PostRepository $posts, $postId) // [tl! highlight]
@@ -699,11 +699,11 @@ new class extends Component
     <h1>{{ $post->title }}</h1>
     <p>{{ $post->content }}</p>
 
-    <div x-intersect="$wire.incrementViewCount()"></div>
+    <div wire:intersect="incrementViewCount"></div>
 </div>
 ```
 
-The example above uses [`x-intersect`](https://alpinejs.dev/plugins/intersect), an Alpine utility that calls the expression when the element enters the viewport (typically used to detect when a user scrolls to an element further down the page).
+The example above uses `wire:intersect` to call the action when the element enters the viewport (typically used to detect when a user scrolls to an element further down the page).
 
 As you can see, when a user scrolls to the bottom of the post, `incrementViewCount()` is invoked. Since `#[Renderless]` was added to the action, the view is logged, but the template doesn't re-render and no part of the page is affected.
 
@@ -780,7 +780,7 @@ new class extends Component
 ```
 
 ```blade
-<div x-intersect="$wire.logActivity()">
+<div wire:intersect="logActivity">
     <!-- ... -->
 </div>
 ```

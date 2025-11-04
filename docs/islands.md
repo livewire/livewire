@@ -7,7 +7,7 @@ This gives you the performance benefits of breaking components into smaller piec
 To create an island, wrap any portion of your Blade template with the `@island` directive:
 
 ```blade
-<?php
+<?php // resources/views/components/⚡dashboard.blade.php
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -48,7 +48,7 @@ Because the expensive calculation is inside a computed property—which evaluate
 Sometimes you have expensive computations or slow API calls that shouldn't block your initial page load. You can defer an island's initial render until after the page loads using the `lazy` parameter:
 
 ```blade
-<?php
+<?php // resources/views/components/⚡dashboard.blade.php
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -166,7 +166,7 @@ Both islands will update together whenever one is triggered.
 Instead of replacing content entirely, islands can append or prepend new content. This is perfect for pagination, infinite scroll, or real-time feeds:
 
 ```blade
-<?php
+<?php // resources/views/components/⚡activity-feed.blade.php
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;

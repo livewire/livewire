@@ -236,9 +236,11 @@ To demonstrate, consider this dropdown example with its `showDropdown` property 
 
 
 ```php
+<?php // resources/views/components/⚡post-dropdown.blade.php
+
 use Livewire\Component;
 
-class PostDropdown extends Component
+new class extends Component
 {
     public $showDropdown = false;
 
@@ -255,10 +257,9 @@ class PostDropdown extends Component
 
         $this->showDropdown = false;
     }
-}
-```
+};
+?>
 
-```blade
 <div x-data="{ open: $wire.entangle('showDropdown') }">
     <button x-on:click="open = true">Show More...</button>
 

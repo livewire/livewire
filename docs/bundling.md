@@ -13,14 +13,16 @@ By using Livewire's `#[Isolate]` class attribute, you can mark a component as "i
 This is useful if the update is expensive and you'd rather execute this component's update in parallel with others. For example, if multiple components are using `wire:poll` or listening for an event on the page, you may want to isolate specific component whose updates are expensive and would otherwise hold up the entire request.
 
 ```php
+<?php // resources/views/components/post/⚡show.blade.php
+
 use Livewire\Attributes\Isolate;
 use Livewire\Component;
 
 #[Isolate] // [tl! highlight]
-class ShowPost extends Component
+new class extends Component
 {
     // ...
-}
+};
 ```
 
 By adding the `#[Isolate]` attribute, this component's requests will no longer be bundled with other component updates.
@@ -32,18 +34,16 @@ When many components on a single page are "lazy" loaded (using the `#[Lazy]` att
 If you wish to disable this behavior, you can pass an `isolate: false` parameter into the `#[Lazy]` attribute like so:
 
 ```php
-<?php
+<?php // resources/views/components/⚡revenue.blade.php
 
-namespace App\Livewire;
-
-use Livewire\Component;
 use Livewire\Attributes\Lazy;
+use Livewire\Component;
 
 #[Lazy(isolate: false)] // [tl! highlight]
-class Revenue extends Component
+new class extends Component
 {
     // ...
-}
+};
 ```
 
 Now, if there are multiple `Revenue` components on the same page, all ten updates will be bundled and sent the server as single, lazy-load, network request.

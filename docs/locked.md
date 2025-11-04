@@ -2,16 +2,18 @@ Livewire properties are able to be modified freely on both the frontend and back
 
 ## Basic usage
 
-Below is a `ShowPost` component that stores a `Post` model's ID as a public property named `$id`. To keep this property from being modified by a curious or malicious user, you can add the `#[Locked]` attribute to the property:
+Below is a `show-post` component that stores a `Post` model's ID as a public property named `$id`. To keep this property from being modified by a curious or malicious user, you can add the `#[Locked]` attribute to the property:
 
 > [!warning] Make sure you import attribute classes
 > Make sure you import any attribute classes. For example, the below `#[Locked]` attribute requires the following import `use Livewire\Attributes\Locked;`.
 
 ```php
+<?php // resources/views/components/post/⚡show.blade.php
+
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
-class ShowPost extends Component
+new class extends Component
 {
 	#[Locked] // [tl! highlight]
     public $id;
@@ -22,7 +24,7 @@ class ShowPost extends Component
     }
 
 	// ...
-}
+};
 ```
 
 By adding the `#[Locked]` attribute, you are ensured that the `$id` property will never be tampered with.
@@ -30,7 +32,12 @@ By adding the `#[Locked]` attribute, you are ensured that the `$id` property wil
 > [!tip] Model properties are secure by default
 > If you store an Eloquent model in a public property instead of just the model's ID, Livewire will ensure the ID isn't tampered with, without you needing to explicitly add the `#[Locked]` attribute to the property. For most cases, this is a better approach than using `#[Locked]`:
 > ```php
-> class ShowPost extends Component
+> <?php // resources/views/components/post/⚡show.blade.php
+>
+> use Livewire\Component;
+> use App\Models\Post;
+>
+> new class extends Component
 > {
 >    public Post $post; // [tl! highlight]
 >
@@ -40,7 +47,7 @@ By adding the `#[Locked]` attribute, you are ensured that the `$id` property wil
 >    }
 >
 >	// ...
->}
+> };
 > ```
 
 ### Why not use protected properties?

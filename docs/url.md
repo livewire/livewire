@@ -2,28 +2,25 @@ Livewire allows you to store component properties in the URL's query string. For
 
 ## Basic usage
 
-Below is a `ShowUsers` component that allows you to search users by their name via a simple text input:
+Below is a `show-users` component that allows you to search users by their name via a simple text input:
 
 ```php
-<?php
+<?php // resources/views/components/⚡show-users.blade.php
 
-namespace App\Livewire;
-
-use Livewire\Attributes\Url;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\User;
 
-class ShowUsers extends Component
+new class extends Component
 {
     public $search = '';
 
-    public function render()
+    #[Computed]
+    public function users()
     {
-        return view('livewire.show-users', [
-            'users' => User::search($this->search)->get(),
-        ]);
+        return User::search($this->search)->get();
     }
-}
+};
 ```
 
 ```blade
@@ -31,7 +28,7 @@ class ShowUsers extends Component
     <input type="text" wire:model.live="search">
 
     <ul>
-        @foreach ($users as $user)
+        @foreach ($this->users as $user)
             <li wire:key="{{ $user->id }}">{{ $user->name }}</li>
         @endforeach
     </ul>
@@ -45,26 +42,24 @@ However, if the visitor refreshes the page, the search value and results will be
 To preserve the search value across page loads so that a visitor can refresh the page or share the URL, we can store the search value in the URL's query string by adding the `#[Url]` attribute above the `$search` property like so:
 
 ```php
-<?php
+<?php // resources/views/components/⚡show-users.blade.php
 
-namespace App\Livewire;
-
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use App\Models\User;
 
-class ShowUsers extends Component
+new class extends Component
 {
     #[Url] // [tl! highlight]
     public $search = '';
 
-    public function render()
+    #[Computed]
+    public function users()
     {
-        return view('livewire.show-users', [
-            'posts' => User::search($this->search)->get(),
-        ]);
+        return User::search($this->search)->get();
     }
-}
+};
 ```
 
 Now, if a user types "bob" into the search field, the URL bar in the browser will show:

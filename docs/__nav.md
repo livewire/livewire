@@ -52,6 +52,24 @@ HTML Directives:
     wire:sort: { uri: /docs/4.x/wire-sort, file: /wire-sort.md }
     wire:stream: { uri: /docs/4.x/wire-stream, file: /wire-stream.md }
     wire:text: { uri: /docs/4.x/wire-text, file: /wire-text.md }
+PHP Attributes:
+    Async: { uri: /docs/4.x/attribute-async, file: /attribute-async.md }
+    Computed: { uri: /docs/4.x/attribute-computed, file: /attribute-computed.md }
+    Defer: { uri: /docs/4.x/attribute-defer, file: /attribute-defer.md }
+    Isolate: { uri: /docs/4.x/attribute-isolate, file: /attribute-isolate.md }
+    Js: { uri: /docs/4.x/attribute-js, file: /attribute-js.md }
+    Layout: { uri: /docs/4.x/attribute-layout, file: /attribute-ayout.md }
+    Lazy: { uri: /docs/4.x/attribute-lazy, file: /attribute-lazy.md }
+    Locked: { uri: /docs/4.x/attribute-locked, file: /attribute-locked.md }
+    Modelable: { uri: /docs/4.x/attribute-modelable, file: /attribute-modelable.md }
+    On: { uri: /docs/4.x/attribute-on, file: /attribute-on.md }
+    Reactive: { uri: /docs/4.x/attribute-reactive, file: /attribute-reactive.md }
+    Renderless: { uri: /docs/4.x/attribute-renderless, file: /attribute-renderless.md }
+    Rule: { uri: /docs/4.x/attribute-rule, file: /attribute-rule.md }
+    Session: { uri: /docs/4.x/attribute-session, file: /attribute-session.md }
+    Title: { uri: /docs/4.x/attribute-title, file: /attribute-title.md }
+    Url: { uri: /docs/4.x/attribute-url, file: /attribute-url.md }
+    Validate: { uri: /docs/4.x/attribute-validate, file: /attribute-validate.md }
 Concepts:
     Morphing: { uri: /docs/4.x/morphing, file: /morph.md }
     Hydration: { uri: /docs/4.x/hydration, file: /hydration.md }

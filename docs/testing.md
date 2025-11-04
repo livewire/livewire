@@ -224,17 +224,15 @@ class UpdatePostTest extends TestCase
 }
 ```
 
-The underlying component being tested (`UpdatePost`) will receive `$post` through its `mount()` method. Let's look at the source for `UpdatePost` to paint a clearer picture of this feature:
+The underlying component being tested (`post.edit`) will receive `$post` through its `mount()` method. Let's look at the source for `post.edit` to paint a clearer picture of this feature:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡edit.blade.php
 
 use Livewire\Component;
 use App\Models\Post;
 
-class UpdatePost extends Component
+new class extends Component
 {
 	public Post $post;
 
@@ -248,36 +246,41 @@ class UpdatePost extends Component
 	}
 
 	// ...
-}
+};
 ```
 
 ### Setting URL parameters
 
 If your Livewire component depends on specific query parameters in the URL of the page it's loaded on, you can use the `withQueryParams()` method to set the query parameters manually for your test.
 
-Below is a basic `SearchPosts` component that uses [Livewire's URL feature](/docs/4.x/url) to store and track the current search query in the query string:
+Below is a basic `search-posts` component that uses [Livewire's URL feature](/docs/4.x/url) to store and track the current search query in the query string:
 
 ```php
-<?php
+<?php // resources/views/components/⚡search-posts.blade.php
 
-namespace App\Livewire;
-
-use Livewire\Component;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
+use Livewire\Component;
 use App\Models\Post;
 
-class SearchPosts extends Component
+new class extends Component
 {
     #[Url] // [tl! highlight]
     public $search = '';
 
-    public function render()
+    #[Computed]
+    public function posts()
     {
-        return view('livewire.search-posts', [
-            'posts' => Post::search($this->search)->get(),
-        ]);
+        return Post::search($this->search)->get(),
     }
-}
+};
+?>
+
+<div>
+    @foreach ($this->posts as $post)
+        {{ $post->title }}
+    @endforeach
+</div>
 ```
 
 As you can see, the `$search` property above uses Livewire's `#[Url]` attribute to denote that its value should be stored in the URL.
@@ -313,26 +316,27 @@ class SearchPostsTest extends TestCase
 
 If your Livewire component depends on cookies, you can use the `withCookie()` or `withCookies()` methods to set the cookies manually for your test.
 
-Below is a basic `Cart` component that loads a discount token from a cookie on mount:
+Below is a basic `cart` component that loads a discount token from a cookie on mount:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡cart.blade.php
 
 use Livewire\Component;
-use Livewire\Attributes\Url;
-use App\Models\Post;
 
-class Cart extends Component
+new class extends Component
 {
     public $discountToken;
 
-    public mount()
+    public function mount()
     {
         $this->discountToken = request()->cookie('discountToken');
     }
-}
+};
+?>
+
+<div>
+    Discount: {{ $discountToken }}
+</div>
 ```
 
 As you can see, the `$discountToken` property above gets its value from a cookie in the request.

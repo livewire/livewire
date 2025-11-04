@@ -8,33 +8,27 @@ Consult our [in-depth, technical examination of Livewire component nesting](/doc
 
 ## Nesting a component
 
-To nest a Livewire component within a parent component, simply include it in the parent component's Blade view. Below is an example of a `Dashboard` parent component that contains a nested `TodoList` component:
+To nest a Livewire component within a parent component, simply include it in the parent component's Blade view. Below is an example of a `dashboard` parent component that contains a nested `todos` component:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡dashboard.blade.php
 
 use Livewire\Component;
 
-class Dashboard extends Component
+new class extends Component
 {
-    public function render()
-    {
-        return view('livewire.dashboard');
-    }
-}
-```
+    //
+};
+?>
 
-```blade
 <div>
     <h1>Dashboard</h1>
 
-    <livewire:todo-list /> <!-- [tl! highlight] -->
+    <livewire:todos /> <!-- [tl! highlight] -->
 </div>
 ```
 
-On this page's initial render, the `Dashboard` component will encounter `<livewire:todo-list />` and render it in place. On a subsequent network request to `Dashboard`, the nested `todo-list` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are "islands"](/docs/4.x/understanding-nesting#every-component-is-an-island).
+On this page's initial render, the `dashboard` component will encounter `<livewire:todos />` and render it in place. On a subsequent network request to `dashboard`, the nested `todos` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are "islands"](/docs/4.x/understanding-nesting#every-component-is-an-island).
 
 For more information about the syntax for rendering components, consult our documentation on [Rendering Components](/docs/4.x/components#rendering-components).
 
@@ -42,48 +36,44 @@ For more information about the syntax for rendering components, consult our docu
 
 Passing data from a parent component to a child component is straightforward. In fact, it's very much like passing props to a typical [Blade component](https://laravel.com/docs/blade#components).
 
-For example, let's check out a `TodoList` component that passes a collection of `$todos` to a child component called `TodoCount`:
+For example, let's check out a `todos` component that passes a collection of `$todos` to a child component called `todo-count`:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡todos.blade.php
 
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-class TodoList extends Component
+new class extends Component
 {
-    public function render()
+    #[Computed]
+    public function todos()
     {
-        return view('livewire.todo-list', [
-            'todos' => Auth::user()->todos,
-        ]);
+        return Auth::user()->todos,
     }
-}
-```
+};
+?>
 
-```blade
 <div>
-    <livewire:todo-count :todos="$todos" />
+    <livewire:todo-count :todos="$this->todos" />
 
     <!-- ... -->
 </div>
 ```
 
-As you can see, we are passing `$todos` into `todo-count` with the syntax: `:todos="$todos"`.
+As you can see, we are passing `$this->todos` into `todo-count` with the syntax: `:todos="$this->todos"`.
 
 Now that `$todos` has been passed to the child component, you can receive that data through the child component's `mount()` method:
 
 ```php
-<?php
+<?php // resources/views/components/⚡todo-count.blade.php
 
-namespace App\Livewire;
-
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Todo;
 
-class TodoCount extends Component
+new class extends Component
 {
     public $todos;
 
@@ -92,13 +82,17 @@ class TodoCount extends Component
         $this->todos = $todos;
     }
 
-    public function render()
+    #[Computed]
+    public function count()
     {
-        return view('livewire.todo-count', [
-            'count' => $this->todos->count(),
-        ]);
+        return $this->todos->count(),
     }
-}
+};
+?>
+
+<div>
+    Count: {{ $this->count }}
+</div>
 ```
 
 > [!tip] Omit `mount()` as a shorter alternative
@@ -168,7 +162,7 @@ When using Livewire, [every component is an island](/docs/4.x/understanding-nest
 
 But, if you want or need a prop to be reactive, you can easily enable this behavior using the `#[Reactive]` attribute parameter.
 
-For example, below is the template of a parent `TodoList` component. Inside, it is rendering a `TodoCount` component and passing in the current list of todos:
+For example, below is the template of a parent `todos` component. Inside, it is rendering a `todo-count` component and passing in the current list of todos:
 
 ```blade
 <div>
@@ -180,29 +174,32 @@ For example, below is the template of a parent `TodoList` component. Inside, it 
 </div>
 ```
 
-Now let's add `#[Reactive]` to the `$todos` prop in the `TodoCount` component. Once we have done so, any todos that are added or removed inside the parent component will automatically trigger an update within the `TodoCount` component:
+Now let's add `#[Reactive]` to the `$todos` prop in the `todo-count` component. Once we have done so, any todos that are added or removed inside the parent component will automatically trigger an update within the `todo-count` component:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡todo-count.blade.php
 
 use Livewire\Attributes\Reactive;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Todo;
 
-class TodoCount extends Component
+new class extends Component
 {
     #[Reactive] // [tl! highlight]
     public $todos;
 
-    public function render()
+    #[Computed]
+    public function count()
     {
-        return view('livewire.todo-count', [
-            'count' => $this->todos->count(),
-        ]);
+        return $this->todos->count(),
     }
-}
+};
+?>
+
+<div>
+    Count: {{ $this->count }}
+</div>
 ```
 
 Reactive properties are an incredibly powerful feature, making Livewire more similar to frontend component libraries like Vue and React. But, it is important to understand the performance implications of this feature and only add `#[Reactive]` when it makes sense for your particular scenario.
@@ -213,18 +210,17 @@ Another powerful pattern for sharing state between parent and child components i
 
 This behavior is very commonly needed when extracting an input element into a dedicated Livewire component while still accessing its state in the parent component.
 
-Below is an example of a parent `TodoList` component that contains a `$todo` property which tracks the current todo about to be added by a user:
+Below is an example of a parent `todos` component that contains a `$todo` property which tracks the current todo about to be added by a user:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡todos.blade.php
 
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Todo;
 
-class TodoList extends Component
+new class extends Component
 {
     public $todo = '';
 
@@ -235,16 +231,15 @@ class TodoList extends Component
         ]);
     }
 
-    public function render()
+    #[Computed]
+    public function todos()
     {
-        return view('livewire.todo-list', [
-            'todos' => Auth::user()->todos,
-        ]);
+        return Auth::user()->todos,
     }
-}
+};
 ```
 
-As you can see in the `TodoList` template, `wire:model` is being used to bind the `$todo` property directly to a nested `TodoInput` component:
+As you can see in the `todos` template, `wire:model` is being used to bind the `$todo` property directly to a nested `todo-input` component:
 
 ```blade
 <div>
@@ -255,7 +250,7 @@ As you can see in the `TodoList` template, `wire:model` is being used to bind th
     <button wire:click="add">Add Todo</button>
 
     <div>
-        @foreach ($todos as $todo)
+        @foreach ($this->todos as $todo)
             <livewire:todo-item :$todo :key="$todo->id" />
         @endforeach
     </div>
@@ -264,35 +259,27 @@ As you can see in the `TodoList` template, `wire:model` is being used to bind th
 
 Livewire provides a `#[Modelable]` attribute you can add to any child component property to make it _modelable_ from a parent component.
 
-Below is the `TodoInput` component with the `#[Modelable]` attribute added above the `$value` property to signal to Livewire that if `wire:model` is declared on the component by a parent it should bind to this property:
+Below is the `todo-input` component with the `#[Modelable]` attribute added above the `$value` property to signal to Livewire that if `wire:model` is declared on the component by a parent it should bind to this property:
 
 ```php
-<?php
+<?php // resources/views/components/⚡todo-input.blade.php
 
-namespace App\Livewire;
-
-use Livewire\Component;
 use Livewire\Attributes\Modelable;
+use Livewire\Component;
 
-class TodoInput extends Component
+new class extends Component
 {
     #[Modelable] // [tl! highlight]
     public $value = '';
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.todo-input');
-    }
-}
-```
-
-```blade
 <div>
     <input type="text" wire:model="value" >
 </div>
 ```
 
-Now the parent `TodoList` component can treat `TodoInput` like any other input element and bind directly to its value using `wire:model`.
+Now the parent `todos` component can treat `todo-input` like any other input element and bind directly to its value using `wire:model`.
 
 > [!warning]
 > Currently Livewire only supports a single `#[Modelable]` attribute, so only the first one will be bound.
@@ -450,18 +437,17 @@ Another powerful parent-child component communication technique is Livewire's ev
 
 Our [complete documentation on Livewire's event system](/docs/4.x/events) provides more detailed information on events, but below we'll discuss a simple example of using an event to trigger an update in a parent component.
 
-Consider a `TodoList` component with functionality to show and remove todos:
+Consider a `todos` component with functionality to show and remove todos:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡todos.blade.php
 
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Todo;
 
-class TodoList extends Component
+new class extends Component
 {
     public function remove($todoId)
     {
@@ -472,36 +458,33 @@ class TodoList extends Component
         $todo->delete();
     }
 
-    public function render()
+    #[Computed]
+    public function todos()
     {
-        return view('livewire.todo-list', [
-            'todos' => Auth::user()->todos,
-        ]);
+        return Auth::user()->todos,
     }
-}
-```
+};
+?>
 
-```blade
 <div>
-    @foreach ($todos as $todo)
+    @foreach ($this->todos as $todo)
         <livewire:todo-item :$todo :key="$todo->id" />
     @endforeach
 </div>
 ```
 
-To call `remove()` from inside the child `TodoItem` components, you can add an event listener to `TodoList` via the `#[On]` attribute:
+To call `remove()` from inside the child `todo-item` components, you can add an event listener to `todos` via the `#[On]` attribute:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡todos.blade.php
 
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use App\Models\Todo;
-use Livewire\Attributes\On;
 
-class TodoList extends Component
+new class extends Component
 {
     #[On('remove-todo')] // [tl! highlight]
     public function remove($todoId)
@@ -513,26 +496,30 @@ class TodoList extends Component
         $todo->delete();
     }
 
-    public function render()
+    #[Computed]
+    public function todos()
     {
-        return view('livewire.todo-list', [
-            'todos' => Auth::user()->todos,
-        ]);
+        return Auth::user()->todos,
     }
-}
+};
+?>
+
+<div>
+    @foreach ($this->todos as $todo)
+        <livewire:todo-item :$todo :key="$todo->id" />
+    @endforeach
+</div>
 ```
 
-Once the attribute has been added to the action, you can dispatch the `remove-todo` event from the `TodoList` child component:
+Once the attribute has been added to the action, you can dispatch the `remove-todo` event from the `todo-item` child component:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡todo-item.blade.php
 
 use Livewire\Component;
 use App\Models\Todo;
 
-class TodoItem extends Component
+new class extends Component
 {
     public Todo $todo;
 
@@ -540,15 +527,9 @@ class TodoItem extends Component
     {
         $this->dispatch('remove-todo', todoId: $this->todo->id); // [tl! highlight]
     }
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.todo-item');
-    }
-}
-```
-
-```blade
 <div>
     <span>{{ $todo->content }}</span>
 
@@ -556,7 +537,7 @@ class TodoItem extends Component
 </div>
 ```
 
-Now when the "Remove" button is clicked inside a `TodoItem`, the parent `TodoList` component will intercept the dispatched event and perform the todo removal.
+Now when the "Remove" button is clicked inside a `todo-item`, the parent `todos` component will intercept the dispatched event and perform the todo removal.
 
 After the todo is removed in the parent, the list will be re-rendered and the child that dispatched the `remove-todo` event will be removed from the page.
 
@@ -564,31 +545,23 @@ After the todo is removed in the parent, the list will be re-rendered and the ch
 
 Though the above example works, it takes two network requests to perform a single action:
 
-1. The first network request from the `TodoItem` component triggers the `remove` action, dispatching the `remove-todo` event.
-2. The second network request is after the `remove-todo` event is dispatched client-side and is intercepted by `TodoList` to call its `remove` action.
+1. The first network request from the `todo-item` component triggers the `remove` action, dispatching the `remove-todo` event.
+2. The second network request is after the `remove-todo` event is dispatched client-side and is intercepted by `todos` to call its `remove` action.
 
-You can avoid the first request entirely by dispatching the `remove-todo` event directly on the client-side. Below is an updated `TodoItem` component that does not trigger a network request when dispatching the `remove-todo` event:
+You can avoid the first request entirely by dispatching the `remove-todo` event directly on the client-side. Below is an updated `todo-item` component that does not trigger a network request when dispatching the `remove-todo` event:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡todo-item.blade.php
 
 use Livewire\Component;
 use App\Models\Todo;
 
-class TodoItem extends Component
+new class extends Component
 {
     public Todo $todo;
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.todo-item');
-    }
-}
-```
-
-```blade
 <div>
     <span>{{ $todo->content }}</span>
 
@@ -627,13 +600,11 @@ Sometimes, you may not know which child component should be rendered on a page u
 Dynamic child components are useful in a variety of different scenarios, but below is an example of rendering different steps in a multi-step form using a dynamic component:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡steps.blade.php
 
 use Livewire\Component;
 
-class Steps extends Component
+new class extends Component
 {
     public $current = 'step-one';
 
@@ -649,15 +620,9 @@ class Steps extends Component
 
         $this->current = $this->steps[$currentIndex + 1];
     }
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.todo-list');
-    }
-}
-```
-
-```blade
 <div>
     <livewire:dynamic-component :is="$current" :key="$current" />
 
@@ -665,22 +630,22 @@ class Steps extends Component
 </div>
 ```
 
-Now, if the `Steps` component's `$current` prop is set to "step-one", Livewire will render a component named "step-one" like so:
+Now, if the `steps` component's `$current` prop is set to "step-one", Livewire will render a component named "step-one" like so:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡step-one.blade.php
 
 use Livewire\Component;
 
-class StepOne extends Component
+new class extends Component
 {
-    public function render()
-    {
-        return view('livewire.step-one');
-    }
-}
+    //
+};
+?>
+
+<div>
+    Step One Content
+</div>
 ```
 
 If you prefer, you can use the alternative syntax:
@@ -698,34 +663,31 @@ If you prefer, you can use the alternative syntax:
 
 Although rarely needed by most applications, Livewire components may be nested recursively, meaning a parent component renders itself as its child.
 
-Imagine a survey which contains a `SurveyQuestion` component that can have sub-questions attached to itself:
+Imagine a survey which contains a `survey-question` component that can have sub-questions attached to itself:
 
 ```php
-<?php
+<?php // resources/views/components/⚡survey-question.blade.php
 
-namespace App\Livewire;
-
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Question;
 
-class SurveyQuestion extends Component
+new class extends Component
 {
     public Question $question;
 
-    public function render()
+    #[Computed]
+    public function subQuestions()
     {
-        return view('livewire.survey-question', [
-            'subQuestions' => $this->question->subQuestions,
-        ]);
+        return $this->question->subQuestions,
     }
-}
-```
+};
+?>
 
-```blade
 <div>
     Question: {{ $question->content }}
 
-    @foreach ($subQuestions as $subQuestion)
+    @foreach ($this->subQuestions as $subQuestion)
         <livewire:survey-question :question="$subQuestion" :key="$subQuestion->id" />
     @endforeach
 </div>

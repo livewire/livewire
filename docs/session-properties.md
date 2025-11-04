@@ -7,34 +7,29 @@ The `#[Session]` attribute is analogous to the [`#[Url]`](/docs/4.x/url) attribu
 
 ## Basic usage
 
-Here's a `ShowPosts` component that allows users to filter visible posts by a string stored in a `$search` property:
+Here's a `show-posts` component that allows users to filter visible posts by a string stored in a `$search` property:
 
 ```php
-<?php
+<?php // resources/views/components/⚡show-posts.blade.php
 
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Session;
 use Livewire\Component;
 use App\Models\Post;
 
-class ShowPosts extends Component
+new class extends Component
 {
     #[Session] // [tl! highlight]
     public $search;
 
-    protected function posts()
+    #[Computed]
+    public function posts()
     {
         return $this->search === ''
             ? Post::all()
             : Post::where('title', 'like', '%'.$this->search.'%');
     }
-
-    public function render()
-    {
-        return view('livewire.show-posts', [
-            'posts' => $this->posts(),
-        ]);
-    }
-}
+};
 ```
 
 Because the `#[Session]` attribute has been added to the `$search` property, after a user enters a search value, they can refresh the page and the search value will be persisted. Every time `$search` is updated, its new value will be stored in the user's session and used across page loads.

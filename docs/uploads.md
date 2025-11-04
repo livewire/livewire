@@ -5,15 +5,13 @@ First, add the `WithFileUploads` trait to your component. Once this trait has be
 Here's an example of a simple component that handles uploading a photo:
 
 ```php
-<?php
+<?php // resources/views/components/⚡upload-photo.blade.php
 
-namespace App\Livewire;
-
-use Livewire\Component;
-use Livewire\WithFileUploads;
 use Livewire\Attributes\Validate;
+use Livewire\WithFileUploads;
+use Livewire\Component;
 
-class UploadPhoto extends Component
+new class extends Component
 {
     use WithFileUploads;
 
@@ -24,7 +22,7 @@ class UploadPhoto extends Component
     {
         $this->photo->store(path: 'photos');
     }
-}
+};
 ```
 
 ```blade
@@ -90,11 +88,13 @@ Livewire automatically handles multiple file uploads by detecting the `multiple`
 For example, below is a component with an array property named `$photos`. By adding `multiple` to the form's file input, Livewire will automatically append new files to this array:
 
 ```php
-use Livewire\Component;
-use Livewire\WithFileUploads;
-use Livewire\Attributes\Validate;
+<?php // resources/views/components/⚡upload-photos.blade.php
 
-class UploadPhotos extends Component
+use Livewire\Attributes\Validate;
+use Livewire\WithFileUploads;
+use Livewire\Component;
+
+new class extends Component
 {
     use WithFileUploads;
 
@@ -107,7 +107,7 @@ class UploadPhotos extends Component
             $photo->store(path: 'photos');
         }
     }
-}
+};
 ```
 
 ```blade
@@ -141,11 +141,13 @@ Livewire makes this trivial by using the `->temporaryUrl()` method on uploaded f
 Let's explore an example of a file upload with an image preview:
 
 ```php
-use Livewire\Component;
-use Livewire\WithFileUploads;
-use Livewire\Attributes\Validate;
+<?php // resources/views/components/⚡upload-photo.blade.php
 
-class UploadPhoto extends Component
+use Livewire\Attributes\Validate;
+use Livewire\WithFileUploads;
+use Livewire\Component;
+
+new class extends Component
 {
     use WithFileUploads;
 
@@ -153,7 +155,7 @@ class UploadPhoto extends Component
     public $photo;
 
     // ...
-}
+};
 ```
 
 ```blade
@@ -213,13 +215,15 @@ class UploadPhotoTest extends TestCase
 }
 ```
 
-Below is an example of the `UploadPhoto` component required to make the previous test pass:
+Below is an example of the `upload-photo` component required to make the previous test pass:
 
 ```php
-use Livewire\Component;
-use Livewire\WithFileUploads;
+<?php // resources/views/components/⚡upload-photo.blade.php
 
-class UploadPhoto extends Component
+use Livewire\WithFileUploads;
+use Livewire\Component;
+
+new class extends Component
 {
     use WithFileUploads;
 
@@ -231,7 +235,7 @@ class UploadPhoto extends Component
     }
 
     // ...
-}
+};
 ```
 
 For more information on testing file uploads, please consult [Laravel's file upload testing documentation](https://laravel.com/docs/http-tests#testing-file-uploads).

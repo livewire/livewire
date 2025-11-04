@@ -6,46 +6,44 @@ However, when you use pagination inside a Livewire component, users can navigate
 
 ## Basic usage
 
-Below is the most basic example of using pagination inside a `ShowPosts` component to only show ten posts at a time:
+Below is the most basic example of using pagination inside a `show-posts` component to only show ten posts at a time:
 
 > [!warning] You must use the `WithPagination` trait
 > To take advantage of Livewire's pagination features, each component containing pagination must use the `Livewire\WithPagination` trait.
 
 ```php
-<?php
+<?php // resources/views/components/⚡show-posts.blade.php
 
-namespace App\Livewire;
-
+use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Post;
 
-class ShowPosts extends Component
+new class extends Component
 {
     use WithPagination;
 
-    public function render()
+    #[Computed]
+    public function posts()
     {
-        return view('show-posts', [
-            'posts' => Post::paginate(10),
-        ]);
+        return Post::paginate(10);
     }
-}
+};
 ```
 
 ```blade
 <div>
     <div>
-        @foreach ($posts as $post)
+        @foreach ($this->posts as $post)
             <!-- ... -->
         @endforeach
     </div>
 
-    {{ $posts->links() }}
+    {{ $this->posts->links() }}
 </div>
 ```
 
-As you can see, in addition to limiting the number of posts shown via the `Post::paginate()` method, we will also use `$posts->links()` to render page navigation links.
+As you can see, in addition to limiting the number of posts shown via the `Post::paginate()` method, we will also use `$this->posts->links()` to render page navigation links.
 
 For more information on pagination using Laravel, check out [Laravel's comprehensive pagination documentation](https://laravel.com/docs/pagination).
 
@@ -95,15 +93,14 @@ For this reason, Livewire provides the `$this->resetPage()` method, allowing you
 The following component demonstrates using this method to reset the page after the search form is submitted:
 
 ```php
-<?php
+<?php // resources/views/components/⚡search-posts.blade.php
 
-namespace App\Livewire;
-
+use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Post;
 
-class SearchPosts extends Component
+new class extends Component
 {
     use WithPagination;
 
@@ -114,13 +111,12 @@ class SearchPosts extends Component
         $this->resetPage();
     }
 
-    public function render()
+    #[Computed]
+    public function posts()
     {
-        return view('show-posts', [
-            'posts' => Post::where('title', 'like', '%'.$this->query.'%')->paginate(10),
-        ]);
+        return Post::where('title', 'like', '%'.$this->query.'%')->paginate(10);
     }
-}
+};
 ```
 
 ```blade
@@ -132,12 +128,12 @@ class SearchPosts extends Component
     </form>
 
     <div>
-        @foreach ($posts as $post)
+        @foreach ($this->posts as $post)
             <!-- ... -->
         @endforeach
     </div>
 
-    {{ $posts->links() }}
+    {{ $this->posts->links() }}
 </div>
 ```
 
@@ -158,24 +154,26 @@ In addition to `$this->resetPage()`, Livewire provides other useful methods for 
 
 Because both Laravel and Livewire use URL query string parameters to store and track the current page number, if a single page contains multiple paginators, it's important to assign them different names.
 
-To demonstrate the problem more clearly, consider the following `ShowClients` component:
+To demonstrate the problem more clearly, consider the following `show-clients` component:
 
 ```php
+<?php // resources/views/components/⚡show-clients.blade.php
+
+use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Client;
 
-class ShowClients extends Component
+new class extends Component
 {
     use WithPagination;
 
-    public function render()
+    #[Computed]
+    public function clients()
     {
-        return view('show-clients', [
-            'clients' => Client::paginate(10),
-        ]);
+        return Client::paginate(10);
     }
-}
+};
 ```
 
 As you can see, the above component contains a paginated set of *clients*. If a user were to navigate to page `2` of this result set, the URL might look like the following:
@@ -184,24 +182,26 @@ As you can see, the above component contains a paginated set of *clients*. If a 
 http://application.test/?page=2
 ```
 
-Suppose the page also contains a `ShowInvoices` component that also uses pagination. To independently track each paginator's current page, you need to specify a name for the second paginator like so:
+Suppose the page also contains a `show-invoices` component that also uses pagination. To independently track each paginator's current page, you need to specify a name for the second paginator like so:
 
 ```php
+<?php // resources/views/components/⚡show-invoices.blade.php
+
+use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use Livewire\Component;
-use App\Models\Invoices;
+use App\Models\Invoice;
 
-class ShowInvoices extends Component
+new class extends Component
 {
     use WithPagination;
 
-    public function render()
+    #[Computed]
+    public function invoices()
     {
-        return view('show-invoices', [
-            'invoices' => Invoice::paginate(10, pageName: 'invoices-page'),
-        ]);
+        return Invoice::paginate(10, pageName: 'invoices-page');
     }
-}
+};
 ```
 
 Now, because of the `pageName` parameter that has been added to the `paginate` method, when a user visits page `2` of the *invoices*, the URL will contain the following:
@@ -227,9 +227,14 @@ $this->previousPage(pageName: 'invoices-page');
 Livewire allows you to execute code before and after a page is updated by defining either of the following methods inside your component:
 
 ```php
-use Livewire\WithPagination;
+<?php // resources/views/components/⚡show-posts.blade.php
 
-class ShowPosts extends Component
+use Livewire\Attributes\Computed;
+use Livewire\WithPagination;
+use Livewire\Component;
+use App\Models\Post;
+
+new class extends Component
 {
     use WithPagination;
 
@@ -243,13 +248,12 @@ class ShowPosts extends Component
         // Runs after the page is updated for this component...
     }
 
-    public function render()
+    #[Computed]
+    public function posts()
     {
-        return view('show-posts', [
-            'posts' => Post::paginate(10),
-        ]);
+        return Post::paginate(10);
     }
-}
+};
 ```
 
 ### Named paginator hooks

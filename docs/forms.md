@@ -4,17 +4,15 @@ Let's dive in.
 
 ## Submitting a form
 
-Let's start by looking at a very simple form in a `CreatePost` component. This form will have two simple text inputs and a submit button, as well as some code on the backend to manage the form's state and submission:
+Let's start by looking at a very simple form in a `post.create` component. This form will have two simple text inputs and a submit button, as well as some code on the backend to manage the form's state and submission:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡create.blade.php
 
 use Livewire\Component;
 use App\Models\Post;
 
-class CreatePost extends Component
+new class extends Component
 {
     public $title = '';
 
@@ -30,15 +28,9 @@ class CreatePost extends Component
 
         return $this->redirect('/posts');
     }
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
-```
-
-```blade
 <form wire:submit="save">
     <input type="text" wire:model="title">
 
@@ -52,7 +44,7 @@ As you can see, we are "binding" the public `$title` and `$content` properties i
 
 In addition to binding `$title` and `$content`, we are using `wire:submit` to capture the `submit` event when the "Save" button is clicked and invoking the `save()` action. This action will persist the form input to the database.
 
-After the new post is created in the database, we redirect the user to the `ShowPosts` component page and show them a "flash" message that the new post was created.
+After the new post is created in the database, we redirect the user to the posts page and show them a "flash" message that the new post was created.
 
 ### Adding validation
 
@@ -62,18 +54,16 @@ Livewire makes validating your forms as simple as adding `#[Validate]` attribute
 
 Once a property has a `#[Validate]` attribute attached to it, the validation rule will be applied to the property's value any time it's updated server-side.
 
-Let's add some basic validation rules to the `$title` and `$content` properties in our `CreatePost` component:
+Let's add some basic validation rules to the `$title` and `$content` properties in our `post.create` component:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡create.blade.php
 
 use Livewire\Attributes\Validate; // [tl! highlight]
 use Livewire\Component;
 use App\Models\Post;
 
-class CreatePost extends Component
+new class extends Component
 {
     #[Validate('required')] // [tl! highlight]
     public $title = '';
@@ -91,12 +81,7 @@ class CreatePost extends Component
 
         return $this->redirect('/posts');
     }
-
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
+};
 ```
 
 We'll also modify our Blade template to show any validation errors on the page.
@@ -135,7 +120,7 @@ php artisan livewire:form PostForm
 
 The above command will create a file called `app/Livewire/Forms/PostForm.php`.
 
-Let's rewrite the `CreatePost` component to use a `PostForm` class:
+Let's rewrite the `post.create` component to use a `PostForm` class:
 
 ```php
 <?php
@@ -156,15 +141,13 @@ class PostForm extends Form
 ```
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡create.blade.php
 
 use App\Livewire\Forms\PostForm;
 use Livewire\Component;
 use App\Models\Post;
 
-class CreatePost extends Component
+new class extends Component
 {
     public PostForm $form; // [tl! highlight]
 
@@ -178,12 +161,7 @@ class CreatePost extends Component
 
         return $this->redirect('/posts');
     }
-
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
+};
 ```
 
 ```blade
@@ -233,7 +211,12 @@ class PostForm extends Form
 Now you can call `$this->form->store()` from the component:
 
 ```php
-class CreatePost extends Component
+<?php // resources/views/components/post/⚡create.blade.php
+
+use App\Livewire\Forms\PostForm;
+use Livewire\Component;
+
+new class extends Component
 {
     public PostForm $form;
 
@@ -245,23 +228,21 @@ class CreatePost extends Component
     }
 
     // ...
-}
+};
 ```
 
 If you want to use this form object for both a create and update form, you can easily adapt it to handle both use cases.
 
-Here's what it would look like to use this same form object for an `UpdatePost` component and fill it with initial data:
+Here's what it would look like to use this same form object for a `post.edit` component and fill it with initial data:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡edit.blade.php
 
 use App\Livewire\Forms\PostForm;
 use Livewire\Component;
 use App\Models\Post;
 
-class UpdatePost extends Component
+new class extends Component
 {
     public PostForm $form;
 
@@ -276,12 +257,7 @@ class UpdatePost extends Component
 
         return $this->redirect('/posts');
     }
-
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
+};
 ```
 
 ```php
@@ -542,7 +518,7 @@ Livewire's `wire:loading` feature has a lot more to offer. Visit the [Loading do
 
 By default, Livewire only sends a network request when the form is submitted (or any other [action](/docs/4.x/actions) is called), not while the form is being filled out.
 
-Take the `CreatePost` component, for example. If you want to make sure the "title" input field is synchronized with the `$title` property on the backend as the user types, you may add the `.live` modifier to `wire:model` like so:
+Take the `post.create` component, for example. If you want to make sure the "title" input field is synchronized with the `$title` property on the backend as the user types, you may add the `.live` modifier to `wire:model` like so:
 
 ```blade
 <input type="text" wire:model.live="title">
@@ -590,15 +566,13 @@ For more information, check out the [validation documentation page](/docs/4.x/va
 If you want to automatically save a form as the user fills it out rather than wait until the user clicks "submit", you can do so using Livewire's `updated()` hook:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡edit.blade.php
 
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use App\Models\Post;
 
-class UpdatePost extends Component
+new class extends Component
 {
     public Post $post;
 
@@ -621,15 +595,9 @@ class UpdatePost extends Component
             $name => $value,
         ]);
     }
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
-```
-
-```blade
 <form wire:submit>
     <input type="text" wire:model.blur="title">
     <div>
@@ -655,7 +623,7 @@ To learn more about the "updated" lifecycle hook and other hooks, [visit the lif
 
 In the real-time saving scenario discussed above, it may be helpful to indicate to users when a field hasn't been persisted to the database yet.
 
-For example, if a user visits an `UpdatePost` page and starts modifying the title of the post in a text input, it may be unclear to them when the title is actually being updated in the database, especially if there is no "Save" button at the bottom of the form.
+For example, if a user visits a `post.edit` page and starts modifying the title of the post in a text input, it may be unclear to them when the title is actually being updated in the database, especially if there is no "Save" button at the bottom of the form.
 
 Livewire provides the `wire:dirty` directive to allow you to toggle elements or modify classes when an input's value diverges from the server-side component:
 
@@ -699,11 +667,11 @@ In the above example, as a user is typing continuously in the "title" field, a n
 
 ## Extracting input fields to Blade components
 
-Even in a small component such as the `CreatePost` example we've been discussing, we end up duplicating lots of form field boilerplate like validation messages and labels.
+Even in a small component such as the `post.create` example we've been discussing, we end up duplicating lots of form field boilerplate like validation messages and labels.
 
 It can be helpful to extract repetitive UI elements such as these into dedicated [Blade components](https://laravel.com/docs/blade#components) to be shared across your application.
 
-For example, below is the original Blade template from the `CreatePost` component. We will be extracting the following two text inputs into dedicated Blade components:
+For example, below is the original Blade template from the `post.create` component. We will be extracting the following two text inputs into dedicated Blade components:
 
 ```blade
 <form wire:submit="save">
