@@ -208,11 +208,11 @@ new class extends Component
 When using components as pages, you can pass route parameters directly to your component. The route parameters are automatically passed to the `mount()` method:
 
 ```php
-Route::livewire('/posts/{id}', 'pages::show-post');
+Route::livewire('/posts/{id}', 'pages::post.show');
 ```
 
 ```php
-<?php
+<?php // resources/views/pages/post/⚡show.blade.php
 
 use Livewire\Component;
 
@@ -230,11 +230,11 @@ new class extends Component
 Livewire also supports Laravel's route model binding:
 
 ```php
-Route::livewire('/posts/{post}', 'pages::show-post');
+Route::livewire('/posts/{post}', 'pages::post.show');
 ```
 
 ```php
-<?php
+<?php // resources/views/pages/post/⚡show.blade.php
 
 use App\Models\Post;
 use Livewire\Component;

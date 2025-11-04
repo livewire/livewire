@@ -7,14 +7,12 @@ You can set initial values for properties within your component's `mount()` meth
 Consider the following example:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡todos.blade.php
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-class TodoList extends Component
+new class extends Component
 {
     public $todos = [];
 
@@ -26,7 +24,7 @@ class TodoList extends Component
     }
 
     // ...
-}
+};
 ```
 
 In this example, we've defined an empty `todos` array and initialized it with existing todos from the authenticated user. Now, when the component renders for the first time, all the existing todos in the database are shown to the user.
@@ -38,14 +36,12 @@ Sometimes initializing many properties in the `mount()` method can feel verbose.
 For example:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡edit.blade.php
 
 use Livewire\Component;
 use App\Models\Post;
 
-class UpdatePost extends Component
+new class extends Component
 {
     public $post;
 
@@ -63,7 +59,7 @@ class UpdatePost extends Component
     }
 
     // ...
-}
+};
 ```
 
 Because `$post->only(...)` returns an associative array of model attributes and values based on the names you pass into it, the `$title` and `$description` properties will be initially set to the `title` and `description` of the `$post` model from the database without having to set each one individually.
@@ -72,16 +68,14 @@ Because `$post->only(...)` returns an associative array of model attributes and 
 
 Livewire supports two-way data binding through the `wire:model` HTML attribute. This allows you to easily synchronize data between component properties and HTML inputs, keeping your user interface and component state in sync.
 
-Let's use the `wire:model` directive to bind the `$todo` property in a `TodoList` component to a basic input element:
+Let's use the `wire:model` directive to bind the `$todo` property in a `todos` component to a basic input element:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡todos.blade.php
 
 use Livewire\Component;
 
-class TodoList extends Component
+new class extends Component
 {
     public $todos = [];
 
@@ -95,7 +89,7 @@ class TodoList extends Component
     }
 
     // ...
-}
+};
 ```
 
 ```blade
@@ -123,13 +117,11 @@ Sometimes, you may need to reset your properties back to their initial state aft
 In the example below, we can avoid code duplication by using `$this->reset()` to reset the `todo` field after the "Add Todo" button is clicked:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡todos.blade.php
 
 use Livewire\Component;
 
-class ManageTodos extends Component
+new class extends Component
 {
     public $todos = [];
 
@@ -143,7 +135,7 @@ class ManageTodos extends Component
     }
 
     // ...
-}
+};
 ```
 
 In the above example, after a user clicks "Add Todo", the input field holding the todo that has just been added will clear, allowing the user to write a new todo.
@@ -158,13 +150,11 @@ Alternatively, you can use the `pull()` method to both reset and retrieve the va
 Here's the same example from above, but simplified with `pull()`:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡todos.blade.php
 
 use Livewire\Component;
 
-class ManageTodos extends Component
+new class extends Component
 {
     public $todos = [];
 
@@ -176,7 +166,7 @@ class ManageTodos extends Component
     }
 
     // ...
-}
+};
 ```
 
 The above example is pulling a single value, but `pull()` can also be used to reset and retrieve (as a key-value pair) all or some properties:
@@ -204,7 +194,7 @@ Livewire supports primitive types such as strings, integers, etc. These types ca
 Livewire supports the following primitive property types: `Array`, `String`, `Integer`, `Float`, `Boolean`, and `Null`.
 
 ```php
-class TodoList extends Component
+new class extends Component
 {
     public $todos = []; // Array
 
@@ -215,7 +205,7 @@ class TodoList extends Component
     public $showTodos = false; // Boolean
 
     public $todoFilter; // Null
-}
+};
 ```
 
 ### Common PHP types
@@ -289,7 +279,7 @@ class Customer
 Attempting to set an instance of this class to a Livewire component property will result in an error telling you that the `Customer` property type isn't supported:
 
 ```php
-class ShowCustomer extends Component
+new class extends Component
 {
     public Customer $customer;
 
@@ -297,7 +287,7 @@ class ShowCustomer extends Component
     {
         $this->customer = new Customer('Caleb', 29);
     }
-}
+};
 ```
 
 However, you can solve this by implementing the `Wireable` interface and adding a `toLivewire()` and `fromLivewire()` method to your class. These methods tell Livewire how to turn properties of this type into JSON and back again:
@@ -380,7 +370,7 @@ If you prefer, you can use the more explicit `.get()` method to accomplish the s
 
 Similarly, you can manipulate your Livewire component properties in JavaScript using `$wire`.
 
-For example, let's add a "Clear" button to the `TodoList` component to allow the user to reset the input field using only JavaScript:
+For example, let's add a "Clear" button to the `todos` component to allow the user to reset the input field using only JavaScript:
 
 ```blade
 <div>
@@ -413,17 +403,15 @@ In short, always treat public properties as user input — as if they were reque
 
 ### Don't trust property values
 
-To demonstrate how neglecting to authorize and validate properties can introduce security holes in your application, the following `UpdatePost` component is vulnerable to attack:
+To demonstrate how neglecting to authorize and validate properties can introduce security holes in your application, the following `post.edit` component is vulnerable to attack:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡edit.blade.php
 
 use Livewire\Component;
 use App\Models\Post;
 
-class UpdatePost extends Component
+new class extends Component
 {
     public $id;
     public $title;
@@ -447,12 +435,7 @@ class UpdatePost extends Component
 
         session()->flash('message', 'Post updated successfully!');
     }
-
-    public function render()
-    {
-        return view('livewire.update-post');
-    }
-}
+};
 ```
 
 ```blade
@@ -512,13 +495,13 @@ Livewire also allows you to "lock" properties in order to prevent properties fro
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
-class UpdatePost extends Component
+new class extends Component
 {
     #[Locked] // [tl! highlight]
     public $id;
 
     // ...
-}
+};
 ```
 
 Now, if a user tries to modify `$id` on the front end, an error will be thrown.
@@ -532,14 +515,12 @@ For more information on locking properties, [consult the Locked properties docum
 When an Eloquent model is assigned to a Livewire component property, Livewire will automatically lock the property and ensure the ID isn't changed, so that you are safe from these kinds of attacks:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡edit.blade.php
 
 use Livewire\Component;
 use App\Models\Post;
 
-class UpdatePost extends Component
+new class extends Component
 {
     public Post $post; // [tl! highlight]
     public $title;
@@ -561,12 +542,7 @@ class UpdatePost extends Component
 
         session()->flash('message', 'Post updated successfully!');
     }
-
-    public function render()
-    {
-        return view('livewire.update-post');
-    }
-}
+};
 ```
 
 ### Properties expose system information to the browser
@@ -625,17 +601,15 @@ Typically, Livewire is able to preserve and recreate server-side properties betw
 
 For example, when storing Eloquent collections as Livewire properties, additional query constraints like `select(...)` will not be re-applied on subsequent requests.
 
-To demonstrate, consider the following `ShowTodos` component with a `select()` constraint applied to the `Todos` Eloquent collection:
+To demonstrate, consider the following `show-todos` component with a `select()` constraint applied to the `Todos` Eloquent collection:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡show-todos.blade.php
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-class ShowTodos extends Component
+new class extends Component
 {
     public $todos;
 
@@ -646,12 +620,7 @@ class ShowTodos extends Component
             ->select(['title', 'content']) // [tl! highlight]
             ->get();
     }
-
-    public function render()
-    {
-        return view('livewire.show-todos');
-    }
-}
+};
 ```
 
 When this component is initially loaded, the `$todos` property will be set to an Eloquent collection of the user's todos; however, only the `title` and `content` fields of each row in the database will have been queried and loaded into each of the models.
@@ -665,15 +634,13 @@ Computed properties are methods in your component marked with the `#[Computed]` 
 Here's the above example re-written using a computed property:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡show-todos.blade.php
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-class ShowTodos extends Component
+new class extends Component
 {
     #[Computed] // [tl! highlight]
     public function todos()
@@ -683,12 +650,7 @@ class ShowTodos extends Component
             ->select(['title', 'content'])
             ->get();
     }
-
-    public function render()
-    {
-        return view('livewire.show-todos');
-    }
-}
+};
 ```
 
 Here's how you would access these _todos_ from the Blade view:
@@ -706,15 +668,13 @@ Notice, inside your views, you can only access computed properties on the `$this
 You can also access `$todos` from inside your class. For example, if you had a `markAllAsComplete()` action:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡show-todos.blade.php
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-class ShowTodos extends Component
+new class extends Component
 {
     #[Computed]
     public function todos()
@@ -729,12 +689,7 @@ class ShowTodos extends Component
     {
         $this->todos->each->complete();
     }
-
-    public function render()
-    {
-        return view('livewire.show-todos');
-    }
-}
+};
 ```
 
 You might wonder why not just call `$this->todos()` as a method directly where you need to? Why use `#[Computed]` in the first place?
