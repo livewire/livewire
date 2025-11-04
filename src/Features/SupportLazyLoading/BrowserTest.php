@@ -334,6 +334,206 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_lazy_components_are_not_bundled_by_default()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child1 lazy />
+                        <livewire:child2 lazy />
+                        <livewire:child3 lazy />
+                    </div>
+                    @script
+                    <script>
+                        window.requestCount = 0
+
+                        Livewire.interceptRequest(({ onSend }) => {
+                            onSend(() => window.requestCount++)
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            },
+            'child1' => new class extends Component {
+                public function render() {
+                    return '<div>Child 1</div>';
+                }
+            },
+            'child2' => new class extends Component {
+                public function render() {
+                    return '<div>Child 2</div>';
+                }
+            },
+            'child3' => new class extends Component {
+                public function render() {
+                    return '<div>Child 3</div>';
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+
+        ->waitForText('Child 1')
+        ->waitForText('Child 2')
+        ->waitForText('Child 3')
+
+        // Lazy components should be isolated by default, making separate requests
+        ->assertScript('window.requestCount', 3)
+        ;
+    }
+
+    public function test_lazy_bundle_bundles_multiple_lazy_components_into_single_request()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child1 lazy.bundle />
+                        <livewire:child2 lazy.bundle />
+                        <livewire:child3 lazy.bundle />
+                    </div>
+                    @script
+                    <script>
+                        window.requestCount = 0
+
+                        Livewire.interceptRequest(({ onSend }) => {
+                            onSend(() => window.requestCount++)
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            },
+            'child1' => new class extends Component {
+                public function render() {
+                    return '<div>Child 1</div>';
+                }
+            },
+            'child2' => new class extends Component {
+                public function render() {
+                    return '<div>Child 2</div>';
+                }
+            },
+            'child3' => new class extends Component {
+                public function render() {
+                    return '<div>Child 3</div>';
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+
+        ->waitForText('Child 1')
+        ->waitForText('Child 2')
+        ->waitForText('Child 3')
+
+        // All three lazy components should be bundled into a single request
+        ->assertScript('window.requestCount', 1)
+        ;
+    }
+
+    public function test_defer_components_are_not_bundled_by_default()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child1 defer />
+                        <livewire:child2 defer />
+                        <livewire:child3 defer />
+                    </div>
+                    @script
+                    <script>
+                        window.requestCount = 0
+
+                        Livewire.interceptRequest(({ onSend }) => {
+                            onSend(() => window.requestCount++)
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            },
+            'child1' => new class extends Component {
+                public function render() {
+                    return '<div>Child 1</div>';
+                }
+            },
+            'child2' => new class extends Component {
+                public function render() {
+                    return '<div>Child 2</div>';
+                }
+            },
+            'child3' => new class extends Component {
+                public function render() {
+                    return '<div>Child 3</div>';
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+
+        ->waitForText('Child 1')
+        ->waitForText('Child 2')
+        ->waitForText('Child 3')
+
+        // Defer components should be isolated by default, making separate requests
+        ->assertScript('window.requestCount', 3)
+        ;
+    }
+
+    public function test_defer_bundle_bundles_multiple_defer_components_into_single_request()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child1 defer.bundle />
+                        <livewire:child2 defer.bundle />
+                        <livewire:child3 defer.bundle />
+                    </div>
+                    @script
+                    <script>
+                        window.requestCount = 0
+
+                        Livewire.interceptRequest(({ onSend }) => {
+                            onSend(() => window.requestCount++)
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            },
+            'child1' => new class extends Component {
+                public function render() {
+                    return '<div>Child 1</div>';
+                }
+            },
+            'child2' => new class extends Component {
+                public function render() {
+                    return '<div>Child 2</div>';
+                }
+            },
+            'child3' => new class extends Component {
+                public function render() {
+                    return '<div>Child 3</div>';
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+
+        ->waitForText('Child 1')
+        ->waitForText('Child 2')
+        ->waitForText('Child 3')
+
+        // All three defer components should be bundled into a single request
+        ->assertScript('window.requestCount', 1)
+        ;
+    }
+
 }
 
 class Page extends Component {

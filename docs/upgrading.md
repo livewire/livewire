@@ -423,8 +423,8 @@ class Revenue extends Component { ... }
 Control whether multiple lazy/deferred components load in parallel or bundled together:
 
 ```blade
-<livewire:revenue lazy lazy:bundle />
-<livewire:expenses defer defer:bundle />
+<livewire:revenue lazy.bundle />
+<livewire:expenses defer.bundle />
 ```
 
 ```php
