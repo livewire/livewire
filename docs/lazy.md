@@ -283,16 +283,18 @@ class Revenue extends Component
 
 Now, if there are ten `Revenue` components on the same page, when the page loads, all ten updates will be bundled and sent to the server as a single network request.
 
-You can also enable bundling inline when rendering a component:
+### Using the bundle modifier
+
+You can also enable bundling inline when rendering a component using the bundle modifier:
 
 ```blade
-<livewire:revenue lazy lazy:bundle />
+<livewire:revenue lazy.bundle />
 ```
 
 This also works with deferred components:
 
 ```blade
-<livewire:revenue defer defer:bundle />
+<livewire:revenue defer.bundle />
 ```
 
 Or using the attribute:
