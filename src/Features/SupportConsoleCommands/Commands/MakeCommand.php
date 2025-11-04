@@ -4,6 +4,8 @@ namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use function Laravel\Prompts\text;
 use function Laravel\Prompts\confirm;
+use function Livewire\invade;
+
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -74,6 +76,19 @@ class MakeCommand extends Command
 
     protected function normalizeComponentName(string $name): string
     {
+        // Check if the name contains a namespace separator (::)
+        if (str_contains($name, '::')) {
+            [$namespace, $componentName] = explode('::', $name, 2);
+            // Normalize only the component name part, preserve the namespace
+            $normalizedComponentName = (string) str($componentName)
+                ->replace('/', '.')
+                ->replace('\\', '.')
+                ->explode('.')
+                ->map(fn ($i) => str($i)->kebab())
+                ->implode('.');
+            return $namespace . '::' . $normalizedComponentName;
+        }
+
         return (string) str($name)
             ->replace('/', '.')
             ->replace('\\', '.')
@@ -249,29 +264,38 @@ class MakeCommand extends Command
     {
         $stub = $this->files->get($this->getStubPath('livewire.stub'));
 
-        $segments = explode('.', $name);
+        [$namespace, $componentName] = invade($this->finder)->parseNamespaceAndName($name);
 
-        $className = Str::studly(end($segments));
+        $segments = explode('.', $componentName ?? $name);
 
-        $namespaceSegments = array_slice($segments, 0, -1);
+        $classSegments = array_map(fn($segment) => Str::studly($segment), $segments);
 
-        $namespace = 'App\\Livewire';
+        $className = end($classSegments);
 
-        if (! empty($namespaceSegments)) {
-            $namespace .= '\\' . collect($namespaceSegments)
-                ->map(fn($segment) => Str::studly($segment))
-                ->implode('\\');
+        $namespaceSegments = array_slice($classSegments, 0, -1);
+
+        $classNamespaces = invade($this->finder)->classNamespaces;
+
+        $classNamespace = $classNamespaces[$namespace] ?? config('livewire.class_namespace');
+
+        $fullNamespace = $classNamespace;
+        if (!empty($namespaceSegments)) {
+            $fullNamespace .= '\\' . implode('\\', $namespaceSegments);
         }
 
-        // Get the configured view path and extract the view namespace from it
-        $viewPath = config('livewire.view_path', resource_path('views/livewire'));
-        $viewNamespace = $this->extractViewNamespace($viewPath);
+        $viewSegments = array_map(fn($segment) => Str::kebab($segment), $segments);
+        $viewName = implode('.', $viewSegments);
 
-        $viewName = $viewNamespace . '.' . collect($segments)
-            ->map(fn($segment) => Str::kebab($segment))
-            ->implode('.');
+        if ($namespace !== null) {
+            $viewName = $namespace . '.' . $viewName;
+        } else {
+            // Get the configured view path and extract the view namespace from it
+            $viewPath = config('livewire.view_path', resource_path('views/livewire'));
+            $viewNamespace = $this->extractViewNamespace($viewPath);
+            $viewName = $viewNamespace . '.' . $viewName;
+        }
 
-        $stub = str_replace('[namespace]', $namespace, $stub);
+        $stub = str_replace('[namespace]', $fullNamespace, $stub);
         $stub = str_replace('[class]', $className, $stub);
         $stub = str_replace('[view]', $viewName, $stub);
 

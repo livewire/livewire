@@ -444,17 +444,32 @@ class Finder
         // Convert segments to StudlyCase for class name
         $classSegments = array_map(fn($segment) => str($segment)->studly()->toString(), $segments);
         $className = implode('\\', $classSegments);
+        $classPath = str_replace('\\', '/', $className) . '.php';
 
         // Convert segments to kebab-case for view name
         $viewSegments = array_map(fn($segment) => str($segment)->kebab()->toString(), $segments);
         $viewName = implode('.', $viewSegments);
 
-        // Build the class file path
-        $classPath = app_path('Livewire/' . str_replace('\\', '/', $className) . '.php');
+        // Get the appropriate location
+        if ($namespace !== null && isset($this->classNamespaces[$namespace])) {
+            $classNamespace = $this->classNamespaces[$namespace];
+            $classNamespacePath = app_path('/' . str($classNamespace)->ltrim('\\')->ltrim('App\\')->replace('\\', '/')->toString());
+            $baseViewPath = resource_path('views/' . str($namespace)->replace('.', '/')->toString());
+        } else {
+            // Use the configured root namespace
+            $classNamespace = config('livewire.class_namespace');
+            $classNamespacePath = app_path('/' . str($classNamespace)->ltrim('\\')->ltrim('App\\')->replace('\\', '/')->toString());
+            $baseViewPath = resource_path('views/livewire');
+        }
 
-        // Build the view file path using the configured view path
-        $configuredViewPath = config('livewire.view_path', resource_path('views/livewire'));
-        $viewPath = $configuredViewPath . '/' . str_replace('.', '/', $viewName) . '.blade.php';
+        $classPath = $classNamespacePath . '/' . $classPath;
+
+        // Convert view name dots to slashes for file path
+        $viewPathSegments = str_replace('.', '/', $viewName);
+        $normalizedBasePath = $this->normalizeLocation($baseViewPath);
+        $viewPath = $normalizedBasePath . '/' . ltrim($viewPathSegments, '/') . '.blade.php';
+        // Normalize any double slashes that might have been introduced
+        $viewPath = str_replace('//', '/', $viewPath);
 
         return [
             'class' => $classPath,

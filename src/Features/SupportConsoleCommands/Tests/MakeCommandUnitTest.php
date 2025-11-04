@@ -325,7 +325,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         // Set the custom namespace in config
         $adminPath = resource_path('views/admin');
         $this->app['config']->set('livewire.component_namespaces.admin', $adminPath);
-        
+
         // Register the namespace with all the necessary systems (mimicking what LivewireServiceProvider does)
         app('livewire.finder')->addNamespace('admin', path: $adminPath);
         app('blade.compiler')->anonymousComponentPath($adminPath, 'admin');
@@ -351,5 +351,85 @@ class MakeCommandUnitTest extends \Tests\TestCase
         Artisan::call('make:livewire', ['name' => 'pages::blog.posts.create-post']);
 
         $this->assertTrue(File::exists(resource_path('views/pages/blog/posts/⚡create-post.blade.php')));
+    }
+
+    public function test_class_based_component_is_created_in_custom_namespace()
+    {
+        // Register a namespace with a class namespace
+        app('livewire.finder')->addNamespace('foo', class: 'App\Foo');
+
+        Artisan::call('make:livewire', ['name' => 'foo::bar', '--class' => true]);
+
+        $this->assertTrue(File::exists(app_path('Foo/Bar.php')));
+        $this->assertTrue(File::exists(resource_path('views/foo/bar.blade.php')));
+        $this->assertFalse(File::exists($this->livewireClassesPath('Bar.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('bar.blade.php')));
+    }
+
+    public function test_class_based_component_namespace_class_content_structure()
+    {
+        // Register a namespace with a class namespace
+        app('livewire.finder')->addNamespace('foo', class: 'App\Foo');
+
+        Artisan::call('make:livewire', ['name' => 'foo::test-component', '--class' => true]);
+
+        $classContent = File::get(app_path('Foo/TestComponent.php'));
+        $viewContent = File::get(resource_path('views/foo/test-component.blade.php'));
+
+        // Check class file
+        $this->assertStringContainsString('namespace App\Foo;', $classContent);
+        $this->assertStringContainsString('use Livewire\Component;', $classContent);
+        $this->assertStringContainsString('class TestComponent extends Component', $classContent);
+        $this->assertStringContainsString("view('foo.test-component')", $classContent);
+
+        // Check view file
+        $this->assertStringContainsString('<div>', $viewContent);
+    }
+
+    public function test_class_based_component_in_namespace_with_nested_path()
+    {
+        // Register a namespace with a class namespace
+        app('livewire.finder')->addNamespace('foo', class: 'App\Foo');
+
+        Artisan::call('make:livewire', ['name' => 'foo::bar.baz', '--class' => true]);
+
+        $this->assertTrue(File::exists(app_path('Foo/Bar/Baz.php')));
+        $this->assertTrue(File::exists(resource_path('views/foo/bar/baz.blade.php')));
+
+        $classContent = File::get(app_path('Foo/Bar/Baz.php'));
+        $this->assertStringContainsString('namespace App\Foo\Bar;', $classContent);
+        $this->assertStringContainsString('class Baz extends Component', $classContent);
+        $this->assertStringContainsString("view('foo.bar.baz')", $classContent);
+    }
+
+    public function test_class_based_component_in_namespace_with_multiple_levels()
+    {
+        // Register a namespace with a class namespace
+        app('livewire.finder')->addNamespace('admin', class: 'App\Admin');
+
+        Artisan::call('make:livewire', ['name' => 'admin::users.profile.settings', '--class' => true]);
+
+        $this->assertTrue(File::exists(app_path('Admin/Users/Profile/Settings.php')));
+        $this->assertTrue(File::exists(resource_path('views/admin/users/profile/settings.blade.php')));
+
+        $classContent = File::get(app_path('Admin/Users/Profile/Settings.php'));
+        $this->assertStringContainsString('namespace App\Admin\Users\Profile;', $classContent);
+        $this->assertStringContainsString('class Settings extends Component', $classContent);
+        $this->assertStringContainsString("view('admin.users.profile.settings')", $classContent);
+    }
+
+    public function test_class_based_component_namespace_with_kebab_case_component_name()
+    {
+        // Register a namespace with a class namespace
+        app('livewire.finder')->addNamespace('foo', class: 'App\Foo');
+
+        Artisan::call('make:livewire', ['name' => 'foo::user-profile', '--class' => true]);
+
+        $this->assertTrue(File::exists(app_path('Foo/UserProfile.php')));
+        $this->assertTrue(File::exists(resource_path('views/foo/user-profile.blade.php')));
+
+        $classContent = File::get(app_path('Foo/UserProfile.php'));
+        $this->assertStringContainsString('class UserProfile extends Component', $classContent);
+        $this->assertStringContainsString("view('foo.user-profile')", $classContent);
     }
 }
