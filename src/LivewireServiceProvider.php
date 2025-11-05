@@ -146,11 +146,6 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         // Register view-based component locations and namespaces...
 
         foreach (config('livewire.component_locations', []) as $location) {
-            // Only register directories that actually exist to avoid errors during view:cache.
-            if (! is_dir($location)) {
-                continue;
-            }
-
             app('livewire.finder')->addLocation(path: $location);
             app('blade.compiler')->anonymousComponentPath($location);
             app('view')->addLocation($location);
