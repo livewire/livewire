@@ -6,6 +6,8 @@ use Livewire\Component;
 
 class Finder
 {
+    protected $classLocations = [];
+
     protected $viewLocations = [];
 
     protected $classNamespaces = [];
@@ -16,22 +18,10 @@ class Finder
 
     protected $viewComponents = [];
 
-    public function addLocation($path = null, $class = null): void
-    {
-        if ($class !== null) $this->classNamespaces[] = $this->normalizeClassName($class);
-        if ($path !== null) $this->viewLocations[] = $path;
-    }
-
-    public function addNamespace($namespace, $path = null, $class = null): void
-    {
-        if ($class !== null) $this->classNamespaces[$namespace] = $this->normalizeClassName($class);
-        if ($path !== null) $this->viewNamespaces[$namespace] = $path;
-    }
-
-    public function addComponent($name = null, $path = null, $class = null): void
+    public function addComponent($name = null, $viewPath = null, $class = null): void
     {
         // Support $name being used a single argument for class-based components...
-        if ($name !== null && $class === null && $path === null) {
+        if ($name !== null && $class === null && $viewPath === null) {
             $class = $name;
 
             $name = null;
@@ -42,18 +32,41 @@ class Finder
         }
 
         // Support $class being used a single named argument for class-based components...
-        if ($name === null && $class !== null && $path === null) {
+        if ($name === null && $class !== null && $viewPath === null) {
             $name = $this->generateHashName($class);
         }
 
-        if ($name == null && $class === null && $path !== null) {
+        if ($name == null && $class === null && $viewPath !== null) {
             throw new \Exception('You must provide a name when registering a single/multi-file component');
         }
 
         if ($name) {
             if ($class !== null) $this->classComponents[$name] = $this->normalizeClassName($class);
-            elseif ($path !== null) $this->viewComponents[$name] = $path;
+            elseif ($viewPath !== null) $this->viewComponents[$name] = $viewPath;
         }
+    }
+
+    public function addLocation($viewPath = null, $classNamespace = null): void
+    {
+        if ($classNamespace !== null) $this->classLocations[] = $this->normalizeClassName($classNamespace);
+        if ($viewPath !== null) $this->viewLocations[] = $viewPath;
+    }
+
+    public function addNamespace($namespace, $viewPath = null, $classNamespace = null, $classPath = null, $classViewPath = null): void
+    {
+        if ($classNamespace !== null) {
+            $this->classNamespaces[$namespace] = [
+                'classNamespace' => $this->normalizeClassName($classNamespace),
+                'classPath' => $classPath,
+                'classViewPath' => $classViewPath,
+            ];
+        }
+        if ($viewPath !== null) $this->viewNamespaces[$namespace] = $viewPath;
+    }
+
+    public function getClassNamespace(string $namespace): array
+    {
+        return $this->classNamespaces[$namespace];
     }
 
     public function normalizeName($nameComponentOrClass): ?string
@@ -83,7 +96,7 @@ class Finder
                 return $name;
             }
 
-            $result = $this->generateNameFromClass($class, $this->classNamespaces);
+            $result = $this->generateNameFromClass($class);
 
             return $result;
         }
@@ -91,7 +104,7 @@ class Finder
         return $nameComponentOrClass;
     }
 
-    protected function parseNamespaceAndName($name): array
+    public function parseNamespaceAndName($name): array
     {
         if (str_contains($name, '::')) {
             [$namespace, $componentName] = explode('::', $name, 2);
@@ -105,9 +118,10 @@ class Finder
     {
         [$namespace, $componentName] = $this->parseNamespaceAndName($name);
 
+        // Check if the component is in a namespace...
         if ($namespace !== null) {
-            if (isset($this->classNamespaces[$namespace])) {
-                $class = $this->generateClassFromName($componentName, [$this->classNamespaces[$namespace]]);
+            if (isset($this->classNamespaces[$namespace]['classNamespace'])) {
+                $class = $this->generateClassFromName($componentName, [$this->classNamespaces[$namespace]['classNamespace']]);
 
                 if (class_exists($class)) {
                     return $class;
@@ -117,11 +131,13 @@ class Finder
             return null;
         }
 
+        // Check if the component is explicitly registered...
         if (isset($this->classComponents[$name])) {
             return $this->classComponents[$name];
         }
 
-        $class = $this->generateClassFromName($name, $this->classNamespaces);
+        // Check if the component is in a class location...
+        $class = $this->generateClassFromName($name, $this->classLocations);
 
         if (! class_exists($class)) {
             return null;
@@ -270,7 +286,7 @@ class Finder
         return $path;
     }
 
-    protected function generateClassFromName($name, $classNamespaces = [])
+    protected function generateClassFromName($name, $classNamespaces = []): string
     {
         $baseClass = collect(str($name)->explode('.'))
             ->map(fn ($segment) => (string) str($segment)->studly())
@@ -290,7 +306,7 @@ class Finder
         return $this->normalizeClassName($baseClass);
     }
 
-    protected function generateNameFromClass($class, $classNamespaces = []): string
+    protected function generateNameFromClass($class): string
     {
         $class = str_replace(
             ['/', '\\'],
@@ -319,6 +335,11 @@ class Finder
         if ($secondToLastSegment && $lastSegment === $secondToLastSegment) {
             $fullName = $fullName->replaceLast('.' . $lastSegment, '');
         }
+
+        $classNamespaces = collect($this->classNamespaces)
+            ->map(fn ($classNamespace) => $classNamespace['classNamespace'])
+            ->merge($this->classLocations)
+            ->toArray();
 
         foreach ($classNamespaces as $classNamespace) {
             $namespace = str_replace(
@@ -434,7 +455,7 @@ class Finder
         return $location . '/' . $leadingPath . $prefix . $lastSegment;
     }
 
-    public function resolveClassComponentFilePaths(string $name): array
+    public function resolveClassComponentFilePaths(string $name): ?array
     {
         [$namespace, $componentName] = $this->parseNamespaceAndName($name);
 
@@ -449,11 +470,24 @@ class Finder
         $viewSegments = array_map(fn($segment) => str($segment)->kebab()->toString(), $segments);
         $viewName = implode('.', $viewSegments);
 
-        // Build the class file path
-        $classPath = app_path('Livewire/' . str_replace('\\', '/', $className) . '.php');
+        if ($namespace !== null) {
+            if (! isset($this->classNamespaces[$namespace])) {
+                return null;
+            }
 
-        // Build the view file path using the configured view path
-        $configuredViewPath = config('livewire.view_path', resource_path('views/livewire'));
+            $classNamespaceDetails  = $this->classNamespaces[$namespace];
+
+            $configuredClassPath = $classNamespaceDetails['classPath'];
+            $configuredViewPath = $classNamespaceDetails['classViewPath'];
+        } else {
+            $configuredClassPath = config('livewire.class_path', app_path('Livewire'));
+            $configuredViewPath = config('livewire.view_path', resource_path('views/livewire'));
+        }
+
+        // Build the class file path
+        $classPath = $configuredClassPath . '/' . str_replace('\\', '/', $className) . '.php';
+
+        // Build the view file path
         $viewPath = $configuredViewPath . '/' . str_replace('.', '/', $viewName) . '.blade.php';
 
         return [
