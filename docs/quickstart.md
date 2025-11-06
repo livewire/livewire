@@ -178,9 +178,7 @@ You should see a simple form with two fields and a submit button.
 
 1. **Test validation:** Click "Save Post" without filling in any fields. You'll see red error messages appear instantly below each field—no page reload required.
 
-2. **Test data binding:** Start typing in the title field. Livewire is automatically syncing your input with the server-side `$title` property in real-time.
-
-3. **Test submission:** Fill in both fields and click "Save Post". You should see a debug screen showing the values you entered.
+2. **Test submission:** Fill in both fields and click "Save Post". You should see a debug screen showing the values you entered.
 
 This demonstrates Livewire's core power: reactive data binding, real-time validation, and form handling—all written in PHP without touching JavaScript.
 

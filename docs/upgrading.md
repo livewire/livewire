@@ -34,6 +34,9 @@ These changes are most likely to affect your application and should be reviewed 
 
 Several configuration keys have been renamed, reorganized, or have new defaults. Update your `config/livewire.php` file:
 
+> [!tip] View the full config file
+> For reference, you can view the complete v4 config file on GitHub: [livewire.php →](https://github.com/livewire/livewire/blob/main/config/livewire.php)
+
 #### Renamed configuration keys
 
 **Layout configuration:**
@@ -64,9 +67,9 @@ The layout now uses the `layouts::` namespace by default, pointing to `resources
 'smart_wire_keys' => true,
 ```
 
-This enables automatic intelligent wire:key generation for loops, reducing the need for manual wire:key attributes.
+This helps prevent wire:key issues on deeply nested components. Note: You still need to add `wire:key` manually in loops—this setting doesn't eliminate that requirement.
 
-[Learn more about wire:key →](/docs/4.x/nesting#wire-key)
+[Learn more about wire:key →](/docs/4.x/nesting#rendering-children-in-a-loop)
 
 #### New configuration options
 
@@ -105,7 +108,7 @@ Configure default component format and emoji usage. Set `type` to `'class'` to m
 'csp_safe' => false,
 ```
 
-Enable Content Security Policy mode to avoid `unsafe-eval` violations. When enabled, Livewire uses the Alpine CSP build. Note: This mode restricts complex JavaScript expressions in directives like `wire:click="addToCart($event.detail.productId)"` or global references like `window.location`.
+Enable Content Security Policy mode to avoid `unsafe-eval` violations. When enabled, Livewire uses the [Alpine CSP build](https://alpinejs.dev/advanced/csp). Note: This mode restricts complex JavaScript expressions in directives like `wire:click="addToCart($event.detail.productId)"` or global references like `window.location`.
 
 ### Routing changes
 
@@ -124,7 +127,7 @@ Route::livewire('/dashboard', 'pages::dashboard');
 
 Using `Route::livewire()` is now the preferred method and is required for single-file and multi-file components to work correctly as full-page components.
 
-[Learn more about routing →](/docs/4.x/components#full-page-components)
+[Learn more about routing →](/docs/4.x/components#page-components)
 
 ## Medium-impact changes
 
@@ -339,7 +342,7 @@ Livewire.interceptRequest(({ request, onResponse, onSuccess, onError, onFailure 
 1. **More granular error handling**: The new system separates network failures (`onFailure`) from server errors (`onError`)
 2. **Better lifecycle hooks**: Message interceptors provide additional hooks like `onSync`, `onMorph`, and `onRender`
 3. **Cancellation support**: Both messages and requests can be cancelled/aborted
-4. **Component scoping**: Interceptors can be scoped to specific components using `Livewire.intercept($wire, ...)`
+4. **Component scoping**: Message interceptors can be scoped to specific components using `$wire.intercept(...)`
 
 For complete documentation on the new interceptor system, see the [JavaScript Interceptors documentation](/docs/4.x/javascript#interceptors).
 
@@ -399,8 +402,6 @@ Islands allow you to create isolated regions within a component that update inde
 @endisland
 ```
 
-Islands also support imperative rendering and streaming from your component actions.
-
 [Learn more about islands →](/docs/4.x/islands)
 
 ### Loading improvements
@@ -458,7 +459,7 @@ Built-in support for sortable lists with drag-and-drop:
 ```blade
 <ul wire:sort="updateOrder">
     @foreach ($items as $item)
-        <li wire:sort:item="{{ $item->id }}">{{ $item->name }}</li>
+        <li wire:sort:item="{{ $item->id }}" wire:key="{{ $item->id }}">{{ $item->name }}</li>
     @endforeach
 </ul>
 ```
@@ -467,7 +468,7 @@ Built-in support for sortable lists with drag-and-drop:
 
 **`wire:intersect` - Viewport intersection**
 
-Run actions when elements enter or leave the viewport, similar to Alpine's `x-intersect`:
+Run actions when elements enter or leave the viewport, similar to Alpine's [`x-intersect`](https://alpinejs.dev/plugins/intersect):
 
 ```blade
 <!-- Basic usage -->
@@ -498,15 +499,17 @@ Available modifiers:
 Easily reference and interact with elements in your template:
 
 ```blade
-@foreach ($comments as $comment)
-    <div wire:ref="comment-{{ $comment->id }}">
-        {{ $comment->body }}
-    </div>
-@endforeach
+<div wire:ref="modal">
+    <!-- Modal content -->
+</div>
 
-<button wire:click="$refs['comment-123'].scrollIntoView()">
-    Scroll to Comment
-</button>
+<button wire:click="$js.scrollToModal">Scroll to modal</button>
+
+<script>
+    this.$js.scrollToModal = () => {
+        this.$refs.modal.scrollIntoView()
+    }
+</script>
 ```
 
 [Learn more about wire:ref →](/docs/4.x/wire-ref)
@@ -521,8 +524,6 @@ Skip component re-rendering directly from the template:
 
 This is an alternative to the `#[Renderless]` attribute for actions that don't need to update the UI.
 
-[Learn more about actions →](/docs/4.x/actions)
-
 **`.preserve-scroll` modifier**
 
 Preserve scroll position during updates to prevent layout jumps:
@@ -536,7 +537,7 @@ Preserve scroll position during updates to prevent layout jumps:
 Every element that triggers a network request automatically receives a `data-loading` attribute, making it easy to style loading states with Tailwind:
 
 ```blade
-<button wire:click="save" class="data-[loading]:opacity-50 data-[loading]:pointer-events-none">
+<button wire:click="save" class="data-loading:opacity-50 data-loading:pointer-events-none">
     Save Changes
 </button>
 ```
@@ -563,10 +564,8 @@ Intercept and modify Livewire requests from JavaScript:
 
 ```blade
 <script>
-this.$intercept('save', ({ proceed }) => {
-    if (confirm('Save changes?')) {
-        proceed()
-    }
+this.$intercept('save', ({ ... }) => {
+    // ...
 })
 </script>
 ```
@@ -578,8 +577,8 @@ this.$intercept('save', ({ proceed }) => {
 Trigger island renders directly from the template:
 
 ```blade
-<button wire:click="$refresh" wire:island.prepend="stats">
-    Update Stats
+<button wire:click.append="loadMore" wire:island="stats">
+    Load more
 </button>
 ```
 
@@ -591,4 +590,3 @@ If you encounter issues during the upgrade:
 
 - Check the [documentation](https://livewire.laravel.com) for detailed feature guides
 - Visit the [GitHub discussions](https://github.com/livewire/livewire/discussions) for community support
-- Report bugs on [GitHub issues](https://github.com/livewire/livewire/issues)

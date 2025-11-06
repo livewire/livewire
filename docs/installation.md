@@ -74,7 +74,7 @@ The following sections cover advanced scenarios that most applications won't nee
 
 ## Manually bundling Livewire and Alpine
 
-**When you need this:** If you want to use Alpine.js plugins or have fine-grained control over when Alpine and Livewire initialize.
+**When you need this:** If you want to use Alpine.js plugins or need fine-grained control over when Alpine and Livewire initialize.
 
 By default, Livewire automatically loads Alpine.js bundled with its JavaScript. However, if you need to register Alpine plugins or customize the initialization order, you can manually bundle Livewire and Alpine using your JavaScript build tool.
 
