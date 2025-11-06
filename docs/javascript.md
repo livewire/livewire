@@ -114,6 +114,18 @@ Here is an example of using `@assets` to load a date picker library called [Pika
 
 When this component loads, Livewire will make sure any `@assets` are loaded on that page before evaluating `@script`s. In addition, it will ensure the provided `@assets` are only loaded once per page no matter how many instances of this component there are, unlike `@script`, which will evaluate for every component instance on the page.
 
+### Using the `@js` directive
+
+If you need to output PHP data for use in JavaScript directly, you can use the `@js` directive.
+
+```blade
+<script>
+    let posts = @js($posts)
+
+    // "posts" will now be a JavaScript array of post data from PHP.
+</script>
+```
+
 ## Global Livewire events
 
 Livewire dispatches two helpful browser events for you to register any custom extension points from outside scripts:
