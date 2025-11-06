@@ -25,6 +25,8 @@ class CacheCommandUnitTest extends \Tests\TestCase
         $this->app->instance('blade.compiler', null);
         $this->app->instance('view', null);
 
+        File::ensureDirectoryExists(resource_path('views').'/layouts');
+
         // Create the Livewire v4 components folder
         File::ensureDirectoryExists($this->livewireComponentsPath());
 
@@ -34,5 +36,7 @@ class CacheCommandUnitTest extends \Tests\TestCase
 
         $exitCode = Artisan::call('view:cache');
         $this->assertEquals(0, $exitCode);
+
+        File::deleteDirectory(resource_path('views').'/layouts');
     }
 }
