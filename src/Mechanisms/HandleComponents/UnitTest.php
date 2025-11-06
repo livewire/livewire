@@ -247,35 +247,6 @@ class UnitTest extends \Tests\TestCase
             $this->assertEquals(['data-foo' => 'bar'], $component->instance()->getHtmlAttributes());
         });
     }
-
-    public function test_it_has_wire_model_attribute_inside_attribute_bag()
-    {
-        Livewire::test([
-            new class extends Component {
-                public $foo = '';
-
-                public function render()
-                {
-                    return <<<'HTML'
-                    <div>
-                         <livewire:child wire:model="foo" />
-                    </div>
-                    HTML;
-                }
-            },
-            'child' => new class extends Component {
-                public function render()
-                {
-                    return <<<'HTML'
-                    <div>
-                        <div {{ $attributes }}></div>
-                    </div>
-                    HTML;
-                }
-            }
-        ])
-        ->assertSeeHtml('wire:model="foo"');
-    }
 }
 
 class BasicComponent extends TestComponent

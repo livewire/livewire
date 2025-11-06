@@ -104,6 +104,35 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertContains($children, $component->snapshot['memo']);
     }
+
+    public function test_child_component_has_wire_model_attribute_inside_attribute_bag()
+    {
+        app('livewire')->test([
+            new class extends Component {
+                public $foo = '';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                         <livewire:child wire:model="foo" />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div {{ $attributes }}></div>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+        ->assertSeeHtml('wire:model="foo"');
+    }
 }
 
 class ParentComponentForNestingChildStub extends Component
