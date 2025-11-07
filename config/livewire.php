@@ -88,6 +88,19 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Class Path
+    |---------------------------------------------------------------------------
+    |
+    | This value is used to specify the path where Livewire component class files
+    | are created when running creation commands like `artisan make:livewire`.
+    | This path is customizable to match your projects directory structure.
+    |
+    */
+
+    'class_path' => app_path('Livewire'),
+
+    /*
+    |---------------------------------------------------------------------------
     | View Path
     |---------------------------------------------------------------------------
     |

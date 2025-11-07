@@ -405,7 +405,7 @@ use Livewire\Livewire;
 // In a service provider's boot() method (e.g., App\Providers\AppServiceProvider)
 Livewire::addComponent(
     name: 'custom-button',
-    path: resource_path('views/ui/button.blade.php')
+    viewPath: resource_path('views/ui/button.blade.php')
 );
 ```
 
@@ -413,7 +413,7 @@ Livewire::addComponent(
 
 ```php
 Livewire::addLocation(
-    path: resource_path('views/admin/components')
+    viewPath: resource_path('views/admin/components')
 );
 ```
 
@@ -422,7 +422,7 @@ Livewire::addLocation(
 ```php
 Livewire::addNamespace(
     namespace: 'ui',
-    path: resource_path('views/ui')
+    viewPath: resource_path('views/ui')
 );
 ```
 
@@ -506,13 +506,15 @@ Livewire::addComponent(
 
 // Register a location for class-based components
 Livewire::addLocation(
-    class: 'App\\Admin\\Livewire'
+    classNamespace: 'App\\Admin\\Livewire'
 );
 
 // Create a namespace for class-based components
 Livewire::addNamespace(
     namespace: 'admin',
-    class: 'App\\Admin\\Livewire'
+    classNamespace: 'App\\Admin\\Livewire',
+    classPath: app_path('Admin/Livewire'),
+    classViewPath: resource_path('views/admin/livewire')
 );
 ```
 

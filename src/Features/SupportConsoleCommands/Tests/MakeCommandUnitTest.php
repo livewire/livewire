@@ -3,8 +3,9 @@
 namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Illuminate\Contracts\Console\Kernel;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+use Livewire\Livewire;
 
 class MakeCommandUnitTest extends \Tests\TestCase
 {
@@ -297,7 +298,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($this->livewireComponentsPath('⚡create-post.blade.php')));
     }
 
-    public function test_nested_component_is_created_in_pages_namespace()
+    public function test_nested_single_file_component_is_created_in_pages_namespace()
     {
         Artisan::call('make:livewire', ['name' => 'pages::blog.create-post']);
 
@@ -313,6 +314,29 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists(resource_path('views/pages/⚡dashboard/dashboard.blade.php')));
     }
 
+    public function test_class_component_is_created_in_namespace()
+    {
+        File::deleteDirectory(app_path('Foo'));
+        File::deleteDirectory(resource_path('views/foo'));
+
+        Livewire::addNamespace(
+            namespace: 'foo',
+            classNamespace: 'App\Foo',
+            classPath: app_path('Foo'),
+            classViewPath: resource_path('views/foo'),
+        );
+        
+        Artisan::call('make:livewire', ['name' => 'foo::bar', '--class' => true]);
+
+        $this->assertTrue(File::exists(resource_path('views/foo/bar.blade.php')));
+        $this->assertTrue(File::exists(app_path('Foo/Bar.php')));
+
+        $contents = File::get(app_path('Foo/Bar.php'));
+        $this->assertStringContainsString('namespace App\Foo;', $contents);
+        $this->assertStringContainsString('class Bar extends Component', $contents);
+        $this->assertStringContainsString("view('foo.bar')", $contents);
+    }
+
     public function test_component_is_created_in_layouts_namespace()
     {
         Artisan::call('make:livewire', ['name' => 'layouts::sidebar']);
@@ -325,9 +349,9 @@ class MakeCommandUnitTest extends \Tests\TestCase
         // Set the custom namespace in config
         $adminPath = resource_path('views/admin');
         $this->app['config']->set('livewire.component_namespaces.admin', $adminPath);
-        
+
         // Register the namespace with all the necessary systems (mimicking what LivewireServiceProvider does)
-        app('livewire.finder')->addNamespace('admin', path: $adminPath);
+        app('livewire.finder')->addNamespace('admin', viewPath: $adminPath);
         app('blade.compiler')->anonymousComponentPath($adminPath, 'admin');
         app('view')->addNamespace('admin', $adminPath);
 
