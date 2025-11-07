@@ -70,6 +70,12 @@ Remember, Livewire only persists public properties between requests. Protected p
 
 This is where `#[Locked]` becomes essential: it gives you the persistence of public properties with protection against client-side tampering.
 
-## Learn more
+## Can't Livewire do this automatically?
 
-For a complete guide on locked properties, including detailed security considerations and best practices, see the [Locked Properties documentation](/docs/4.x/locked).
+In a perfect world, Livewire would lock properties by default and only allow modifications when `wire:model` is used on that property.
+
+Unfortunately, that would require Livewire to parse all of your Blade templates to understand if a property is modified by `wire:model` or a similar API.
+
+Not only would that add technical and performance overhead, it would be impossible to detect if a property is mutated by something like Alpine or any other custom JavaScript.
+
+Therefore, Livewire will continue to make public properties freely mutable by default and give developers the tools to lock them as needed.

@@ -1,4 +1,4 @@
-Computed properties are a way to create "derived" properties in Livewire. Like accessors on an Eloquent model, computed properties allow you to access values and cache them for future access during the request.
+Computed properties are a way to create "derived" properties in Livewire. Like accessors on an Eloquent model, computed properties allow you to access values and memoize them for future access during the request.
 
 Computed properties are particularly useful in combination with component's public properties.
 
@@ -58,21 +58,21 @@ Because the `#[Computed]` attribute has been added to the `user()` method, the v
 
 You may be asking yourself: why use computed properties at all? Why not just call the method directly?
 
-Accessing a method as a computed property offers a performance advantage over calling a method. Internally, when a computed property is executed for the first time, Livewire caches the returned value. This way, any subsequent accesses in the request will return the cached value instead of executing multiple times.
+Accessing a method as a computed property offers a performance advantage over calling a method. Internally, when a computed property is executed for the first time, Livewire memoizes the returned value. This way, any subsequent accesses in the request will return the memoized value instead of executing multiple times.
 
 This allows you to freely access a derived value and not worry about the performance implications.
 
-> [!warning] Computed properties are only cached for a single request
-> It's a common misconception that Livewire caches computed properties for the entire lifespan of your Livewire component on a page. However, this isn't the case. Instead, Livewire only caches the result for the duration of a single component request. This means that if your computed property method contains an expensive database query, it will be executed every time your Livewire component performs an update.
+> [!warning] Computed properties are only memoized for a single request
+> It's a common misconception that Livewire memoizes computed properties for the entire lifespan of your Livewire component on a page. However, this isn't the case. Instead, Livewire only memoizes the result for the duration of a single component request (it does not persist between requests). This means that if your computed property method contains an expensive database query, it will be executed every time your Livewire component performs an update.
 
-### Busting the cache
+### Clearing the memo
 
 Consider the following problematic scenario:
 1) You access a computed property that depends on a certain property or database state
 2) The underlying property or database state changes
-3) The cached value for the property becomes stale and needs to be re-computed
+3) The memoized value for the property becomes stale and needs to be re-computed
 
-To clear, or "bust", the stored cache, you can use PHP's `unset()` function.
+To clear, or "bust", the stored memo, you can use PHP's `unset()` function.
 
 Below is an example of an action called `createPost()` that, by creating a new post in the application, makes the `posts()` computed stale — meaning the computed property `posts()` needs to be re-computed to include the newly added post:
 
@@ -106,9 +106,12 @@ new class extends Component
 };
 ```
 
-In the above component, the computed property is cached before a new post is created because the `createPost()` method accesses `$this->posts` before the new post is created. To ensure that `$this->posts` contains the most up-to-date contents when accessed inside the view, the cache is invalidated using `unset($this->posts)`.
+In the above component, the computed property is memoized before a new post is created because the `createPost()` method accesses `$this->posts` before the new post is created. To ensure that `$this->posts` contains the most up-to-date contents when accessed inside the view, the memo is cleared using `unset($this->posts)`.
 
 ### Caching between requests
+
+> [!tip] Memoization vs Caching
+> The memoization we've discussed so far only lasts for a single request. If you need values to persist across multiple requests, you need actual Laravel caching.
 
 Sometimes you would like to cache the value of a computed property for the lifespan of a Livewire component, rather than it being cleared after every request. In these cases, you can use [Laravel's caching utilities](https://laravel.com/docs/cache#retrieve-store).
 
@@ -164,8 +167,8 @@ Livewire caches persisted values for 3600 seconds (one hour). You can override t
 #[Computed(persist: true, seconds: 7200)]
 ```
 
-> [!tip] Calling `unset()` will bust this cache
-> As previously discussed, you can clear a computed property's cache using PHP's `unset()` method. This also applies to computed properties using the `persist: true` parameter. When calling `unset()` on a cached computed property, Livewire will clear not only the computed property cache, but also the underlying cached value in Laravel's cache.
+> [!tip] Calling `unset()` will clear both memo and cache
+> As previously discussed, you can clear a computed property's memo using PHP's `unset()` method. This also applies to computed properties using the `persist: true` parameter. When calling `unset()` on a persisted computed property, Livewire will clear not only the in-request memo, but also the underlying cached value in Laravel's cache.
 
 ## Caching across all components
 
@@ -338,3 +341,25 @@ new class extends Component
     @endforeach
 </div>
 ```
+
+## Alternative: Session properties
+
+If you need to persist simple values across page refreshes without cross-request caching, consider using the [`#[Session]` attribute](/docs/4.x/attribute-session) instead of computed properties.
+
+Session properties are useful when:
+* You want user-specific values to persist across page reloads (like search filters or UI preferences)
+* You don't need the value to be shareable via URL
+* The value is simple and not computationally expensive to store
+
+For example, storing a search query in the session:
+
+```php
+use Livewire\Attributes\Session;
+
+#[Session]
+public $search = '';
+```
+
+This keeps the search value across page refreshes without using URL parameters or computed property caching.
+
+[Learn more about session properties →](/docs/4.x/attribute-session)

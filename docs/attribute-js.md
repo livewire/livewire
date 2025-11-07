@@ -114,14 +114,12 @@ new class extends Component
     <button wire:click="showCount">Show Count</button>
 </div>
 
-@script
 <script>
     // Pure client-side JavaScript action
-    $js.incrementLocal = () => {
+    this.$js.incrementLocal = () => {
         console.log('No server request made')
     }
 </script>
-@endscript
 ```
 
 ## Learn more

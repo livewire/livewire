@@ -53,7 +53,11 @@ Now, instead of loading the component right away, Livewire will skip this compon
 
 By default, Livewire will insert an empty `<div></div>` for your component before it is fully loaded. As the component will initially be invisible to users, it can be jarring when the component suddenly appears on the page.
 
-To signal to your users that the component is being loaded, you can define a `placeholder()` method to render any kind of placeholder HTML you like, including loading spinners and skeleton placeholders:
+To signal to your users that the component is being loaded, you can render placeholder HTML like loading spinners and skeleton placeholders.
+
+### Using the @placeholder directive
+
+For single-file and multi-file components, you can use the `@placeholder` directive directly in your view to specify placeholder content:
 
 ```php
 <?php // resources/views/components/⚡revenue.blade.php
@@ -62,6 +66,50 @@ use Livewire\Component;
 use App\Models\Transaction;
 
 new class extends Component
+{
+    public $amount;
+
+    public function mount()
+    {
+        // Slow database query...
+        $this->amount = Transaction::monthToDate()->sum('amount');
+    }
+};
+?>
+
+@placeholder
+    <div>
+        <!-- Loading spinner... -->
+        <svg>...</svg>
+    </div>
+@endplaceholder
+
+<div>
+    Revenue this month: {{ $amount }}
+</div>
+```
+
+The content inside `@placeholder` and `@endplaceholder` will be displayed while the component is loading, then replaced with the actual component content once loaded.
+
+> [!tip] Placeholder directive for view-based components only
+> The `@placeholder` directive is only available for view-based components (single-file and multi-file components). For class-based components, use the `placeholder()` method instead.
+
+> [!warning] The placeholder and the component must share the same element type
+> For instance, if your placeholder's root element type is a 'div,' your component must also use a 'div' element.
+
+### Using the placeholder() method
+
+For class-based components, or if you prefer programmatic control, you can define a `placeholder()` method that returns HTML:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use App\Models\Transaction;
+
+class Revenue extends Component
 {
     public $amount;
 
@@ -80,22 +128,15 @@ new class extends Component
         </div>
         HTML;
     }
-};
-?>
 
-<div>
-    Revenue this month: {{ $amount }}
-</div>
+    public function render()
+    {
+        return view('livewire.revenue');
+    }
+}
 ```
 
-Because the above component specifies a "placeholder" by returning HTML from a `placeholder()` method, the user will see an SVG loading spinner on the page until the component is fully loaded.
-
-> [!warning] The placeholder and the component must share the same element type
-> For instance, if your placeholder's root element type is a 'div,' your component must also use a 'div' element.
-
-### Rendering a placeholder via a view
-
-For more complex loaders (such as skeletons) you can return a `view` from the `placeholder()` similar to `render()`.
+For more complex loaders (such as skeletons) you can return a `view` from the `placeholder()` method:
 
 ```php
 public function placeholder(array $params = [])
@@ -168,18 +209,15 @@ new class extends Component
         // Expensive database query...
         $this->amount = Transactions::between($start, $end)->sum('amount');
     }
-
-    public function placeholder()
-    {
-        return <<<'HTML'
-        <div>
-            <!-- Loading spinner... -->
-            <svg>...</svg>
-        </div>
-        HTML;
-    }
 };
 ?>
+
+@placeholder
+    <div>
+        <!-- Loading spinner... -->
+        <svg>...</svg>
+    </div>
+@endplaceholder
 
 <div>
     Revenue this month: {{ $amount }}

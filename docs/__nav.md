@@ -23,12 +23,8 @@ Features:
     Pagination: { uri: /docs/4.x/pagination, file: /pagination.md }
     URL Query Parameters: { uri: /docs/4.x/url, file: /url.md }
     Computed Properties: { uri: /docs/4.x/computed-properties, file: /computed-properties.md }
-    Session Properties: { uri: /docs/4.x/session-properties, file: /session-properties.md }
     Redirecting: { uri: /docs/4.x/redirecting, file: /redirecting.md }
     File Downloads: { uri: /docs/4.x/downloads, file: /downloads.md }
-    Locked Properties: { uri: /docs/4.x/locked, file: /locked.md }
-    Request Bundling: { uri: /docs/4.x/bundling, file: /bundling.md }
-    Offline States: { uri: /docs/4.x/offline, file: /offline.md }
     Teleport: { uri: /docs/4.x/teleport, file: /teleport.md }
 HTML Directives:
     wire:click: { uri: /docs/4.x/wire-click, file: /wire-click.md }
@@ -65,16 +61,19 @@ PHP Attributes:
     On: { uri: /docs/4.x/attribute-on, file: /attribute-on.md }
     Reactive: { uri: /docs/4.x/attribute-reactive, file: /attribute-reactive.md }
     Renderless: { uri: /docs/4.x/attribute-renderless, file: /attribute-renderless.md }
-    Rule: { uri: /docs/4.x/attribute-rule, file: /attribute-rule.md }
     Session: { uri: /docs/4.x/attribute-session, file: /attribute-session.md }
     Title: { uri: /docs/4.x/attribute-title, file: /attribute-title.md }
     Url: { uri: /docs/4.x/attribute-url, file: /attribute-url.md }
     Validate: { uri: /docs/4.x/attribute-validate, file: /attribute-validate.md }
-Concepts:
+Blade Directives:
+    '@island': { uri: /docs/4.x/directive-island, file: /directive-island.md }
+    '@placeholder': { uri: /docs/4.x/directive-placeholder, file: /directive-placeholder.md }
+    '@persist': { uri: /docs/4.x/directive-persist, file: /directive-persist.md }
+    '@teleport': { uri: /docs/4.x/directive-teleport, file: /directive-teleport.md }
+Advanced:
     Morphing: { uri: /docs/4.x/morphing, file: /morph.md }
     Hydration: { uri: /docs/4.x/hydration, file: /hydration.md }
     Nesting: { uri: /docs/4.x/understanding-nesting, file: /understanding-nesting.md }
-Advanced:
     Troubleshooting: { uri: /docs/4.x/troubleshooting, file: /troubleshooting.md }
     Security: { uri: /docs/4.x/security, file: /security.md }
     CSP: { uri: /docs/4.x/csp, file: /csp.md }

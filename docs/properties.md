@@ -1,4 +1,4 @@
-Properties store and manage data inside your Livewire components. They are defined as public properties on component classes and can be accessed and modified on both the server and client-side.
+Properties store and manage state inside your Livewire components. They are defined as public properties on component classes and can be accessed and modified on both the server and client-side.
 
 ## Initializing properties
 
@@ -9,7 +9,6 @@ Consider the following example:
 ```php
 <?php // resources/views/components/⚡todos.blade.php
 
-use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 new class extends Component
@@ -20,14 +19,14 @@ new class extends Component
 
     public function mount()
     {
-        $this->todos = Auth::user()->todos; // [tl! highlight]
+        $this->todos = ['Buy groceries', 'Walk the dog', 'Write code']; // [tl! highlight]
     }
 
     // ...
 };
 ```
 
-In this example, we've defined an empty `todos` array and initialized it with existing todos from the authenticated user. Now, when the component renders for the first time, all the existing todos in the database are shown to the user.
+In this example, we've defined an empty `todos` array and initialized it with a default list of todos in the `mount()` method. Now, when the component renders for the first time, these initial todos are shown to the user.
 
 ## Bulk assignment
 
@@ -196,15 +195,15 @@ Livewire supports the following primitive property types: `Array`, `String`, `In
 ```php
 new class extends Component
 {
-    public $todos = []; // Array
+    public array $todos = [];
 
-    public $todo = ''; // String
+    public string $todo = '';
 
-    public $maxTodos = 10; // Integer
+    public int $maxTodos = 10;
 
-    public $showTodos = false; // Boolean
+    public bool $showTodos = false;
 
-    public $todoFilter; // Null
+    public ?string $todoFilter = null;
 };
 ```
 
@@ -224,9 +223,10 @@ Supported PHP types:
 | Stringable | `Illuminate\Support\Stringable` |
 
 > [!warning] Eloquent Collections and Models
-> When storing Eloquent Collections and Models in Livewire properties, additional query constraints like select(...) will not be re-applied on subsequent requests.
+> When storing Eloquent Collections and Models in Livewire properties, be aware of these limitations:
 >
-> See [Eloquent constraints aren't preserved between requests](#eloquent-constraints-arent-preserved-between-requests) for more details
+> - **Query constraints aren't preserved**: Additional query constraints like `select(...)` will not be re-applied on subsequent requests. See [Eloquent constraints aren't preserved between requests](#eloquent-constraints-arent-preserved-between-requests) for details.
+> - **Performance impact**: Storing large Eloquent collections as properties can cause performance issues because Livewire must re-execute the database query every time the component hydrates. For expensive queries, consider using [computed properties](/docs/4.x/computed-properties) instead, which only execute when the data is actually accessed in your template.
 
 Here's a quick example of setting properties as these various types:
 
@@ -355,16 +355,6 @@ For example, we can use `$wire` to show a live character count of the `todo` inp
 ```
 
 As the user types in the field, the character length of the current todo being written will be shown and live-updated on the page, all without sending a network request to the server.
-
-If you prefer, you can use the more explicit `.get()` method to accomplish the same thing:
-
-```blade
-<div>
-    <input type="text" wire:model="todo">
-
-    Todo character length: <h2 x-text="$wire.get('todo').length"></h2>
-</div>
-```
 
 ### Manipulating properties
 
@@ -508,7 +498,7 @@ Now, if a user tries to modify `$id` on the front end, an error will be thrown.
 
 By using `#[Locked]`, you can assume this property has not been manipulated anywhere outside your component's class.
 
-For more information on locking properties, [consult the Locked properties documentation](/docs/4.x/locked).
+For more information on locking properties, [consult the Locked attribute documentation](/docs/4.x/attribute-locked).
 
 #### Eloquent models and locking
 
@@ -694,6 +684,6 @@ new class extends Component
 
 You might wonder why not just call `$this->todos()` as a method directly where you need to? Why use `#[Computed]` in the first place?
 
-The reason is that computed properties have a performance advantage, since they are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once, so that you don't run an expensive query multiple times in the same request.
+The reason is that computed properties have a performance advantage, since they are automatically memoized after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once, so that you don't run an expensive query multiple times in the same request.
 
 For more information, [visit the computed properties documentation](/docs/4.x/computed-properties).

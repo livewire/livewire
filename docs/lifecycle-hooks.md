@@ -77,7 +77,7 @@ The `mount()` method is a crucial part of using Livewire. The following document
 
 * [Initializing properties](/docs/4.x/properties#initializing-properties)
 * [Receiving data from parent components](/docs/4.x/nesting#passing-props-to-children)
-* [Accessing route parameters](/docs/4.x/components#accessing-route-parameters)
+* [Accessing route parameters](/docs/4.x/pages#accessing-route-parameters)
 
 ## Boot
 
@@ -118,7 +118,7 @@ You can use this technique to have complete control over initializing a componen
 > [!warning] Always lock sensitive public properties
 > As you can see above, we are using the `#[Locked]` attribute on the `$postId` property. In a scenario like the above, where you want to ensure the `$postId` property isn't tampered with by users on the client-side, it's important to authorize the property's value before using it or add `#[Locked]` to the property ensure it is never changed.
 >
-> For more information, check out the [documentation on Locked properties](/docs/4.x/locked).
+> For more information, check out the [documentation on the Locked attribute](/docs/4.x/attribute-locked).
 
 
 ## Update
@@ -129,7 +129,7 @@ Livewire provides convenient hooks to intercept the updating of a public propert
 
 Below is an example of using `updating` to prevent the modification of the `$postId` property.
 
-It's worth noting that for this particular example, in an actual application, you should use the [`#[Locked]` attribute](/docs/4.x/locked) instead, like in the above example.
+It's worth noting that for this particular example, in an actual application, you should use the [`#[Locked]` attribute](/docs/4.x/attribute-locked) instead, like in the above example.
 
 ```php
 <?php // resources/views/components/post/⚡show.blade.php

@@ -185,6 +185,5 @@ Users can set their preferred filters and they'll persist across sessions, page 
 * Complete Eloquent models
 * Binary data or file contents
 
-## Learn more
-
-For more information about session properties and alternatives like URL persistence, see the [Session Properties documentation](/docs/4.x/session-properties).
+> [!tip] Alternative: URL persistence
+> If you want state to be shareable via URL or bookmarkable, consider using the [`#[Url]` attribute](/docs/4.x/url) instead of `#[Session]`. URL parameters persist state in the address bar while session properties keep the URL clean.

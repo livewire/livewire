@@ -371,7 +371,6 @@ For these scenarios, Livewire exposes dedicated JavaScript functions.
 These functions exist on a JavaScript component object, which can be accessed using Livewire's convenient `$wire` object from within your Livewire component's template:
 
 ```blade
-@script
 <script>
     let file = $wire.el.querySelector('input[type="file"]').files[0]
 
@@ -396,7 +395,6 @@ These functions exist on a JavaScript component object, which can be accessed us
     // Cancel an upload...
     $wire.cancelUpload('photos')
 </script>
-@endscript
 ```
 
 ## Configuration

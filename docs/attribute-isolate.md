@@ -1,5 +1,13 @@
 The `#[Isolate]` attribute prevents a component's requests from being bundled with other component updates, allowing it to execute in parallel.
 
+## Why bundling matters
+
+Every component update in Livewire triggers a network request. By default, when multiple components trigger updates at the same time, they are bundled into a single request.
+
+This results in fewer network connections to the server and can drastically reduce server load. In addition to the performance gains, this also unlocks features internally that require collaboration between multiple components ([Reactive Properties](/docs/4.x/nesting#reactive-props), [Modelable Properties](/docs/4.x/nesting#binding-to-child-data-using-wiremodel), etc.)
+
+However, there are times when disabling this bundling is desired for performance reasons. That's where `#[Isolate]` comes in.
+
 ## Basic usage
 
 Apply the `#[Isolate]` attribute to any component that should send isolated requests:
@@ -26,11 +34,8 @@ new class extends Component
 
 With `#[Isolate]`, this component's requests will no longer be bundled with other component updates, allowing them to execute in parallel.
 
-## How request bundling works
-
-By default, when multiple components trigger updates at the same time, Livewire bundles them into a single network request. This reduces server load and enables features like reactive properties and modelable bindings.
-
-However, if a component performs expensive operations, bundling can slow down the entire request. Isolating that component allows it to run in parallel with other updates.
+> [!tip] When bundling helps vs hurts
+> Bundling is great for most scenarios, but if a component performs expensive operations, bundling can slow down the entire request. Isolating that component allows it to run in parallel with other updates.
 
 ## When to use
 
@@ -100,7 +105,3 @@ Now multiple `revenue` components will bundle their lazy-load requests into a si
 * More network requests to the server
 * Can't coordinate with other components in the same request
 * Slightly higher server overhead from multiple connections
-
-## Learn more
-
-For more information about request bundling and performance optimization, see the [Request Bundling documentation](/docs/4.x/bundling).

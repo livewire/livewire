@@ -8,12 +8,14 @@ Apply the `#[Layout]` attribute to a full-page component to use a specific layou
 <?php // resources/views/pages/posts/⚡index.blade.php
 
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
 #[Layout('layouts.dashboard')] // [tl! highlight]
 new class extends Component
 {
+    #[Computed]
     public function posts()
     {
         return Post::all();

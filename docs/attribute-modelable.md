@@ -129,12 +129,11 @@ new class extends Component
 
 <div>
     <div
-        x-data="{
-            content: $wire.entangle('content')
-        }"
         x-init="
             // Initialize your rich text editor library here
-            editor.on('change', () => content = editor.getContent())
+            editor.on('change', () => {
+                $wire.content = editor.getContent()
+            })
         "
     >
         <!-- Rich text editor UI -->

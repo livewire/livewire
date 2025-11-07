@@ -12,35 +12,6 @@ Route::livewire('/posts/create', 'pages::post.create');
 
 When you visit the specified URL, the component will be rendered as a complete page using your application's layout.
 
-### Component namespaces
-
-You may have noticed the `pages::` prefix in the route example above. Livewire automatically registers several component namespaces for better organization:
-
-- `pages::` — Points to `resources/views/pages/`
-- `layouts::` — Points to `resources/views/layouts/`
-
-These namespaces are registered for both Livewire components and Blade components, allowing you to organize your application's pages and layouts in dedicated directories. For example:
-
-```php
-// These all work automatically:
-Route::livewire('/dashboard', 'pages::dashboard');
-Route::livewire('/profile', 'pages::user.profile');
-
-// In Blade templates:
-<livewire:pages::dashboard />
-<x-layouts::app />
-```
-
-You can customize these namespaces or add your own in the `config/livewire.php` file:
-
-```php
-'component_namespaces' => [
-    'layouts' => resource_path('views/layouts'),
-    'pages' => resource_path('views/pages'),
-    'admin' => resource_path('views/admin'),  // Add custom namespace
-],
-```
-
 ## Layouts
 
 Components rendered via routes will use your application's layout file. By default, Livewire looks for a layout called `layouts::app` located at `resources/views/layouts/app.blade.php`.
@@ -92,9 +63,7 @@ To use a different layout for a specific component, you may place the `#[Layout]
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new
-#[Layout('layouts::dashboard')] // [tl! highlight]
-class extends Component
+new #[Layout('layouts::dashboard')] class extends Component // [tl! highlight]
 {
 	// ...
 };
@@ -139,9 +108,7 @@ Next, above your Livewire component's class, add the `#[Title]` attribute and pa
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new
-#[Title('Create post')] // [tl! highlight]
-class extends Component
+new #[Title('Create post')] class extends Component  // [tl! highlight]
 {
 	// ...
 };
@@ -161,7 +128,7 @@ public function render()
 
 ## Setting additional layout file slots
 
-If your layout file has any named slots in addition to `$slot`, you can set their content in your Blade view by defining `<x-slot>`s outside your root element. For example, if you want to be able to set the page language for each component individually, you can add a dynamic `$lang` slot into the opening HTML tag in your layout file:
+If your layout file has any named slots in addition to `$slot`, you can set their content in your Blade view by defining `<x-slot>` outside your root element. For example, if you want to be able to set the page language for each component individually, you can add a dynamic `$lang` slot into the opening HTML tag in your layout file:
 
 ```blade
 <!-- resources/views/layouts/app.blade.php -->
