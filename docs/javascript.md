@@ -585,8 +585,7 @@ For example, here is a `post.create` component that triggers a client-side alert
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $title = '';
 
     public function save()

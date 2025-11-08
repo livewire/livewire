@@ -13,8 +13,7 @@ Below is an example of dispatching a `post-created` event from a `post.create` c
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public function save()
     {
 		// ...
@@ -45,8 +44,7 @@ To listen for an event in a Livewire component, add the `#[On]` attribute above 
 use Livewire\Component;
 use Livewire\Attributes\On; // [tl! highlight]
 
-new class extends Component
-{
+new class extends Component {
 	#[On('post-created')] // [tl! highlight]
     public function updatePostList($title)
     {
@@ -70,8 +68,7 @@ For example, if you wanted to scope an event listener to a specific Eloquent mod
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public function update()
     {
         // ...
@@ -90,8 +87,7 @@ use Livewire\Attributes\On; // [tl! highlight]
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
 	#[On('post-updated.{post.id}')] // [tl! highlight]
@@ -303,8 +299,7 @@ Below is an example of the `post.create` component dispatching the `post-created
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public function save()
     {
 		// ...
@@ -323,8 +318,7 @@ Using the `dispatch()->self()` modifier, you can restrict an event to only being
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public function save()
     {
 		// ...
@@ -476,8 +470,7 @@ Below is an example of an `order-tracker` component that is listening for the `O
 use Livewire\Attributes\On; // [tl! highlight]
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $showNewOrderNotification = false;
 
     #[On('echo:orders,OrderShipped')]
@@ -499,8 +492,7 @@ use Livewire\Attributes\On; // [tl! highlight]
 use Livewire\Component;
 use App\Models\Order;
 
-new class extends Component
-{
+new class extends Component {
     public Order $order;
 
     public $showOrderShippedNotification = false;
@@ -555,8 +547,7 @@ You may also listen to events broadcast to private and presence channels:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $showNewOrderNotification = false;
 
     public function getListeners()

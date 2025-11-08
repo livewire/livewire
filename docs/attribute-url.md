@@ -12,8 +12,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use App\Models\User;
 
-new class extends Component
-{
+new class extends Component {
     #[Url] // [tl! highlight]
     public $search = '';
 
@@ -71,8 +70,7 @@ Shorten or obfuscate property names in the URL with the `as` parameter:
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Url(as: 'q')] // [tl! highlight]
     public $search = '';
 };
@@ -90,8 +88,7 @@ By default, Livewire only adds query parameters when values differ from their in
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Url(except: '')] // [tl! highlight]
     public $search = '';
 
@@ -125,8 +122,7 @@ Use nullable type hints to treat empty query parameters as `null` instead of emp
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Url]
     public ?string $search; // [tl! highlight]
 };
@@ -167,8 +163,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use App\Models\Product;
 
-new class extends Component
-{
+new class extends Component {
     #[Url(as: 'q')]
     public $search = '';
 

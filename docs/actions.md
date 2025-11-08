@@ -8,8 +8,7 @@ Let's explore a basic example of calling a `save` action:
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public $title = '';
 
     public $content = '';
@@ -52,8 +51,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -108,8 +106,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -137,8 +134,7 @@ use App\Repositories\PostRepository;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -346,7 +342,19 @@ Livewire provides a `wire:loading` directive that makes it trivial to show and h
 </form>
 ```
 
-`wire:loading` is a powerful feature with a variety of more powerful features. [Check out the full loading documentation for more information](/docs/4.x/wire-loading).
+Alternatively, you can style loading states directly using Tailwind and Livewire's automatic `data-loading` attribute:
+
+```blade
+<form wire:submit="save">
+    <textarea wire:model="content"></textarea>
+
+    <button type="submit" class="data-loading:opacity-50">Save</button>
+
+    <span class="not-data-loading:hidden">Saving...</span>
+</form>
+```
+
+For most cases, using `data-loading` selectors is simpler and more flexible than `wire:loading`. [Learn more about loading states →](/docs/4.x/loading-states)
 
 ## Refreshing a component
 
@@ -469,8 +477,7 @@ Here's an example of bookmarking a post that uses a JavaScript action to optimis
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     public $bookmarked = false;
@@ -524,11 +531,11 @@ This provides instant visual feedback while ensuring the bookmark state is prope
 > [!warning] Class-based components need @script wrapper
 > The examples above use bare `<script>` tags, which work for single-file and multi-file components. If you're using class-based components, you must wrap your script tags with the `@script` directive:
 > ```blade
-> @script
+> @@script
 > <script>
 >     this.$js.bookmark = () => { /* ... */ }
 > </script>
-> @endscript
+> @@endscript
 > ```
 > This ensures your JavaScript is properly scoped to the component.
 
@@ -549,8 +556,7 @@ JavaScript actions can also be called using the `js()` method from PHP:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $title = '';
 
     public function save()
@@ -663,8 +669,7 @@ use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     public function mount(Post $post)
@@ -701,8 +706,7 @@ If you prefer to not utilize method attributes or need to conditionally skip ren
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     public function mount(Post $post)
@@ -751,8 +755,7 @@ Alternatively, you can mark a method as async using the `#[Async]` attribute. Th
 use Livewire\Attributes\Async;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     #[Async]
@@ -789,8 +792,7 @@ Here's an example of tracking when a user clicks on an external link:
 use Livewire\Attributes\Async;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $url;
 
     #[Async]
@@ -829,8 +831,7 @@ Consider this dangerous example:
 use Livewire\Attributes\Async;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $count = 0;
 
     #[Async] // Don't do this!
@@ -857,8 +858,7 @@ Another valid use case is fetching data from the server that will be consumed en
 use Livewire\Attributes\Async;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Async]
     public function fetchSuggestions($query)
     {
@@ -922,8 +922,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -964,8 +963,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -997,8 +995,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -1041,8 +1038,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -1079,8 +1075,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -1130,8 +1125,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {

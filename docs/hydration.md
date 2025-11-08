@@ -27,8 +27,7 @@ Take the following `counter` component for example:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $count = 1;
 
     public function increment()
@@ -150,8 +149,7 @@ Let's take a look at a slightly more complex example - a `todos` component:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $todos;
 
     public function mount() {
@@ -221,8 +219,7 @@ For example, consider the above `todos` example, except now with a [Laravel Stri
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $todos;
 
     public function mount() {

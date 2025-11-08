@@ -14,8 +14,7 @@ Below is an example of a `post.create` Livewire component that redirects the use
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
 	public $title = '';
 
     public $content = '';
@@ -103,8 +102,7 @@ To pass flash data along with a redirect, you can use Laravel's `session()->flas
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     // ...
 
     public function update()

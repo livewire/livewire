@@ -12,8 +12,7 @@ All component examples use **single-file anonymous class format**:
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public $title = '';
 
     public function save()

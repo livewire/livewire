@@ -19,8 +19,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\User;
 
-new class extends Component
-{
+new class extends Component {
     public $userId;
 
     #[Computed]
@@ -83,8 +82,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public function createPost()
     {
         if ($this->posts->count() > 10) {
@@ -125,8 +123,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\User;
 
-new class extends Component
-{
+new class extends Component {
     public $userId;
 
     #[Computed]
@@ -286,8 +283,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -324,8 +320,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {

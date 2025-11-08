@@ -92,8 +92,7 @@ You can combine multiple modifiers to create precise behaviors:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $page = 1;
     public $posts = [];
 
@@ -133,8 +132,7 @@ new class extends Component
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $imageLoaded = false;
 
     public function loadImage()

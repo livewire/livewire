@@ -50,9 +50,15 @@ Persisted elements should typically be placed outside Livewire components, commo
 <!-- resources/views/layouts/app.blade.php -->
 
 <!DOCTYPE html>
-<html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
-        <title>{{ $title ?? 'App' }}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>{{ $title ?? config('app.name') }}</title>
+
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+
         @livewireStyles
     </head>
     <body>

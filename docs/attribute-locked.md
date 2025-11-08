@@ -11,8 +11,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Locked] // [tl! highlight]
     public $postId;
 
@@ -51,8 +50,7 @@ Use `#[Locked]` when you need to:
 > use Livewire\Component;
 > use App\Models\Post;
 >
-> new class extends Component
-> {
+> new class extends Component {
 >     public Post $post; // Already protected [tl! highlight]
 >
 >     public function mount($id)

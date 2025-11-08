@@ -11,8 +11,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\User;
 
-new class extends Component
-{
+new class extends Component {
     public $search = '';
 
     #[Computed]
@@ -49,8 +48,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use App\Models\User;
 
-new class extends Component
-{
+new class extends Component {
     #[Url] // [tl! highlight]
     public $search = '';
 

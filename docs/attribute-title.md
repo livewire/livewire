@@ -10,9 +10,7 @@ Apply the `#[Title]` attribute to a full-page component to set its title:
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title('Create Post')] // [tl! highlight]
-new class extends Component
-{
+new #[Title('Create Post')] class extends Component { // [tl! highlight]
     public $title = '';
     public $content = '';
 
@@ -65,8 +63,7 @@ For dynamic titles using component properties, use the `title()` method in the `
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     public function mount($id)
@@ -101,10 +98,10 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
+new
 #[Layout('layouts.admin')]
 #[Title('Create Post')]
-new class extends Component
-{
+class extends Component {
     // ...
 };
 ```
@@ -136,8 +133,7 @@ Here's a complete example showing titles across CRUD operations:
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title('All Posts')]
-new class extends Component { };
+new #[Title('All Posts')] class extends Component { };
 ```
 
 ```php
@@ -146,8 +142,7 @@ new class extends Component { };
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title('Create Post')]
-new class extends Component { };
+new #[Title('Create Post')] class extends Component { };
 ```
 
 ```php
@@ -156,8 +151,7 @@ new class extends Component { };
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     public function render()
@@ -173,8 +167,7 @@ new class extends Component
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     public function render()

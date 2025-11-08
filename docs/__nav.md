@@ -18,6 +18,7 @@ Features:
     Navigate: { uri: /docs/4.x/navigate, file: /navigate.md }
     Islands: { uri: /docs/4.x/islands, file: /islands.md }
     Lazy Loading: { uri: /docs/4.x/lazy, file: /lazy.md }
+    Loading States: { uri: /docs/4.x/loading-states, file: /loading-states.md }
     Validation: { uri: /docs/4.x/validation, file: /validation.md }
     File Uploads: { uri: /docs/4.x/uploads, file: /uploads.md }
     Pagination: { uri: /docs/4.x/pagination, file: /pagination.md }

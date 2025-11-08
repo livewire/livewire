@@ -40,7 +40,9 @@ This will generate `resources/views/layouts/app.blade.php` with the following co
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>{{ $title ?? 'Page Title' }}</title>
+        <title>{{ $title ?? config('app.name') }}</title>
+
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
     </head>
@@ -78,8 +80,7 @@ Open `resources/views/pages/post/⚡create.blade.php` and replace its contents w
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public string $title = '';
 
     public string $content = '';

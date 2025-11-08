@@ -19,9 +19,7 @@ use Livewire\Attributes\Isolate;
 use Livewire\Component;
 use App\Models\Post;
 
-#[Isolate] // [tl! highlight]
-new class extends Component
-{
+new #[Isolate] class extends Component { // [tl! highlight]
     public Post $post;
 
     public function refreshStats()
@@ -56,9 +54,7 @@ Here's a practical example with multiple polling components:
 use Livewire\Attributes\Isolate;
 use Livewire\Component;
 
-#[Isolate] // [tl! highlight]
-new class extends Component
-{
+new #[Isolate] class extends Component { // [tl! highlight]
     public function checkStatus()
     {
         // Expensive external API call...
@@ -85,9 +81,7 @@ When using the `#[Lazy]` attribute, components are automatically isolated to loa
 use Livewire\Attributes\Lazy;
 use Livewire\Component;
 
-#[Lazy(isolate: false)] // [tl! highlight]
-new class extends Component
-{
+new #[Lazy(isolate: false)] class extends Component { // [tl! highlight]
     // ...
 };
 ```

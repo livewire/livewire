@@ -18,8 +18,7 @@ This creates a single-file component at:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $title = '';
 
     public function save()
@@ -169,8 +168,7 @@ Data passed into components is received through the `mount()` method:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $title;
 
     public function mount($title = null)
@@ -191,8 +189,7 @@ To reduce boilerplate code, you can omit the `mount()` method and Livewire will 
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $title; // Automatically set from prop
 
     // ...
@@ -215,8 +212,7 @@ Route::livewire('/posts/{id}', 'pages::post.show');
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $postId;
 
     public function mount($id)
@@ -238,8 +234,7 @@ Route::livewire('/posts/{post}', 'pages::post.show');
 use App\Models\Post;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post; // Automatically bound from route
 
     // No mount() needed - Livewire handles it automatically
@@ -277,8 +272,7 @@ The simplest approach is using public properties, which are automatically availa
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $title = 'My Post';
 };
 ```

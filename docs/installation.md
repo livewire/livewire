@@ -39,7 +39,9 @@ This creates a layout file at `resources/views/layouts/app.blade.php` with the f
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>{{ $title ?? 'Page Title' }}</title>
+        <title>{{ $title ?? config('app.name') }}</title>
+
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
     </head>
@@ -87,10 +89,11 @@ First, add the `@livewireScriptConfig` directive to your layout file:
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>{{ $title ?? 'Page Title' }}</title>
+        <title>{{ $title ?? config('app.name') }}</title>
+
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
-        @vite(['resources/js/app.js'])
     </head>
     <body>
         {{ $slot }}

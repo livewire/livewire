@@ -19,8 +19,7 @@ For example, imagine you have a `revenue` component which contains a slow databa
 use Livewire\Component;
 use App\Models\Transaction;
 
-new class extends Component
-{
+new class extends Component {
     public $amount;
 
     public function mount()
@@ -65,8 +64,7 @@ For single-file and multi-file components, you can use the `@placeholder` direct
 use Livewire\Component;
 use App\Models\Transaction;
 
-new class extends Component
-{
+new class extends Component {
     public $amount;
 
     public function mount()
@@ -200,8 +198,7 @@ You can accept this data in `mount()` just like any other component:
 use Livewire\Component;
 use App\Models\Transaction;
 
-new class extends Component
-{
+new class extends Component {
     public $amount;
 
     public function mount($start, $end)

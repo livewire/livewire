@@ -10,8 +10,7 @@ Apply the `#[Modelable]` attribute to a property in a child component to make it
 use Livewire\Attributes\Modelable;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Modelable] // [tl! highlight]
     public $value = '';
 };
@@ -29,8 +28,7 @@ Now the parent component can bind to this child component just like any other in
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $todo = '';
 
     public function addTodo()
@@ -73,8 +71,7 @@ The `#[Modelable]` attribute simplifies this by allowing `wire:model` to work di
 use Livewire\Attributes\Modelable;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Modelable]
     public $date = '';
 };
@@ -120,8 +117,7 @@ Here's a more complex example of a rich-text editor component:
 use Livewire\Attributes\Modelable;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Modelable]
     public $content = '';
 };

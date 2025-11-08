@@ -11,8 +11,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\User;
 
-new class extends Component
-{
+new class extends Component {
     public $userId;
 
     #[Computed] // [tl! highlight]
@@ -53,8 +52,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed] // [tl! highlight]
     public function posts()
     {
@@ -76,8 +74,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {

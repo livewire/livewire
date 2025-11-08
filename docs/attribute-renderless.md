@@ -11,8 +11,7 @@ use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     public function mount(Post $post)
@@ -65,8 +64,7 @@ If you need to conditionally skip rendering or prefer not to use attributes, you
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     public function incrementViewCount()

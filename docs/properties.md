@@ -11,8 +11,7 @@ Consider the following example:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $todos = [];
 
     public $todo = '';
@@ -40,8 +39,7 @@ For example:
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public $post;
 
     public $title;
@@ -74,8 +72,7 @@ Let's use the `wire:model` directive to bind the `$todo` property in a `todos` c
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $todos = [];
 
     public $todo = '';
@@ -120,8 +117,7 @@ In the example below, we can avoid code duplication by using `$this->reset()` to
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $todos = [];
 
     public $todo = '';
@@ -153,8 +149,7 @@ Here's the same example from above, but simplified with `pull()`:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $todos = [];
 
     public $todo = '';
@@ -193,8 +188,7 @@ Livewire supports primitive types such as strings, integers, etc. These types ca
 Livewire supports the following primitive property types: `Array`, `String`, `Integer`, `Float`, `Boolean`, and `Null`.
 
 ```php
-new class extends Component
-{
+new class extends Component {
     public array $todos = [];
 
     public string $todo = '';
@@ -279,8 +273,7 @@ class Customer
 Attempting to set an instance of this class to a Livewire component property will result in an error telling you that the `Customer` property type isn't supported:
 
 ```php
-new class extends Component
-{
+new class extends Component {
     public Customer $customer;
 
     public function mount()
@@ -401,8 +394,7 @@ To demonstrate how neglecting to authorize and validate properties can introduce
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public $id;
     public $title;
     public $content;
@@ -485,8 +477,7 @@ Livewire also allows you to "lock" properties in order to prevent properties fro
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Locked] // [tl! highlight]
     public $id;
 
@@ -510,8 +501,7 @@ When an Eloquent model is assigned to a Livewire component property, Livewire wi
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post; // [tl! highlight]
     public $title;
     public $content;
@@ -599,8 +589,7 @@ To demonstrate, consider the following `show-todos` component with a `select()` 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $todos;
 
     public function mount()
@@ -630,8 +619,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed] // [tl! highlight]
     public function todos()
     {
@@ -664,8 +652,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function todos()
     {

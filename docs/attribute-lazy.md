@@ -11,9 +11,7 @@ use Livewire\Attributes\Lazy;
 use Livewire\Component;
 use App\Models\Transaction;
 
-#[Lazy] // [tl! highlight]
-new class extends Component
-{
+new #[Lazy] class extends Component { // [tl! highlight]
     public $amount;
 
     public function mount()
@@ -51,9 +49,7 @@ use Livewire\Attributes\Lazy;
 use Livewire\Component;
 use App\Models\Transaction;
 
-#[Lazy]
-new class extends Component
-{
+new #[Lazy] class extends Component {
     public $amount;
 
     public function mount()
@@ -92,9 +88,7 @@ By default, lazy components load in parallel with independent network requests. 
 use Livewire\Attributes\Lazy;
 use Livewire\Component;
 
-#[Lazy(bundle: true)] // [tl! highlight]
-new class extends Component
-{
+new #[Lazy(bundle: true)] class extends Component { // [tl! highlight]
     // ...
 };
 ```

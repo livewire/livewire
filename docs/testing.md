@@ -232,8 +232,7 @@ The underlying component being tested (`post.edit`) will receive `$post` through
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
 	public Post $post;
 
     public $title = '';
@@ -263,8 +262,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Url] // [tl! highlight]
     public $search = '';
 
@@ -323,8 +321,7 @@ Below is a basic `cart` component that loads a discount token from a cookie on m
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $discountToken;
 
     public function mount()

@@ -18,9 +18,7 @@ This is useful if the update is expensive and you'd rather execute this componen
 use Livewire\Attributes\Isolate;
 use Livewire\Component;
 
-#[Isolate] // [tl! highlight]
-new class extends Component
-{
+new #[Isolate] class extends Component { // [tl! highlight]
     // ...
 };
 ```
@@ -39,9 +37,7 @@ If you wish to disable this behavior, you can pass an `isolate: false` parameter
 use Livewire\Attributes\Lazy;
 use Livewire\Component;
 
-#[Lazy(isolate: false)] // [tl! highlight]
-new class extends Component
-{
+new #[Lazy(isolate: false)] class extends Component { // [tl! highlight]
     // ...
 };
 ```

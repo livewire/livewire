@@ -11,8 +11,7 @@ use Livewire\Attributes\Async;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     #[Async] // [tl! highlight]
@@ -47,8 +46,7 @@ Here's an example tracking external link clicks:
 use Livewire\Attributes\Async;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $url;
 
     #[Async] // [tl! highlight]
@@ -85,8 +83,7 @@ Consider this dangerous example:
 use Livewire\Attributes\Async;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $count = 0;
 
     #[Async] // Don't do this! [tl! highlight]

@@ -112,8 +112,7 @@ use Livewire\Volt\Component;
 new
 #[Layout('layouts.guest')]
 #[Title('Login')]
-class extends Component
-{
+class extends Component {
     public string $name = '';
 
     // ...

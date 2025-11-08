@@ -18,8 +18,7 @@ To nest a Livewire component within a parent component, simply include it in the
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     //
 };
 ?>
@@ -48,8 +47,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function todos()
     {
@@ -76,8 +74,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     public $todos;
 
     public function mount($todos)
@@ -187,8 +184,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     #[Reactive] // [tl! highlight]
     public $todos;
 
@@ -226,8 +222,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     public $todo = '';
 
     public function add()
@@ -273,8 +268,7 @@ Below is the `todo-input` component with the `#[Modelable]` attribute added abov
 use Livewire\Attributes\Modelable;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Modelable] // [tl! highlight]
     public $value = '';
 };
@@ -304,8 +298,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     #[Computed]
@@ -340,8 +333,7 @@ Now that content has been passed to the `Comment` child component, you can rende
 use Livewire\Component;
 use App\Models\Comment;
 
-new class extends Component
-{
+new class extends Component {
     public Comment $comment;
 };
 ?>
@@ -569,8 +561,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     public function remove($todoId)
     {
         $todo = Todo::find($todoId);
@@ -606,8 +597,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     #[On('remove-todo')] // [tl! highlight]
     public function remove($todoId)
     {
@@ -641,8 +631,7 @@ Once the attribute has been added to the action, you can dispatch the `remove-to
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     public Todo $todo;
 
     public function remove()
@@ -678,8 +667,7 @@ You can avoid the first request entirely by dispatching the `remove-todo` event 
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     public Todo $todo;
 };
 ?>
@@ -729,8 +717,7 @@ Dynamic child components are useful in a variety of different scenarios, but bel
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $current = 'step-one';
 
     protected $steps = [
@@ -762,8 +749,7 @@ Now, if the `steps` component's `$current` prop is set to "step-one", Livewire w
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     //
 };
 ?>
@@ -797,8 +783,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Question;
 
-new class extends Component
-{
+new class extends Component {
     public Question $question;
 
     #[Computed]

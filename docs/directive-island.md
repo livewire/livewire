@@ -11,8 +11,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Revenue;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function revenue()
     {

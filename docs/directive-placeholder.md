@@ -10,8 +10,7 @@ For single-file and multi-file components, use `@placeholder` to specify what di
 use Livewire\Component;
 use App\Models\Transaction;
 
-new class extends Component
-{
+new class extends Component {
     public $amount;
 
     public function mount()

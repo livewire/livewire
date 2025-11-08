@@ -12,8 +12,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Session] // [tl! highlight]
     public $search = '';
 
@@ -68,8 +67,7 @@ By default, Livewire generates session keys using the component and property nam
 use Livewire\Attributes\Session;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Session(key: 'post_search')] // [tl! highlight]
     public $search = '';
 };
@@ -88,8 +86,7 @@ use Livewire\Attributes\Session;
 use Livewire\Component;
 use App\Models\Author;
 
-new class extends Component
-{
+new class extends Component {
     public Author $author;
 
     #[Session(key: 'search-{author.id}')] // [tl! highlight]
@@ -121,8 +118,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Transaction;
 
-new class extends Component
-{
+new class extends Component {
     #[Session]
     public $dateRange = '30days';
 

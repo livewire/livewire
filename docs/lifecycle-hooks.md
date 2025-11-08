@@ -28,8 +28,7 @@ Here's an example of using the `mount()` method to initialize the `name` and `em
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $name;
 
     public $email;
@@ -53,8 +52,7 @@ As mentioned earlier, the `mount()` method receives data passed into the compone
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public $title;
 
     public $content;
@@ -94,8 +92,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Locked]
     public $postId = 1;
 
@@ -137,8 +134,7 @@ It's worth noting that for this particular example, in an actual application, yo
 use Exception;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $postId = 1;
 
     public function updating($property, $value)
@@ -162,8 +158,7 @@ The above `updating()` method runs before the property is updated, allowing you 
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $username = '';
 
     public $email = '';
@@ -190,8 +185,7 @@ Because you are often targeting a specific property when using update hooks, Liv
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $username = '';
 
     public $email = '';
@@ -218,8 +212,7 @@ Note that when the array itself is updated instead of a specific key, the `$key`
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $preferences = [];
 
     public function updatedPreferences($value, $key)
@@ -247,8 +240,7 @@ Let's look at an example that uses both `mount()` , `hydrate()`, and `dehydrate(
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $post;
 
     public function mount($title, $content)
@@ -294,8 +286,7 @@ If you want to hook into the process of rendering a component's Blade view, you 
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public function render()
     {
         return $this->view([
@@ -333,8 +324,7 @@ This also unlocks powerful patterns when you want to stop further execution of c
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public function mount() // [tl! highlight:3]
     {
         $this->post = Post::find($this->postId);
@@ -366,8 +356,7 @@ Below is an example of a component referencing a trait called `HasPostForm`:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     use HasPostForm;
 
     // ...
@@ -438,8 +427,7 @@ Below is an example of a component using a `PostForm` form object:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public PostForm $form;
 
     // ...

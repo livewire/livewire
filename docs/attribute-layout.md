@@ -12,9 +12,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-#[Layout('layouts.dashboard')] // [tl! highlight]
-new class extends Component
-{
+new #[Layout('layouts.dashboard')] class extends Component { // [tl! highlight]
     #[Computed]
     public function posts()
     {
@@ -48,9 +46,7 @@ The `#[Layout]` attribute overrides this default for specific components.
 You can pass additional data to your layout using array syntax:
 
 ```php
-#[Layout('layouts.dashboard', ['title' => 'Posts Dashboard'])] // [tl! highlight]
-new class extends Component
-{
+new #[Layout('layouts.dashboard', ['title' => 'Posts Dashboard'])] class extends Component { // [tl! highlight]
     // ...
 };
 ```
@@ -78,8 +74,7 @@ Instead of the attribute, you can use the `layout()` method in your `render()` m
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public function render()
     {
         return view('livewire.posts.index')
@@ -96,16 +91,13 @@ A common pattern is to use different layouts for different sections of your app:
 
 ```php
 // Admin pages
-#[Layout('layouts.admin')]
-new class extends Component { }
+new #[Layout('layouts.admin')] class extends Component { }
 
 // Marketing pages
-#[Layout('layouts.marketing')]
-new class extends Component { }
+new #[Layout('layouts.marketing')] class extends Component { }
 
 // Dashboard pages
-#[Layout('layouts.dashboard')]
-new class extends Component { }
+new #[Layout('layouts.dashboard')] class extends Component { }
 ```
 
 ## When to use

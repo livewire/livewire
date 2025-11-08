@@ -11,8 +11,7 @@ use Livewire\Attributes\Validate;
 use Livewire\WithFileUploads;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     use WithFileUploads;
 
     #[Validate('image|max:1024')] // 1MB Max
@@ -94,8 +93,7 @@ use Livewire\Attributes\Validate;
 use Livewire\WithFileUploads;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     use WithFileUploads;
 
     #[Validate(['photos.*' => 'image|max:1024'])]
@@ -147,8 +145,7 @@ use Livewire\Attributes\Validate;
 use Livewire\WithFileUploads;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     use WithFileUploads;
 
     #[Validate('image|max:1024')]
@@ -223,8 +220,7 @@ Below is an example of the `upload-photo` component required to make the previou
 use Livewire\WithFileUploads;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     use WithFileUploads;
 
     public $photo;
@@ -287,7 +283,7 @@ Now, any temporary files older than 24 hours will be cleaned up by S3 automatica
 
 Although `wire:model` for file uploads works differently than other `wire:model` input types under the hood, the interface for showing loading indicators remains the same.
 
-You can display a loading indicator scoped to the file upload like so:
+You can display a loading indicator scoped to the file upload using `wire:loading`:
 
 ```blade
 <input type="file" wire:model="photo">
@@ -295,9 +291,19 @@ You can display a loading indicator scoped to the file upload like so:
 <div wire:loading wire:target="photo">Uploading...</div>
 ```
 
+Or more simply using Livewire's automatic `data-loading` attribute:
+
+```blade
+<div>
+    <input type="file" wire:model="photo">
+
+    <div class="not-data-loading:hidden">Uploading...</div>
+</div>
+```
+
 Now, while the file is uploading, the "Uploading..." message will be shown and then hidden when the upload is finished.
 
-For more information on loading states, check out our comprehensive [loading state documentation](/docs/4.x/wire-loading).
+[Learn more about loading states →](/docs/4.x/loading-states)
 
 ## Progress indicators
 

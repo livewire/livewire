@@ -542,7 +542,7 @@ Every element that triggers a network request automatically receives a `data-loa
 </button>
 ```
 
-[Learn more about loading states →](/docs/4.x/wire-loading)
+[Learn more about loading states →](/docs/4.x/loading-states)
 
 ### JavaScript improvements
 
