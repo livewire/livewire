@@ -39,7 +39,7 @@ class Posts extends Component
     Post Limit: <input type="number" wire:model.live="postLimit">
 
     @foreach ($posts as $post)
-        <livewire:show-post :$post :key="$post->id">
+        <livewire:show-post :$post :wire:key="$post->id">
     @endforeach
 </div>
 ```
@@ -141,7 +141,7 @@ As a reminder, here's the Blade template of the parent `Posts` component:
     Post Limit: <input type="number" wire:model.live="postLimit">
 
     @foreach ($posts as $post)
-        <livewire:show-post :$post :key="$post->id">
+        <livewire:show-post :$post :wire:key="$post->id">
     @endforeach
 </div>
 ```

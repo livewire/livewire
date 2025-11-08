@@ -144,7 +144,7 @@ You can specify the component's key by specifying a `:key` prop on the child com
     <h1>Todos</h1>
 
     @foreach ($todos as $todo)
-        <livewire:todo-item :$todo :key="$todo->id" />
+        <livewire:todo-item :$todo :wire:key="$todo->id" />
     @endforeach
 </div>
 ```
@@ -252,7 +252,7 @@ As you can see in the `todos` template, `wire:model` is being used to bind the `
 
     <div>
         @foreach ($this->todos as $todo)
-            <livewire:todo-item :$todo :key="$todo->id" />
+            <livewire:todo-item :$todo :wire:key="$todo->id" />
         @endforeach
     </div>
 </div>
@@ -316,7 +316,7 @@ new class extends Component {
 
 <div>
     @foreach ($this->comments as $comment)
-        <livewire:comment :$comment :key="$comment->id">
+        <livewire:comment :$comment :wire:key="$comment->id">
             <button wire:click="removeComment({{ $comment->id }})">
                 Remove
             </button>
@@ -359,7 +359,7 @@ Below is an example of passing both a default slot and a named `actions` slot to
 ```blade
 <div>
     @foreach ($this->comments as $comment)
-        <livewire:comment :$comment :key="$comment->id">
+        <livewire:comment :$comment :wire:key="$comment->id">
             <livewire:slot name="actions">
                 <button wire:click="removeComment({{ $comment->id }})">
                     Remove
@@ -491,7 +491,7 @@ If the component will be used in multiple places with its own logic and state:
 
 ```blade
 {{-- This todo-item can be reused across the application --}}
-<livewire:todo-item :$todo :key="$todo->id" />
+<livewire:todo-item :$todo :wire:key="$todo->id" />
 ```
 
 **You need separate lifecycle hooks**
@@ -581,7 +581,7 @@ new class extends Component {
 
 <div>
     @foreach ($this->todos as $todo)
-        <livewire:todo-item :$todo :key="$todo->id" />
+        <livewire:todo-item :$todo :wire:key="$todo->id" />
     @endforeach
 </div>
 ```
@@ -618,7 +618,7 @@ new class extends Component {
 
 <div>
     @foreach ($this->todos as $todo)
-        <livewire:todo-item :$todo :key="$todo->id" />
+        <livewire:todo-item :$todo :wire:key="$todo->id" />
     @endforeach
 </div>
 ```
@@ -736,7 +736,7 @@ new class extends Component {
 ?>
 
 <div>
-    <livewire:dynamic-component :is="$current" :key="$current" />
+    <livewire:dynamic-component :is="$current" :wire:key="$current" />
 
     <button wire:click="next">Next</button>
 </div>
@@ -762,7 +762,7 @@ new class extends Component {
 If you prefer, you can use the alternative syntax:
 
 ```blade
-<livewire:is :component="$current" :key="$current" />
+<livewire:is :component="$current" :wire:key="$current" />
 ```
 
 > [!warning]
@@ -798,7 +798,7 @@ new class extends Component {
     Question: {{ $question->content }}
 
     @foreach ($this->subQuestions as $subQuestion)
-        <livewire:survey-question :question="$subQuestion" :key="$subQuestion->id" />
+        <livewire:survey-question :question="$subQuestion" :wire:key="$subQuestion->id" />
     @endforeach
 </div>
 ```
@@ -822,7 +822,7 @@ Livewire internally attaches a random string key to the component like so:
 
 ```blade
 <div>
-    <livewire:todo-count :$todos key="lska" />
+    <livewire:todo-count :$todos wire:key="lska" />
 </div>
 ```
 
@@ -842,7 +842,7 @@ Below is an example where we might want to destroy and re-initialize the `todo-c
 
 ```blade
 <div>
-    <livewire:todo-count :todos="$todos" :key="$todos->pluck('id')->join('-')" />
+    <livewire:todo-count :todos="$todos" :wire:key="$todos->pluck('id')->join('-')" />
 </div>
 ```
 
