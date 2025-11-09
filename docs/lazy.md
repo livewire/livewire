@@ -418,3 +418,10 @@ class DashboardTest extends TestCase
 ```
 
 Now, when the dashboard component is rendered for this test, it will skip rendering the `placeholder()` and instead render the full component as if lazy loading wasn't applied at all.
+
+## See also
+
+- **[Islands](/docs/4.x/islands)** — Isolate updates within a single component
+- **[Loading States](/docs/4.x/loading-states)** — Show placeholders while components load
+- **[@placeholder](/docs/4.x/directive-placeholder)** — Define placeholder content
+- **[Lazy Attribute](/docs/4.x/attribute-lazy)** — Mark components for lazy loading

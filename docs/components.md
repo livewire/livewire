@@ -312,7 +312,7 @@ public function posts()
 ```blade
 <div>
     @foreach ($this->posts as $post)
-        <article>{{ $post->title }}</article>
+        <article wire:key="{{ $post->id }}">{{ $post->title }}</article>
     @endforeach
 </div>
 ```
@@ -564,12 +564,10 @@ Once published, Livewire will automatically use your custom stubs when generatin
 - Rename one of the components to be unique
 - Namespace one of the directories for more clear separation
 
-## Next steps
+## See also
 
-Now that you understand Livewire components, here are the key concepts to explore next:
-
-- **[Properties](/docs/4.x/properties)** — Learn how component properties work, including types, security, and reactivity
-- **[Actions](/docs/4.x/actions)** — Understand how to handle user interactions with methods and events
-- **[Forms](/docs/4.x/forms)** — Build powerful forms with real-time validation and file uploads
-- **[Pages](/docs/4.x/pages)** — Master page components, layouts, and routing
-- **[Nesting](/docs/4.x/nesting)** — Learn how to compose components and communicate between them
+- **[Properties](/docs/4.x/properties)** — Manage component state and data
+- **[Actions](/docs/4.x/actions)** — Handle user interactions with methods
+- **[Pages](/docs/4.x/pages)** — Use components as full pages with routing
+- **[Nesting](/docs/4.x/nesting)** — Compose components together and pass data between them
+- **[Lifecycle Hooks](/docs/4.x/lifecycle-hooks)** — Execute code at specific points in a component's lifecycle

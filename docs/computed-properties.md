@@ -215,7 +215,9 @@ public function render()
 ```blade
 <div>
     @foreach ($posts as $post)
-        <!-- ... -->
+        <div wire:key="{{ $post->id }}">
+            <!-- ... -->
+        </div>
     @endforeach
 </div>
 ```
@@ -232,7 +234,9 @@ Consider the following template without a computed property:
 <div>
     @if (Auth::user()->can_see_posts)
         @foreach ($posts as $post)
-            <!-- ... -->
+            <div wire:key="{{ $post->id }}">
+                <!-- ... -->
+            </div>
         @endforeach
     @endif
 </div>
@@ -262,7 +266,9 @@ public function render()
 <div>
     @if (Auth::user()->can_see_posts)
         @foreach ($this->posts as $post)
-            <!-- ... -->
+            <div wire:key="{{ $post->id }}">
+                <!-- ... -->
+            </div>
         @endforeach
     @endif
 </div>
@@ -295,7 +301,9 @@ new class extends Component {
         return <<<HTML
         <div>
             @foreach ($this->posts as $post)
-                <!-- ... -->
+                <div wire:key="{{ $post->id }}">
+                    <!-- ... -->
+                </div>
             @endforeach
         </div>
         HTML;
@@ -332,7 +340,9 @@ new class extends Component {
 ```blade
 <div>
     @foreach ($this->posts as $post)
-        <!-- ... -->
+        <div wire:key="{{ $post->id }}">
+            <!-- ... -->
+        </div>
     @endforeach
 </div>
 ```
@@ -358,3 +368,10 @@ public $search = '';
 This keeps the search value across page refreshes without using URL parameters or computed property caching.
 
 [Learn more about session properties →](/docs/4.x/attribute-session)
+
+## See also
+
+- **[Properties](/docs/4.x/properties)** — Understand basic property management
+- **[Islands](/docs/4.x/islands)** — Optimize performance with lazy computed values
+- **[Computed Attribute](/docs/4.x/attribute-computed)** — Use #[Computed] for memoization
+- **[Components](/docs/4.x/components)** — Access computed properties in views

@@ -30,7 +30,7 @@ class Todos extends Component
 <form wire:submit="add">
     <ul>
         @foreach ($todos as $item)
-            <li>{{ $item }}</li>
+            <li wire:key="{{ $loop->index }}">{{ $item }}</li>
         @endforeach
     </ul>
 
@@ -192,3 +192,9 @@ Now that the conditional has been wrapped in a persistent element, Livewire will
 #### Bypassing morphing
 
 If you need to bypass morphing entirely for an element, you can use [wire:replace](/docs/4.x/wire-replace) to instruct livewire to replace all children of an element instead of attempting to morph the existing elements.
+
+## See also
+
+- **[Hydration](/docs/4.x/hydration)** — Understand Livewire's request lifecycle
+- **[Components](/docs/4.x/components)** — How components render and update
+- **[wire:replace](/docs/4.x/wire-replace)** — Bypass morphing for specific elements

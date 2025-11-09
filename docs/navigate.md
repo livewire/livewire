@@ -394,3 +394,10 @@ You can customize the color of this bar or disable it all together inside Livewi
     'progress_bar_color' => '#2299dd',
 ],
 ```
+
+## See also
+
+- **[Pages](/docs/4.x/pages)** — Create routable page components
+- **[Redirecting](/docs/4.x/redirecting)** — Navigate programmatically from actions
+- **[@persist](/docs/4.x/directive-persist)** — Persist elements across page navigations
+- **[wire:navigate](/docs/4.x/wire-navigate)** — Add SPA navigation to links

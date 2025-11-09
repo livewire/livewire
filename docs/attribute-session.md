@@ -30,7 +30,7 @@ new class extends Component {
     <input type="text" wire:model.live="search" placeholder="Search posts...">
 
     @foreach($this->posts as $post)
-        <div>{{ $post->title }}</div>
+        <div wire:key="{{ $post->id }}">{{ $post->title }}</div>
     @endforeach
 </div>
 ```
@@ -159,7 +159,7 @@ new class extends Component {
     </select>
 
     @foreach($this->transactions as $transaction)
-        <div>{{ $transaction->description }}</div>
+        <div wire:key="{{ $transaction->id }}">{{ $transaction->description }}</div>
     @endforeach
 </div>
 ```
@@ -183,3 +183,15 @@ Users can set their preferred filters and they'll persist across sessions, page 
 
 > [!tip] Alternative: URL persistence
 > If you want state to be shareable via URL or bookmarkable, consider using the [`#[Url]` attribute](/docs/4.x/url) instead of `#[Session]`. URL parameters persist state in the address bar while session properties keep the URL clean.
+
+## Reference
+
+```php
+#[Session(
+    ?string $key = null,
+)]
+```
+
+**`$key`** (optional)
+- Custom session key for storing the property value
+- Default: `null` (auto-generated based on component and property name)

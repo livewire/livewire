@@ -1010,3 +1010,10 @@ let message = {
 }
 ```
 
+## See also
+
+- **[Alpine](/docs/4.x/alpine)** — Use Alpine for client-side interactivity
+- **[Actions](/docs/4.x/actions)** — Create JavaScript actions in components
+- **[Properties](/docs/4.x/properties)** — Access properties from JavaScript with $wire
+- **[Events](/docs/4.x/events)** — Dispatch and listen for events in JavaScript
+

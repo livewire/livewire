@@ -58,3 +58,9 @@ In the above example, when a user submits the form by clicking "Save", `wire:sub
 
 * [Responding to browser events with Livewire](/docs/4.x/actions)
 * [Creating forms in Livewire](/docs/4.x/forms)
+
+## See also
+
+- **[Forms](/docs/4.x/forms)** — Handle form submissions with Livewire
+- **[Actions](/docs/4.x/actions)** — Process form data in actions
+- **[Validation](/docs/4.x/validation)** — Validate forms before submission

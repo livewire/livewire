@@ -238,3 +238,11 @@ new class extends Component {
 ```
 
 The `$post` property will automatically be assigned to the model bound via the route's `{post}` parameter.
+
+## See also
+
+- **[Components](/docs/4.x/components)** — Learn about creating and organizing components
+- **[Navigate](/docs/4.x/navigate)** — Build SPA-like navigation between pages
+- **[Redirecting](/docs/4.x/redirecting)** — Redirect users after form submissions or actions
+- **[Layout Attribute](/docs/4.x/attribute-layout)** — Specify layouts for full-page components
+- **[Title Attribute](/docs/4.x/attribute-title)** — Set page titles dynamically

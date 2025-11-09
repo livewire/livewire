@@ -148,7 +148,7 @@ In general, something like a `$postId` would be generated in Blade. Here's an ex
 
 ```html
 @foreach ($posts as $post)
-    <button type="button" x-on:click="$wire.deletePost({{ $post->id }})">
+    <button type="button" wire:key="{{ $post->id }}" x-on:click="$wire.deletePost({{ $post->id }})">
         Delete "{{ $post->title }}"
     </button>
 @endforeach
@@ -307,3 +307,10 @@ Livewire.start()
 ```
 
 Now the `x-clipboard` directive will be available to all your Alpine components in your Livewire application.
+
+## See also
+
+- **[Properties](/docs/4.x/properties)** — Access Livewire properties from Alpine using $wire
+- **[Actions](/docs/4.x/actions)** — Call Livewire actions from Alpine
+- **[JavaScript](/docs/4.x/javascript)** — Execute custom JavaScript in components
+- **[Events](/docs/4.x/events)** — Dispatch and listen for events with Alpine

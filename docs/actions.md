@@ -1186,3 +1186,11 @@ class CreatePost extends Component
 Now, the `LogPostCreation` middleware will be applied only to the `createPost` action, ensuring that the activity is only being logged when users create a new post.
 
 -->
+
+## See also
+
+- **[Events](/docs/4.x/events)** — Communicate between components using events
+- **[Forms](/docs/4.x/forms)** — Handle form submissions with actions
+- **[Loading States](/docs/4.x/loading-states)** — Show feedback while actions are processing
+- **[wire:click](/docs/4.x/wire-click)** — Trigger actions from button clicks
+- **[Validation](/docs/4.x/validation)** — Validate data before processing actions

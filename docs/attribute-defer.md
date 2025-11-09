@@ -126,3 +126,15 @@ Use `#[Defer]` when:
 ## Learn more
 
 For complete documentation on lazy and deferred loading, including placeholders and bundling strategies, see the [Lazy Loading documentation](/docs/4.x/lazy).
+
+## Reference
+
+```php
+#[Defer(
+    bool|null $bundle = null,
+)]
+```
+
+**`$bundle`** (optional)
+- Whether to bundle multiple deferred components into a single network request
+- Default: `null` (loads in parallel by default)

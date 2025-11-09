@@ -240,3 +240,10 @@ trait WithSorting
     }
 }
 ```
+
+## See also
+
+- **[Properties](/docs/4.x/properties)** — Sync properties with URL parameters
+- **[Navigate](/docs/4.x/navigate)** — Maintain URL state during SPA navigation
+- **[Url Attribute](/docs/4.x/attribute-url)** — Bind properties to URL query strings
+- **[Pages](/docs/4.x/pages)** — Work with route parameters

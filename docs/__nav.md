@@ -55,7 +55,7 @@ PHP Attributes:
     Defer: { uri: /docs/4.x/attribute-defer, file: /attribute-defer.md }
     Isolate: { uri: /docs/4.x/attribute-isolate, file: /attribute-isolate.md }
     Js: { uri: /docs/4.x/attribute-js, file: /attribute-js.md }
-    Layout: { uri: /docs/4.x/attribute-layout, file: /attribute-ayout.md }
+    Layout: { uri: /docs/4.x/attribute-layout, file: /attribute-layout.md }
     Lazy: { uri: /docs/4.x/attribute-lazy, file: /attribute-lazy.md }
     Locked: { uri: /docs/4.x/attribute-locked, file: /attribute-locked.md }
     Modelable: { uri: /docs/4.x/attribute-modelable, file: /attribute-modelable.md }

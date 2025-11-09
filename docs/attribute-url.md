@@ -211,7 +211,7 @@ new class extends Component {
     </select>
 
     @foreach($this->products as $product)
-        <div>{{ $product->name }} - ${{ $product->price }}</div>
+        <div wire:key="{{ $product->id }}">{{ $product->name }} - ${{ $product->price }}</div>
     @endforeach
 </div>
 ```
@@ -232,3 +232,35 @@ Query parameters are indexed by search engines and included in analytics:
 ## Learn more
 
 For more information about URL query parameters, including the `queryString()` method and trait hooks, see the [URL Query Parameters documentation](/docs/4.x/url).
+
+## Reference
+
+```php
+#[Url(
+    ?string $as = null,
+    bool $history = false,
+    bool $keep = false,
+    mixed $except = null,
+    mixed $nullable = null,
+)]
+```
+
+**`$as`** (optional)
+- Custom name for the query parameter in the URL
+- Default: `null` (uses property name)
+
+**`$history`** (optional)
+- Whether to push URL changes to browser history (enables back button navigation)
+- Default: `false`
+
+**`$keep`** (optional)
+- Whether to keep the query parameter when navigating away
+- Default: `false`
+
+**`$except`** (optional)
+- Value(s) to exclude from the URL (property won't appear in URL when it has this value)
+- Default: `null`
+
+**`$nullable`** (optional)
+- Value to use when query parameter is missing from URL
+- Default: `null`

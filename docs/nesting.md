@@ -847,3 +847,11 @@ Below is an example where we might want to destroy and re-initialize the `todo-c
 ```
 
 As you can see above, we are generating a dynamic `:key` string based on the content of `$todos`. This way, the `todo-count` component will render and exist as normal until the `$todos` themselves change. At that point, the component will be re-initialized entirely from scratch, and the old component will be discarded.
+
+## See also
+
+- **[Events](/docs/4.x/events)** — Communicate between nested components
+- **[Components](/docs/4.x/components)** — Learn about rendering and organizing components
+- **[Islands](/docs/4.x/islands)** — Alternative to nesting for isolated updates
+- **[Understanding Nesting](/docs/4.x/understanding-nesting)** — Deep dive into nesting performance and behavior
+- **[Reactive Attribute](/docs/4.x/attribute-reactive)** — Make props reactive in nested components

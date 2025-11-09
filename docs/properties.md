@@ -96,7 +96,7 @@ new class extends Component {
 
     <ul>
         @foreach ($todos as $todo)
-            <li>{{ $todo }}</li>
+            <li wire:key="{{ $loop->index }}">{{ $todo }}</li>
         @endforeach
     </ul>
 </div>
@@ -636,7 +636,7 @@ Here's how you would access these _todos_ from the Blade view:
 ```blade
 <ul>
     @foreach ($this->todos as $todo)
-        <li>{{ $todo }}</li>
+        <li wire:key="{{ $loop->index }}">{{ $todo }}</li>
     @endforeach
 </ul>
 ```
@@ -674,3 +674,11 @@ You might wonder why not just call `$this->todos()` as a method directly where y
 The reason is that computed properties have a performance advantage, since they are automatically memoized after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once, so that you don't run an expensive query multiple times in the same request.
 
 For more information, [visit the computed properties documentation](/docs/4.x/computed-properties).
+
+## See also
+
+- **[Forms](/docs/4.x/forms)** — Bind properties to form inputs with wire:model
+- **[Computed Properties](/docs/4.x/computed-properties)** — Create derived values with automatic memoization
+- **[Validation](/docs/4.x/validation)** — Validate property values before persisting
+- **[Locked Attribute](/docs/4.x/attribute-locked)** — Prevent properties from being manipulated client-side
+- **[Alpine](/docs/4.x/alpine)** — Access and manipulate properties from JavaScript

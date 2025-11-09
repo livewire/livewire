@@ -196,3 +196,14 @@ Good page titles are crucial for SEO:
 ## Learn more
 
 For more information about full-page components, layouts, and routing, see the [Pages documentation](/docs/4.x/pages#setting-a-page-title).
+
+## Reference
+
+```php
+#[Title(
+    string $content,
+)]
+```
+
+**`$content`** (required)
+- The text to display in the browser's title bar

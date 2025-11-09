@@ -800,3 +800,11 @@ Because `x-modelable` works for both `wire:model` and `x-model`, you can also us
 ```
 
 Creating custom input elements in your application is extremely powerful but requires a deeper understanding of the utilities Livewire and Alpine provide and how they interact with each other.
+
+## See also
+
+- **[Validation](/docs/4.x/validation)** — Validate form inputs with real-time feedback
+- **[wire:model](/docs/4.x/wire-model)** — Bind form inputs to component properties
+- **[File Uploads](/docs/4.x/uploads)** — Handle file uploads in forms
+- **[Actions](/docs/4.x/actions)** — Process form submissions with actions
+- **[Loading States](/docs/4.x/loading-states)** — Show loading indicators during form submission

@@ -270,3 +270,40 @@ Users get immediate feedback as they fill out the form, with friendly field name
 ## Learn more
 
 For comprehensive documentation on validation, including form objects, custom rules, and testing, see the [Validation documentation](/docs/4.x/validation).
+
+## Reference
+
+```php
+#[Validate(
+    mixed $rule = null,
+    ?string $attribute = null,
+    ?string $as = null,
+    mixed $message = null,
+    bool $onUpdate = true,
+    bool $translate = true,
+)]
+```
+
+**`$rule`** (optional)
+- The validation rule(s) to apply
+- Default: `null`
+
+**`$attribute`** (optional)
+- Custom attribute name for the validation error message
+- Default: `null` (uses property name)
+
+**`$as`** (optional)
+- Friendly name to display in validation error messages
+- Default: `null` (uses property name)
+
+**`$message`** (optional)
+- Custom error message(s) for validation failures
+- Default: `null` (uses Laravel's default messages)
+
+**`$onUpdate`** (optional)
+- Whether to run validation when the property is updated
+- Default: `true`
+
+**`$translate`** (optional)
+- Whether to translate validation messages
+- Default: `true`

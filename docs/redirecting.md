@@ -126,3 +126,10 @@ Assuming the page being redirected to contain the following Blade snippet, the u
     </div>
 @endif
 ```
+
+## See also
+
+- **[Navigate](/docs/4.x/navigate)** — Use SPA navigation for redirects
+- **[Actions](/docs/4.x/actions)** — Redirect after action completion
+- **[Forms](/docs/4.x/forms)** — Redirect after successful form submission
+- **[Pages](/docs/4.x/pages)** — Navigate between page components

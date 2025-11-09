@@ -481,3 +481,10 @@ class PostForm extends Form
     // ...
 }
 ```
+
+## See also
+
+- **[Properties](/docs/4.x/properties)** — Initialize properties in mount() and boot()
+- **[Components](/docs/4.x/components)** — Understand when hooks run during component creation
+- **[Pages](/docs/4.x/pages)** — Use mount() to receive route parameters
+- **[Hydration](/docs/4.x/hydration)** — Understand the hydrate() and dehydrate() hooks

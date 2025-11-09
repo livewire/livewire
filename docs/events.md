@@ -323,7 +323,7 @@ new class extends Component {
     {
 		// ...
 
-		$this->dispatch('post-created')->self();
+		$this->dispatch('post-created')->to(self: true);
     }
 };
 ```
@@ -573,3 +573,10 @@ new class extends Component {
     }
 };
 ```
+
+## See also
+
+- **[Nesting](/docs/4.x/nesting)** — Communicate between parent and child components
+- **[Actions](/docs/4.x/actions)** — Trigger events from component actions
+- **[Alpine](/docs/4.x/alpine)** — Dispatch and listen for events with Alpine
+- **[On Attribute](/docs/4.x/attribute-on)** — Listen for events using the #[On] attribute

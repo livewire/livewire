@@ -426,3 +426,9 @@ For visual-only loading states (like opacity changes), you can use Livewire's au
 
 [Learn more about loading states →](/docs/4.x/loading-states)
 
+## See also
+
+- **[URL Query Parameters](/docs/4.x/url)** — Sync pagination state with URL
+- **[Loading States](/docs/4.x/loading-states)** — Show feedback during page changes
+- **[Computed Properties](/docs/4.x/computed-properties)** — Efficiently query paginated data
+

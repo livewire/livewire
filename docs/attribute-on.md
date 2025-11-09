@@ -198,3 +198,14 @@ $this->dispatch('notification-sent');
 ## Learn more
 
 For more information about events, dispatching to specific components, and Laravel Echo integration, see the [Events documentation](/docs/4.x/events).
+
+## Reference
+
+```php
+#[On(
+    string $event,
+)]
+```
+
+**`$event`** (required)
+- The name of the event to listen for

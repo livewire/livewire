@@ -26,3 +26,9 @@ By adding the `.hover` modifier, Livewire will pre-fetch a page when a user hove
 ## Going deeper
 
 For more complete documentation on this feature, visit [Livewire's navigate documentation page](/docs/4.x/navigate).
+
+## See also
+
+- **[Navigate](/docs/4.x/navigate)** — Complete guide to SPA navigation
+- **[Pages](/docs/4.x/pages)** — Create routable page components
+- **[@persist](/docs/4.x/directive-persist)** — Persist elements during navigation

@@ -441,3 +441,10 @@ Temporary files are uploaded to the specified disk's `livewire-tmp/` directory. 
     'directory' => 'tmp',
 ],
 ```
+
+## See also
+
+- **[Forms](/docs/4.x/forms)** — Handle file uploads in forms
+- **[Validation](/docs/4.x/validation)** — Validate uploaded files
+- **[Loading States](/docs/4.x/loading-states)** — Show upload progress indicators
+- **[wire:model](/docs/4.x/wire-model)** — Bind file inputs to properties

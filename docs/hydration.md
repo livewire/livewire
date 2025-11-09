@@ -250,3 +250,10 @@ As you can see, the third item in the collection has been dehydrated into a meta
 ### Supporting custom property types
 
 Internally, Livewire has hydration support for the most common PHP and Laravel types. However, if you wish to support un-supported types, you can do so using [Synthesizers](/docs/4.x/synthesizers) — Livewire's internal mechanism for hydrating/dehydrating non-primitive property types.
+
+## See also
+
+- **[Lifecycle Hooks](/docs/4.x/lifecycle-hooks)** — Use hydrate() and dehydrate() hooks
+- **[Properties](/docs/4.x/properties)** — How properties are preserved between requests
+- **[Morphing](/docs/4.x/morphing)** — How Livewire updates the DOM
+- **[Synthesizers](/docs/4.x/synthesizers)** — Customize property serialization

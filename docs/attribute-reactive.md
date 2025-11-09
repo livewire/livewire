@@ -127,7 +127,7 @@ new class extends Component {
 
 <div>
     @foreach($posts as $post)
-        <div>{{ $post->title }}</div>
+        <div wire:key="{{ $post->id }}">{{ $post->title }}</div>
     @endforeach
 </div>
 ```
