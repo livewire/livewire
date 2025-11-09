@@ -1210,6 +1210,25 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_data_current_is_automatically_added_to_wire_navigate_links()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForText('On first')
+
+                ->assertAttribute('@link.to.first.no.wire.current', 'data-current', '')
+                ->assertAttributeMissing('@link.to.second.no.wire.current', 'data-current')
+
+                ->click('@link.to.second.no.wire.current')
+                ->waitForText('On second')
+
+                ->assertAttributeMissing('@link.to.first.no.wire.current', 'data-current')
+                ->assertAttribute('@link.to.second.no.wire.current', 'data-current', '')
+                ;
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -1253,6 +1272,9 @@ class FirstPage extends Component
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
             <a href="/redirect-to-second" wire:navigate dusk="redirect.to.second.link">Redirect to second page from link</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
+
+            <a href="/first" wire:navigate dusk="link.to.first.no.wire.current">First (no wire:current)</a>
+            <a href="/second" wire:navigate dusk="link.to.second.no.wire.current">Second (no wire:current)</a>
 
             @script
             <script>
@@ -1314,6 +1336,9 @@ class SecondPage extends Component
 
             <a href="/first" wire:navigate dusk="link.to.first">Go to first page</a>
             <button type="button" wire:click="redirectToPageOne" dusk="redirect.to.first">Redirect to first page</button>
+
+            <a href="/first" wire:navigate dusk="link.to.first.no.wire.current">First (no wire:current)</a>
+            <a href="/second" wire:navigate dusk="link.to.second.no.wire.current">Second (no wire:current)</a>
 
             @persist('foo')
                 <div x-data="{ count: 1 }">

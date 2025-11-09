@@ -46,7 +46,7 @@ globalDirective('current', ({ el, directive, cleanup }) => {
     cleanup(() => onPageChanges.delete(el))
 })
 
-function pathMatches(hrefUrl, actualUrl, options) {
+export function pathMatches(hrefUrl, actualUrl, options = {}) {
     // If the domains/hostnames don't match, we are not going to match...
     if (hrefUrl.hostname !== actualUrl.hostname) return false
 
