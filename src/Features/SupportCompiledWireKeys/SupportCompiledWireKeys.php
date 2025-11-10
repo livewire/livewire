@@ -102,21 +102,7 @@ class SupportCompiledWireKeys extends ComponentHook
 
     public static function processElementKey($keyString, $data)
     {
-        $compiler = app('blade.compiler');
-
-        // As we are rendering a string, Blade will generate a view for the string in the cache directory
-        // and it doesn't use the `cachePath` property. Instead it uses the config `view.compiled` path
-        // to store the view. Hence why our `temporaryCachePath` won't clean this file up. To remove
-        // the file, we can pass `deleteCachedView: true` to the render method...
-        $key = $compiler->render($keyString, $data, deleteCachedView: true);
-
-        $keyStringPath = $compiler->getPath();
-
-        if ($keyStringPath) {
-            // The above view is then compiled into a compiled view in the cache directory, so we need to
-            // remove that compiled view as well, after the key string has been rendered...
-            @unlink($compiler->getCompiledPath($keyStringPath));
-        }
+        $key = Blade::render($keyString, $data);
 
         static::$currentLoop['key'] = $key;
     }
