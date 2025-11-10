@@ -46,7 +46,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // If a plain wire:model is added to a text input, debounce the
     // trigerring of network requests.
-    let debouncedUpdate = isTextInput(el) && ! isDebounced && isLive
+    let debouncedUpdate = isRealtimeInput(el) && ! isDebounced && isLive
         ? debounce(update, 150)
         : update
 
@@ -82,11 +82,11 @@ function getModifierTail(modifiers) {
     return '.' + modifiers.join('.')
 }
 
-function isTextInput(el) {
+function isRealtimeInput(el) {
     return (
         ['INPUT', 'TEXTAREA'].includes(el.tagName.toUpperCase()) &&
         !['checkbox', 'radio'].includes(el.type)
-    )
+    ) || el.tagName.toUpperCase() === 'UI-SLIDER' // Flux UI
 }
 
 function isDirty(subject, dirty) {
