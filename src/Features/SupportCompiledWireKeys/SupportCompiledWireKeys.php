@@ -102,46 +102,9 @@ class SupportCompiledWireKeys extends ComponentHook
 
     public static function processElementKey($keyString, $data)
     {
-        $compiler = app('blade.compiler');
-
-        // As we are rendering a string, Blade will generate a view for the string in the cache directory
-        // and it doesn't use the `cachePath` property. Instead it uses the config `view.compiled` path
-        // to store the view. Hence why our `temporaryCachePath` won't clean this file up. To remove
-        // the file, we can pass `deleteCachedView: true` to the render method...
-        $key = $compiler->render($keyString, $data, deleteCachedView: true);
-
-        $keyStringPath = $compiler->getPath();
-
-        if ($keyStringPath) {
-            // The above view is then compiled into a compiled view in the cache directory, so we need to
-            // remove that compiled view as well, after the key string has been rendered...
-            @unlink($compiler->getCompiledPath($keyStringPath));
-
-            // The `deleteCachedView: true` will remove the view file from the cache directory, but it will
-            // not remove the compiled view file name from the component $bladeViewCache property, so we
-            // need to do that manually otherwise it throws an exception...
-            static::removeBladeComponentViewCacheForView($keyStringPath);
-        }
+        $key = Blade::render($keyString, $data);
 
         static::$currentLoop['key'] = $key;
-    }
-
-    public static function removeBladeComponentViewCacheForView($viewPath)
-    {
-        $reflectionProperty = new \ReflectionProperty(\Illuminate\View\Component::class, 'bladeViewCache');
-        $reflectionProperty->setAccessible(true);
-
-        $bladeViewCache = $reflectionProperty->getValue();
-
-        collect($bladeViewCache)->each(function($value, $key) use ($viewPath, &$bladeViewCache) {
-            $filename = '__components::'.basename($viewPath, '.blade.php');
-
-            if ($value === $filename) {
-                unset($bladeViewCache[$key]);
-            }
-        });
-
-        $reflectionProperty->setValue($bladeViewCache);
     }
 
     public static function processComponentKey($component)
