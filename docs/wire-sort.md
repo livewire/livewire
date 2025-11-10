@@ -120,3 +120,15 @@ You can prevent specific areas within a sortable item from triggering drag opera
 ```
 
 Clicking and dragging within an element marked with `wire:sort:ignore` will have no effect, allowing users to interact with buttons and other controls without accidentally triggering a sort operation.
+
+## Reference
+
+```blade
+wire:sort="method"
+wire:sort:item="id"
+wire:sort:group="name"
+wire:sort:handle
+wire:sort:ignore
+```
+
+This directive has no modifiers.

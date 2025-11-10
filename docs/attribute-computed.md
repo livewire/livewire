@@ -165,46 +165,10 @@ For detailed information about computed properties, caching strategies, and adva
 )]
 ```
 
-**`$persist`** (optional)
-- Cache the computed value across requests for the same component instance
-- Default: `false`
-
-**`$seconds`** (optional)
-- Duration in seconds to cache the value when using `persist` or `cache`
-- Default: `3600` (1 hour)
-
-**`$cache`** (optional)
-- Cache the computed value across all component instances in the application
-- Default: `false`
-
-**`$key`** (optional)
-- Custom cache key for the computed value
-- Default: Auto-generated based on component and property name
-
-**`$tags`** (optional)
-- Cache tags for the computed value (requires a cache driver that supports tags)
-- Default: `null`
-
-### Examples
-
-```php
-// Basic usage (request-level caching only)
-#[Computed]
-public function posts() { }
-
-// Cache across requests for this component instance
-#[Computed(persist: true)]
-public function user() { }
-
-// Cache across all component instances
-#[Computed(cache: true)]
-public function globalSettings() { }
-
-// Custom cache duration
-#[Computed(persist: true, seconds: 600)]
-public function recentActivity() { }
-
-// Custom cache key with tags
-#[Computed(cache: true, key: 'homepage-stats', tags: ['stats'])]
-public function dashboardStats() { }
-```
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$persist` | `bool` | `false` | Cache the value across requests for the same component instance |
+| `$seconds` | `int` | `3600` | Duration in seconds to cache the value |
+| `$cache` | `bool` | `false` | Cache the value across all component instances |
+| `$key` | `?string` | `null` | Custom cache key (auto-generated if not provided) |
+| `$tags` | `mixed` | `null` | Cache tags (requires a cache driver that supports tags) |

@@ -125,3 +125,15 @@ Teleporting is useful for nested modals, dropdowns, and popovers where parent st
 This functionality uses [Alpine's `x-teleport` directive](https://alpinejs.dev/directives/teleport) under the hood.
 
 [Learn more about teleporting content →](/docs/4.x/teleport)
+
+## Reference
+
+```blade
+@teleport(string $selector)
+    <!-- Content -->
+@endteleport
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$selector` | `string` | *required* | A CSS selector specifying where to render the content (e.g., `'body'`, `'#modal-root'`, `'.container'`) |

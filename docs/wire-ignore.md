@@ -28,3 +28,15 @@ You can also instruct Livewire to only ignore changes to attributes of the root 
     <!-- ... -->
 </div>
 ```
+
+## Reference
+
+```blade
+wire:ignore
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.self` | Only ignore attribute changes on the element itself, not its children |

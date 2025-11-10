@@ -125,9 +125,7 @@ For more information about full-page components and layouts, see the [Pages docu
 )]
 ```
 
-**`$name`** (required)
-- The name of the Blade layout to use
-
-**`$params`** (optional)
-- Additional data to pass to the layout
-- Default: `[]`
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$name` | `string` | *required* | The name of the Blade layout to use |
+| `$params` | `array` | `[]` | Additional data to pass to the layout |

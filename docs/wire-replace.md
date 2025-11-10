@@ -27,3 +27,15 @@ You can also instruct Livewire to replace the target element as well as all chil
   <!-- Ensure that the "open" state is reset to false on each render -->
 </div>
 ```
+
+## Reference
+
+```blade
+wire:replace
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.self` | Replace the element itself and all children instead of just children |

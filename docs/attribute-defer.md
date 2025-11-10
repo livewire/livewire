@@ -135,6 +135,6 @@ For complete documentation on lazy and deferred loading, including placeholders 
 )]
 ```
 
-**`$bundle`** (optional)
-- Whether to bundle multiple deferred components into a single network request
-- Default: `null` (loads in parallel by default)
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$bundle` | `bool\|null` | `null` | Bundle multiple deferred components into a single network request |

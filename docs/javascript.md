@@ -748,6 +748,14 @@ console.log(component.snapshot)
 - Debounce expensive operations using `wire:model.debounce` or JavaScript debouncing
 - Use lazy loading (`lazy` parameter) for components that aren't immediately visible
 - Consider using islands for isolated regions that update independently
+
+## See also
+
+- **[Alpine](/docs/4.x/alpine)** — Use Alpine for client-side interactivity
+- **[Actions](/docs/4.x/actions)** — Create JavaScript actions in components
+- **[Properties](/docs/4.x/properties)** — Access properties from JavaScript with $wire
+- **[Events](/docs/4.x/events)** — Dispatch and listen for events in JavaScript
+
 ## Reference
 
 When extending Livewire's JavaScript system, it's important to understand the different objects you might encounter.
@@ -1009,11 +1017,3 @@ let message = {
     ],
 }
 ```
-
-## See also
-
-- **[Alpine](/docs/4.x/alpine)** — Use Alpine for client-side interactivity
-- **[Actions](/docs/4.x/actions)** — Create JavaScript actions in components
-- **[Properties](/docs/4.x/properties)** — Access properties from JavaScript with $wire
-- **[Events](/docs/4.x/events)** — Dispatch and listen for events in JavaScript
-

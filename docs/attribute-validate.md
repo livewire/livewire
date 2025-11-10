@@ -284,26 +284,11 @@ For comprehensive documentation on validation, including form objects, custom ru
 )]
 ```
 
-**`$rule`** (optional)
-- The validation rule(s) to apply
-- Default: `null`
-
-**`$attribute`** (optional)
-- Custom attribute name for the validation error message
-- Default: `null` (uses property name)
-
-**`$as`** (optional)
-- Friendly name to display in validation error messages
-- Default: `null` (uses property name)
-
-**`$message`** (optional)
-- Custom error message(s) for validation failures
-- Default: `null` (uses Laravel's default messages)
-
-**`$onUpdate`** (optional)
-- Whether to run validation when the property is updated
-- Default: `true`
-
-**`$translate`** (optional)
-- Whether to translate validation messages
-- Default: `true`
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$rule` | `mixed` | `null` | The validation rule(s) to apply |
+| `$attribute` | `?string` | `null` | Custom attribute name for validation error messages |
+| `$as` | `?string` | `null` | Friendly name to display in validation error messages |
+| `$message` | `mixed` | `null` | Custom error message(s) for validation failures |
+| `$onUpdate` | `bool` | `true` | Whether to run validation when the property is updated |
+| `$translate` | `bool` | `true` | Whether to translate validation messages |

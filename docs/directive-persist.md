@@ -111,3 +111,15 @@ When navigating with `wire:navigate`:
 3. The element's state, event listeners, and Alpine data are preserved
 
 [Learn more about navigation →](/docs/4.x/navigate)
+
+## Reference
+
+```blade
+@persist(string $key)
+    <!-- Content -->
+@endpersist
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$key` | `string` | *required* | A unique name identifying the element to persist across page navigations |

@@ -112,3 +112,21 @@ Islands provide performance isolation without the overhead of creating separate 
 * You want simpler architecture than nested components
 
 [Learn more about islands →](/docs/4.x/islands)
+
+## Reference
+
+```blade
+@island(
+    ?string $name = null,
+    bool $lazy = false,
+    bool $defer = false,
+)
+    <!-- Content -->
+@endisland
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$name` | `?string` | `null` | A unique name for targeting the island with `wire:island` |
+| `$lazy` | `bool` | `false` | Defer rendering until the island is visible in the viewport |
+| `$defer` | `bool` | `false` | Load immediately after page load instead of waiting for viewport visibility |

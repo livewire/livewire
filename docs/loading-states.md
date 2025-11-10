@@ -144,7 +144,7 @@ The `data-loading` attribute approach offers several advantages over the traditi
 ## Tailwind 4 requirement
 
 > [!info] Tailwind v4+ required for advanced variants
-> The `in-data-loading:`, `has-data-loading:`, `peer-data-loading:`, and `not-data-loading:` variants require Tailwind CSS v4 or above. If you're using an earlier version of Tailwind, you can still target the `data-loading` attribute using the `data-[loading]:` syntax or standard CSS.
+> The `in-data-loading:`, `has-data-loading:`, `peer-data-loading:`, and `not-data-loading:` variants require Tailwind CSS v4 or above. If you're using an earlier version of Tailwind, you can still target the `data-loading` attribute using the `data-loading:` syntax or standard CSS.
 
 ## Using with plain CSS
 

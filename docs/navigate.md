@@ -133,9 +133,34 @@ You might be used to highlighting the currently active page link in a navbar usi
 </nav>
 ```
 
-However, this will not work inside persisted elements as they are re-used between page loads. Instead, you should use Livewire's `wire:current` directive to highlight the currently active link.
+However, this will not work inside persisted elements as they are re-used between page loads. Instead, you have two options for highlighting active links during navigation:
 
-Simply pass any CSS classes you want to apply to the currently active link to `wire:current`:
+#### Using the `data-current` attribute
+
+Livewire automatically adds a `data-current` attribute to any `wire:navigate` link that matches the current page. This allows you to style active links with CSS or Tailwind without any additional directives:
+
+```blade
+<nav>
+    <a href="/dashboard" wire:navigate class="data-current:font-bold data-current:text-zinc-800">Dashboard</a>
+    <a href="/posts" wire:navigate class="data-current:font-bold data-current:text-zinc-800">Posts</a>
+    <a href="/users" wire:navigate class="data-current:font-bold data-current:text-zinc-800">Users</a>
+</nav>
+```
+
+When the `/posts` page is visited, the "Posts" link will automatically receive the `data-current` attribute and be styled accordingly.
+
+You can also use plain CSS to style active links:
+
+```css
+[data-current] {
+    font-weight: bold;
+    color: #18181b;
+}
+```
+
+#### Using the `wire:current` directive
+
+Alternatively, you can use Livewire's `wire:current` directive to add CSS classes to the currently active link:
 
 ```blade
 <nav>
@@ -146,6 +171,9 @@ Simply pass any CSS classes you want to apply to the currently active link to `w
 ```
 
 Now, when the `/posts` page is visited, the "Posts" link will have a stronger font treatment than the other links.
+
+> [!tip] Prefer data-current for simplicity
+> While both approaches work well, using the `data-current` attribute is often simpler and more flexible since it doesn't require an additional directive and works seamlessly with Tailwind's data attribute variants.
 
 Read more in the [`wire:current` documentation](/docs/4.x/wire-current).
 

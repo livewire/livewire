@@ -207,5 +207,6 @@ For more information about events, dispatching to specific components, and Larav
 )]
 ```
 
-**`$event`** (required)
-- The name of the event to listen for
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$event` | `string` | *required* | The name of the event to listen for |

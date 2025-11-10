@@ -222,12 +222,12 @@ Livewire automatically adds a `data-loading` attribute to any element that trigg
 
 ### Using Tailwind's data attribute variant
 
-You can use Tailwind's `data-[loading]` variant to apply styles when an element is loading:
+You can use Tailwind's `data-loading` variant to apply styles when an element is loading:
 
 ```blade
 <button
     wire:click="save"
-    class="data-[loading]:opacity-50 data-[loading]:pointer-events-none"
+    class="data-loading:opacity-50 data-loading:pointer-events-none"
 >
     Save Changes
 </button>
@@ -256,7 +256,7 @@ button[data-loading] {
 You can style parent elements when a child has `data-loading` using the `has-data-loading:` variant:
 
 ```blade
-<div class="has-data-[loading]:opacity-50">
+<div class="has-data-loading:opacity-50">
     <button wire:click="save">Save</button>
 </div>
 ```
@@ -265,8 +265,8 @@ Or style child elements from a parent with `data-loading` using the `in-data-loa
 
 ```blade
 <button wire:click="save">
-    <span class="in-data-[loading]:hidden">Save</span>
-    <span class="hidden in-data-[loading]:block">Saving...</span>
+    <span class="in-data-loading:hidden">Save</span>
+    <span class="hidden in-data-loading:block">Saving...</span>
 </button>
 ```
 
@@ -275,3 +275,34 @@ Or style child elements from a parent with `data-loading` using the `in-data-loa
 - **[Loading States](/docs/4.x/loading-states)** — Modern approach with data-loading attributes
 - **[Actions](/docs/4.x/actions)** — Show feedback during action processing
 - **[Forms](/docs/4.x/forms)** — Display form submission progress
+
+## Reference
+
+```blade
+wire:loading
+wire:target="action"
+wire:target="property"
+wire:target.except="action"
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.remove` | Show element by default, hide during loading |
+| `.class="class-name"` | Add a CSS class during loading |
+| `.class.remove="class-name"` | Remove a CSS class during loading |
+| `.attr="attribute"` | Add an HTML attribute during loading |
+| `.delay` | Delay showing indicator by 200ms |
+| `.delay.shortest` | Delay by 50ms |
+| `.delay.shorter` | Delay by 100ms |
+| `.delay.short` | Delay by 150ms |
+| `.delay.long` | Delay by 300ms |
+| `.delay.longer` | Delay by 500ms |
+| `.delay.longest` | Delay by 1000ms |
+| `.inline-flex` | Use `inline-flex` display value |
+| `.inline` | Use `inline` display value |
+| `.block` | Use `block` display value |
+| `.table` | Use `table` display value |
+| `.flex` | Use `flex` display value |
+| `.grid` | Use `grid` display value |

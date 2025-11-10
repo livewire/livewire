@@ -136,6 +136,6 @@ For complete documentation on lazy loading, including placeholders, bundling str
 )]
 ```
 
-**`$bundle`** (optional)
-- Whether to bundle multiple lazy components into a single network request
-- Default: `null` (loads in parallel by default)
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$bundle` | `bool\|null` | `null` | Bundle multiple lazy components into a single network request |

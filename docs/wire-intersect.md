@@ -164,3 +164,21 @@ new class extends Component {
 ## Comparison with Alpine's x-intersect
 
 If you're familiar with Alpine.js, `wire:intersect` works similarly to `x-intersect` but triggers Livewire actions instead of Alpine expressions. The modifiers and behavior are designed to feel familiar to Alpine users.
+
+## Reference
+
+```blade
+wire:intersect="action"
+wire:intersect:enter="action"
+wire:intersect:leave="action"
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.once` | Only fire the action on the first intersection |
+| `.half` | Trigger when half of the element is visible |
+| `.full` | Trigger when the entire element is visible |
+| `.threshold.[0-100]` | Trigger at a custom visibility threshold percentage |
+| `.margin.[value]` | Add margin around the viewport (e.g., `.margin.200px`, `.margin.10%`) |

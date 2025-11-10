@@ -176,6 +176,68 @@ Place the reference section after "Learn more" or at the end of the page:
 - Don't document deprecated parameters (e.g., `isolate: false` deprecated in favor of `bundle: true`)
 - Focus on current recommended approaches
 
+## Directive Reference Sections
+
+When documenting `wire:*` directives, include a comprehensive Reference section at the bottom.
+
+### Research Process
+
+Before writing directive documentation:
+
+1. **Search the entire docs directory** for all uses of the directive
+   ```bash
+   grep -r "wire:directivename\." docs/
+   ```
+
+2. **Check actions.md** - Most event directive modifiers are documented there
+
+3. **Verify Alpine modifiers** - Since Livewire event directives use Alpine's event system, all Alpine modifiers are available (`.prevent`, `.stop`, `.self`, `.debounce`, `.throttle`, `.window`, `.document`, `.outside`, `.once`, `.passive`, `.capture`, `.camel`, `.dot`)
+
+4. **Check for Livewire-specific modifiers:**
+   - `.renderless` - Skip re-rendering
+   - `.preserve-scroll` - Maintain scroll position
+   - `.async` - Parallel execution
+
+### Structure for Event Directives
+
+```markdown
+## Reference
+
+```blade
+wire:directivename="methodName"
+wire:directivename="methodName(param1, param2)"
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.prevent` | Prevents default browser behavior |
+| `.stop` | Stops event propagation |
+| `.self` | Only triggers if event originated on this element |
+| `.once` | Ensures listener is only called once |
+| `.debounce` | Debounces handler by 250ms (use `.debounce.500ms` for custom duration) |
+| `.throttle` | Throttles handler to every 250ms minimum (use `.throttle.500ms` for custom) |
+| `.window` | Listens for event on the `window` object |
+| `.document` | Listens for event on the `document` object |
+| `.outside` | Only listens for clicks outside the element |
+| `.passive` | Won't block scroll performance |
+| `.capture` | Listens during the capturing phase |
+| `.camel` | Converts event name to camel case |
+| `.dot` | Converts event name to dot notation |
+| `.renderless` | Skips re-rendering after action completes |
+| `.preserve-scroll` | Maintains scroll position during updates |
+| `.async` | Executes action in parallel instead of queued |
+```
+
+### Guidelines for Directive References
+
+- **Use a table format**: Clean, scannable reference
+- **No examples in reference**: Main content covers usage patterns
+- **List all modifiers**: Include Alpine and Livewire-specific modifiers
+- **Brief descriptions**: One line per modifier
+- **Research thoroughly**: Search docs for all uses before documenting
+
 ## Testing Documentation
 
 **Pest is the recommended testing framework** for Livewire 4. All testing examples should use Pest syntax unless specifically demonstrating PHPUnit compatibility.
@@ -576,6 +638,12 @@ For features with performance/debugging considerations, add a "Best Practices" s
 - Use `wire:` directives over `x-` when both work
 - Show Alpine.js integration where relevant
 - Self-closing tags for components: `<livewire:post.create />`
+
+### Tailwind/CSS
+
+- Use `data-current:` not `data-[current]:` for data attribute variants (cleaner, no brackets needed)
+- Use `data-loading:` not `data-[loading]:` for data attribute variants
+- Examples: `data-current:font-bold`, `data-loading:opacity-50`
 
 ### JavaScript
 

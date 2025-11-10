@@ -205,5 +205,6 @@ For more information about full-page components, layouts, and routing, see the [
 )]
 ```
 
-**`$content`** (required)
-- The text to display in the browser's title bar
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$content` | `string` | *required* | The text to display in the browser's title bar |

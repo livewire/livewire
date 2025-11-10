@@ -192,6 +192,6 @@ Users can set their preferred filters and they'll persist across sessions, page 
 )]
 ```
 
-**`$key`** (optional)
-- Custom session key for storing the property value
-- Default: `null` (auto-generated based on component and property name)
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$key` | `?string` | `null` | Custom session key (auto-generated if not provided) |

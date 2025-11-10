@@ -33,3 +33,17 @@ The `.attr` modifier allows you to add an attribute to an element when the user 
 ```blade
 <button wire:offline.attr="disabled">Save</button>
 ```
+
+## Reference
+
+```blade
+wire:offline
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.class="class-name"` | Add a CSS class when offline |
+| `.class.remove="class-name"` | Remove a CSS class when offline |
+| `.attr="attribute"` | Add an HTML attribute when offline |

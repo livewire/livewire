@@ -245,22 +245,10 @@ For more information about URL query parameters, including the `queryString()` m
 )]
 ```
 
-**`$as`** (optional)
-- Custom name for the query parameter in the URL
-- Default: `null` (uses property name)
-
-**`$history`** (optional)
-- Whether to push URL changes to browser history (enables back button navigation)
-- Default: `false`
-
-**`$keep`** (optional)
-- Whether to keep the query parameter when navigating away
-- Default: `false`
-
-**`$except`** (optional)
-- Value(s) to exclude from the URL (property won't appear in URL when it has this value)
-- Default: `null`
-
-**`$nullable`** (optional)
-- Value to use when query parameter is missing from URL
-- Default: `null`
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$as` | `?string` | `null` | Custom name for the query parameter in the URL |
+| `$history` | `bool` | `false` | Push URL changes to browser history (enables back button) |
+| `$keep` | `bool` | `false` | Keep the query parameter when navigating away |
+| `$except` | `mixed` | `null` | Value(s) to exclude from the URL |
+| `$nullable` | `mixed` | `null` | Value to use when query parameter is missing from URL |

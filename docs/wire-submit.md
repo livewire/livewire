@@ -64,3 +64,28 @@ In the above example, when a user submits the form by clicking "Save", `wire:sub
 - **[Forms](/docs/4.x/forms)** — Handle form submissions with Livewire
 - **[Actions](/docs/4.x/actions)** — Process form data in actions
 - **[Validation](/docs/4.x/validation)** — Validate forms before submission
+
+## Reference
+
+```blade
+wire:submit="methodName"
+wire:submit="methodName(param1, param2)"
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.prevent` | Prevents default browser behavior (automatic for `wire:submit`) |
+| `.stop` | Stops event propagation |
+| `.self` | Only triggers if event originated on this element |
+| `.once` | Ensures listener is only called once |
+| `.debounce` | Debounces handler by 250ms (use `.debounce.500ms` for custom duration) |
+| `.throttle` | Throttles handler to every 250ms minimum (use `.throttle.500ms` for custom) |
+| `.window` | Listens for event on the `window` object |
+| `.document` | Listens for event on the `document` object |
+| `.passive` | Won't block scroll performance |
+| `.capture` | Listens during the capturing phase |
+| `.renderless` | Skips re-rendering after action completes |
+| `.preserve-scroll` | Maintains scroll position during updates |
+| `.async` | Executes action in parallel instead of queued |

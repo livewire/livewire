@@ -168,3 +168,11 @@ Here's an example with multiple modal instances:
 Refs are scoped to the current component. This means you can target any element within the component, but not elements in other components on the page.
 
 If multiple elements have the same ref name within a component, the first one encountered will be used.
+
+## Reference
+
+```blade
+wire:ref="name"
+```
+
+This directive has no modifiers.
