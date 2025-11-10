@@ -19,7 +19,8 @@ directive('poll', ({ el, directive, component }) => {
 })
 
 function triggerComponentRequest(el, directive, component) {
-    setNextActionOrigin({ el, directive })
+    // Set targetEl to null to prevent data-loading on poll actions
+    setNextActionOrigin({ el, directive, targetEl: null })
     setNextActionMetadata({ type: 'poll' })
 
     let fullMethod = directive.expression ? directive.expression : '$refresh'

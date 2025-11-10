@@ -43,7 +43,13 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
 
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
-                    setNextActionOrigin({ el, directive })
+                    // For wire:submit, apply data-loading to the submit button, not the form
+                    if (directive.value === 'submit') {
+                        let submitButton = e.submitter || el.querySelector('button[type="submit"], input[type="submit"]')
+                        setNextActionOrigin({ el, directive, targetEl: submitButton })
+                    } else {
+                        setNextActionOrigin({ el, directive })
+                    }
 
                     evaluateActionExpression(component, el, directive.expression, { scope: { $event: e } })
                 })
