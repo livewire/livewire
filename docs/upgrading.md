@@ -346,6 +346,61 @@ Livewire.interceptRequest(({ request, onResponse, onSuccess, onError, onFailure 
 
 For complete documentation on the new interceptor system, see the [JavaScript Interceptors documentation](/docs/4.x/javascript#interceptors).
 
+## Upgrading Volt
+
+Livewire v4 now supports single-file components, which use the same syntax as Volt class-based components. This means you can migrate from Volt to Livewire's built-in single-file components.
+
+### Update component imports
+
+Replace all instances of `Livewire\Volt\Component` with `Livewire\Component`:
+
+```php
+// Before (Volt)
+use Livewire\Volt\Component;
+
+new class extends Component { ... }
+
+// After (Livewire v4)
+use Livewire\Component;
+
+new class extends Component { ... }
+```
+
+### Remove Volt service provider
+
+Delete the Volt service provider file:
+
+```bash
+rm app/Providers/VoltServiceProvider.php
+```
+
+Then remove it from the providers array in `bootstrap/providers.php`:
+
+```php
+// Before
+return [
+    App\Providers\AppServiceProvider::class,
+    App\Providers\VoltServiceProvider::class,
+];
+
+// After
+return [
+    App\Providers\AppServiceProvider::class,
+];
+```
+
+### Remove Volt package
+
+Uninstall the Volt package:
+
+```bash
+composer remove livewire/volt
+```
+
+### Install Livewire v4
+
+After completing the above changes, install Livewire v4. Your existing Volt class-based components will work without modification since they use the same syntax as Livewire's single-file components.
+
 ## New features in v4
 
 Livewire v4 introduces several powerful new features you can start using immediately:
