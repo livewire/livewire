@@ -25,7 +25,7 @@ trait WithFileUploads
         $this->dispatch('upload:generatedSignedUrl', name: $name, url: GenerateSignedUploadUrl::forLocal())->self();
     }
 
-    function _finishUpload($name, $tmpPath, $isMultiple, $append = false)
+    function _finishUpload($name, $tmpPath, $isMultiple, $append = true)
     {
         if (FileUploadConfiguration::shouldCleanupOldUploads()) {
             $this->cleanupOldUploads();
