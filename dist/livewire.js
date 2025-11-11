@@ -514,7 +514,8 @@
         return;
       start3();
       if (e.target.multiple) {
-        manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
+        let append = ["ui-file-upload"].includes(e.target.tagName.toLowerCase());
+        manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel, append);
       } else {
         manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
       }
@@ -566,17 +567,19 @@
         finishCallback,
         errorCallback,
         progressCallback,
-        cancelledCallback
+        cancelledCallback,
+        append: false
       });
     }
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = false) {
       this.setUpload(name, {
         files: Array.from(files),
         multiple: true,
         finishCallback,
         errorCallback,
         progressCallback,
-        cancelledCallback
+        cancelledCallback,
+        append
       });
     }
     removeUpload(name, tmpFilename, finishCallback) {
@@ -629,7 +632,7 @@
       request.addEventListener("load", () => {
         if ((request.status + "")[0] === "2") {
           let paths = retrievePaths(request.response && JSON.parse(request.response));
-          this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
+          this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple, this.uploadBag.first(name).append);
           return;
         }
         let errors = null;
@@ -733,7 +736,7 @@
   }, errorCallback = () => {
   }, progressCallback = () => {
   }, cancelledCallback = () => {
-  }) {
+  }, append = false) {
     let uploadManager = getUploadManager(component);
     uploadManager.uploadMultiple(
       name,
@@ -741,7 +744,8 @@
       finishCallback,
       errorCallback,
       progressCallback,
-      cancelledCallback
+      cancelledCallback,
+      append
     );
   }
   function removeUpload(component, name, tmpFilename, finishCallback = () => {
@@ -764,7 +768,7 @@
     );
   }
 
-  // node_modules/alpinejs/dist/module.esm.js
+  // ../alpine/packages/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -1181,7 +1185,14 @@
       handleError(e, el, expression);
     }
   }
-  function handleError(error2, el, expression = void 0) {
+  function handleError(...args) {
+    return errorHandler(...args);
+  }
+  var errorHandler = normalErrorHandler;
+  function setErrorHandler(handler4) {
+    errorHandler = handler4;
+  }
+  function normalErrorHandler(error2, el, expression = void 0) {
     error2 = Object.assign(
       error2 ?? { message: "No error message given." },
       { el, expression }
@@ -2380,6 +2391,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     onlyDuringClone,
     addRootSelector,
     addInitSelector,
+    setErrorHandler,
     interceptClone,
     addScopeToNode,
     deferMutations,
@@ -6114,7 +6126,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // node_modules/@alpinejs/collapse/dist/module.esm.js
+  // ../alpine/packages/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -6208,7 +6220,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // node_modules/@alpinejs/focus/dist/module.esm.js
+  // ../alpine/packages/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -7165,7 +7177,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // node_modules/@alpinejs/persist/dist/module.esm.js
+  // ../alpine/packages/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -7227,7 +7239,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // node_modules/@alpinejs/intersect/dist/module.esm.js
+  // ../alpine/packages/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -7282,7 +7294,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // node_modules/@alpinejs/sort/dist/module.esm.js
+  // ../alpine/packages/sort/dist/module.esm.js
   function ownKeys3(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -9632,7 +9644,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // node_modules/@alpinejs/resize/dist/module.esm.js
+  // ../alpine/packages/resize/dist/module.esm.js
   function src_default7(Alpine3) {
     Alpine3.directive("resize", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluator = evaluateLater2(expression);
@@ -9677,7 +9689,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default7 = src_default7;
 
-  // node_modules/@alpinejs/anchor/dist/module.esm.js
+  // ../alpine/packages/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -11928,7 +11940,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // node_modules/@alpinejs/morph/dist/module.esm.js
+  // ../alpine/packages/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -12309,7 +12321,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default9 = src_default9;
 
-  // node_modules/@alpinejs/mask/dist/module.esm.js
+  // ../alpine/packages/mask/dist/module.esm.js
   function src_default10(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
@@ -13215,13 +13227,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let origin = action.origin;
     if (!origin)
       return;
-    let el = origin.el;
+    let { el, directive: directive3 } = origin;
     let islandAttributeName = el.getAttribute("wire:island");
-    let prependIslandAttributeName = el.getAttribute("wire:island.prepend");
-    let appendIslandAttributeName = el.getAttribute("wire:island.append");
-    let islandName = islandAttributeName || prependIslandAttributeName || appendIslandAttributeName;
+    let islandName = islandAttributeName;
+    let isPrepend = directive3?.modifiers.includes("prepend");
+    let isAppend = directive3?.modifiers.includes("append");
     if (islandName) {
-      let mode2 = appendIslandAttributeName ? "append" : prependIslandAttributeName ? "prepend" : "morph";
+      let mode2 = isPrepend ? "prepend" : isAppend ? "append" : "morph";
       action.mergeMetadata({
         island: {
           name: islandName,
@@ -13317,18 +13329,128 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     onSend(() => {
       actions.forEach((action) => {
         let origin = action.origin;
-        if (!origin || !origin.el)
+        if (!origin)
           return;
-        if (action.metadata?.type === "poll")
+        let el = origin.hasOwnProperty("targetEl") ? origin.targetEl : origin.el;
+        if (!el)
           return;
-        origin.el.setAttribute("data-loading", "true");
+        el.setAttribute("data-loading", "true");
         undos.push(() => {
-          origin.el.removeAttribute("data-loading");
+          el.removeAttribute("data-loading");
         });
       });
     });
     onFinish(() => undos.forEach((undo) => undo()));
   });
+
+  // js/directives/wire-current.js
+  module_default.addInitSelector(() => `[wire\\:current]`);
+  var onPageChanges = /* @__PURE__ */ new Map();
+  document.addEventListener("livewire:navigated", () => {
+    onPageChanges.forEach((i) => i(new URL(window.location.href)));
+  });
+  globalDirective("current", ({ el, directive: directive3, cleanup: cleanup2 }) => {
+    let expression = directive3.expression;
+    let options = {
+      exact: directive3.modifiers.includes("exact"),
+      strict: directive3.modifiers.includes("strict")
+    };
+    if (expression.startsWith("#"))
+      return;
+    if (!el.hasAttribute("href"))
+      return;
+    let href = el.getAttribute("href");
+    let hrefUrl = new URL(href, window.location.href);
+    let classes = expression.split(" ").filter(String);
+    let refreshCurrent = (url) => {
+      if (pathMatches(hrefUrl, url, options)) {
+        el.classList.add(...classes);
+        el.setAttribute("data-current", "");
+      } else {
+        el.classList.remove(...classes);
+        el.removeAttribute("data-current");
+      }
+    };
+    refreshCurrent(new URL(window.location.href));
+    onPageChanges.set(el, refreshCurrent);
+    cleanup2(() => onPageChanges.delete(el));
+  });
+  function pathMatches(hrefUrl, actualUrl, options = {}) {
+    if (hrefUrl.hostname !== actualUrl.hostname)
+      return false;
+    let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
+    let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
+    if (options.exact) {
+      return hrefPath === actualPath;
+    }
+    let hrefPathSegments = hrefPath.split("/");
+    let actualPathSegments = actualPath.split("/");
+    for (let i = 0; i < hrefPathSegments.length; i++) {
+      if (hrefPathSegments[i] !== actualPathSegments[i])
+        return false;
+    }
+    return true;
+  }
+
+  // js/directives/wire-navigate.js
+  var wireNavigateSelectors = [
+    "[wire\\:navigate]",
+    "[wire\\:navigate\\.hover]",
+    "[wire\\:navigate\\.preserve-scroll]",
+    "[wire\\:navigate\\.preserve-scroll\\.hover]",
+    "[wire\\:navigate\\.hover\\.preserve-scroll]"
+  ];
+  var wireNavigateSelector = wireNavigateSelectors.join(", ");
+  var attributeMap = {
+    "wire:navigate": "x-navigate",
+    "wire:navigate.hover": "x-navigate.hover",
+    "wire:navigate.preserve-scroll": "x-navigate.preserve-scroll",
+    "wire:navigate.preserve-scroll.hover": "x-navigate.preserve-scroll.hover",
+    "wire:navigate.hover.preserve-scroll": "x-navigate.hover.preserve-scroll"
+  };
+  wireNavigateSelectors.forEach((selector) => {
+    module_default.addInitSelector(() => selector);
+  });
+  module_default.interceptInit(
+    module_default.skipDuringClone((el) => {
+      for (let [wireAttr, alpineDirective] of Object.entries(attributeMap)) {
+        if (el.hasAttribute(wireAttr)) {
+          module_default.bind(el, { [alpineDirective]: true });
+          break;
+        }
+      }
+    })
+  );
+  document.addEventListener("alpine:navigating", () => {
+    Livewire.all().forEach((component) => {
+      component.inscribeSnapshotAndEffectsOnElement();
+    });
+  });
+
+  // js/features/supportDataCurrent.js
+  document.addEventListener("livewire:navigated", () => {
+    updateNavigateLinks();
+  });
+  document.addEventListener("DOMContentLoaded", () => {
+    updateNavigateLinks();
+  });
+  function updateNavigateLinks() {
+    let currentUrl = new URL(window.location.href);
+    document.querySelectorAll(wireNavigateSelector).forEach((el) => {
+      let href = el.getAttribute("href");
+      if (!href || href.startsWith("#"))
+        return;
+      try {
+        let hrefUrl = new URL(href, window.location.href);
+        if (pathMatches(hrefUrl, currentUrl)) {
+          el.setAttribute("data-current", "");
+        } else {
+          el.removeAttribute("data-current");
+        }
+      } catch (e) {
+      }
+    });
+  }
 
   // js/features/supportPreserveScroll.js
   interceptMessage(({ actions, onSuccess }) => {
@@ -13401,6 +13523,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         if (directive3.modifiers.includes("renderless")) {
           attribute = attribute.replace(".renderless", "");
+        }
+        if (directive3.modifiers.includes("prepend")) {
+          attribute = attribute.replace(".prepend", "");
+        }
+        if (directive3.modifiers.includes("append")) {
+          attribute = attribute.replace(".append", "");
         }
         let expression = directive3.expression;
         module_default.bind(el, {
@@ -13493,13 +13621,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (directive3.modifiers.includes("renderless")) {
       attribute = attribute.replace(".renderless", "");
     }
+    if (directive3.modifiers.includes("prepend")) {
+      attribute = attribute.replace(".prepend", "");
+    }
+    if (directive3.modifiers.includes("append")) {
+      attribute = attribute.replace(".append", "");
+    }
     let cleanupBinding = module_default.bind(el, {
       [attribute](e) {
         directive3.eventContext = e;
         directive3.wire = component.$wire;
         let execute = () => {
           callAndClearComponentDebounces(component, () => {
-            setNextActionOrigin({ el, directive: directive3 });
+            if (directive3.value === "submit") {
+              let submitButton = e.submitter || el.querySelector('button[type="submit"], input[type="submit"]');
+              setNextActionOrigin({ el, directive: directive3, targetEl: submitButton });
+            } else {
+              setNextActionOrigin({ el, directive: directive3 });
+            }
             evaluateActionExpression(component, el, directive3.expression, { scope: { $event: e } });
           });
         };
@@ -13515,33 +13654,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
     cleanup2(cleanupBinding);
-  });
-
-  // js/directives/wire-navigate.js
-  module_default.addInitSelector(() => `[wire\\:navigate]`);
-  module_default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-  module_default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
-  module_default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
-  module_default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
-  module_default.interceptInit(
-    module_default.skipDuringClone((el) => {
-      if (el.hasAttribute("wire:navigate")) {
-        module_default.bind(el, { ["x-navigate"]: true });
-      } else if (el.hasAttribute("wire:navigate.hover")) {
-        module_default.bind(el, { ["x-navigate.hover"]: true });
-      } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
-        module_default.bind(el, { ["x-navigate.preserve-scroll"]: true });
-      } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
-        module_default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
-      } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
-        module_default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
-      }
-    })
-  );
-  document.addEventListener("alpine:navigating", () => {
-    Livewire.all().forEach((component) => {
-      component.inscribeSnapshotAndEffectsOnElement();
-    });
   });
 
   // js/directives/wire-confirm.js
@@ -13572,55 +13684,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
   });
-
-  // js/directives/wire-current.js
-  module_default.addInitSelector(() => `[wire\\:current]`);
-  var onPageChanges = /* @__PURE__ */ new Map();
-  document.addEventListener("livewire:navigated", () => {
-    onPageChanges.forEach((i) => i(new URL(window.location.href)));
-  });
-  globalDirective("current", ({ el, directive: directive3, cleanup: cleanup2 }) => {
-    let expression = directive3.expression;
-    let options = {
-      exact: directive3.modifiers.includes("exact"),
-      strict: directive3.modifiers.includes("strict")
-    };
-    if (expression.startsWith("#"))
-      return;
-    if (!el.hasAttribute("href"))
-      return;
-    let href = el.getAttribute("href");
-    let hrefUrl = new URL(href, window.location.href);
-    let classes = expression.split(" ").filter(String);
-    let refreshCurrent = (url) => {
-      if (pathMatches(hrefUrl, url, options)) {
-        el.classList.add(...classes);
-        el.setAttribute("data-current", "");
-      } else {
-        el.classList.remove(...classes);
-        el.removeAttribute("data-current");
-      }
-    };
-    refreshCurrent(new URL(window.location.href));
-    onPageChanges.set(el, refreshCurrent);
-    cleanup2(() => onPageChanges.delete(el));
-  });
-  function pathMatches(hrefUrl, actualUrl, options) {
-    if (hrefUrl.hostname !== actualUrl.hostname)
-      return false;
-    let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
-    let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
-    if (options.exact) {
-      return hrefPath === actualPath;
-    }
-    let hrefPathSegments = hrefPath.split("/");
-    let actualPathSegments = actualPath.split("/");
-    for (let i = 0; i < hrefPathSegments.length; i++) {
-      if (hrefPathSegments[i] !== actualPathSegments[i])
-        return false;
-    }
-    return true;
-  }
 
   // js/directives/shared.js
   function toggleBooleanStateDirective(el, directive3, isTruthy, cachedDisplay = null) {
@@ -13917,7 +13980,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
     };
-    let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce2(update, 150) : update;
+    let debouncedUpdate = isRealtimeInput(el) && !isDebounced && isLive ? debounce2(update, 150) : update;
     module_default.bind(el, {
       ["@change"]() {
         isLazy && update();
@@ -13947,8 +14010,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return "";
     return "." + modifiers.join(".");
   }
-  function isTextInput(el) {
-    return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type);
+  function isRealtimeInput(el) {
+    return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type) || el.tagName.toUpperCase() === "UI-SLIDER";
   }
   function componentIsMissingProperty(component, property) {
     if (property.startsWith("$parent")) {
@@ -13994,7 +14057,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     stopWhen(() => theElementIsDisconnected(el));
   });
   function triggerComponentRequest(el, directive3, component) {
-    setNextActionOrigin({ el, directive: directive3 });
+    setNextActionOrigin({ el, directive: directive3, targetEl: null });
     setNextActionMetadata({ type: "poll" });
     let fullMethod = directive3.expression ? directive3.expression : "$refresh";
     evaluateActionExpression(component, el, fullMethod);

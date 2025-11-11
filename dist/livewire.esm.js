@@ -20,9 +20,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1735,7 +1735,14 @@ var require_module_cjs = __commonJS({
         handleError(e, el, expression);
       }
     }
-    function handleError(error2, el, expression = void 0) {
+    function handleError(...args) {
+      return errorHandler(...args);
+    }
+    var errorHandler = normalErrorHandler;
+    function setErrorHandler(handler4) {
+      errorHandler = handler4;
+    }
+    function normalErrorHandler(error2, el, expression = void 0) {
       error2 = Object.assign(
         error2 != null ? error2 : { message: "No error message given." },
         { el, expression }
@@ -2934,6 +2941,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       onlyDuringClone,
       addRootSelector,
       addInitSelector,
+      setErrorHandler,
       interceptClone,
       addScopeToNode,
       deferMutations,
@@ -3892,9 +3900,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../alpine/packages/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4013,9 +4021,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../alpine/packages/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5026,9 +5034,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../alpine/packages/intersect/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5108,9 +5116,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/sort/dist/module.cjs.js
+// ../alpine/packages/sort/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/sort/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/sort/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -6252,9 +6260,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/resize/dist/module.cjs.js
+// ../alpine/packages/resize/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "node_modules/@alpinejs/resize/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/resize/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6324,9 +6332,9 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/anchor/dist/module.cjs.js
+// ../alpine/packages/anchor/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7865,9 +7873,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
+// ../alpine/packages/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8273,9 +8281,9 @@ var require_module_cjs8 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
+// ../alpine/packages/mask/dist/module.cjs.js
 var require_module_cjs9 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8693,7 +8701,8 @@ function handleFileUpload(el, property, component, cleanup) {
       return;
     start2();
     if (e.target.multiple) {
-      manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
+      let append = ["ui-file-upload"].includes(e.target.tagName.toLowerCase());
+      manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel, append);
     } else {
       manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
     }
@@ -8745,17 +8754,19 @@ var UploadManager = class {
       finishCallback,
       errorCallback,
       progressCallback,
-      cancelledCallback
+      cancelledCallback,
+      append: false
     });
   }
-  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = false) {
     this.setUpload(name, {
       files: Array.from(files),
       multiple: true,
       finishCallback,
       errorCallback,
       progressCallback,
-      cancelledCallback
+      cancelledCallback,
+      append
     });
   }
   removeUpload(name, tmpFilename, finishCallback) {
@@ -8808,7 +8819,7 @@ var UploadManager = class {
     request.addEventListener("load", () => {
       if ((request.status + "")[0] === "2") {
         let paths = retrievePaths(request.response && JSON.parse(request.response));
-        this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
+        this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple, this.uploadBag.first(name).append);
         return;
       }
       let errors = null;
@@ -8912,7 +8923,7 @@ function uploadMultiple(component, name, files, finishCallback = () => {
 }, errorCallback = () => {
 }, progressCallback = () => {
 }, cancelledCallback = () => {
-}) {
+}, append = false) {
   let uploadManager = getUploadManager(component);
   uploadManager.uploadMultiple(
     name,
@@ -8920,7 +8931,8 @@ function uploadMultiple(component, name, files, finishCallback = () => {
     finishCallback,
     errorCallback,
     progressCallback,
-    cancelledCallback
+    cancelledCallback,
+    append
   );
 }
 function removeUpload(component, name, tmpFilename, finishCallback = () => {
@@ -11066,7 +11078,7 @@ var Directive = class {
 var import_collapse = __toESM(require_module_cjs2());
 var import_focus = __toESM(require_module_cjs3());
 
-// node_modules/@alpinejs/persist/dist/module.esm.js
+// ../alpine/packages/persist/dist/module.esm.js
 function src_default(Alpine24) {
   let persist = () => {
     let alias;
@@ -12894,13 +12906,13 @@ interceptAction(({ action }) => {
   let origin = action.origin;
   if (!origin)
     return;
-  let el = origin.el;
+  let { el, directive: directive2 } = origin;
   let islandAttributeName = el.getAttribute("wire:island");
-  let prependIslandAttributeName = el.getAttribute("wire:island.prepend");
-  let appendIslandAttributeName = el.getAttribute("wire:island.append");
-  let islandName = islandAttributeName || prependIslandAttributeName || appendIslandAttributeName;
+  let islandName = islandAttributeName;
+  let isPrepend = directive2?.modifiers.includes("prepend");
+  let isAppend = directive2?.modifiers.includes("append");
   if (islandName) {
-    let mode2 = appendIslandAttributeName ? "append" : prependIslandAttributeName ? "prepend" : "morph";
+    let mode2 = isPrepend ? "prepend" : isAppend ? "append" : "morph";
     action.mergeMetadata({
       island: {
         name: islandName,
@@ -12996,18 +13008,130 @@ interceptMessage(({ actions, onSend, onFinish }) => {
   onSend(() => {
     actions.forEach((action) => {
       let origin = action.origin;
-      if (!origin || !origin.el)
+      if (!origin)
         return;
-      if (action.metadata?.type === "poll")
+      let el = origin.hasOwnProperty("targetEl") ? origin.targetEl : origin.el;
+      if (!el)
         return;
-      origin.el.setAttribute("data-loading", "true");
+      el.setAttribute("data-loading", "true");
       undos.push(() => {
-        origin.el.removeAttribute("data-loading");
+        el.removeAttribute("data-loading");
       });
     });
   });
   onFinish(() => undos.forEach((undo) => undo()));
 });
+
+// js/directives/wire-current.js
+var import_alpinejs12 = __toESM(require_module_cjs());
+import_alpinejs12.default.addInitSelector(() => `[wire\\:current]`);
+var onPageChanges = /* @__PURE__ */ new Map();
+document.addEventListener("livewire:navigated", () => {
+  onPageChanges.forEach((i) => i(new URL(window.location.href)));
+});
+globalDirective("current", ({ el, directive: directive2, cleanup }) => {
+  let expression = directive2.expression;
+  let options = {
+    exact: directive2.modifiers.includes("exact"),
+    strict: directive2.modifiers.includes("strict")
+  };
+  if (expression.startsWith("#"))
+    return;
+  if (!el.hasAttribute("href"))
+    return;
+  let href = el.getAttribute("href");
+  let hrefUrl = new URL(href, window.location.href);
+  let classes = expression.split(" ").filter(String);
+  let refreshCurrent = (url) => {
+    if (pathMatches(hrefUrl, url, options)) {
+      el.classList.add(...classes);
+      el.setAttribute("data-current", "");
+    } else {
+      el.classList.remove(...classes);
+      el.removeAttribute("data-current");
+    }
+  };
+  refreshCurrent(new URL(window.location.href));
+  onPageChanges.set(el, refreshCurrent);
+  cleanup(() => onPageChanges.delete(el));
+});
+function pathMatches(hrefUrl, actualUrl, options = {}) {
+  if (hrefUrl.hostname !== actualUrl.hostname)
+    return false;
+  let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
+  let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
+  if (options.exact) {
+    return hrefPath === actualPath;
+  }
+  let hrefPathSegments = hrefPath.split("/");
+  let actualPathSegments = actualPath.split("/");
+  for (let i = 0; i < hrefPathSegments.length; i++) {
+    if (hrefPathSegments[i] !== actualPathSegments[i])
+      return false;
+  }
+  return true;
+}
+
+// js/directives/wire-navigate.js
+var import_alpinejs13 = __toESM(require_module_cjs());
+var wireNavigateSelectors = [
+  "[wire\\:navigate]",
+  "[wire\\:navigate\\.hover]",
+  "[wire\\:navigate\\.preserve-scroll]",
+  "[wire\\:navigate\\.preserve-scroll\\.hover]",
+  "[wire\\:navigate\\.hover\\.preserve-scroll]"
+];
+var wireNavigateSelector = wireNavigateSelectors.join(", ");
+var attributeMap = {
+  "wire:navigate": "x-navigate",
+  "wire:navigate.hover": "x-navigate.hover",
+  "wire:navigate.preserve-scroll": "x-navigate.preserve-scroll",
+  "wire:navigate.preserve-scroll.hover": "x-navigate.preserve-scroll.hover",
+  "wire:navigate.hover.preserve-scroll": "x-navigate.hover.preserve-scroll"
+};
+wireNavigateSelectors.forEach((selector) => {
+  import_alpinejs13.default.addInitSelector(() => selector);
+});
+import_alpinejs13.default.interceptInit(
+  import_alpinejs13.default.skipDuringClone((el) => {
+    for (let [wireAttr, alpineDirective] of Object.entries(attributeMap)) {
+      if (el.hasAttribute(wireAttr)) {
+        import_alpinejs13.default.bind(el, { [alpineDirective]: true });
+        break;
+      }
+    }
+  })
+);
+document.addEventListener("alpine:navigating", () => {
+  Livewire.all().forEach((component) => {
+    component.inscribeSnapshotAndEffectsOnElement();
+  });
+});
+
+// js/features/supportDataCurrent.js
+document.addEventListener("livewire:navigated", () => {
+  updateNavigateLinks();
+});
+document.addEventListener("DOMContentLoaded", () => {
+  updateNavigateLinks();
+});
+function updateNavigateLinks() {
+  let currentUrl = new URL(window.location.href);
+  document.querySelectorAll(wireNavigateSelector).forEach((el) => {
+    let href = el.getAttribute("href");
+    if (!href || href.startsWith("#"))
+      return;
+    try {
+      let hrefUrl = new URL(href, window.location.href);
+      if (pathMatches(hrefUrl, currentUrl)) {
+        el.setAttribute("data-current", "");
+      } else {
+        el.removeAttribute("data-current");
+      }
+    } catch (e) {
+    }
+  });
+}
 
 // js/features/supportPreserveScroll.js
 interceptMessage(({ actions, onSuccess }) => {
@@ -13036,15 +13160,15 @@ interceptMessage(({ actions, onSuccess }) => {
 });
 
 // js/features/supportWireIntersect.js
-var import_alpinejs12 = __toESM(require_module_cjs());
-import_alpinejs12.default.interceptInit((el) => {
+var import_alpinejs14 = __toESM(require_module_cjs());
+import_alpinejs14.default.interceptInit((el) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:intersect")) {
       let { name, value } = el.attributes[i];
       let directive2 = extractDirective(el, name);
       let modifierString = name.split("wire:intersect")[1];
       let expression = value.trim();
-      import_alpinejs12.default.bind(el, {
+      import_alpinejs14.default.bind(el, {
         ["x-intersect" + modifierString](e) {
           directive2.eventContext = e;
           let component = el.closest("[wire\\:id]")?.__livewire;
@@ -13060,14 +13184,14 @@ import_alpinejs12.default.interceptInit((el) => {
 });
 
 // js/features/supportWireSort.js
-var import_alpinejs13 = __toESM(require_module_cjs());
-import_alpinejs13.default.interceptInit((el) => {
+var import_alpinejs15 = __toESM(require_module_cjs());
+import_alpinejs15.default.interceptInit((el) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:sort:item")) {
       let directive2 = extractDirective(el, el.attributes[i].name);
       let modifierString = directive2.modifiers.join(".");
       let expression = directive2.expression;
-      import_alpinejs13.default.bind(el, {
+      import_alpinejs15.default.bind(el, {
         ["x-sort:item" + modifierString]() {
           return expression;
         }
@@ -13083,8 +13207,14 @@ import_alpinejs13.default.interceptInit((el) => {
       if (directive2.modifiers.includes("renderless")) {
         attribute = attribute.replace(".renderless", "");
       }
+      if (directive2.modifiers.includes("prepend")) {
+        attribute = attribute.replace(".prepend", "");
+      }
+      if (directive2.modifiers.includes("append")) {
+        attribute = attribute.replace(".append", "");
+      }
       let expression = directive2.expression;
-      import_alpinejs13.default.bind(el, {
+      import_alpinejs15.default.bind(el, {
         [attribute]() {
           setNextActionOrigin({ el, directive: directive2 });
           return evaluateActionExpressionWithoutComponentScope(el, expression, { scope: {
@@ -13110,21 +13240,21 @@ on("effect", ({ component, effects }) => {
 });
 
 // js/directives/wire-transition.js
-var import_alpinejs14 = __toESM(require_module_cjs());
+var import_alpinejs16 = __toESM(require_module_cjs());
 on("morph.added", ({ el }) => {
   el.__addedByMorph = true;
 });
 directive("transition", ({ el, directive: directive2, component, cleanup }) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:show")) {
-      import_alpinejs14.default.bind(el, {
+      import_alpinejs16.default.bind(el, {
         [directive2.rawName.replace("wire:transition", "x-transition")]: directive2.expression
       });
       return;
     }
   }
-  let visibility = import_alpinejs14.default.reactive({ state: el.__addedByMorph ? false : true });
-  import_alpinejs14.default.bind(el, {
+  let visibility = import_alpinejs16.default.reactive({ state: el.__addedByMorph ? false : true });
+  import_alpinejs16.default.bind(el, {
     [directive2.rawName.replace("wire:", "x-")]: "",
     "x-show"() {
       return visibility.state;
@@ -13160,7 +13290,7 @@ function callAndClearComponentDebounces(component, callback) {
 }
 
 // js/directives/wire-wildcard.js
-var import_alpinejs15 = __toESM(require_module_cjs());
+var import_alpinejs17 = __toESM(require_module_cjs());
 on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty", "sort"].includes(directive2.value))
     return;
@@ -13176,13 +13306,24 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   if (directive2.modifiers.includes("renderless")) {
     attribute = attribute.replace(".renderless", "");
   }
-  let cleanupBinding = import_alpinejs15.default.bind(el, {
+  if (directive2.modifiers.includes("prepend")) {
+    attribute = attribute.replace(".prepend", "");
+  }
+  if (directive2.modifiers.includes("append")) {
+    attribute = attribute.replace(".append", "");
+  }
+  let cleanupBinding = import_alpinejs17.default.bind(el, {
     [attribute](e) {
       directive2.eventContext = e;
       directive2.wire = component.$wire;
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          setNextActionOrigin({ el, directive: directive2 });
+          if (directive2.value === "submit") {
+            let submitButton = e.submitter || el.querySelector('button[type="submit"], input[type="submit"]');
+            setNextActionOrigin({ el, directive: directive2, targetEl: submitButton });
+          } else {
+            setNextActionOrigin({ el, directive: directive2 });
+          }
           evaluateActionExpression(component, el, directive2.expression, { scope: { $event: e } });
         });
       };
@@ -13198,34 +13339,6 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
     }
   });
   cleanup(cleanupBinding);
-});
-
-// js/directives/wire-navigate.js
-var import_alpinejs16 = __toESM(require_module_cjs());
-import_alpinejs16.default.addInitSelector(() => `[wire\\:navigate]`);
-import_alpinejs16.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-import_alpinejs16.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
-import_alpinejs16.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
-import_alpinejs16.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
-import_alpinejs16.default.interceptInit(
-  import_alpinejs16.default.skipDuringClone((el) => {
-    if (el.hasAttribute("wire:navigate")) {
-      import_alpinejs16.default.bind(el, { ["x-navigate"]: true });
-    } else if (el.hasAttribute("wire:navigate.hover")) {
-      import_alpinejs16.default.bind(el, { ["x-navigate.hover"]: true });
-    } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
-      import_alpinejs16.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
-    } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
-      import_alpinejs16.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
-    } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
-      import_alpinejs16.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
-    }
-  })
-);
-document.addEventListener("alpine:navigating", () => {
-  Livewire.all().forEach((component) => {
-    component.inscribeSnapshotAndEffectsOnElement();
-  });
 });
 
 // js/directives/wire-confirm.js
@@ -13256,56 +13369,6 @@ directive("confirm", ({ el, directive: directive2 }) => {
     }
   };
 });
-
-// js/directives/wire-current.js
-var import_alpinejs17 = __toESM(require_module_cjs());
-import_alpinejs17.default.addInitSelector(() => `[wire\\:current]`);
-var onPageChanges = /* @__PURE__ */ new Map();
-document.addEventListener("livewire:navigated", () => {
-  onPageChanges.forEach((i) => i(new URL(window.location.href)));
-});
-globalDirective("current", ({ el, directive: directive2, cleanup }) => {
-  let expression = directive2.expression;
-  let options = {
-    exact: directive2.modifiers.includes("exact"),
-    strict: directive2.modifiers.includes("strict")
-  };
-  if (expression.startsWith("#"))
-    return;
-  if (!el.hasAttribute("href"))
-    return;
-  let href = el.getAttribute("href");
-  let hrefUrl = new URL(href, window.location.href);
-  let classes = expression.split(" ").filter(String);
-  let refreshCurrent = (url) => {
-    if (pathMatches(hrefUrl, url, options)) {
-      el.classList.add(...classes);
-      el.setAttribute("data-current", "");
-    } else {
-      el.classList.remove(...classes);
-      el.removeAttribute("data-current");
-    }
-  };
-  refreshCurrent(new URL(window.location.href));
-  onPageChanges.set(el, refreshCurrent);
-  cleanup(() => onPageChanges.delete(el));
-});
-function pathMatches(hrefUrl, actualUrl, options) {
-  if (hrefUrl.hostname !== actualUrl.hostname)
-    return false;
-  let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
-  let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
-  if (options.exact) {
-    return hrefPath === actualPath;
-  }
-  let hrefPathSegments = hrefPath.split("/");
-  let actualPathSegments = actualPath.split("/");
-  for (let i = 0; i < hrefPathSegments.length; i++) {
-    if (hrefPathSegments[i] !== actualPathSegments[i])
-      return false;
-  }
-  return true;
-}
 
 // js/directives/shared.js
 function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = null) {
@@ -13604,7 +13667,7 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
     }
     expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
   };
-  let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
+  let debouncedUpdate = isRealtimeInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
   import_alpinejs19.default.bind(el, {
     ["@change"]() {
       isLazy && update();
@@ -13634,8 +13697,8 @@ function getModifierTail(modifiers) {
     return "";
   return "." + modifiers.join(".");
 }
-function isTextInput(el) {
-  return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type);
+function isRealtimeInput(el) {
+  return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type) || el.tagName.toUpperCase() === "UI-SLIDER";
 }
 function componentIsMissingProperty(component, property) {
   if (property.startsWith("$parent")) {
@@ -13681,7 +13744,7 @@ directive("poll", ({ el, directive: directive2, component }) => {
   stopWhen(() => theElementIsDisconnected(el));
 });
 function triggerComponentRequest(el, directive2, component) {
-  setNextActionOrigin({ el, directive: directive2 });
+  setNextActionOrigin({ el, directive: directive2, targetEl: null });
   setNextActionMetadata({ type: "poll" });
   let fullMethod = directive2.expression ? directive2.expression : "$refresh";
   evaluateActionExpression(component, el, fullMethod);
