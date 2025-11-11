@@ -7,16 +7,17 @@ interceptAction(({ action }) => {
 
     if (! origin) return
 
-    let el = origin.el
+    let { el, directive } = origin
 
     let islandAttributeName = el.getAttribute('wire:island')
-    let prependIslandAttributeName = el.getAttribute('wire:island.prepend')
-    let appendIslandAttributeName = el.getAttribute('wire:island.append')
 
-    let islandName = islandAttributeName || prependIslandAttributeName || appendIslandAttributeName
+    let islandName = islandAttributeName
+
+    let isPrepend = directive?.modifiers.includes('prepend')
+    let isAppend = directive?.modifiers.includes('append')
 
     if (islandName) {
-        let mode = appendIslandAttributeName ? 'append' : (prependIslandAttributeName ? 'prepend' : 'morph')
+        let mode = isPrepend ? 'prepend' : (isAppend ? 'append' : 'morph')
 
         action.mergeMetadata({
             island: {

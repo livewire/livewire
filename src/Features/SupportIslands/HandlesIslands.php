@@ -73,18 +73,18 @@ trait HandlesIslands
             }
         }
 
-        if ($lazy) {
+        if ($lazy && $this->islandIsMounting()) {
             $renderedContent = $this->renderIslandView($name, $token, [
                 '__placeholder' => '',
             ]);
 
-            $renderedContent = '<div wire:intersect="$refresh">' . $renderedContent . '</div>';
-        } elseif ($defer) {
+            $renderedContent = '<div wire:intersect="__lazyLoadIsland">' . $renderedContent . '</div>';
+        } elseif ($defer && $this->islandIsMounting()) {
             $renderedContent = $this->renderIslandView($name, $token, [
                 '__placeholder' => '',
             ]);
 
-            $renderedContent = '<div wire:init="$refresh">' . $renderedContent . '</div>';
+            $renderedContent = '<div wire:init="__lazyLoadIsland">' . $renderedContent . '</div>';
         } else {
             // Don't pass directive's $with - it's extracted in the compiled island
             $renderedContent = $this->renderIslandView($name, $token, []);
@@ -108,12 +108,18 @@ trait HandlesIslands
         ]);
     }
 
-    public function renderIsland($name, $content = null, $mode = 'morph', $with = [])
+    public function renderIsland($name, $content = null, $mode = 'morph', $with = [], $mount = false)
     {
         $islands = $this->getIslands();
 
         foreach ($islands as $island) {
             if ($island['name'] === $name) {
+
+                // If the island is lazy, we need to mount it, but to ensure any nested islands render,
+                // we need to set the `$islandsHaveMounted` flag to false and reset it back after the
+                // lazy island is mounted...
+                $finish = $this->mountIfNeedsMounting($mount);
+
                 $token = $island['token'];
 
                 if (! $token) continue;
@@ -129,6 +135,8 @@ trait HandlesIslands
                 ]);
 
                 $this->renderedIslandFragments[] = $renderedContent;
+
+                $finish();
             }
         }
     }
@@ -221,5 +229,20 @@ trait HandlesIslands
             'name' => $name,
             'token' => $token,
         ];
+    }
+
+    protected function mountIfNeedsMounting($mount)
+    {
+        if (! $mount) {
+            return function() {};
+        }
+
+        $existingMounted = $this->islandsHaveMounted;
+
+        $this->islandsHaveMounted = false;
+
+        return function() use ($existingMounted) {
+            $this->islandsHaveMounted = $existingMounted;
+        };
     }
 }

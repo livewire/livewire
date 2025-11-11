@@ -35,6 +35,16 @@ Alpine.interceptInit(el => {
                 attribute = attribute.replace('.renderless', '')
             }
 
+            // Strip .prepend from Alpine expression because it only concerns Livewire and trips up Alpine...
+            if (directive.modifiers.includes('prepend')) {
+                attribute = attribute.replace('.prepend', '')
+            }
+
+            // Strip .append from Alpine expression because it only concerns Livewire and trips up Alpine...
+            if (directive.modifiers.includes('append')) {
+                attribute = attribute.replace('.append', '')
+            }
+
             let expression = directive.expression
 
             Alpine.bind(el, {

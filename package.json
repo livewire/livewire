@@ -16,18 +16,18 @@
         "vitest": "^3.2.4"
     },
     "dependencies": {
-        "@alpinejs/anchor": "^3.15.0",
-        "@alpinejs/collapse": "^3.15.0",
-        "@alpinejs/csp": "^3.15.0",
-        "@alpinejs/focus": "^3.15.0",
-        "@alpinejs/intersect": "^3.15.0",
-        "@alpinejs/mask": "^3.15.0",
-        "@alpinejs/morph": "^3.15.0",
-        "@alpinejs/persist": "^3.15.0",
-        "@alpinejs/resize": "^3.15.0",
-        "@alpinejs/sort": "^3.15.0",
+        "@alpinejs/anchor": "^3.15.1",
+        "@alpinejs/collapse": "^3.15.1",
+        "@alpinejs/csp": "^3.15.1",
+        "@alpinejs/focus": "^3.15.1",
+        "@alpinejs/intersect": "^3.15.1",
+        "@alpinejs/mask": "^3.15.1",
+        "@alpinejs/morph": "^3.15.1",
+        "@alpinejs/persist": "^3.15.1",
+        "@alpinejs/resize": "^3.15.1",
+        "@alpinejs/sort": "^3.15.1",
         "@vue/reactivity": "^3.2.45",
-        "alpinejs": "^3.15.0",
+        "alpinejs": "^3.15.1",
         "nprogress": "^0.2.0"
     }
 }

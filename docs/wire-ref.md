@@ -8,8 +8,7 @@ They're a tidy alternative, but conceptually similar, to using something like cl
 Here are a list of use-cases:
 
 - Dispatching an event to a specific component
-- Targeting a Livewire component using `$refs`
-- Accessing DOM elements within a component from JavaScript
+- Targeting an element using `$refs`
 - Streaming content to a specific element
 
 Let's walk through each of these.
@@ -67,49 +66,9 @@ new class extends Livewire\Component {
 </div>
 ```
 
-## Using `$refs`
-
-Similar to Livewire's `$parent` magic, the `$refs` magic allows you target another component within common directives like `wire:click`:
-
-```php
-<div>
-    <!-- ... -->
-
-    <livewire:modal wire:ref="modal">
-        <button wire:click="$refs.modal.dispatch('close')">Close</button>
-
-        <!-- ... -->
-    </livewire:modal>
-</div>
-```
-
-Additionally, `$refs` is accessible directly from the `this` or `$wire` JavaScript context.
-
-Consider an example that aims to handle the closing of the modal purely in JavaScript:
-
-```php
-<div>
-    <!-- ... -->
-
-    <livewire:modal wire:ref="modal">
-        <!-- ... -->
-
-        <button wire:click="save()">Save</button>
-    </livewire:modal>
-</div>
-
-<script>
-    this.intercept('save', ({ request }) => {
-        request.onSuccess(() => {
-            this.$refs.modal.close()
-        })
-    })
-</script>
-```
-
 ## Accessing DOM elements
 
-When you add `wire:ref` to a plain HTML element, you can access the underlying DOM element using the `.el` property. This is useful for direct DOM manipulation without triggering a full component re-render.
+When you add `wire:ref` to an HTML element, you can access it via the `$refs` magic property.
 
 Consider a character counter that updates in real-time:
 
@@ -123,8 +82,32 @@ Consider a character counter that updates in real-time:
 </div>
 
 <script>
-    this.$refs['message'].el.addEventListener('input', (e) => {
-        this.$refs['count'].el.textContent = e.target.value.length`
+    this.$refs.message.addEventListener('input', (e) => {
+        this.$refs.count.textContent = e.target.value.length
+    })
+</script>
+```
+
+## Accessing `$wire`
+
+If you wish to access `$wire` for a component with a ref, you can do so via the `.$wire` propert on the element:
+
+```php
+<div>
+    <!-- ... -->
+
+    <livewire:modal wire:ref="modal">
+        <!-- ... -->
+
+        <button wire:click="save()">Save</button>
+    </livewire:modal>
+</div>
+
+<script>
+    this.$intercept('save', ({ onFinish }) => {
+        onFinish(() => {
+            this.$refs.modal.$wire.close()
+        })
     })
 </script>
 ```
@@ -163,25 +146,6 @@ new class extends Livewire\Component {
 </div>
 ```
 
-## Naming conventions
-
-Refs use kebab-case in HTML, matching Livewire's attribute naming style:
-
-```php
-<livewire:modal wire:ref="user-modal"></livewire>
-```
-
-In JavaScript, you can access refs using either camelCase or bracket notation:
-
-```php
-<script>
-    // Both of these work...
-
-    this.$refs.userModal.close()
-    this.$refs['user-modal'].close()
-</script>
-```
-
 ## Dynamic refs
 
 Refs work perfectly in loops and other dynamic contexts.
@@ -204,3 +168,11 @@ Here's an example with multiple modal instances:
 Refs are scoped to the current component. This means you can target any element within the component, but not elements in other components on the page.
 
 If multiple elements have the same ref name within a component, the first one encountered will be used.
+
+## Reference
+
+```blade
+wire:ref="name"
+```
+
+This directive has no modifiers.

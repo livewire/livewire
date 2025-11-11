@@ -514,7 +514,8 @@
         return;
       start3();
       if (e.target.multiple) {
-        manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
+        let append = ["ui-file-upload"].includes(e.target.tagName.toLowerCase());
+        manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel, append);
       } else {
         manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
       }
@@ -566,17 +567,19 @@
         finishCallback,
         errorCallback,
         progressCallback,
-        cancelledCallback
+        cancelledCallback,
+        append: false
       });
     }
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = false) {
       this.setUpload(name, {
         files: Array.from(files),
         multiple: true,
         finishCallback,
         errorCallback,
         progressCallback,
-        cancelledCallback
+        cancelledCallback,
+        append
       });
     }
     removeUpload(name, tmpFilename, finishCallback) {
@@ -629,7 +632,7 @@
       request.addEventListener("load", () => {
         if ((request.status + "")[0] === "2") {
           let paths = retrievePaths(request.response && JSON.parse(request.response));
-          this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
+          this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple, this.uploadBag.first(name).append);
           return;
         }
         let errors = null;
@@ -733,7 +736,7 @@
   }, errorCallback = () => {
   }, progressCallback = () => {
   }, cancelledCallback = () => {
-  }) {
+  }, append = false) {
     let uploadManager = getUploadManager(component);
     uploadManager.uploadMultiple(
       name,
@@ -741,7 +744,8 @@
       finishCallback,
       errorCallback,
       progressCallback,
-      cancelledCallback
+      cancelledCallback,
+      append
     );
   }
   function removeUpload(component, name, tmpFilename, finishCallback = () => {
@@ -1181,7 +1185,14 @@
       handleError(e, el, expression);
     }
   }
-  function handleError(error2, el, expression = void 0) {
+  function handleError(...args) {
+    return errorHandler(...args);
+  }
+  var errorHandler = normalErrorHandler;
+  function setErrorHandler(handler4) {
+    errorHandler = handler4;
+  }
+  function normalErrorHandler(error2, el, expression = void 0) {
     error2 = Object.assign(
       error2 ?? { message: "No error message given." },
       { el, expression }
@@ -2366,7 +2377,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.15.0",
+    version: "3.15.1",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -2380,6 +2391,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     onlyDuringClone,
     addRootSelector,
     addInitSelector,
+    setErrorHandler,
     interceptClone,
     addScopeToNode,
     deferMutations,
@@ -4700,7 +4712,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     isAsync() {
       let asyncMethods = this.component.snapshot.memo?.async || [];
       let methodIsMarkedAsync = asyncMethods.includes(this.method);
-      let actionIsAsync = this.origin?.directive?.modifiers.includes("async");
+      let actionIsAsync = this.origin?.directive?.modifiers.includes("async") || !!this.metadata.async;
       return methodIsMarkedAsync || actionIsAsync;
     }
     mergeMetadata(metadata) {
@@ -4923,7 +4935,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         },
         error: ({ response, responseBody }) => {
           let preventDefault = false;
-          request.onError({ response, responseBody, preventDefault });
+          request.onError({ response, responseBody, preventDefault: () => preventDefault = true });
           if (preventDefault)
             return;
           if (response.status === 419) {
@@ -4937,14 +4949,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         },
         redirect: (url) => {
           let preventDefault = false;
-          request.onRedirect({ url, preventDefault });
+          request.onRedirect({ url, preventDefault: () => preventDefault = true });
           if (preventDefault)
             return;
           window.location.href = url;
         },
         dump: (content) => {
           let preventDefault = false;
-          request.onDump({ content, preventDefault });
+          request.onDump({ content, preventDefault: () => preventDefault = true });
           if (preventDefault)
             return;
           showHtmlModal(content);
@@ -4968,7 +4980,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 message.onSync();
                 if (message.isCancelled())
                   return;
-                message.component.processEffects(effects);
+                message.component.processEffects(effects, request);
                 message.onEffect();
                 if (message.isCancelled())
                   return;
@@ -5396,9 +5408,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
   });
-  wireProperty("$island", (component) => async (name, mode2 = null) => {
+  wireProperty("$island", (component) => async (name, options = {}) => {
     return fireAction(component, "$refresh", [], {
-      island: { name, mode: mode2 }
+      island: { name, ...options }
     });
   });
   wireProperty("$entangle", (component) => (name, live = false) => {
@@ -5554,12 +5566,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.mergeNewSnapshot(JSON.stringify(snapshot), effects);
       this.processEffects({ html });
     }
-    processEffects(effects) {
+    processEffects(effects, request) {
       trigger2("effects", this, effects);
       trigger2("effect", {
         component: this,
         effects,
-        cleanup: (i) => this.addCleanup(i)
+        cleanup: (i) => this.addCleanup(i),
+        request
       });
     }
     get children() {
@@ -6024,35 +6037,92 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return methods[0].params;
     }
     parseOutMethodsAndParams(rawMethod) {
-      let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
-      let method = rawMethod;
-      let params = [];
-      let methodAndParamString = method.match(methodRegex);
       let methods = [];
-      let slicedLength = 0;
-      while (methodAndParamString) {
-        let argumentsToArray = function() {
-          for (var l = arguments.length, p = new Array(l), k = 0; k < l; k++) {
-            p[k] = arguments[k];
+      let parsedMethods = this.splitAndParseMethods(rawMethod);
+      for (let { method, paramString } of parsedMethods) {
+        let params = [];
+        if (paramString.length > 0) {
+          let argumentsToArray = function() {
+            for (var l = arguments.length, p = new Array(l), k = 0; k < l; k++) {
+              p[k] = arguments[k];
+            }
+            return [].concat(p);
+          };
+          try {
+            params = Alpine.evaluate(
+              document,
+              "argumentsToArray(" + paramString + ")",
+              {
+                scope: { argumentsToArray }
+              }
+            );
+          } catch (error2) {
+            console.warn("Failed to parse parameters:", paramString, error2);
+            params = [];
           }
-          return [].concat(p);
-        };
-        method = methodAndParamString[1];
-        let params2 = Alpine.evaluate(
-          document,
-          "argumentsToArray(" + methodAndParamString[2] + ")",
-          {
-            scope: { argumentsToArray }
-          }
-        );
-        methods.push({ method, params: params2 });
-        slicedLength += methodAndParamString[0].length;
-        methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex);
-      }
-      if (methods.length === 0) {
+        }
         methods.push({ method, params });
       }
       return methods;
+    }
+    splitAndParseMethods(methodExpression) {
+      let methods = [];
+      let current = "";
+      let parenCount = 0;
+      let inString = false;
+      let stringChar = null;
+      let trimmedExpression = methodExpression.trim();
+      for (let i = 0; i < trimmedExpression.length; i++) {
+        let char = trimmedExpression[i];
+        if (!inString) {
+          if (char === '"' || char === "'") {
+            inString = true;
+            stringChar = char;
+            current += char;
+          } else if (char === "(") {
+            parenCount++;
+            current += char;
+          } else if (char === ")") {
+            parenCount--;
+            current += char;
+          } else if (char === "," && parenCount === 0) {
+            methods.push(this.parseMethodCall(current.trim()));
+            current = "";
+          } else {
+            current += char;
+          }
+        } else {
+          if (char === stringChar && trimmedExpression[i - 1] !== "\\") {
+            inString = false;
+            stringChar = null;
+          }
+          current += char;
+        }
+      }
+      if (current.trim().length > 0) {
+        methods.push(this.parseMethodCall(current.trim()));
+      }
+      return methods;
+    }
+    parseMethodCall(methodString) {
+      let methodMatch = methodString.match(/^([^(]+)\(/);
+      if (!methodMatch) {
+        return {
+          method: methodString.trim(),
+          paramString: ""
+        };
+      }
+      let method = methodMatch[1].trim();
+      let paramStart = methodMatch[0].length - 1;
+      let lastParenIndex = methodString.lastIndexOf(")");
+      if (lastParenIndex === -1) {
+        throw new Error(`Missing closing parenthesis for method "${method}"`);
+      }
+      let paramString = methodString.slice(paramStart + 1, lastParenIndex).trim();
+      return {
+        method,
+        paramString
+      };
     }
   };
 
@@ -12603,8 +12673,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             evaluateExpression(component, component.el, scriptContent, {
               scope: {
                 "$wire": component.$wire,
-                "$js": component.$wire.$js,
-                "$intercept": component.$wire.$intercept
+                "$js": component.$wire.js
               }
             });
           });
@@ -13140,8 +13209,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportRedirects.js
-  on2("effect", ({ effects }) => {
+  on2("effect", ({ effects, request }) => {
     if (!effects["redirect"])
+      return;
+    let preventDefault = false;
+    request.onRedirect({ url: effects["redirect"], preventDefault: () => preventDefault = true });
+    if (preventDefault)
       return;
     let url = effects["redirect"];
     shouldRedirectUsingNavigateOr(effects, url, () => {
@@ -13154,13 +13227,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let origin = action.origin;
     if (!origin)
       return;
-    let el = origin.el;
+    let { el, directive: directive3 } = origin;
     let islandAttributeName = el.getAttribute("wire:island");
-    let prependIslandAttributeName = el.getAttribute("wire:island.prepend");
-    let appendIslandAttributeName = el.getAttribute("wire:island.append");
-    let islandName = islandAttributeName || prependIslandAttributeName || appendIslandAttributeName;
+    let islandName = islandAttributeName;
+    let isPrepend = directive3?.modifiers.includes("prepend");
+    let isAppend = directive3?.modifiers.includes("append");
     if (islandName) {
-      let mode2 = appendIslandAttributeName ? "append" : prependIslandAttributeName ? "prepend" : "morph";
+      let mode2 = isPrepend ? "prepend" : isAppend ? "append" : "morph";
       action.mergeMetadata({
         island: {
           name: islandName,
@@ -13256,18 +13329,128 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     onSend(() => {
       actions.forEach((action) => {
         let origin = action.origin;
-        if (!origin || !origin.el)
+        if (!origin)
           return;
-        if (action.metadata?.type === "poll")
+        let el = origin.hasOwnProperty("targetEl") ? origin.targetEl : origin.el;
+        if (!el)
           return;
-        origin.el.setAttribute("data-loading", "true");
+        el.setAttribute("data-loading", "true");
         undos.push(() => {
-          origin.el.removeAttribute("data-loading");
+          el.removeAttribute("data-loading");
         });
       });
     });
     onFinish(() => undos.forEach((undo) => undo()));
   });
+
+  // js/directives/wire-current.js
+  module_default.addInitSelector(() => `[wire\\:current]`);
+  var onPageChanges = /* @__PURE__ */ new Map();
+  document.addEventListener("livewire:navigated", () => {
+    onPageChanges.forEach((i) => i(new URL(window.location.href)));
+  });
+  globalDirective("current", ({ el, directive: directive3, cleanup: cleanup2 }) => {
+    let expression = directive3.expression;
+    let options = {
+      exact: directive3.modifiers.includes("exact"),
+      strict: directive3.modifiers.includes("strict")
+    };
+    if (expression.startsWith("#"))
+      return;
+    if (!el.hasAttribute("href"))
+      return;
+    let href = el.getAttribute("href");
+    let hrefUrl = new URL(href, window.location.href);
+    let classes = expression.split(" ").filter(String);
+    let refreshCurrent = (url) => {
+      if (pathMatches(hrefUrl, url, options)) {
+        el.classList.add(...classes);
+        el.setAttribute("data-current", "");
+      } else {
+        el.classList.remove(...classes);
+        el.removeAttribute("data-current");
+      }
+    };
+    refreshCurrent(new URL(window.location.href));
+    onPageChanges.set(el, refreshCurrent);
+    cleanup2(() => onPageChanges.delete(el));
+  });
+  function pathMatches(hrefUrl, actualUrl, options = {}) {
+    if (hrefUrl.hostname !== actualUrl.hostname)
+      return false;
+    let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
+    let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
+    if (options.exact) {
+      return hrefPath === actualPath;
+    }
+    let hrefPathSegments = hrefPath.split("/");
+    let actualPathSegments = actualPath.split("/");
+    for (let i = 0; i < hrefPathSegments.length; i++) {
+      if (hrefPathSegments[i] !== actualPathSegments[i])
+        return false;
+    }
+    return true;
+  }
+
+  // js/directives/wire-navigate.js
+  var wireNavigateSelectors = [
+    "[wire\\:navigate]",
+    "[wire\\:navigate\\.hover]",
+    "[wire\\:navigate\\.preserve-scroll]",
+    "[wire\\:navigate\\.preserve-scroll\\.hover]",
+    "[wire\\:navigate\\.hover\\.preserve-scroll]"
+  ];
+  var wireNavigateSelector = wireNavigateSelectors.join(", ");
+  var attributeMap = {
+    "wire:navigate": "x-navigate",
+    "wire:navigate.hover": "x-navigate.hover",
+    "wire:navigate.preserve-scroll": "x-navigate.preserve-scroll",
+    "wire:navigate.preserve-scroll.hover": "x-navigate.preserve-scroll.hover",
+    "wire:navigate.hover.preserve-scroll": "x-navigate.hover.preserve-scroll"
+  };
+  wireNavigateSelectors.forEach((selector) => {
+    module_default.addInitSelector(() => selector);
+  });
+  module_default.interceptInit(
+    module_default.skipDuringClone((el) => {
+      for (let [wireAttr, alpineDirective] of Object.entries(attributeMap)) {
+        if (el.hasAttribute(wireAttr)) {
+          module_default.bind(el, { [alpineDirective]: true });
+          break;
+        }
+      }
+    })
+  );
+  document.addEventListener("alpine:navigating", () => {
+    Livewire.all().forEach((component) => {
+      component.inscribeSnapshotAndEffectsOnElement();
+    });
+  });
+
+  // js/features/supportDataCurrent.js
+  document.addEventListener("livewire:navigated", () => {
+    updateNavigateLinks();
+  });
+  document.addEventListener("DOMContentLoaded", () => {
+    updateNavigateLinks();
+  });
+  function updateNavigateLinks() {
+    let currentUrl = new URL(window.location.href);
+    document.querySelectorAll(wireNavigateSelector).forEach((el) => {
+      let href = el.getAttribute("href");
+      if (!href || href.startsWith("#"))
+        return;
+      try {
+        let hrefUrl = new URL(href, window.location.href);
+        if (pathMatches(hrefUrl, currentUrl)) {
+          el.setAttribute("data-current", "");
+        } else {
+          el.removeAttribute("data-current");
+        }
+      } catch (e) {
+      }
+    });
+  }
 
   // js/features/supportPreserveScroll.js
   interceptMessage(({ actions, onSuccess }) => {
@@ -13341,6 +13524,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (directive3.modifiers.includes("renderless")) {
           attribute = attribute.replace(".renderless", "");
         }
+        if (directive3.modifiers.includes("prepend")) {
+          attribute = attribute.replace(".prepend", "");
+        }
+        if (directive3.modifiers.includes("append")) {
+          attribute = attribute.replace(".append", "");
+        }
         let expression = directive3.expression;
         module_default.bind(el, {
           [attribute]() {
@@ -13362,11 +13551,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
       let path = `/livewire/js/${encodedName}.js?v=${scriptModuleHash}`;
       import(path).then((module) => {
-        module.run.call(component.$wire, [
-          component.$wire,
-          component.$wire.$js,
-          component.$wire.$intercept
-        ]);
+        module.run.call(component.$wire, component.$wire, component.$wire.js);
       });
     }
   });
@@ -13436,13 +13621,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (directive3.modifiers.includes("renderless")) {
       attribute = attribute.replace(".renderless", "");
     }
+    if (directive3.modifiers.includes("prepend")) {
+      attribute = attribute.replace(".prepend", "");
+    }
+    if (directive3.modifiers.includes("append")) {
+      attribute = attribute.replace(".append", "");
+    }
     let cleanupBinding = module_default.bind(el, {
       [attribute](e) {
         directive3.eventContext = e;
         directive3.wire = component.$wire;
         let execute = () => {
           callAndClearComponentDebounces(component, () => {
-            setNextActionOrigin({ el, directive: directive3 });
+            if (directive3.value === "submit") {
+              let submitButton = e.submitter || el.querySelector('button[type="submit"], input[type="submit"]');
+              setNextActionOrigin({ el, directive: directive3, targetEl: submitButton });
+            } else {
+              setNextActionOrigin({ el, directive: directive3 });
+            }
             evaluateActionExpression(component, el, directive3.expression, { scope: { $event: e } });
           });
         };
@@ -13458,33 +13654,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
     cleanup2(cleanupBinding);
-  });
-
-  // js/directives/wire-navigate.js
-  module_default.addInitSelector(() => `[wire\\:navigate]`);
-  module_default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-  module_default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
-  module_default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
-  module_default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
-  module_default.interceptInit(
-    module_default.skipDuringClone((el) => {
-      if (el.hasAttribute("wire:navigate")) {
-        module_default.bind(el, { ["x-navigate"]: true });
-      } else if (el.hasAttribute("wire:navigate.hover")) {
-        module_default.bind(el, { ["x-navigate.hover"]: true });
-      } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
-        module_default.bind(el, { ["x-navigate.preserve-scroll"]: true });
-      } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
-        module_default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
-      } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
-        module_default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
-      }
-    })
-  );
-  document.addEventListener("alpine:navigating", () => {
-    Livewire.all().forEach((component) => {
-      component.inscribeSnapshotAndEffectsOnElement();
-    });
   });
 
   // js/directives/wire-confirm.js
@@ -13515,55 +13684,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
   });
-
-  // js/directives/wire-current.js
-  module_default.addInitSelector(() => `[wire\\:current]`);
-  var onPageChanges = /* @__PURE__ */ new Map();
-  document.addEventListener("livewire:navigated", () => {
-    onPageChanges.forEach((i) => i(new URL(window.location.href)));
-  });
-  globalDirective("current", ({ el, directive: directive3, cleanup: cleanup2 }) => {
-    let expression = directive3.expression;
-    let options = {
-      exact: directive3.modifiers.includes("exact"),
-      strict: directive3.modifiers.includes("strict")
-    };
-    if (expression.startsWith("#"))
-      return;
-    if (!el.hasAttribute("href"))
-      return;
-    let href = el.getAttribute("href");
-    let hrefUrl = new URL(href, window.location.href);
-    let classes = expression.split(" ").filter(String);
-    let refreshCurrent = (url) => {
-      if (pathMatches(hrefUrl, url, options)) {
-        el.classList.add(...classes);
-        el.setAttribute("data-current", "");
-      } else {
-        el.classList.remove(...classes);
-        el.removeAttribute("data-current");
-      }
-    };
-    refreshCurrent(new URL(window.location.href));
-    onPageChanges.set(el, refreshCurrent);
-    cleanup2(() => onPageChanges.delete(el));
-  });
-  function pathMatches(hrefUrl, actualUrl, options) {
-    if (hrefUrl.hostname !== actualUrl.hostname)
-      return false;
-    let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
-    let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
-    if (options.exact) {
-      return hrefPath === actualPath;
-    }
-    let hrefPathSegments = hrefPath.split("/");
-    let actualPathSegments = actualPath.split("/");
-    for (let i = 0; i < hrefPathSegments.length; i++) {
-      if (hrefPathSegments[i] !== actualPathSegments[i])
-        return false;
-    }
-    return true;
-  }
 
   // js/directives/shared.js
   function toggleBooleanStateDirective(el, directive3, isTruthy, cachedDisplay = null) {
@@ -13741,18 +13861,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let inverted = false;
     if (directives2.has("target")) {
       let directive3 = directives2.get("target");
-      let raw2 = directive3.expression;
       if (directive3.modifiers.includes("except"))
         inverted = true;
-      if (raw2.includes("(") && raw2.includes(")")) {
-        targets.push({ target: directive3.method, params: quickHash(JSON.stringify(directive3.params)) });
-      } else if (raw2.includes(",")) {
-        raw2.split(",").map((i) => i.trim()).forEach((target) => {
-          targets.push({ target });
+      directive3.methods.forEach(({ method, params }) => {
+        targets.push({
+          target: method,
+          params: params && params.length > 0 ? quickHash(JSON.stringify(params)) : void 0
         });
-      } else {
-        targets.push({ target: raw2 });
-      }
+      });
     } else {
       let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "navigate", "target", "loading", "poll", "ignore", "key", "id"];
       directives2.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
@@ -13864,7 +13980,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
     };
-    let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce2(update, 150) : update;
+    let debouncedUpdate = isRealtimeInput(el) && !isDebounced && isLive ? debounce2(update, 150) : update;
     module_default.bind(el, {
       ["@change"]() {
         isLazy && update();
@@ -13894,8 +14010,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return "";
     return "." + modifiers.join(".");
   }
-  function isTextInput(el) {
-    return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type);
+  function isRealtimeInput(el) {
+    return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type) || el.tagName.toUpperCase() === "UI-SLIDER";
   }
   function componentIsMissingProperty(component, property) {
     if (property.startsWith("$parent")) {
@@ -13941,7 +14057,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     stopWhen(() => theElementIsDisconnected(el));
   });
   function triggerComponentRequest(el, directive3, component) {
-    setNextActionOrigin({ el, directive: directive3 });
+    setNextActionOrigin({ el, directive: directive3, targetEl: null });
     setNextActionMetadata({ type: "poll" });
     let fullMethod = directive3.expression ? directive3.expression : "$refresh";
     evaluateActionExpression(component, el, fullMethod);

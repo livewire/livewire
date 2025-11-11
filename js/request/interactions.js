@@ -83,14 +83,3 @@ export function coordinateNetworkInteractions(messageBus) {
         }
     })
 }
-
-// Scenarios:
-// - Reactive/modelable
-//   - When a child is mid-flight, what happens when the parent tries to send a request with the bundled child?
-// - Wire:poll
-//   - When a poll is in-flight, throw away any new polls...
-//   - When a non-poll action comes in, cancel the in-flight poll...
-//   - Should the very next unblocked poll wait the exact poll time before firing? Instead of just firing when it fires naturally which sometimes is immediately after the last poll is finished?
-// - Wire:model.live
-//   - When a model.live action is in-flight, cancel it with the new incoming action...
-//   - Or should we allow both to run in parallel?

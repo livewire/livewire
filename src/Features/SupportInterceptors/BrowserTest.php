@@ -434,4 +434,44 @@ class BrowserTest extends \Tests\BrowserTestCase
         ])
         ;
     }
+
+    public function test_a_redirect_can_be_intercepted_and_prevented()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function redirectToWebsite()
+                {
+                    $this->redirect('https://google.com');
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="redirectToWebsite" dusk="redirect-to-website">Redirect to Website</button>
+                    </div>
+                    @script
+                    <script>
+                        window.stopRedirect = true
+
+                        Livewire.interceptRequest(({ onRedirect }) => {
+                            onRedirect(({ url, preventDefault }) => {
+                                if (window.stopRedirect) {
+                                    preventDefault()
+                                    window.stopRedirect = false
+                                }
+                            })
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                    }
+                }
+            ])
+            ->waitForLivewireToLoad()
+            ->waitForLivewire()->click('@redirect-to-website')
+            ->assertHostIsNot('www.google.com')
+            ->waitForLivewire()->click('@redirect-to-website')
+            ->assertHostIs('www.google.com')
+            ;
+    }
 }

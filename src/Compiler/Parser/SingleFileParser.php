@@ -2,6 +2,8 @@
 
 namespace Livewire\Compiler\Parser;
 
+use Livewire\Compiler\Compiler;
+
 class SingleFileParser extends Parser
 {
     public function __construct(
@@ -13,11 +15,11 @@ class SingleFileParser extends Parser
         public string $viewPortion,
     ) {}
 
-    public static function parse(string $path): self
+    public static function parse(Compiler $compiler, string $path): self
     {
         $contents = file_get_contents($path);
 
-        $mutableContents = $contents;
+        $mutableContents = $compiler->prepareViewForCompilation($contents, $path);
 
         $scriptPortion = static::extractScriptPortion($mutableContents);
         $classPortion = static::extractClassPortion($mutableContents);
@@ -55,6 +57,9 @@ class SingleFileParser extends Parser
 
         // Remove @script/@endscript blocks (let Livewire handle these normally)
         $viewContents = preg_replace('/@script\s*.*?@endscript/s', '', $viewContents);
+
+        // Remove @assets/@endassets blocks (let Livewire handle these normally)
+        $viewContents = preg_replace('/@assets\s*.*?@endassets/s', '', $viewContents);
 
         // Find script tags that are at the start of a line
         $pattern = '/(?:^|\n)\s*(<script\b[^>]*>.*?<\/script>)/s';
@@ -187,7 +192,7 @@ class SingleFileParser extends Parser
 
         return <<<JS
         {$hoistedImports}
-        export function run(\$wire, \$js, \$intercept) {
+        export function run(\$wire, \$js) {
             {$scriptContents}
         }
         JS;

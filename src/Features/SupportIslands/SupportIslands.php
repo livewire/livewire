@@ -39,8 +39,15 @@ class SupportIslands extends ComponentHook
 
         $island = $metadata['island'];
 
+        $mount = false;
+
+        if ($method === '__lazyLoadIsland') {
+            $mount = true;
+            $returnEarly();
+        }
+
         // if metadata contains an island, then we should render it...
-        return function (...$params) use ($island, $componentContext) {
+        return function (...$params) use ($island, $componentContext, $mount) {
             ['name' => $name, 'mode' => $mode] = $island;
 
             $islands = $this->component->getIslands();
@@ -54,6 +61,7 @@ class SupportIslands extends ComponentHook
             $this->component->renderIsland(
                 name: $name,
                 mode: $mode,
+                mount: $mount,
             );
         };
     }

@@ -8,6 +8,7 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 class BaseDefer extends LivewireAttribute
 {
     public function __construct(
-        public $isolate = true
+        public $isolate = null,
+        public $bundle = null,
     ) {}
 }

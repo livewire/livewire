@@ -181,3 +181,26 @@ When using Livewire to transition an element such as a dropdown menu, it makes s
 > [!tip] Livewire uses Alpine transitions behind the scenes
 > When using `wire:transition` on an element, Livewire is internally applying Alpine's `x-transition` directive. Therefore you can use most if not all syntaxes you would normally use with `x-transition`. Check out [Alpine's transition documentation](https://alpinejs.dev/directives/transition) for all its capabilities.
 
+## Reference
+
+```blade
+wire:transition
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.in` | Only transition the element "in" |
+| `.out` | Only transition the element "out" |
+| `.opacity` | Only apply the opacity transition |
+| `.scale` | Only apply the scale transition |
+| `.origin.top` | Set scale origin to top |
+| `.origin.bottom` | Set scale origin to bottom |
+| `.origin.left` | Set scale origin to left |
+| `.origin.right` | Set scale origin to right |
+| `.duration.[number]ms` | Set duration in milliseconds |
+| `.duration.[number]s` | Set duration in seconds |
+| `.delay.[number]ms` | Set delay in milliseconds |
+| `.delay.[number]s` | Set delay in seconds |
+

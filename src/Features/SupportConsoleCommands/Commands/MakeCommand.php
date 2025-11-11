@@ -105,12 +105,25 @@ class MakeCommand extends Command
 
     protected function createClassBasedComponent(string $name): int
     {
+        [$namespace, $componentName] = $this->finder->parseNamespaceAndName($name);
+
+        if ($namespace !== null) {
+            $classNamespaceDetails = $this->finder->getClassNamespace($namespace);
+
+            if ($classNamespaceDetails === null) {
+                $this->components->error('Namespace not found.');
+                return 1;
+            }
+        } else {
+            $classNamespaceDetails = null;
+        }
+
         $paths = $this->finder->resolveClassComponentFilePaths($name);
 
         $this->ensureDirectoryExists(dirname($paths['class']));
         $this->ensureDirectoryExists(dirname($paths['view']));
 
-        $classContent = $this->buildClassBasedComponentClass($name);
+        $classContent = $this->buildClassBasedComponentClass($componentName, $classNamespaceDetails);
         $viewContent = $this->buildClassBasedComponentView();
 
         $this->files->put($paths['class'], $classContent);
@@ -245,17 +258,23 @@ class MakeCommand extends Command
         return config('livewire.make_command.emoji', true);
     }
 
-    protected function buildClassBasedComponentClass(string $name): string
+    protected function buildClassBasedComponentClass(string $componentName, ?array $classNamespaceDetails = null): string
     {
         $stub = $this->files->get($this->getStubPath('livewire.stub'));
 
-        $segments = explode('.', $name);
+        $segments = explode('.', $componentName);
 
         $className = Str::studly(end($segments));
 
         $namespaceSegments = array_slice($segments, 0, -1);
 
-        $namespace = 'App\\Livewire';
+        if ($classNamespaceDetails !== null) {
+            $namespace = $classNamespaceDetails['classNamespace'];
+            $viewPath = $classNamespaceDetails['classViewPath'];
+        } else {
+            $namespace = 'App\\Livewire';
+            $viewPath = config('livewire.view_path', resource_path('views/livewire'));
+        }
 
         if (! empty($namespaceSegments)) {
             $namespace .= '\\' . collect($namespaceSegments)
@@ -264,7 +283,6 @@ class MakeCommand extends Command
         }
 
         // Get the configured view path and extract the view namespace from it
-        $viewPath = config('livewire.view_path', resource_path('views/livewire'));
         $viewNamespace = $this->extractViewNamespace($viewPath);
 
         $viewName = $viewNamespace . '.' . collect($segments)

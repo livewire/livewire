@@ -7,14 +7,13 @@ This gives you the performance benefits of breaking components into smaller piec
 To create an island, wrap any portion of your Blade template with the `@island` directive:
 
 ```blade
-<?php
+<?php // resources/views/components/⚡dashboard.blade.php
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Revenue;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function revenue()
     {
@@ -48,14 +47,13 @@ Because the expensive calculation is inside a computed property—which evaluate
 Sometimes you have expensive computations or slow API calls that shouldn't block your initial page load. You can defer an island's initial render until after the page loads using the `lazy` parameter:
 
 ```blade
-<?php
+<?php // resources/views/components/⚡dashboard.blade.php
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Revenue;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function revenue()
     {
@@ -166,14 +164,13 @@ Both islands will update together whenever one is triggered.
 Instead of replacing content entirely, islands can append or prepend new content. This is perfect for pagination, infinite scroll, or real-time feeds:
 
 ```blade
-<?php
+<?php // resources/views/components/⚡activity-feed.blade.php
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Activity;
 
-new class extends Component
-{
+new class extends Component {
     public $page = 1;
 
     public function loadMore()
@@ -194,20 +191,19 @@ new class extends Component
 <div>
     @island(name: 'feed')
         @foreach ($this->activities as $activity)
-            <x-activity-item :activity="$activity" />
+            <x-activity-item wire:key="{{ $activity->id }}" :activity="$activity" />
         @endforeach
     @endisland
 
-    <button type="button" wire:click="loadMore" wire:island.append="feed">
+    <button type="button" wire:click.append="loadMore" wire:island="feed">
         Load more
     </button>
 </div>
 ```
 
 Available modes:
-- `wire:island` - Replace/morph content (default)
-- `wire:island.append` - Add to the end
-- `wire:island.prepend` - Add to the beginning
+- `.append` - Add to the end
+- `.prepend` - Add to the beginning
 
 ## Nested islands
 
@@ -297,42 +293,6 @@ You can use `wire:poll` within an island to refresh just that island on an inter
 
 The polling is scoped to the island — only the island will refresh every 3 seconds, not the entire component.
 
-## Streaming to islands
-
-You can stream content directly to islands using the `streamIsland()` method. This is perfect for real-time updates like notifications or live data feeds:
-
-```blade
-<?php
-
-use Livewire\Component;
-
-new class extends Component
-{
-    public function streamUpdates()
-    {
-        // Stream to append content...
-        $this->streamIsland('activity', '<div>New sale: $500</div>', mode: 'append');
-
-        // Skip rendering the rest of the component...
-        $this->skipRender();
-    }
-};
-?>
-
-<div>
-    @island(name: 'activity')
-        <!-- Activity items will be appended here -->
-    @endisland
-
-    <button type="button" wire:click.async="streamUpdates">Stream Updates</button>
-</div>
-```
-
-Available streaming modes:
-- `morph` (default) - Replaces/morphs island content entirely
-- `append` - Adds content to the end of the island
-- `prepend` - Adds content to the beginning of the island
-
 ## Considerations
 
 While islands provide powerful isolation, keep in mind:
@@ -391,3 +351,10 @@ While islands provide powerful isolation, keep in mind:
 - Performance bottlenecks in large components
 
 Islands aren't necessary for static content, tightly coupled UI, or simple components that already render quickly.
+
+## See also
+
+- **[Nesting](/docs/4.x/nesting)** — Alternative approach using child components
+- **[Lazy Loading](/docs/4.x/lazy)** — Defer loading of expensive content
+- **[Computed Properties](/docs/4.x/computed-properties)** — Optimize island performance with memoization
+- **[@island](/docs/4.x/directive-island)** — Create isolated update regions

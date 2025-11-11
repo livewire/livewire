@@ -69,6 +69,11 @@ abstract class Component
         return $this->__name;
     }
 
+    function renderless()
+    {
+        $this->skipRender();
+    }
+
     function skipRender($html = null)
     {
         if (store($this)->has('forceRender')) {

@@ -178,7 +178,6 @@ class BrowserTest extends \Tests\BrowserTestCase
             }
         ])
             ->waitForLivewireToLoad()
-            ->tinker()
             ->waitForLivewire()->click('@send-button')
             // Wait for children to update...
             ->pause(50)

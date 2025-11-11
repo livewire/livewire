@@ -4,9 +4,9 @@ Like many other component-based frameworks, Livewire components are nestable —
 However, because Livewire's nesting system is built differently than other frameworks, there are certain implications and constraints that are important to be aware of.
 
 > [!tip] Make sure you understand hydration first
-> Before learning more about Livewire's nesting system, it's helpful to fully understand how Livewire hydrates components. You can learn more by reading the [hydration documentation](/docs/hydration).
+> Before learning more about Livewire's nesting system, it's helpful to fully understand how Livewire hydrates components. You can learn more by reading the [hydration documentation](/docs/4.x/hydration).
 
-## Every component is an island
+## Every component is independent {#every-component-is-an-island}
 
 In Livewire, every component on a page tracks its state and makes updates independently of other components.
 
@@ -39,7 +39,7 @@ class Posts extends Component
     Post Limit: <input type="number" wire:model.live="postLimit">
 
     @foreach ($posts as $post)
-        <livewire:show-post :$post :key="$post->id">
+        <livewire:show-post :$post :wire:key="$post->id">
     @endforeach
 </div>
 ```
@@ -141,7 +141,7 @@ As a reminder, here's the Blade template of the parent `Posts` component:
     Post Limit: <input type="number" wire:model.live="postLimit">
 
     @foreach ($posts as $post)
-        <livewire:show-post :$post :key="$post->id">
+        <livewire:show-post :$post :wire:key="$post->id">
     @endforeach
 </div>
 ```
@@ -202,17 +202,14 @@ The effect is that, after _morphing_, the final DOM content of the parent `Posts
 
 ## Performance implications
 
-Livewire's "island" architecture can have both positive and negative implications for your application.
+Livewire's independent component architecture can have both positive and negative implications for your application.
 
 An advantage of this architecture is it allows you to isolate expensive portions of your application. For example, you can quarantine a slow database query to its own independent component, and its performance overhead won't impact the rest of the page.
 
 However, the biggest drawback of this approach is that because components are entirely separate, inter-component communication/dependencies becomes more difficult.
 
-For example, if you had a property passed down from the above parent `Posts` component to the nested `ShowPost` component, it wouldn't be "reactive". Because each component is an island, if a request to the parent component changed the value of the property being passed into `ShowPost`, it wouldn't update inside `ShowPost`.
+For example, if you had a property passed down from the above parent `Posts` component to the nested `ShowPost` component, it wouldn't be "reactive". Because each component is independent, if a request to the parent component changed the value of the property being passed into `ShowPost`, it wouldn't update inside `ShowPost`.
 
-Livewire has overcome a number of these hurdles and provides dedicated APIs for these scenarios like: [Reactive properties](/docs/nesting#reactive-props), [Modelable components](/docs/nesting#binding-to-child-data-using-wiremodel), and [the `$parent` object](/docs/nesting#directly-accessing-the-parent-from-the-child).
+Livewire has overcome a number of these hurdles and provides dedicated APIs for these scenarios like: [Reactive properties](/docs/4.x/nesting#reactive-props), [Modelable components](/docs/4.x/nesting#binding-to-child-data-using-wiremodel), and [the `$parent` object](/docs/4.x/nesting#directly-accessing-the-parent-from-the-child).
 
 Armed with this knowledge of how nested Livewire components operate, you will be able to make more informed decisions about when and how to nest components within your application.
-
-
-

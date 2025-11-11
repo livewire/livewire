@@ -21,9 +21,8 @@ import './supportIslands';
 import './supportNavigate';
 import './supportEntangle';
 import './supportSlots';
-
-// V4-specific features
 import './supportDataLoading';
+import './supportDataCurrent';
 import './supportPreserveScroll';
 import './supportWireIntersect';
 import './supportWireSort';

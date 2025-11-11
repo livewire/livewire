@@ -488,8 +488,8 @@ class BrowserTest extends BrowserTestCase
                     </div>
 
                     <button type="button" wire:click="increment" dusk="foo-increment" wire:island="foo">Increment</button>
-                    <button type="button" wire:click="increment" dusk="foo-prepend-increment" wire:island.prepend="foo">Prepend</button>
-                    <button type="button" wire:click="increment" dusk="foo-append-increment" wire:island.append="foo">Append</button>
+                    <button type="button" wire:click.prepend="increment" dusk="foo-prepend-increment" wire:island="foo">Prepend</button>
+                    <button type="button" wire:click.append="increment" dusk="foo-append-increment" wire:island="foo">Append</button>
                 </div>
                 HTML;
             }
@@ -578,6 +578,137 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@island-validate-foo')
             ->assertSeeIn('@island-error', 'The foo field is required.')
             ->assertDontSeeIn('@root-error', 'The foo field is required.')
+            ;
+    }
+
+    public function test_islands_inside_a_lazy_island_get_rendered_when_the_lazy_island_is_mounted()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function hydrate() { usleep(250000); } // 250ms
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div style="height: 200vh" dusk="long-content">Long content to push the island off the page...</div>
+
+                    @island(lazy: true)
+                        <button type="button" wire:click="increment" dusk="outer-island-increment">Outer Island Count: {{ $count }}</button>
+
+                        @island
+                            <button type="button" wire:click="increment" dusk="inner-island-increment">Inner Island Count: {{ $count }}</button>
+                        @endisland
+                    @endisland
+
+                    <button type="button" wire:click="increment" dusk="root-increment">Root count: {{ $count }}</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertNotPresent('@outer-island-increment')
+            ->assertNotPresent('@inner-island-increment')
+            ->assertPresent('@root-increment')
+            ->scrollTo('@root-increment')
+            ->waitForText('Outer Island Count: 0')
+            ->assertPresent('@outer-island-increment')
+            ->assertPresent('@inner-island-increment')
+            ->assertPresent('@root-increment')
+            ;
+    }
+
+    public function test_lazy_islands_inside_a_lazy_island_get_mounted_after_the_outer_lazy_island_is_mounted()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function hydrate() { usleep(250000); } // 250ms
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div style="height: 200vh" dusk="long-content">Long content to push the island off the page...</div>
+
+                    @island(lazy: true)
+                        <button type="button" wire:click="increment" dusk="outer-island-increment">Outer Island Count: {{ $count }}</button>
+
+                        @island(lazy: true)
+                            <button type="button" wire:click="increment" dusk="inner-island-increment">Inner Island Count: {{ $count }}</button>
+                        @endisland
+                    @endisland
+
+                    <button type="button" wire:click="increment" dusk="root-increment">Root count: {{ $count }}</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertNotPresent('@outer-island-increment')
+            ->assertNotPresent('@inner-island-increment')
+            ->assertPresent('@root-increment')
+            ->scrollTo('@root-increment')
+            ->waitForText('Outer Island Count: 0')
+            ->assertPresent('@outer-island-increment')
+            ->assertNotPresent('@inner-island-increment')
+            ->assertPresent('@root-increment')
+            ->waitForText('Inner Island Count: 0')
+            ->assertPresent('@inner-island-increment')
+            ->assertPresent('@root-increment')
+            ;
+    }
+
+    public function test_island_with_lazy_and_always_updates_with_the_component_when_the_component_makes_a_request()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <button type="button" wire:click="increment" dusk="root-increment">Count: {{ $count }}</button>
+
+                    @island(lazy: true, always: true)
+                        <button type="button" wire:click="increment" dusk="island-increment">Island Count: {{ $count }}</button>
+                    @endisland
+                </div>
+
+                @script
+                <script>
+                    window.requestCount = 0
+
+                    this.intercept(() => {
+                        window.requestCount++
+                    })
+                </script>
+                @endscript
+                HTML;
+            }
+        }])
+            ->waitForLivewireToLoad()
+            ->waitForText('Island Count: 0')
+            ->assertScript('window.requestCount', 1) // Initial lazy island load
+            ->assertSeeIn('@root-increment', 'Count: 0')
+            ->assertSeeIn('@island-increment', 'Island Count: 0')
+            ->tap(fn ($b) => $b->script('window.requestCount = 0')) // Reset counter
+            ->waitForLivewire()->click('@root-increment')
+            ->pause(100)
+            ->assertScript('window.requestCount', 1) // Should be only 1 request for both component and island
+            ->assertSeeIn('@root-increment', 'Count: 1')
+            ->assertSeeIn('@island-increment', 'Island Count: 1')
             ;
     }
 }

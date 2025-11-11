@@ -1735,7 +1735,14 @@ var require_module_cjs = __commonJS({
         handleError(e, el, expression);
       }
     }
-    function handleError(error2, el, expression = void 0) {
+    function handleError(...args) {
+      return errorHandler(...args);
+    }
+    var errorHandler = normalErrorHandler;
+    function setErrorHandler(handler4) {
+      errorHandler = handler4;
+    }
+    function normalErrorHandler(error2, el, expression = void 0) {
       error2 = Object.assign(
         error2 != null ? error2 : { message: "No error message given." },
         { el, expression }
@@ -2920,7 +2927,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.15.0",
+      version: "3.15.1",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -2934,6 +2941,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       onlyDuringClone,
       addRootSelector,
       addInitSelector,
+      setErrorHandler,
       interceptClone,
       addScopeToNode,
       deferMutations,
@@ -9475,7 +9483,8 @@ function handleFileUpload(el, property, component, cleanup) {
       return;
     start2();
     if (e.target.multiple) {
-      manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
+      let append = ["ui-file-upload"].includes(e.target.tagName.toLowerCase());
+      manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel, append);
     } else {
       manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
     }
@@ -9527,17 +9536,19 @@ var UploadManager = class {
       finishCallback,
       errorCallback,
       progressCallback,
-      cancelledCallback
+      cancelledCallback,
+      append: false
     });
   }
-  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = false) {
     this.setUpload(name, {
       files: Array.from(files),
       multiple: true,
       finishCallback,
       errorCallback,
       progressCallback,
-      cancelledCallback
+      cancelledCallback,
+      append
     });
   }
   removeUpload(name, tmpFilename, finishCallback) {
@@ -9590,7 +9601,7 @@ var UploadManager = class {
     request.addEventListener("load", () => {
       if ((request.status + "")[0] === "2") {
         let paths = retrievePaths(request.response && JSON.parse(request.response));
-        this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
+        this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple, this.uploadBag.first(name).append);
         return;
       }
       let errors = null;
@@ -9694,7 +9705,7 @@ function uploadMultiple(component, name, files, finishCallback = () => {
 }, errorCallback = () => {
 }, progressCallback = () => {
 }, cancelledCallback = () => {
-}) {
+}, append = false) {
   let uploadManager = getUploadManager(component);
   uploadManager.uploadMultiple(
     name,
@@ -9702,7 +9713,8 @@ function uploadMultiple(component, name, files, finishCallback = () => {
     finishCallback,
     errorCallback,
     progressCallback,
-    cancelledCallback
+    cancelledCallback,
+    append
   );
 }
 function removeUpload(component, name, tmpFilename, finishCallback = () => {
@@ -10430,7 +10442,7 @@ var Action = class {
   isAsync() {
     let asyncMethods = this.component.snapshot.memo?.async || [];
     let methodIsMarkedAsync = asyncMethods.includes(this.method);
-    let actionIsAsync = this.origin?.directive?.modifiers.includes("async");
+    let actionIsAsync = this.origin?.directive?.modifiers.includes("async") || !!this.metadata.async;
     return methodIsMarkedAsync || actionIsAsync;
   }
   mergeMetadata(metadata) {
@@ -10653,7 +10665,7 @@ function sendMessages() {
       },
       error: ({ response, responseBody }) => {
         let preventDefault = false;
-        request.onError({ response, responseBody, preventDefault });
+        request.onError({ response, responseBody, preventDefault: () => preventDefault = true });
         if (preventDefault)
           return;
         if (response.status === 419) {
@@ -10667,14 +10679,14 @@ function sendMessages() {
       },
       redirect: (url) => {
         let preventDefault = false;
-        request.onRedirect({ url, preventDefault });
+        request.onRedirect({ url, preventDefault: () => preventDefault = true });
         if (preventDefault)
           return;
         window.location.href = url;
       },
       dump: (content) => {
         let preventDefault = false;
-        request.onDump({ content, preventDefault });
+        request.onDump({ content, preventDefault: () => preventDefault = true });
         if (preventDefault)
           return;
         showHtmlModal(content);
@@ -10698,7 +10710,7 @@ function sendMessages() {
               message.onSync();
               if (message.isCancelled())
                 return;
-              message.component.processEffects(effects);
+              message.component.processEffects(effects, request);
               message.onEffect();
               if (message.isCancelled())
                 return;
@@ -11126,9 +11138,9 @@ wireProperty("$errors", (component) => getErrorsObject(component));
 wireProperty("$call", (component) => async (method, ...params) => {
   return await component.$wire[method](...params);
 });
-wireProperty("$island", (component) => async (name, mode2 = null) => {
+wireProperty("$island", (component) => async (name, options = {}) => {
   return fireAction(component, "$refresh", [], {
-    island: { name, mode: mode2 }
+    island: { name, ...options }
   });
 });
 wireProperty("$entangle", (component) => (name, live = false) => {
@@ -11284,12 +11296,13 @@ var Component = class {
     this.mergeNewSnapshot(JSON.stringify(snapshot), effects);
     this.processEffects({ html });
   }
-  processEffects(effects) {
+  processEffects(effects, request) {
     trigger("effects", this, effects);
     trigger("effect", {
       component: this,
       effects,
-      cleanup: (i) => this.addCleanup(i)
+      cleanup: (i) => this.addCleanup(i),
+      request
     });
   }
   get children() {
@@ -11754,35 +11767,92 @@ var Directive = class {
     return methods[0].params;
   }
   parseOutMethodsAndParams(rawMethod) {
-    let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
-    let method = rawMethod;
-    let params = [];
-    let methodAndParamString = method.match(methodRegex);
     let methods = [];
-    let slicedLength = 0;
-    while (methodAndParamString) {
-      let argumentsToArray = function() {
-        for (var l = arguments.length, p = new Array(l), k = 0; k < l; k++) {
-          p[k] = arguments[k];
+    let parsedMethods = this.splitAndParseMethods(rawMethod);
+    for (let { method, paramString } of parsedMethods) {
+      let params = [];
+      if (paramString.length > 0) {
+        let argumentsToArray = function() {
+          for (var l = arguments.length, p = new Array(l), k = 0; k < l; k++) {
+            p[k] = arguments[k];
+          }
+          return [].concat(p);
+        };
+        try {
+          params = Alpine.evaluate(
+            document,
+            "argumentsToArray(" + paramString + ")",
+            {
+              scope: { argumentsToArray }
+            }
+          );
+        } catch (error2) {
+          console.warn("Failed to parse parameters:", paramString, error2);
+          params = [];
         }
-        return [].concat(p);
-      };
-      method = methodAndParamString[1];
-      let params2 = Alpine.evaluate(
-        document,
-        "argumentsToArray(" + methodAndParamString[2] + ")",
-        {
-          scope: { argumentsToArray }
-        }
-      );
-      methods.push({ method, params: params2 });
-      slicedLength += methodAndParamString[0].length;
-      methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex);
-    }
-    if (methods.length === 0) {
+      }
       methods.push({ method, params });
     }
     return methods;
+  }
+  splitAndParseMethods(methodExpression) {
+    let methods = [];
+    let current = "";
+    let parenCount = 0;
+    let inString = false;
+    let stringChar = null;
+    let trimmedExpression = methodExpression.trim();
+    for (let i = 0; i < trimmedExpression.length; i++) {
+      let char = trimmedExpression[i];
+      if (!inString) {
+        if (char === '"' || char === "'") {
+          inString = true;
+          stringChar = char;
+          current += char;
+        } else if (char === "(") {
+          parenCount++;
+          current += char;
+        } else if (char === ")") {
+          parenCount--;
+          current += char;
+        } else if (char === "," && parenCount === 0) {
+          methods.push(this.parseMethodCall(current.trim()));
+          current = "";
+        } else {
+          current += char;
+        }
+      } else {
+        if (char === stringChar && trimmedExpression[i - 1] !== "\\") {
+          inString = false;
+          stringChar = null;
+        }
+        current += char;
+      }
+    }
+    if (current.trim().length > 0) {
+      methods.push(this.parseMethodCall(current.trim()));
+    }
+    return methods;
+  }
+  parseMethodCall(methodString) {
+    let methodMatch = methodString.match(/^([^(]+)\(/);
+    if (!methodMatch) {
+      return {
+        method: methodString.trim(),
+        paramString: ""
+      };
+    }
+    let method = methodMatch[1].trim();
+    let paramStart = methodMatch[0].length - 1;
+    let lastParenIndex = methodString.lastIndexOf(")");
+    if (lastParenIndex === -1) {
+      throw new Error(`Missing closing parenthesis for method "${method}"`);
+    }
+    let paramString = methodString.slice(paramStart + 1, lastParenIndex).trim();
+    return {
+      method,
+      paramString
+    };
   }
 };
 
@@ -13060,8 +13130,7 @@ on("effect", ({ component, effects }) => {
           evaluateExpression(component, component.el, scriptContent, {
             scope: {
               "$wire": component.$wire,
-              "$js": component.$wire.$js,
-              "$intercept": component.$wire.$intercept
+              "$js": component.$wire.js
             }
           });
         });
@@ -13601,8 +13670,12 @@ function shouldHideProgressBar() {
 }
 
 // js/features/supportRedirects.js
-on("effect", ({ effects }) => {
+on("effect", ({ effects, request }) => {
   if (!effects["redirect"])
+    return;
+  let preventDefault = false;
+  request.onRedirect({ url: effects["redirect"], preventDefault: () => preventDefault = true });
+  if (preventDefault)
     return;
   let url = effects["redirect"];
   shouldRedirectUsingNavigateOr(effects, url, () => {
@@ -13615,13 +13688,13 @@ interceptAction(({ action }) => {
   let origin = action.origin;
   if (!origin)
     return;
-  let el = origin.el;
+  let { el, directive: directive2 } = origin;
   let islandAttributeName = el.getAttribute("wire:island");
-  let prependIslandAttributeName = el.getAttribute("wire:island.prepend");
-  let appendIslandAttributeName = el.getAttribute("wire:island.append");
-  let islandName = islandAttributeName || prependIslandAttributeName || appendIslandAttributeName;
+  let islandName = islandAttributeName;
+  let isPrepend = directive2?.modifiers.includes("prepend");
+  let isAppend = directive2?.modifiers.includes("append");
   if (islandName) {
-    let mode2 = appendIslandAttributeName ? "append" : prependIslandAttributeName ? "prepend" : "morph";
+    let mode2 = isPrepend ? "prepend" : isAppend ? "append" : "morph";
     action.mergeMetadata({
       island: {
         name: islandName,
@@ -13717,18 +13790,130 @@ interceptMessage(({ actions, onSend, onFinish }) => {
   onSend(() => {
     actions.forEach((action) => {
       let origin = action.origin;
-      if (!origin || !origin.el)
+      if (!origin)
         return;
-      if (action.metadata?.type === "poll")
+      let el = origin.hasOwnProperty("targetEl") ? origin.targetEl : origin.el;
+      if (!el)
         return;
-      origin.el.setAttribute("data-loading", "true");
+      el.setAttribute("data-loading", "true");
       undos.push(() => {
-        origin.el.removeAttribute("data-loading");
+        el.removeAttribute("data-loading");
       });
     });
   });
   onFinish(() => undos.forEach((undo) => undo()));
 });
+
+// js/directives/wire-current.js
+var import_alpinejs12 = __toESM(require_module_cjs());
+import_alpinejs12.default.addInitSelector(() => `[wire\\:current]`);
+var onPageChanges = /* @__PURE__ */ new Map();
+document.addEventListener("livewire:navigated", () => {
+  onPageChanges.forEach((i) => i(new URL(window.location.href)));
+});
+globalDirective("current", ({ el, directive: directive2, cleanup }) => {
+  let expression = directive2.expression;
+  let options = {
+    exact: directive2.modifiers.includes("exact"),
+    strict: directive2.modifiers.includes("strict")
+  };
+  if (expression.startsWith("#"))
+    return;
+  if (!el.hasAttribute("href"))
+    return;
+  let href = el.getAttribute("href");
+  let hrefUrl = new URL(href, window.location.href);
+  let classes = expression.split(" ").filter(String);
+  let refreshCurrent = (url) => {
+    if (pathMatches(hrefUrl, url, options)) {
+      el.classList.add(...classes);
+      el.setAttribute("data-current", "");
+    } else {
+      el.classList.remove(...classes);
+      el.removeAttribute("data-current");
+    }
+  };
+  refreshCurrent(new URL(window.location.href));
+  onPageChanges.set(el, refreshCurrent);
+  cleanup(() => onPageChanges.delete(el));
+});
+function pathMatches(hrefUrl, actualUrl, options = {}) {
+  if (hrefUrl.hostname !== actualUrl.hostname)
+    return false;
+  let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
+  let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
+  if (options.exact) {
+    return hrefPath === actualPath;
+  }
+  let hrefPathSegments = hrefPath.split("/");
+  let actualPathSegments = actualPath.split("/");
+  for (let i = 0; i < hrefPathSegments.length; i++) {
+    if (hrefPathSegments[i] !== actualPathSegments[i])
+      return false;
+  }
+  return true;
+}
+
+// js/directives/wire-navigate.js
+var import_alpinejs13 = __toESM(require_module_cjs());
+var wireNavigateSelectors = [
+  "[wire\\:navigate]",
+  "[wire\\:navigate\\.hover]",
+  "[wire\\:navigate\\.preserve-scroll]",
+  "[wire\\:navigate\\.preserve-scroll\\.hover]",
+  "[wire\\:navigate\\.hover\\.preserve-scroll]"
+];
+var wireNavigateSelector = wireNavigateSelectors.join(", ");
+var attributeMap = {
+  "wire:navigate": "x-navigate",
+  "wire:navigate.hover": "x-navigate.hover",
+  "wire:navigate.preserve-scroll": "x-navigate.preserve-scroll",
+  "wire:navigate.preserve-scroll.hover": "x-navigate.preserve-scroll.hover",
+  "wire:navigate.hover.preserve-scroll": "x-navigate.hover.preserve-scroll"
+};
+wireNavigateSelectors.forEach((selector) => {
+  import_alpinejs13.default.addInitSelector(() => selector);
+});
+import_alpinejs13.default.interceptInit(
+  import_alpinejs13.default.skipDuringClone((el) => {
+    for (let [wireAttr, alpineDirective] of Object.entries(attributeMap)) {
+      if (el.hasAttribute(wireAttr)) {
+        import_alpinejs13.default.bind(el, { [alpineDirective]: true });
+        break;
+      }
+    }
+  })
+);
+document.addEventListener("alpine:navigating", () => {
+  Livewire.all().forEach((component) => {
+    component.inscribeSnapshotAndEffectsOnElement();
+  });
+});
+
+// js/features/supportDataCurrent.js
+document.addEventListener("livewire:navigated", () => {
+  updateNavigateLinks();
+});
+document.addEventListener("DOMContentLoaded", () => {
+  updateNavigateLinks();
+});
+function updateNavigateLinks() {
+  let currentUrl = new URL(window.location.href);
+  document.querySelectorAll(wireNavigateSelector).forEach((el) => {
+    let href = el.getAttribute("href");
+    if (!href || href.startsWith("#"))
+      return;
+    try {
+      let hrefUrl = new URL(href, window.location.href);
+      if (pathMatches(hrefUrl, currentUrl)) {
+        el.setAttribute("data-current", "");
+      } else {
+        el.removeAttribute("data-current");
+      }
+    } catch (e) {
+    }
+  });
+}
 
 // js/features/supportPreserveScroll.js
 interceptMessage(({ actions, onSuccess }) => {
@@ -13757,15 +13942,15 @@ interceptMessage(({ actions, onSuccess }) => {
 });
 
 // js/features/supportWireIntersect.js
-var import_alpinejs12 = __toESM(require_module_cjs());
-import_alpinejs12.default.interceptInit((el) => {
+var import_alpinejs14 = __toESM(require_module_cjs());
+import_alpinejs14.default.interceptInit((el) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:intersect")) {
       let { name, value } = el.attributes[i];
       let directive2 = extractDirective(el, name);
       let modifierString = name.split("wire:intersect")[1];
       let expression = value.trim();
-      import_alpinejs12.default.bind(el, {
+      import_alpinejs14.default.bind(el, {
         ["x-intersect" + modifierString](e) {
           directive2.eventContext = e;
           let component = el.closest("[wire\\:id]")?.__livewire;
@@ -13781,14 +13966,14 @@ import_alpinejs12.default.interceptInit((el) => {
 });
 
 // js/features/supportWireSort.js
-var import_alpinejs13 = __toESM(require_module_cjs());
-import_alpinejs13.default.interceptInit((el) => {
+var import_alpinejs15 = __toESM(require_module_cjs());
+import_alpinejs15.default.interceptInit((el) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:sort:item")) {
       let directive2 = extractDirective(el, el.attributes[i].name);
       let modifierString = directive2.modifiers.join(".");
       let expression = directive2.expression;
-      import_alpinejs13.default.bind(el, {
+      import_alpinejs15.default.bind(el, {
         ["x-sort:item" + modifierString]() {
           return expression;
         }
@@ -13804,8 +13989,14 @@ import_alpinejs13.default.interceptInit((el) => {
       if (directive2.modifiers.includes("renderless")) {
         attribute = attribute.replace(".renderless", "");
       }
+      if (directive2.modifiers.includes("prepend")) {
+        attribute = attribute.replace(".prepend", "");
+      }
+      if (directive2.modifiers.includes("append")) {
+        attribute = attribute.replace(".append", "");
+      }
       let expression = directive2.expression;
-      import_alpinejs13.default.bind(el, {
+      import_alpinejs15.default.bind(el, {
         [attribute]() {
           setNextActionOrigin({ el, directive: directive2 });
           return evaluateActionExpressionWithoutComponentScope(el, expression, { scope: {
@@ -13825,31 +14016,27 @@ on("effect", ({ component, effects }) => {
     let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
     let path = `/livewire/js/${encodedName}.js?v=${scriptModuleHash}`;
     import(path).then((module) => {
-      module.run.call(component.$wire, [
-        component.$wire,
-        component.$wire.$js,
-        component.$wire.$intercept
-      ]);
+      module.run.call(component.$wire, component.$wire, component.$wire.js);
     });
   }
 });
 
 // js/directives/wire-transition.js
-var import_alpinejs14 = __toESM(require_module_cjs());
+var import_alpinejs16 = __toESM(require_module_cjs());
 on("morph.added", ({ el }) => {
   el.__addedByMorph = true;
 });
 directive("transition", ({ el, directive: directive2, component, cleanup }) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:show")) {
-      import_alpinejs14.default.bind(el, {
+      import_alpinejs16.default.bind(el, {
         [directive2.rawName.replace("wire:transition", "x-transition")]: directive2.expression
       });
       return;
     }
   }
-  let visibility = import_alpinejs14.default.reactive({ state: el.__addedByMorph ? false : true });
-  import_alpinejs14.default.bind(el, {
+  let visibility = import_alpinejs16.default.reactive({ state: el.__addedByMorph ? false : true });
+  import_alpinejs16.default.bind(el, {
     [directive2.rawName.replace("wire:", "x-")]: "",
     "x-show"() {
       return visibility.state;
@@ -13885,7 +14072,7 @@ function callAndClearComponentDebounces(component, callback) {
 }
 
 // js/directives/wire-wildcard.js
-var import_alpinejs15 = __toESM(require_module_cjs());
+var import_alpinejs17 = __toESM(require_module_cjs());
 on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty", "sort"].includes(directive2.value))
     return;
@@ -13901,13 +14088,24 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   if (directive2.modifiers.includes("renderless")) {
     attribute = attribute.replace(".renderless", "");
   }
-  let cleanupBinding = import_alpinejs15.default.bind(el, {
+  if (directive2.modifiers.includes("prepend")) {
+    attribute = attribute.replace(".prepend", "");
+  }
+  if (directive2.modifiers.includes("append")) {
+    attribute = attribute.replace(".append", "");
+  }
+  let cleanupBinding = import_alpinejs17.default.bind(el, {
     [attribute](e) {
       directive2.eventContext = e;
       directive2.wire = component.$wire;
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          setNextActionOrigin({ el, directive: directive2 });
+          if (directive2.value === "submit") {
+            let submitButton = e.submitter || el.querySelector('button[type="submit"], input[type="submit"]');
+            setNextActionOrigin({ el, directive: directive2, targetEl: submitButton });
+          } else {
+            setNextActionOrigin({ el, directive: directive2 });
+          }
           evaluateActionExpression(component, el, directive2.expression, { scope: { $event: e } });
         });
       };
@@ -13923,34 +14121,6 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
     }
   });
   cleanup(cleanupBinding);
-});
-
-// js/directives/wire-navigate.js
-var import_alpinejs16 = __toESM(require_module_cjs());
-import_alpinejs16.default.addInitSelector(() => `[wire\\:navigate]`);
-import_alpinejs16.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-import_alpinejs16.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
-import_alpinejs16.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
-import_alpinejs16.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
-import_alpinejs16.default.interceptInit(
-  import_alpinejs16.default.skipDuringClone((el) => {
-    if (el.hasAttribute("wire:navigate")) {
-      import_alpinejs16.default.bind(el, { ["x-navigate"]: true });
-    } else if (el.hasAttribute("wire:navigate.hover")) {
-      import_alpinejs16.default.bind(el, { ["x-navigate.hover"]: true });
-    } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
-      import_alpinejs16.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
-    } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
-      import_alpinejs16.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
-    } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
-      import_alpinejs16.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
-    }
-  })
-);
-document.addEventListener("alpine:navigating", () => {
-  Livewire.all().forEach((component) => {
-    component.inscribeSnapshotAndEffectsOnElement();
-  });
 });
 
 // js/directives/wire-confirm.js
@@ -13981,56 +14151,6 @@ directive("confirm", ({ el, directive: directive2 }) => {
     }
   };
 });
-
-// js/directives/wire-current.js
-var import_alpinejs17 = __toESM(require_module_cjs());
-import_alpinejs17.default.addInitSelector(() => `[wire\\:current]`);
-var onPageChanges = /* @__PURE__ */ new Map();
-document.addEventListener("livewire:navigated", () => {
-  onPageChanges.forEach((i) => i(new URL(window.location.href)));
-});
-globalDirective("current", ({ el, directive: directive2, cleanup }) => {
-  let expression = directive2.expression;
-  let options = {
-    exact: directive2.modifiers.includes("exact"),
-    strict: directive2.modifiers.includes("strict")
-  };
-  if (expression.startsWith("#"))
-    return;
-  if (!el.hasAttribute("href"))
-    return;
-  let href = el.getAttribute("href");
-  let hrefUrl = new URL(href, window.location.href);
-  let classes = expression.split(" ").filter(String);
-  let refreshCurrent = (url) => {
-    if (pathMatches(hrefUrl, url, options)) {
-      el.classList.add(...classes);
-      el.setAttribute("data-current", "");
-    } else {
-      el.classList.remove(...classes);
-      el.removeAttribute("data-current");
-    }
-  };
-  refreshCurrent(new URL(window.location.href));
-  onPageChanges.set(el, refreshCurrent);
-  cleanup(() => onPageChanges.delete(el));
-});
-function pathMatches(hrefUrl, actualUrl, options) {
-  if (hrefUrl.hostname !== actualUrl.hostname)
-    return false;
-  let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
-  let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
-  if (options.exact) {
-    return hrefPath === actualPath;
-  }
-  let hrefPathSegments = hrefPath.split("/");
-  let actualPathSegments = actualPath.split("/");
-  for (let i = 0; i < hrefPathSegments.length; i++) {
-    if (hrefPathSegments[i] !== actualPathSegments[i])
-      return false;
-  }
-  return true;
-}
 
 // js/directives/shared.js
 function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = null) {
@@ -14208,18 +14328,14 @@ function getTargets(el) {
   let inverted = false;
   if (directives.has("target")) {
     let directive2 = directives.get("target");
-    let raw = directive2.expression;
     if (directive2.modifiers.includes("except"))
       inverted = true;
-    if (raw.includes("(") && raw.includes(")")) {
-      targets.push({ target: directive2.method, params: quickHash(JSON.stringify(directive2.params)) });
-    } else if (raw.includes(",")) {
-      raw.split(",").map((i) => i.trim()).forEach((target) => {
-        targets.push({ target });
+    directive2.methods.forEach(({ method, params }) => {
+      targets.push({
+        target: method,
+        params: params && params.length > 0 ? quickHash(JSON.stringify(params)) : void 0
       });
-    } else {
-      targets.push({ target: raw });
-    }
+    });
   } else {
     let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "navigate", "target", "loading", "poll", "ignore", "key", "id"];
     directives.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
@@ -14333,7 +14449,7 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
     }
     expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
   };
-  let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
+  let debouncedUpdate = isRealtimeInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
   import_alpinejs19.default.bind(el, {
     ["@change"]() {
       isLazy && update();
@@ -14363,8 +14479,8 @@ function getModifierTail(modifiers) {
     return "";
   return "." + modifiers.join(".");
 }
-function isTextInput(el) {
-  return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type);
+function isRealtimeInput(el) {
+  return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type) || el.tagName.toUpperCase() === "UI-SLIDER";
 }
 function componentIsMissingProperty(component, property) {
   if (property.startsWith("$parent")) {
@@ -14410,7 +14526,7 @@ directive("poll", ({ el, directive: directive2, component }) => {
   stopWhen(() => theElementIsDisconnected(el));
 });
 function triggerComponentRequest(el, directive2, component) {
-  setNextActionOrigin({ el, directive: directive2 });
+  setNextActionOrigin({ el, directive: directive2, targetEl: null });
   setNextActionMetadata({ type: "poll" });
   let fullMethod = directive2.expression ? directive2.expression : "$refresh";
   evaluateActionExpression(component, el, fullMethod);

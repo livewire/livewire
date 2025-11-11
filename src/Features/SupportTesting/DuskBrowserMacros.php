@@ -172,7 +172,6 @@ class DuskBrowserMacros
 
                     let handle = () => {
                         queueMicrotask(() => {
-                            console.log('test')
                             delete window.duskIsWaitingForLivewireRequest{$id}
                         })
                     }

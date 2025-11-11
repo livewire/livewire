@@ -26,6 +26,16 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
         attribute = attribute.replace('.renderless', '')
     }
 
+    // Strip .prepend from Alpine expression because it only concerns Livewire and trips up Alpine...
+    if (directive.modifiers.includes('prepend')) {
+        attribute = attribute.replace('.prepend', '')
+    }
+
+    // Strip .append from Alpine expression because it only concerns Livewire and trips up Alpine...
+    if (directive.modifiers.includes('append')) {
+        attribute = attribute.replace('.append', '')
+    }
+
     let cleanupBinding = Alpine.bind(el, {
         [attribute](e) {
             directive.eventContext = e
@@ -33,7 +43,13 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
 
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
-                    setNextActionOrigin({ el, directive })
+                    // For wire:submit, apply data-loading to the submit button, not the form
+                    if (directive.value === 'submit') {
+                        let submitButton = e.submitter || el.querySelector('button[type="submit"], input[type="submit"]')
+                        setNextActionOrigin({ el, directive, targetEl: submitButton })
+                    } else {
+                        setNextActionOrigin({ el, directive })
+                    }
 
                     evaluateActionExpression(component, el, directive.expression, { scope: { $event: e } })
                 })

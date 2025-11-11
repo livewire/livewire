@@ -7,6 +7,8 @@ use Livewire\Compiler\Parser\MultiFileParser;
 
 class Compiler
 {
+    protected $prepareViewsForCompilationUsing = [];
+
     public function __construct(
         public CacheManager $cacheManager,
     ) {}
@@ -30,8 +32,8 @@ class Compiler
     public function compilePath(string $path): void
     {
         $parser = is_file($path)
-            ? SingleFileParser::parse($path)
-            : MultiFileParser::parse($path);
+            ? SingleFileParser::parse($this, $path)
+            : MultiFileParser::parse($this, $path);
 
         $viewFileName = $this->cacheManager->getViewPath($path);
 
@@ -65,5 +67,19 @@ class Compiler
     public function clearCompiled($output = null)
     {
         $this->cacheManager->clearCompiledFiles($output);
+    }
+
+    public function prepareViewsForCompilationUsing($callback)
+    {
+        $this->prepareViewsForCompilationUsing[] = $callback;
+    }
+
+    public function prepareViewForCompilation($contents, $path)
+    {
+        foreach ($this->prepareViewsForCompilationUsing as $callback) {
+            $contents = $callback($contents, $path);
+        }
+
+        return $contents;
     }
 }
