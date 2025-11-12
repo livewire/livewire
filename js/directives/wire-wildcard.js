@@ -4,7 +4,7 @@ import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 
 on('directive.init', ({ el, directive, cleanup, component }) => {
-    if (['snapshot', 'effects', 'model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'target', 'dirty'].includes(directive.value)) return
+    if (['snapshot', 'effects', 'model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'target', 'dirty', 'scroll'].includes(directive.value)) return
     if (customDirectiveHasBeenRegistered(directive.value)) return
 
     let attribute = directive.rawName.replace('wire:', 'x-on:')
@@ -13,6 +13,8 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
     if (directive.value === 'submit' && ! directive.modifiers.includes('prevent')) {
         attribute = attribute + '.prevent'
     }
+
+    if (!directive.expression || directive.expression.trim() === '') return
 
     let cleanupBinding = Alpine.bind(el, {
         [attribute](e) {
