@@ -129,6 +129,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             app('livewire.finder')->addLocation(viewPath: $location);
 
             if (! is_dir($location)) continue;
+
             app('blade.compiler')->anonymousComponentPath($location);
             app('view')->addLocation($location);
         }
@@ -137,6 +138,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             app('livewire.finder')->addNamespace($namespace, viewPath: $location);
 
             if (! is_dir($location)) continue;
+
             app('blade.compiler')->anonymousComponentPath($location, $namespace);
             app('view')->addNamespace($namespace, $location);
         }
