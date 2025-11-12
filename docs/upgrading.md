@@ -394,7 +394,7 @@ $this->dispatch('post-created', postId: $post->id); // [tl! add]
 <button wire:click="$dispatch('post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
 
 <button wire:click="$emitTo('foo', post-created', 1)">...</button> <!-- [tl! remove] -->
-<button wire:click="$dispatchTo('foo', 'post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
+<button wire:click="$dispatch('post-created', { postId: 1 })->to('foo')">...</button> <!-- [tl! add] -->
 
 <button x-on:click="$wire.emit('post-created', 1)">...</button> <!-- [tl! remove] -->
 <button x-on:click="$dispatch('post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
