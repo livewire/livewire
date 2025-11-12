@@ -358,7 +358,7 @@ class Dashboard extends Component
 
 The three main changes from Livewire 2 are:
 
-1. `emit()` has been renamed to `dispatch()` (Likewise `emitTo()` and `emitSelf()` are now `dispatchTo()` and `dispatchSelf()`)
+1. `emit()` has been renamed to `dispatch()` (Likewise `emitTo()` and `emitSelf()` are now `dispatch()->to()` and `dispatch()->self()`)
 2. `dispatchBrowserEvent()` has been renamed to `dispatch()`
 3. All event parameters must be named
 
