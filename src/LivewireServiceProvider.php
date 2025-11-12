@@ -97,12 +97,32 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         // Adapt v4 config to v3 config...
 
-        config()->set(
-            'livewire.component_locations',
-            config('livewire.component_locations', [
+        // Check component locations exist or not
+        $componentLocations = config('livewire.component_locations', [
+            resource_path('views/components'),
+            resource_path('views/livewire'),
+        ]);
+
+        $existingComponentLocations = [];
+
+        // Check component folders exist or not
+        foreach ($componentLocations as $location) {
+            if (is_dir($location)) {
+                $existingComponentLocations[] = $location;
+            }
+        }
+
+        // if component locations is an empty array, set it back to default
+        if ($existingComponentLocations === []) {
+            $existingComponentLocations = [
                 resource_path('views/components'),
                 resource_path('views/livewire'),
-            ])
+            ];
+        }
+
+        config()->set(
+            'livewire.component_locations',
+            $existingComponentLocations
         );
 
         config()->set(
