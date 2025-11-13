@@ -86,7 +86,7 @@ export function renderIsland(component, islandHtml) {
     let parentElement = fragment.startMarkerNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
 
-    mode = incomingMetadata.mode || 'morph'
+    let mode = incomingMetadata.mode || 'morph'
 
     if (mode === 'morph') {
         morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent)
