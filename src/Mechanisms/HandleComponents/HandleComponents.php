@@ -98,7 +98,7 @@ class HandleComponents extends Mechanism
 
         foreach ($params as $key => $value) {
             $processedKey = $key;
-            
+
             // Convert only kebab-case params to camelCase for matching...
             if (str($processedKey)->contains('-')) {
                 $processedKey = str($processedKey)->camel()->toString();
@@ -106,6 +106,9 @@ class HandleComponents extends Mechanism
 
             // Check if this is a reserved param
             if ($this->isReservedParam($key)) {
+                $componentParams[$key] = $value;
+            } elseif (str_starts_with($key, 'wire:model')) {
+                $htmlAttributes[$key] = $value;
                 $componentParams[$key] = $value;
             }
 
@@ -128,7 +131,7 @@ class HandleComponents extends Mechanism
     protected function isReservedParam($key)
     {
         $exact = ['lazy', 'defer', 'lazy.bundle', 'defer.bundle', 'wire:ref'];
-        $startsWith = ['@', 'wire:model'];
+        $startsWith = ['@'];
 
         // Check exact matches
         if (in_array($key, $exact)) {
