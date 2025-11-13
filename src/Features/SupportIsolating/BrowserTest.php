@@ -63,6 +63,54 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_parallel_requests()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<HTML
+            <div>
+                <livewire:child />
+                <livewire:child-isolated />
+
+                <button x-on:click="\$dispatch('trigger')" dusk="trigger">Dispatch trigger</button>
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public $time;
+            #[On('trigger')]
+            public function react() {
+                $this->time = LARAVEL_START;
+            }
+            public function render() { return <<<'HTML'
+            <div id="child">
+                Child 1
+
+                <span dusk="time-1">{{ $time }}</span>
+            </div>
+            HTML; }
+        }, 'child-isolated' => new #[Isolate] class extends Component {
+            public $time;
+            #[On('trigger')]
+            public function react() {
+                $this->time = LARAVEL_START;
+            }
+            public function render() { return <<<'HTML'
+            <div id="child">
+                Child 2
+
+                <span dusk="time-2">{{ $time }}</span>
+            </div>
+            HTML; }
+        }])
+        ->waitForLivewire()->click('@trigger')
+        ->tap(function ($b) {
+            $time1 = (float) $b->waitFor('@time-1')->text('@time-1');
+            $time2 = (float) $b->waitFor('@time-2')->text('@time-2');
+
+            $this->assertNotEquals($time1, $time2);
+        })
+        ;
+    }
+
     public function test_lazy_requests_are_isolated_by_default()
     {
         Livewire::visit([new class extends Component {
