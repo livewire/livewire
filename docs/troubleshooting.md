@@ -34,7 +34,7 @@ The same applies to Livewire components within a loop:
 
 ```blade
 @foreach($posts as $post)
-    <livewire:show-post :$post :key="$post->id" /> <!-- [tl! highlight] -->
+    <livewire:show-post :$post :wire:key="$post->id" /> <!-- [tl! highlight] -->
 @endforeach
 ```
 
@@ -46,7 +46,7 @@ When you have a Livewire component deeply nested inside a `@foreach` loop, you S
 @foreach($posts as $post)
     <div wire:key="{{ $post->id }}">
         ...
-        <livewire:show-post :$post :key="$post->id" /> <!-- [tl! highlight] -->
+        <livewire:show-post :$post :wire:key="$post->id" /> <!-- [tl! highlight] -->
         ...
     </div>
 @endforeach

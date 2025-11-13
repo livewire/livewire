@@ -19,7 +19,11 @@ class SupportNestingComponents extends ComponentHook
 
                 $finish = trigger('mount.stub', $tag, $childId, $params, $parent, $key, $slots);
 
-                $html = "<{$tag} wire:id=\"{$childId}\" wire:name=\"{$name}\"></{$tag}>";
+                $idAttribute = " wire:id=\"{$childId}\"";
+                $nameAttribute = " wire:name=\"{$name}\"";
+                $keyAttribute = $key !== null ? " wire:key=\"{$key}\"" : '';
+
+                $html = "<{$tag}{$idAttribute}{$nameAttribute}{$keyAttribute}></{$tag}>";
 
                 static::setParentChild($parent, $key, $tag, $childId);
 
@@ -33,12 +37,20 @@ class SupportNestingComponents extends ComponentHook
 
             static::setParametersToMatchingProperties($component, $params);
 
-            return function ($html) use ($component, $key, $parent, $start) {
+            return function (&$html) use ($component, $key, $parent, $start) {
+                if ($key !== null) {
+                   $html = Utils::insertAttributesIntoHtmlRoot($html, [
+                        'wire:key' => $key,
+                    ]);
+                }
+
                 if ($parent) {
                     if (config('app.debug')) trigger('profile', 'child:'.$component->getId(), $parent->getId(), [$start, microtime(true)]);
 
                     preg_match('/<([a-zA-Z0-9\-]*)/', $html, $matches, PREG_OFFSET_CAPTURE);
+
                     $tag = $matches[1][0];
+
                     static::setParentChild($parent, $key, $tag, $component->getId());
                 }
             };

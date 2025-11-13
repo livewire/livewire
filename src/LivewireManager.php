@@ -2,14 +2,12 @@
 
 namespace Livewire;
 
-use Livewire\V4\Registry\ComponentViewPathResolver;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
-use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Features\SupportTesting\DuskTestable;
 use Livewire\Features\SupportLazyLoading\SupportLazyLoading;
@@ -33,7 +31,22 @@ class LivewireManager
 
     function component($name, $class = null)
     {
-        app(ComponentRegistry::class)->component($name, $class);
+        $this->addComponent($name, class: $class);
+    }
+
+    function addComponent($name, $viewPath = null, $class = null)
+    {
+        app('livewire.finder')->addComponent($name, class: $class, viewPath: $viewPath);
+    }
+
+    function addLocation($viewPath = null, $classNamespace = null)
+    {
+        return app('livewire.finder')->addLocation(classNamespace: $classNamespace, viewPath: $viewPath);
+    }
+
+    function addNamespace($namespace, $viewPath = null, $classNamespace = null, $classPath = null, $classViewPath = null)
+    {
+        return app('livewire.finder')->addNamespace($namespace, classNamespace: $classNamespace, viewPath: $viewPath, classPath: $classPath, classViewPath: $classViewPath);
     }
 
     function componentHook($hook)
@@ -56,34 +69,32 @@ class LivewireManager
         app(ExtendBlade::class)->livewireOnlyPrecompiler($callback);
     }
 
-    function new($name, $id = null)
+    function prepareViewsForCompilationUsing(callable $callback)
     {
-        return app(ComponentRegistry::class)->new($name, $id);
+        app('livewire.compiler')->prepareViewsForCompilationUsing($callback);
     }
 
+    function new($name, $id = null)
+    {
+        return app('livewire.factory')->create($name, $id);
+    }
+
+    /**
+     * @deprecated This method will be removed in a future version. Use exists() instead.
+     */
     function isDiscoverable($componentNameOrClass)
     {
-        return app(ComponentRegistry::class)->isDiscoverable($componentNameOrClass);
+        return $this->exists($componentNameOrClass);
+    }
+
+    function exists($componentNameOrClass)
+    {
+        return app('livewire.factory')->exists($componentNameOrClass);
     }
 
     function resolveMissingComponent($resolver)
     {
-        return app(ComponentRegistry::class)->resolveMissingComponent($resolver);
-    }
-
-    function namespace($namespace, $path)
-    {
-        return app('livewire.resolver')->namespace($namespace, $path);
-    }
-
-    function route($uri, $component)
-    {
-        return \Illuminate\Support\Facades\Route::get($uri, function () use ($component) {
-            return app()->call([
-                app(LivewireManager::class)->new($component),
-                '__invoke',
-            ]);
-        });
+        return app('livewire.factory')->resolveMissingComponent($resolver);
     }
 
     function mount($name, $params = [], $key = null, $slots = [])
@@ -223,11 +234,6 @@ class LivewireManager
 
     function visit($name, $args = [])
     {
-        // @todo: Remove this once Laracon US 2025 is over...
-        if (class_exists(\Livewire\V4\PestLivewireOverride::class) && class_exists(\Pest\Browser\Api\TestableLivewire::class)) {
-            return \Livewire\V4\PestLivewireOverride::test($name, $args);
-        }
-
         if (class_exists(\Pest\Browser\Api\Livewire::class)) {
             return \Pest\Browser\Api\Livewire::test($name, $args);
         }
@@ -304,5 +310,10 @@ class LivewireManager
         }
 
         return request()->method();
+    }
+
+    function isCspSafe()
+    {
+        return config('livewire.csp_safe', false);
     }
 }

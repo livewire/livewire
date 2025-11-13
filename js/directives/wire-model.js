@@ -1,14 +1,15 @@
 import { directive } from '@/directives'
 import { handleFileUpload } from '@/features/supportFileUploads'
-import { closestComponent } from '@/store'
+import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
+import { setNextActionMetadata, setNextActionOrigin } from '@/request'
 import Alpine from 'alpinejs'
-import Action from '@/v4/requests/action'
+// Action is no longer needed - wire:model uses $commit which creates its own actions
 
 directive('model', ({ el, directive, component, cleanup }) => {
     // @todo: will need to probaby do this further upstream i just don't want to bog down the entire lifecycle right now...
     // this is to support slots properly...
-    component = closestComponent(el)
+    component = findComponentByEl(el)
 
     let { expression, modifiers } = directive
 
@@ -32,12 +33,10 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Trigger a network request (only if .live or .lazy is added to wire:model)...
     let update = () => {
-        if (window.livewireV4) {
-            component.addActionContext({
-                // type: 'user',
-                el,
-                directive,
-            })
+        setNextActionOrigin({ el, directive })
+
+        if (isLive || isDebounced) {
+            setNextActionMetadata({ type: 'model.live' })
         }
 
         expression.startsWith('$parent')
@@ -47,7 +46,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // If a plain wire:model is added to a text input, debounce the
     // trigerring of network requests.
-    let debouncedUpdate = isTextInput(el) && ! isDebounced && isLive
+    let debouncedUpdate = isRealtimeInput(el) && ! isDebounced && isLive
         ? debounce(update, 150)
         : update
 
@@ -83,11 +82,11 @@ function getModifierTail(modifiers) {
     return '.' + modifiers.join('.')
 }
 
-function isTextInput(el) {
+function isRealtimeInput(el) {
     return (
         ['INPUT', 'TEXTAREA'].includes(el.tagName.toUpperCase()) &&
         !['checkbox', 'radio'].includes(el.type)
-    )
+    ) || el.tagName.toUpperCase() === 'UI-SLIDER' // Flux UI
 }
 
 function isDirty(subject, dirty) {
@@ -100,7 +99,7 @@ function isDirty(subject, dirty) {
 
 function componentIsMissingProperty(component, property) {
     if (property.startsWith('$parent')) {
-        let parent = closestComponent(component.el.parentElement, false)
+        let parent = findComponentByEl(component.el.parentElement, false)
 
         if (! parent) return true
 

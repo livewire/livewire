@@ -11,9 +11,11 @@ class LivewireRouteCachingUnitTest extends TestCase
 {
     public function test_livewire_script_route_is_cacheable(): void
     {
-        $route = $this->getRoute('livewire/livewire.min.js');
+        // The route changes based on debug mode
+        $uri = config('app.debug') ? 'livewire/livewire.js' : 'livewire/livewire.min.js';
+        $route = $this->getRoute($uri);
 
-        $this->cacheRoute($route, 'Livewire\Mechanisms\FrontendAssets\FrontendAssets@returnJavaScriptAsFile', "Failed to cache route 'livewire/livewire.js'");
+        $this->cacheRoute($route, 'Livewire\Mechanisms\FrontendAssets\FrontendAssets@returnJavaScriptAsFile', "Failed to cache route '$uri'");
     }
 
     public function test_livewire_update_route_is_cacheable(): void

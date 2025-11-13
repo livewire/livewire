@@ -64,3 +64,11 @@ You can combine `wire:show` with Alpine.js transitions to create smooth show/hid
 The Alpine.js transition classes above will create a fade and scale effect when the modal shows and hides.
 
 [View the full x-transition documentation →](https://alpinejs.dev/directives/transition)
+
+## Reference
+
+```blade
+wire:show="expression"
+```
+
+This directive has no modifiers.

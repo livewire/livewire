@@ -1,17 +1,15 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
-import { on } from '@/hooks'
-import { listen } from '@/utils'
 import { closestIsland } from '@/features/supportIslands'
-
-let loadingStack = new WeakMap
+import { interceptMessage } from '@/request'
+import { listen } from '@/utils'
 
 directive('loading', ({ el, directive, component, cleanup }) => {
     let { targets, inverted } = getTargets(el)
 
     let [delay, abortDelay] = applyDelay(directive)
 
-    let cleanupA = whenTargetsArePartOfRequest(component, el, targets, loadingStack, inverted, [
+    let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
     ])
@@ -72,74 +70,34 @@ function applyDelay(directive) {
     ]
 }
 
-function whenTargetsArePartOfRequest(component, el, targets, loadingStack, inverted, [ startLoading, endLoading ]) {
-    if (window.livewireV4) {
-        return component.intercept(({ request }) => {
-            // This local variable ensures that the end loading is scoped to this request...
-            let isLoading = false
+function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLoading, endLoading ]) {
+    return interceptMessage(({ message, onSend, onFinish }) => {
+        if (component !== message.component) return
 
-            request.beforeSend(({ component: requestComponent, payload }) => {
-                if (requestComponent !== component) return
+        let island = closestIsland(el)
 
-                let island = closestIsland(component, el)
+        // If an island is found, see if the message has an action for the island and return if not...
+        if (island && ! message.hasActionForIsland(island)) {
+            return
+        }
 
-                let shouldLoad = shouldLoadAsComponentOrIslandsMatch(payload, island)
+        // If no island is found, see if the message has an action for the component and return if not...
+        if (! island && ! message.hasActionForComponent()) {
+            return
+        }
 
-                if (! shouldLoad) return
+        let matches = true
 
-                if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
-                    if (loadingStack.has(el)) {
-                        loadingStack.delete(el)
-
-                        endLoading()
-
-                        isLoading = false
-                    }
-
-                    return
-                }
-
-                if (!loadingStack.has(el)) {
-                    loadingStack.set(el, 0)
-                } else {
-                    loadingStack.set(el, loadingStack.get(el) + 1)
-                }
-
-                isLoading = true
-
-                startLoading()
-            })
-
-            let cleanup = () => {
-                if (! isLoading) return
-
-                if (!loadingStack.has(el)) return
-
-                if (loadingStack.get(el) === 0) {
-                    loadingStack.delete(el)
-
-                    endLoading()
-                } else {
-                    loadingStack.set(el, loadingStack.get(el) - 1)
-                }
+        onSend(({ payload }) => {
+            if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
+                matches = false
             }
 
-            request.onSuccess(cleanup)
-            request.onFailure(cleanup)
-            request.onError(cleanup)
-            request.onCancel(cleanup)
+            matches && startLoading()
         })
-    }
 
-    return on('commit', ({ component: iComponent, commit: payload, respond }) => {
-        if (iComponent !== component) return
-
-        if (targets.length > 0 && containsTargets(payload, targets) === inverted) return
-
-        startLoading()
-
-        respond(() => {
-            endLoading()
+        onFinish(() => {
+            matches && endLoading()
         })
     })
 }
@@ -207,21 +165,6 @@ function containsTargets(payload, targets) {
     })
 }
 
-// If the payload contains an island that the loading element is inside then we should show loading.
-// Or if the payload contains no islands and the loading element is not inside an island, then we
-// should also show loading. Otherwise, we should not show loading...
-function shouldLoadAsComponentOrIslandsMatch(payload, island) {
-    let payloadIslands = Array.from(payload.calls)
-        .map(i => i.context.island?.name)
-        .filter(name => name !== undefined)
-
-    if (island === null) {
-        return payloadIslands.length === 0
-    }
-
-    return payloadIslands.includes(island.name)
-}
-
 function getTargets(el) {
     let directives = getDirectives(el)
 
@@ -232,22 +175,14 @@ function getTargets(el) {
     if (directives.has('target')) {
         let directive = directives.get('target')
 
-        let raw = directive.expression
-
         if (directive.modifiers.includes("except")) inverted = true
 
-        if (raw.includes('(') && raw.includes(')')) {
-            targets = targets.concat(
-                directive.methods.map(
-                    method => ({ target: method.method, params: quickHash(JSON.stringify(method.params)) })
-            ))
-        } else if (raw.includes(',')) {
-            raw.split(',').map(i => i.trim()).forEach(target => {
-                targets.push({ target })
+        directive.methods.forEach(({ method, params }) => {
+            targets.push({
+                target: method,
+                params: params && params.length > 0 ? quickHash(JSON.stringify(params)) : undefined
             })
-        } else {
-            targets.push({ target: raw })
-        }
+        })
     } else {
         // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
         // and automatically scope this loading directive to that action.

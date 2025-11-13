@@ -65,3 +65,17 @@ Below is an example where a user types into an input field and the border become
 <input wire:model.blur="title" wire:dirty.class="border-yellow-500">
 ```
 
+## Reference
+
+```blade
+wire:dirty
+wire:target="property"
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.remove` | Show element by default, hide when dirty |
+| `.class="class-name"` | Add a CSS class when dirty |
+

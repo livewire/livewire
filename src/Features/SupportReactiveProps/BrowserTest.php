@@ -25,18 +25,18 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                         <button wire:click="inc" dusk="parent.inc">inc</button>
 
-                        <livewire:child :$count />
+                        <livewire:child :child-count="$count" />
                     </div>
                     HTML;
                 }
             },
             'child' => new class extends Component {
                 #[BaseReactive]
-                public $count;
+                public $childCount;
 
                 public function render() { return <<<'HTML'
                     <div>
-                        <h1>Child count: <span dusk="child.count">{{ $count }}</span>
+                        <h1>Child count: <span dusk="child.count">{{ $childCount }}</span>
                     </div>
                     HTML;
                 }
