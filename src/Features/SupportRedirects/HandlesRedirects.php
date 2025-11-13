@@ -33,4 +33,13 @@ trait HandlesRedirects
     {
         $this->redirect(action($name, $parameters, $absolute), $navigate);
     }
+
+    public function redirectGuest($url, $navigate = false)
+    {
+        if ($intended = session()->previousUrl()) {
+            session()->put('url.intended', $intended);
+        }
+
+        $this->redirect($url, $navigate);
+    }
 }
