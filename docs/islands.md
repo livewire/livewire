@@ -195,7 +195,7 @@ new class extends Component {
         @endforeach
     @endisland
 
-    <button type="button" wire:click.append="loadMore" wire:island="feed">
+    <button type="button" wire:click="loadMore" wire:island.append="feed">
         Load more
     </button>
 </div>
