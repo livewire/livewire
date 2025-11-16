@@ -53,7 +53,7 @@ Now Pest will recognize and run tests located next to your components when you r
 You can generate a test file alongside a component by appending the `--test` flag to the `make:livewire` command:
 
 ```shell
-php artisan make:livewire post.create --test
+php artisan make:livewire post.create --mfc --test
 ```
 
 For multi-file components, this will create a test file at `resources/views/components/post/create.test.php`:
