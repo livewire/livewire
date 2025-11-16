@@ -217,13 +217,18 @@ class Lazy {
     //
 }
 
-class ArticleComponent extends TestComponent
+class ArticleComponent extends \Livewire\Component
 {
     public $article;
 
     public function mount()
     {
         $this->article = Article::first();
+    }
+
+    public function render()
+    {
+        return '<div>{{ $article->title }}</div>';
     }
 }
 

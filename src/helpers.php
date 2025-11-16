@@ -111,7 +111,7 @@ function before($name, $callback) {
 }
 
 function off($name, $callback) {
-    return app(\Livewire\EventBus::class)->off($name, $callback);
+    app(\Livewire\EventBus::class)->off($name, $callback);
 }
 
 function memoize($target) {

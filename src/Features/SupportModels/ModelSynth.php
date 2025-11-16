@@ -2,14 +2,15 @@
 
 namespace Livewire\Features\SupportModels;
 
-use Illuminate\Database\ClassMorphViolationException;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\ClassMorphViolationException;
 
 class ModelSynth extends Synth {
-    use SerializesAndRestoresModelIdentifiers;
+    use SerializesAndRestoresModelIdentifiers, IsLazy;
 
     public static $key = 'mdl';
 
@@ -18,8 +19,17 @@ class ModelSynth extends Synth {
     }
 
     function dehydrate($target) {
+        if ($this->isLazy($target)) {
+            $meta = $this->getLazyMeta($target);
+
+            return [
+                null,
+                $meta,
+            ];
+        }
+
         $class = $target::class;
-        
+
         try {
             // If no alias is found, this just returns the class name
             $alias = $target->getMorphClass();
@@ -37,7 +47,6 @@ class ModelSynth extends Synth {
         // If the model doesn't exist as it's an empty model or has been
         // recently deleted, then we don't want to include any key.
         if ($serializedModel) $meta['key'] = $serializedModel['id'];
-        
 
         return [
             null,
@@ -62,9 +71,9 @@ class ModelSynth extends Synth {
 
         $key = $meta['key'];
 
-        $model = (new $class)->newQueryForRestoration($key)->useWritePdo()->firstOrFail();
-
-        return $model;
+        return $this->makeLazyProxy($class, $meta, function () use ($class, $key) {
+            return (new $class)->newQueryForRestoration($key)->useWritePdo()->firstOrFail();
+        });
     }
 
     function get(&$target, $key) {

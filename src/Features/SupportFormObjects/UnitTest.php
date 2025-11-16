@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Stringable;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\Form;
@@ -131,6 +132,98 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('Title: ""', false)
             ->assertSee('Content: ""', false);
         ;
+    }
+
+    function test_form_object_update_lifecycle_hooks_are_called()
+    {
+        $component = Livewire::test(
+            new class extends TestComponent {
+                public LifecycleHooksForm $form;
+
+                public function mount(array $expected = [])
+                {
+                    $this->form->expected = $expected;
+                }
+            },
+            [
+                'expected' => [
+                    'updating' => [[
+                        'foo' => 'bar',
+                    ]],
+                    'updated' => [[
+                        'foo' => 'bar',
+                    ]],
+                    'updatingFoo' => ['bar'],
+                    'updatedFoo' => ['bar'],
+                ],
+            ]
+        )->set('form.foo', 'bar');
+
+        $this->assertEquals([
+            'updating' => true,
+            'updated' => true,
+            'updatingFoo' => true,
+            'updatedFoo' => true,
+            'updatingBar' => false,
+            'updatingBarBaz' => false,
+            'updatedBar' => false,
+            'updatedBarBaz' => false,
+        ], $component->form->lifecycles);
+    }
+
+    function test_form_object_update_nested_lifecycle_hooks_are_called()
+    {
+        $component = Livewire::test(
+            new class extends TestComponent {
+                public LifecycleHooksForm $form;
+
+                public function mount(array $expected = [])
+                {
+                    $this->form->expected = $expected;
+                }
+            },
+            [
+                'expected' => [
+                    'updating' => [
+                        ['bar.foo' => 'baz',],
+                        ['bar.cocktail.soft' => 'Shirley Ginger'],
+                        ['bar.cocktail.soft' => 'Shirley Cumin']
+                    ],
+                    'updated' => [
+                        ['bar.foo' => 'baz',],
+                        ['bar.cocktail.soft' => 'Shirley Ginger'],
+                        ['bar.cocktail.soft' => 'Shirley Cumin']
+                    ],
+                    'updatingBar' => [
+                        ['foo' => [null, 'baz']],
+                        ['cocktail.soft' => [null, 'Shirley Ginger']],
+                        ['cocktail.soft' => ['Shirley Ginger', 'Shirley Cumin']]
+                    ],
+                    'updatedBar' => [
+                        ['foo' => 'baz'],
+                        ['cocktail.soft' => 'Shirley Ginger'],
+                        ['cocktail.soft' => 'Shirley Cumin']
+                    ],
+                ],
+            ]
+        );
+
+        $component->set('form.bar.foo', 'baz');
+
+        $component->set('form.bar.cocktail.soft', 'Shirley Ginger');
+
+        $component->set('form.bar.cocktail.soft', 'Shirley Cumin');
+
+        $this->assertEquals([
+            'updating' => true,
+            'updated' => true,
+            'updatingFoo' => false,
+            'updatedFoo' => false,
+            'updatingBar' => true,
+            'updatingBarBaz' => false,
+            'updatedBar' => true,
+            'updatedBarBaz' => false,
+        ], $component->form->lifecycles);
     }
 
     function test_can_validate_a_form_object()
@@ -1061,5 +1154,111 @@ class ResetPropertiesForm extends Form
 
     public function proxyPull(...$args){
         return $this->pull(...$args);
+    }
+}
+
+class LifecycleHooksForm extends Form
+{
+    public $expected;
+
+    public $foo;
+
+    public $bar = [];
+
+    public $lifecycles = [
+        'updating' => false,
+        'updatingFoo' => false,
+        'updated' => false,
+        'updatedFoo' => false,
+        'updatingBar' => false,
+        'updatingBarBaz' => false,
+        'updatedBar' => false,
+        'updatedBarBaz' => false,
+    ];
+
+    public function updating($name, $value)
+    {
+        Assert::assertEquals(array_shift($this->expected['updating']), [$name => $value]);
+
+        $this->lifecycles['updating'] = true;
+    }
+
+    public function updated($name, $value)
+    {
+        Assert::assertEquals(array_shift($this->expected['updated']), [$name => $value]);
+
+        $this->lifecycles['updated'] = true;
+    }
+
+    public function updatingFoo($value)
+    {
+        Assert::assertEquals(array_shift($this->expected['updatingFoo']), $value);
+
+        $this->lifecycles['updatingFoo'] = true;
+    }
+
+    public function updatedFoo($value)
+    {
+        Assert::assertEquals(array_shift($this->expected['updatedFoo']), $value);
+
+        $this->lifecycles['updatedFoo'] = true;
+    }
+
+    public function updatingBar($value, $key)
+    {
+        $expected = array_shift($this->expected['updatingBar']);
+        $expected_key = array_keys($expected)[0];
+        $expected_value = $expected[$expected_key];
+        [$before, $after] = $expected_value;
+
+        Assert::assertNotInstanceOf(Stringable::class, $key);
+        Assert::assertEquals($expected_key, $key);
+        Assert::assertEquals($before, data_get($this->bar, $key));
+        Assert::assertEquals($after, $value);
+
+        $this->lifecycles['updatingBar'] = true;
+    }
+
+    public function updatedBar($value, $key)
+    {
+        $expected = array_shift($this->expected['updatedBar']);
+        $expected_key = array_keys($expected)[0];
+        $expected_value = $expected[$expected_key];
+
+        Assert::assertNotInstanceOf(Stringable::class, $key);
+        Assert::assertEquals($expected_key, $key);
+        Assert::assertEquals($expected_value, $value);
+        Assert::assertEquals($expected_value, data_get($this->bar, $key));
+
+        $this->lifecycles['updatedBar'] = true;
+    }
+
+    public function updatingBarBaz($value, $key)
+    {
+        $expected = array_shift($this->expected['updatingBarBaz']);
+        $expected_key = array_keys($expected)[0];
+        $expected_value = $expected[$expected_key];
+        [$before, $after] = $expected_value;
+
+        Assert::assertNotInstanceOf(Stringable::class, $key);
+        Assert::assertEquals($expected_key, $key);
+        Assert::assertEquals($before, data_get($this->bar, $key));
+        Assert::assertEquals($after, $value);
+
+        $this->lifecycles['updatingBarBaz'] = true;
+    }
+
+    public function updatedBarBaz($value, $key)
+    {
+        $expected = array_shift($this->expected['updatedBarBaz']);
+        $expected_key = array_keys($expected)[0];
+        $expected_value = $expected[$expected_key];
+
+        Assert::assertNotInstanceOf(Stringable::class, $key);
+        Assert::assertEquals($expected_key, $key);
+        Assert::assertEquals($expected_value, $value);
+        Assert::assertEquals($expected_value, data_get($this->bar, $key));
+
+        $this->lifecycles['updatedBarBaz'] = true;
     }
 }

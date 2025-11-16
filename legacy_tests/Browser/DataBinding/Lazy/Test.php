@@ -12,16 +12,18 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, LazyInputsWithUpdatesDisplayedComponent::class)
                 ->type('@name', 'bob')
                 ->waitForLivewire()->click('@submit')
-                ->assertSeeIn('@totalNumberUpdates', 2)
+                ->assertSeeIn('@totalNumberUpdates', 3)
                 ->assertSeeIn('@updatesList', 'syncInput - name')
+                ->assertSeeIn('@updatesList', 'callMethod - $commit')
                 ->assertDontSeeIn('@updatesList', 'syncInput - description')
                 ->assertSeeIn('@updatesList', 'callMethod - submit')
 
                 ->type('@description', 'Test')
                 ->waitForLivewire()->click('@submit')
-                ->assertSeeIn('@totalNumberUpdates', 2)
+                ->assertSeeIn('@totalNumberUpdates', 3)
                 ->assertDontSeeIn('@updatesList', 'syncInput - name')
                 ->assertSeeIn('@updatesList', 'syncInput - description')
+                ->assertSeeIn('@updatesList', 'callMethod - $commit')
                 ->assertSeeIn('@updatesList', 'callMethod - submit')
             ;
         });
@@ -33,9 +35,11 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, LazyInputsWithUpdatesDisplayedComponent::class)
                 ->type('@name', 'bob')
                 ->waitForLivewire()->check('@is_active')
-                ->assertSeeIn('@totalNumberUpdates', 2)
+                ->assertSeeIn('@totalNumberUpdates', 4)
                 ->assertSeeIn('@updatesList', 'syncInput - name')
                 ->assertSeeIn('@updatesList', 'syncInput - is_active')
+                ->assertSeeIn('@updatesList', 'callMethod - $commit')
+                ->assertSeeIn('@updatesList', 'callMethod - $commit')
             ;
         });
     }

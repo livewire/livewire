@@ -1,16 +1,14 @@
-import { morph } from '@/morph'
-import { on } from '@/hooks'
+import { morph } from "@/morph";
+import { interceptMessage } from "@/request";
 
-on('effect', ({ component, effects }) => {
-    let html = effects.html
-    if (! html) return
+interceptMessage(({ message, onSuccess }) => {
+    onSuccess(({ payload, onMorph }) => {
+        onMorph(() => {
+            let html = payload.effects.html
 
-    // Wrapping this in a double queueMicrotask. The first one puts it after all
-    // other "effect" hooks, and the second one puts it after all reactive
-    // Alpine effects (that are processed via flushJobs in scheduler).
-    queueMicrotask(() => {
-        queueMicrotask(() => {
-            morph(component, component.el, html)
+            if (! html) return
+
+            morph(message.component, message.component.el, html)
         })
     })
 })

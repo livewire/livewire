@@ -208,7 +208,7 @@ export function getNonce() {
         return nonce
     }
 
-    const elWithNonce = document.querySelector('style[data-livewire-style][nonce]')
+    let elWithNonce = document.querySelector('style[data-livewire-style][nonce]')
 
     if (elWithNonce) {
         nonce = elWithNonce.nonce
@@ -234,4 +234,34 @@ export function splitDumpFromContent(content) {
     let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s)
 
     return [dump, content.replace(dump, '')]
+}
+
+export function walkUpwards(el, callback) {
+    let current = el
+
+    while (current) {
+        let stop = undefined
+
+        callback(current, { stop: (value) => value === undefined ? stop = current : stop = value })
+
+        if (stop !== undefined) return stop
+
+        if (current._x_teleportBack) current = current._x_teleportBack
+
+        current = current.parentElement
+    }
+}
+
+export function walkBackwards(el, callback) {
+    let current = el
+
+    while (current) {
+        let stop = undefined
+
+        callback(current, { stop: (value) => value === undefined ? stop = current : stop = value })
+
+        if (stop !== undefined) return stop
+
+        current = current.previousSibling
+    }
 }

@@ -1,11 +1,13 @@
 import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
 import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
-import { closestComponent } from '@/store'
-import { requestCommit, requestCall } from '@/request'
+import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
+import { fireAction, intercept } from '@/request'
+import { getErrorsObject } from '@/features/supportErrors'
+import { findRefEl } from '@/features/supportRefs'
 
 let properties = {}
 let fallback
@@ -27,21 +29,27 @@ let aliases = {
     'js': '$js',
     'get': '$get',
     'set': '$set',
+    'refs': '$refs',
     'call': '$call',
     'hook': '$hook',
-    'commit': '$commit',
     'watch': '$watch',
+    'commit': '$commit',
+    'errors': '$errors',
+    'island': '$island',
+    'upload': '$upload',
     'entangle': '$entangle',
     'dispatch': '$dispatch',
+    'intercept': '$intercept',
     'dispatchTo': '$dispatchTo',
     'dispatchSelf': '$dispatchSelf',
-    'upload': '$upload',
-    'uploadMultiple': '$uploadMultiple',
     'removeUpload': '$removeUpload',
     'cancelUpload': '$cancelUpload',
+    'uploadMultiple': '$uploadMultiple',
 }
 
 export function generateWireObject(component, state) {
+    let isScoped = false
+
     return new Proxy({}, {
         get(target, property) {
             if (property === '__instance') return component
@@ -85,7 +93,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
     // we would want the entangle effect freed if the element was removed from the DOM...
     return new Proxy({}, {
         get(target, property) {
-            if (! component) component = closestComponent(el)
+            if (! component) component = findComponentByEl(el)
 
             if (['$entangle', 'entangle'].includes(property)) {
                 return generateEntangleFunction(component, cleanup)
@@ -95,7 +103,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
         },
 
         set(target, property, value) {
-            if (! component) component = closestComponent(el)
+            if (! component) component = findComponentByEl(el)
 
             component.$wire[property] = value
 
@@ -125,7 +133,13 @@ wireProperty('$js', (component) => {
         fn[name] = component.getJsAction(name)
     })
 
-    return fn
+    return new Proxy(fn, {
+        set(target, property, value) {
+            component.addJsAction(property, value)
+
+            return true
+        }
+    })
 })
 
 wireProperty('$set', (component) => async (property, value, live = true) => {
@@ -136,14 +150,57 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     if (live) {
         component.queueUpdate(property, value)
 
-        return await requestCommit(component)
+        return fireAction(component, '$set')
     }
 
     return Promise.resolve()
 })
 
+wireProperty('$refs', (component) => {
+    let fn = (name) => findRefEl(component, name)
+
+    return new Proxy(fn, {
+        get(target, property) {
+            if (property in target) {
+                return target[property]
+            }
+
+            return fn(property)
+        }
+    })
+})
+
+wireProperty('$intercept', (component) => (method, callback = null) => {
+    if (callback === null && typeof method === 'function') {
+        callback = method
+
+        return intercept(component, callback)
+    }
+
+    return intercept(component, (options) => {
+        let action = options.message.getActions().find(action => action.method === method)
+
+        if (action) {
+            let el = action?.origin?.el
+
+            callback({
+                ...options,
+                el,
+            })
+        }
+    })
+})
+
+wireProperty('$errors', (component) => getErrorsObject(component))
+
 wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
+})
+
+wireProperty('$island', (component) => async (name, options = {}) => {
+    return fireAction(component, '$refresh', [], {
+        island: { name, ...options },
+    })
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {
@@ -164,8 +221,13 @@ wireProperty('$watch', (component) => (path, callback) => {
     component.addCleanup(unwatch)
 })
 
-wireProperty('$refresh', (component) => component.$wire.$commit)
-wireProperty('$commit', (component) => async () => await requestCommit(component))
+wireProperty('$refresh', (component) => async () => {
+    return fireAction(component, '$refresh')
+})
+
+wireProperty('$commit', (component) => async () => {
+    return fireAction(component, '$commit')
+})
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
@@ -234,5 +296,5 @@ wireFallback((component) => (property) => async (...params) => {
         }
     }
 
-    return await requestCall(component, property, params)
+    return fireAction(component, property, params)
 })

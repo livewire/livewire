@@ -228,6 +228,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Loading "myModel"...')
         ->assertDontSee('Loading "prop2"...')
 
+        ->waitUntilMissingText('Loading "prop"...')
+
         ->type('@input2', 'Hello Caleb')
 		->waitForText('Loading "prop2"...')
         ->assertSee('Loading "prop2"...')
@@ -289,6 +291,129 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->pause(250)
         ->assertDontSee('Waiting to process...')
         ->assertSee('Processing...')
+        ;
+    }
+
+    function test_wire_target_works_with_multiple_function_including_multiple_params()
+    {
+        Livewire::visit(new class extends Component {
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="processFunction('1', 2)" dusk="process1Button">Process 1 and 2</button>
+                        <button wire:click="processFunction('3', 4)" dusk="process2Button">Process 3 adn 4</button>
+                        <button wire:click="resetFunction" dusk="resetButton">Reset</button>
+                        <div wire:loading wire:target="resetFunction" dusk="loadingIndicator">
+                            Waiting to process...
+                        </div>
+                        <div wire:loading wire:target="processFunction('1', 2), processFunction('3', 4)" dusk="loadingIndicator2">
+                            Processing...
+                        </div>
+                    </div>
+                HTML;
+            }
+
+            public function processFunction(string $value)
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+            public function resetFunction()
+            {
+                usleep(500000); // Simulate reset time.
+            }
+        })
+            ->press('@resetButton')
+            ->pause(250)
+            ->waitForText('Waiting to process...')
+            ->assertSee('Waiting to process...')
+            ->assertDontSee('Processing...')
+            ->waitUntilMissingText('Waiting to process...')
+            ->press('@process1Button')
+            ->pause(250)
+            ->assertDontSee('Waiting to process...')
+            ->assertSee('Processing...')
+            ->press('@resetButton')
+            ->waitForText('Waiting to process...')
+            ->assertSee('Waiting to process...')
+            ->waitUntilMissingText('Waiting to process...')
+            ->press('@process2Button')
+            ->pause(250)
+            ->assertDontSee('Waiting to process...')
+            ->assertSee('Processing...')
+        ;
+    }
+
+    function test_wire_target_works_with_multiple_function_multiple_params_using_js_helper()
+    {
+        Livewire::visit(new class extends Component {
+            public function mountAction(string $action, array $params = [], array $context = [])
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="mountAction('add', {{ \Illuminate\Support\Js::from(['block' => 'name']) }}, { schemaComponent: 'tableFiltersForm.queryBuilder.rules' })" dusk="mountButton">Mount</button>
+                        <div wire:loading wire:target="mountAction('add', {{ \Illuminate\Support\Js::from(['block' => 'name']) }}, { schemaComponent: 'tableFiltersForm.queryBuilder.rules' })">
+                            Mounting...
+                        </div>
+                    </div>
+                    HTML;
+            }
+        })
+            ->assertDontSee('Mounting...')
+            ->press('@mountButton')
+            ->waitForText('Mounting...')
+            ->assertSee('Mounting...')
+            ->pause(400)
+            ->waitUntilMissingText('Mounting...')
+            ->assertDontSee('Mounting...')
+        ;
+    }
+
+    function test_wire_target_works_with_function_JSONparse_params()
+    {
+        Livewire::visit(new class extends Component {
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="processFunction(@js(['bar' => 'baz']))" dusk="processButton">Process</button>
+                        <button wire:click="resetFunction" dusk="resetButton">Reset</button>
+                        <div wire:loading wire:target="resetFunction" dusk="loadingIndicator">
+                            Waiting to process...
+                        </div>
+                        <div wire:loading wire:target="processFunction" dusk="loadingIndicator2">
+                            Processing...
+                        </div>
+                    </div>
+                HTML;
+            }
+
+            public function processFunction(mixed $value)
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+            public function resetFunction()
+            {
+                usleep(500000); // Simulate reset time.
+            }
+        })
+            ->press('@resetButton')
+            ->pause(250)
+            ->waitForText('Waiting to process...')
+            ->assertSee('Waiting to process...')
+            ->assertDontSee('Processing...')
+            ->waitUntilMissingText('Waiting to process...')
+            ->press('@processButton')
+            ->pause(250)
+            ->assertDontSee('Waiting to process...')
+            ->assertSee('Processing...')
         ;
     }
 
@@ -367,6 +492,540 @@ class BrowserTest extends \Tests\BrowserTestCase
 		->waitForText('Foo')
         ->assertSee('Foo')
         ;
+    }
+
+    function test_wire_loading_targets_exclude_wire_navigate()
+    {
+        Livewire::visit(new class extends Component {
+            public function hydrate()
+            {
+                sleep(1);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <a href="/otherpage" wire:navigate dusk="link" class="text-blue-500" wire:loading.class="text-red-500">Link</a>
+                        <button type="button" wire:click="$refresh" dusk="refresh-button">Refresh</button>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertHasClass('@link', 'text-blue-500')
+        ->click('@refresh-button')
+        ->pause(5)
+        ->assertHasClass('@link', 'text-red-500')
+        ;
+    }
+
+    public function test_a_component_can_show_loading_without_showing_island_loading()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="slowRequest" dusk="component-slow-request">Component slow request</button>
+                        <div wire:loading.block dusk="component-loading">Loading...</div>
+
+                        <div>
+                            @island
+                                <button wire:click="slowRequest" dusk="island-slow-request">Island slow request</button>
+                                <div wire:loading.block dusk="island-loading">Island loading...</div>
+                            @endisland
+                        </div>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+
+            ->click('@component-slow-request')
+            // Wait for the Livewire request to start...
+            ->pause(10)
+            ->assertVisible('@component-loading')
+            ->assertMissing('@island-loading')
+
+            // Wait for the Livewire request to finish...
+            ->waitUntilMissingText('Loading...')
+
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+            ;
+    }
+
+    public function test_an_island_can_show_loading_without_showing_component_loading()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="slowRequest" dusk="component-slow-request">Component slow request</button>
+                        <div wire:loading.block dusk="component-loading">Loading...</div>
+
+                        <div>
+                            @island
+                                <button wire:click="slowRequest" dusk="island-slow-request">Island slow request</button>
+                                <div wire:loading.block dusk="island-loading">Island loading...</div>
+                            @endisland
+                        </div>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+
+            ->click('@island-slow-request')
+            // Wait for the Livewire request to start...
+            ->pause(10)
+            ->assertMissing('@component-loading')
+            ->assertVisible('@island-loading')
+
+            // Wait for the Livewire request to finish...
+            ->waitUntilMissingText('Island loading...')
+
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+            ;
+    }
+
+    public function test_an_island_and_component_can_show_different_loading_states()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="slowRequest" dusk="component-slow-request">Component slow request</button>
+                        <div wire:loading.block dusk="component-loading">Loading...</div>
+
+                        <div>
+                            @island
+                                <button wire:click="slowRequest" dusk="island-slow-request">Island slow request</button>
+                                <div wire:loading.block dusk="island-loading">Island loading...</div>
+                            @endisland
+                        </div>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+
+            // Run the component request and then the island request...
+
+            ->click('@component-slow-request')
+            // Wait for the component request to start...
+            ->pause(10)
+            ->assertVisible('@component-loading')
+            ->assertMissing('@island-loading')
+
+            // Wait a bit before starting the island request...
+            ->pause(200)
+
+            ->click('@island-slow-request')
+            // Wait for the island request to start...
+            ->pause(10)
+            ->assertVisible('@component-loading')
+            ->assertVisible('@island-loading')
+
+            // Wait for the component request to finish...
+            ->waitUntilMissingText('Loading...')
+
+            ->assertMissing('@component-loading')
+            ->assertVisible('@island-loading')
+
+            // Wait for the island request to finish...
+            ->waitUntilMissingText('Island loading...')
+
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+
+            // Run the island request and then the component request...
+
+            ->click('@island-slow-request')
+            // Wait for the island request to start...
+            ->pause(10)
+            ->assertMissing('@component-loading')
+            ->assertVisible('@island-loading')
+
+            // Wait a bit before starting the component request...
+            ->pause(200)
+
+            ->click('@component-slow-request')
+            // Wait for the component request to start...
+            ->pause(10)
+            ->assertVisible('@component-loading')
+            ->assertVisible('@island-loading')
+
+            // Wait for the island request to finish...
+            ->waitUntilMissingText('Island loading...')
+
+            ->assertVisible('@component-loading')
+            ->assertMissing('@island-loading')
+
+            // Wait for the component request to finish...
+            ->waitUntilMissingText('Loading...')
+
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+            ;
+    }
+
+    public function test_a_component_can_show_targeted_loading()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="slowRequest" dusk="component-slow-request">Component slow request</button>
+                        <div wire:loading.block dusk="component-loading">Loading...</div>
+                        <div wire:loading.block wire:target="slowRequest" dusk="component-loading-targeted">Component loading targeted...</div>
+                        <div wire:loading.block wire:target="otherRequest" dusk="component-loading-targeted-other">Component loading targeted other...</div>
+
+                        <div>
+                            @island
+                                <button wire:click="slowRequest" dusk="island-slow-request">Island slow request</button>
+                                <div wire:loading.block dusk="island-loading">Island loading...</div>
+                                <div wire:loading.block wire:target="slowRequest" dusk="island-loading-targeted">Island loading targeted...</div>
+                                <div wire:loading.block wire:target="otherRequest" dusk="island-loading-targeted-other">Island loading targeted other...</div>
+                            @endisland
+                        </div>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('@component-loading')
+            ->assertMissing('@component-loading-targeted')
+            ->assertMissing('@component-loading-targeted-other')
+            ->assertMissing('@island-loading')
+            ->assertMissing('@island-loading-targeted')
+            ->assertMissing('@island-loading-targeted-other')
+
+            ->click('@component-slow-request')
+            // Wait for the component request to start...
+            ->pause(10)
+            ->assertVisible('@component-loading')
+            ->assertVisible('@component-loading-targeted')
+            ->assertMissing('@component-loading-targeted-other')
+            ->assertMissing('@island-loading')
+            ->assertMissing('@island-loading-targeted')
+            ->assertMissing('@island-loading-targeted-other')
+
+            // Wait for the component request to finish...
+            ->waitUntilMissingText('Loading...')
+
+            ->assertMissing('@component-loading')
+            ->assertMissing('@component-loading-targeted')
+            ->assertMissing('@component-loading-targeted-other')
+            ->assertMissing('@island-loading')
+            ->assertMissing('@island-loading-targeted')
+            ->assertMissing('@island-loading-targeted-other')
+            ;
+    }
+
+    public function test_an_island_can_show_targeted_loading()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="slowRequest" dusk="component-slow-request">Component slow request</button>
+                        <div wire:loading.block dusk="component-loading">Loading...</div>
+                        <div wire:loading.block wire:target="slowRequest" dusk="component-loading-targeted">Component loading targeted...</div>
+                        <div wire:loading.block wire:target="otherRequest" dusk="component-loading-targeted-other">Component loading targeted other...</div>
+
+                        <div>
+                            @island
+                                <button wire:click="slowRequest" dusk="island-slow-request">Island slow request</button>
+                                <div wire:loading.block dusk="island-loading">Island loading...</div>
+                                <div wire:loading.block wire:target="slowRequest" dusk="island-loading-targeted">Island loading targeted...</div>
+                                <div wire:loading.block wire:target="otherRequest" dusk="island-loading-targeted-other">Island loading targeted other...</div>
+                            @endisland
+                        </div>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('@component-loading')
+            ->assertMissing('@component-loading-targeted')
+            ->assertMissing('@component-loading-targeted-other')
+            ->assertMissing('@island-loading')
+            ->assertMissing('@island-loading-targeted')
+            ->assertMissing('@island-loading-targeted-other')
+
+            ->click('@island-slow-request')
+            // Wait for the island request to start...
+            ->pause(10)
+            ->assertMissing('@component-loading')
+            ->assertMissing('@component-loading-targeted')
+            ->assertMissing('@component-loading-targeted-other')
+            ->assertVisible('@island-loading')
+            ->assertVisible('@island-loading-targeted')
+            ->assertMissing('@island-loading-targeted-other')
+
+            // Wait for the island request to finish...
+            ->waitUntilMissingText('Island loading...')
+
+            ->assertMissing('@component-loading')
+            ->assertMissing('@component-loading-targeted')
+            ->assertMissing('@component-loading-targeted-other')
+            ->assertMissing('@island-loading')
+            ->assertMissing('@island-loading-targeted')
+            ->assertMissing('@island-loading-targeted-other')
+            ;
+    }
+
+    public function test_a_second_component_request_doesnt_cancel_loading()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="slowRequest" dusk="component-slow-request">Component slow request</button>
+                        <div wire:loading.block dusk="component-loading">Loading...</div>
+
+                        <div>
+                            @island
+                                <button wire:click="slowRequest" dusk="island-slow-request">Island slow request</button>
+                                <div wire:loading.block dusk="island-loading">Island loading...</div>
+                            @endisland
+                        </div>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+
+            ->click('@component-slow-request')
+            // Wait for the component request to start...
+            ->pause(10)
+            ->assertVisible('@component-loading')
+            ->assertMissing('@island-loading')
+
+            // Pause for a bit before starting the second request...
+            ->pause(300)
+
+            ->click('@component-slow-request')
+            // Wait for the component request to start...
+            ->pause(10)
+            ->assertVisible('@component-loading')
+            ->assertMissing('@island-loading')
+
+            // Pause for long enough for the first request to finish if it were to continue to run...
+            ->pause(300)
+            ->assertVisible('@component-loading')
+            ->assertMissing('@island-loading')
+
+            // Pause for long enough for the second request to finish if it were to continue to run...
+            ->pause(300)
+            ->waitUntilMissingText('Loading...')
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+            ;
+    }
+
+    public function test_a_second_island_request_doesnt_cancel_loading()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="slowRequest" dusk="component-slow-request">Component slow request</button>
+                        <div wire:loading.block dusk="component-loading">Loading...</div>
+
+                        <div>
+                            @island
+                                <button wire:click="slowRequest" dusk="island-slow-request">Island slow request</button>
+                                <div wire:loading.block dusk="island-loading">Island loading...</div>
+                            @endisland
+                        </div>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+
+            ->click('@island-slow-request')
+            // Wait for the island request to start...
+            ->pause(10)
+            ->assertMissing('@component-loading')
+            ->assertVisible('@island-loading')
+
+            // Pause for a bit before starting the second request...
+            ->pause(300)
+
+            ->click('@island-slow-request')
+            // Wait for the island request to start...
+            ->pause(10)
+            ->assertMissing('@component-loading')
+            ->assertVisible('@island-loading')
+
+            // Pause for long enough for the first request to finish if it were to continue to run...
+            ->pause(300)
+            ->assertMissing('@component-loading')
+            ->assertVisible('@island-loading')
+
+            // Pause for long enough for the second request to finish if it were to continue to run...
+            ->pause(300)
+            ->waitUntilMissingText('Island loading...')
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+            ;
+    }
+
+    public function test_a_cancelled_component_request_cancels_loading()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="slowRequest" dusk="component-slow-request">Component slow request</button>
+                        <div wire:loading.block dusk="component-loading">Loading...</div>
+
+                        <div>
+                            @island
+                                <button wire:click="slowRequest" dusk="island-slow-request">Island slow request</button>
+                                <div wire:loading.block dusk="island-loading">Island loading...</div>
+                            @endisland
+                        </div>
+                    </div>
+                    @script
+                    <script>
+                        this.intercept(({ cancel }) => {
+                            setTimeout(() => {
+                                cancel();
+                            }, 200);
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+
+            ->click('@component-slow-request')
+            // Wait for the component request to start...
+            ->pause(10)
+            ->assertVisible('@component-loading')
+            ->assertMissing('@island-loading')
+
+            // The request is scheduled to be cancelled after 200ms, so we pause for a bit longer than that...
+            ->pause(300)
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+            ;
+    }
+
+    public function test_a_cancelled_island_request_cancels_loading()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function slowRequest() {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="slowRequest" dusk="component-slow-request">Component slow request</button>
+                        <div wire:loading.block dusk="component-loading">Loading...</div>
+
+                        <div>
+                            @island
+                                <button wire:click="slowRequest" dusk="island-slow-request">Island slow request</button>
+                                <div wire:loading.block dusk="island-loading">Island loading...</div>
+                            @endisland
+                        </div>
+                    </div>
+                    @script
+                    <script>
+                        this.intercept(({ cancel }) => {
+                            setTimeout(() => {
+                                cancel();
+                            }, 200);
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+
+            ->click('@island-slow-request')
+            // Wait for the island request to start...
+            ->pause(10)
+            ->assertMissing('@component-loading')
+            ->assertVisible('@island-loading')
+
+            // The request is scheduled to be cancelled after 200ms, so we pause for a bit longer than that...
+            ->pause(300)
+            ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+            ;
     }
 }
 

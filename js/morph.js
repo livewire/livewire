@@ -1,6 +1,7 @@
 import { trigger } from "@/hooks"
-import { closestComponent } from "@/store"
+import { findComponentByEl } from "@/store"
 import Alpine from 'alpinejs'
+import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFragmentMarker } from "./fragment"
 
 export function morph(component, el, html) {
     let wrapperTag = el.parentElement
@@ -8,13 +9,19 @@ export function morph(component, el, html) {
         ? el.parentElement.tagName.toLowerCase()
         : 'div'
 
+    let customElement = customElements.get(wrapperTag)
+
+    // If the wrapper tag is a custom element, we can't instantiate it using the hyphenated
+    // tag name, so we need to get the name off the custom element instead...
+    wrapperTag = customElement ? customElement.name : wrapperTag
+
     let wrapper = document.createElement(wrapperTag)
 
     wrapper.innerHTML = html
     let parentComponent
 
     try {
-        parentComponent = closestComponent(el.parentElement)
+        parentComponent = findComponentByEl(el.parentElement)
     } catch (e) {}
 
     parentComponent && (wrapper.__livewire = parentComponent)
@@ -56,11 +63,65 @@ export function morph(component, el, html) {
         }
     })
 
-    Alpine.morph(el, to, {
-        updating: (el, toEl, childrenOnly, skip, skipChildren) => {
+    Alpine.morph(el, to, getMorphConfig(component))
+
+    trigger('morphed', { el, component })
+}
+
+export function morphFragment(component, startNode, endNode, toHTML) {
+    let fromContainer = startNode.parentElement
+    let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
+
+    let toContainer = document.createElement(fromContainerTag)
+    toContainer.innerHTML = toHTML
+    toContainer.__livewire = component
+
+    // Add the parent component reference to an outer wrapper if it exists...
+    let parentElement = component.el.parentElement
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
+
+    let parentComponent
+
+    try {
+        parentComponent = parentElement ? findComponentByEl(parentElement) : null
+    } catch (e) {}
+
+    if (parentComponent) {
+        let parentProviderWrapper = document.createElement(parentElementTag)
+        parentProviderWrapper.appendChild(toContainer)
+        parentProviderWrapper.__livewire = parentComponent
+    }
+
+    trigger('island.morph', { startNode, endNode, component })
+
+    Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
+
+    trigger('island.morphed', { startNode, endNode, component })
+}
+
+function getMorphConfig(component) {
+    return {
+        updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+            // Skip fragments...
+            if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
+                let metadata = extractFragmentMetadataFromMarkerNode(toEl)
+
+                if (metadata.mode !== 'morph') {
+                    skipUntil(node => {
+                        if (isEndFragmentMarker(node)) {
+                            let endMarkerMetadata = extractFragmentMetadataFromMarkerNode(node)
+
+                            return endMarkerMetadata.token === metadata.token
+                        }
+
+                        return false
+                    })
+                }
+            }
+
             if (isntElement(el)) return
 
-            trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren })
+            trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil })
 
             // bypass DOM diffing for children by overwriting the content
             if (el.__livewire_replace === true) el.innerHTML = toEl.innerHTML;
@@ -105,7 +166,7 @@ export function morph(component, el, html) {
         added: (el) => {
             if (isntElement(el)) return
 
-            const closestComponentId = closestComponent(el).id
+            const findComponentByElId = findComponentByEl(el).id
 
             trigger('morph.added', { el })
         },
@@ -113,18 +174,16 @@ export function morph(component, el, html) {
         key: (el) => {
             if (isntElement(el)) return
 
-            return el.hasAttribute(`wire:key`)
-                ? el.getAttribute(`wire:key`)
-                : // If no "key", then first check for "wire:id", then "id"
-                el.hasAttribute(`wire:id`)
-                    ? el.getAttribute(`wire:id`)
+            return el.hasAttribute(`wire:id`)
+                ? el.getAttribute(`wire:id`)
+                : // If no component "id", then first check for "wire:key", then "id"
+                el.hasAttribute(`wire:key`)
+                    ? el.getAttribute(`wire:key`)
                     : el.id
         },
 
         lookahead: false,
-    })
-
-    trigger('morphed', { el, component })
+    }
 }
 
 function isntElement(el) {

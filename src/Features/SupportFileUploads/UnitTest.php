@@ -21,8 +21,6 @@ class UnitTest extends \Tests\TestCase
 {
     public function test_component_must_have_file_uploads_trait_to_accept_file_uploads()
     {
-        $this->markTestSkipped(); // @todo: need to implement this properly...
-
         $this->expectException(MissingFileUploadsTraitException::class);
 
         Livewire::test(NonFileUploadComponent::class)
@@ -347,7 +345,8 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file2)
             ->call('upload', 'uploaded-avatar2.png');
 
-        $this->assertCount(2, FileUploadConfiguration::storage()->allFiles());
+        // 4 files because we have 2 files and 2 meta files...
+        $this->assertCount(4, FileUploadConfiguration::storage()->allFiles());
 
         // Make temporary files look 2 days old.
         foreach (FileUploadConfiguration::storage()->allFiles() as $fileShortPath) {
@@ -358,7 +357,8 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file3)
             ->call('upload', 'uploaded-avatar3.png');
 
-        $this->assertCount(1, FileUploadConfiguration::storage()->allFiles());
+        // 2 files because we have 1 file and 1 meta file...
+        $this->assertCount(2, FileUploadConfiguration::storage()->allFiles());
     }
 
     public function test_temporary_files_older_than_24_hours_are_not_cleaned_up_if_configuration_specifies()
@@ -379,7 +379,8 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file2)
             ->call('upload', 'uploaded-avatar2.png');
 
-        $this->assertCount(2, FileUploadConfiguration::storage()->allFiles());
+        // 4 files because we have 2 files and 2 meta files...
+        $this->assertCount(4, FileUploadConfiguration::storage()->allFiles());
 
         // Make temporary files look 2 days old.
         foreach (FileUploadConfiguration::storage()->allFiles() as $fileShortPath) {
@@ -390,7 +391,8 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file3)
             ->call('upload', 'uploaded-avatar3.png');
 
-        $this->assertCount(3, FileUploadConfiguration::storage()->allFiles());
+        // 6 files because we have 2 files and 4 meta files...
+        $this->assertCount(6, FileUploadConfiguration::storage()->allFiles());
     }
 
     public function test_temporary_files_older_than_24_hours_are_not_cleaned_up_on_every_new_upload_when_using_S3()
@@ -411,7 +413,8 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file2)
             ->call('upload', 'uploaded-avatar2.png');
 
-        $this->assertCount(2, FileUploadConfiguration::storage()->allFiles());
+        // 4 files because we have 2 files and 2 meta files...
+        $this->assertCount(4, FileUploadConfiguration::storage()->allFiles());
 
         // Make temporary files look 2 days old.
         foreach (FileUploadConfiguration::storage()->allFiles() as $fileShortPath) {
@@ -422,7 +425,8 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file3)
             ->call('upload', 'uploaded-avatar3.png');
 
-        $this->assertCount(3, FileUploadConfiguration::storage()->allFiles());
+        // 6 files because we have 2 files and 4 meta files...
+        $this->assertCount(6, FileUploadConfiguration::storage()->allFiles());
     }
 
     public function test_S3_can_be_configured_so_that_temporary_files_older_than_24_hours_are_cleaned_up_automatically()
@@ -831,6 +835,54 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors([
                 'photo' => 'mimetypes',
             ]);
+    }
+
+    public function test_the_default_file_upload_controller_middleware_overwritten()
+    {
+        config()->set('livewire.temporary_file_upload.middleware', ['throttle:60,1']);
+        FileUploadController::$defaultMiddleware = ['tenant'];
+
+        $middleware = Arr::pluck(FileUploadController::middleware(), 'middleware');
+
+        $this->assertEquals(['tenant', 'throttle:60,1'], $middleware);
+    }
+
+    public function test_a_meta_file_gets_stored_with_a_temporary_file()
+    {
+        $disk = Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file);
+
+        $temporaryFile = $component->get('photo');
+
+        $disk->assertExists('livewire-tmp/'.$temporaryFile->getFileName().'.json');
+
+        $metaFileData = $temporaryFile->metaFileData();
+
+        $this->assertEquals($file->getClientOriginalName(), $metaFileData['name']);
+        $this->assertEquals($file->getMimeType(), $metaFileData['type']);
+        $this->assertEquals($file->getSize(), $metaFileData['size']);
+        $this->assertEquals($file->hashName(), $metaFileData['hash']);
+    }
+
+    public function test_file_name_falls_back_to_extracting_file_name_from_hash_if_no_meta_file_is_present()
+    {
+        $disk = Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $hashWithOriginalNameEmbedded = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
+
+        $disk->putFileAs('livewire-tmp', $file, $hashWithOriginalNameEmbedded);
+
+        $temporaryFile = TemporaryUploadedFile::createFromLivewire($disk->path('livewire-tmp/'.$hashWithOriginalNameEmbedded));
+
+        $disk->assertMissing('livewire-tmp/'.$temporaryFile->getFileName().'.json');
+
+        $this->assertEquals($file->getClientOriginalName(), $temporaryFile->getClientOriginalName());
     }
 }
 

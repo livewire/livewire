@@ -26,6 +26,7 @@ class FrontendAssets extends Mechanism
         });
 
         Route::get('/livewire/livewire.min.js.map', [static::class, 'maps']);
+        Route::get('/livewire/livewire.csp.min.js.map', [static::class, 'cspMaps']);
 
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
         Blade::directive('livewireScriptConfig', [static::class, 'livewireScriptConfig']);
@@ -77,18 +78,34 @@ class FrontendAssets extends Mechanism
 
     public function returnJavaScriptAsFile()
     {
-        return Utils::pretendResponseIsFile(
-            config('app.debug')
-                ? __DIR__.'/../../../dist/livewire.js'
-                : __DIR__.'/../../../dist/livewire.min.js'
-        );
+        $isCsp = app('livewire')->isCspSafe();
+
+        if (config('app.debug')) {
+            $file = $isCsp ? 'livewire.csp.js' : 'livewire.js';
+        } else {
+            $file = $isCsp ? 'livewire.csp.min.js' : 'livewire.min.js';
+        }
+
+        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/'.$file);
     }
 
     public function maps()
     {
-        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.min.js.map');
+        $file = app('livewire')->isCspSafe()
+            ? 'livewire.csp.min.js.map'
+            : 'livewire.min.js.map';
+
+        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/'.$file);
     }
 
+    public function cspMaps()
+    {
+        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.csp.min.js.map');
+    }
+
+    /**
+     * @return string
+     */
     public static function styles($options = [])
     {
         app(static::class)->hasRenderedStyles = true;
@@ -102,7 +119,7 @@ class FrontendAssets extends Mechanism
         $html = <<<HTML
         <!-- Livewire Styles -->
         <style {$nonce}>
-            [wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {
+            [wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.list-item][wire\:loading\.list-item], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {
                 display: none;
             }
 
@@ -139,6 +156,9 @@ class FrontendAssets extends Mechanism
         return static::minify($html);
     }
 
+    /**
+     * @return string
+     */
     public static function scripts($options = [])
     {
         app(static::class)->hasRenderedScripts = true;
@@ -231,7 +251,13 @@ class FrontendAssets extends Mechanism
         $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
         $versionedFileName = $publishedManifest['/livewire.js'];
 
-        $fileName = config('app.debug') ? '/livewire.js' : '/livewire.min.js';
+        $isCsp = app('livewire')->isCspSafe();
+
+        if (config('app.debug')) {
+            $fileName = $isCsp ? '/livewire.csp.js' : '/livewire.js';
+        } else {
+            $fileName = $isCsp ? '/livewire.csp.min.js' : '/livewire.min.js';
+        }
 
         $versionedFileName = "{$fileName}?id={$versionedFileName}";
 

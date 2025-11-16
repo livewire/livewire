@@ -16,7 +16,9 @@ let autofocus = false
 
 export default function (Alpine) {
 
-    Alpine.navigate = (url) => {
+    Alpine.navigate = (url, options = {}) => {
+        let { preserveScroll = false } = options
+
         let destination = createUrlObjectFromString(url)
 
         let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
@@ -25,7 +27,7 @@ export default function (Alpine) {
 
         if (prevented) return
 
-        navigateTo(destination)
+        navigateTo(destination, { preserveScroll })
     }
 
     Alpine.navigate.disableProgressBar = () => {
@@ -37,6 +39,8 @@ export default function (Alpine) {
     Alpine.directive('navigate', (el, { modifiers }) => {
         let shouldPrefetchOnHover = modifiers.includes('hover')
 
+        let preserveScroll = modifiers.includes('preserve-scroll')
+
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
 
@@ -44,6 +48,8 @@ export default function (Alpine) {
 
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
+            }, () => {
+                showProgressBar && finishAndHideProgressBar()
             })
         })
 
@@ -54,6 +60,8 @@ export default function (Alpine) {
 
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
+            }, () => {
+                showProgressBar && finishAndHideProgressBar()
             })
 
             whenItIsReleased(() => {
@@ -63,20 +71,18 @@ export default function (Alpine) {
 
                 if (prevented) return
 
-                navigateTo(destination);
+                navigateTo(destination, { preserveScroll })
             })
         })
     })
 
-    function navigateTo(destination, shouldPushToHistoryState = true) {
+    function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
             fireEventForOtherLibrariesToHookInto('alpine:navigating')
 
             restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway()
-
-            showProgressBar && finishAndHideProgressBar()
 
             cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement()
 
@@ -102,7 +108,7 @@ export default function (Alpine) {
                         unPackPersistedPopovers(persistedEl)
                     })
 
-                    restoreScrollPositionOrScrollToTop()
+                    !preserveScroll && restoreScrollPositionOrScrollToTop()
 
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {
@@ -113,10 +119,13 @@ export default function (Alpine) {
                             nowInitializeAlpineOnTheNewPage(Alpine)
 
                             fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                            showProgressBar && finishAndHideProgressBar()
                         })
                     })
                 })
             })
+        }, () => {
+            showProgressBar && finishAndHideProgressBar()
         })
     }
 
@@ -131,9 +140,7 @@ export default function (Alpine) {
 
                 if (prevented) return
 
-                let shouldPushToHistoryState = false
-
-                navigateTo(destination, shouldPushToHistoryState)
+                navigateTo(destination, { shouldPushToHistoryState: false })
             })
         },
         (html, url, currentPageUrl, currentPageKey) => {
@@ -193,9 +200,9 @@ export default function (Alpine) {
     })
 }
 
-function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
+function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback, errorCallback) {
     getPretchedHtmlOr(fromDestination, callback, () => {
-        fetchHtml(fromDestination, callback)
+        fetchHtml(fromDestination, callback, errorCallback)
     })
 }
 

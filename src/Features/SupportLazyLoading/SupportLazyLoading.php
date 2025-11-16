@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportLazyLoading;
 
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\HandleComponents\ViewContext;
 use function Livewire\{ on, store, trigger, wrap };
 use Illuminate\Routing\Route;
@@ -35,28 +36,58 @@ class SupportLazyLoading extends ComponentHook
 
             return $this;
         });
+
+        Route::macro('defer', function ($enabled = true) {
+            $this->defaults['defer'] = $enabled;
+
+            return $this;
+        });
     }
 
     public function mount($params)
     {
-        $hasLazyParam = isset($params['lazy']);
-        $lazyProperty = $params['lazy'] ?? false;
+        $shouldBeLazy = false;
+        $isDeferred = false;
         $isolate = true;
+
+        if (isset($params['lazy']) && $params['lazy']) $shouldBeLazy = true;
+        if (isset($params['lazy.bundle']) && $params['lazy.bundle']) $shouldBeLazy = true;
+        if (isset($params['defer']) && $params['defer']) $shouldBeLazy = true;
+        if (isset($params['defer.bundle']) && $params['defer.bundle']) $shouldBeLazy = true;
+
+        if (isset($params['lazy']) && $params['lazy'] === 'on-load') $isDeferred = true;
+        if (isset($params['lazy.bundle']) && $params['lazy.bundle'] === 'on-load') $isDeferred = true;
+        if (isset($params['defer']) && $params['defer']) $isDeferred = true;
+        if (isset($params['defer.bundle']) && $params['defer.bundle']) $isDeferred = true;
+
+        if (isset($params['lazy.bundle']) && $params['lazy.bundle']) $isolate = false;
+        if (isset($params['defer.bundle']) && $params['defer.bundle']) $isolate = false;
 
         $reflectionClass = new \ReflectionClass($this->component);
         $lazyAttribute = $reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)[0] ?? null;
+        $deferAttribute = $reflectionClass->getAttributes(\Livewire\Attributes\Defer::class)[0] ?? null;
+
+        if ($lazyAttribute) $shouldBeLazy = true;
+        if ($deferAttribute) $shouldBeLazy = true;
+        if ($deferAttribute) $isDeferred = true;
 
         // If Livewire::withoutLazyLoading()...
         if (static::$disableWhileTesting) return;
-        // If `:lazy="false"` disable lazy loading...
-        if ($hasLazyParam && ! $lazyProperty) return;
-        // If no lazy loading is included at all...
-        if (! $hasLazyParam && ! $lazyAttribute) return;
+        // If `:lazy="false"` or no lazy loading is included at all...
+        if (! $shouldBeLazy) return;
 
         if ($lazyAttribute) {
             $attribute = $lazyAttribute->newInstance();
 
-            $isolate = $attribute->isolate;
+            if ($attribute->bundle !== null) $isolate = ! $attribute->bundle;
+            if ($attribute->isolate !== null) $isolate = $attribute->isolate;
+        }
+
+        if ($deferAttribute) {
+            $attribute = $deferAttribute->newInstance();
+
+            if ($attribute->bundle !== null) $isolate = ! $attribute->bundle;
+            if ($attribute->isolate !== null) $isolate = $attribute->isolate;
         }
 
         $this->component->skipMount();
@@ -65,7 +96,7 @@ class SupportLazyLoading extends ComponentHook
         store($this->component)->set('isLazyIsolated', $isolate);
 
         $this->component->skipRender(
-            $this->generatePlaceholderHtml($params)
+            $this->generatePlaceholderHtml($params, $isDeferred)
         );
     }
 
@@ -102,15 +133,19 @@ class SupportLazyLoading extends ComponentHook
         $returnEarly();
     }
 
-    public function generatePlaceholderHtml($params)
+    public function generatePlaceholderHtml($params, $isDeferred = false)
     {
         $this->registerContainerComponent();
 
         $container = app('livewire')->new('__mountParamsContainer');
 
-        $container->forMount = array_diff_key($params, array_flip(['lazy']));
+        $container->forMount = array_diff_key($params, array_flip(['lazy', 'defer']));
 
-        $snapshot = app('livewire')->snapshot($container);
+        $context = new ComponentContext($container, mounting: true);
+
+        trigger('dehydrate', $container, $context);
+
+        $snapshot = app('livewire')->snapshot($container, $context);
 
         $encoded = base64_encode(json_encode($snapshot));
 
@@ -126,7 +161,7 @@ class SupportLazyLoading extends ComponentHook
         });
 
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
-            ((isset($params['lazy']) and $params['lazy'] === 'on-load') ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\''.$encoded.'\')',
+            ($isDeferred ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\''.$encoded.'\')',
         ]);
 
         $replaceHtml = function ($newHtml) use (&$html) {
@@ -140,11 +175,19 @@ class SupportLazyLoading extends ComponentHook
 
     protected function getPlaceholderView($component, $params)
     {
-        $globalPlaceholder = config('livewire.lazy_placeholder');
+        // @todo: This is a hack. Fix this so it uses a deterministically generated name...
+        $name = (string) str($this->component->getName())->afterLast('.');
+        $compiledPlaceholder = "livewire-compiled::{$name}_placeholder";
 
-        $placeholderHtml = $globalPlaceholder
-            ? view($globalPlaceholder)->render()
-            : '<div></div>';
+        $globalPlaceholder = config('livewire.component_placeholder');
+
+        if (view()->exists($compiledPlaceholder)) {
+            $placeholderHtml = $compiledPlaceholder;
+        } else if ($globalPlaceholder) {
+            $placeholderHtml = view($globalPlaceholder)->render();
+        } else {
+            $placeholderHtml = '<div></div>';
+        }
 
         $viewOrString = wrap($component)->withFallback($placeholderHtml)->placeholder($params);
 

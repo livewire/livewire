@@ -1039,33 +1039,39 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    public function test_it_handles_query_string_params_without_values()
+    public function test_it_handles_query_string_params_without_values_and_does_not_throw_a_console_error()
     {
-        $id = 'a'.str()->random(10);
+        $componentClass = new class extends Component
+        {
+            #[Url]
+            public $foo;
+
+            public function setFoo()
+            {
+                $this->foo = 'bar';
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="setFoo" dusk="setButton">Set foo</button>
+                    <span dusk="output">@js($foo)</span>
+                </div>
+                HTML;
+            }
+        };
+
+        $id = 'a'.substr(md5(str()->beforeLast($componentClass::class, '$')), 0, 8);
 
         DuskTestable::createBrowser($id, [
-            $id => new class extends Component
-            {
-                #[Url]
-                public $foo;
-
-                public function setFoo()
-                {
-                    $this->foo = 'bar';
-                }
-
-                public function render()
-                {
-                    return <<<'HTML'
-                    <div>
-                        <button wire:click="setFoo" dusk="setButton">Set foo</button>
-                        <span dusk="output">@js($foo)</span>
-                    </div>
-                    HTML;
-                }
-            }
+            $id => $componentClass
         ])
+        // It's essential for this test that `flag`, in the query string below, is set
+        // but has no value. That is why class and ID are manually set up above...
         ->visit('/livewire-dusk/'.$id.'?flag')
+
+        // Now just test the component still functions without any console errors...
         ->assertQueryStringMissing('foo')
         ->waitForLivewire()->click('@setButton')
         ->assertSeeIn('@output', '\'bar\'')

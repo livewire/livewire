@@ -1,4 +1,5 @@
 import { componentsByName } from "@/store"
+import { findRefEl } from "@/features/supportRefs"
 
 export function dispatch(component, name, params) {
     dispatchEvent(component.el, name, params)
@@ -12,12 +13,26 @@ export function dispatchSelf(component, name, params) {
     dispatchEvent(component.el, name, params, false)
 }
 
+export function dispatchEl(component, selector, name, params) {
+    let targets = component.el.querySelectorAll(selector)
+
+    targets.forEach(target => {
+        dispatchEvent(target, name, params, false)
+    })
+}
+
 export function dispatchTo(componentName, name, params) {
     let targets = componentsByName(componentName)
 
     targets.forEach(target => {
         dispatchEvent(target.el, name, params, false)
     })
+}
+
+export function dispatchRef(component, ref, name, params) {
+    let el = findRefEl(component, ref)
+
+    dispatchEvent(el, name, params, false)
 }
 
 export function listen(component, name, callback) {
@@ -42,6 +57,11 @@ export function on(eventName, callback) {
 }
 
 function dispatchEvent(target, name, params, bubbles = true) {
+    // We need to ensure the params are an array (or object), so we need to wrap them if they're not already...
+    if (typeof params === 'string') {
+        params = [params]
+    }
+
     let e = new CustomEvent(name, { bubbles, detail: params })
 
     e.__livewire = { name, params, receivedBy: [] }
