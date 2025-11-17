@@ -129,6 +129,19 @@ Using `Route::livewire()` is now the preferred method and is required for single
 
 [Learn more about routing →](/docs/4.x/components#page-components)
 
+### Use `wire:navigate:scroll`
+
+When using `wire:scroll` to preserve scroll in a scrollable container across `wire:navigate` requests in v3, you will need to instead us `wire:navigate:scroll` in v4:
+
+```
+@persist('sidebar')
+    <div class="overflow-y-scroll" wire:scroll> <!-- [tl! remove] -->
+    <div class="overflow-y-scroll" wire:navigate:scroll> <!-- [tl! add] -->
+        <!-- ... -->
+    </div>
+@endpersist
+```
+
 ## Medium-impact changes
 
 These changes may affect certain parts of your application depending on which features you use.

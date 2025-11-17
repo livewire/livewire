@@ -181,11 +181,11 @@ Read more in the [`wire:current` documentation](/docs/4.x/wire-current).
 
 By default, Livewire will preserve the scroll position of a page when navigating back and forth between pages. However, sometimes you may want to preserve the scroll position of an individual element you are persisting between page loads.
 
-To do this, you must add `wire:scroll` to the element containing a scrollbar like so:
+To do this, you must add `wire:navigate:scroll` to the element containing a scrollbar like so:
 
 ```html
-@persist('scrollbar')
-<div class="overflow-y-scroll" wire:scroll> <!-- [tl! highlight] -->
+@persist('sidebar')
+<div class="overflow-y-scroll" wire:navigate:scroll> <!-- [tl! highlight] -->
     <!-- ... -->
 </div>
 @endpersist
