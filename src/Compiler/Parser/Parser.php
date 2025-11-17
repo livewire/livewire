@@ -52,9 +52,10 @@ class Parser
 
     protected function ensureAnonymousClassHasReturn(string $contents): string
     {
-        if (preg_match('/\bnew\b/', $contents) && !preg_match('/\breturn\s+new\b/', $contents)) {
-            return preg_replace('/\bnew\b/', 'return new', $contents, 1);
+        if (preg_match('/^(?!.*\breturn\s+).*\bnew\s+class\s+extends\s+Component/m', $contents)) {
+            return preg_replace('/^(\s*)(new\s+class\s+extends\s+Component)/m', '$1return $2', $contents, 1);
         }
+
         return $contents;
     }
 
