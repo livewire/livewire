@@ -322,4 +322,22 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@change')
             ->assertConsoleLogHasNoErrors();
     }
+
+    public function test_empty_wire_expression_does_not_throw_errors()
+    {
+        Livewire::visit(new class extends Component {
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click dusk="button">Click me</button>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->click('@button')
+            ->pause(100)
+            ->assertConsoleLogHasNoErrors();
+    }
 }
