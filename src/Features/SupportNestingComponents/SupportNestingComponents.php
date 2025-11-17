@@ -12,12 +12,12 @@ class SupportNestingComponents extends ComponentHook
 {
     static function provide()
     {
-        on('pre-mount', function ($name, $params, $key, $parent, $hijack, $slots) {
+        on('pre-mount', function ($name, $params, $key, $parent, $hijack, $slots, $attributes) {
             // If this has already been rendered spoof it...
             if ($parent && static::hasPreviouslyRenderedChild($parent, $key)) {
                 [$tag, $childId] = static::getPreviouslyRenderedChild($parent, $key);
 
-                $finish = trigger('mount.stub', $tag, $childId, $params, $parent, $key, $slots);
+                $finish = trigger('mount.stub', $tag, $childId, $params, $parent, $key, $slots, $attributes);
 
                 $idAttribute = " wire:id=\"{$childId}\"";
                 $nameAttribute = " wire:name=\"{$name}\"";
