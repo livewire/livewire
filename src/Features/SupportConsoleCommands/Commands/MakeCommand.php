@@ -180,6 +180,13 @@ class MakeCommand extends Command
 
         $this->files->put($path, $content);
 
+        // Create test file if --test flag is present
+        if ($this->option('test')) {
+            $testPath = $this->getSingleFileComponentTestPath($path);
+            $testContent = $this->buildSingleFileComponentTest($name);
+            $this->files->put($testPath, $testContent);
+        }
+
         $this->components->info(sprintf('Livewire component [%s] created successfully.', $path));
 
         return 0;
@@ -346,6 +353,26 @@ class MakeCommand extends Command
         return $this->files->get($this->getStubPath('livewire-mfc-js.stub'));
     }
 
+    protected function getSingleFileComponentTestPath(string $sfcPath): string
+    {
+        // Convert: /path/⚡foo.blade.php → /path/⚡foo.test.php
+        return str_replace('.blade.php', '.test.php', $sfcPath);
+    }
+
+    protected function buildSingleFileComponentTest(string $name): string
+    {
+        // Use same stub as MFC, same format
+        $stub = $this->files->get($this->getStubPath('livewire-mfc-test.stub'));
+
+        $componentName = collect(explode('.', $name))
+            ->map(fn($segment) => Str::kebab($segment))
+            ->implode('.');
+
+        $stub = str_replace('[component-name]', $componentName, $stub);
+
+        return $stub;
+    }
+
     protected function getStubPath(string $stub): string
     {
         $customPath = $this->laravel->basePath('stubs/' . $stub);
@@ -413,7 +440,7 @@ class MakeCommand extends Command
             ['mfc', null, InputOption::VALUE_NONE, 'Create a multi-file component'],
             ['class', null, InputOption::VALUE_NONE, 'Create a class-based component'],
             ['type', null, InputOption::VALUE_REQUIRED, 'Component type (sfc, mfc, or class)'],
-            ['test', null, InputOption::VALUE_NONE, 'Create a test file for multi-file components'],
+            ['test', null, InputOption::VALUE_NONE, 'Create a test file'],
             ['emoji', null, InputOption::VALUE_REQUIRED, 'Use emoji in file/directory names (true or false)'],
             ['js', null, InputOption::VALUE_NONE, 'Create a JavaScript file for multi-file components'],
         ];
