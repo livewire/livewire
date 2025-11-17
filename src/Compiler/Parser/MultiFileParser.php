@@ -78,6 +78,11 @@ class MultiFileParser extends Parser
 
     public function generateScriptContents(): ?string
     {
+        // Return null if there's no script content
+        if ($this->scriptPortion === null || trim($this->scriptPortion) === '') {
+            return null;
+        }
+
         $scriptContents = trim($this->scriptPortion);
 
         return <<<JS
