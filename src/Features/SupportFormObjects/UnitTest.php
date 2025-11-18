@@ -926,6 +926,25 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('form.foo', 'bar2')
         ->assertSet('form.bob', 'lob2');
     }
+
+    function test_form_object_synth_rejects_non_form_classes()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid form object class');
+
+        $component = Livewire::test(new class extends TestComponent {
+            public PostFormStub $form;
+        });
+
+        // Create a synth instance and try to hydrate with a non-Form class
+        $synth = new FormObjectSynth(
+            new \Livewire\Mechanisms\HandleComponents\ComponentContext($component->instance()),
+            'form'
+        );
+
+        // This should throw because stdClass doesn't extend Form
+        $synth->hydrate(['title' => 'test'], ['class' => \stdClass::class], fn($k, $v) => $v);
+    }
 }
 
 class PostFormStub extends Form
