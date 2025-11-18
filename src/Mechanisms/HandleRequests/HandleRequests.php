@@ -4,6 +4,7 @@ namespace Livewire\Mechanisms\HandleRequests;
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 use Livewire\Mechanisms\Mechanism;
 
@@ -18,7 +19,7 @@ class HandleRequests extends Mechanism
         // Only set it if another provider hasn't already set it....
         if (! $this->updateRoute) {
             app($this::class)->setUpdateRoute(function ($handle) {
-                return Route::post('/livewire/update', $handle)->middleware('web');
+                return Route::post(EndpointResolver::updatePath(), $handle)->middleware('web');
             });
         }
 
