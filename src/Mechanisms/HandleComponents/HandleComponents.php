@@ -297,6 +297,11 @@ class HandleComponents extends Mechanism
             return $value;
         }
 
+        // Validate class against denylist before any synthesizer can instantiate it...
+        if (isset($meta['class'])) {
+            SecurityPolicy::validateClass($meta['class']);
+        }
+
         $synth = $this->propertySynth($meta['s'], $context, $path);
 
         return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path) {
@@ -313,6 +318,11 @@ class HandleComponents extends Mechanism
         // Nested properties get set as `__rm__` when they are removed. We don't want to hydrate these.
         if ($this->isRemoval($value) && str($path)->contains('.')) {
             return $value;
+        }
+
+        // Validate class against denylist before any synthesizer can instantiate it...
+        if (isset($meta['class'])) {
+            SecurityPolicy::validateClass($meta['class']);
         }
 
         $synth = $this->propertySynth($meta['s'], $context, $path);
