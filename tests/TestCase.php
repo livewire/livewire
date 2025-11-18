@@ -4,6 +4,7 @@ namespace Tests;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\RateLimiter;
 use Orchestra\Testbench\Dusk\Options;
 
 class TestCase extends \Orchestra\Testbench\Dusk\TestCase
@@ -30,6 +31,9 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
         Artisan::call('view:clear');
 
         app()->forgetInstance('livewire.factory');
+
+        // Clear checksum failure rate limits
+        RateLimiter::clear('livewire-checksum-failures:127.0.0.1');
 
         File::deleteDirectory($this->livewireViewsPath());
         File::deleteDirectory($this->livewireClassesPath());
