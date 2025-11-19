@@ -1,8 +1,9 @@
 <?php
 
-namespace Livewire\Mechanisms\HandleComponents;
+namespace Tests\Unit\Mechanisms\HandleComponents;
 
 use Illuminate\Console\Command;
+use Livewire\Mechanisms\HandleComponents\SecurityPolicy;
 
 class SecurityPolicyTest extends \Tests\TestCase
 {

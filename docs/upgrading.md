@@ -19,8 +19,7 @@ composer require livewire/livewire:^4.0@beta
 After updating, clear your application's cache:
 
 ```bash
-php artisan config:clear
-php artisan view:clear
+php artisan optimize:clear
 ```
 
 > [!info] View all changes on GitHub

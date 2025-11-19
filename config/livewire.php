@@ -256,4 +256,17 @@ return [
     */
 
     'csp_safe' => false,
+
+    /*
+    |---------------------------------------------------------------------------
+    | Max Property Nesting Depth
+    |---------------------------------------------------------------------------
+    |
+    | This value limits how deeply nested a property path can be when updating
+    | component properties (e.g., "user.profile.address.street" = 4 levels).
+    | This mitigates DoS attacks that might trigger excessive CPU usage.
+    |
+    */
+
+    'max_nesting_depth' => 10,
 ];

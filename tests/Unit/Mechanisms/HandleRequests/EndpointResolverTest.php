@@ -1,7 +1,8 @@
 <?php
 
-namespace Livewire\Mechanisms\HandleRequests;
+namespace Tests\Unit\Mechanisms\HandleRequests;
 
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\TestCase;
 
 class EndpointResolverTest extends TestCase

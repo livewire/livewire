@@ -1,8 +1,10 @@
 <?php
 
-namespace Livewire\Mechanisms\HandleComponents;
+namespace Tests\Unit\Mechanisms\HandleComponents;
 
 use Illuminate\Support\Facades\RateLimiter;
+use Livewire\Mechanisms\HandleComponents\Checksum;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Tests\TestCase;
 

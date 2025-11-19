@@ -433,6 +433,12 @@ class HandleComponents extends Mechanism
     {
         $segments = explode('.', $path);
 
+        // Limit property path depth to prevent DoS attacks
+        $maxDepth = config('livewire.max_nesting_depth');
+        if ($maxDepth !== null && count($segments) > $maxDepth) {
+            throw new MaxNestingDepthExceededException($path, $maxDepth);
+        }
+
         $property = array_shift($segments);
 
         $finish = trigger('update', $component, $path, $value);
