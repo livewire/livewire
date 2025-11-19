@@ -5,6 +5,8 @@ namespace Livewire\Mechanisms\HandleRequests;
 use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+use Livewire\Exceptions\PayloadTooLargeException;
+use Livewire\Exceptions\TooManyComponentsException;
 
 use Livewire\Mechanisms\Mechanism;
 
@@ -79,8 +81,26 @@ class HandleRequests extends Mechanism
 
     function handleUpdate()
     {
+        // Check payload size limit...
+        $maxSize = config('livewire.payload.max_size');
+
+        if ($maxSize !== null) {
+            $contentLength = request()->header('Content-Length', 0);
+
+            if ($contentLength > $maxSize) {
+                throw new PayloadTooLargeException($contentLength, $maxSize);
+            }
+        }
+
         $requestPayload = request(key: 'components', default: []);
-        
+
+        // Check max components limit...
+        $maxComponents = config('livewire.payload.max_components');
+
+        if ($maxComponents !== null && count($requestPayload) > $maxComponents) {
+            throw new TooManyComponentsException(count($requestPayload), $maxComponents);
+        }
+
         $finish = trigger('request', $requestPayload);
 
         $requestPayload = $finish($requestPayload);

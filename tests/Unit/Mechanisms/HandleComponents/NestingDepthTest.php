@@ -4,14 +4,14 @@ namespace Tests\Unit\Mechanisms\HandleComponents;
 
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\Mechanisms\HandleComponents\MaxNestingDepthExceededException;
+use Livewire\Exceptions\MaxNestingDepthExceededException;
 use Tests\TestCase;
 
 class NestingDepthTest extends TestCase
 {
     public function test_rejects_property_paths_exceeding_max_depth()
     {
-        config()->set('livewire.max_nesting_depth', 10);
+        config()->set('livewire.payload.max_nesting_depth', 10);
 
         $this->expectException(MaxNestingDepthExceededException::class);
         $this->expectExceptionMessage('max_nesting_depth');
@@ -22,7 +22,7 @@ class NestingDepthTest extends TestCase
 
     public function test_allows_property_paths_within_max_depth()
     {
-        config()->set('livewire.max_nesting_depth', 10);
+        config()->set('livewire.payload.max_nesting_depth', 10);
 
         $component = Livewire::test(NestingDepthComponent::class)
             ->set('data.level1.level2.level3', 'nested value'); // 4 levels
@@ -35,7 +35,7 @@ class NestingDepthTest extends TestCase
 
     public function test_allows_exactly_max_depth()
     {
-        config()->set('livewire.max_nesting_depth', 5);
+        config()->set('livewire.payload.max_nesting_depth', 5);
 
         $component = Livewire::test(NestingDepthComponent::class)
             ->set('data.a.b.c.d', 'value'); // Exactly 5 levels
@@ -45,7 +45,7 @@ class NestingDepthTest extends TestCase
 
     public function test_rejects_one_over_max_depth()
     {
-        config()->set('livewire.max_nesting_depth', 5);
+        config()->set('livewire.payload.max_nesting_depth', 5);
 
         $this->expectException(MaxNestingDepthExceededException::class);
         $this->expectExceptionMessage('max_nesting_depth');
@@ -56,7 +56,7 @@ class NestingDepthTest extends TestCase
 
     public function test_depth_limit_can_be_disabled()
     {
-        config()->set('livewire.max_nesting_depth', null);
+        config()->set('livewire.payload.max_nesting_depth', null);
 
         // Should not throw even with very deep path
         $component = Livewire::test(NestingDepthComponent::class)
@@ -68,7 +68,7 @@ class NestingDepthTest extends TestCase
 
     public function test_depth_limit_can_be_customized()
     {
-        config()->set('livewire.max_nesting_depth', 3);
+        config()->set('livewire.payload.max_nesting_depth', 3);
 
         $this->expectException(MaxNestingDepthExceededException::class);
         $this->expectExceptionMessage('max_nesting_depth');
@@ -79,7 +79,7 @@ class NestingDepthTest extends TestCase
 
     public function test_single_level_property_always_works()
     {
-        config()->set('livewire.max_nesting_depth', 1);
+        config()->set('livewire.payload.max_nesting_depth', 1);
 
         $component = Livewire::test(NestingDepthComponent::class)
             ->set('data', ['foo' => 'bar']); // 1 level
@@ -89,7 +89,7 @@ class NestingDepthTest extends TestCase
 
     public function test_deep_nesting_attack_is_blocked_quickly()
     {
-        config()->set('livewire.max_nesting_depth', 10);
+        config()->set('livewire.payload.max_nesting_depth', 10);
 
         $start = microtime(true);
         $exceptions = 0;

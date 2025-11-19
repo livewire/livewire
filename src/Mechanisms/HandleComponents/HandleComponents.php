@@ -8,6 +8,8 @@ use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Exceptions\MaxNestingDepthExceededException;
+use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\View;
 
@@ -433,8 +435,7 @@ class HandleComponents extends Mechanism
     {
         $segments = explode('.', $path);
 
-        // Limit property path depth to prevent DoS attacks
-        $maxDepth = config('livewire.max_nesting_depth');
+        $maxDepth = config('livewire.payload.max_nesting_depth');
         if ($maxDepth !== null && count($segments) > $maxDepth) {
             throw new MaxNestingDepthExceededException($path, $maxDepth);
         }
@@ -566,6 +567,12 @@ class HandleComponents extends Mechanism
 
     protected function callMethods($root, $calls, $componentContext)
     {
+        $maxCalls = config('livewire.payload.max_calls');
+
+        if ($maxCalls !== null && count($calls) > $maxCalls) {
+            throw new TooManyCallsException(count($calls), $maxCalls);
+        }
+
         $returns = [];
 
         foreach ($calls as $idx => $call) {
