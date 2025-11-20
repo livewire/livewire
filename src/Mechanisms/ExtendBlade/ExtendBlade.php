@@ -14,20 +14,28 @@ class ExtendBlade extends Mechanism
     protected $renderCounter = 0;
 
     protected static $livewireComponents = [];
+    protected static $livewireViews = [];
 
-    function startLivewireRendering($component)
+    function startLivewireRendering($component, $view = null)
     {
         static::$livewireComponents[] = $component;
+        static::$livewireViews[] = $view;
     }
 
     function endLivewireRendering()
     {
         array_pop(static::$livewireComponents);
+        array_pop(static::$livewireViews);
     }
 
     static function currentRendering()
     {
         return end(static::$livewireComponents);
+    }
+
+    static function currentRenderingView()
+    {
+        return end(static::$livewireViews);
     }
 
     static function isRenderingLivewireComponent()
@@ -40,7 +48,7 @@ class ExtendBlade extends Mechanism
         Blade::directive('this', fn() => "window.Livewire.find('{{ \$_instance->getId() }}')");
 
         on('render', function ($target, $view) {
-            $this->startLivewireRendering($target);
+            $this->startLivewireRendering($target, $view);
 
             $undo = $this->livewireifyBladeCompiler();
 
@@ -73,6 +81,7 @@ class ExtendBlade extends Mechanism
             app()->singleton(DeterministicBladeKeys::class);
 
             static::$livewireComponents = [];
+            static::$livewireViews = [];
         });
 
         // We're using "precompiler" as a hook for the point in time when
