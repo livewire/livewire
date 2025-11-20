@@ -35,9 +35,6 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
 
         ob_start();
 
-        // We'll evaluate the contents of the view inside a try/catch block so we can
-        // flush out any stray output that might get out before an error occurs or
-        // an exception is thrown. This prevents any partial views from leaking.
         try {
             $component = ExtendBlade::currentRendering();
 
@@ -52,20 +49,20 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
         return ltrim(ob_get_clean());
     }
 
-    // Errors thrown while a view is rendering are caught by the Blade
-    // compiler and wrapped in an "ErrorException". This makes Livewire errors
-    // harder to read, AND causes issues like `abort(404)` not actually working.
     protected function handleViewException(\Throwable $e, $obLevel)
     {
         if ($this->shouldBypassExceptionForLivewire($e, $obLevel)) {
-            // This is because there is no "parent::parent::".
             \Illuminate\View\Engines\PhpEngine::handleViewException($e, $obLevel);
-
             return;
         }
 
-        // Enhance exception message with component context before wrapping
-        if (ExtendBlade::isRenderingLivewireComponent() && ! str_contains($e->getMessage(), '(Component:')) {
+        // Prevent duplicate enhancement when exception bubbles up through nested views
+        if ($this->isExceptionAlreadyEnhanced($e)) {
+            parent::handleViewException($e, $obLevel);
+            return;
+        }
+
+        if (ExtendBlade::isRenderingLivewireComponent()) {
             $component = ExtendBlade::currentRendering();
 
             if ($component) {
@@ -73,10 +70,9 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
                     $componentName = $component->getName();
                     $renderStack = \Livewire\Mechanisms\HandleComponents\HandleComponents::$renderStack ?? [];
 
-                    // Try to resolve the original view path
+                    // Resolve original view path (not the compiled storage path)
                     $viewPath = null;
 
-                    // 1. Try getting it from the currently rendering View object
                     if (method_exists(ExtendBlade::class, 'currentRenderingView')) {
                         $currentView = ExtendBlade::currentRenderingView();
                         if ($currentView instanceof View) {
@@ -84,38 +80,33 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
                         }
                     }
 
-                    // 2. Fallback to the compiled path if nothing else
                     if (! $viewPath) {
                         $viewPath = end($this->viewPathStack);
                     }
 
-                    // 3. Check if it's a storage path (compiled view)
+                    // If it's a compiled storage path, try to resolve the original source file
                     $isStoragePath = $viewPath && function_exists('storage_path') && str_starts_with($viewPath, storage_path());
 
                     if ($isStoragePath) {
                         try {
-                            // A) Try Reflection (for Volt / Class-based components)
+                            // Try Reflection first (works for Volt/Class-based components)
                             $reflection = new \ReflectionClass($component);
                             $classFile = $reflection->getFileName();
 
                             if ($classFile && (str_contains($classFile, 'app') || str_contains($classFile, 'resources'))) {
                                 $viewPath = $classFile;
                             } else {
-                                // B) Try guessing the view path based on configuration
+                                // Fallback: guess based on component name and configured locations
                                 $guesses = [];
                                 $componentPath = str_replace('.', '/', $componentName);
 
-                                // Check configured view_path (Standard Livewire)
                                 $livewireViewPath = config('livewire.view_path') ?: resource_path('views/livewire');
                                 $guesses[] = $livewireViewPath . '/' . $componentPath . '.blade.php';
 
-                                // Check configured component_locations (Volt / Functional)
                                 $componentLocations = config('livewire.component_locations') ?: [resource_path('views/components')];
                                 foreach ($componentLocations as $location) {
-                                    // Standard: components/foo.blade.php
                                     $guesses[] = $location . '/' . $componentPath . '.blade.php';
 
-                                    // Nested/Custom: components/foo/foo.blade.php
                                     if (str_contains($componentName, '.')) {
                                         $pathParts = explode('.', $componentName);
                                         $name = end($pathParts);
@@ -134,12 +125,12 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
                         } catch (\Throwable $r) {}
                     }
 
-                    // Format the path relative to base_path
                     $relativeViewPath = $viewPath;
                     if ($viewPath && function_exists('base_path') && str_contains($viewPath, base_path())) {
                         $relativeViewPath = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $viewPath);
                     }
 
+                    // Build component hierarchy: [parent -> child] for nested, [name] for single
                     $componentContext = '';
                     if (count($renderStack) > 1) {
                         $componentNames = array_map(fn($c) => $c->getName(), $renderStack);
@@ -150,7 +141,6 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
                     }
 
                     if ($relativeViewPath) {
-                        // Use a slightly different label if we resolved it to the class file
                         $label = (str_ends_with($relativeViewPath, '.php') && !str_ends_with($relativeViewPath, '.blade.php'))
                             ? 'Class'
                             : 'View';
@@ -158,10 +148,10 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
                         $componentContext = " ({$label}: {$relativeViewPath})" . $componentContext;
                     }
 
-                    // Create new exception with enhanced message
+                    $originalMessage = $e->getMessage();
                     $severity = ($e instanceof \ErrorException) ? $e->getSeverity() : \E_ERROR;
                     $e = new \ErrorException(
-                        $e->getMessage() . $componentContext,
+                        $originalMessage . $componentContext,
                         0,
                         $severity,
                         $e->getFile(),
@@ -169,7 +159,6 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
                         $e
                     );
                 } catch (\Throwable $componentException) {
-                    // If we can't get component name, continue with original exception
                 }
             }
         }
@@ -178,13 +167,45 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
     }
 
     /**
-     * Get the exception message for an exception.
+     * Check if an exception (or any previous exception in the chain) has already been enhanced.
+     *
+     * When exceptions bubble up through nested views, handleViewException() is called at each level.
+     * This prevents duplicate enhancement by checking the entire exception chain.
+     *
+     * @param  \Throwable  $e
+     * @return bool
+     */
+    protected function isExceptionAlreadyEnhanced(\Throwable $e): bool
+    {
+        $exceptionToCheck = $e;
+        while ($exceptionToCheck) {
+            $message = $exceptionToCheck->getMessage();
+            if (str_contains($message, '(Component:')
+                || str_contains($message, '(View:')
+                || str_contains($message, '(Class:')) {
+                return true;
+            }
+            $exceptionToCheck = $exceptionToCheck->getPrevious();
+        }
+
+        return false;
+    }
+
+    /**
+     * Override to prevent parent CompilerEngine from adding duplicate (View: ...).
+     *
+     * The parent's handleViewException() wraps exceptions and calls getMessage(), which always
+     * adds (View: ...). When exceptions bubble up through nested views, this causes duplicates.
      *
      * @param  \Throwable  $e
      * @return string
      */
     protected function getMessage(\Throwable $e)
     {
+        if ($this->isExceptionAlreadyEnhanced($e)) {
+            return $e->getMessage();
+        }
+
         return parent::getMessage($e);
     }
 

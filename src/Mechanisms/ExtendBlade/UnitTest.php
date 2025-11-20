@@ -153,9 +153,28 @@ class UnitTest extends \Tests\TestCase
         try {
             View::make('render-component', ['component' => 'test-single'])->render();
         } catch (ErrorException $e) {
+            $message = $e->getMessage();
+
             // Verify the exception message contains component context
-            $this->assertStringContainsString('(Component:', $e->getMessage());
-            $this->assertStringContainsString('Undefined variable', $e->getMessage());
+            $this->assertStringContainsString('(Component:', $message);
+            $this->assertStringContainsString('Undefined variable', $message);
+
+            // Strict checks: no duplicates
+            $componentContextCount = substr_count($message, '(Component:');
+            $this->assertEquals(1, $componentContextCount, 'Component context should appear exactly once');
+
+            $viewPathCount = substr_count($message, '(View:');
+            $classPathCount = substr_count($message, '(Class:');
+            $totalPathCount = $viewPathCount + $classPathCount;
+            $this->assertLessThanOrEqual(1, $totalPathCount, 'View/Class path should appear at most once');
+
+            // Verify format: should match pattern "Error (View: path) (Component: [name])" or "Error (Component: [name])"
+            $this->assertMatchesRegularExpression(
+                '/Undefined variable.*?(\((View|Class): [^)]+\)\s*)?\(Component: \[[^\]]+\]\)/',
+                $message,
+                'Exception message should follow format: Error (View: path?) (Component: [name])'
+            );
+
             throw $e;
         }
     }
@@ -171,11 +190,32 @@ class UnitTest extends \Tests\TestCase
             View::make('render-component', ['component' => 'parent-nested'])->render();
         } catch (\Throwable $e) {
             if ($e instanceof ErrorException) {
-                // Verify the exception message contains component hierarchy
                 $message = $e->getMessage();
+
+                // Verify the exception message contains component hierarchy
                 $this->assertStringContainsString('(Component:', $message);
                 $this->assertStringContainsString('->', $message, 'Should contain component hierarchy separator');
                 $this->assertStringContainsString('Undefined variable', $message);
+
+                // Strict checks: no duplicates
+                $componentContextCount = substr_count($message, '(Component:');
+                $this->assertEquals(1, $componentContextCount, 'Component context should appear exactly once');
+
+                $viewPathCount = substr_count($message, '(View:');
+                $classPathCount = substr_count($message, '(Class:');
+                $totalPathCount = $viewPathCount + $classPathCount;
+                $this->assertLessThanOrEqual(1, $totalPathCount, 'View/Class path should appear at most once');
+
+                // Verify hierarchy format: should contain exactly one "->" for 2-level nesting
+                $arrowCount = substr_count($message, '->');
+                $this->assertEquals(1, $arrowCount, 'Should contain exactly one -> separator for 2-level nesting');
+
+                // Verify format: "Error (View: path?) (Component: [parent -> child])"
+                $this->assertMatchesRegularExpression(
+                    '/Undefined variable.*?(\((View|Class): [^)]+\)\s*)?\(Component: \[[^\]]+ -> [^\]]+\]\)/',
+                    $message,
+                    'Exception message should follow format: Error (View: path?) (Component: [parent -> child])'
+                );
             }
             throw $e;
         }
@@ -191,10 +231,28 @@ class UnitTest extends \Tests\TestCase
             View::make('render-component', ['component' => 'test-view-path'])->render();
         } catch (ErrorException $e) {
             $message = $e->getMessage();
+
             // Should contain either View: or Class: prefix
             $hasViewOrClass = str_contains($message, '(View:') || str_contains($message, '(Class:');
             $this->assertTrue($hasViewOrClass, 'Exception message should contain View: or Class: prefix');
             $this->assertStringContainsString('(Component:', $message);
+
+            // Strict checks: no duplicates
+            $componentContextCount = substr_count($message, '(Component:');
+            $this->assertEquals(1, $componentContextCount, 'Component context should appear exactly once');
+
+            $viewPathCount = substr_count($message, '(View:');
+            $classPathCount = substr_count($message, '(Class:');
+            $totalPathCount = $viewPathCount + $classPathCount;
+            $this->assertEquals(1, $totalPathCount, 'View/Class path should appear exactly once (no duplicates)');
+
+            // Verify format: should have View/Class before Component
+            $this->assertMatchesRegularExpression(
+                '/\((View|Class): [^)]+\)\s*\(Component: \[[^\]]+\]\)/',
+                $message,
+                'Exception message should follow format: Error (View/Class: path) (Component: [name])'
+            );
+
             throw $e;
         }
     }
@@ -208,9 +266,18 @@ class UnitTest extends \Tests\TestCase
         try {
             View::make('render-component', ['component' => 'test-duplicate'])->render();
         } catch (ErrorException $e) {
+            $message = $e->getMessage();
+
             // Count occurrences of (Component: - should only appear once
-            $occurrences = substr_count($e->getMessage(), '(Component:');
-            $this->assertEquals(1, $occurrences, 'Component context should only appear once');
+            $componentOccurrences = substr_count($message, '(Component:');
+            $this->assertEquals(1, $componentOccurrences, 'Component context should only appear once');
+
+            // Also verify no duplicate view paths
+            $viewPathCount = substr_count($message, '(View:');
+            $classPathCount = substr_count($message, '(Class:');
+            $totalPathCount = $viewPathCount + $classPathCount;
+            $this->assertLessThanOrEqual(1, $totalPathCount, 'View/Class path should appear at most once');
+
             throw $e;
         }
     }
@@ -257,6 +324,16 @@ class UnitTest extends \Tests\TestCase
             $message = $e->getMessage();
             $this->assertStringContainsString('(Component:', $message);
             $this->assertStringContainsString('Undefined variable', $message);
+
+            // Strict checks: no duplicates
+            $componentContextCount = substr_count($message, '(Component:');
+            $this->assertEquals(1, $componentContextCount, 'Component context should appear exactly once');
+
+            $viewPathCount = substr_count($message, '(View:');
+            $classPathCount = substr_count($message, '(Class:');
+            $totalPathCount = $viewPathCount + $classPathCount;
+            $this->assertLessThanOrEqual(1, $totalPathCount, 'View/Class path should appear at most once');
+
             throw $e;
         }
     }
@@ -278,6 +355,15 @@ class UnitTest extends \Tests\TestCase
             $this->assertStringContainsString('Undefined variable', $message);
             $this->assertStringContainsString('(Component:', $message);
 
+            // Strict checks: no duplicates
+            $componentContextCount = substr_count($message, '(Component:');
+            $this->assertEquals(1, $componentContextCount, 'Component context should appear exactly once');
+
+            $viewPathCount = substr_count($message, '(View:');
+            $classPathCount = substr_count($message, '(Class:');
+            $totalPathCount = $viewPathCount + $classPathCount;
+            $this->assertLessThanOrEqual(1, $totalPathCount, 'View/Class path should appear at most once');
+
             // Check that component context comes after the original error
             $componentPos = strpos($message, '(Component:');
             $errorPos = strpos($message, 'Undefined variable');
@@ -285,6 +371,19 @@ class UnitTest extends \Tests\TestCase
 
             // Verify format: (Component: [name]) or (Component: [parent -> child])
             $this->assertMatchesRegularExpression('/\(Component: \[[^\]]+\]\)/', $message);
+
+            // Verify no duplicate patterns - check that each pattern appears only once
+            $patternCounts = [
+                '(Component:' => substr_count($message, '(Component:'),
+                '(View:' => substr_count($message, '(View:'),
+                '(Class:' => substr_count($message, '(Class:'),
+            ];
+
+            foreach ($patternCounts as $pattern => $count) {
+                if ($count > 0) {
+                    $this->assertEquals(1, $count, "Pattern '{$pattern}' should appear exactly once, found {$count} times");
+                }
+            }
 
             throw $e;
         }
@@ -296,18 +395,46 @@ class UnitTest extends \Tests\TestCase
 
         Livewire::component('grandparent-nested', GrandparentComponentStub::class);
         Livewire::component('parent-nested-deep', ParentComponentWithNestedChildStub::class);
-        Livewire::component('child-nested-deep', ChildComponentWithExceptionStub::class);
+        Livewire::component('child', ChildComponentWithExceptionStub::class); // Register as 'child' for the view
 
         try {
             View::make('render-component', ['component' => 'grandparent-nested'])->render();
         } catch (\Throwable $e) {
             if ($e instanceof ErrorException) {
                 $message = $e->getMessage();
+
+                // Debug output - uncomment to see the exception message
+                // $this->fail("DEBUG - Exception Message:\n\n{$message}");
+
                 $this->assertStringContainsString('(Component:', $message);
-                // Should contain multiple -> separators for deep nesting
+                $this->assertStringContainsString('Undefined variable', $message);
+
+                // Strict checks: no duplicates
+                $componentContextCount = substr_count($message, '(Component:');
+                $this->assertEquals(1, $componentContextCount, 'Component context should appear exactly once');
+
+                $viewPathCount = substr_count($message, '(View:');
+                $classPathCount = substr_count($message, '(Class:');
+                $totalPathCount = $viewPathCount + $classPathCount;
+                $this->assertEquals(1, $totalPathCount, 'View/Class path should appear exactly once (no duplicates)');
+
+                // Should contain multiple -> separators for deep nesting (at least 2 for 3-level)
                 $arrowCount = substr_count($message, '->');
                 $this->assertGreaterThanOrEqual(1, $arrowCount, 'Should show component hierarchy for nested components');
-                $this->assertStringContainsString('Undefined variable', $message);
+
+                // Verify format: "Error (View: path) (Component: [grandparent -> parent -> child])"
+                $this->assertMatchesRegularExpression(
+                    '/Undefined variable.*?\((View|Class): [^)]+\)\s*\(Component: \[[^\]]+\]\)/',
+                    $message,
+                    'Exception message should follow format: Error (View: path) (Component: [hierarchy])'
+                );
+
+                // Extract and verify component hierarchy format
+                if (preg_match('/\(Component: \[([^\]]+)\]\)/', $message, $matches)) {
+                    $hierarchy = $matches[1];
+                    $components = explode(' -> ', $hierarchy);
+                    $this->assertGreaterThanOrEqual(2, count($components), 'Should have at least 2 components in hierarchy');
+                }
             }
             throw $e;
         }
