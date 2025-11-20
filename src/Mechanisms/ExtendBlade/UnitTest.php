@@ -490,6 +490,59 @@ class UnitTest extends \Tests\TestCase
             throw $e;
         }
     }
+
+    public function test_exception_message_property_not_found_includes_component_context()
+    {
+        $this->expectException(\Livewire\Exceptions\PropertyNotFoundException::class);
+
+        Livewire::component('test-property-not-found', ComponentWithPropertyNotFoundExceptionStub::class);
+
+        try {
+            View::make('render-component', ['component' => 'test-property-not-found'])->render();
+        } catch (\Livewire\Exceptions\PropertyNotFoundException $e) {
+            $message = $e->getMessage();
+
+            // PropertyNotFoundException should be enhanced with component context and view path
+            $this->assertStringContainsString('Property [', $message);
+            $this->assertStringContainsString('not found on component:', $message);
+            $this->assertStringContainsString('(Component:', $message, 'PropertyNotFoundException should include component context');
+
+            // Strict checks: no duplicates
+            $componentContextCount = substr_count($message, '(Component:');
+            $this->assertEquals(1, $componentContextCount, 'Component context should appear exactly once');
+
+            $viewPathCount = substr_count($message, '(View:');
+            $classPathCount = substr_count($message, '(Class:');
+            $totalPathCount = $viewPathCount + $classPathCount;
+            $this->assertLessThanOrEqual(1, $totalPathCount, 'View/Class path should appear at most once');
+
+            throw $e;
+        }
+    }
+
+    public function test_exception_message_property_not_found_includes_hierarchy_for_nested_components()
+    {
+        $this->expectException(\Livewire\Exceptions\PropertyNotFoundException::class);
+
+        Livewire::component('parent-property-error', ParentComponentWithPropertyErrorStub::class);
+        Livewire::component('child', ChildComponentWithPropertyNotFoundExceptionStub::class); // Register as 'child' for the view
+
+        try {
+            View::make('render-component', ['component' => 'parent-property-error'])->render();
+        } catch (\Livewire\Exceptions\PropertyNotFoundException $e) {
+            $message = $e->getMessage();
+
+            // Should include component hierarchy for nested components
+            $this->assertStringContainsString('(Component:', $message);
+            $this->assertStringContainsString('->', $message, 'Should contain component hierarchy separator for nested components');
+
+            // Strict checks: no duplicates
+            $componentContextCount = substr_count($message, '(Component:');
+            $this->assertEquals(1, $componentContextCount, 'Component context should appear exactly once');
+
+            throw $e;
+        }
+    }
 }
 
 class ExtendBladeTestComponent extends Component
@@ -677,6 +730,42 @@ class ComponentWithDuplicateContextStub extends Component
                 throw new ErrorException('Error (Component: [test-duplicate])');
             },
         ]);
+    }
+}
+
+class ComponentWithPropertyNotFoundExceptionStub extends Component
+{
+    public function render()
+    {
+        // Access non-existent property to trigger PropertyNotFoundException
+        return <<<'blade'
+            <div>
+                {{ $this->nonExistentProperty }}
+            </div>
+        blade;
+    }
+}
+
+class ParentComponentWithPropertyErrorStub extends Component
+{
+    public function render()
+    {
+        return app('view')->make('show-child', [
+            'child' => ['name' => 'child-property-error'],
+        ]);
+    }
+}
+
+class ChildComponentWithPropertyNotFoundExceptionStub extends Component
+{
+    public function render()
+    {
+        // Access non-existent property to trigger PropertyNotFoundException
+        return <<<'blade'
+            <div>
+                {{ $this->nonExistentProperty }}
+            </div>
+        blade;
     }
 }
 

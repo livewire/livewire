@@ -51,13 +51,16 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
 
     protected function handleViewException(\Throwable $e, $obLevel)
     {
-        if ($this->shouldBypassExceptionForLivewire($e, $obLevel)) {
-            \Illuminate\View\Engines\PhpEngine::handleViewException($e, $obLevel);
-            return;
-        }
+        // Enhance Livewire exceptions (like PropertyNotFoundException) even if they bypass view handler
+        // This ensures they include component context and view path
+        $shouldBypass = $this->shouldBypassExceptionForLivewire($e, $obLevel);
 
         // Prevent duplicate enhancement when exception bubbles up through nested views
         if ($this->isExceptionAlreadyEnhanced($e)) {
+            if ($shouldBypass) {
+                \Illuminate\View\Engines\PhpEngine::handleViewException($e, $obLevel);
+                return;
+            }
             parent::handleViewException($e, $obLevel);
             return;
         }
@@ -149,18 +152,35 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
                     }
 
                     $originalMessage = $e->getMessage();
-                    $severity = ($e instanceof \ErrorException) ? $e->getSeverity() : \E_ERROR;
-                    $e = new \ErrorException(
-                        $originalMessage . $componentContext,
-                        0,
-                        $severity,
-                        $e->getFile(),
-                        $e->getLine(),
-                        $e
-                    );
+
+                    // For exceptions that bypass view handler, enhance message but keep original type
+                    if ($shouldBypass) {
+                        // Use reflection to set protected message property while preserving exception type
+                        $reflection = new \ReflectionClass($e);
+                        $messageProperty = $reflection->getProperty('message');
+                        $messageProperty->setAccessible(true);
+                        $messageProperty->setValue($e, $originalMessage . $componentContext);
+                    } else {
+                        // For regular exceptions, wrap in ErrorException
+                        $severity = ($e instanceof \ErrorException) ? $e->getSeverity() : \E_ERROR;
+                        $e = new \ErrorException(
+                            $originalMessage . $componentContext,
+                            0,
+                            $severity,
+                            $e->getFile(),
+                            $e->getLine(),
+                            $e
+                        );
+                    }
                 } catch (\Throwable $componentException) {
                 }
             }
+        }
+
+        // If this exception should bypass view handler, use PhpEngine instead of parent
+        if ($shouldBypass) {
+            \Illuminate\View\Engines\PhpEngine::handleViewException($e, $obLevel);
+            return;
         }
 
         parent::handleViewException($e, $obLevel);
