@@ -16,6 +16,14 @@ use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        // Clear render stack between tests to ensure test isolation
+        \Livewire\Mechanisms\HandleComponents\HandleComponents::$renderStack = [];
+    }
+
     public function test_livewire_only_directives_apply_to_livewire_components_and_not_normal_blade()
     {
         Livewire::directive('foo', function ($expression) {
@@ -301,6 +309,7 @@ class UnitTest extends \Tests\TestCase
             \Illuminate\Support\Facades\Blade::render('@php throw new \Exception("Test error"); @endphp');
         } catch (ErrorException $e) {
             $message = $e->getMessage();
+
             // The implementation checks isRenderingLivewireComponent() before enhancing
             // If component context appears, it means the check failed or we're in a component context
             // In a clean state, this should not happen
@@ -322,6 +331,7 @@ class UnitTest extends \Tests\TestCase
             Livewire::test(ClassBasedComponentWithExceptionStub::class);
         } catch (ErrorException $e) {
             $message = $e->getMessage();
+
             $this->assertStringContainsString('(Component:', $message);
             $this->assertStringContainsString('Undefined variable', $message);
 
@@ -403,9 +413,6 @@ class UnitTest extends \Tests\TestCase
             if ($e instanceof ErrorException) {
                 $message = $e->getMessage();
 
-                // Debug output - uncomment to see the exception message
-                // $this->fail("DEBUG - Exception Message:\n\n{$message}");
-
                 $this->assertStringContainsString('(Component:', $message);
                 $this->assertStringContainsString('Undefined variable', $message);
 
@@ -454,6 +461,7 @@ class UnitTest extends \Tests\TestCase
         } catch (\Throwable $e) {
             if ($e instanceof ErrorException) {
                 $message = $e->getMessage();
+
                 $this->assertStringContainsString('(Component:', $message);
                 $this->assertStringContainsString('Undefined variable', $message);
             }
@@ -475,6 +483,7 @@ class UnitTest extends \Tests\TestCase
         } catch (\Throwable $e) {
             if ($e instanceof ErrorException) {
                 $message = $e->getMessage();
+
                 $this->assertStringContainsString('(Component:', $message);
                 $this->assertStringContainsString('Undefined variable', $message);
             }
