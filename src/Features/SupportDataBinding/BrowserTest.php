@@ -128,4 +128,49 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->select('@parent', 'foo')
             ->assertSelected('@child', 'bar');
     }
+
+
+    /** @test */
+    public function it_can_update_checkbox_with_value()
+    {
+        // Check if checking a checkbox results in correct value
+        Livewire::visit(new class() extends \Livewire\Component
+        {
+            public $element = '';
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input dusk="checkbox" type="checkbox" value="checked" wire:model.live="element">
+                    <span>{{ $element }}</span>
+                </div>
+                HTML;
+            }
+        })
+            ->check('@checkbox')
+            ->assertSee('checked');
+    }
+
+
+    /** @test */
+    public function it_checks_checkbox_with_existing_value()
+    {
+
+        // Check if checkbox is checked when value is the same as model value
+        Livewire::visit(new class() extends \Livewire\Component
+        {
+            public $element = 'checked';
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input dusk="checkbox" type="checkbox" value="checked" wire:model.live="element">
+                </div>
+                HTML;
+            }
+        })
+            ->assertChecked('@checkbox');
+    }
 }
