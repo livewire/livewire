@@ -433,7 +433,7 @@ use Livewire\Livewire;
 // Register an individual class-based component
 Livewire::addComponent(
     name: 'todos',
-    \App\Livewire\Todos::class
+    class: \App\Livewire\Todos::class
 );
 
 // Register a location for class-based components
