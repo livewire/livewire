@@ -19,8 +19,7 @@ composer require livewire/livewire:^4.0@beta
 After updating, clear your application's cache:
 
 ```bash
-php artisan config:clear
-php artisan view:clear
+php artisan optimize:clear
 ```
 
 > [!info] View all changes on GitHub
@@ -128,6 +127,19 @@ Route::livewire('/dashboard', 'pages::dashboard');
 Using `Route::livewire()` is now the preferred method and is required for single-file and multi-file components to work correctly as full-page components.
 
 [Learn more about routing →](/docs/4.x/components#page-components)
+
+### Use `wire:navigate:scroll`
+
+When using `wire:scroll` to preserve scroll in a scrollable container across `wire:navigate` requests in v3, you will need to instead us `wire:navigate:scroll` in v4:
+
+```
+@persist('sidebar')
+    <div class="overflow-y-scroll" wire:scroll> <!-- [tl! remove] -->
+    <div class="overflow-y-scroll" wire:navigate:scroll> <!-- [tl! add] -->
+        <!-- ... -->
+    </div>
+@endpersist
+```
 
 ## Medium-impact changes
 

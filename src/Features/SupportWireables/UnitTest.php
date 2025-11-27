@@ -159,6 +159,24 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['wireable.embeddedWireable.message' => 'required'])
             ->call('removeWireable');
     }
+
+    public function test_wireable_synth_rejects_non_wireable_classes()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid wireable class');
+
+        $wireable = new WireableClass('test', 'test');
+        $component = Livewire::test(ComponentWithWireablePublicProperty::class, ['wireable' => $wireable]);
+
+        // Create a synth instance and try to hydrate with a non-Wireable class
+        $synth = new WireableSynth(
+            new \Livewire\Mechanisms\HandleComponents\ComponentContext($component->instance()),
+            'wireable'
+        );
+
+        // This should throw because stdClass doesn't implement Wireable
+        $synth->hydrate(['message' => 'test'], ['class' => \stdClass::class], fn($k, $v) => $v);
+    }
 }
 
 class WireableClass implements Wireable

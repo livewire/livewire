@@ -63,6 +63,8 @@ queueMicrotask(() => {
 })
 
 export function fireAction(component, method, params = [], metadata = {}) {
+    if (component.__isWireProxy) component = component.__instance
+
     let action = constructAction(component, method, params, metadata)
 
     let prevented = false

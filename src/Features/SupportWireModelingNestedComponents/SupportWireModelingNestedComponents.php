@@ -19,8 +19,8 @@ class SupportWireModelingNestedComponents extends ComponentHook
         // with wire:model on it, and that child has already been mounted
         // in a previous request, capture the value being passed in so we
         // can later set the child's property if it exists in this request.
-        on('mount.stub', function ($tag, $id, $params, $parent, $key) {
-            $outer = collect($params)->first(function ($value, $key) {
+        on('mount.stub', function ($tag, $id, $params, $parent, $key, $slots, $attributes) {
+            $outer = collect($attributes)->first(function ($value, $key) {
                 return str($key)->startsWith('wire:model');
             });
 

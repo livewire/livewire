@@ -8,6 +8,8 @@ use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Exceptions\MaxNestingDepthExceededException;
+use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\View;
 
@@ -46,8 +48,7 @@ class HandleComponents extends Mechanism
         // Separate params into component properties and HTML attributes...
         [$componentParams, $htmlAttributes] = $this->separateParamsAndAttributes($component, $params);
 
-        if ($html = $this->shortCircuitMount($name, $componentParams, $key, $parent, $slots)) return $html;
-
+        if ($html = $this->shortCircuitMount($name, $componentParams, $key, $parent, $slots, $htmlAttributes)) return $html;
 
         if (! empty($slots)) {
             $component->withSlots($slots, $parent);
@@ -62,7 +63,7 @@ class HandleComponents extends Mechanism
         $context = new ComponentContext($component, mounting: true);
 
         if (config('app.debug')) $start = microtime(true);
-        $finish = trigger('mount', $component, $componentParams, $key, $parent);
+        $finish = trigger('mount', $component, $componentParams, $key, $parent, $htmlAttributes);
         if (config('app.debug')) trigger('profile', 'mount', $component->getId(), [$start, microtime(true)]);
 
         if (config('app.debug')) $start = microtime(true);
@@ -98,7 +99,7 @@ class HandleComponents extends Mechanism
 
         foreach ($params as $key => $value) {
             $processedKey = $key;
-            
+
             // Convert only kebab-case params to camelCase for matching...
             if (str($processedKey)->contains('-')) {
                 $processedKey = str($processedKey)->camel()->toString();
@@ -128,7 +129,7 @@ class HandleComponents extends Mechanism
     protected function isReservedParam($key)
     {
         $exact = ['lazy', 'defer', 'lazy.bundle', 'defer.bundle', 'wire:ref'];
-        $startsWith = ['@', 'wire:model'];
+        $startsWith = ['@'];
 
         // Check exact matches
         if (in_array($key, $exact)) {
@@ -161,13 +162,13 @@ class HandleComponents extends Mechanism
         return $parameters;
     }
 
-    protected function shortCircuitMount($name, $params, $key, $parent, $slots)
+    protected function shortCircuitMount($name, $params, $key, $parent, $slots, $htmlAttributes)
     {
         $newHtml = null;
 
         trigger('pre-mount', $name, $params, $key, $parent, function ($html) use (&$newHtml) {
             $newHtml = $html;
-        }, $slots);
+        }, $slots, $htmlAttributes);
 
         return $newHtml;
     }
@@ -298,6 +299,11 @@ class HandleComponents extends Mechanism
             return $value;
         }
 
+        // Validate class against denylist before any synthesizer can instantiate it...
+        if (isset($meta['class'])) {
+            SecurityPolicy::validateClass($meta['class']);
+        }
+
         $synth = $this->propertySynth($meta['s'], $context, $path);
 
         return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path) {
@@ -314,6 +320,11 @@ class HandleComponents extends Mechanism
         // Nested properties get set as `__rm__` when they are removed. We don't want to hydrate these.
         if ($this->isRemoval($value) && str($path)->contains('.')) {
             return $value;
+        }
+
+        // Validate class against denylist before any synthesizer can instantiate it...
+        if (isset($meta['class'])) {
+            SecurityPolicy::validateClass($meta['class']);
         }
 
         $synth = $this->propertySynth($meta['s'], $context, $path);
@@ -423,6 +434,11 @@ class HandleComponents extends Mechanism
     public function updateProperty($component, $path, $value, $context)
     {
         $segments = explode('.', $path);
+
+        $maxDepth = config('livewire.payload.max_nesting_depth');
+        if ($maxDepth !== null && count($segments) > $maxDepth) {
+            throw new MaxNestingDepthExceededException($path, $maxDepth);
+        }
 
         $property = array_shift($segments);
 
@@ -551,6 +567,12 @@ class HandleComponents extends Mechanism
 
     protected function callMethods($root, $calls, $componentContext)
     {
+        $maxCalls = config('livewire.payload.max_calls');
+
+        if ($maxCalls !== null && count($calls) > $maxCalls) {
+            throw new TooManyCallsException(count($calls), $maxCalls);
+        }
+
         $returns = [];
 
         foreach ($calls as $idx => $call) {

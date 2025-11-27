@@ -376,4 +376,108 @@ class MakeCommandUnitTest extends \Tests\TestCase
 
         $this->assertTrue(File::exists(resource_path('views/pages/blog/posts/⚡create-post.blade.php')));
     }
+
+    public function test_single_file_component_with_test_flag_creates_test_file()
+    {
+        Artisan::call('make:livewire', ['name' => 'foo', '--test' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo.test.php')));
+
+        $testContent = File::get($this->livewireComponentsPath('⚡foo.test.php'));
+        $this->assertStringContainsString("it('renders successfully'", $testContent);
+        $this->assertStringContainsString('foo', $testContent);
+    }
+
+    public function test_single_file_component_with_test_flag_without_emoji()
+    {
+        $this->app['config']->set('livewire.make_command.emoji', false);
+
+        Artisan::call('make:livewire', ['name' => 'bar', '--test' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('bar.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('bar.test.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡bar.test.php')));
+    }
+
+    public function test_nested_single_file_component_with_test_flag()
+    {
+        Artisan::call('make:livewire', ['name' => 'admin.users', '--test' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('admin/⚡users.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('admin/⚡users.test.php')));
+    }
+
+    public function test_converting_single_file_to_multi_file_preserves_test_file()
+    {
+        // Create SFC with test
+        Artisan::call('make:livewire', ['name' => 'foo', '--test' => true]);
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo.test.php')));
+
+        // Convert to MFC
+        Artisan::call('livewire:convert', ['name' => 'foo', '--mfc' => true]);
+
+        // Check that test file was moved into MFC directory
+        $this->assertTrue(File::isDirectory($this->livewireComponentsPath('⚡foo')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.test.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡foo.test.php')));
+
+        $testContent = File::get($this->livewireComponentsPath('⚡foo/foo.test.php'));
+        $this->assertStringContainsString("it('renders successfully'", $testContent);
+    }
+
+    public function test_converting_multi_file_to_single_file_preserves_test_file()
+    {
+        // Create MFC with test
+        Artisan::call('make:livewire', ['name' => 'bar', '--mfc' => true, '--test' => true]);
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡bar/bar.test.php')));
+
+        // Convert to SFC
+        Artisan::call('livewire:convert', ['name' => 'bar', '--sfc' => true]);
+
+        // Check that test file was moved out of MFC directory
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡bar.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡bar.test.php')));
+        $this->assertFalse(File::isDirectory($this->livewireComponentsPath('⚡bar')));
+
+        $testContent = File::get($this->livewireComponentsPath('⚡bar.test.php'));
+        $this->assertStringContainsString("it('renders successfully'", $testContent);
+    }
+
+    public function test_converting_sfc_to_mfc_without_test_flag_preserves_existing_test()
+    {
+        // Create SFC with test
+        Artisan::call('make:livewire', ['name' => 'baz', '--test' => true]);
+
+        // Convert to MFC without --test flag (should still preserve test)
+        Artisan::call('livewire:convert', ['name' => 'baz', '--mfc' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡baz/baz.test.php')));
+    }
+
+    public function test_converting_sfc_to_mfc_with_test_flag_creates_test_when_none_exists()
+    {
+        // Create SFC without test
+        Artisan::call('make:livewire', ['name' => 'qux']);
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡qux.test.php')));
+
+        // Convert to MFC with --test flag
+        Artisan::call('livewire:convert', ['name' => 'qux', '--mfc' => true, '--test' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡qux/qux.test.php')));
+    }
+
+    public function test_converting_mfc_to_sfc_without_test_file_works()
+    {
+        // Create MFC without test
+        Artisan::call('make:livewire', ['name' => 'quux', '--mfc' => true]);
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡quux/quux.test.php')));
+
+        // Convert to SFC
+        Artisan::call('livewire:convert', ['name' => 'quux', '--sfc' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡quux.blade.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡quux.test.php')));
+    }
 }
