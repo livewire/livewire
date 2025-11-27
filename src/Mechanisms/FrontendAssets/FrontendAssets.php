@@ -250,7 +250,7 @@ class FrontendAssets extends Mechanism
         }
 
         $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
-        $versionedFileName = $publishedManifest['/livewire.js'];
+        $version = $publishedManifest['/livewire.js'];
 
         $isCsp = app('livewire')->isCspSafe();
 
@@ -260,9 +260,12 @@ class FrontendAssets extends Mechanism
             $fileName = $isCsp ? '/livewire.csp.min.js' : '/livewire.min.js';
         }
 
-        $versionedFileName = "{$fileName}?id={$versionedFileName}";
+        $versionedFileName = "{$fileName}?id={$version}";
 
-        $assertUrl = config('livewire.asset_url')
+        $configuredUrl = config('livewire.asset_url');
+        $versionedConfiguredUrl = $configuredUrl ? "{$configuredUrl}?id={$version}" : null;
+
+        $assertUrl = $versionedConfiguredUrl
             ?? (app('livewire')->isRunningServerless()
                 ? rtrim(config('app.asset_url'), '/')."/vendor/livewire$versionedFileName"
                 : url("vendor/livewire{$versionedFileName}")
