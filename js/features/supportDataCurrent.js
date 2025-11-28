@@ -12,9 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function updateNavigateLinks() {
     let currentUrl = new URL(window.location.href)
+    let options = {
+        exact: true,
+    }
 
     // Find all links with any wire:navigate variation
     document.querySelectorAll(wireNavigateSelector).forEach(el => {
+        // If the element has `wire:current` then the user might want to specify strict or 
+        // exact matching, so we will just return early so we don't override that...
+        if (el.hasAttribute('wire:current')) return
+
         // Fragment hrefs aren't supported...
         let href = el.getAttribute('href')
 
@@ -24,7 +31,7 @@ function updateNavigateLinks() {
             let hrefUrl = new URL(href, window.location.href)
 
             // Check if this link matches the current URL (using default partial matching)
-            if (pathMatches(hrefUrl, currentUrl)) {
+            if (pathMatches(hrefUrl, currentUrl, options)) {
                 el.setAttribute('data-current', '')
             } else {
                 el.removeAttribute('data-current')
