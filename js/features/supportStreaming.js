@@ -14,7 +14,7 @@ interceptMessage(({ message, onStream }) => {
         let targetEl = null
 
         if (type === 'directive') {
-            replaceEl = component.el.querySelector(`[wire\\:stream.replace="${name}"]`)
+            replaceEl = component.el.querySelector(`[wire\\:stream\\.replace="${name}"]`)
 
             if (replaceEl) {
                 targetEl = replaceEl
