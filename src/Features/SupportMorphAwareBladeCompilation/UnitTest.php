@@ -622,9 +622,9 @@ class UnitTest extends \Tests\TestCase
                 0,
                 <<<'HTML'
                 <style>
-                @supports (filter: drop-shadow(0 0 0 #ccc)) {
-                    /* ... */
-                }
+                    @supports (filter: drop-shadow(0 0 0 #ccc)) {
+                        background-color: blue;
+                    }
                 </style>
                 HTML
             ],
@@ -633,6 +633,34 @@ class UnitTest extends \Tests\TestCase
                 <<<'HTML'
                 <div>
                     @@if (true)
+                </div>
+                HTML
+            ],
+            34 => [
+                0,
+                <<<'HTML'
+                <div>
+                    <script>
+                        @if (app()->environment('production'))
+                            console.debug('tracking enabled');
+                        @else
+                            console.debug('tracking disabled');
+                        @endif
+                    </script>
+                </div>
+                HTML
+            ],
+            34 => [
+                0,
+                <<<'HTML'
+                <div>
+                    <style>
+                        @if (app()->environment('local'))
+                            body {
+                                background-color: red;
+                            }
+                        @endif
+                    </style>
                 </div>
                 HTML
             ],
