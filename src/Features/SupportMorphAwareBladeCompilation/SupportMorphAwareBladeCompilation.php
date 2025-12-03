@@ -102,7 +102,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
                 && str($match[0])->endsWith(')')
                 && ! static::hasEvenNumberOfParentheses($match[0])
             ) {
-                if (($after = str($template)->after($match[0])) === $template) {
+                if (($after = str($template)->after($match[0])->toString()) === $template) {
                     break;
                 }
 

@@ -617,7 +617,17 @@ class UnitTest extends \Tests\TestCase
                 <<<'HTML'
                 <div> @for ($i=0; $i<3; $i++)<span> {{ $someProperty }} </span> @endfor Else</div>
                 HTML
-            ]
+            ],
+            32 => [
+                0,
+                <<<'HTML'
+                <style>
+                @supports (filter: drop-shadow(0 0 0 #ccc)) {
+                    /* ... */
+                }
+                </style>
+                HTML
+            ],
         ];
     }
 
