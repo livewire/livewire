@@ -628,6 +628,14 @@ class UnitTest extends \Tests\TestCase
                 </style>
                 HTML
             ],
+            33 => [
+                0,
+                <<<'HTML'
+                <div>
+                    @@if (true)
+                </div>
+                HTML
+            ],
         ];
     }
 

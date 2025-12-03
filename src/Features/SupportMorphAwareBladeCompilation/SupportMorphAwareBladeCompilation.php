@@ -94,6 +94,11 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
                 $matches[4][$i] ?: null,
             ];
 
+            // If the blade directive is escaped with an extra `@` then we don't want to process it...
+            if (str($match[1])->startsWith('@')) {
+                continue;
+            }
+
             // Here we check to see if we have properly found the closing parenthesis by
             // regex pattern or not, and will recursively continue on to the next ")"
             // then check again until the tokenizer confirms we find the right one.
