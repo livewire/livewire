@@ -80,19 +80,38 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         preg_match_all(
             '/\B@(@?\w+(?:::\w+)?)([ \t]*)(\( ( [\S\s]*? ) \))?/x',
             $template,
-            $matches
+            $matches,
+            PREG_OFFSET_CAPTURE
         );
 
-        $offset = 0;
+        if (empty($matches[0])) {
+            return $template;
+        }
+
+        // Find all tags which shouldn't have directives processed inside them...
+        $ignoredTags = ['script', 'style'];
+        $excludedRanges = static::findIgnoredTagRanges($template, $ignoredTags);
 
         for ($i = 0; isset($matches[0][$i]); $i++) {
             $match = [
-                $matches[0][$i],
-                $matches[1][$i],
-                $matches[2][$i],
-                $matches[3][$i] ?: null,
-                $matches[4][$i] ?: null,
+                $matches[0][$i][0],
+                $matches[1][$i][0],
+                $matches[2][$i][0],
+                $matches[3][$i][0] ?: null,
+                $matches[4][$i][0] ?: null,
             ];
+
+            $matchPosition = $matches[0][$i][1];
+
+            // If the blade directive is escaped with an extra `@` then we don't want to process it...
+            if (str($match[1])->startsWith('@')) {
+                continue;
+            }
+
+            // Skip directives inside ignored tags...
+            if (static::isInExcludedRange($matchPosition, $excludedRanges)) {
+                continue;
+            }
 
             // Here we check to see if we have properly found the closing parenthesis by
             // regex pattern or not, and will recursively continue on to the next ")"
@@ -102,7 +121,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
                 && str($match[0])->endsWith(')')
                 && ! static::hasEvenNumberOfParentheses($match[0])
             ) {
-                if (($after = str($template)->after($match[0])) === $template) {
+                if (($after = str($template)->after($match[0])->toString()) === $template) {
                     break;
                 }
 
@@ -110,7 +129,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
                 if (
                     isset($matches[0][$i + 1])
-                    && str($rest.')')->contains($matches[0][$i + 1])
+                    && str($rest.')')->contains($matches[0][$i + 1][0])
                 ) {
                     unset($matches[0][$i + 1]);
                     $i++;
@@ -144,9 +163,9 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         $livewireCheckClosingTag = '<?php endif; ?>';
 
         $prefix = '';
-        
+
         $suffix = '';
-        
+
         if (static::$shouldInjectConditionalMarkers) {
             $prefix = '<!--[if BLOCK]><![endif]-->';
         }
@@ -365,5 +384,66 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         }
 
         return $opening === $closing;
+    }
+
+    protected static function findIgnoredTagRanges(string $template, array $tags): array
+    {
+        if (empty($tags)) {
+            return [];
+        }
+
+        $ranges = [];
+
+        $escapedTags = array_map('preg_quote', $tags);
+        $tagsPattern = implode('|', $escapedTags);
+
+        // Match both opening and closing tags. This handles attributes like `<script type="text/javascript">`...
+        preg_match_all(
+            '/<('.$tagsPattern.')(?:\s[^>]*)?>|<\/('.$tagsPattern.')>/i',
+            $template,
+            $tagMatches,
+            PREG_OFFSET_CAPTURE
+        );
+
+        $stack = [];
+
+        foreach ($tagMatches[0] as $tagMatch) {
+            $tag = $tagMatch[0];
+            $position = $tagMatch[1];
+
+            // Check if it's an opening tag...
+            if (preg_match('/<('.$tagsPattern.')/i', $tag, $typeMatch)) {
+                $type = strtolower($typeMatch[1]);
+                $stack[] = ['type' => $type, 'start' => $position];
+            }
+            // Check if it's a closing tag...
+            elseif (preg_match('/<\/('.$tagsPattern.')>/i', $tag, $typeMatch)) {
+                $type = strtolower($typeMatch[1]);
+
+                // Find the matching opening tag...
+                for ($i = count($stack) - 1; $i >= 0; $i--) {
+                    if ($stack[$i]['type'] === $type) {
+                        $start = $stack[$i]['start'];
+                        $end = $position + strlen($tag);
+                        $ranges[] = [$start, $end];
+                        array_splice($stack, $i, 1);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $ranges;
+    }
+
+    protected static function isInExcludedRange(int $position, array $ranges): bool
+    {
+        foreach ($ranges as [$start, $end]) {
+            if ($position >= $start && $position < $end) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
