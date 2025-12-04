@@ -46,14 +46,21 @@ class ComponentHookRegistry
             });
 
             on('hydrate', function ($component, $memo) use ($hook) {
-                if (! $hook = static::initializeHook($hook, $component)) {
-                    return;
-                }
-
-                $hook->callBoot();
-                $hook->callHydrate($memo);
+                // Initialize all hooks first before calling hydrate on any of them
+                // This ensures that when a hook's hydrate() method calls trigger('update'),
+                // all other hooks (like SupportLifecycleHooks) are already initialized
+                static::initializeHook($hook, $component);
             });
         }
+
+        // After all hooks are initialized, call hydrate on each of them
+        // Use 'after' to ensure this runs after all initialization listeners
+        after('hydrate', function ($component, $memo) {
+            foreach (static::$components[$component] ?? [] as $hook) {
+                $hook->callBoot();
+                $hook->callHydrate($memo);
+            }
+        });
 
         on('update', function ($component, $fullPath, $newValue) {
             $propertyName = Utils::beforeFirstDot($fullPath);

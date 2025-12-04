@@ -5,7 +5,10 @@ namespace Tests;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\RateLimiter;
-use Orchestra\Testbench\Dusk\Options;
+use Orchestra\Testbench\Dusk\Options as DuskOptions;
+use Facebook\WebDriver\Chrome\ChromeOptions;
+use Facebook\WebDriver\Remote\DesiredCapabilities;
+use Facebook\WebDriver\Remote\RemoteWebDriver;
 
 class TestCase extends \Orchestra\Testbench\Dusk\TestCase
 {
@@ -15,8 +18,8 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
             $this->makeACleanSlate();
 
             if (env('DUSK_HEADLESS_DISABLED', true) == false) {
-                Options::withoutUI();
-            } 
+                DuskOptions::withoutUI();
+            }
         });
 
         $this->beforeApplicationDestroyed(function () {
@@ -98,5 +101,26 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
     protected function resolveApplication()
     {
         return parent::resolveApplication()->useEnvironmentPath(__DIR__.'/..');
+    }
+
+    protected function driver(): RemoteWebDriver
+    {
+        $options = DuskOptions::getChromeOptions();
+
+        // Add Docker/container-compatible Chrome flags
+        // These are needed for Chrome to run properly in containers and are safe in non-container environments
+        // Orchestra Testbench Dusk handles headless mode automatically via CI environment variable
+        $options->addArguments([
+            '--no-sandbox',
+            '--disable-dev-shm-usage',
+        ]);
+
+        return RemoteWebDriver::create(
+            'http://localhost:9515',
+            DesiredCapabilities::chrome()->setCapability(
+                ChromeOptions::CAPABILITY,
+                $options
+            )
+        );
     }
 }
