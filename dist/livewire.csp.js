@@ -2787,7 +2787,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           timeout = setTimeout(later, wait);
         };
       }
-      function throttle2(func, limit) {
+      function throttle3(func, limit) {
         let inThrottle;
         return function() {
           let context = this, args = arguments;
@@ -2962,7 +2962,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         mutateDom,
         directive: directive2,
         entangle,
-        throttle: throttle2,
+        throttle: throttle3,
         debounce: debounce2,
         evaluate: evaluate2,
         initTree,
@@ -3977,7 +3977,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (modifiers.includes("throttle")) {
           let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
           let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-          handler4 = throttle2(handler4, wait);
+          handler4 = throttle3(handler4, wait);
         }
         if (modifiers.includes("prevent"))
           handler4 = wrapHandler(handler4, (next, e) => {
@@ -5176,8 +5176,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return;
       start2();
       if (e.target.multiple) {
-        let append = ["ui-file-upload"].includes(e.target.tagName.toLowerCase());
-        manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel, append);
+        manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
       } else {
         manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
       }
@@ -5233,7 +5232,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         append: false
       });
     }
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = false) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = true) {
       this.setUpload(name, {
         files: Array.from(files),
         multiple: true,
@@ -5398,7 +5397,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }, errorCallback = () => {
   }, progressCallback = () => {
   }, cancelledCallback = () => {
-  }, append = false) {
+  }, append = true) {
     let uploadManager = getUploadManager(component);
     uploadManager.uploadMultiple(
       name,
@@ -6196,6 +6195,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     coordinateNetworkInteractions(messageBus);
   });
   function fireAction(component, method, params = [], metadata = {}) {
+    if (component.__isWireProxy)
+      component = component.__instance;
     let action = constructAction(component, method, params, metadata);
     let prevented = false;
     actionInterceptors.forEach((callback) => {
@@ -12586,7 +12587,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function storeScrollInformationInHtmlBeforeNavigatingAway() {
     document.body.setAttribute("data-scroll-x", document.body.scrollLeft);
     document.body.setAttribute("data-scroll-y", document.body.scrollTop);
-    document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach((el) => {
+    document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:navigate\\:scroll]"]).forEach((el) => {
       el.setAttribute("data-scroll-x", el.scrollLeft);
       el.setAttribute("data-scroll-y", el.scrollTop);
     });
@@ -12608,7 +12609,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     queueMicrotask(() => {
       queueMicrotask(() => {
         scroll(document.body);
-        document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach(scroll);
+        document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:navigate\\:scroll]"]).forEach(scroll);
       });
     });
   }
@@ -14042,6 +14043,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/evaluator.js
   var import_alpinejs6 = __toESM(require_module_cjs());
   function evaluateExpression(component, el, expression, options = {}) {
+    if (!expression || expression.trim() === "")
+      return;
     options = {
       ...{
         scope: {
@@ -14056,6 +14059,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return import_alpinejs6.default.evaluate(el, expression, options);
   }
   function evaluateActionExpression(component, el, expression, options = {}) {
+    if (!expression || expression.trim() === "")
+      return;
     let negated = false;
     if (expression.startsWith("!")) {
       negated = true;
@@ -14065,6 +14070,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return import_alpinejs6.default.evaluate(el, contextualExpression, options);
   }
   function evaluateActionExpressionWithoutComponentScope(el, expression, options = {}) {
+    if (!expression || expression.trim() === "")
+      return;
     let negated = false;
     if (expression.startsWith("!")) {
       negated = true;
@@ -14587,7 +14594,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/supportStreaming.js
   interceptMessage(({ message, onStream }) => {
     onStream(({ streamedJson }) => {
-      let { id, type, name, el, ref, content, mode: mode2 } = streamedJson;
+      let { id, type, name, el, ref, content, mode } = streamedJson;
       if (type === "island")
         return;
       let component = findComponent(id);
@@ -14596,7 +14603,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         replaceEl = component.el.querySelector(`[wire\\:stream.replace="${name}"]`);
         if (replaceEl) {
           targetEl = replaceEl;
-          mode2 = "replace";
+          mode = "replace";
         } else {
           targetEl = component.el.querySelector(`[wire\\:stream="${name}"]`);
         }
@@ -14607,7 +14614,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       if (!targetEl)
         return;
-      if (mode2 === "replace") {
+      if (mode === "replace") {
         targetEl.innerHTML = content;
       } else {
         targetEl.insertAdjacentHTML("beforeend", content);
@@ -14670,11 +14677,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let isPrepend = directive2?.modifiers.includes("prepend");
     let isAppend = directive2?.modifiers.includes("append");
     if (islandName) {
-      let mode2 = isPrepend ? "prepend" : isAppend ? "append" : "morph";
+      let mode = isPrepend ? "prepend" : isAppend ? "append" : "morph";
       action.mergeMetadata({
         island: {
           name: islandName,
-          mode: mode2
+          mode
         }
       });
       return;
@@ -14725,7 +14732,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let strippedContent = extractInnerHtmlFromFragmentHtml(islandHtml);
     let parentElement = fragment.startMarkerNode.parentElement;
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-    mode = incomingMetadata.mode || "morph";
+    let mode = incomingMetadata.mode || "morph";
     if (mode === "morph") {
       morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
     } else if (mode === "append") {
@@ -14875,13 +14882,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function updateNavigateLinks() {
     let currentUrl = new URL(window.location.href);
+    let options = {
+      exact: true
+    };
     document.querySelectorAll(wireNavigateSelector).forEach((el) => {
+      if (el.hasAttribute("wire:current"))
+        return;
       let href = el.getAttribute("href");
       if (!href || href.startsWith("#"))
         return;
       try {
         let hrefUrl = new URL(href, window.location.href);
-        if (pathMatches(hrefUrl, currentUrl)) {
+        if (pathMatches(hrefUrl, currentUrl, options)) {
           el.setAttribute("data-current", "");
         } else {
           el.removeAttribute("data-current");
@@ -15418,6 +15430,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
     let onBlur = modifiers.includes("blur");
     let isDebounced = modifiers.includes("debounce");
+    let isThrottled = modifiers.includes("throttle");
     let update = () => {
       setNextActionOrigin({ el, directive: directive2 });
       if (isLive || isDebounced) {
@@ -15425,7 +15438,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
     };
-    let debouncedUpdate = isRealtimeInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
+    let debouncedUpdate = update;
+    if (isLive && isRealtimeInput(el) || isDebounced) {
+      debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(modifiers, "debounce") || 150);
+    }
+    if (isThrottled) {
+      debouncedUpdate = throttle2(debouncedUpdate, parseModifierDuration(modifiers, "throttle") || 150);
+    }
     import_alpinejs19.default.bind(el, {
       ["@change"]() {
         isLazy && update();
@@ -15451,6 +15470,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       "lazy",
       "defer"
     ].includes(i));
+    if (modifiers.includes("debounce")) {
+      let index2 = modifiers.indexOf("debounce");
+      let hasDuration = parseModifierDuration(modifiers, "debounce") !== void 0;
+      modifiers.splice(index2, hasDuration ? 2 : 1);
+    }
+    if (modifiers.includes("throttle")) {
+      let index2 = modifiers.indexOf("throttle");
+      let hasDuration = parseModifierDuration(modifiers, "throttle") !== void 0;
+      modifiers.splice(index2, hasDuration ? 2 : 1);
+    }
     if (modifiers.length === 0)
       return "";
     return "." + modifiers.join(".");
@@ -15479,6 +15508,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
+  }
+  function throttle2(func, limit) {
+    let inThrottle;
+    return function() {
+      let context = this, args = arguments;
+      if (!inThrottle) {
+        func.apply(context, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  }
+  function parseModifierDuration(modifiers, key) {
+    let index2 = modifiers.indexOf(key);
+    if (index2 === -1)
+      return void 0;
+    let nextModifier = modifiers[modifiers.indexOf(key) + 1] || "invalid-wait";
+    let duration = nextModifier.split("ms")[0];
+    return !isNaN(duration) ? duration : void 0;
   }
 
   // js/directives/wire-init.js
