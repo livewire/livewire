@@ -2,12 +2,12 @@
 
 namespace Livewire\Compiler;
 
-use Illuminate\Support\Facades\File;
-use Livewire\Compiler\CacheManager;
-use Livewire\Compiler\Compiler;
-use Livewire\Compiler\Parser\MultiFileParser;
-use Livewire\Compiler\Parser\SingleFileParser;
 use Livewire\Component;
+use Livewire\Compiler\Parser\SingleFileParser;
+use Livewire\Compiler\Parser\MultiFileParser;
+use Livewire\Compiler\Compiler;
+use Livewire\Compiler\CacheManager;
+use Illuminate\Support\Facades\File;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class UnitTest extends \Tests\TestCase
