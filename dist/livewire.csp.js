@@ -21,9 +21,9 @@
     mod
   ));
 
-  // ../alpine/packages/csp/dist/module.cjs.js
+  // node_modules/@alpinejs/csp/dist/module.cjs.js
   var require_module_cjs = __commonJS({
-    "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
+    "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
       var __create2 = Object.create;
       var __defProp2 = Object.defineProperty;
       var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -2928,7 +2928,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         get raw() {
           return raw;
         },
-        version: "3.15.1",
+        version: "3.15.2",
         flushAndStopDeferringMutations,
         dontAutoEvaluateFunctions,
         disableEffectScheduling,
@@ -2983,6 +2983,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         bind: bind2
       };
       var alpine_default = Alpine24;
+      var safemap = /* @__PURE__ */ new WeakMap();
+      var globals = /* @__PURE__ */ new Set();
+      Object.getOwnPropertyNames(globalThis).forEach((key) => {
+        if (key === "styleMedia")
+          return;
+        globals.add(globalThis[key]);
+      });
       var Token = class {
         constructor(type, value, start22, end) {
           this.type = type;
@@ -3526,38 +3533,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       };
       var Evaluator = class {
-        evaluate({ node, scope: scope2 = {}, context = null, allowGlobal = false, forceBindingRootScopeToFunctions = true }) {
+        evaluate({ node, scope: scope2 = {}, context = null, forceBindingRootScopeToFunctions = true }) {
           switch (node.type) {
             case "Literal":
               return node.value;
             case "Identifier":
               if (node.name in scope2) {
                 const value2 = scope2[node.name];
+                this.checkForDangerousValues(value2);
                 if (typeof value2 === "function") {
                   return value2.bind(scope2);
                 }
                 return value2;
               }
-              if (allowGlobal && typeof globalThis[node.name] !== "undefined") {
-                const value2 = globalThis[node.name];
-                if (typeof value2 === "function") {
-                  return value2.bind(globalThis);
-                }
-                return value2;
-              }
               throw new Error(`Undefined variable: ${node.name}`);
             case "MemberExpression":
-              const object = this.evaluate({ node: node.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              const object = this.evaluate({ node: node.object, scope: scope2, context, forceBindingRootScopeToFunctions });
               if (object == null) {
                 throw new Error("Cannot read property of null or undefined");
               }
-              let memberValue;
+              let property;
               if (node.computed) {
-                const property = this.evaluate({ node: node.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                memberValue = object[property];
+                property = this.evaluate({ node: node.property, scope: scope2, context, forceBindingRootScopeToFunctions });
               } else {
-                memberValue = object[node.property.name];
+                property = node.property.name;
               }
+              this.checkForDangerousKeywords(property);
+              let memberValue = object[property];
+              this.checkForDangerousValues(memberValue);
               if (typeof memberValue === "function") {
                 if (forceBindingRootScopeToFunctions) {
                   return memberValue.bind(scope2);
@@ -3567,28 +3570,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               }
               return memberValue;
             case "CallExpression":
-              const args = node.arguments.map((arg) => this.evaluate({ node: arg, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }));
+              const args = node.arguments.map((arg) => this.evaluate({ node: arg, scope: scope2, context, forceBindingRootScopeToFunctions }));
+              let returnValue;
               if (node.callee.type === "MemberExpression") {
-                const obj = this.evaluate({ node: node.callee.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                let func;
+                const obj = this.evaluate({ node: node.callee.object, scope: scope2, context, forceBindingRootScopeToFunctions });
+                let prop;
                 if (node.callee.computed) {
-                  const prop = this.evaluate({ node: node.callee.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                  func = obj[prop];
+                  prop = this.evaluate({ node: node.callee.property, scope: scope2, context, forceBindingRootScopeToFunctions });
                 } else {
-                  func = obj[node.callee.property.name];
+                  prop = node.callee.property.name;
                 }
+                this.checkForDangerousKeywords(prop);
+                let func = obj[prop];
                 if (typeof func !== "function") {
                   throw new Error("Value is not a function");
                 }
-                return func.apply(obj, args);
+                returnValue = func.apply(obj, args);
               } else {
                 if (node.callee.type === "Identifier") {
                   const name = node.callee.name;
                   let func;
                   if (name in scope2) {
                     func = scope2[name];
-                  } else if (allowGlobal && typeof globalThis[name] !== "undefined") {
-                    func = globalThis[name];
                   } else {
                     throw new Error(`Undefined variable: ${name}`);
                   }
@@ -3596,17 +3599,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                     throw new Error("Value is not a function");
                   }
                   const thisContext = context !== null ? context : scope2;
-                  return func.apply(thisContext, args);
+                  returnValue = func.apply(thisContext, args);
                 } else {
-                  const callee = this.evaluate({ node: node.callee, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                  const callee = this.evaluate({ node: node.callee, scope: scope2, context, forceBindingRootScopeToFunctions });
                   if (typeof callee !== "function") {
                     throw new Error("Value is not a function");
                   }
-                  return callee.apply(context, args);
+                  returnValue = callee.apply(context, args);
                 }
               }
+              this.checkForDangerousValues(returnValue);
+              return returnValue;
             case "UnaryExpression":
-              const argument = this.evaluate({ node: node.argument, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              const argument = this.evaluate({ node: node.argument, scope: scope2, context, forceBindingRootScopeToFunctions });
               switch (node.operator) {
                 case "!":
                   return !argument;
@@ -3631,8 +3636,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 }
                 return node.prefix ? scope2[name] : oldValue;
               } else if (node.argument.type === "MemberExpression") {
-                const obj = this.evaluate({ node: node.argument.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                const prop = node.argument.computed ? this.evaluate({ node: node.argument.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }) : node.argument.property.name;
+                const obj = this.evaluate({ node: node.argument.object, scope: scope2, context, forceBindingRootScopeToFunctions });
+                const prop = node.argument.computed ? this.evaluate({ node: node.argument.property, scope: scope2, context, forceBindingRootScopeToFunctions }) : node.argument.property.name;
                 const oldValue = obj[prop];
                 if (node.operator === "++") {
                   obj[prop] = oldValue + 1;
@@ -3643,8 +3648,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               }
               throw new Error("Invalid update expression target");
             case "BinaryExpression":
-              const left = this.evaluate({ node: node.left, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-              const right = this.evaluate({ node: node.right, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              const left = this.evaluate({ node: node.left, scope: scope2, context, forceBindingRootScopeToFunctions });
+              const right = this.evaluate({ node: node.right, scope: scope2, context, forceBindingRootScopeToFunctions });
               switch (node.operator) {
                 case "+":
                   return left + right;
@@ -3680,37 +3685,62 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                   throw new Error(`Unknown binary operator: ${node.operator}`);
               }
             case "ConditionalExpression":
-              const test = this.evaluate({ node: node.test, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-              return test ? this.evaluate({ node: node.consequent, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }) : this.evaluate({ node: node.alternate, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              const test = this.evaluate({ node: node.test, scope: scope2, context, forceBindingRootScopeToFunctions });
+              return test ? this.evaluate({ node: node.consequent, scope: scope2, context, forceBindingRootScopeToFunctions }) : this.evaluate({ node: node.alternate, scope: scope2, context, forceBindingRootScopeToFunctions });
             case "AssignmentExpression":
-              const value = this.evaluate({ node: node.right, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              const value = this.evaluate({ node: node.right, scope: scope2, context, forceBindingRootScopeToFunctions });
               if (node.left.type === "Identifier") {
                 scope2[node.left.name] = value;
                 return value;
               } else if (node.left.type === "MemberExpression") {
-                const obj = this.evaluate({ node: node.left.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                if (node.left.computed) {
-                  const prop = this.evaluate({ node: node.left.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                  obj[prop] = value;
-                } else {
-                  obj[node.left.property.name] = value;
-                }
-                return value;
+                throw new Error("Property assignments are prohibited in the CSP build");
               }
               throw new Error("Invalid assignment target");
             case "ArrayExpression":
-              return node.elements.map((el) => this.evaluate({ node: el, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }));
+              return node.elements.map((el) => this.evaluate({ node: el, scope: scope2, context, forceBindingRootScopeToFunctions }));
             case "ObjectExpression":
               const result = {};
               for (const prop of node.properties) {
-                const key = prop.computed ? this.evaluate({ node: prop.key, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }) : prop.key.type === "Identifier" ? prop.key.name : this.evaluate({ node: prop.key, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                const value2 = this.evaluate({ node: prop.value, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                const key = prop.computed ? this.evaluate({ node: prop.key, scope: scope2, context, forceBindingRootScopeToFunctions }) : prop.key.type === "Identifier" ? prop.key.name : this.evaluate({ node: prop.key, scope: scope2, context, forceBindingRootScopeToFunctions });
+                const value2 = this.evaluate({ node: prop.value, scope: scope2, context, forceBindingRootScopeToFunctions });
                 result[key] = value2;
               }
               return result;
             default:
               throw new Error(`Unknown node type: ${node.type}`);
           }
+        }
+        checkForDangerousKeywords(keyword) {
+          let blacklist = [
+            "constructor",
+            "prototype",
+            "__proto__",
+            "__defineGetter__",
+            "__defineSetter__",
+            "insertAdjacentHTML"
+          ];
+          if (blacklist.includes(keyword)) {
+            throw new Error(`Accessing "${keyword}" is prohibited in the CSP build`);
+          }
+        }
+        checkForDangerousValues(prop) {
+          if (prop === null) {
+            return;
+          }
+          if (typeof prop !== "object" && typeof prop !== "function") {
+            return;
+          }
+          if (safemap.has(prop)) {
+            return;
+          }
+          if (prop instanceof HTMLIFrameElement || prop instanceof HTMLScriptElement) {
+            throw new Error("Accessing iframes and scripts is prohibited in the CSP build");
+          }
+          if (globals.has(prop)) {
+            throw new Error("Accessing global variables is prohibited in the CSP build");
+          }
+          safemap.set(prop, true);
+          return true;
         }
       };
       function generateRuntimeFunction(expression) {
@@ -3721,8 +3751,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           const ast = parser.parse();
           const evaluator = new Evaluator();
           return function(options = {}) {
-            const { scope: scope2 = {}, context = null, allowGlobal = false, forceBindingRootScopeToFunctions = false } = options;
-            return evaluator.evaluate({ node: ast, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+            const { scope: scope2 = {}, context = null, forceBindingRootScopeToFunctions = false } = options;
+            return evaluator.evaluate({ node: ast, scope: scope2, context, forceBindingRootScopeToFunctions });
           };
         } catch (error2) {
           throw new Error(`CSP Parser Error: ${error2.message}`);
@@ -3742,13 +3772,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return [overriddenMagics, ...closestDataStack(el)];
       }
       function generateEvaluator(el, expression, dataStack) {
+        if (el instanceof HTMLIFrameElement) {
+          throw new Error("Evaluating expressions on an iframe is prohibited in the CSP build");
+        }
+        if (el instanceof HTMLScriptElement) {
+          throw new Error("Evaluating expressions on a script is prohibited in the CSP build");
+        }
         return (receiver = () => {
         }, { scope: scope2 = {}, params = [] } = {}) => {
           let completeScope = mergeProxies([scope2, ...dataStack]);
           let evaluate22 = generateRuntimeFunction(expression);
           let returnValue = evaluate22({
             scope: completeScope,
-            allowGlobal: false,
             forceBindingRootScopeToFunctions: true
           });
           if (shouldAutoEvaluateFunctions && typeof returnValue === "function") {
@@ -4676,6 +4711,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       function warnMissingPluginDirective(name, directiveName, slug) {
         directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
       }
+      directive2("html", (el, { expression }) => {
+        handleError(new Error("Using the x-html directive is prohibited in the CSP build"), el);
+      });
       alpine_default.setEvaluator(cspEvaluator);
       alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
       var src_default10 = alpine_default;
@@ -7550,7 +7588,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default(Alpine24) {
     Alpine24.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -7644,7 +7682,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default = src_default;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -8601,7 +8639,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default3(Alpine24) {
     let persist = () => {
       let alias;
@@ -8663,7 +8701,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default4(Alpine24) {
     Alpine24.directive("intersect", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
       let evaluate2 = evaluateLater(expression);
@@ -8718,7 +8756,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/sort/dist/module.esm.js
+  // node_modules/@alpinejs/sort/dist/module.esm.js
   function ownKeys2(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -11068,7 +11106,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // ../alpine/packages/resize/dist/module.esm.js
+  // node_modules/@alpinejs/resize/dist/module.esm.js
   function src_default6(Alpine24) {
     Alpine24.directive("resize", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
       let evaluator = evaluateLater(expression);
@@ -11113,7 +11151,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -13366,7 +13404,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -13747,7 +13785,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default9(Alpine24) {
     Alpine24.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
       let templateFn = () => expression;
