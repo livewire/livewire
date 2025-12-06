@@ -9,7 +9,11 @@ use Livewire\Features\SupportEvents\TestsEvents;
 use Illuminate\Support\Traits\Macroable;
 use BackedEnum;
 
-/** @mixin \Illuminate\Testing\TestResponse */
+/**
+ * @template TComponent of \Livewire\Component
+ *
+ * @mixin \Illuminate\Testing\TestResponse
+ */
 
 class Testable
 {
@@ -27,13 +31,13 @@ class Testable
     ) {}
 
     /**
-     * @param string $name
+     * @param class-string<TComponent>|TComponent|string|array<array-key, \Livewire\Component> $name
      * @param array $params
      * @param array $fromQueryString
      * @param array $cookies
      * @param array $headers
      *
-     * @return static
+     * @return static<TComponent>
      */
     static function create($name, $params = [], $fromQueryString = [], $cookies = [], $headers = [])
     {
@@ -320,6 +324,9 @@ class Testable
         return $this->lastState->getSnapshotData();
     }
 
+    /**
+     * @return TComponent
+     */
     function instance()
     {
         return $this->lastState->getComponent();
