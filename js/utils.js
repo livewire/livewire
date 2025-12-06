@@ -220,6 +220,13 @@ export function getNonce() {
 }
 
 /**
+ * Livewire's encoded URI prefix...
+ */
+export function getUriPrefix() {
+    return document.querySelector('[data-uri-prefix]')?.getAttribute('data-uri-prefix') ?? window.livewireScriptConfig['uri-prefix'] ?? null
+}
+
+/**
  * Livewire's update URI. This is configurable via Livewire::setUpdateRoute(...)
  */
 export function getUpdateUri() {
