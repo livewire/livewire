@@ -97,7 +97,7 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->typeSlowly('@input', 'livewire', 50) // 400ms total
+            ->typeSlowly('@input', 'livewire', 40) // 320ms total
             ->assertSeeIn('@text', 'livewire') // wire:text should update immediately
             ->pause(200) // Wait for the request to be handled
             ->assertScript('window.requests', 2); // Two requests: after 250ms and 500ms
