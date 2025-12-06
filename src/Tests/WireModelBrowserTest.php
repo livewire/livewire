@@ -12,11 +12,6 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(new class extends Component {
             public $foo;
 
-            public function updated()
-            {
-                $this->js('window.requests++');
-            }
-
             public function render()
             {
                 return <<<'HTML'
@@ -24,9 +19,20 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
                     <input type="text" wire:model.live="foo" dusk="input">
                     <span wire:text="foo" dusk="text"></span>
                 </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
                 HTML;
             }
         })
+            ->waitForLivewireToLoad()
             ->typeSlowly('@input', 'livewire', 50)
             ->assertSeeIn('@text', 'livewire') // wire:text should update immediately
             ->pause(200) // Wait for the request to be handled
@@ -38,11 +44,6 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(new class extends Component {
             public $foo;
 
-            public function updated()
-            {
-                $this->js('window.requests++');
-            }
-
             public function render()
             {
                 return <<<'HTML'
@@ -50,9 +51,20 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
                     <input type="text" wire:model.live.debounce.250ms="foo" dusk="input">
                     <span wire:text="foo" dusk="text"></span>
                 </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
                 HTML;
             }
         })
+            ->waitForLivewireToLoad()
             ->typeSlowly('@input', 'livewire', 50)
             ->assertSeeIn('@text', 'livewire') // wire:text should update immediately
             ->pause(300) // Wait for the request to be handled
@@ -64,11 +76,6 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(new class extends Component {
             public $foo;
 
-            public function updated()
-            {
-                $this->js('window.requests++');
-            }
-
             public function render()
             {
                 return <<<'HTML'
@@ -76,9 +83,20 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
                     <input type="text" wire:model.live.throttle.250ms="foo" dusk="input">
                     <span wire:text="foo" dusk="text"></span>
                 </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
                 HTML;
             }
         })
+            ->waitForLivewireToLoad()
             ->typeSlowly('@input', 'livewire', 50) // 400ms total
             ->assertSeeIn('@text', 'livewire') // wire:text should update immediately
             ->pause(200) // Wait for the request to be handled
