@@ -451,6 +451,9 @@
     }
     return null;
   }
+  function getUriPrefix() {
+    return document.querySelector("[data-uri-prefix]")?.getAttribute("data-uri-prefix") ?? window.livewireScriptConfig["uriPrefix"] ?? null;
+  }
   function getUpdateUri() {
     return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
   }
@@ -13561,7 +13564,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let scriptModuleHash = effects.scriptModule;
     if (scriptModuleHash) {
       let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
-      let path = `/livewire/js/${encodedName}.js?v=${scriptModuleHash}`;
+      let path = `${getUriPrefix()}/js/${encodedName}.js?v=${scriptModuleHash}`;
       import(path).then((module) => {
         module.run.call(component.$wire, component.$wire, component.$wire.js);
       });
