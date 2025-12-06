@@ -160,6 +160,11 @@ class LivewireManager
         return app(HandleRequests::class)->setUpdateRoute($callback);
     }
 
+    function getUriPrefix()
+    {
+        return app(HandleRequests::class)->getUriPrefix();
+    }
+
     function getUpdateUri()
     {
         return app(HandleRequests::class)->getUpdateUri();

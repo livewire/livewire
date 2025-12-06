@@ -209,6 +209,8 @@ class FrontendAssets extends Mechanism
 
         $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
 
+        $uriPrefix = app('livewire')->getUriPrefix();
+
         $updateUri = app('livewire')->getUpdateUri();
 
         $extraAttributes = Utils::stringifyHtmlAttributes(
@@ -216,7 +218,7 @@ class FrontendAssets extends Mechanism
         );
 
         return <<<HTML
-        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
+        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-uri-prefix="{$uriPrefix}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 
@@ -231,6 +233,7 @@ class FrontendAssets extends Mechanism
         $attributes = json_encode([
             'csrf' => app()->has('session.store') ? csrf_token() : '',
             'uri' => app('livewire')->getUpdateUri(),
+            'uriPrefix' => app('livewire')->getUriPrefix(),
             'progressBar' => $progressBar,
             'nonce' => isset($options['nonce']) ? $options['nonce'] : '',
         ]);

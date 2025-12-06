@@ -28,6 +28,11 @@ class HandleRequests extends Mechanism
         $this->skipRequestPayloadTamperingMiddleware();
     }
 
+    function getUriPrefix()
+    {
+        return EndpointResolver::prefix();
+    }
+
     function getUpdateUri()
     {
         return (string) str(
