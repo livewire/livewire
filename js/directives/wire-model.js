@@ -107,7 +107,9 @@ function isRealtimeInput(el) {
     return (
         ['INPUT', 'TEXTAREA'].includes(el.tagName.toUpperCase()) &&
         !['checkbox', 'radio'].includes(el.type)
-    ) || el.tagName.toUpperCase() === 'UI-SLIDER' // Flux UI
+    )
+        || el.tagName.toUpperCase() === 'UI-SLIDER' // Flux UI
+        || el.tagName.toUpperCase() === 'UI-COMPOSER' // Flux UI
 }
 
 function isDirty(subject, dirty) {
@@ -172,6 +174,6 @@ function parseModifierDuration(modifiers, key) {
 
     let nextModifier = modifiers[modifiers.indexOf(key)+1] || 'invalid-wait'
     let duration = nextModifier.split('ms')[0]
-    
+
     return ! isNaN(duration) ? duration : undefined
 }
