@@ -120,11 +120,11 @@ new class extends Component {
 Assuming the page being redirected to contain the following Blade snippet, the user will see a "Post successfully updated." message after updating the post:
 
 ```blade
-@if (session('status'))
+@session('status')
     <div class="alert alert-success">
-        {{ session('status') }}
+        {{ $message }}
     </div>
-@endif
+@endsession
 ```
 
 ## See also
