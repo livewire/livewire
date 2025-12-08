@@ -1120,6 +1120,37 @@ class BrowserTest extends \Tests\BrowserTestCase
             ])
             ->assertScript('return window.location.search', '?foo[bar]=baz&bob%5Blob%5D=law');
     }
+
+    public function test_except_does_remove_value_from_query_string_when_loaded_with_value_then_changed_to_except_value()
+    {
+        Livewire::withQueryParams([
+            'shown' => true,
+        ])
+            ->visit([
+                new class extends Component
+                {
+                    #[Url(except: false)]
+                    public bool $shown = false;
+
+                    public function hide(): void
+                    {
+                        $this->shown = false;
+                    }
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                        <div>
+                            <button wire:click="hide" dusk="hideButton">Hide</button>
+                        </div>
+                        HTML;
+                    }
+                }
+            ])
+            ->assertScript('return window.location.search', '?shown=true')
+            ->waitForLivewire()->click('@hideButton')
+            ->assertScript('return window.location.search', '?');
+    }
 }
 
 class FormObject extends \Livewire\Form
