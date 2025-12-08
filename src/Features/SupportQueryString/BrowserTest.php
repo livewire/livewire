@@ -489,7 +489,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->visit([
             new class extends Component
             {
-                #[Url(nullable: true)]
+                #[Url(keep: true, nullable: true)]
                 public ?StringBackedEnumForUrlTesting $foo;
 
                 public function change()
@@ -532,7 +532,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->visit([
             new class extends Component
             {
-                #[Url(nullable: true)]
+                #[Url(keep: true, nullable: true)]
                 public ?IntegerBackedEnumForUrlTesting $foo;
 
                 public function change()
@@ -876,10 +876,10 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringHas('foo', 'bar')
             ->waitForLivewire()->click('@unsetButton')
             ->assertSeeIn('@output', 'null')
-            ->assertQueryStringHas('foo', '')
+            ->assertQueryStringMissing('foo')
             ->refresh()
             ->assertSeeIn('@output', 'null')
-            ->assertQueryStringHas('foo', '');
+            ->assertQueryStringMissing('foo');
     }
 
     public function test_can_handle_empty_querystring_value_as_null_or_empty_string_based_on_typehinting_of_property()
@@ -942,16 +942,16 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@output-nullableFoo', 'null')
             ->assertSeeIn('@output-notNullableFoo', '\'\'')
             ->assertSeeIn('@output-notTypehintingFoo', 'null')
-            ->assertQueryStringHas('nullableFoo', '')
+            ->assertQueryStringMissing('nullableFoo')
             ->assertQueryStringHas('notNullableFoo', '')
-            ->assertQueryStringHas('notTypehintingFoo', '')
+            ->assertQueryStringMissing('notTypehintingFoo')
             ->refresh()
             ->assertSeeIn('@output-nullableFoo', 'null')
             ->assertSeeIn('@output-notNullableFoo', '\'\'')
-            ->assertSeeIn('@output-notTypehintingFoo', '\'\'')
-            ->assertQueryStringHas('nullableFoo', '')
+            ->assertSeeIn('@output-notTypehintingFoo', 'null')
+            ->assertQueryStringMissing('nullableFoo')
             ->assertQueryStringHas('notNullableFoo', '')
-            ->assertQueryStringHas('notTypehintingFoo', '');
+            ->assertQueryStringMissing('notTypehintingFoo');
     }
 
     public function test_can_set_the_correct_query_string_parameter_when_multiple_instances_of_the_same_component_are_used()
