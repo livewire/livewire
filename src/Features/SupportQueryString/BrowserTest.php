@@ -1149,7 +1149,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ])
             ->assertScript('return window.location.search', '?shown=true')
             ->waitForLivewire()->click('@hideButton')
-            ->assertScript('return window.location.search', '?');
+            ->assertScript('return window.location.search', '');
     }
 }
 

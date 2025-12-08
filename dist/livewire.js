@@ -8212,7 +8212,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let isInitiallyPresentInUrl = has2(url, name);
     let initialValue = isInitiallyPresentInUrl ? get3(url, name) : initialSeedValue;
     let initialValueMemo = JSON.stringify(initialValue);
-    let exceptValueMemo = [false, null, void 0].includes(except) ? initialSeedValue : JSON.stringify(except);
+    let exceptValueMemo = JSON.stringify(except);
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
     let hasReturnedToExceptValue = (newValue) => JSON.stringify(newValue) === exceptValueMemo;
     if (alwaysShow)
