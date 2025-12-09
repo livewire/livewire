@@ -43,7 +43,7 @@ class BrowserTest extends BrowserTestCase
     {
         Livewire::visit(new class extends Component {
             public $result = '';
-            public $errors = '';
+            public $validationErrors = '';
 
             #[Json]
             public function saveData()
@@ -57,19 +57,19 @@ class BrowserTest extends BrowserTestCase
             {
                 return <<<'HTML'
                 <div>
-                    <button dusk="call" @click="$wire.saveData().then(([data, errors]) => { $wire.result = JSON.stringify(data); $wire.errors = JSON.stringify(errors) })">Call</button>
+                    <button dusk="call" @click="$wire.saveData().then(([data, errors]) => { $wire.result = JSON.stringify(data); $wire.validationErrors = JSON.stringify(errors) })">Call</button>
 
                     <span dusk="result" wire:text="result"></span>
-                    <span dusk="errors" wire:text="errors"></span>
+                    <span dusk="validationErrors" wire:text="validationErrors"></span>
                 </div>
                 HTML;
             }
         })
         ->waitForLivewireToLoad()
         ->click('@call')
-        ->waitForTextIn('@errors', 'name')
+        ->waitForTextIn('@validationErrors', 'name')
         ->assertSeeIn('@result', 'null')
-        ->assertSeeIn('@errors', 'name')
+        ->assertSeeIn('@validationErrors', 'name')
         ;
     }
 
