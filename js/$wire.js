@@ -34,7 +34,6 @@ let aliases = {
     'hook': '$hook',
     'watch': '$watch',
     'commit': '$commit',
-    'errors': '$errors',
     'island': '$island',
     'upload': '$upload',
     'entangle': '$entangle',

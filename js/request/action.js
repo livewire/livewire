@@ -36,6 +36,12 @@ export default class Action {
         return methodIsMarkedAsync || actionIsAsync
     }
 
+    isJson() {
+        let jsonMethods = this.component.snapshot.memo?.json || []
+
+        return jsonMethods.includes(this.method)
+    }
+
     mergeMetadata(metadata) {
         this.metadata = { ...this.metadata, ...metadata }
     }

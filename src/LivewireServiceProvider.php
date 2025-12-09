@@ -202,6 +202,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportModels\SupportModels::class,
             Features\SupportEvents\SupportEvents::class,
             Features\SupportSlots\SupportSlots::class,
+            Features\SupportJson\SupportJson::class,
 
             // Some features we want to have priority over others...
             Features\SupportLifecycleHooks\SupportLifecycleHooks::class,

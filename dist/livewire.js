@@ -4728,6 +4728,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let actionIsAsync = this.origin?.directive?.modifiers.includes("async") || !!this.metadata.async;
       return methodIsMarkedAsync || actionIsAsync;
     }
+    isJson() {
+      let jsonMethods = this.component.snapshot.memo?.json || [];
+      return jsonMethods.includes(this.method);
+    }
     mergeMetadata(metadata) {
       this.metadata = { ...this.metadata, ...metadata };
     }
@@ -5302,7 +5306,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "hook": "$hook",
     "watch": "$watch",
     "commit": "$commit",
-    "errors": "$errors",
     "island": "$island",
     "upload": "$upload",
     "entangle": "$entangle",
