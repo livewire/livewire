@@ -122,7 +122,7 @@ Assuming the page being redirected to contain the following Blade snippet, the u
 ```blade
 @session('status')
     <div class="alert alert-success">
-        {{ $message }}
+        {{ $value }}
     </div>
 @endsession
 ```
