@@ -6710,6 +6710,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "hook": "$hook",
     "watch": "$watch",
     "commit": "$commit",
+    "errors": "$errors",
     "island": "$island",
     "upload": "$upload",
     "entangle": "$entangle",
