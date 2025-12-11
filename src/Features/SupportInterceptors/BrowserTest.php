@@ -174,9 +174,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ actions, onSend, onCancel, onError, onSuccess, cancel }) => {
-                            let action = [...actions][0]
-                            let method = action.method
+                        this.intercept(({ message, onSend, onCancel, onError, onSuccess }) => {
+                            let action = [...message.actions][0]
+                            let method = action.name
                             let directive = action.origin.directive
 
                             window.intercepts.push(`onInit-${directive.method}`)
@@ -301,9 +301,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ actions, onSend, onCancel, onError, onSuccess, cancel }) => {
-                            let action = [...actions][0]
-                            let method = action.method
+                        this.intercept(({ message, onSend, onCancel, onError, onSuccess }) => {
+                            let action = [...message.actions][0]
+                            let method = action.name
                             let directive = action.origin.directive
 
                             window.intercepts.push(`onInit-${directive.method}`)
@@ -377,9 +377,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ actions, onSend, onCancel, onError, onSuccess, cancel }) => {
-                            let action = [...actions][0]
-                            let method = action.method
+                        this.intercept(({ message, onSend, onCancel, onError, onSuccess }) => {
+                            let action = [...message.actions][0]
+                            let method = action.name
                             let directive = action.origin.directive
 
                             window.intercepts.push(`onInit-${directive.method}`)

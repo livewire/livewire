@@ -20,9 +20,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -49,8 +49,8 @@ var require_module_cjs = __commonJS({
       mod
     ));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var require_shared_cjs = __commonJS2({
-      "node_modules/@vue/shared/dist/shared.cjs.js"(exports2) {
+    var require_shared_cjs_prod = __commonJS2({
+      "node_modules/@vue/shared/dist/shared.cjs.prod.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         function makeMap(str, expectsLowerCase) {
@@ -324,8 +324,8 @@ var require_module_cjs = __commonJS({
           "optionalChaining",
           "nullishCoalescingOperator"
         ];
-        var EMPTY_OBJ = Object.freeze({});
-        var EMPTY_ARR = Object.freeze([]);
+        var EMPTY_OBJ = {};
+        var EMPTY_ARR = [];
         var NOOP = () => {
         };
         var NO = () => false;
@@ -460,23 +460,23 @@ var require_module_cjs = __commonJS({
     var require_shared = __commonJS2({
       "node_modules/@vue/shared/index.js"(exports2, module2) {
         "use strict";
-        if (false) {
-          module2.exports = null;
+        if (true) {
+          module2.exports = require_shared_cjs_prod();
         } else {
-          module2.exports = require_shared_cjs();
+          module2.exports = null;
         }
       }
     });
-    var require_reactivity_cjs = __commonJS2({
-      "node_modules/@vue/reactivity/dist/reactivity.cjs.js"(exports2) {
+    var require_reactivity_cjs_prod = __commonJS2({
+      "node_modules/@vue/reactivity/dist/reactivity.cjs.prod.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         var shared = require_shared();
         var targetMap = /* @__PURE__ */ new WeakMap();
         var effectStack = [];
         var activeEffect;
-        var ITERATE_KEY = Symbol("iterate");
-        var MAP_KEY_ITERATE_KEY = Symbol("Map key iterate");
+        var ITERATE_KEY = Symbol("");
+        var MAP_KEY_ITERATE_KEY = Symbol("");
         function isEffect(fn) {
           return fn && fn._isEffect === true;
         }
@@ -566,14 +566,6 @@ var require_module_cjs = __commonJS({
           if (!dep.has(activeEffect)) {
             dep.add(activeEffect);
             activeEffect.deps.push(dep);
-            if (activeEffect.options.onTrack) {
-              activeEffect.options.onTrack({
-                effect: activeEffect,
-                target,
-                type,
-                key
-              });
-            }
           }
         }
         function trigger2(target, type, key, newValue, oldValue, oldTarget) {
@@ -630,17 +622,6 @@ var require_module_cjs = __commonJS({
             }
           }
           const run = (effect4) => {
-            if (effect4.options.onTrigger) {
-              effect4.options.onTrigger({
-                effect: effect4,
-                target,
-                key,
-                type,
-                newValue,
-                oldValue,
-                oldTarget
-              });
-            }
             if (effect4.options.scheduler) {
               effect4.options.scheduler(effect4);
             } else {
@@ -734,7 +715,7 @@ var require_module_cjs = __commonJS({
               if (!hadKey) {
                 trigger2(target, "add", key, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger2(target, "set", key, value, oldValue);
+                trigger2(target, "set", key, value);
               }
             }
             return result;
@@ -742,10 +723,10 @@ var require_module_cjs = __commonJS({
         }
         function deleteProperty(target, key) {
           const hadKey = shared.hasOwn(target, key);
-          const oldValue = target[key];
+          target[key];
           const result = Reflect.deleteProperty(target, key);
           if (result && hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0);
           }
           return result;
         }
@@ -770,15 +751,9 @@ var require_module_cjs = __commonJS({
         var readonlyHandlers = {
           get: readonlyGet,
           set(target, key) {
-            {
-              console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
-            }
             return true;
           },
           deleteProperty(target, key) {
-            {
-              console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
-            }
             return true;
           }
         };
@@ -845,15 +820,13 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
-          } else {
-            checkIdentityKeys(target, has2, key);
           }
           const oldValue = get3.call(target, key);
           target.set(key, value);
           if (!hadKey) {
             trigger2(target, "add", key, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger2(target, "set", key, value, oldValue);
+            trigger2(target, "set", key, value);
           }
           return this;
         }
@@ -864,23 +837,20 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
-          } else {
-            checkIdentityKeys(target, has2, key);
           }
-          const oldValue = get3 ? get3.call(target, key) : void 0;
+          get3 ? get3.call(target, key) : void 0;
           const result = target.delete(key);
           if (hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0);
           }
           return result;
         }
         function clear() {
           const target = toRaw2(this);
           const hadItems = target.size !== 0;
-          const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
           const result = target.clear();
           if (hadItems) {
-            trigger2(target, "clear", void 0, void 0, oldTarget);
+            trigger2(target, "clear", void 0, void 0);
           }
           return result;
         }
@@ -922,10 +892,6 @@ var require_module_cjs = __commonJS({
         }
         function createReadonlyMethod(type) {
           return function(...args) {
-            {
-              const key = args[0] ? `on key "${args[0]}" ` : ``;
-              console.warn(`${shared.capitalize(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
-            }
             return type === "delete" ? false : this;
           };
         }
@@ -1046,13 +1012,6 @@ var require_module_cjs = __commonJS({
         var shallowReadonlyCollectionHandlers = {
           get: /* @__PURE__ */ createInstrumentationGetter(true, true)
         };
-        function checkIdentityKeys(target, has2, key) {
-          const rawKey = toRaw2(key);
-          if (rawKey !== key && has2.call(target, rawKey)) {
-            const type = shared.toRawType(target);
-            console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-          }
-        }
         var reactiveMap = /* @__PURE__ */ new WeakMap();
         var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
         var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -1091,9 +1050,6 @@ var require_module_cjs = __commonJS({
         }
         function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
           if (!shared.isObject(target)) {
-            {
-              console.warn(`value cannot be made reactive: ${String(target)}`);
-            }
             return target;
           }
           if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
@@ -1167,7 +1123,7 @@ var require_module_cjs = __commonJS({
           return new RefImpl(rawValue, shallow);
         }
         function triggerRef(ref2) {
-          trigger2(toRaw2(ref2), "set", "value", ref2.value);
+          trigger2(toRaw2(ref2), "set", "value", void 0);
         }
         function unref(ref2) {
           return isRef(ref2) ? ref2.value : ref2;
@@ -1205,9 +1161,6 @@ var require_module_cjs = __commonJS({
           return new CustomRefImpl(factory);
         }
         function toRefs(object) {
-          if (!isProxy(object)) {
-            console.warn(`toRefs() expects a reactive object but received a plain one.`);
-          }
           const ret = shared.isArray(object) ? new Array(object.length) : {};
           for (const key in object) {
             ret[key] = toRef(object, key);
@@ -1264,9 +1217,7 @@ var require_module_cjs = __commonJS({
           let setter;
           if (shared.isFunction(getterOrOptions)) {
             getter = getterOrOptions;
-            setter = () => {
-              console.warn("Write operation failed: computed value is readonly");
-            };
+            setter = shared.NOOP;
           } else {
             getter = getterOrOptions.get;
             setter = getterOrOptions.set;
@@ -1305,10 +1256,10 @@ var require_module_cjs = __commonJS({
     var require_reactivity = __commonJS2({
       "node_modules/@vue/reactivity/index.js"(exports2, module2) {
         "use strict";
-        if (false) {
-          module2.exports = null;
+        if (true) {
+          module2.exports = require_reactivity_cjs_prod();
         } else {
-          module2.exports = require_reactivity_cjs();
+          module2.exports = null;
         }
       }
     });
@@ -1769,6 +1720,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function evaluateLater(...args) {
       return theEvaluatorFunction(...args);
+    }
+    function evaluateRaw(el, expression) {
+      let overriddenMagics = {};
+      injectMagics(overriddenMagics, el);
+      let dataStack = [overriddenMagics, ...closestDataStack(el)];
+      if (typeof expression === "function") {
+        let func = expression;
+        return ({ scope: scope2 = {}, params = [], context } = {}) => {
+          return func.apply(mergeProxies([scope2, ...dataStack]), params);
+        };
+      } else {
+        let func = generateFunctionFromString(expression, el);
+        return ({ scope: scope2 = {}, params = [], context } = {}) => {
+          let completeScope = mergeProxies([scope2, ...dataStack]);
+          return func.call(context, func, completeScope);
+        };
+      }
     }
     var theEvaluatorFunction = normalEvaluator;
     function setEvaluator(newEvaluator) {
@@ -2948,6 +2916,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       mapAttributes,
       evaluateLater,
       interceptInit,
+      evaluateRaw,
       setEvaluator,
       mergeProxies,
       extractProp,
@@ -5116,9 +5085,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/sort/dist/module.cjs.js
+// ../alpine/packages/sort/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/sort/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/sort/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -7873,9 +7842,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
+// ../alpine/packages/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -9077,7 +9046,7 @@ function coordinateNetworkInteractions(messageBus2) {
       compileRequest([message, ...bundledMessages]);
     }
   });
-  interceptAction(({ action, reject, defer }) => {
+  interceptAction(({ action }) => {
     let isRenderless = action?.origin?.directive?.modifiers.includes("renderless");
     if (isRenderless) {
       action.metadata.renderless = true;
@@ -9087,7 +9056,7 @@ function coordinateNetworkInteractions(messageBus2) {
       if (message.isAsync() || action.isAsync())
         return;
       if (action.metadata.type === "poll") {
-        return reject();
+        return action.cancel();
       }
       if (Array.from(message.actions).every((action2) => action2.metadata.type === "poll")) {
         return message.cancel();
@@ -9097,11 +9066,9 @@ function coordinateNetworkInteractions(messageBus2) {
           return;
         }
       }
-      defer();
+      action.defer();
       message.addInterceptor(({ onFinish }) => {
-        onFinish(() => {
-          fireActionInstance(action);
-        });
+        onFinish(() => action.fire());
       });
     }
   });
@@ -9112,7 +9079,7 @@ var MessageRequest = class {
   messages = /* @__PURE__ */ new Set();
   controller = new AbortController();
   interceptors = [];
-  aborted = false;
+  cancelled = false;
   uri = null;
   payload = null;
   options = null;
@@ -9134,10 +9101,10 @@ var MessageRequest = class {
       message.getInterceptors().forEach((interceptor) => interceptor.init());
     });
   }
-  abort() {
-    if (this.aborted)
+  cancel() {
+    if (this.cancelled)
       return;
-    this.aborted = true;
+    this.cancelled = true;
     this.controller.abort();
     this.messages.forEach((message) => {
       if (message.isCancelled())
@@ -9148,40 +9115,41 @@ var MessageRequest = class {
   hasAllCancelledMessages() {
     return this.getActiveMessages().size === 0;
   }
-  isAborted() {
-    return this.aborted;
+  isCancelled() {
+    return this.cancelled;
   }
-  onSend({ responsePromise }) {
+  invokeOnSend({ responsePromise }) {
     this.interceptors.forEach((interceptor) => interceptor.onSend({ responsePromise }));
-    this.messages.forEach((message) => message.onSend());
+    this.messages.forEach((message) => message.invokeOnSend());
   }
-  onAbort() {
-    this.interceptors.forEach((interceptor) => interceptor.onAbort());
+  invokeOnCancel() {
+    this.interceptors.forEach((interceptor) => interceptor.onCancel());
   }
-  onFailure({ error: error2 }) {
+  invokeOnFailure({ error: error2 }) {
     this.interceptors.forEach((interceptor) => interceptor.onFailure({ error: error2 }));
+    this.messages.forEach((message) => message.invokeOnFailure(error2));
   }
-  onResponse({ response }) {
+  invokeOnResponse({ response }) {
     this.interceptors.forEach((interceptor) => interceptor.onResponse({ response }));
   }
-  onStream({ response }) {
+  invokeOnStream({ response }) {
     this.interceptors.forEach((interceptor) => interceptor.onStream({ response }));
   }
-  onParsed({ response, responseBody }) {
-    this.interceptors.forEach((interceptor) => interceptor.onParsed({ response, responseBody }));
+  invokeOnParsed({ response, body }) {
+    this.interceptors.forEach((interceptor) => interceptor.onParsed({ response, body }));
   }
-  onRedirect({ url, preventDefault }) {
+  invokeOnRedirect({ url, preventDefault }) {
     this.interceptors.forEach((interceptor) => interceptor.onRedirect({ url, preventDefault }));
   }
-  onDump({ content, preventDefault }) {
-    this.interceptors.forEach((interceptor) => interceptor.onDump({ content, preventDefault }));
+  invokeOnDump({ html, preventDefault }) {
+    this.interceptors.forEach((interceptor) => interceptor.onDump({ html, preventDefault }));
   }
-  onError({ response, responseBody, preventDefault }) {
-    this.interceptors.forEach((interceptor) => interceptor.onError({ response, responseBody, preventDefault }));
-    this.messages.forEach((message) => message.onError({ response, responseBody, preventDefault }));
+  invokeOnError({ response, body, preventDefault }) {
+    this.interceptors.forEach((interceptor) => interceptor.onError({ response, body, preventDefault }));
+    this.messages.forEach((message) => message.invokeOnError({ response, body, preventDefault }));
   }
-  onSuccess({ response, responseBody, responseJson }) {
-    this.interceptors.forEach((interceptor) => interceptor.onSuccess({ response, responseBody, responseJson }));
+  invokeOnSuccess({ response, body, json }) {
+    this.interceptors.forEach((interceptor) => interceptor.onSuccess({ response, body, json }));
   }
 };
 var PageRequest = class {
@@ -9221,42 +9189,27 @@ var MessageInterceptor = class {
   };
   onRender = () => {
   };
-  hasBeenSynchronouslyCancelled = false;
   constructor(message, callback) {
     this.message = message;
     this.callback = callback;
-    let isInsideCallbackSynchronously = true;
     this.callback({
       message: this.message,
-      actions: this.message.actions,
-      component: this.message.component,
       onSend: (callback2) => this.onSend = callback2,
       onCancel: (callback2) => this.onCancel = callback2,
       onFailure: (callback2) => this.onFailure = callback2,
       onError: (callback2) => this.onError = callback2,
       onStream: (callback2) => this.onStream = callback2,
       onSuccess: (callback2) => this.onSuccess = callback2,
-      onFinish: (callback2) => this.onFinish = callback2,
-      cancel: () => {
-        if (isInsideCallbackSynchronously) {
-          this.hasBeenSynchronouslyCancelled = true;
-        } else {
-          this.message.cancel();
-        }
-      }
+      onFinish: (callback2) => this.onFinish = callback2
     });
-    isInsideCallbackSynchronously = false;
   }
   init() {
-    if (this.hasBeenSynchronouslyCancelled) {
-      this.message.cancel();
-    }
   }
 };
 var RequestInterceptor = class {
   onSend = () => {
   };
-  onAbort = () => {
+  onCancel = () => {
   };
   onFailure = () => {
   };
@@ -9274,15 +9227,13 @@ var RequestInterceptor = class {
   };
   onSuccess = () => {
   };
-  hasBeenSynchronouslyAborted = false;
   constructor(request, callback) {
     this.request = request;
     this.callback = callback;
-    let isInsideCallbackSynchronously = true;
     this.callback({
       request: this.request,
       onSend: (callback2) => this.onSend = callback2,
-      onAbort: (callback2) => this.onAbort = callback2,
+      onCancel: (callback2) => this.onCancel = callback2,
       onFailure: (callback2) => this.onFailure = callback2,
       onResponse: (callback2) => this.onResponse = callback2,
       onParsed: (callback2) => this.onParsed = callback2,
@@ -9290,21 +9241,10 @@ var RequestInterceptor = class {
       onStream: (callback2) => this.onStream = callback2,
       onRedirect: (callback2) => this.onRedirect = callback2,
       onDump: (callback2) => this.onDump = callback2,
-      onSuccess: (callback2) => this.onSuccess = callback2,
-      abort: () => {
-        if (isInsideCallbackSynchronously) {
-          this.hasBeenSynchronouslyAborted = true;
-        } else {
-          this.request.abort();
-        }
-      }
+      onSuccess: (callback2) => this.onSuccess = callback2
     });
-    isInsideCallbackSynchronously = false;
   }
   init() {
-    if (this.hasBeenSynchronouslyAborted) {
-      this.request.abort();
-    }
   }
 };
 var InterceptorRegistry = class {
@@ -9515,7 +9455,15 @@ var Message = class {
       actionsByFingerprint.get(action.fingerprint).addSquashedAction(action);
       return;
     }
+    action.message = this;
     this.actions.add(action);
+  }
+  removeAction(action) {
+    this.actions.delete(action);
+    action.message = null;
+    if (this.actions.size === 0) {
+      this.cancel();
+    }
   }
   getActions() {
     return Array.from(this.actions);
@@ -9548,9 +9496,9 @@ var Message = class {
     if (this.cancelled)
       return;
     this.cancelled = true;
-    this.onCancel();
-    if (this.request.hasAllCancelledMessages()) {
-      this.request.abort();
+    this.invokeOnCancel();
+    if (this.request?.hasAllCancelledMessages()) {
+      this.request.cancel();
     }
   }
   isCancelled() {
@@ -9559,34 +9507,48 @@ var Message = class {
   isAsync() {
     return Array.from(this.actions).every((action) => action.isAsync());
   }
-  onSend() {
+  invokeOnSend() {
     this.interceptors.forEach((interceptor) => interceptor.onSend({
       payload: this.payload
     }));
+    Array.from(this.actions).forEach((action, index) => {
+      let call = this.calls[index];
+      action.invokeOnSend({ call });
+    });
   }
-  onCancel() {
+  invokeOnCancel() {
     this.interceptors.forEach((interceptor) => interceptor.onCancel());
-    this.rejectActionPromises("Request cancelled");
-    this.onFinish();
+    this.rejectActionPromises({ status: null, body: null, json: null, errors: null });
+    Array.from(this.actions).forEach((action) => action.invokeOnFinish());
+    this.invokeOnFinish();
   }
-  onFailure(error2) {
+  invokeOnFailure(error2) {
     this.interceptors.forEach((interceptor) => interceptor.onFailure({ error: error2 }));
-    this.rejectActionPromises("Request failed");
-    this.onFinish();
+    Array.from(this.actions).forEach((action) => action.invokeOnFailure({ error: error2 }));
+    this.rejectActionPromises({ status: null, body: null, json: null, errors: null });
+    Array.from(this.actions).forEach((action) => action.invokeOnFinish());
+    this.invokeOnFinish();
   }
-  onError({ response, responseBody, preventDefault }) {
+  invokeOnError({ response, body, preventDefault }) {
     this.interceptors.forEach((interceptor) => interceptor.onError({
       response,
-      responseBody,
+      body,
       preventDefault
     }));
-    this.rejectActionPromises("Request failed");
-    this.onFinish();
+    Array.from(this.actions).forEach((action) => action.invokeOnError({ response, body }));
+    let json = null;
+    try {
+      json = JSON.parse(body);
+    } catch (e) {
+    }
+    this.rejectActionPromises({ status: response.status, body, json, errors: null });
+    Array.from(this.actions).forEach((action) => action.invokeOnFinish());
+    this.invokeOnFinish();
   }
-  onStream({ streamedJson }) {
-    this.interceptors.forEach((interceptor) => interceptor.onStream({ streamedJson }));
+  invokeOnStream({ json }) {
+    this.interceptors.forEach((interceptor) => interceptor.onStream({ json }));
   }
-  onSuccess() {
+  invokeOnSuccess() {
     this.interceptors.forEach((interceptor) => {
       interceptor.onSuccess({
         payload: this.responsePayload,
@@ -9597,54 +9559,73 @@ var Message = class {
       });
     });
     let returns = this.responsePayload.effects["returns"] || [];
-    this.resolveActionPromises(returns);
-    this.onFinish();
+    let returnsMeta = this.responsePayload.effects["returnsMeta"] || {};
+    this.resolveActionPromises(returns, returnsMeta);
+    this.invokeOnFinish();
   }
-  onSync() {
+  invokeOnSync() {
     this.interceptors.forEach((interceptor) => interceptor.onSync());
   }
-  onEffect() {
+  invokeOnEffect() {
     this.interceptors.forEach((interceptor) => interceptor.onEffect());
   }
-  onMorph() {
+  invokeOnMorph() {
     this.interceptors.forEach((interceptor) => interceptor.onMorph());
   }
-  onRender() {
+  invokeOnRender() {
     this.interceptors.forEach((interceptor) => interceptor.onRender());
   }
-  onFinish() {
+  invokeOnFinish() {
     this.interceptors.forEach((interceptor) => interceptor.onFinish());
   }
-  rejectActionPromises(error2) {
+  rejectActionPromises({ status, body, json, errors }) {
     Array.from(this.actions).forEach((action) => {
-      action.rejectPromise(error2);
+      action.rejectPromise({ status, body, json, errors });
     });
   }
-  resolveActionPromises(returns) {
+  resolveActionPromises(returns, returnsMeta) {
     let resolvedActions = /* @__PURE__ */ new Set();
     returns.forEach((value, index) => {
       let action = Array.from(this.actions)[index];
       if (!action)
         return;
+      let meta = returnsMeta[index];
+      if (meta?.errors) {
+        action.rejectPromise({ status: 422, body: null, json: null, errors: meta.errors });
+        action.invokeOnFinish();
+        resolvedActions.add(action);
+        return;
+      }
+      action.invokeOnSuccess(value);
       action.resolvePromise(value);
+      action.invokeOnFinish();
       resolvedActions.add(action);
     });
     Array.from(this.actions).forEach((action) => {
       if (resolvedActions.has(action))
         return;
+      action.invokeOnSuccess(void 0);
       action.resolvePromise();
+      action.invokeOnFinish();
     });
   }
 };
 
 // js/request/action.js
 var Action = class {
-  handleReturn = () => {
-  };
   squashedActions = /* @__PURE__ */ new Set();
-  constructor(component, method, params = [], metadata = {}, origin = null) {
+  onSendCallbacks = [];
+  onSuccessCallbacks = [];
+  onErrorCallbacks = [];
+  onFailureCallbacks = [];
+  onFinishCallbacks = [];
+  message = null;
+  cancelled = false;
+  deferred = false;
+  _fire = null;
+  constructor(component, name, params = [], metadata = {}, origin = null) {
     this.component = component;
-    this.method = method;
+    this.name = name;
     this.params = params;
     this.metadata = metadata;
     this.origin = origin;
@@ -9652,25 +9633,84 @@ var Action = class {
       this.promiseResolution = { resolve, reject };
     });
   }
+  cancel() {
+    if (this.cancelled)
+      return;
+    this.cancelled = true;
+    this.invokeOnFinish();
+    this.rejectPromise({ status: null, body: null, json: null, errors: null });
+    this.squashedActions.forEach((action) => action.cancel());
+    if (this.message) {
+      this.message.removeAction(this);
+    }
+  }
+  isCancelled() {
+    return this.cancelled;
+  }
+  defer() {
+    this.deferred = true;
+  }
+  isDeferred() {
+    return this.deferred;
+  }
+  fire() {
+    if (this._fire) {
+      this._fire(this);
+    }
+  }
   get fingerprint() {
     let componentId = this.component.id;
-    let method = this.method;
+    let name = this.name;
     let params = JSON.stringify(this.params);
     let metadata = JSON.stringify(this.metadata);
-    return window.btoa(String.fromCharCode(...new TextEncoder().encode(componentId + method + params + metadata)));
+    return window.btoa(String.fromCharCode(...new TextEncoder().encode(componentId + name + params + metadata)));
   }
   isAsync() {
     let asyncMethods = this.component.snapshot.memo?.async || [];
-    let methodIsMarkedAsync = asyncMethods.includes(this.method);
+    let methodIsMarkedAsync = asyncMethods.includes(this.name);
     let actionIsAsync = this.origin?.directive?.modifiers.includes("async") || !!this.metadata.async;
     return methodIsMarkedAsync || actionIsAsync;
+  }
+  isJson() {
+    let jsonMethods = this.component.snapshot.memo?.json || [];
+    return jsonMethods.includes(this.name);
+  }
+  addInterceptor(callback) {
+    callback({
+      action: this,
+      onSend: (cb) => this.onSendCallbacks.push(cb),
+      onSuccess: (cb) => this.onSuccessCallbacks.push(cb),
+      onError: (cb) => this.onErrorCallbacks.push(cb),
+      onFailure: (cb) => this.onFailureCallbacks.push(cb),
+      onFinish: (cb) => this.onFinishCallbacks.push(cb)
+    });
+  }
+  invokeOnSend({ call }) {
+    this.onSendCallbacks.forEach((cb) => cb({ call }));
+    this.squashedActions.forEach((action) => action.invokeOnSend({ call }));
+  }
+  invokeOnSuccess(result) {
+    this.onSuccessCallbacks.forEach((cb) => cb(result));
+    this.squashedActions.forEach((action) => action.invokeOnSuccess(result));
+  }
+  invokeOnError({ response, body }) {
+    this.onErrorCallbacks.forEach((cb) => cb({ response, body }));
+    this.squashedActions.forEach((action) => action.invokeOnError({ response, body }));
+  }
+  invokeOnFailure({ error: error2 }) {
+    this.onFailureCallbacks.forEach((cb) => cb({ error: error2 }));
+    this.squashedActions.forEach((action) => action.invokeOnFailure({ error: error2 }));
+  }
+  invokeOnFinish() {
+    this.onFinishCallbacks.forEach((cb) => cb());
+    this.squashedActions.forEach((action) => action.invokeOnFinish());
   }
   mergeMetadata(metadata) {
     this.metadata = { ...this.metadata, ...metadata };
   }
   rejectPromise(error2) {
     this.squashedActions.forEach((action) => action.rejectPromise(error2));
-    this.promiseResolution.resolve();
+    this.promiseResolution.reject(error2);
   }
   addSquashedAction(action) {
     this.squashedActions.add(action);
@@ -9681,9 +9721,101 @@ var Action = class {
   }
 };
 
+// js/request/legacy.js
+function registerLegacyEventSupport(interceptRequest2, interceptMessage2) {
+  interceptRequest2(({
+    request,
+    onFailure,
+    onResponse,
+    onError,
+    onSuccess
+  }) => {
+    let respondCallbacks = [];
+    let succeedCallbacks = [];
+    let failCallbacks = [];
+    trigger("request", {
+      url: request.uri,
+      options: request.options,
+      payload: request.options.body,
+      respond: (i) => respondCallbacks.push(i),
+      succeed: (i) => succeedCallbacks.push(i),
+      fail: (i) => failCallbacks.push(i)
+    });
+    onResponse(({ response }) => {
+      respondCallbacks.forEach((callback) => callback({
+        status: response.status,
+        response
+      }));
+    });
+    onSuccess(({ response, json }) => {
+      succeedCallbacks.forEach((callback) => callback({
+        status: response.status,
+        json
+      }));
+    });
+    onFailure(({ error: error2 }) => {
+      failCallbacks.forEach((callback) => callback({
+        status: 503,
+        content: null,
+        preventDefault: () => {
+        }
+      }));
+    });
+    onError(({ response, body, preventDefault }) => {
+      failCallbacks.forEach((callback) => callback({
+        status: response.status,
+        content: body,
+        preventDefault
+      }));
+    });
+  });
+  interceptMessage2(({
+    message,
+    onCancel,
+    onError,
+    onSuccess,
+    onFinish
+  }) => {
+    let respondCallbacks = [];
+    let succeedCallbacks = [];
+    let failCallbacks = [];
+    trigger("commit", {
+      component: message.component,
+      commit: message.payload,
+      respond: (callback) => {
+        respondCallbacks.push(callback);
+      },
+      succeed: (callback) => {
+        succeedCallbacks.push(callback);
+      },
+      fail: (callback) => {
+        failCallbacks.push(callback);
+      }
+    });
+    onFinish(() => {
+      respondCallbacks.forEach((callback) => callback());
+    });
+    onSuccess(({ payload, onSync, onMorph, onRender }) => {
+      onRender(() => {
+        succeedCallbacks.forEach((callback) => callback({
+          snapshot: payload.snapshot,
+          effects: payload.effects
+        }));
+      });
+    });
+    onError(() => {
+      failCallbacks.forEach((callback) => callback());
+    });
+    onCancel(() => {
+      failCallbacks.forEach((callback) => callback());
+    });
+  });
+}
+
 // js/request/index.js
 var outstandingActionOrigin = null;
 var outstandingActionMetadata = {};
+var outstandingActionInterceptors = [];
 var interceptors = new InterceptorRegistry();
 var messageBus = new MessageBus();
 var actionInterceptors = [];
@@ -9693,6 +9825,9 @@ function setNextActionOrigin(origin) {
 }
 function setNextActionMetadata(metadata) {
   outstandingActionMetadata = metadata;
+}
+function setNextActionInterceptor(callback) {
+  outstandingActionInterceptors.push(callback);
 }
 function intercept(component, callback) {
   return interceptors.addInterceptor(component, callback);
@@ -9726,30 +9861,34 @@ function fireAction(component, method, params = [], metadata = {}) {
   if (component.__isWireProxy)
     component = component.__instance;
   let action = constructAction(component, method, params, metadata);
-  let prevented = false;
   actionInterceptors.forEach((callback) => {
     callback({
       action,
-      reject: () => {
-        action.rejectPromise();
-        prevented = true;
-      },
-      defer: () => prevented = true
+      onSend: (cb) => action.onSendCallbacks.push(cb),
+      onSuccess: (cb) => action.onSuccessCallbacks.push(cb),
+      onError: (cb) => action.onErrorCallbacks.push(cb),
+      onFailure: (cb) => action.onFailureCallbacks.push(cb),
+      onFinish: (cb) => action.onFinishCallbacks.push(cb)
     });
   });
-  if (prevented)
+  if (action.isCancelled() || action.isDeferred())
     return action.promise;
   return fireActionInstance(action);
 }
 function constructAction(component, method, params, metadata) {
   let origin = outstandingActionOrigin;
+  let pendingInterceptors = outstandingActionInterceptors;
   outstandingActionOrigin = null;
+  outstandingActionInterceptors = [];
   metadata = {
     ...metadata,
     ...outstandingActionMetadata
   };
   outstandingActionMetadata = {};
-  return new Action(component, method, params, metadata, origin);
+  let action = new Action(component, method, params, metadata, origin);
+  action._fire = fireActionInstance;
+  pendingInterceptors.forEach((callback) => action.addInterceptor(callback));
+  return action;
 }
 function fireActionInstance(action) {
   let message = createOrAddToOutstandingMessage(action);
@@ -9808,7 +9947,7 @@ function sendMessages() {
       message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn();
       message.updates = message.component.getUpdates();
       message.calls = Array.from(message.actions).map((i) => ({
-        method: i.method,
+        method: i.name,
         params: i.params,
         metadata: i.metadata
       }));
@@ -9851,43 +9990,43 @@ function sendMessages() {
   requests.forEach((request) => {
     request.initInterceptors(interceptors);
     if (request.hasAllCancelledMessages()) {
-      request.abort();
+      request.cancel();
     }
     sendRequest(request, {
       send: ({ responsePromise }) => {
-        request.onSend({ responsePromise });
+        request.invokeOnSend({ responsePromise });
       },
       failure: ({ error: error2 }) => {
-        request.onFailure({ error: error2 });
+        request.invokeOnFailure({ error: error2 });
       },
       response: ({ response }) => {
-        request.onResponse({ response });
+        request.invokeOnResponse({ response });
       },
       stream: async ({ response }) => {
-        request.onStream({ response });
+        request.invokeOnStream({ response });
         let finalResponse = "";
         try {
-          finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamedJson) => {
-            let componentId = streamedJson.id;
+          finalResponse = await interceptStreamAndReturnFinalResponse(response, (json) => {
+            let componentId = json.id;
             request.messages.forEach((message) => {
               if (message.component.id === componentId) {
-                message.onStream({ streamedJson });
+                message.invokeOnStream({ json });
               }
             });
-            trigger("stream", streamedJson);
+            trigger("stream", json);
           });
         } catch (e) {
-          request.abort();
+          request.cancel();
           throw e;
         }
         return finalResponse;
       },
       parsed: ({ response, responseBody }) => {
-        request.onParsed({ response, responseBody });
+        request.invokeOnParsed({ response, body: responseBody });
       },
       error: ({ response, responseBody }) => {
         let preventDefault = false;
-        request.onError({ response, responseBody, preventDefault: () => preventDefault = true });
+        request.invokeOnError({ response, body: responseBody, preventDefault: () => preventDefault = true });
         if (preventDefault)
           return;
         if (response.status === 419) {
@@ -9901,20 +10040,20 @@ function sendMessages() {
       },
       redirect: (url) => {
         let preventDefault = false;
-        request.onRedirect({ url, preventDefault: () => preventDefault = true });
+        request.invokeOnRedirect({ url, preventDefault: () => preventDefault = true });
         if (preventDefault)
           return;
         window.location.href = url;
       },
-      dump: (content) => {
+      dump: (html) => {
         let preventDefault = false;
-        request.onDump({ content, preventDefault: () => preventDefault = true });
+        request.invokeOnDump({ html, preventDefault: () => preventDefault = true });
         if (preventDefault)
           return;
-        showHtmlModal(content);
+        showHtmlModal(html);
       },
       success: async ({ response, responseBody, responseJson }) => {
-        request.onSuccess({ response, responseBody, responseJson });
+        request.invokeOnSuccess({ response, body: responseBody, json: responseJson });
         await triggerAsync("payload.intercept", responseJson);
         let messageResponsePayloads = responseJson.components;
         request.messages.forEach((message) => {
@@ -9925,25 +10064,25 @@ function sendMessages() {
             let snapshot = JSON.parse(snapshotEncoded);
             if (snapshot.memo.id === message.component.id) {
               message.responsePayload = { snapshot, effects };
-              message.onSuccess();
+              message.invokeOnSuccess();
               if (message.isCancelled())
                 return;
               message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates);
-              message.onSync();
+              message.invokeOnSync();
               if (message.isCancelled())
                 return;
               message.component.processEffects(effects, request);
-              message.onEffect();
+              message.invokeOnEffect();
               if (message.isCancelled())
                 return;
               queueMicrotask(() => {
                 if (message.isCancelled())
                   return;
-                message.onMorph();
+                message.invokeOnMorph();
                 setTimeout(() => {
                   if (message.isCancelled())
                     return;
-                  message.onRender();
+                  message.invokeOnRender();
                 });
               });
             }
@@ -9956,15 +10095,15 @@ function sendMessages() {
 async function sendRequest(request, handlers) {
   let response;
   try {
-    if (request.isAborted())
+    if (request.isCancelled())
       return;
     let responsePromise = fetch(request.uri, request.options);
-    if (request.isAborted())
+    if (request.isCancelled())
       return;
     handlers.send({ responsePromise });
     response = await responsePromise;
   } catch (e) {
-    if (request.isAborted())
+    if (request.isCancelled())
       return;
     handlers.failure({ error: e });
     return;
@@ -9976,7 +10115,7 @@ async function sendRequest(request, handlers) {
   } else {
     responseBody = await response.text();
   }
-  if (request.isAborted())
+  if (request.isCancelled())
     return;
   handlers.parsed({ response, responseBody });
   if (!response.ok) {
@@ -10056,93 +10195,7 @@ function getDestination(uri, response) {
 function createUrlObjectFromString(urlString) {
   return urlString !== null && new URL(urlString, document.baseURI);
 }
-interceptRequest(({
-  request,
-  onFailure,
-  onResponse,
-  onError,
-  onSuccess
-}) => {
-  let respondCallbacks = [];
-  let succeedCallbacks = [];
-  let failCallbacks = [];
-  trigger("request", {
-    url: request.uri,
-    options: request.options,
-    payload: request.options.body,
-    respond: (i) => respondCallbacks.push(i),
-    succeed: (i) => succeedCallbacks.push(i),
-    fail: (i) => failCallbacks.push(i)
-  });
-  onResponse(({ response }) => {
-    respondCallbacks.forEach((callback) => callback({
-      status: response.status,
-      response
-    }));
-  });
-  onSuccess(({ response, responseJson }) => {
-    succeedCallbacks.forEach((callback) => callback({
-      status: response.status,
-      json: responseJson
-    }));
-  });
-  onFailure(({ error: error2 }) => {
-    failCallbacks.forEach((callback) => callback({
-      status: 503,
-      content: null,
-      preventDefault: () => {
-      }
-    }));
-  });
-  onError(({ response, responseBody, preventDefault }) => {
-    failCallbacks.forEach((callback) => callback({
-      status: response.status,
-      content: responseBody,
-      preventDefault
-    }));
-  });
-});
-interceptMessage(({
-  message,
-  onCancel,
-  onError,
-  onSuccess,
-  onFinish
-}) => {
-  let respondCallbacks = [];
-  let succeedCallbacks = [];
-  let failCallbacks = [];
-  trigger("commit", {
-    component: message.component,
-    commit: message.payload,
-    respond: (callback) => {
-      respondCallbacks.push(callback);
-    },
-    succeed: (callback) => {
-      succeedCallbacks.push(callback);
-    },
-    fail: (callback) => {
-      failCallbacks.push(callback);
-    }
-  });
-  onFinish(() => {
-    respondCallbacks.forEach((callback) => callback());
-  });
-  onSuccess(({ payload, onSync, onMorph, onRender }) => {
-    onRender(() => {
-      succeedCallbacks.forEach((callback) => callback({
-        snapshot: payload.snapshot,
-        effects: payload.effects
-      }));
-    });
-  });
-  onError(() => {
-    failCallbacks.forEach((callback) => callback());
-  });
-  onCancel(() => {
-    failCallbacks.forEach((callback) => callback());
-  });
-});
+registerLegacyEventSupport(interceptRequest, interceptMessage);
 
 // js/features/supportErrors.js
 function getErrorsObject(component) {
@@ -10346,7 +10399,7 @@ wireProperty("$intercept", (component) => (method, callback = null) => {
     return intercept(component, callback);
   }
   return intercept(component, (options) => {
-    let action = options.message.getActions().find((action2) => action2.method === method);
+    let action = options.message.getActions().find((action2) => action2.name === method);
     if (action) {
       let el = action?.origin?.el;
       callback({
@@ -12838,8 +12891,8 @@ on("effect", ({ component, effects }) => {
 
 // js/features/supportStreaming.js
 interceptMessage(({ message, onStream }) => {
-  onStream(({ streamedJson }) => {
-    let { id, type, name, el, ref, content, mode } = streamedJson;
+  onStream(({ json }) => {
+    let { id, type, name, el, ref, content, mode } = json;
     if (type === "island")
       return;
     let component = findComponent(id);
@@ -12902,7 +12955,7 @@ on("effect", ({ effects, request }) => {
   if (!effects["redirect"])
     return;
   let preventDefault = false;
-  request.onRedirect({ url: effects["redirect"], preventDefault: () => preventDefault = true });
+  request.invokeOnRedirect({ url: effects["redirect"], preventDefault: () => preventDefault = true });
   if (preventDefault)
     return;
   let url = effects["redirect"];
@@ -12942,8 +12995,8 @@ interceptAction(({ action }) => {
   });
 });
 interceptMessage(({ message, onSuccess, onStream }) => {
-  onStream(({ streamedJson }) => {
-    let { type, islandFragment } = streamedJson;
+  onStream(({ json }) => {
+    let { type, islandFragment } = json;
     if (type !== "island")
       return;
     renderIsland(message.component, islandFragment);
@@ -13013,10 +13066,10 @@ function renderSlot(component, fragmentHtml) {
 }
 
 // js/features/supportDataLoading.js
-interceptMessage(({ actions, onSend, onFinish }) => {
+interceptMessage(({ message, onSend, onFinish }) => {
   let undos = [];
   onSend(() => {
-    actions.forEach((action) => {
+    message.actions.forEach((action) => {
       let origin = action.origin;
       if (!origin)
         return;
@@ -13149,9 +13202,9 @@ function updateNavigateLinks() {
 }
 
 // js/features/supportPreserveScroll.js
-interceptMessage(({ actions, onSuccess }) => {
+interceptMessage(({ message, onSuccess }) => {
   onSuccess(({ onSync, onMorph, onRender }) => {
-    actions.forEach((action) => {
+    message.actions.forEach((action) => {
       let origin = action.origin;
       if (!origin || !origin.directive)
         return;
@@ -13339,7 +13392,16 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
           } else {
             setNextActionOrigin({ el, directive: directive2 });
           }
-          evaluateActionExpression(component, el, directive2.expression, { scope: { $event: e } });
+          let livewireOptions = e.detail?.livewire;
+          if (livewireOptions?.interceptAction) {
+            setNextActionInterceptor(livewireOptions.interceptAction);
+          }
+          let expression = directive2.expression;
+          if (livewireOptions?.defaultParams !== void 0 && !expression.includes("(")) {
+            let params = Array.isArray(livewireOptions.defaultParams) ? livewireOptions.defaultParams : [livewireOptions.defaultParams];
+            expression = `${expression}(${params.map((p) => JSON.stringify(p)).join(", ")})`;
+          }
+          evaluateActionExpression(component, el, expression, { scope: { $event: e } });
         });
       };
       if (el.__livewire_confirm) {
@@ -13730,7 +13792,7 @@ function getModifierTail(modifiers) {
   return "." + modifiers.join(".");
 }
 function isRealtimeInput(el) {
-  return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type) || el.tagName.toUpperCase() === "UI-SLIDER";
+  return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type) || el.tagName.toUpperCase() === "UI-SLIDER" || el.tagName.toUpperCase() === "UI-COMPOSER";
 }
 function componentIsMissingProperty(component, property) {
   if (property.startsWith("$parent")) {
