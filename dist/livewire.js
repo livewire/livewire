@@ -4288,6 +4288,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.callback = callback;
       this.callback({
         message: this.message,
+        cancel: () => this.message.cancel(),
         onSend: (callback2) => this.onSend = callback2,
         onCancel: (callback2) => this.onCancel = callback2,
         onFailure: (callback2) => this.onFailure = callback2,

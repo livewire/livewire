@@ -19,6 +19,7 @@ export class MessageInterceptor {
 
         this.callback({
             message: this.message,
+            cancel: () => this.message.cancel(),
             onSend: (callback) => this.onSend = callback,
             onCancel: (callback) => this.onCancel = callback,
             onFailure: (callback) => this.onFailure = callback,
