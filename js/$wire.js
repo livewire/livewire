@@ -280,7 +280,7 @@ export function overrideMethod(component, method, callback) {
     overriddenMethods.set(component, obj)
 }
 
-wireFallback((component) => (property) => async (...params) => {
+wireFallback((component) => (property) => (...params) => {
     // If this method is passed directly to a Vue or Alpine
     // event listener (@click="someMethod") without using
     // parens, strip out the automatically added event.

@@ -68,7 +68,7 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
                         expression = `${expression}(${params.map(p => JSON.stringify(p)).join(', ')})`
                     }
 
-                    evaluateActionExpression(component, el, expression, { scope: { $event: e } })
+                    evaluateActionExpression(el, expression, { scope: { $event: e } })
                 })
             }
 

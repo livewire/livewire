@@ -301,7 +301,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onError, onSuccess }) => {
+                        this.intercept(({ message, cancel, onSend, onCancel, onError, onSuccess }) => {
                             let action = [...message.actions][0]
                             let method = action.name
                             let directive = action.origin.directive
@@ -377,7 +377,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onError, onSuccess }) => {
+                        this.intercept(({ message, cancel, onSend, onCancel, onError, onSuccess }) => {
                             let action = [...message.actions][0]
                             let method = action.name
                             let directive = action.origin.directive

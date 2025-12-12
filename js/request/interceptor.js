@@ -19,7 +19,17 @@ export class MessageInterceptor {
 
         this.callback({
             message: this.message,
-            cancel: () => this.message.cancel(),
+            cancel: () => {
+                // If we're not yet attached to the message's interceptors,
+                // call our own onCancel since message.invokeOnCancel() won't reach us
+                let attachedToMessage = this.message.getInterceptors().includes(this)
+
+                if (!attachedToMessage) {
+                    this.onCancel()
+                }
+
+                this.message.cancel()
+            },
             onSend: (callback) => this.onSend = callback,
             onCancel: (callback) => this.onCancel = callback,
             onFailure: (callback) => this.onFailure = callback,

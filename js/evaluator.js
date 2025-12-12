@@ -1,24 +1,31 @@
 import Alpine from 'alpinejs'
 
-export function evaluateExpression(component, el, expression, options = {}) {
+export function evaluateExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 
-    options = {
-        ...{
-            scope: {
-                $wire: component.$wire,
-            },
-            context: component.$wire,
-            ...options.scope,
-            ...options.context,
-        },
-        ...options,
+    // Can I delete this?
+    // options = {
+    //     ...{
+    //         scope: {
+    //             $wire: component.$wire,
+    //         },
+    //         context: component.$wire,
+    //         ...options.scope,
+    //         ...options.context,
+    //     },
+    //     ...options,
+    // }
+
+    let result = Alpine.evaluateRaw(el, expression, options)
+
+    if (result instanceof Promise) {
+        result.catch(() => {})
     }
 
-    return Alpine.evaluate(el, expression, options)
+    return result
 }
 
-export function evaluateActionExpression(component, el, expression, options = {}) {
+export function evaluateActionExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 
     let negated = false
@@ -31,21 +38,19 @@ export function evaluateActionExpression(component, el, expression, options = {}
 
     let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`
 
-    return Alpine.evaluate(el, contextualExpression, options)
-}
+    try {
+        let result = Alpine.evaluateRaw(el, contextualExpression, options)
 
-export function evaluateActionExpressionWithoutComponentScope(el, expression, options = {}) {
-    if (! expression || expression.trim() === '') return
+        // Silently catch Livewire request failures. These are handled by
+        // Livewire at the request level...
+        if (result instanceof Promise && result._livewireAction) {
+            result.catch(() => {})
+        }
 
-    let negated = false
+        return result
+    } catch (error) {
+        console.warn(`Livewire Expression Error: ${error.message}\n\n${ expression ? 'Expression: \"' + expression + '\"\n\n' : '' }`, el)
 
-    if (expression.startsWith('!')) {
-        negated = true
-
-        expression = expression.slice(1).trim()
+        console.error(error)
     }
-
-    let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`
-
-    return Alpine.evaluate(el, contextualExpression, options)
 }

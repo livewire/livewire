@@ -27,6 +27,8 @@ export default class Action {
         this.promise = new Promise((resolve, reject) => {
             this.promiseResolution = { resolve, reject }
         })
+
+        this.promise._livewireAction = this
     }
 
     cancel() {

@@ -1222,23 +1222,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function evaluateLater(...args) {
     return theEvaluatorFunction(...args);
   }
-  function evaluateRaw(el, expression) {
-    let overriddenMagics = {};
-    injectMagics(overriddenMagics, el);
-    let dataStack = [overriddenMagics, ...closestDataStack(el)];
-    if (typeof expression === "function") {
-      let func = expression;
-      return ({ scope: scope2 = {}, params = [], context } = {}) => {
-        return func.apply(mergeProxies([scope2, ...dataStack]), params);
-      };
-    } else {
-      let func = generateFunctionFromString(expression, el);
-      return ({ scope: scope2 = {}, params = [], context } = {}) => {
-        let completeScope = mergeProxies([scope2, ...dataStack]);
-        return func.call(context, func, completeScope);
-      };
-    }
-  }
   var theEvaluatorFunction = normalEvaluator;
   function setEvaluator(newEvaluator) {
     theEvaluatorFunction = newEvaluator;
@@ -1316,6 +1299,32 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       value.then((i) => receiver(i));
     } else {
       receiver(value);
+    }
+  }
+  function evaluateRaw(el, expression, extras = {}) {
+    let overriddenMagics = {};
+    injectMagics(overriddenMagics, el);
+    let dataStack = [overriddenMagics, ...closestDataStack(el)];
+    let scope2 = mergeProxies([extras.scope ?? {}, ...dataStack]);
+    if (expression.includes("await")) {
+      let AsyncFunction = Object.getPrototypeOf(async function() {
+      }).constructor;
+      let func = new AsyncFunction(
+        ["scope"],
+        `with (scope) { return ${expression} }`
+      );
+      let result = func.call(extras.context, scope2);
+      return result;
+    } else {
+      let func = new Function(
+        ["scope"],
+        `with (scope) { return ${expression} }`
+      );
+      let result = func.call(extras.context, scope2);
+      if (typeof result === "function" && shouldAutoEvaluateFunctions) {
+        return result();
+      }
+      return result;
     }
   }
   var prefixAsString = "x-";
@@ -2417,7 +2426,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     mapAttributes,
     evaluateLater,
     interceptInit,
-    evaluateRaw,
     setEvaluator,
     mergeProxies,
     extractProp,
@@ -2434,6 +2442,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     throttle,
     debounce,
     evaluate,
+    evaluateRaw,
     initTree,
     nextTick,
     prefixed: prefix,
@@ -4288,7 +4297,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.callback = callback;
       this.callback({
         message: this.message,
-        cancel: () => this.message.cancel(),
+        cancel: () => {
+          let attachedToMessage = this.message.getInterceptors().includes(this);
+          if (!attachedToMessage) {
+            this.onCancel();
+          }
+          this.message.cancel();
+        },
         onSend: (callback2) => this.onSend = callback2,
         onCancel: (callback2) => this.onCancel = callback2,
         onFailure: (callback2) => this.onFailure = callback2,
@@ -4727,6 +4742,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.promise = new Promise((resolve, reject) => {
         this.promiseResolution = { resolve, reject };
       });
+      this.promise._livewireAction = this;
     }
     cancel() {
       if (this.cancelled)
@@ -4990,6 +5006,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     messageBus.messageBuffer(message, () => {
       sendMessages();
     });
+    window.dafireActionInstance = action.promise;
     return action.promise;
   }
   function createOrAddToOutstandingMessage(action) {
@@ -5567,7 +5584,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     obj[method] = callback;
     overriddenMethods.set(component, obj);
   }
-  wireFallback((component) => (property) => async (...params) => {
+  wireFallback((component) => (property) => (...params) => {
     if (params.length === 1 && params[0] instanceof Event) {
       params = [];
     }
@@ -12708,23 +12725,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/evaluator.js
-  function evaluateExpression(component, el, expression, options = {}) {
+  function evaluateExpression(el, expression, options = {}) {
     if (!expression || expression.trim() === "")
       return;
-    options = {
-      ...{
-        scope: {
-          $wire: component.$wire
-        },
-        context: component.$wire,
-        ...options.scope,
-        ...options.context
-      },
-      ...options
-    };
-    return module_default.evaluate(el, expression, options);
+    let result = module_default.evaluateRaw(el, expression, options);
+    if (result instanceof Promise) {
+      result.catch(() => {
+      });
+    }
+    return result;
   }
-  function evaluateActionExpression(component, el, expression, options = {}) {
+  function evaluateActionExpression(el, expression, options = {}) {
     if (!expression || expression.trim() === "")
       return;
     let negated = false;
@@ -12733,18 +12744,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       expression = expression.slice(1).trim();
     }
     let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`;
-    return module_default.evaluate(el, contextualExpression, options);
-  }
-  function evaluateActionExpressionWithoutComponentScope(el, expression, options = {}) {
-    if (!expression || expression.trim() === "")
-      return;
-    let negated = false;
-    if (expression.startsWith("!")) {
-      negated = true;
-      expression = expression.slice(1).trim();
+    try {
+      let result = module_default.evaluateRaw(el, contextualExpression, options);
+      if (result instanceof Promise && result._livewireAction) {
+        result.catch(() => {
+        });
+      }
+      return result;
+    } catch (error2) {
+      console.warn(`Livewire Expression Error: ${error2.message}
+
+${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
+      console.error(error2);
     }
-    let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`;
-    return module_default.evaluate(el, contextualExpression, options);
   }
 
   // js/features/supportScriptsAndAssets.js
@@ -12776,7 +12788,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
           let scriptContent = extractScriptTagContent(content);
           module_default.dontAutoEvaluateFunctions(() => {
-            evaluateExpression(component, component.el, scriptContent, {
+            evaluateExpression(component.el, scriptContent, {
               scope: {
                 "$wire": component.$wire,
                 "$js": component.$wire.js
@@ -12863,14 +12875,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (js) {
       Object.entries(js).forEach(([method, body]) => {
         overrideMethod(component, method, () => {
-          evaluateExpression(component, component.el, body);
+          evaluateExpression(component.el, body);
         });
       });
     }
     if (xjs) {
       xjs.forEach(({ expression, params }) => {
         params = Object.values(params);
-        evaluateExpression(component, component.el, expression, { scope: component.jsActions, params });
+        evaluateExpression(component.el, expression, { scope: component.jsActions, params });
       });
     }
   });
@@ -13605,7 +13617,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               el,
               directive: directive3
             });
-            evaluateActionExpression(component, el, expression);
+            evaluateActionExpression(el, expression);
           }
         });
       }
@@ -13645,7 +13657,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         module_default.bind(el, {
           [attribute]() {
             setNextActionOrigin({ el, directive: directive3 });
-            return evaluateActionExpressionWithoutComponentScope(el, expression, { scope: {
+            return evaluateActionExpression(el, expression, { scope: {
               $item: this.$item,
               $position: this.$position
             } });
@@ -13759,7 +13771,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               let params = Array.isArray(livewireOptions.defaultParams) ? livewireOptions.defaultParams : [livewireOptions.defaultParams];
               expression = `${expression}(${params.map((p) => JSON.stringify(p)).join(", ")})`;
             }
-            evaluateActionExpression(component, el, expression, { scope: { $event: e } });
+            evaluateActionExpression(el, expression, { scope: { $event: e } });
           });
         };
         if (el.__livewire_confirm) {
@@ -14196,7 +14208,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive2("init", ({ component, el, directive: directive3 }) => {
     let fullMethod = directive3.expression ? directive3.expression : "$refresh";
     setNextActionOrigin({ el, directive: directive3 });
-    evaluateActionExpression(component, el, fullMethod);
+    evaluateActionExpression(el, fullMethod);
   });
 
   // js/directives/wire-poll.js
@@ -14216,7 +14228,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setNextActionOrigin({ el, directive: directive3, targetEl: null });
     setNextActionMetadata({ type: "poll" });
     let fullMethod = directive3.expression ? directive3.expression : "$refresh";
-    evaluateActionExpression(component, el, fullMethod);
+    evaluateActionExpression(el, fullMethod);
   }
   function poll(callback, interval = 2e3) {
     let pauseConditions = [];
@@ -14313,7 +14325,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let expression = value.trim();
         module_default.bind(el, {
           ["x-show" + modifierString]() {
-            return evaluateActionExpressionWithoutComponentScope(el, expression);
+            return evaluateActionExpression(el, expression);
           }
         });
       }
@@ -14329,7 +14341,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let expression = value.trim();
         module_default.bind(el, {
           ["x-text" + modifierString]() {
-            return evaluateActionExpressionWithoutComponentScope(el, expression);
+            return evaluateActionExpression(el, expression);
           }
         });
       }
