@@ -17,7 +17,7 @@ on('effect', ({ component, effects }) => {
     if (js) {
         Object.entries(js).forEach(([method, body]) => {
             overrideMethod(component, method, () => {
-                evaluateExpression(component, component.el, body)
+                evaluateExpression(component.el, body)
             })
         })
     }
@@ -26,7 +26,7 @@ on('effect', ({ component, effects }) => {
         xjs.forEach(({ expression, params }) => {
             params = Object.values(params)
 
-            evaluateExpression(component, component.el, expression, { scope: component.jsActions, params })
+            evaluateExpression(component.el, expression, { scope: component.jsActions, params })
         })
     }
 })

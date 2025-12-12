@@ -1,8 +1,8 @@
 import { interceptMessage } from '@/request'
 
-interceptMessage(({ actions, onSuccess }) => {
+interceptMessage(({ message, onSuccess }) => {
     onSuccess(({ onSync, onMorph, onRender }) => {
-        actions.forEach(action => {
+        message.actions.forEach(action => {
             let origin = action.origin
 
             if (! origin || ! origin.directive) return

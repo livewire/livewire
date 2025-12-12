@@ -1,4 +1,4 @@
-import { constructAction, createOrAddToOutstandingMessage, fireActionInstance, interceptAction, interceptPartition } from '@/request'
+import { constructAction, createOrAddToOutstandingMessage, interceptAction, interceptPartition } from '@/request'
 
 export function coordinateNetworkInteractions(messageBus) {
     // Handle isolated components...
@@ -38,7 +38,7 @@ export function coordinateNetworkInteractions(messageBus) {
     })
 
     // If a request is in-flight, queue up the action to fire after the in-flight request has finished...
-    interceptAction(({ action, reject, defer }) => {
+    interceptAction(({ action }) => {
         // Wire:click.renderless
         let isRenderless = action?.origin?.directive?.modifiers.includes('renderless')
         if (isRenderless) {
@@ -56,7 +56,7 @@ export function coordinateNetworkInteractions(messageBus) {
             // Wire:poll:
             // - Throw away new polls if a request of any kind is in-flight...
             if (action.metadata.type === 'poll') {
-                return reject()
+                return action.cancel()
             }
 
             // Wire:poll:
@@ -73,12 +73,10 @@ export function coordinateNetworkInteractions(messageBus) {
                 }
             }
 
-            defer()
+            action.defer()
 
             message.addInterceptor(({ onFinish }) => {
-                onFinish(() => {
-                    fireActionInstance(action)
-                })
+                onFinish(() => action.fire())
             })
         }
     })

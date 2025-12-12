@@ -26,7 +26,7 @@ Alpine.interceptInit(el => {
                         directive,
                     })
 
-                    evaluateActionExpression(component, el, expression)
+                    evaluateActionExpression(el, expression)
                 }
             })
         }

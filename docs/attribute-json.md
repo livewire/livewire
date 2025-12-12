@@ -1,4 +1,4 @@
-The `#[Json]` attribute marks an action as a JSON endpoint, returning data directly to JavaScript as a `[result, errors]` tuple. This is ideal for actions consumed by JavaScript rather than rendered in Blade.
+The `#[Json]` attribute marks an action as a JSON endpoint, returning data directly to JavaScript. Validation errors trigger a promise rejection with structured error data. This is ideal for actions consumed by JavaScript rather than rendered in Blade.
 
 ## Basic usage
 
@@ -27,7 +27,7 @@ new class extends Component {
     <input
         type="text"
         x-model="query"
-        x-on:input.debounce="$wire.search(query).then(([data, errors]) => posts = data)"
+        x-on:input.debounce="$wire.search(query).then(data => posts = data)"
     >
 
     <ul>
@@ -40,35 +40,62 @@ new class extends Component {
 
 The `search()` method returns posts directly to Alpine, where they're stored in the `posts` array and rendered client-side.
 
-## The response tuple
+## Handling responses
 
-JSON methods always return a two-element array: `[result, errors]`.
+JSON methods resolve with the return value on success, and reject on validation failure:
 
 **On success:**
 ```js
-let [data, errors] = await $wire.search()
+let data = await $wire.search('query')
 // data = [ { id: 1, title: '...' }, ...]
-// errors = null
 ```
 
 **On validation failure:**
 ```js
-let [data, errors] = await $wire.search()
-// data = null
-// errors = { query: ['The query field is required.'] }
+try {
+    let data = await $wire.save()
+} catch (e) {
+    // e.status = 422
+    // e.errors = { name: ['The name field is required.'] }
+}
 ```
 
-This consistent format allows straightforward error handling:
+Or using `.catch()`:
+```js
+$wire.save()
+    .then(data => {
+        // Handle success
+        console.log(data)
+    })
+    .catch(e => {
+        if (e.status === 422) {
+            // Handle validation errors
+            console.log(e.errors)
+        }
+    })
+```
+
+## Error rejection shape
+
+When a promise is rejected, the error object has this structure:
 
 ```js
-let [data, errors] = await $wire.save()
+{
+    status: 422,    // HTTP status code (422 for validation errors)
+    body: null,     // Raw response body (null for validation errors)
+    json: null,     // Parsed JSON (null for validation errors)
+    errors: {...}   // Validation errors object
+}
+```
 
-if (errors) {
-    // Handle validation errors
-    console.log(errors)
-} else {
-    // Use the data
-    console.log(data)
+For HTTP errors (500, etc.), the shape is the same but with the actual response data:
+
+```js
+{
+    status: 500,
+    body: '<html>...</html>',
+    json: null,
+    errors: null
 }
 ```
 
@@ -91,7 +118,7 @@ Use `#[Json]` when:
 * **Integrating with third-party libraries** - Providing data to libraries that manage their own rendering
 
 > [!warning] Validation errors are isolated
-> Validation errors from JSON methods are only returned in the `[result, errors]` tuple. They don't appear in `$wire.$errors` or the component's error bag. This is intentional—JSON methods are self-contained and don't affect the component's rendered state.
+> Validation errors from JSON methods are only returned via promise rejection. They don't appear in `$wire.$errors` or the component's error bag. This is intentional—JSON methods are self-contained and don't affect the component's rendered state.
 
 ## See also
 

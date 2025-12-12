@@ -25,7 +25,7 @@ class BrowserTest extends BrowserTestCase
             {
                 return <<<'HTML'
                 <div>
-                    <button dusk="call" @click="$wire.getData().then(([data, errors]) => { $wire.result = JSON.stringify(data) })">Call</button>
+                    <button dusk="call" @click="$wire.getData().then(data => { $wire.result = JSON.stringify(data) })">Call</button>
 
                     <span dusk="result" wire:text="result"></span>
                 </div>
@@ -39,10 +39,10 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    public function test_json_method_returns_validation_errors()
+    public function test_json_method_rejects_with_validation_errors()
     {
         Livewire::visit(new class extends Component {
-            public $result = '';
+            public $status = '';
             public $validationErrors = '';
 
             #[Json]
@@ -57,9 +57,9 @@ class BrowserTest extends BrowserTestCase
             {
                 return <<<'HTML'
                 <div>
-                    <button dusk="call" @click="$wire.saveData().then(([data, errors]) => { $wire.result = JSON.stringify(data); $wire.validationErrors = JSON.stringify(errors) })">Call</button>
+                    <button dusk="call" @click="$wire.saveData().catch(e => { $wire.status = e.status; $wire.validationErrors = JSON.stringify(e.errors) })">Call</button>
 
-                    <span dusk="result" wire:text="result"></span>
+                    <span dusk="status" wire:text="status"></span>
                     <span dusk="validationErrors" wire:text="validationErrors"></span>
                 </div>
                 HTML;
@@ -67,8 +67,8 @@ class BrowserTest extends BrowserTestCase
         })
         ->waitForLivewireToLoad()
         ->click('@call')
-        ->waitForTextIn('@validationErrors', 'name')
-        ->assertSeeIn('@result', 'null')
+        ->waitForTextIn('@status', '422')
+        ->assertSeeIn('@status', '422')
         ->assertSeeIn('@validationErrors', 'name')
         ;
     }
@@ -101,6 +101,35 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@count', '0')
         ->waitForLivewire()->click('@call')
         ->assertSeeIn('@count', '0')
+        ;
+    }
+
+    public function test_json_method_can_return_primitive_values()
+    {
+        Livewire::visit(new class extends Component {
+            public $result = '';
+
+            #[Json]
+            public function getString()
+            {
+                return 'hello world';
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button dusk="call" @click="$wire.getString().then(data => { $wire.result = data })">Call</button>
+
+                    <span dusk="result" wire:text="result"></span>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->click('@call')
+        ->waitForTextIn('@result', 'hello world')
+        ->assertSeeIn('@result', 'hello world')
         ;
     }
 }
