@@ -15,7 +15,10 @@ globalDirective('current', ({ el, directive, cleanup }) => {
     let options = {
         exact: directive.modifiers.includes('exact'),
         strict: directive.modifiers.includes('strict'),
+        ignore: directive.modifiers.includes('ignore'),
     }
+
+    if (options.ignore) return
 
     // Fragment hrefs aren't supported as of yet...
     if (expression.startsWith('#')) return
