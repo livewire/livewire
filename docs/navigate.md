@@ -158,6 +158,12 @@ You can also use plain CSS to style active links:
 }
 ```
 
+If you would like to disable this behavior while still using `wire:navigate`, you may add the `wire:current.ignore` directive:
+
+```blade
+<a href="/posts" wire:navigate wire:current.ignore>Posts</a>
+```
+
 #### Using the `wire:current` directive
 
 Alternatively, you can use Livewire's `wire:current` directive to add CSS classes to the currently active link:
