@@ -1220,11 +1220,18 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertAttribute('@link.to.first.no.wire.current', 'data-current', '')
                 ->assertAttributeMissing('@link.to.second.no.wire.current', 'data-current')
 
+                ->assertAttributeMissing('@link.to.first.wire.current.ignore', 'data-current')
+                ->assertAttributeMissing('@link.to.second.wire.current.ignore', 'data-current')
+
                 ->click('@link.to.second.no.wire.current')
                 ->waitForText('On second')
 
                 ->assertAttributeMissing('@link.to.first.no.wire.current', 'data-current')
                 ->assertAttribute('@link.to.second.no.wire.current', 'data-current', '')
+
+                ->assertAttributeMissing('@link.to.first.wire.current.ignore', 'data-current')
+                ->assertAttributeMissing('@link.to.second.wire.current.ignore', 'data-current')
+
                 ;
         });
     }
@@ -1275,6 +1282,9 @@ class FirstPage extends Component
 
             <a href="/first" wire:navigate dusk="link.to.first.no.wire.current">First (no wire:current)</a>
             <a href="/second" wire:navigate dusk="link.to.second.no.wire.current">Second (no wire:current)</a>
+
+            <a href="/first" wire:navigate wire:current.ignore dusk="link.to.first.wire.current.ignore">First (wire:current.ignore)</a>
+            <a href="/second" wire:navigate wire:current.ignore dusk="link.to.second.wire.current.ignore">Second (wire:current.ignore)</a>
 
             @script
             <script>
@@ -1339,6 +1349,9 @@ class SecondPage extends Component
 
             <a href="/first" wire:navigate dusk="link.to.first.no.wire.current">First (no wire:current)</a>
             <a href="/second" wire:navigate dusk="link.to.second.no.wire.current">Second (no wire:current)</a>
+
+            <a href="/first" wire:navigate wire:current.ignore dusk="link.to.first.wire.current.ignore">First (wire:current.ignore)</a>
+            <a href="/second" wire:navigate wire:current.ignore dusk="link.to.second.wire.current.ignore">Second (wire:current.ignore)</a>
 
             @persist('foo')
                 <div x-data="{ count: 1 }">
