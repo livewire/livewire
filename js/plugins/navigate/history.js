@@ -57,6 +57,12 @@ let snapshotCache = {
     }
 }
 
+let currentPageStatus = null
+
+export function storeCurrentPageStatus(status) {
+    currentPageStatus = status
+}
+
 export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     // Create a history state entry for the initial page load.
     // (This is so later hitting back can restore this page).
@@ -83,6 +89,10 @@ export function whenTheBackOrForwardButtonIsClicked(
         let state = e.state || {}
 
         let alpine = state.alpine || {}
+
+        if (currentPageStatus && (currentPageStatus < 200 || currentPageStatus >= 300)) {
+            return window.location.href = alpine.url
+        }
 
         // If state is an empty object, then the popstate has probably been triggered
         // by anchor tags `#my-heading`, so we don't want to handle them.
