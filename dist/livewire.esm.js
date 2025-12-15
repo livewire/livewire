@@ -8819,6 +8819,10 @@ var snapshotCache = {
     }
   }
 };
+var currentPageStatus = null;
+function storeCurrentPageStatus(status) {
+  currentPageStatus = status;
+}
 function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
   let url = new URL(window.location.href, document.baseURI);
   replaceUrl(url, document.documentElement.outerHTML);
@@ -8833,6 +8837,9 @@ function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
   window.addEventListener("popstate", (e) => {
     let state = e.state || {};
     let alpine = state.alpine || {};
+    if (currentPageStatus && (currentPageStatus < 200 || currentPageStatus >= 300)) {
+      return window.location.href = alpine.url;
+    }
     if (Object.keys(state).length === 0)
       return;
     if (!alpine.snapshotIdx)
@@ -8934,7 +8941,8 @@ function getUriStringFromUrlObject(urlObject) {
 // js/plugins/navigate/fetch.js
 function fetchHtml(destination, callback) {
   let uri = getUriStringFromUrlObject(destination);
-  performFetch(uri, (html, finalDestination) => {
+  performFetch(uri, (html, finalDestination, status) => {
+    storeCurrentPageStatus(status);
     callback(html, finalDestination);
   });
 }
@@ -8949,15 +8957,17 @@ function performFetch(uri, callback) {
     options
   });
   let finalDestination;
+  let status;
   fetch(uri, options).then((response) => {
     let destination = createUrlObjectFromString(uri);
     finalDestination = createUrlObjectFromString(response.url);
     if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
       finalDestination.hash = destination.hash;
     }
+    status = response.status;
     return response.text();
   }).then((html) => {
-    callback(html, finalDestination);
+    callback(html, finalDestination, status);
   });
 }
 
@@ -8969,7 +8979,8 @@ function prefetchHtml(destination, callback) {
   if (prefetches[uri])
     return;
   prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
-  performFetch(uri, (html, routedUri) => {
+  performFetch(uri, (html, routedUri, status) => {
+    storeCurrentPageStatus(status);
     callback(html, routedUri);
   });
 }
