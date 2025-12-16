@@ -41,14 +41,10 @@ class BrowserTest extends \Tests\BrowserTestCase
         ])
         ->waitForLivewireToLoad()
         ->assertScript('window.intercepts.length', 0)
-        ->click('@refresh')
-        // Wait for the requests to be corralled...
-        ->pause(6)
+        ->waitForLivewire()->click('@refresh')
         ->assertScript('window.intercepts.length', 1)
         ->assertScript('window.intercepts[0]', 'intercept')
-        ->click('@child-refresh')
-        // Wait for the requests to be corralled...
-        ->pause(6)
+        ->waitForLivewire()->click('@child-refresh')
         ->assertScript('window.intercepts.length', 2)
         ->assertScript('window.intercepts[1]', 'intercept')
         ;
@@ -89,15 +85,10 @@ class BrowserTest extends \Tests\BrowserTestCase
         ])
         ->waitForLivewireToLoad()
         ->assertScript('window.intercepts.length', 0)
-        ->click('@refresh')
-        // Wait for the requests to be corralled...
-        ->pause(6)
+        ->waitForLivewire()->click('@refresh')
         ->assertScript('window.intercepts.length', 1)
         ->assertScript('window.intercepts[0]', 'intercept')
-        ->click('@child-refresh')
-        // Wait for the requests to be corralled...
-        ->pause(6)
-
+        ->waitForLivewire()->click('@child-refresh')
         // The child component should not have been intercepted...
         ->assertScript('window.intercepts.length', 1)
         ->assertScript('window.intercepts[0]', 'intercept')
@@ -134,18 +125,11 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertScript('window.intercepts.length', 0)
 
         // The interceptor should not be triggered when the component is refreshed...
-        ->click('@refresh')
-        // Wait for the requests to be corralled...
-        ->pause(7)
+        ->waitForLivewire()->click('@refresh')
         ->assertScript('window.intercepts.length', 0)
 
-        // Wait for the first request to finish...
-        ->pause(100)
-
         // The interceptor should be triggered when the action is performed...
-        ->click('@do-something')
-        // Wait for the requests to be corralled...
-        ->pause(6)
+        ->waitForLivewire()->click('@do-something')
         ->assertScript('window.intercepts.length', 1)
         ->assertScript('window.intercepts[0]', 'intercept')
         ;
@@ -220,8 +204,6 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // The interceptor should not be triggered when the component is refreshed...
         ->waitForLivewire()->click('@refresh')
-        // Wait for the requests to be corralled...
-        ->pause(6)
         ->assertScript('window.intercepts.length', 6)
         ->assertScript('window.intercepts', [
             'onInit-$refresh',
@@ -239,14 +221,9 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // Trigger the slow request...
         ->click('@slow-request')
-        // Wait for the requests to be corralled...
-        ->pause(6)
-
-        // Wait for a moment, then trigger another request which should cancel the slow request...
+        // Wait for a moment, then trigger another request...
         ->pause(100)
         ->waitForLivewire()->click('@refresh')
-        // Wait for the requests to be corralled...
-        ->pause(6)
         ->assertScript('window.intercepts.length', 12)
         // The below results are the combination of the slow request and the refresh request...
         ->assertScript('window.intercepts', [
@@ -271,9 +248,6 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // Trigger the error request...
         ->waitForLivewire()->click('@throw-error')
-        // Wait for the requests to be corralled...
-        ->pause(6)
-
         ->assertScript('window.intercepts.length', 3)
         ->assertScript('window.intercepts', [
             'onInit-throwAnError',
@@ -350,7 +324,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         // The interceptor has a timeout set to cancel the request after 200ms...
         ->click('@slow-request')
         // Wait for the requests to be corralled...
-        ->pause(6)
+        ->pause(250)
         ->assertScript('window.intercepts.length', 2)
         ->assertScript('window.intercepts', [
             'onInit-slowRequest',

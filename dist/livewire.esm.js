@@ -1774,6 +1774,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function setEvaluator(newEvaluator) {
       theEvaluatorFunction = newEvaluator;
     }
+    var theRawEvaluatorFunction;
+    function setRawEvaluator(newEvaluator) {
+      theRawEvaluatorFunction = newEvaluator;
+    }
     function normalEvaluator(el, expression) {
       let overriddenMagics = {};
       injectMagics(overriddenMagics, el);
@@ -1784,6 +1788,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function generateEvaluatorFromFunction(dataStack, func) {
       return (receiver = () => {
       }, { scope: scope2 = {}, params = [], context } = {}) => {
+        if (!shouldAutoEvaluateFunctions) {
+          runIfTypeOfFunction(receiver, func, mergeProxies([scope2, ...dataStack]), params);
+          return;
+        }
         let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
         runIfTypeOfFunction(receiver, result);
       };
@@ -1849,29 +1857,35 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         receiver(value);
       }
     }
-    function evaluateRaw(el, expression, extras = {}) {
-      var _a;
+    function evaluateRaw(...args) {
+      return theRawEvaluatorFunction(...args);
+    }
+    function normalRawEvaluator(el, expression, extras = {}) {
+      var _a, _b;
       let overriddenMagics = {};
       injectMagics(overriddenMagics, el);
       let dataStack = [overriddenMagics, ...closestDataStack(el)];
       let scope2 = mergeProxies([(_a = extras.scope) != null ? _a : {}, ...dataStack]);
+      let params = (_b = extras.params) != null ? _b : [];
       if (expression.includes("await")) {
         let AsyncFunction = Object.getPrototypeOf(async function() {
         }).constructor;
+        let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression.trim()) || /^(let|const)\s/.test(expression.trim()) ? `(async()=>{ ${expression} })()` : expression;
         let func = new AsyncFunction(
           ["scope"],
-          `with (scope) { return ${expression} }`
+          `with (scope) { let __result = ${rightSideSafeExpression}; return __result }`
         );
         let result = func.call(extras.context, scope2);
         return result;
       } else {
+        let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression.trim()) || /^(let|const)\s/.test(expression.trim()) ? `(()=>{ ${expression} })()` : expression;
         let func = new Function(
           ["scope"],
-          `with (scope) { return ${expression} }`
+          `with (scope) { let __result = ${rightSideSafeExpression}; return __result }`
         );
         let result = func.call(extras.context, scope2);
         if (typeof result === "function" && shouldAutoEvaluateFunctions) {
-          return result();
+          return result.apply(scope2, params);
         }
         return result;
       }
@@ -2119,6 +2133,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return el;
       if (el._x_teleportBack)
         el = el._x_teleportBack;
+      if (el.parentNode instanceof ShadowRoot) {
+        return findClosest(el.parentNode.host, callback);
+      }
       if (!el.parentElement)
         return;
       return findClosest(el.parentElement, callback);
@@ -2954,7 +2971,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.15.2",
+      version: "3.15.3",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -2975,7 +2992,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       mapAttributes,
       evaluateLater,
       interceptInit,
+      initInterceptors,
+      injectMagics,
       setEvaluator,
+      setRawEvaluator,
       mergeProxies,
       extractProp,
       findClosest,
@@ -3922,6 +3942,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     alpine_default.setEvaluator(normalEvaluator);
+    alpine_default.setRawEvaluator(normalRawEvaluator);
     alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
     var src_default2 = alpine_default;
     var module_default2 = src_default2;
@@ -12471,6 +12492,7 @@ on("effect", ({ component, effects }) => {
         let scriptContent = extractScriptTagContent(content);
         import_alpinejs7.default.dontAutoEvaluateFunctions(() => {
           evaluateExpression(component.el, scriptContent, {
+            context: component.$wire,
             scope: {
               "$wire": component.$wire,
               "$js": component.$wire.js
