@@ -10708,7 +10708,6 @@ function fireActionInstance(action) {
   messageBus.messageBuffer(message, () => {
     sendMessages();
   });
-  window.dafireActionInstance = action.promise;
   return action.promise;
 }
 function createOrAddToOutstandingMessage(action) {

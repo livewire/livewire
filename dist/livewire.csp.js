@@ -6401,7 +6401,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     messageBus.messageBuffer(message, () => {
       sendMessages();
     });
-    window.dafireActionInstance = action.promise;
     return action.promise;
   }
   function createOrAddToOutstandingMessage(action) {
