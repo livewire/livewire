@@ -61,6 +61,9 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
                     let expression = directive.expression
 
                     // Handle defaultParams - if expression has no parentheses, append the default params
+                    // This uses a simple heuristic: if the expression contains '(', we assume params
+                    // are already provided. This works for common cases like "someMethod" but will
+                    // skip adding params for edge cases like "someMethod.bind(this)" or "obj['method()']"
                     if (livewireOptions?.defaultParams !== undefined && !expression.includes('(')) {
                         let params = Array.isArray(livewireOptions.defaultParams)
                             ? livewireOptions.defaultParams

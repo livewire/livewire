@@ -21,9 +21,9 @@
     mod
   ));
 
-  // ../alpine/packages/csp/dist/module.cjs.js
+  // node_modules/@alpinejs/csp/dist/module.cjs.js
   var require_module_cjs = __commonJS({
-    "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
+    "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
       var __create2 = Object.create;
       var __defProp2 = Object.defineProperty;
       var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -8885,7 +8885,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/sort/dist/module.esm.js
+  // node_modules/@alpinejs/sort/dist/module.esm.js
   function ownKeys2(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -13533,7 +13533,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -15851,6 +15851,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var Livewire2 = {
     directive,
     dispatchTo,
+    interceptAction: (callback) => interceptAction(callback),
     interceptMessage: (callback) => interceptMessage(callback),
     interceptRequest: (callback) => interceptRequest(callback),
     fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),

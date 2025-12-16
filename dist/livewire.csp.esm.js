@@ -20,9 +20,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../alpine/packages/csp/dist/module.cjs.js
+// node_modules/@alpinejs/csp/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5970,9 +5970,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/sort/dist/module.cjs.js
+// node_modules/@alpinejs/sort/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/sort/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/sort/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -8727,9 +8727,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -14875,6 +14875,7 @@ import_alpinejs21.default.interceptInit((el) => {
 var Livewire2 = {
   directive,
   dispatchTo,
+  interceptAction: (callback) => interceptAction(callback),
   interceptMessage: (callback) => interceptMessage(callback),
   interceptRequest: (callback) => interceptRequest(callback),
   fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),

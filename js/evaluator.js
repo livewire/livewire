@@ -3,19 +3,6 @@ import Alpine from 'alpinejs'
 export function evaluateExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 
-    // Can I delete this?
-    // options = {
-    //     ...{
-    //         scope: {
-    //             $wire: component.$wire,
-    //         },
-    //         context: component.$wire,
-    //         ...options.scope,
-    //         ...options.context,
-    //     },
-    //     ...options,
-    // }
-
     let result = Alpine.evaluateRaw(el, expression, options)
 
     if (result instanceof Promise) {

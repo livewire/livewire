@@ -134,8 +134,6 @@ export default class Action {
     }
 
     rejectPromise(error) {
-        // Resolving instead of rejecting to avoid unhandled promise rejection errors...
-        // Should think about how we can handle this better...
         this.squashedActions.forEach(action => action.rejectPromise(error))
 
         this.promiseResolution.reject(error)
