@@ -1,4 +1,6 @@
 import { isObjecty } from "@/utils"
+import historyCoordinator from "./coordinator"
+import { unwrap } from "./utils"
 
 export default function history(Alpine) {
     Alpine.magic('queryString', (el, { interceptor }) =>  {
@@ -137,37 +139,11 @@ export function track(name, initialSeedValue, alwaysShow = false, except = null)
 }
 
 function replace(url, key, object) {
-    let state = window.history.state || {}
-
-    if (! state.alpine) state.alpine = {}
-
-    state.alpine[key] = unwrap(object)
-
-    try {
-        window.history.replaceState(state, '', url.toString())
-    } catch (e) {
-        console.error(e)
-    }
+    historyCoordinator.replaceState(url, { [key]: object })
 }
 
 function push(url, key, object) {
-    let state = window.history.state || {}
-
-    if (! state.alpine) state.alpine = {}
-
-    state = { alpine: {...state.alpine, ...{[key]: unwrap(object)}} }
-
-    try {
-        window.history.pushState(state, '', url.toString())
-    } catch (e) {
-        console.error(e)
-    }
-}
-
-function unwrap(object) {
-    if (object === undefined) return undefined
-
-    return JSON.parse(JSON.stringify(object))
+    historyCoordinator.pushState(url, { [key]: object })
 }
 
 function queryStringUtils() {

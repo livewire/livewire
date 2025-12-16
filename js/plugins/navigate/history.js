@@ -1,3 +1,4 @@
+import historyCoordinator from "@/plugins/history/coordinator"
 
 class Snapshot {
     constructor(url, html) {
@@ -122,27 +123,17 @@ function updateUrl(method, url, html) {
         ? snapshotCache.push(key, new Snapshot(url, html))
         : snapshotCache.replace(key = (snapshotCache.currentKey ?? key), new Snapshot(url, html))
 
-    let state = history.state || {}
-
-    if (!state.alpine) state.alpine = {}
-
-    state.alpine.snapshotIdx = key
-    state.alpine.url = url.toString()
-
-    try {
-        // 640k character limit:
-        history[method](state, JSON.stringify(document.title), url)
-
-        snapshotCache.currentKey = key
-        snapshotCache.currentUrl = url
-    } catch (error) {
+    let errorHandler = error => {
         if (error instanceof DOMException && error.name === 'SecurityError') {
             console.error(
                 "Livewire: You can't use wire:navigate with a link to a different root domain: " +
                     url
             )
         }
-
-        console.error(error)
     }
+
+    historyCoordinator[method](url, { snapshotIdx: key, url: url.toString() }, { navigate: errorHandler })
+
+    snapshotCache.currentKey = key
+    snapshotCache.currentUrl = url
 }
