@@ -90,6 +90,7 @@ export function whenTheBackOrForwardButtonIsClicked(
 
         let alpine = state.alpine || {}
 
+        // If the current page is not a 2xx status code, then we want to force a full page refresh to ensure that the error page assets aren't kept in the DOM...
         if (currentPageStatus && (currentPageStatus < 200 || currentPageStatus >= 300)) {
             return window.location.href = alpine.url
         }
