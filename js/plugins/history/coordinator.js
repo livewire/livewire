@@ -37,7 +37,6 @@ class HistoryCoordinator {
 
         try {
             // 640k character limit:
-            console.log('actually replacing state', state, url.toString())
             window.history.replaceState(state, '', url.toString())
         } catch (error) {
             let errorHandlers = this.errorHandlers
@@ -87,7 +86,6 @@ class HistoryCoordinator {
 
         try {
             // 640k character limit:
-            console.log('actually pushing state', state, url.toString())
             window.history.pushState(state, '', url.toString())
         } catch (error) {
             let errorHandlers = this.errorHandlers
