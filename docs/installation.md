@@ -63,7 +63,7 @@ The `@livewireStyles` and `@livewireScripts` directives include the necessary Ja
 Livewire is "zero-config", meaning you can use it by following conventions without any additional configuration. However, if needed, you can publish and customize Livewire's configuration file:
 
 ```shell
-php artisan livewire:publish --config
+php artisan livewire:config
 ```
 
 This will create a new `livewire.php` file in your Laravel application's `config` directory where you can customize various Livewire settings.
