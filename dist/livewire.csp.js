@@ -6764,7 +6764,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       response = await fetch(uri, options);
       let destination = getDestination(uri, response);
       let html = await response.text();
-      callback(html, destination);
+      let status = response.status;
+      callback(html, destination, status);
     } catch (error2) {
       errorCallback(error2);
       throw error2;
@@ -12560,6 +12561,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
   };
+  var currentPageStatus = null;
+  function storeCurrentPageStatus(status) {
+    currentPageStatus = status;
+  }
   function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     let url = new URL(window.location.href, document.baseURI);
     replaceUrl(url, document.documentElement.outerHTML);
@@ -12574,6 +12579,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     window.addEventListener("popstate", (e) => {
       let state = e.state || {};
       let alpine = state.alpine || {};
+      if (currentPageStatus && (currentPageStatus < 200 || currentPageStatus >= 300)) {
+        return window.location.href = alpine.url;
+      }
       if (Object.keys(state).length === 0)
         return;
       if (!alpine.snapshotIdx)
@@ -12677,7 +12685,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/plugins/navigate/fetch.js
   function fetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination);
-    performFetch(uri, (html, finalDestination) => {
+    performFetch(uri, (html, finalDestination, status) => {
+      storeCurrentPageStatus(status);
       callback(html, finalDestination);
     }, errorCallback);
   }
@@ -12693,7 +12702,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (prefetches[uri])
       return;
     prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
-    performFetch(uri, (html, routedUri) => {
+    performFetch(uri, (html, routedUri, status) => {
+      storeCurrentPageStatus(status);
       callback(html, routedUri);
     }, () => {
       delete prefetches[uri];
@@ -14961,8 +14971,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let expression = directive2.expression;
     let options = {
       exact: directive2.modifiers.includes("exact"),
-      strict: directive2.modifiers.includes("strict")
+      strict: directive2.modifiers.includes("strict"),
+      ignore: directive2.modifiers.includes("ignore")
     };
+    if (options.ignore)
+      return;
     if (expression.startsWith("#"))
       return;
     if (!el.hasAttribute("href"))
@@ -15049,7 +15062,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       exact: true
     };
     document.querySelectorAll(wireNavigateSelector).forEach((el) => {
-      if (el.hasAttribute("wire:current"))
+      if (Array.from(el.attributes).some((attr) => attr.name.startsWith("wire:current")))
         return;
       let href = el.getAttribute("href");
       if (!href || href.startsWith("#"))

@@ -498,7 +498,9 @@ export async function sendNavigateRequest(uri, callback, errorCallback) {
 
         let html = await response.text()
 
-        callback(html, destination)
+        let status = response.status
+
+        callback(html, destination, status)
     } catch (error) {
         errorCallback(error)
 

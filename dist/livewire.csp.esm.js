@@ -11071,7 +11071,8 @@ async function sendNavigateRequest(uri, callback, errorCallback) {
     response = await fetch(uri, options);
     let destination = getDestination(uri, response);
     let html = await response.text();
-    callback(html, destination);
+    let status = response.status;
+    callback(html, destination, status);
   } catch (error2) {
     errorCallback(error2);
     throw error2;
@@ -12139,6 +12140,10 @@ var snapshotCache = {
     }
   }
 };
+var currentPageStatus = null;
+function storeCurrentPageStatus(status) {
+  currentPageStatus = status;
+}
 function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
   let url = new URL(window.location.href, document.baseURI);
   replaceUrl(url, document.documentElement.outerHTML);
@@ -12153,6 +12158,9 @@ function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
   window.addEventListener("popstate", (e) => {
     let state = e.state || {};
     let alpine = state.alpine || {};
+    if (currentPageStatus && (currentPageStatus < 200 || currentPageStatus >= 300)) {
+      return window.location.href = alpine.url;
+    }
     if (Object.keys(state).length === 0)
       return;
     if (!alpine.snapshotIdx)
@@ -12256,7 +12264,8 @@ function getUriStringFromUrlObject(urlObject) {
 // js/plugins/navigate/fetch.js
 function fetchHtml(destination, callback, errorCallback) {
   let uri = getUriStringFromUrlObject(destination);
-  performFetch(uri, (html, finalDestination) => {
+  performFetch(uri, (html, finalDestination, status) => {
+    storeCurrentPageStatus(status);
     callback(html, finalDestination);
   }, errorCallback);
 }
@@ -12272,7 +12281,8 @@ function prefetchHtml(destination, callback, errorCallback) {
   if (prefetches[uri])
     return;
   prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
-  performFetch(uri, (html, routedUri) => {
+  performFetch(uri, (html, routedUri, status) => {
+    storeCurrentPageStatus(status);
     callback(html, routedUri);
   }, () => {
     delete prefetches[uri];
@@ -13985,8 +13995,11 @@ globalDirective("current", ({ el, directive: directive2, cleanup }) => {
   let expression = directive2.expression;
   let options = {
     exact: directive2.modifiers.includes("exact"),
-    strict: directive2.modifiers.includes("strict")
+    strict: directive2.modifiers.includes("strict"),
+    ignore: directive2.modifiers.includes("ignore")
   };
+  if (options.ignore)
+    return;
   if (expression.startsWith("#"))
     return;
   if (!el.hasAttribute("href"))
@@ -14073,7 +14086,7 @@ function updateNavigateLinks() {
     exact: true
   };
   document.querySelectorAll(wireNavigateSelector).forEach((el) => {
-    if (el.hasAttribute("wire:current"))
+    if (Array.from(el.attributes).some((attr) => attr.name.startsWith("wire:current")))
       return;
     let href = el.getAttribute("href");
     if (!href || href.startsWith("#"))
