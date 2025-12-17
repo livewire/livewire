@@ -192,9 +192,6 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $suffixEscaped = preg_quote($suffix);
 
-        // `preg_replace` replacement prop needs `$` and `\` to be escaped
-        $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
-
         $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}";
 
         // If the suffix is not empty, then add it to the pattern...
@@ -204,7 +201,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $pattern .= "(?![^<]*(?<![?=-])>)/mUi";
 
-        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template, 1);
+        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix);
     }
 
     protected static function suffixClosingDirective($found, $template, $position)
@@ -249,18 +246,16 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $suffixEscaped = preg_quote($suffix);
 
-        // `preg_replace` replacement prop needs `$` and `\` to be escaped
-        $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
-
         $pattern = "/";
 
         // If the prefix is not empty, then add it to the pattern...
         if ($prefixEscaped !== '') {
             $pattern .= "(?<!{$prefixEscaped})";
         }
+
         $pattern .= "{$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
-        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template, 1);
+        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix);
     }
 
     /*
@@ -306,11 +301,9 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $suffixEscaped = preg_quote($suffix);
 
-        $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
-
         $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!\s*\()(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
-        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template, 1);
+        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix);
     }
 
     protected static function isLoop($found)
@@ -445,5 +438,24 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         }
 
         return false;
+    }
+
+    protected static function replaceMatchIfNotInsideAHtmlTag(string $template, int $position, string $pattern, string $found, string $prefix, string $suffix): string
+    {
+        // Clamp the match position to the template bounds...
+        $templateLength = strlen($template);
+        $position = max(0, min($templateLength, (int) $position));
+
+        $before = substr($template, 0, $position);
+        $after = substr($template, $position);
+
+        if (! preg_match($pattern, $after, $afterMatch, PREG_OFFSET_CAPTURE) || $afterMatch[0][1] !== 0) {
+            return $template;
+        }
+
+        // Remove the match from the beginning of the after string...
+        $after = substr($after, strlen($afterMatch[0][0]));
+
+        return $before.$prefix.$found.$suffix.$after;
     }
 }

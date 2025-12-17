@@ -682,6 +682,30 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
+            37 => [
+                2,
+                <<<'HTML'
+                <div>
+                    <div id="label">
+                        @if (now()->dayName === 'Friday')
+                            Friday
+                        @endif
+                    </div>
+
+                    <script type="text/javascript">
+                        @if (now()->dayName === 'Friday')
+                            document.getElementById('label').style.color = 'red';
+                        @endif
+                    </script>
+
+                    <div id="label">
+                        @if (now()->dayName === 'Friday')
+                            Friday
+                        @endif
+                    </div>
+                </div>
+                HTML
+            ],
         ];
     }
 
