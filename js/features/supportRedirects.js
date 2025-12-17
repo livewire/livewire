@@ -6,7 +6,7 @@ on('effect', ({ effects, request }) => {
 
     let preventDefault = false
 
-    request.onRedirect({ url: effects['redirect'], preventDefault: () => preventDefault = true })
+    request.invokeOnRedirect({ url: effects['redirect'], preventDefault: () => preventDefault = true })
 
     if (preventDefault) return
 

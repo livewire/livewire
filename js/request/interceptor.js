@@ -13,18 +13,23 @@ export class MessageInterceptor {
     onMorph = () => {}
     onRender = () => {}
 
-    hasBeenSynchronouslyCancelled = false
-
     constructor(message, callback) {
         this.message = message
         this.callback = callback
 
-        let isInsideCallbackSynchronously = true
-
         this.callback({
             message: this.message,
-            actions: this.message.actions,
-            component: this.message.component,
+            cancel: () => {
+                // If we're not yet attached to the message's interceptors,
+                // call our own onCancel since message.invokeOnCancel() won't reach us
+                let attachedToMessage = this.message.getInterceptors().includes(this)
+
+                if (!attachedToMessage) {
+                    this.onCancel()
+                }
+
+                this.message.cancel()
+            },
             onSend: (callback) => this.onSend = callback,
             onCancel: (callback) => this.onCancel = callback,
             onFailure: (callback) => this.onFailure = callback,
@@ -32,28 +37,17 @@ export class MessageInterceptor {
             onStream: (callback) => this.onStream = callback,
             onSuccess: (callback) => this.onSuccess = callback,
             onFinish: (callback) => this.onFinish = callback,
-            cancel: () => {
-                if (isInsideCallbackSynchronously) {
-                    this.hasBeenSynchronouslyCancelled = true
-                } else {
-                    this.message.cancel()
-                }
-            },
         })
-
-        isInsideCallbackSynchronously = false
     }
 
     init() {
-        if (this.hasBeenSynchronouslyCancelled) {
-            this.message.cancel()
-        }
+        // Reserved for future use
     }
 }
 
 export class RequestInterceptor {
     onSend = () => {}
-    onAbort = () => {}
+    onCancel = () => {}
     onFailure = () => {}
     onResponse = () => {}
     onParsed = () => {}
@@ -63,19 +57,14 @@ export class RequestInterceptor {
     onDump = () => {}
     onSuccess = () => {}
 
-    hasBeenSynchronouslyAborted = false
-
     constructor(request, callback) {
         this.request = request
-
         this.callback = callback
-
-        let isInsideCallbackSynchronously = true
 
         this.callback({
             request: this.request,
             onSend: (callback) => this.onSend = callback,
-            onAbort: (callback) => this.onAbort = callback,
+            onCancel: (callback) => this.onCancel = callback,
             onFailure: (callback) => this.onFailure = callback,
             onResponse: (callback) => this.onResponse = callback,
             onParsed: (callback) => this.onParsed = callback,
@@ -84,22 +73,11 @@ export class RequestInterceptor {
             onRedirect: (callback) => this.onRedirect = callback,
             onDump: (callback) => this.onDump = callback,
             onSuccess: (callback) => this.onSuccess = callback,
-            abort: () => {
-                if (isInsideCallbackSynchronously) {
-                    this.hasBeenSynchronouslyAborted = true
-                } else {
-                    this.request.abort()
-                }
-            },
         })
-
-        isInsideCallbackSynchronously = false
     }
 
     init() {
-        if (this.hasBeenSynchronouslyAborted) {
-            this.request.abort()
-        }
+        // Reserved for future use
     }
 }
 

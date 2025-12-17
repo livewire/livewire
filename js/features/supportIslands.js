@@ -42,8 +42,8 @@ interceptAction(({ action }) => {
 })
 
 interceptMessage(({ message, onSuccess, onStream }) => {
-    onStream(({ streamedJson }) => {
-        let { type, islandFragment } = streamedJson
+    onStream(({ json }) => {
+        let { type, islandFragment } = json
 
         if (type !== 'island') return
 

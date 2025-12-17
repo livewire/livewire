@@ -2,16 +2,16 @@
 
 namespace Livewire\Features\SupportJson;
 
-use Livewire\ComponentHook;
-use Illuminate\Validation\ValidationException;
-
 use function Livewire\on;
+use Livewire\ComponentHook;
+
+use Illuminate\Validation\ValidationException;
 
 class SupportJson extends ComponentHook
 {
     public static function provide()
     {
-        on('call', function ($component, $method, $params, $context, $returnEarly, $metadata) {
+        on('call', function ($component, $method, $params, $context, $returnEarly, $metadata, $index) {
             if (! static::isJsonMethod($component, $method)) return;
 
             $component->skipRender();
@@ -19,9 +19,15 @@ class SupportJson extends ComponentHook
             try {
                 $result = $component->{$method}(...$params);
 
-                $returnEarly([$result, null]);
+                $returnEarly($result);
             } catch (ValidationException $e) {
-                $returnEarly([null, $e->errors()]);
+                // Add validation errors to returnsMeta effect keyed by action index
+                $existingMeta = $context->effects['returnsMeta'] ?? [];
+                $existingMeta[$index] = ['errors' => $e->errors()];
+                $context->addEffect('returnsMeta', $existingMeta);
+
+                // Return null so the returns array stays aligned
+                $returnEarly(null);
             }
         });
     }

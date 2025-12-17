@@ -41,14 +41,10 @@ class BrowserTest extends \Tests\BrowserTestCase
         ])
         ->waitForLivewireToLoad()
         ->assertScript('window.intercepts.length', 0)
-        ->click('@refresh')
-        // Wait for the requests to be corralled...
-        ->pause(6)
+        ->waitForLivewire()->click('@refresh')
         ->assertScript('window.intercepts.length', 1)
         ->assertScript('window.intercepts[0]', 'intercept')
-        ->click('@child-refresh')
-        // Wait for the requests to be corralled...
-        ->pause(6)
+        ->waitForLivewire()->click('@child-refresh')
         ->assertScript('window.intercepts.length', 2)
         ->assertScript('window.intercepts[1]', 'intercept')
         ;
@@ -89,15 +85,10 @@ class BrowserTest extends \Tests\BrowserTestCase
         ])
         ->waitForLivewireToLoad()
         ->assertScript('window.intercepts.length', 0)
-        ->click('@refresh')
-        // Wait for the requests to be corralled...
-        ->pause(6)
+        ->waitForLivewire()->click('@refresh')
         ->assertScript('window.intercepts.length', 1)
         ->assertScript('window.intercepts[0]', 'intercept')
-        ->click('@child-refresh')
-        // Wait for the requests to be corralled...
-        ->pause(6)
-
+        ->waitForLivewire()->click('@child-refresh')
         // The child component should not have been intercepted...
         ->assertScript('window.intercepts.length', 1)
         ->assertScript('window.intercepts[0]', 'intercept')
@@ -134,18 +125,11 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertScript('window.intercepts.length', 0)
 
         // The interceptor should not be triggered when the component is refreshed...
-        ->click('@refresh')
-        // Wait for the requests to be corralled...
-        ->pause(7)
+        ->waitForLivewire()->click('@refresh')
         ->assertScript('window.intercepts.length', 0)
 
-        // Wait for the first request to finish...
-        ->pause(100)
-
         // The interceptor should be triggered when the action is performed...
-        ->click('@do-something')
-        // Wait for the requests to be corralled...
-        ->pause(6)
+        ->waitForLivewire()->click('@do-something')
         ->assertScript('window.intercepts.length', 1)
         ->assertScript('window.intercepts[0]', 'intercept')
         ;
@@ -174,9 +158,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ actions, onSend, onCancel, onError, onSuccess, cancel }) => {
-                            let action = [...actions][0]
-                            let method = action.method
+                        this.intercept(({ message, onSend, onCancel, onError, onSuccess }) => {
+                            let action = [...message.actions][0]
+                            let method = action.name
                             let directive = action.origin.directive
 
                             window.intercepts.push(`onInit-${directive.method}`)
@@ -220,8 +204,6 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // The interceptor should not be triggered when the component is refreshed...
         ->waitForLivewire()->click('@refresh')
-        // Wait for the requests to be corralled...
-        ->pause(6)
         ->assertScript('window.intercepts.length', 6)
         ->assertScript('window.intercepts', [
             'onInit-$refresh',
@@ -239,14 +221,9 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // Trigger the slow request...
         ->click('@slow-request')
-        // Wait for the requests to be corralled...
-        ->pause(6)
-
-        // Wait for a moment, then trigger another request which should cancel the slow request...
+        // Wait for a moment, then trigger another request...
         ->pause(100)
         ->waitForLivewire()->click('@refresh')
-        // Wait for the requests to be corralled...
-        ->pause(6)
         ->assertScript('window.intercepts.length', 12)
         // The below results are the combination of the slow request and the refresh request...
         ->assertScript('window.intercepts', [
@@ -271,9 +248,6 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // Trigger the error request...
         ->waitForLivewire()->click('@throw-error')
-        // Wait for the requests to be corralled...
-        ->pause(6)
-
         ->assertScript('window.intercepts.length', 3)
         ->assertScript('window.intercepts', [
             'onInit-throwAnError',
@@ -301,9 +275,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ actions, onSend, onCancel, onError, onSuccess, cancel }) => {
-                            let action = [...actions][0]
-                            let method = action.method
+                        this.intercept(({ message, cancel, onSend, onCancel, onError, onSuccess }) => {
+                            let action = [...message.actions][0]
+                            let method = action.name
                             let directive = action.origin.directive
 
                             window.intercepts.push(`onInit-${directive.method}`)
@@ -350,7 +324,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         // The interceptor has a timeout set to cancel the request after 200ms...
         ->click('@slow-request')
         // Wait for the requests to be corralled...
-        ->pause(6)
+        ->pause(250)
         ->assertScript('window.intercepts.length', 2)
         ->assertScript('window.intercepts', [
             'onInit-slowRequest',
@@ -377,9 +351,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ actions, onSend, onCancel, onError, onSuccess, cancel }) => {
-                            let action = [...actions][0]
-                            let method = action.method
+                        this.intercept(({ message, cancel, onSend, onCancel, onError, onSuccess }) => {
+                            let action = [...message.actions][0]
+                            let method = action.name
                             let directive = action.origin.directive
 
                             window.intercepts.push(`onInit-${directive.method}`)
@@ -473,5 +447,107 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewire()->click('@redirect-to-website')
             ->assertHostIs('www.google.com')
             ;
+    }
+
+    public function test_action_interceptors_can_hook_into_action_lifecycle()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $counter = 0;
+
+                public function increment()
+                {
+                    $this->counter++;
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="increment" dusk="increment">Increment</button>
+                        <span dusk="counter">{{ $counter }}</span>
+                    </div>
+                    @script
+                    <script>
+                        window.interceptLogs = []
+
+                        Livewire.interceptAction(({ action, onSend, onSuccess, onFinish }) => {
+                            window.interceptLogs.push('intercept:' + action.name)
+
+                            onSend(() => {
+                                window.interceptLogs.push('onSend:' + action.name)
+                            })
+
+                            onSuccess((result) => {
+                                window.interceptLogs.push('onSuccess:' + action.name)
+                            })
+
+                            onFinish(() => {
+                                window.interceptLogs.push('onFinish:' + action.name)
+                            })
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+        ->assertScript('window.interceptLogs.length', 0)
+        ->waitForLivewire()->click('@increment')
+        ->assertSeeIn('@counter', '1')
+        ->assertScript('window.interceptLogs.length', 4)
+        ->assertScript('window.interceptLogs[0]', 'intercept:increment')
+        ->assertScript('window.interceptLogs[1]', 'onSend:increment')
+        ->assertScript('window.interceptLogs[2]', 'onSuccess:increment')
+        ->assertScript('window.interceptLogs[3]', 'onFinish:increment')
+        ;
+    }
+
+    public function test_action_interceptors_can_handle_errors()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function throwError()
+                {
+                    throw new \Exception('Test error');
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="throwError" dusk="throw">Throw Error</button>
+                    </div>
+                    @script
+                    <script>
+                        window.errorLogs = []
+
+                        Livewire.interceptAction(({ action, onSend, onError, onFinish }) => {
+                            onSend(() => {
+                                window.errorLogs.push('onSend')
+                            })
+
+                            onError(({ response }) => {
+                                window.errorLogs.push('onError:' + response.status)
+                            })
+
+                            onFinish(() => {
+                                window.errorLogs.push('onFinish')
+                            })
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+        ->assertScript('window.errorLogs.length', 0)
+        ->waitForLivewire()->click('@throw')
+        ->pause(100) // Give time for error handling
+        ->assertScript('window.errorLogs.length', 3)
+        ->assertScript('window.errorLogs[0]', 'onSend')
+        ->assertScript('window.errorLogs[1]', 'onError:500')
+        ->assertScript('window.errorLogs[2]', 'onFinish')
+        ;
     }
 }

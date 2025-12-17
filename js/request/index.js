@@ -10,6 +10,7 @@ import Action from './action.js'
 
 let outstandingActionOrigin = null
 let outstandingActionMetadata = {}
+let outstandingActionInterceptors = []
 let interceptors = new InterceptorRegistry
 let messageBus = new MessageBus()
 let actionInterceptors = []
@@ -21,6 +22,10 @@ export function setNextActionOrigin(origin) {
 
 export function setNextActionMetadata(metadata) {
     outstandingActionMetadata = metadata
+}
+
+export function setNextActionInterceptor(callback) {
+    outstandingActionInterceptors.push(callback)
 }
 
 export function intercept(component, callback) {
@@ -67,25 +72,28 @@ export function fireAction(component, method, params = [], metadata = {}) {
 
     let action = constructAction(component, method, params, metadata)
 
-    let prevented = false
-
     actionInterceptors.forEach(callback => {
         callback({
             action,
-            reject: () => { action.rejectPromise(); prevented = true },
-            defer: () => prevented = true,
+            onSend: (cb) => action.onSendCallbacks.push(cb),
+            onSuccess: (cb) => action.onSuccessCallbacks.push(cb),
+            onError: (cb) => action.onErrorCallbacks.push(cb),
+            onFailure: (cb) => action.onFailureCallbacks.push(cb),
+            onFinish: (cb) => action.onFinishCallbacks.push(cb),
         })
     })
 
-    if (prevented) return action.promise
+    if (action.isCancelled() || action.isDeferred()) return action.promise
 
     return fireActionInstance(action)
 }
 
 export function constructAction(component, method, params, metadata) {
     let origin = outstandingActionOrigin
+    let pendingInterceptors = outstandingActionInterceptors
 
     outstandingActionOrigin = null
+    outstandingActionInterceptors = []
 
     metadata = {
         ...metadata,
@@ -94,7 +102,15 @@ export function constructAction(component, method, params, metadata) {
 
     outstandingActionMetadata = {}
 
-    return new Action(component, method, params, metadata, origin)
+    let action = new Action(component, method, params, metadata, origin)
+
+    // Set fire function to avoid circular dependency
+    action._fire = fireActionInstance
+
+    // Attach any per-action interceptors (from event.detail.livewire.interceptAction)
+    pendingInterceptors.forEach(callback => action.addInterceptor(callback))
+
+    return action
 }
 
 export function fireActionInstance(action) {
@@ -176,7 +192,7 @@ function sendMessages() {
             message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn()
             message.updates = message.component.getUpdates()
             message.calls = Array.from(message.actions).map(i => ({
-                method: i.method,
+                method: i.name,
                 params: i.params,
                 metadata: i.metadata,
             }))
@@ -184,7 +200,6 @@ function sendMessages() {
             message.payload = {
                 snapshot: message.snapshot,
                 updates: message.updates,
-                // @todo: Rename to "actions"...
                 calls: message.calls,
             }
         })
@@ -228,38 +243,38 @@ function sendMessages() {
         request.initInterceptors(interceptors)
 
         if (request.hasAllCancelledMessages()) {
-            request.abort()
+            request.cancel()
         }
 
         sendRequest(request, {
             send: ({ responsePromise }) => {
-                request.onSend({ responsePromise })
+                request.invokeOnSend({ responsePromise })
             },
             failure: ({ error }) => {
-                request.onFailure({ error })
+                request.invokeOnFailure({ error })
             },
             response: ({ response }) => {
-                request.onResponse({ response })
+                request.invokeOnResponse({ response })
             },
             stream: async ({ response }) => {
-                request.onStream({ response })
+                request.invokeOnStream({ response })
 
                 let finalResponse = ''
 
                 try {
-                    finalResponse = await interceptStreamAndReturnFinalResponse(response, streamedJson => {
-                        let componentId = streamedJson.id
+                    finalResponse = await interceptStreamAndReturnFinalResponse(response, json => {
+                        let componentId = json.id
 
                         request.messages.forEach(message => {
                             if (message.component.id === componentId) {
-                                message.onStream({ streamedJson })
+                                message.invokeOnStream({ json })
                             }
                         })
 
-                        trigger('stream', streamedJson)
+                        trigger('stream', json)
                     })
                 } catch (e) {
-                    request.abort()
+                    request.cancel()
 
                     throw e
                 }
@@ -267,12 +282,12 @@ function sendMessages() {
                 return finalResponse
             },
             parsed: ({ response, responseBody }) => {
-                request.onParsed({ response, responseBody })
+                request.invokeOnParsed({ response, body: responseBody })
             },
             error: ({ response, responseBody }) => {
                 let preventDefault = false
 
-                request.onError({ response, responseBody, preventDefault: () => preventDefault = true })
+                request.invokeOnError({ response, body: responseBody, preventDefault: () => preventDefault = true })
 
                 if (preventDefault) return
 
@@ -289,23 +304,23 @@ function sendMessages() {
             redirect: (url) => {
                 let preventDefault = false
 
-                request.onRedirect({ url, preventDefault: () => preventDefault = true })
+                request.invokeOnRedirect({ url, preventDefault: () => preventDefault = true })
 
                 if (preventDefault) return
 
                 window.location.href = url
             },
-            dump: (content) => {
+            dump: (html) => {
                 let preventDefault = false
 
-                request.onDump({ content, preventDefault: () => preventDefault = true })
+                request.invokeOnDump({ html, preventDefault: () => preventDefault = true })
 
                 if (preventDefault) return
 
-                showHtmlModal(content)
+                showHtmlModal(html)
             },
             success: async ({ response, responseBody, responseJson }) => {
-                request.onSuccess({ response, responseBody, responseJson })
+                request.invokeOnSuccess({ response, body: responseBody, json: responseJson })
 
                 await triggerAsync('payload.intercept', responseJson)
 
@@ -321,29 +336,29 @@ function sendMessages() {
                         if (snapshot.memo.id === message.component.id) {
                             message.responsePayload = { snapshot, effects }
 
-                            message.onSuccess()
+                            message.invokeOnSuccess()
                             if (message.isCancelled()) return
 
                             message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
 
-                            message.onSync()
+                            message.invokeOnSync()
                             if (message.isCancelled()) return
 
                             // Trigger any side effects from the payload like "morph" and "dispatch event"...
                             message.component.processEffects(effects, request)
 
-                            message.onEffect()
+                            message.invokeOnEffect()
                             if (message.isCancelled()) return
 
                             queueMicrotask(() => {
                                 if (message.isCancelled()) return
 
-                                message.onMorph()
+                                message.invokeOnMorph()
 
                                 setTimeout(() => {
                                     if (message.isCancelled()) return
 
-                                    message.onRender()
+                                    message.invokeOnRender()
                                 })
                             })
                         }
@@ -358,16 +373,16 @@ async function sendRequest(request, handlers) {
     let response
 
     try {
-        if (request.isAborted()) return
+        if (request.isCancelled()) return
 
         let responsePromise = fetch(request.uri, request.options)
 
-        if (request.isAborted()) return
+        if (request.isCancelled()) return
         handlers.send({ responsePromise })
 
         response = await responsePromise
     } catch (e) {
-        if (request.isAborted()) return
+        if (request.isCancelled()) return
 
         handlers.failure({ error: e })
 
@@ -384,7 +399,7 @@ async function sendRequest(request, handlers) {
         responseBody = await response.text()
     }
 
-    if (request.isAborted()) return
+    if (request.isCancelled()) return
 
     handlers.parsed({ response, responseBody })
 
@@ -510,104 +525,6 @@ function createUrlObjectFromString(urlString) {
     return urlString !== null && new URL(urlString, document.baseURI)
 }
 
-// Support legacy 'request' event...
-interceptRequest(({
-    request,
-    onFailure,
-    onResponse,
-    onError,
-    onSuccess,
-}) => {
-    let respondCallbacks = []
-    let succeedCallbacks = []
-    let failCallbacks = []
-
-    trigger('request', {
-        url: request.uri,
-        options: request.options,
-        payload: request.options.body,
-        respond: i => respondCallbacks.push(i),
-        succeed: i => succeedCallbacks.push(i),
-        fail: i => failCallbacks.push(i),
-    })
-
-    onResponse(({ response }) => {
-        respondCallbacks.forEach(callback => callback({
-            status: response.status,
-            response,
-        }))
-    })
-
-    onSuccess(({ response, responseJson }) => {
-        succeedCallbacks.forEach(callback => callback({
-            status: response.status,
-            json: responseJson,
-        }))
-    })
-
-    onFailure(({ error }) => {
-        failCallbacks.forEach(callback => callback({
-            status: 503,
-            content: null,
-            preventDefault: () => {},
-        }))
-    })
-
-    onError(({ response, responseBody, preventDefault }) => {
-        failCallbacks.forEach(callback => callback({
-            status: response.status,
-            content: responseBody,
-            preventDefault,
-        }))
-    })
-})
-
-// Support legacy 'commit' event...
-interceptMessage(({
-    message,
-    onCancel,
-    onError,
-    onSuccess,
-    onFinish,
-}) => {
-    // Allow other areas of the codebase to hook into the lifecycle
-    // of an individual commit...
-    let respondCallbacks = []
-    let succeedCallbacks = []
-    let failCallbacks = []
-
-    trigger('commit', {
-        component: message.component,
-        commit: message.payload,
-        respond: (callback) => {
-            respondCallbacks.push(callback)
-        },
-        succeed: (callback) => {
-            succeedCallbacks.push(callback)
-        },
-        fail: (callback) => {
-            failCallbacks.push(callback)
-        },
-    })
-
-    onFinish(() => {
-        respondCallbacks.forEach(callback => callback())
-    })
-
-    onSuccess(({ payload, onSync, onMorph, onRender }) => {
-        onRender(() => {
-            succeedCallbacks.forEach(callback => callback({
-                snapshot: payload.snapshot,
-                effects: payload.effects,
-            }))
-        })
-    })
-
-    onError(() => {
-        failCallbacks.forEach(callback => callback())
-    })
-
-    onCancel(() => {
-        failCallbacks.forEach(callback => callback())
-    })
-})
+// Load legacy event support ('request' and 'commit' events)
+import { registerLegacyEventSupport } from './legacy.js'
+registerLegacyEventSupport(interceptRequest, interceptMessage)
