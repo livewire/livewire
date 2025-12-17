@@ -92,7 +92,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         $ignoredTags = ['script', 'style'];
         $excludedRanges = static::findIgnoredTagRanges($template, $ignoredTags);
 
-        for ($i = 0; isset($matches[0][$i]); $i++) {
+        for ($i = count($matches[0]) - 1; $i >= 0; $i--) {
             $match = [
                 $matches[0][$i][0],
                 $matches[1][$i][0],
@@ -128,11 +128,11 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
                 $rest = str($after)->before(')');
 
                 if (
-                    isset($matches[0][$i + 1])
-                    && str($rest.')')->contains($matches[0][$i + 1][0])
+                    isset($matches[0][$i - 1])
+                    && str($rest.')')->contains($matches[0][$i - 1][0])
                 ) {
-                    unset($matches[0][$i + 1]);
-                    $i++;
+                    unset($matches[0][$i - 1]);
+                    $i--;
                 }
 
                 $match[0] = $match[0].$rest.')';
@@ -143,18 +143,18 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
             // Now we can check to see if the current Blade directive is a conditional,
             // and if so, prefix/suffix it with HTML comment morph markers...
             if (preg_match($openingDirectivesPattern, $match[0])) {
-                $template = static::prefixOpeningDirective($match[0], $template);
+                $template = static::prefixOpeningDirective($match[0], $template, $matchPosition);
             } elseif (preg_match($closingDirectivesPattern, $match[0])) {
-                $template = static::suffixClosingDirective($match[0], $template);
+                $template = static::suffixClosingDirective($match[0], $template, $matchPosition);
             } elseif (preg_match($loopEmptyDirectivePattern, $match[0])) {
-                $template = static::suffixLoopEmptyDirective($match[0], $template);
+                $template = static::suffixLoopEmptyDirective($match[0], $template, $matchPosition);
             }
         }
 
         return $template;
     }
 
-    protected static function prefixOpeningDirective($found, $template)
+    protected static function prefixOpeningDirective($found, $template, $position)
     {
         $foundEscaped = preg_quote($found, '/');
 
@@ -192,9 +192,6 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $suffixEscaped = preg_quote($suffix);
 
-        // `preg_replace` replacement prop needs `$` and `\` to be escaped
-        $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
-
         $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}";
 
         // If the suffix is not empty, then add it to the pattern...
@@ -204,10 +201,10 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $pattern .= "(?![^<]*(?<![?=-])>)/mUi";
 
-        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
+        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix);
     }
 
-    protected static function suffixClosingDirective($found, $template)
+    protected static function suffixClosingDirective($found, $template, $position)
     {
         // Opening directives can contain a space before the parens, but that causes issues with closing
         // directives. So we will just remove the trailing space if it exists...
@@ -249,18 +246,16 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $suffixEscaped = preg_quote($suffix);
 
-        // `preg_replace` replacement prop needs `$` and `\` to be escaped
-        $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
-
         $pattern = "/";
 
         // If the prefix is not empty, then add it to the pattern...
         if ($prefixEscaped !== '') {
             $pattern .= "(?<!{$prefixEscaped})";
         }
+
         $pattern .= "{$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
-        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
+        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix);
     }
 
     /*
@@ -268,7 +263,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
      * it is the `@empty` directive that actually closes the loop, not the `@endelseif` directive. So we need to ensure we
      * target the `@empty` directive but not confuse it with the `@empty()` conditional directive...
      */
-    protected static function suffixLoopEmptyDirective($found, $template)
+    protected static function suffixLoopEmptyDirective($found, $template, $position)
     {
         // Opening directives can contain a space before the parens, but that causes issues with closing
         // directives. So we will just remove the trailing space if it exists...
@@ -306,11 +301,9 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $suffixEscaped = preg_quote($suffix);
 
-        $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
-
         $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!\s*\()(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
-        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
+        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix);
     }
 
     protected static function isLoop($found)
@@ -445,5 +438,24 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         }
 
         return false;
+    }
+
+    protected static function replaceMatchIfNotInsideAHtmlTag(string $template, int $position, string $pattern, string $found, string $prefix, string $suffix): string
+    {
+        // Clamp the match position to the template bounds...
+        $templateLength = strlen($template);
+        $position = max(0, min($templateLength, (int) $position));
+
+        $before = substr($template, 0, $position);
+        $after = substr($template, $position);
+
+        if (! preg_match($pattern, $after, $afterMatch, PREG_OFFSET_CAPTURE) || $afterMatch[0][1] !== 0) {
+            return $template;
+        }
+
+        // Remove the match from the beginning of the after string...
+        $after = substr($after, strlen($afterMatch[0][0]));
+
+        return $before.$prefix.$found.$suffix.$after;
     }
 }
