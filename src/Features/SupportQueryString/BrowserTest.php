@@ -43,6 +43,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertQueryStringMissing('tableFilters')
         ->type('@filter_1', 'test')
         ->waitForLivewire()
+        // Wait for the changes to be applied...
+        ->pause(5)
         ->assertScript(
             '(new URLSearchParams(window.location.search)).toString()',
             'tableFilters%5Bfilter_1%5D%5Bvalue%5D=test'
@@ -199,6 +201,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->type('@exclamation', 'foo!')
             ->type('@parentheses', 'foo(bar)')
             ->type('@asterisk', 'foo*')
+            // Wait for the changes to be applied...
+            ->pause(5)
             ->assertScript('return !! window.location.search.match(/exclamation=foo\!/)')
             ->assertScript('return !! window.location.search.match(/parentheses=foo\(bar\)/)')
             ->assertScript('return !! window.location.search.match(/asterisk=foo\*/)')
