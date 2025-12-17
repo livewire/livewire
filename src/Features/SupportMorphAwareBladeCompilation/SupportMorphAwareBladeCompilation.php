@@ -92,7 +92,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         $ignoredTags = ['script', 'style'];
         $excludedRanges = static::findIgnoredTagRanges($template, $ignoredTags);
 
-        for ($i = 0; isset($matches[0][$i]); $i++) {
+        for ($i = count($matches[0]) - 1; $i >= 0; $i--) {
             $match = [
                 $matches[0][$i][0],
                 $matches[1][$i][0],
@@ -128,11 +128,11 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
                 $rest = str($after)->before(')');
 
                 if (
-                    isset($matches[0][$i + 1])
-                    && str($rest.')')->contains($matches[0][$i + 1][0])
+                    isset($matches[0][$i - 1])
+                    && str($rest.')')->contains($matches[0][$i - 1][0])
                 ) {
-                    unset($matches[0][$i + 1]);
-                    $i++;
+                    unset($matches[0][$i - 1]);
+                    $i--;
                 }
 
                 $match[0] = $match[0].$rest.')';
@@ -143,18 +143,18 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
             // Now we can check to see if the current Blade directive is a conditional,
             // and if so, prefix/suffix it with HTML comment morph markers...
             if (preg_match($openingDirectivesPattern, $match[0])) {
-                $template = static::prefixOpeningDirective($match[0], $template);
+                $template = static::prefixOpeningDirective($match[0], $template, $matchPosition);
             } elseif (preg_match($closingDirectivesPattern, $match[0])) {
-                $template = static::suffixClosingDirective($match[0], $template);
+                $template = static::suffixClosingDirective($match[0], $template, $matchPosition);
             } elseif (preg_match($loopEmptyDirectivePattern, $match[0])) {
-                $template = static::suffixLoopEmptyDirective($match[0], $template);
+                $template = static::suffixLoopEmptyDirective($match[0], $template, $matchPosition);
             }
         }
 
         return $template;
     }
 
-    protected static function prefixOpeningDirective($found, $template)
+    protected static function prefixOpeningDirective($found, $template, $position)
     {
         $foundEscaped = preg_quote($found, '/');
 
@@ -204,10 +204,10 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $pattern .= "(?![^<]*(?<![?=-])>)/mUi";
 
-        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
+        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template, 1);
     }
 
-    protected static function suffixClosingDirective($found, $template)
+    protected static function suffixClosingDirective($found, $template, $position)
     {
         // Opening directives can contain a space before the parens, but that causes issues with closing
         // directives. So we will just remove the trailing space if it exists...
@@ -260,7 +260,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         }
         $pattern .= "{$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
-        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
+        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template, 1);
     }
 
     /*
@@ -268,7 +268,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
      * it is the `@empty` directive that actually closes the loop, not the `@endelseif` directive. So we need to ensure we
      * target the `@empty` directive but not confuse it with the `@empty()` conditional directive...
      */
-    protected static function suffixLoopEmptyDirective($found, $template)
+    protected static function suffixLoopEmptyDirective($found, $template, $position)
     {
         // Opening directives can contain a space before the parens, but that causes issues with closing
         // directives. So we will just remove the trailing space if it exists...
@@ -310,7 +310,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!\s*\()(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
-        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
+        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template, 1);
     }
 
     protected static function isLoop($found)
