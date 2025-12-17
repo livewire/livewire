@@ -13,6 +13,11 @@ class HistoryCoordinator {
     }
 
     flushReplaces() {
+        if (this.pendingTimeout) {
+            clearTimeout(this.pendingTimeout)
+            this.pendingTimeout = null
+        }
+
         if (Object.keys(this.pendingUpdates).length === 0 || !this.pendingUrl) {
             return
         }
@@ -29,7 +34,6 @@ class HistoryCoordinator {
 
         this.pendingUpdates = {}
         this.pendingUrl = null
-        this.pendingTimeout = null
 
         try {
             // 640k character limit:
