@@ -208,6 +208,9 @@ class UploadManager {
             return request
         }
 
+        // Sequential upload: Files are uploaded one at a time to provide better
+        // progress tracking and more predictable error handling. This also prevents
+        // overwhelming the browser with too many concurrent S3 connections.
         const uploadNextFile = (index = 0) => {
             if (index >= payloads.length) {
                 this.component.$wire.call('_finishUpload', name, completedPaths, payloads.length > 1)
@@ -225,9 +228,19 @@ class UploadManager {
                     uploadNextFile(index + 1)
                 },
                 (error) => {
-                    this.component.$wire.call('_uploadErrored', name, error, payloads.length > 1)
+                    this.component.$wire.call('_uploadErrored', name, error, payloads.length > 1, completedPaths)
                 },
                 (e) => {
+                    const totalFiles = payloads.length
+                    const completedFiles = index
+                    const currentFileProgress = e.detail.progress
+                    const aggregateProgress = Math.floor(((completedFiles * 100) + currentFileProgress) / totalFiles)
+
+                    e.detail.progress = aggregateProgress
+                    e.detail.currentFile = index + 1
+                    e.detail.totalFiles = totalFiles
+                    e.detail.currentFileProgress = currentFileProgress
+
                     this.uploadBag.first(name).progressCallback(e)
                 }
             )

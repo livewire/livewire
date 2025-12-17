@@ -264,6 +264,70 @@ Now, when a user uploads a file, the file will never actually be stored on your 
 > php artisan livewire:publish --config
 > ```
 
+### Multiple file uploads to S3
+
+Livewire fully supports uploading multiple files directly to S3. When using the `multiple` attribute on a file input with S3 configured as the temporary upload disk, files will be uploaded sequentially to provide predictable progress tracking and error handling.
+
+```php
+<?php // resources/views/components/⚡upload-photos-s3.blade.php
+
+use Livewire\Attributes\Validate;
+use Livewire\WithFileUploads;
+use Livewire\Component;
+
+new class extends Component {
+    use WithFileUploads;
+
+    #[Validate(['photos.*' => 'image|max:1024'])]
+    public $photos = [];
+
+    public function save()
+    {
+        foreach ($this->photos as $photo) {
+            $photo->store(path: 'photos', options: 's3');
+        }
+    }
+};
+```
+
+```blade
+<form wire:submit="save">
+    <input type="file" wire:model="photos" multiple>
+
+    @error('photos.*') <span class="error">{{ $message }}</span> @enderror
+
+    <button type="submit">Save photos</button>
+</form>
+```
+
+**Progress tracking for multiple S3 uploads:**
+
+When uploading multiple files to S3, the `livewire-upload-progress` event provides aggregate progress across all files, plus additional details:
+
+```blade
+<div
+    x-data="{ uploading: false, progress: 0, currentFile: 0, totalFiles: 0 }"
+    x-on:livewire-upload-start.window="uploading = true"
+    x-on:livewire-upload-finish.window="uploading = false"
+    x-on:livewire-upload-progress.window="
+        progress = $event.detail.progress
+        currentFile = $event.detail.currentFile || 0
+        totalFiles = $event.detail.totalFiles || 0
+    "
+>
+    <input type="file" wire:model="photos" multiple>
+
+    <div x-show="uploading">
+        <progress max="100" x-bind:value="progress"></progress>
+        <p x-show="totalFiles > 1" x-text="`Uploading file ${currentFile} of ${totalFiles}`"></p>
+    </div>
+</div>
+```
+
+**Error handling:**
+
+If a file upload fails during a multi-file upload to S3, Livewire automatically cleans up any files that were successfully uploaded before the error occurred, preventing orphaned files in your S3 bucket.
+
 ### Configuring automatic file cleanup
 
 Livewire's temporary upload directory will fill up with files quickly; therefore, it's essential to configure S3 to clean up files older than 24 hours.

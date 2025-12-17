@@ -8894,9 +8894,19 @@ var UploadManager = class {
           uploadNextFile(index + 1);
         },
         (error2) => {
-          this.component.$wire.call("_uploadErrored", name, error2, payloads.length > 1);
+          this.component.$wire.call("_uploadErrored", name, error2, payloads.length > 1, completedPaths);
         },
         (e) => {
+          const totalFiles = payloads.length;
+          const completedFiles = index;
+          const currentFileProgress = e.detail.progress;
+          const aggregateProgress = Math.floor(
+            (completedFiles * 100 + currentFileProgress) / totalFiles
+          );
+          e.detail.progress = aggregateProgress;
+          e.detail.currentFile = index + 1;
+          e.detail.totalFiles = totalFiles;
+          e.detail.currentFileProgress = currentFileProgress;
           this.uploadBag.first(name).progressCallback(e);
         }
       );

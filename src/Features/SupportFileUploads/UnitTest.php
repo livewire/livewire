@@ -44,6 +44,33 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(1, $tmpFiles);
     }
 
+    public function test_s3_cleans_up_orphaned_files_when_multi_file_upload_fails_mid_process()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
+        Storage::fake('tmp-for-tests');
+
+        $completedPaths = ['file1.jpg', 'file2.jpg'];
+
+        foreach ($completedPaths as $path) {
+            Storage::disk('tmp-for-tests')->put(
+                FileUploadConfiguration::path($path),
+                'fake-content'
+            );
+        }
+
+        foreach ($completedPaths as $path) {
+            Storage::disk('tmp-for-tests')->assertExists(FileUploadConfiguration::path($path));
+        }
+
+        Livewire::test(FileUploadComponent::class)
+            ->call('_uploadErrored', 'photos', null, true, $completedPaths);
+
+        foreach ($completedPaths as $path) {
+            Storage::disk('tmp-for-tests')->assertMissing(FileUploadConfiguration::path($path));
+        }
+    }
+
     public function test_can_set_a_file_as_a_property_and_store_it()
     {
         Storage::fake('avatars');

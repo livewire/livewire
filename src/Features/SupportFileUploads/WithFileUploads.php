@@ -61,8 +61,16 @@ trait WithFileUploads
         app('livewire')->updateProperty($this, $name, $file);
     }
 
-    function _uploadErrored($name, $errorsInJson, $isMultiple) {
+    function _uploadErrored($name, $errorsInJson, $isMultiple, $completedPaths = []) {
         $this->dispatch('upload:errored', name: $name)->self();
+
+        if (FileUploadConfiguration::isUsingS3() && filled($completedPaths)) {
+            $storage = FileUploadConfiguration::storage();
+            foreach ($completedPaths as $path) {
+                $fullPath = FileUploadConfiguration::path($path);
+                $storage->delete($fullPath);
+            }
+        }
 
         if (is_null($errorsInJson)) {
             // Handle any translations/custom names
