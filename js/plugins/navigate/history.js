@@ -61,7 +61,7 @@ let snapshotCache = {
 export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     // Create a history state entry for the initial page load.
     // (This is so later hitting back can restore this page).
-    let url = new URL(window.location.href, document.baseURI)
+    let url = historyCoordinator.getUrl()
 
     replaceUrl(url, document.documentElement.outerHTML)
 }

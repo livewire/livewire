@@ -43,7 +43,7 @@ export default function history(Alpine) {
 export function track(name, initialSeedValue, alwaysShow = false, except = null) {
     let { has, get, set, remove } = queryStringUtils()
 
-    let url = new URL(window.location.href)
+    let url = historyCoordinator.getUrl()
     let isInitiallyPresentInUrl = has(url, name)
     let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue
     let initialValueMemo = JSON.stringify(initialValue)
@@ -61,7 +61,7 @@ export function track(name, initialSeedValue, alwaysShow = false, except = null)
     let update = (strategy, newValue) => {
         if (lock) return
 
-        let url = new URL(window.location.href)
+        let url = historyCoordinator.getUrl()
 
         // This block of code is what needs to be changed for this failing test to pass:
         if (! alwaysShow && ! isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {

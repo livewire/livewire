@@ -8,6 +8,10 @@ class HistoryCoordinator {
         this.errorHandlers = {}
     }
 
+    getUrl() {
+        return this.pendingUrl ?? new URL(window.location.href)
+    }
+
     flushReplaces() {
         if (Object.keys(this.pendingUpdates).length === 0 || !this.pendingUrl) {
             return
