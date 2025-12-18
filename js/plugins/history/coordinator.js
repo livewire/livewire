@@ -1,99 +1,67 @@
-import { unwrap } from "./utils"
+import { batch, unwrap } from "./utils"
 
 class HistoryCoordinator {
     constructor() {
-        this.pendingUpdates = {}
-        this.pendingUrl = null
-        this.pendingTimeout = null
+        this.url = null
         this.errorHandlers = {}
+
+        this.batch = batch((updates) => {
+            let url = this.getUrl()
+
+            this.writeToHistory('replaceState', url, (state) => {
+                // Only update state.alpine as we are merging...
+                state.alpine = { ...state.alpine, ...unwrap(updates) }
+
+                return state
+            })
+
+            this.url = null
+        })
+    }
+
+    addErrorHandler(key, callback) {
+        this.errorHandlers[key] = callback
     }
 
     getUrl() {
-        return this.pendingUrl ?? new URL(window.location.href)
+        // If the querystring has started changing the URL before the batch has been flushed, use the URL that was passed in...
+        return this.url ?? new URL(window.location.href)
     }
 
-    flushReplaces() {
-        if (this.pendingTimeout) {
-            clearTimeout(this.pendingTimeout)
-            this.pendingTimeout = null
-        }
+    replaceState(url, updates) {
+        this.url = url
+        this.batch.add(updates)
+    }
 
-        if (Object.keys(this.pendingUpdates).length === 0 || !this.pendingUrl) {
-            return
-        }
+    pushState(url, updates) {
+        // Flush any pending replaces first...
+        this.batch.flush()
 
+        this.writeToHistory('pushState', url, (state) => {
+            // Replace the entire state as we are pushing...
+            state = { alpine: { ...state.alpine, ...unwrap(updates) } }
+
+            return state
+        })
+    }
+
+    writeToHistory(method, url, callback) {
         let state = window.history.state || {}
         if (!state.alpine) state.alpine = {}
 
-        state.alpine = {
-            ...state.alpine,
-            ...this.pendingUpdates
-        }
-
-        let url = this.pendingUrl
-
-        this.pendingUpdates = {}
-        this.pendingUrl = null
+        // Process the state using the callback...
+        state = callback(state)
 
         try {
             // 640k character limit:
-            window.history.replaceState(state, '', url.toString())
+            window.history[method](state, '', url.toString())
         } catch (error) {
-            let errorHandlers = this.errorHandlers
-            this.errorHandlers = {}
-
-            Object.values(errorHandlers).forEach(
+            Object.values(this.errorHandlers).forEach(
                 handler => typeof handler === 'function' && handler(error, url)
             )
 
-            console.error(error)
-        }
-    }
-
-
-    replaceState(url, updates, errorHandlers = {}) {
-        this.errorHandlers = {...this.errorHandlers, ...errorHandlers}
-
-        Object.assign(this.pendingUpdates, unwrap(updates))
-
-        this.pendingUrl = url
-
-        if (!this.pendingTimeout) {
-            this.pendingTimeout = setTimeout(() => {
-                this.pendingTimeout = null
-                this.flushReplaces()
-            }, 0)
-        }
-    }
-
-    pushState(url, updates, errorHandlers = {}) {
-        this.errorHandlers = {...this.errorHandlers, ...errorHandlers}
-
-        if (this.pendingTimeout) {
-            clearTimeout(this.pendingTimeout)
-            this.pendingTimeout = null
-        }
-
-        // Flush any pending replaces first
-        if (Object.keys(this.pendingUpdates).length > 0) {
-            this.flushReplaces()
-        }
-
-        let state = window.history.state || {}
-        if (!state.alpine) state.alpine = {}
-
-        state = { alpine: { ...state.alpine, ...unwrap(updates) } }
-
-        try {
-            // 640k character limit:
-            window.history.pushState(state, '', url.toString())
-        } catch (error) {
-            let errorHandlers = this.errorHandlers
+            // Remove error handlers after processing as they could be different depending on what is calling the method...
             this.errorHandlers = {}
-
-            Object.values(errorHandlers).forEach(
-                handler => typeof handler === 'function' && handler(error, url)
-            )
 
             console.error(error)
         }

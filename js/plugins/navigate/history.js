@@ -59,10 +59,11 @@ let snapshotCache = {
 }
 
 export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
+    // Get the URL with all querystring changes...
+    let url = historyCoordinator.getUrl()
+    
     // Create a history state entry for the initial page load.
     // (This is so later hitting back can restore this page).
-    let url = historyCoordinator.getUrl()
-
     replaceUrl(url, document.documentElement.outerHTML)
 }
 
@@ -123,16 +124,16 @@ function updateUrl(method, url, html) {
         ? snapshotCache.push(key, new Snapshot(url, html))
         : snapshotCache.replace(key = (snapshotCache.currentKey ?? key), new Snapshot(url, html))
 
-    let errorHandler = error => {
+    historyCoordinator.addErrorHandler('navigate', error => {
         if (error instanceof DOMException && error.name === 'SecurityError') {
             console.error(
                 "Livewire: You can't use wire:navigate with a link to a different root domain: " +
                     url
             )
         }
-    }
+    })
 
-    historyCoordinator[method](url, { snapshotIdx: key, url: url.toString() }, { navigate: errorHandler })
+    historyCoordinator[method](url, { snapshotIdx: key, url: url.toString() })
 
     snapshotCache.currentKey = key
     snapshotCache.currentUrl = url

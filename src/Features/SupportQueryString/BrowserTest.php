@@ -1130,6 +1130,54 @@ class BrowserTest extends \Tests\BrowserTestCase
             ])
             ->assertScript('return window.location.search', '?foo[bar]=baz&bob%5Blob%5D=law');
     }
+
+    public function test_it_batches_query_string_initialisation_into_a_single_call_to_the_browser_history_api()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        @foreach(range(1, 100) as $i)
+                            <livewire:child />
+                        @endforeach
+                    </div>
+                    @push('scripts')
+                        <script>
+                            let countOfReplaceStateCalls = 0;
+
+                            let originalReplaceState = window.history.replaceState.bind(window.history);
+
+                            window.history.replaceState = function(state, title, url) {
+                                countOfReplaceStateCalls++;
+                                originalReplaceState(state, title, url);
+                            };
+                        </script>
+                    @endpush
+                    HTML;
+                }
+            },
+            'child' => new class extends Component
+            {
+                #[BaseUrl]
+                public $foo = 'bar';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        Child
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->assertScript('return countOfReplaceStateCalls', 1)
+        ;
+    }
 }
 
 class FormObject extends \Livewire\Form
