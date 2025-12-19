@@ -9838,8 +9838,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let expression = directive3.expression;
     let options = {
       exact: directive3.modifiers.includes("exact"),
-      strict: directive3.modifiers.includes("strict")
+      strict: directive3.modifiers.includes("strict"),
+      ignore: directive3.modifiers.includes("ignore")
     };
+    if (options.ignore)
+      return;
     if (expression.startsWith("#"))
       return;
     if (!el.hasAttribute("href"))

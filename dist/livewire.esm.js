@@ -10714,8 +10714,11 @@ globalDirective("current", ({ el, directive: directive2, cleanup }) => {
   let expression = directive2.expression;
   let options = {
     exact: directive2.modifiers.includes("exact"),
-    strict: directive2.modifiers.includes("strict")
+    strict: directive2.modifiers.includes("strict"),
+    ignore: directive2.modifiers.includes("ignore")
   };
+  if (options.ignore)
+    return;
   if (expression.startsWith("#"))
     return;
   if (!el.hasAttribute("href"))
