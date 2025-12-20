@@ -6,6 +6,39 @@ use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function test_named_slot()
+    {
+        Livewire::test([
+            new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        <livewire:child>
+                            <livewire:slot name="header">
+                                Header
+                            </livewire:slot>
+
+                            Hello world
+                        </livewire:child>
+                    </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        @if ($slots->has('header'))
+                            {{ $slots->get('header') }}
+                        @endif
+
+                        {{ $slots['default'] }}
+                    </div>
+                HTML; }
+            },
+        ])
+        ->assertSee('Header')
+        ->assertSee('Hello world')
+        ;
+    }
+
     public function test_slot_with_short_attribute_syntax()
     {
         Livewire::test([
