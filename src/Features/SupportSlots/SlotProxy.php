@@ -2,11 +2,12 @@
 
 namespace Livewire\Features\SupportSlots;
 
+use ArrayAccess;
 use Illuminate\Contracts\Support\Htmlable;
 use Livewire\Features\SupportSlots\Slot;
 use Livewire\Component;
 
-class SlotProxy implements Htmlable
+class SlotProxy implements Htmlable, ArrayAccess
 {
     public function __construct(
         protected Component $component,
@@ -47,5 +48,25 @@ class SlotProxy implements Htmlable
     public function __toString(): string
     {
         return $this->get('default')->toHtml();
+    }
+
+    public function offsetExists($offset): bool
+    {
+        return $this->has($offset);
+    }
+
+    public function offsetGet($offset): mixed
+    {
+        return $this->get($offset);
+    }
+
+    public function offsetSet($offset, $value): void
+    {
+        //
+    }
+
+    public function offsetUnset($offset): void
+    {
+        //
     }
 }

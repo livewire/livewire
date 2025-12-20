@@ -22,14 +22,24 @@ class SupportSlots extends ComponentHook
         // Ensure that the slot proxy is available for child views...
         $slots = $this->component->getSlots();
 
-        $view->with(['slot' => new SlotProxy($this->component, $slots)]);
+        $slotProxy = new SlotProxy($this->component, $slots);
+
+        $view->with([
+            'slot' => $slotProxy,
+            'slots' => $slotProxy,
+        ]);
     }
 
     public function renderIsland($name, $view, $properties)
     {
         $slots = $this->component->getSlots();
 
-        $view->with(['slot' => new SlotProxy($this->component, $slots)]);
+        $slotProxy = new SlotProxy($this->component, $slots);
+
+        $view->with([
+            'slot' => $slotProxy,
+            'slots' => $slotProxy,
+        ]);
     }
 
     function hydrate($memo)
