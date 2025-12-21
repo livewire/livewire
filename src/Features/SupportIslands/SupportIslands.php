@@ -23,7 +23,7 @@ class SupportIslands extends ComponentHook
 
     public static function registerInlineIslandPrecompiler()
     {
-        Blade::precompiler(function ($content) {
+        Blade::prepareStringsForCompilationUsing(function ($content) {
             // Shortcut out if there are no islands in the content...
             if (! str_contains($content, '@endisland')) return $content;
 
