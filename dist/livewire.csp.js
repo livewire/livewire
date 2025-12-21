@@ -12573,6 +12573,84 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default7 = src_default7;
 
+  // js/plugins/history/utils.js
+  function unwrap(object) {
+    if (object === void 0)
+      return void 0;
+    return JSON.parse(JSON.stringify(object));
+  }
+  function batch(callback) {
+    let batch2 = {
+      queued: false,
+      updates: {},
+      add(updates) {
+        Object.assign(batch2.updates, updates);
+        if (batch2.queued)
+          return;
+        batch2.queued = true;
+        queueMicrotask(batch2.flush);
+      },
+      flush() {
+        if (Object.keys(batch2.updates).length) {
+          callback(batch2.updates);
+        }
+        batch2.queued = false;
+        batch2.updates = {};
+      }
+    };
+    return batch2;
+  }
+
+  // js/plugins/history/coordinator.js
+  var HistoryCoordinator = class {
+    constructor() {
+      this.url = null;
+      this.errorHandlers = {};
+      this.batch = batch((updates) => {
+        let url = this.getUrl();
+        this.writeToHistory("replaceState", url, (state) => {
+          state.alpine = { ...state.alpine, ...unwrap(updates) };
+          return state;
+        });
+        this.url = null;
+      });
+    }
+    addErrorHandler(key, callback) {
+      this.errorHandlers[key] = callback;
+    }
+    getUrl() {
+      return this.url ?? new URL(window.location.href);
+    }
+    replaceState(url, updates) {
+      this.url = url;
+      this.batch.add(updates);
+    }
+    pushState(url, updates) {
+      this.batch.flush();
+      this.writeToHistory("pushState", url, (state) => {
+        state = { alpine: { ...state.alpine, ...unwrap(updates) } };
+        return state;
+      });
+    }
+    writeToHistory(method, url, callback) {
+      let state = window.history.state || {};
+      if (!state.alpine)
+        state.alpine = {};
+      state = callback(state);
+      try {
+        window.history[method](state, "", url.toString());
+      } catch (error2) {
+        Object.values(this.errorHandlers).forEach(
+          (handler) => typeof handler === "function" && handler(error2, url)
+        );
+        this.errorHandlers = {};
+        console.error(error2);
+      }
+    }
+  };
+  var historyCoordinator = new HistoryCoordinator();
+  var coordinator_default = historyCoordinator;
+
   // js/plugins/navigate/history.js
   var Snapshot = class {
     constructor(url, html) {
@@ -12621,7 +12699,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     currentPageStatus = status;
   }
   function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
-    let url = new URL(window.location.href, document.baseURI);
+    let url = coordinator_default.getUrl();
     replaceUrl(url, document.documentElement.outerHTML);
   }
   function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key, url) {
@@ -12661,23 +12739,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function updateUrl(method, url, html) {
     let key = url.toString() + "-" + Math.random();
     method === "pushState" ? snapshotCache.push(key, new Snapshot(url, html)) : snapshotCache.replace(key = snapshotCache.currentKey ?? key, new Snapshot(url, html));
-    let state = history.state || {};
-    if (!state.alpine)
-      state.alpine = {};
-    state.alpine.snapshotIdx = key;
-    state.alpine.url = url.toString();
-    try {
-      history[method](state, JSON.stringify(document.title), url);
-      snapshotCache.currentKey = key;
-      snapshotCache.currentUrl = url;
-    } catch (error2) {
+    coordinator_default.addErrorHandler("navigate", (error2) => {
       if (error2 instanceof DOMException && error2.name === "SecurityError") {
         console.error(
           "Livewire: You can't use wire:navigate with a link to a different root domain: " + url
         );
       }
-      console.error(error2);
-    }
+    });
+    coordinator_default[method](url, { snapshotIdx: key, url: url.toString() });
+    snapshotCache.currentKey = key;
+    snapshotCache.currentUrl = url;
   }
 
   // js/plugins/navigate/links.js
@@ -13387,7 +13458,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/plugins/history/index.js
-  function history2(Alpine24) {
+  function history(Alpine24) {
     Alpine24.magic("queryString", (el, { interceptor }) => {
       let alias;
       let alwaysShow = false;
@@ -13426,7 +13497,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function track(name, initialSeedValue, alwaysShow = false, except = null) {
     let { has, get, set, remove } = queryStringUtils();
-    let url = new URL(window.location.href);
+    let url = coordinator_default.getUrl();
     let isInitiallyPresentInUrl = has(url, name);
     let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue;
     let initialValueMemo = JSON.stringify(initialValue);
@@ -13440,7 +13511,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let update = (strategy, newValue) => {
       if (lock)
         return;
-      let url2 = new URL(window.location.href);
+      let url2 = coordinator_default.getUrl();
       if (!alwaysShow && !isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
         url2 = remove(url2, name);
       } else if (newValue === void 0) {
@@ -13482,31 +13553,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
   function replace(url, key, object) {
-    let state = window.history.state || {};
-    if (!state.alpine)
-      state.alpine = {};
-    state.alpine[key] = unwrap(object);
-    try {
-      window.history.replaceState(state, "", url.toString());
-    } catch (e) {
-      console.error(e);
-    }
+    coordinator_default.replaceState(url, { [key]: object });
   }
   function push(url, key, object) {
-    let state = window.history.state || {};
-    if (!state.alpine)
-      state.alpine = {};
-    state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };
-    try {
-      window.history.pushState(state, "", url.toString());
-    } catch (e) {
-      console.error(e);
-    }
-  }
-  function unwrap(object) {
-    if (object === void 0)
-      return void 0;
-    return JSON.parse(JSON.stringify(object));
+    coordinator_default.pushState(url, { [key]: object });
   }
   function queryStringUtils() {
     return {
@@ -14162,7 +14212,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     dispatch(document, "livewire:init");
     dispatch(document, "livewire:initializing");
     import_alpinejs5.default.plugin(module_default8);
-    import_alpinejs5.default.plugin(history2);
+    import_alpinejs5.default.plugin(history);
     import_alpinejs5.default.plugin(module_default4);
     import_alpinejs5.default.plugin(module_default5);
     import_alpinejs5.default.plugin(module_default6);

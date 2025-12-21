@@ -49,6 +49,11 @@ class MakeCommand extends Command
 
         $name = $this->normalizeComponentName($name);
 
+        // If --test flag is provided and component already exists, just create the test
+        if ($this->option('test') && $this->componentExistsInAnyForm($name)) {
+            return $this->createTestForExistingComponent($name);
+        }
+
         // Check if component already exists in ANY form before proceeding
         if ($this->componentExistsInAnyForm($name)) {
             $this->components->error('Component already exists.');
@@ -373,6 +378,39 @@ class MakeCommand extends Command
         return $stub;
     }
 
+    protected function getClassBasedComponentTestPath(string $name): string
+    {
+        $segments = explode('.', $name);
+
+        $className = Str::studly(end($segments)) . 'Test';
+
+        $namespaceSegments = array_slice($segments, 0, -1);
+
+        $path = base_path('tests/Feature/Livewire');
+
+        if (! empty($namespaceSegments)) {
+            $path .= '/' . collect($namespaceSegments)
+                ->map(fn($segment) => Str::studly($segment))
+                ->implode('/');
+        }
+
+        return $path . '/' . $className . '.php';
+    }
+
+    protected function buildClassBasedComponentTest(string $name): string
+    {
+        // Use same Pest-style stub as MFC/SFC for consistency
+        $stub = $this->files->get($this->getStubPath('livewire-mfc-test.stub'));
+
+        $componentName = collect(explode('.', $name))
+            ->map(fn($segment) => Str::kebab($segment))
+            ->implode('.');
+
+        $stub = str_replace('[component-name]', $componentName, $stub);
+
+        return $stub;
+    }
+
     protected function getStubPath(string $stub): string
     {
         $customPath = $this->laravel->basePath('stubs/' . $stub);
@@ -416,14 +454,89 @@ class MakeCommand extends Command
             return true;
         }
 
+        // Check for single-file component
+        $sfcPath = $finder->resolveSingleFileComponentPathForCreation($name);
+        if ($this->files->exists($sfcPath)) {
+            return true;
+        }
+
         // Check for class-based component
         $paths = $finder->resolveClassComponentFilePaths($name);
         if (isset($paths['class']) && $this->files->exists($paths['class'])) {
             return true;
         }
 
-        // Note: We don't check for SFC here because SFC->MFC upgrade is a valid operation
         return false;
+    }
+
+    protected function createTestForExistingComponent(string $name): int
+    {
+        $finder = $this->finder;
+
+        // Check for multi-file component first
+        $mfcPath = $finder->resolveMultiFileComponentPath($name);
+        if ($mfcPath && $this->files->exists($mfcPath) && $this->files->isDirectory($mfcPath)) {
+            $componentName = basename($mfcPath);
+            if ($this->shouldUseEmoji()) {
+                $componentName = str_replace(['⚡', '⚡︎', '⚡️'], '', $componentName);
+            }
+
+            $testPath = $mfcPath . '/' . $componentName . '.test.php';
+
+            if ($this->files->exists($testPath)) {
+                $this->components->error('Test file already exists.');
+                return 1;
+            }
+
+            $testContent = $this->buildMultiFileComponentTest($name);
+            $this->files->put($testPath, $testContent);
+
+            $this->components->info(sprintf('Livewire test [%s] created successfully.', $testPath));
+
+            return 0;
+        }
+
+        // Check for single-file component
+        $sfcPath = $finder->resolveSingleFileComponentPathForCreation($name);
+        if ($this->files->exists($sfcPath)) {
+            $testPath = $this->getSingleFileComponentTestPath($sfcPath);
+
+            if ($this->files->exists($testPath)) {
+                $this->components->error('Test file already exists.');
+                return 1;
+            }
+
+            $testContent = $this->buildSingleFileComponentTest($name);
+            $this->files->put($testPath, $testContent);
+
+            $this->components->info(sprintf('Livewire test [%s] created successfully.', $testPath));
+
+            return 0;
+        }
+
+        // Check for class-based component
+        $paths = $finder->resolveClassComponentFilePaths($name);
+        if (isset($paths['class']) && $this->files->exists($paths['class'])) {
+            // For class-based components, create test in tests/Feature/Livewire directory
+            $testPath = $this->getClassBasedComponentTestPath($name);
+
+            $this->ensureDirectoryExists(dirname($testPath));
+
+            if ($this->files->exists($testPath)) {
+                $this->components->error('Test file already exists.');
+                return 1;
+            }
+
+            $testContent = $this->buildClassBasedComponentTest($name);
+            $this->files->put($testPath, $testContent);
+
+            $this->components->info(sprintf('Livewire test [%s] created successfully.', $testPath));
+
+            return 0;
+        }
+
+        $this->components->error('Component not found.');
+        return 1;
     }
 
     protected function getArguments()

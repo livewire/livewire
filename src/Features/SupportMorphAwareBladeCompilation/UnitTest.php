@@ -236,7 +236,7 @@ class UnitTest extends \Tests\TestCase
         $output = $this->render('<livewire:foo />');
 
         $this->assertStringContainsString('Test', $output);
-        
+
         // When the template is rendered, there should be 1 loop in the stack, which will be a count of 0 so we don't have an offset compared to the loop indexes...
         $this->assertEquals(0, SupportCompiledWireKeys::$currentLoop['count']);
     }
@@ -676,7 +676,7 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
-            34 => [
+            35 => [
                 0,
                 <<<'HTML'
                 <div>
@@ -690,12 +690,54 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
+            36 => [
+                1,
+                <<<'HTML'
+                <div>
+                    <div id="label">
+                        @if (now()->dayName === 'Friday')
+                            Friday
+                        @endif
+                    </div>
+
+                    <script type="text/javascript">
+                        @if (now()->dayName === 'Friday')
+                            document.getElementById('label').style.color = 'red';
+                        @endif
+                    </script>
+                </div>
+                HTML
+            ],
+            37 => [
+                2,
+                <<<'HTML'
+                <div>
+                    <div id="label">
+                        @if (now()->dayName === 'Friday')
+                            Friday
+                        @endif
+                    </div>
+
+                    <script type="text/javascript">
+                        @if (now()->dayName === 'Friday')
+                            document.getElementById('label').style.color = 'red';
+                        @endif
+                    </script>
+
+                    <div id="label">
+                        @if (now()->dayName === 'Friday')
+                            Friday
+                        @endif
+                    </div>
+                </div>
+                HTML
+            ],
         ];
     }
 
     protected function reloadFeatures()
     {
-        // We need to remove these two precompilers so we can test if the 
+        // We need to remove these two precompilers so we can test if the
         // feature is disabled and whether they get registered again...
         $precompilers = \Livewire\invade(app('blade.compiler'))->precompilers;
 
@@ -704,7 +746,7 @@ class UnitTest extends \Tests\TestCase
 
             $closureClass = (new \ReflectionFunction($precompiler))->getClosureScopeClass()->getName();
 
-            return $closureClass !== SupportCompiledWireKeys::class 
+            return $closureClass !== SupportCompiledWireKeys::class
                 && $closureClass !== SupportMorphAwareBladeCompilation::class;
         });
 
