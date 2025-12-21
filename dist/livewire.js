@@ -664,9 +664,7 @@
             const totalFiles = payloads.length;
             const completedFiles = index2;
             const currentFileProgress = e.detail.progress;
-            const aggregateProgress = Math.floor(
-              (completedFiles * 100 + currentFileProgress) / totalFiles
-            );
+            const aggregateProgress = Math.floor((completedFiles * 100 + currentFileProgress) / totalFiles);
             e.detail.progress = aggregateProgress;
             e.detail.currentFile = index2 + 1;
             e.detail.totalFiles = totalFiles;

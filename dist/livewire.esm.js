@@ -8900,9 +8900,7 @@ var UploadManager = class {
           const totalFiles = payloads.length;
           const completedFiles = index;
           const currentFileProgress = e.detail.progress;
-          const aggregateProgress = Math.floor(
-            (completedFiles * 100 + currentFileProgress) / totalFiles
-          );
+          const aggregateProgress = Math.floor((completedFiles * 100 + currentFileProgress) / totalFiles);
           e.detail.progress = aggregateProgress;
           e.detail.currentFile = index + 1;
           e.detail.totalFiles = totalFiles;
