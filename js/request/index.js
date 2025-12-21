@@ -171,7 +171,7 @@ function sendMessages() {
         let hasFoundRequest = false
 
         requests.forEach(request => {
-            if (! hasFoundRequest) {
+            if (! hasFoundRequest && ! request.isIsolated()) {
                 request.addMessage(message)
 
                 hasFoundRequest = true
