@@ -8,6 +8,7 @@ import { on as hook } from './hooks'
 import { fireAction, intercept } from '@/request'
 import { getErrorsObject } from '@/features/supportErrors'
 import { findRefEl } from '@/features/supportRefs'
+import { checkDirty } from './directives/wire-dirty'
 
 let properties = {}
 let fallback
@@ -33,6 +34,7 @@ let aliases = {
     'call': '$call',
     'hook': '$hook',
     'watch': '$watch',
+    'dirty': '$dirty',
     'commit': '$commit',
     'errors': '$errors',
     'island': '$island',
@@ -168,6 +170,24 @@ wireProperty('$refs', (component) => {
             return fn(property)
         }
     })
+})
+
+wireProperty('$dirty', (component) => (property) => {
+    let reactive = Alpine.reactive({ dirty: false })
+
+    intercept(component, ({ onFinish }) => {
+        onFinish(() => {
+            queueMicrotask(() => {
+                reactive.dirty = checkDirty(component, property)
+            })
+        })
+    })
+
+    Alpine.effect(() => {
+        reactive.dirty = checkDirty(component, property)
+    })
+
+    return reactive.dirty
 })
 
 wireProperty('$intercept', (component) => (method, callback = null) => {
