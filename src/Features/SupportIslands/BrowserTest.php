@@ -711,4 +711,45 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@island-increment', 'Island Count: 1')
             ;
     }
+
+    public function test_renderless_attribute_skips_island_render()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            #[\Livewire\Attributes\Renderless]
+            public function incrementRenderless()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo')
+                        <div dusk="island-count">Count: {{ $count }}</div>
+                    @endisland
+
+                    <button type="button" wire:click="increment" dusk="increment" wire:island="foo">Increment</button>
+                    <button type="button" wire:click="incrementRenderless" dusk="increment-renderless" wire:island="foo">Increment Renderless</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->waitForLivewire()->click('@increment')
+            ->assertSeeIn('@island-count', 'Count: 1')
+            ->waitForLivewire()->click('@increment-renderless')
+            // The count was incremented server-side but the island should NOT re-render...
+            ->assertSeeIn('@island-count', 'Count: 1')
+            ->waitForLivewire()->click('@increment')
+            // Now the island should show the updated count (including the renderless increment)...
+            ->assertSeeIn('@island-count', 'Count: 3')
+            ;
+    }
 }
