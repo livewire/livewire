@@ -644,7 +644,7 @@ this.$intercept('save', ({ ... }) => {
 Trigger island renders directly from the template:
 
 ```blade
-<button wire:click.append="loadMore" wire:island="stats">
+<button wire:click="loadMore" wire:island.append="stats">
     Load more
 </button>
 ```

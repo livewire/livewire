@@ -488,8 +488,8 @@ class BrowserTest extends BrowserTestCase
                     </div>
 
                     <button type="button" wire:click="increment" dusk="foo-increment" wire:island="foo">Increment</button>
-                    <button type="button" wire:click.prepend="increment" dusk="foo-prepend-increment" wire:island="foo">Prepend</button>
-                    <button type="button" wire:click.append="increment" dusk="foo-append-increment" wire:island="foo">Append</button>
+                    <button type="button" wire:click="increment" dusk="foo-prepend-increment" wire:island.prepend="foo">Prepend</button>
+                    <button type="button" wire:click="increment" dusk="foo-append-increment" wire:island.append="foo">Append</button>
                 </div>
                 HTML;
             }

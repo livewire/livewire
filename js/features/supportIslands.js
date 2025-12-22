@@ -9,14 +9,17 @@ interceptAction(({ action }) => {
 
     let { el, directive } = origin
 
-    let islandAttributeName = el.getAttribute('wire:island')
+    // Check for wire:island with modifiers (e.g., wire:island.append="foo")
+    let islandAttr = Array.from(el.attributes).find(attr => attr.name.startsWith('wire:island'))
 
-    let islandName = islandAttributeName
+    if (islandAttr) {
+        let islandName = islandAttr.value
 
-    let isPrepend = directive?.modifiers.includes('prepend')
-    let isAppend = directive?.modifiers.includes('append')
+        // Parse modifiers from attribute name (e.g., "wire:island.append" -> ["append"])
+        let attrParts = islandAttr.name.split('.')
+        let isPrepend = attrParts.includes('prepend')
+        let isAppend = attrParts.includes('append')
 
-    if (islandName) {
         let mode = isPrepend ? 'prepend' : (isAppend ? 'append' : 'morph')
 
         action.mergeMetadata({
