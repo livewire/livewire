@@ -78,7 +78,7 @@ trait HandlesIslands
                 '__placeholder' => '',
             ]);
 
-            $directive = $lazy ? 'wire:intersect.once.async' : 'wire:init.async';
+            $directive = $lazy ? 'wire:intersect.once' : 'wire:init';
 
             $renderedContent = $this->injectLazyDirective($renderedContent, $name, $directive);
         } else {

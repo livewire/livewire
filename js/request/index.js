@@ -172,6 +172,11 @@ function sendMessages() {
 
         requests.forEach(request => {
             if (! hasFoundRequest) {
+                // Don't add to a request that already has a message for the same component
+                let hasMessageForSameComponent = Array.from(request.messages).some(m => m.component === message.component)
+
+                if (hasMessageForSameComponent) return
+
                 request.addMessage(message)
 
                 hasFoundRequest = true
