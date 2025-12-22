@@ -51,10 +51,10 @@ Alpine.interceptInit(el => {
                 [attribute]() {
                     setNextActionOrigin({ el, directive })
 
-                    return evaluateActionExpression(el, expression, { scope: {
+                    evaluateActionExpression(el, expression, { scope: {
                         $item: this.$item,
                         $position: this.$position,
-                    } })
+                    }, params: [this.$item, this.$position] })
                 }
             })
         }
