@@ -214,4 +214,236 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@child.count', 0)
         ;
     }
+
+    public function test_reactive_property_triggers_updated_lifecycle_hook()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $count = 0;
+
+                public function inc() { $this->count++; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Parent count: <span dusk="parent.count">{{ $count }}</span>
+
+                        <button wire:click="inc" dusk="parent.inc">inc</button>
+
+                        <livewire:child :$count />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[BaseReactive]
+                public $count;
+
+                public $updatedCount = 0;
+
+                public function updatedCount($value)
+                {
+                    // This lifecycle hook should fire when reactive prop changes
+                    $this->updatedCount = $value * 10;
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Child count: <span dusk="child.count">{{ $count }}</span>
+                        <h1>Updated count (x10): <span dusk="child.updated-count">{{ $updatedCount }}</span>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertSeeIn('@parent.count', 0)
+            ->assertSeeIn('@child.count', 0)
+            ->assertSeeIn('@child.updated-count', 0)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 1)
+            ->assertSeeIn('@child.count', 1)
+            ->assertSeeIn('@child.updated-count', 10)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 2)
+            ->assertSeeIn('@child.count', 2)
+            ->assertSeeIn('@child.updated-count', 20)
+        ;
+    }
+
+    public function test_reactive_property_triggers_updating_lifecycle_hook()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $count = 0;
+
+                public function inc() { $this->count++; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Parent count: <span dusk="parent.count">{{ $count }}</span>
+
+                        <button wire:click="inc" dusk="parent.inc">inc</button>
+
+                        <livewire:child :$count />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[BaseReactive]
+                public $count;
+
+                public $oldCount = 0;
+
+                public function updatingCount($value)
+                {
+                    // Capture the old value before update
+                    $this->oldCount = $this->count;
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Child count: <span dusk="child.count">{{ $count }}</span>
+                        <h1>Old count: <span dusk="child.old-count">{{ $oldCount }}</span>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertSeeIn('@parent.count', 0)
+            ->assertSeeIn('@child.count', 0)
+            ->assertSeeIn('@child.old-count', 0)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 1)
+            ->assertSeeIn('@child.count', 1)
+            ->assertSeeIn('@child.old-count', 0)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 2)
+            ->assertSeeIn('@child.count', 2)
+            ->assertSeeIn('@child.old-count', 1)
+        ;
+    }
+
+    public function test_reactive_property_does_not_trigger_hooks_when_value_unchanged()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $count = 5;
+                public $other = 0;
+
+                public function incOther() { $this->other++; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Parent count: <span dusk="parent.count">{{ $count }}</span>
+                        <h1>Parent other: <span dusk="parent.other">{{ $other }}</span>
+
+                        <button wire:click="incOther" dusk="parent.inc-other">inc other</button>
+
+                        <livewire:child :$count />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[BaseReactive]
+                public $count;
+
+                public $hookCallCount = 0;
+
+                public function updatedCount($value)
+                {
+                    // Count how many times hook is called
+                    $this->hookCallCount++;
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Child count: <span dusk="child.count">{{ $count }}</span>
+                        <h1>Hook call count: <span dusk="child.hook-calls">{{ $hookCallCount }}</span>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertSeeIn('@parent.count', 5)
+            ->assertSeeIn('@child.count', 5)
+            ->assertSeeIn('@child.hook-calls', 0)
+
+            // Trigger parent update that doesn't change $count
+            ->waitForLivewire()->click('@parent.inc-other')
+            ->assertSeeIn('@parent.other', 1)
+            ->assertSeeIn('@child.count', 5)
+            // Hook should NOT have been called since value didn't change
+            ->assertSeeIn('@child.hook-calls', 0)
+
+            ->waitForLivewire()->click('@parent.inc-other')
+            ->assertSeeIn('@parent.other', 2)
+            ->assertSeeIn('@child.count', 5)
+            ->assertSeeIn('@child.hook-calls', 0)
+        ;
+    }
+
+    public function test_reactive_property_does_not_trigger_hooks_when_same_value_passed_multiple_times()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $property = 1;
+                public $other = 0;
+
+                public function incOther() { $this->other++; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Parent property: <span dusk="parent.property">{{ $property }}</span>
+                        <h1>Parent other: <span dusk="parent.other">{{ $other }}</span>
+
+                        <button wire:click="incOther" dusk="parent.inc-other">inc other</button>
+
+                        <livewire:child :$property />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[BaseReactive]
+                public $property;
+
+                public $hookCallCount = 0;
+
+                public function updatedProperty($value)
+                {
+                    // Count how many times hook is called
+                    $this->hookCallCount++;
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Child property: <span dusk="child.property">{{ $property }}</span>
+                        <h1>Hook call count: <span dusk="child.hook-calls">{{ $hookCallCount }}</span>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertSeeIn('@parent.property', 1)
+            ->assertSeeIn('@child.property', 1)
+            ->assertSeeIn('@child.hook-calls', 0)
+
+            // Parent re-renders but property stays 1 -> 1, hook should NOT fire
+            ->waitForLivewire()->click('@parent.inc-other')
+            ->assertSeeIn('@parent.other', 1)
+            ->assertSeeIn('@child.property', 1)
+            ->assertSeeIn('@child.hook-calls', 0)
+
+            // Another re-render, property still 1 -> 1, hook should NOT fire
+            ->waitForLivewire()->click('@parent.inc-other')
+            ->assertSeeIn('@parent.other', 2)
+            ->assertSeeIn('@child.property', 1)
+            ->assertSeeIn('@child.hook-calls', 0)
+        ;
+    }
 }
