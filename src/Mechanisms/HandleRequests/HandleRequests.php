@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleRequests;
 
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
@@ -132,6 +133,21 @@ class HandleRequests extends Mechanism
 
         $finish = trigger('response', $responsePayload);
 
-        return $finish($responsePayload);
+        $response = $finish($responsePayload);
+
+        /**
+         * Headers have already been sent by stream
+         * we need to send the output without additional headers
+         **/
+        if (headers_sent()) {
+            return new class(json_encode($response)) extends Response {
+                public function sendHeaders(?int $statusCode = null): static
+                {
+                    return $this;
+                }
+            };
+        }
+
+        return $response;
     }
 }
