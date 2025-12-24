@@ -163,9 +163,10 @@ Each page navigation triggers three lifecycle hooks:
 
 * `livewire:navigate`
 * `livewire:navigating`
+* `livewire:navigating:swap`
 * `livewire:navigated`
 
-It's important to note that these three hooks events are dispatched on navigations of all types. This includes manual navigation using `Livewire.navigate()`, redirecting with navigation enabled, and back and forward button presses in the browser.
+It's important to note that these hooks events are dispatched on navigations of all types. This includes manual navigation using `Livewire.navigate()`, redirecting with navigation enabled, and back and forward button presses in the browser.
 
 Here's an example of registering listeners for each of these events:
 
@@ -197,6 +198,14 @@ document.addEventListener('livewire:navigating', () => {
 
     // This is a good place to mutate any HTML before the page
     // is navigated away from...
+})
+
+document.addEventListener('livewire:navigating:swap', () => {
+    // Triggered when new HTML is swapped onto the page
+    // but before new scripts are loaded...
+
+    // This is a good place to apply critical styles such as dark mode
+    // to prevent flickering...
 })
 
 document.addEventListener('livewire:navigated', () => {
