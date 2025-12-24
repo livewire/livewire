@@ -106,6 +106,8 @@ export default function (Alpine) {
 
                     !preserveScroll && restoreScrollPositionOrScrollToTop()
 
+                    fireEventForOtherLibrariesToHookInto('alpine:navigating:swap')
+
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {
                             setTimeout(() => {
