@@ -151,4 +151,72 @@ class MultiFileParser extends Parser
 
         return implode("\n", $indentedLines);
     }
+
+    public function generateClassComponentContents(string $className, string $namespace, string $viewName): array
+    {
+        $classPortion = trim($this->classPortion);
+
+        // Strip PHP tags
+        $classPortion = preg_replace('/^<\?php\s*/', '', $classPortion);
+        $classPortion = preg_replace('/\s*\?>$/', '', $classPortion);
+
+        // Extract use statements
+        $useStatements = [];
+        if (preg_match_all('/^use\s+[^;]+;/m', $classPortion, $matches)) {
+            $useStatements = $matches[0];
+        }
+
+        // Remove use statements from classPortion
+        $classPortion = preg_replace('/^use\s+[^;]+;\s*/m', '', $classPortion);
+
+        // Extract the extends clause
+        $extendsClause = 'Component';
+        if (preg_match('/new\s+class\s+extends\s+([^\s{]+)/s', $classPortion, $extendsMatch)) {
+            $extendsClause = trim($extendsMatch[1]);
+        }
+
+        // Extract the class body (everything between the braces)
+        $classBody = '';
+        if (preg_match('/new\s+class\s+extends\s+[^\s{]+\s*\{(.*)\}\s*;?\s*$/s', $classPortion, $bodyMatch)) {
+            $classBody = $bodyMatch[1];
+        }
+
+        // Build the class file
+        $classContents = "<?php\n\n";
+        $classContents .= "namespace {$namespace};\n\n";
+
+        if (! empty($useStatements)) {
+            $classContents .= implode("\n", $useStatements) . "\n\n";
+        }
+
+        $classContents .= "class {$className} extends {$extendsClause}\n{";
+        $classContents .= $classBody;
+
+        // Add render method before closing brace
+        $classContents = rtrim($classContents);
+        $classContents .= "\n\n    public function render()\n";
+        $classContents .= "    {\n";
+        $classContents .= "        return view('{$viewName}');\n";
+        $classContents .= "    }\n";
+        $classContents .= "}\n";
+
+        // Build the view file
+        $viewContents = trim($this->viewPortion);
+
+        // Include placeholder directive if present
+        if ($this->placeholderPortion) {
+            $viewContents = '@placeholder' . $this->placeholderPortion . '@endplaceholder' . "\n\n" . $viewContents;
+        }
+
+        // Include script as a script tag if present
+        if ($this->scriptPortion !== null && trim($this->scriptPortion) !== '') {
+            $indentedScript = $this->addJavaScriptIndentation(trim($this->scriptPortion));
+            $viewContents .= "\n\n<script>\n" . $indentedScript . "\n</script>";
+        }
+
+        return [
+            'class' => $classContents,
+            'view' => $viewContents,
+        ];
+    }
 }
