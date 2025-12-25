@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
-use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
@@ -20,7 +19,7 @@ class ConvertCommand extends Command
 {
     protected $name = 'livewire:convert';
 
-    protected $description = 'Convert a Livewire component between single-file and multi-file formats';
+    protected $description = 'Convert a Livewire component between SFC, MFC, and class-based formats';
 
     protected Filesystem $files;
 
@@ -260,7 +259,6 @@ class ConvertCommand extends Command
         $classPath = $mfcPath . '/' . $componentName . '.php';
         $viewPath = $mfcPath . '/' . $componentName . '.blade.php';
         $testPath = $mfcPath . '/' . $componentName . '.test.php';
-        $jsPath = $mfcPath . '/' . $componentName . '.js';
 
         if (! $this->files->exists($classPath)) {
             $this->components->error('Multi-file component class file not found.');
@@ -310,12 +308,12 @@ class ConvertCommand extends Command
 
         // Validate files exist
         if (! $this->files->exists($classPath)) {
-            $this->components->error('Class file not found: ' . $classPath);
+            $this->components->error('Class component class file not found.');
             return 1;
         }
 
         if (! $this->files->exists($viewPath)) {
-            $this->components->error('View file not found: ' . $viewPath);
+            $this->components->error('Class component view file not found.');
             return 1;
         }
 
@@ -394,12 +392,12 @@ class ConvertCommand extends Command
 
         // Validate files exist
         if (! $this->files->exists($classPath)) {
-            $this->components->error('Class file not found: ' . $classPath);
+            $this->components->error('Class component class file not found.');
             return 1;
         }
 
         if (! $this->files->exists($viewPath)) {
-            $this->components->error('View file not found: ' . $viewPath);
+            $this->components->error('Class component view file not found.');
             return 1;
         }
 
@@ -491,20 +489,21 @@ class ConvertCommand extends Command
         $className = Str::studly(array_pop($segments));
         $namespaceSegments = array_map(fn ($s) => Str::studly($s), $segments);
 
-        $baseNamespace = 'App\\Livewire';
+        $baseNamespace = config('livewire.class_namespace', 'App\\Livewire');
         $namespace = empty($namespaceSegments)
             ? $baseNamespace
             : $baseNamespace . '\\' . implode('\\', $namespaceSegments);
 
-        // Build the view name (kebab-case)
-        $viewName = 'livewire.' . str_replace('.', '.', $name);
-
-        // Generate class and view contents
-        $result = $parser->generateClassComponentContents($className, $namespace, $viewName);
-
         // Determine file paths
         $classBasePath = config('livewire.class_path', app_path('Livewire'));
         $viewBasePath = config('livewire.view_path', resource_path('views/livewire'));
+
+        // Build the view name from configured path (kebab-case)
+        $viewNamespace = $this->extractViewNamespace($viewBasePath);
+        $viewName = $viewNamespace . '.' . str_replace('.', '.', $name);
+
+        // Generate class and view contents
+        $result = $parser->generateClassComponentContents($className, $namespace, $viewName);
 
         $classSubPath = empty($namespaceSegments)
             ? ''
@@ -563,20 +562,21 @@ class ConvertCommand extends Command
         $className = Str::studly(array_pop($segments));
         $namespaceSegments = array_map(fn ($s) => Str::studly($s), $segments);
 
-        $baseNamespace = 'App\\Livewire';
+        $baseNamespace = config('livewire.class_namespace', 'App\\Livewire');
         $namespace = empty($namespaceSegments)
             ? $baseNamespace
             : $baseNamespace . '\\' . implode('\\', $namespaceSegments);
 
-        // Build the view name (kebab-case)
-        $viewName = 'livewire.' . str_replace('.', '.', $name);
-
-        // Generate class and view contents
-        $result = $parser->generateClassComponentContents($className, $namespace, $viewName);
-
         // Determine file paths
         $classBasePath = config('livewire.class_path', app_path('Livewire'));
         $viewBasePath = config('livewire.view_path', resource_path('views/livewire'));
+
+        // Build the view name from configured path (kebab-case)
+        $viewNamespace = $this->extractViewNamespace($viewBasePath);
+        $viewName = $viewNamespace . '.' . str_replace('.', '.', $name);
+
+        // Generate class and view contents
+        $result = $parser->generateClassComponentContents($className, $namespace, $viewName);
 
         $classSubPath = empty($namespaceSegments)
             ? ''
@@ -716,6 +716,21 @@ class ConvertCommand extends Command
         }
 
         return config('livewire.make_command.emoji', true);
+    }
+
+    protected function extractViewNamespace(string $viewPath): string
+    {
+        // Convert the view path to a namespace
+        // e.g., resource_path('views/livewire') => 'livewire'
+        // e.g., resource_path('views/not-livewire') => 'not-livewire'
+        $viewsPath = resource_path('views');
+
+        // Remove the base views path to get the relative path
+        $relativePath = str_replace($viewsPath . DIRECTORY_SEPARATOR, '', $viewPath);
+        $relativePath = str_replace($viewsPath . '/', '', $relativePath);
+
+        // Convert directory separators to dots for the namespace
+        return str_replace(['/', '\\'], '.', $relativePath);
     }
 
     protected function isPathWithinDirectory(string $path, string $directory): bool
