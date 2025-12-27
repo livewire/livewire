@@ -377,6 +377,8 @@ class ConvertCommand extends Command
             $sfcPath
         ));
 
+        $this->showAutoloadWarning();
+
         // Show route suggestion if --page flag was used
         if ($this->option('page')) {
             $this->showRouteSuggestion($name);
@@ -472,6 +474,8 @@ class ConvertCommand extends Command
             $mfcDirectory
         ));
 
+        $this->showAutoloadWarning();
+
         // Show route suggestion if --page flag was used
         if ($this->option('page')) {
             $this->showRouteSuggestion($name);
@@ -550,6 +554,8 @@ class ConvertCommand extends Command
             'View: ' . $viewPath,
         ]);
 
+        $this->showAutoloadWarning();
+
         return 0;
     }
 
@@ -624,6 +630,8 @@ class ConvertCommand extends Command
             'Class: ' . $classPath,
             'View: ' . $viewPath,
         ]);
+
+        $this->showAutoloadWarning();
 
         return 0;
     }
@@ -785,6 +793,16 @@ class ConvertCommand extends Command
         $this->components->bulletList([
             "Old: Route::get('/your-path', YourComponent::class)",
             "New: Route::livewire('/your-path', '{$componentName}')",
+        ]);
+    }
+
+    protected function showAutoloadWarning(): void
+    {
+        $this->newLine();
+        $this->components->warn('Important: Run `composer dump-autoload` to update the class map.');
+        $this->components->bulletList([
+            'Class-based components rely on Composer\'s autoloader for discovery.',
+            'Failing to update the class map may cause component resolution issues.',
         ]);
     }
 
