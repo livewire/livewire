@@ -54,6 +54,10 @@ class GenerateSignedUploadUrl
             $uri = invade($storage)->replaceBaseUrl($uri, $url);
         }
 
+        // Register the S3 path in session for validation during _finishUpload
+        // (S3 uploads bypass FileUploadController, so we register here instead)
+        TemporaryUploadedFile::registerPathsInSession([$fileHashName]);
+
         return [
             'path' => $fileHashName,
             'url' => (string) $uri,

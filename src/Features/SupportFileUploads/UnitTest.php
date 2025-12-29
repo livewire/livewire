@@ -884,6 +884,83 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals($file->getClientOriginalName(), $temporaryFile->getClientOriginalName());
     }
+
+    public function test_finish_upload_rejects_paths_not_uploaded_in_current_session()
+    {
+        Livewire::test(FileUploadComponent::class)
+            ->call('_finishUpload', 'photo', ['fake-path-never-uploaded.jpg'], false)
+            ->assertStatus(403);
+    }
+
+    public function test_finish_upload_rejects_paths_from_different_session()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        // Upload a file in the first component (registers path in session)
+        $component1 = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file);
+
+        $uploadedPath = $component1->viewData('photo')->getFilename();
+
+        // Try to claim the file from a "different session"
+        Livewire::test(FileUploadComponent::class)
+            ->call('_finishUpload', 'photo', [$uploadedPath], false)
+            ->assertStatus(403);
+    }
+
+    public function test_finish_upload_rejects_replay_of_already_claimed_path()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        // Upload and claim a file
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file);
+
+        $uploadedPath = $component->viewData('photo')->getFilename();
+
+        // Try to claim the same path again (replay attack) - should fail since path was removed
+        $component->call('_finishUpload', 'photo', [$uploadedPath], false)
+            ->assertStatus(403);
+    }
+
+    public function test_finish_upload_works_for_legitimate_upload_flow()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        // This should work - normal upload flow
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('upload', 'uploaded-avatar.png');
+
+        Storage::disk('avatars')->assertExists('uploaded-avatar.png');
+    }
+
+    public function test_finish_upload_with_multiple_files_rejects_if_any_path_invalid()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        // Upload one file legitimately
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file);
+
+        $legitimatePath = $component->viewData('photo')->getFilename();
+
+        // Re-register only the legitimate path (simulating partial knowledge)
+        TemporaryUploadedFile::registerPathsInSession([$legitimatePath]);
+
+        // Try to finish upload with one valid and one invalid path - should fail
+        Livewire::test(FileUploadComponent::class)
+            ->call('_finishUpload', 'photos', [$legitimatePath, 'fake-path.jpg'], true)
+            ->assertStatus(403);
+    }
 }
 
 class DummyMiddleware
