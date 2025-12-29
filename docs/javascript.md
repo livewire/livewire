@@ -123,240 +123,198 @@ When this component loads, Livewire will make sure any `@assets` are loaded on t
 
 ## Interceptors
 
-> [!info] Looking for the old `commit` and `request` hooks?
-> These have been replaced by the more powerful interceptor system. See the [upgrade guide](/docs/4.x/upgrading#javascript-hook-changes) for migration details.
-
-Livewire's interceptor system provides powerful hooks into the request lifecycle, allowing you to intercept and manipulate network requests at various stages.
-
-The interceptor system is organized into multiple layers:
-- **Component interceptors** - Scope interceptors to specific components (great for component-level loading states)
-- **Message interceptors** - Hook into component state updates before they're bundled into requests
-- **Request interceptors** - Hook into the actual HTTP requests to the server
-
-### Component interceptors
-
-Component interceptors allow you to register interceptors that only apply to specific component instances. This is useful for component-specific behaviors without affecting the global scope.
-
-```blade
-<script>
-    // This interceptor only affects this component instance
-    $wire.intercept(({ onSend, onSuccess }) => {
-        onSend(() => {
-            $wire.$el.style.opacity = '0.5'
-        })
-
-        onSuccess(() => {
-            $wire.$el.style.opacity = '1'
-        })
-    })
-</script>
-```
-
-You can also scope interceptors to specific actions by passing the method name as the first argument:
-
-```blade
-<script>
-    // This interceptor only runs when $refresh is called
-    $wire.intercept('$refresh', ({ onSend, onSuccess }) => {
-        onSend(() => {
-            // Custom loading state for refresh actions
-            $wire.$el.classList.add('refreshing')
-        })
-
-        onSuccess(() => {
-            $wire.$el.classList.remove('refreshing')
-        })
-    })
-
-    // This interceptor only runs when the save method is called
-    $wire.intercept('save', ({ onSuccess, onError }) => {
-        onSuccess(() => {
-            // Show success message for save actions
-            showNotification('Saved successfully!')
-        })
-
-        onError(() => {
-            // Show error message for save actions
-            showNotification('Save failed!', 'error')
-        })
-    })
-</script>
-```
-
-This is particularly useful when you want different behaviors for different actions within the same component.
-
-### Message interceptors
-
-Message interceptors allow you to hook into the lifecycle of individual component updates before they are sent to the server. A "message" represents a single component's state changes and method calls.
+Intercept Livewire requests at three levels: **action** (most granular), **message** (per-component), and **request** (HTTP level).
 
 ```js
-Livewire.interceptMessage(({ message, component, onSend, onCancel, onFailure, onError, onSuccess, onFinish, cancel }) => {
-    // This runs when a component message is created, but before
-    // it's bundled into a request and sent to the server
+// Action interceptors - fire for each action call
+$wire.intercept(callback)                     // All actions on this component
+$wire.intercept('save', callback)             // Only 'save' action
+Livewire.interceptAction(callback)            // Global (all components)
 
-    // Cancel the message if needed
-    if (shouldCancel) {
-        cancel()
+// Message interceptors - fire for each component message
+$wire.interceptMessage(callback)              // Messages from this component
+$wire.interceptMessage('save', callback)      // Only when message contains 'save'
+Livewire.interceptMessage(callback)           // Global (all components)
 
-        return
-    }
+// Request interceptors - fire for each HTTP request
+$wire.interceptRequest(callback)              // Requests involving this component
+$wire.interceptRequest('save', callback)      // Only when request contains 'save'
+Livewire.interceptRequest(callback)           // Global (all requests)
+```
 
-    onSend(({ payload }) => {
-        // Runs immediately after the request containing this message is sent
+All interceptors return an unsubscribe function:
+
+```js
+let unsubscribe = $wire.intercept(callback)
+unsubscribe() // Remove the interceptor
+```
+
+### Action interceptors
+
+Action interceptors are the most granular. They fire for each method call on a component.
+
+```js
+$wire.intercept(({ action, onSend, onCancel, onSuccess, onError, onFailure, onFinish }) => {
+    // action.name        - Method name ('save', '$refresh', etc.)
+    // action.params      - Method parameters
+    // action.component   - Component instance
+    // action.cancel()    - Cancel this action
+
+    onSend(({ call }) => {
+        // call: { method, params, metadata }
     })
 
-    onCancel(() => {
-        // Runs if the message is cancelled for any reason
+    onCancel(() => {})
+
+    onSuccess((result) => {
+        // result: Return value from PHP method
+    })
+
+    onError(({ response, body, preventDefault }) => {
+        preventDefault() // Prevent error modal
     })
 
     onFailure(({ error }) => {
-        // Runs when there's a network-level error
-    })
-
-    onError(({ response, responseBody, preventDefault }) => {
-        // Runs when the server returns an error status (400, 500, etc.)
-
-        if (response.status === 403) {
-            // Handle authorization errors specially
-            preventDefault() // Prevent Livewire's default error handling
-
-            showCustomAuthDialog()
-        }
-    })
-
-    onSuccess(({ payload, onSync, onMorph, onRender }) => {
-        // Runs after a successful response, before processing
-
-        onSync(() => {
-            // Runs after server data is merged into component state
-        })
-
-        onMorph(() => {
-            // Runs after HTML is morphed into the DOM
-        })
-
-        onRender(() => {
-            // Runs after rendering is complete (after a browser tick)
-        })
+        // error: Network error
     })
 
     onFinish(() => {
-        // Always runs when message processing is complete
-        // (whether successful, failed, or cancelled)
+        // Always runs (success, error, failure, or cancel)
     })
 })
 ```
 
-#### Real-world example: Loading states
+### Message interceptors
 
-Here's how you might implement custom loading indicators for specific components:
+Message interceptors fire for each component update. A message contains one or more actions.
 
 ```js
-Livewire.interceptMessage(({ component, onSend, onFinish }) => {
-    onSend(() => {
-        component.el.classList.add('is-loading')
+$wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onError, onFailure, onStream, onFinish }) => {
+    // message.component  - Component instance
+    // message.actions    - Set of actions in this message
+    // cancel()           - Cancel this message
+
+    onSend(({ payload }) => {
+        // payload: { snapshot, updates, calls }
     })
 
-    onFinish(() => {
-        component.el.classList.remove('is-loading')
+    onCancel(() => {})
+
+    onSuccess(({ payload, onSync, onEffect, onMorph, onRender }) => {
+        // payload: { snapshot, effects }
+
+        onSync(() => {})    // After state synced
+        onEffect(() => {})  // After effects processed
+        onMorph(() => {})   // After DOM morphed
+        onRender(() => {})  // After render complete
     })
+
+    onError(({ response, body, preventDefault }) => {
+        preventDefault() // Prevent error modal
+    })
+
+    onFailure(({ error }) => {})
+
+    onStream(({ json }) => {
+        // json: Parsed stream chunk
+    })
+
+    onFinish(() => {})
 })
 ```
 
 ### Request interceptors
 
-Request interceptors operate at the HTTP level, allowing you to intercept the actual network requests that may contain multiple component messages. This is useful for implementing features like request queuing, retry logic, or global error handling.
+Request interceptors fire for each HTTP request. A request may contain messages from multiple components.
 
 ```js
-Livewire.interceptRequest(({ request, onSend, onAbort, onFailure, onResponse, onParsed, onError, onRedirect, onDump, onSuccess, abort }) => {
-    // Runs when a request is created but before it's sent
+$wire.interceptRequest(({ request, onSend, onCancel, onSuccess, onError, onFailure, onResponse, onParsed, onStream, onRedirect, onDump, onFinish }) => {
+    // request.messages   - Set of messages in this request
+    // request.cancel()   - Cancel this request
 
-    // Abort the request if needed
-    if (shouldAbort) {
-        abort()
+    onSend(({ responsePromise }) => {})
 
-        return
-    }
-
-    onSend(({ responsePromise }) => {
-        // Runs immediately after fetch() is called
-    })
-
-    onAbort(() => {
-        // Runs if the request is aborted
-    })
-
-    onFailure(({ error }) => {
-        // Runs on network-level failures
-    })
+    onCancel(() => {})
 
     onResponse(({ response }) => {
-        // Runs when any response is received
+        // response: Fetch Response (before body read)
     })
 
-    onParsed(({ response, responseBody }) => {
-        // Runs after the response body is parsed
+    onParsed(({ response, body }) => {
+        // body: Response body as string
     })
 
-    onError(({ response, responseBody, preventDefault }) => {
-        // Runs on error status codes (400, 500, etc.)
+    onSuccess(({ response, body, json }) => {})
 
-        if (response.status === 419) {
-            // Custom session expiration handling
-            preventDefault()
-
-            handleSessionExpired()
-        }
+    onError(({ response, body, preventDefault }) => {
+        preventDefault() // Prevent error modal
     })
+
+    onFailure(({ error }) => {})
+
+    onStream(({ response }) => {})
 
     onRedirect(({ url, preventDefault }) => {
-        // Runs when the response triggers a redirect
-
-        // Optionally prevent the redirect
-        if (shouldPreventRedirect) {
-            preventDefault()
-        }
+        preventDefault() // Prevent redirect
     })
 
-    onDump(({ content, preventDefault }) => {
-        // Runs when the response contains debug dump content
-
-        // Optionally prevent the dump modal
-        preventDefault()
-
-        showCustomDumpViewer(content)
+    onDump(({ html, preventDefault }) => {
+        preventDefault() // Prevent dump modal
     })
 
-    onSuccess(({ response, responseBody, responseJson }) => {
-        // Runs on successful responses before processing
-    })
+    onFinish(() => {})
 })
 ```
 
-#### Real-world example: Global error handling
+### Examples
 
-Implement custom error handling for specific status codes:
+**Loading state for a component:**
+
+```blade
+<script>
+    $wire.intercept(({ onSend, onFinish }) => {
+        onSend(() => $wire.$el.classList.add('opacity-50'))
+        onFinish(() => $wire.$el.classList.remove('opacity-50'))
+    })
+</script>
+```
+
+**Confirm before delete:**
+
+```blade
+<script>
+    $wire.intercept('delete', ({ action }) => {
+        if (!confirm('Are you sure?')) {
+            action.cancel()
+        }
+    })
+</script>
+```
+
+**Global session expiration handling:**
 
 ```js
 Livewire.interceptRequest(({ onError }) => {
     onError(({ response, preventDefault }) => {
         if (response.status === 419) {
-            // Session expired
             preventDefault()
-
-            if (confirm('Your session has expired. Refresh the page?')) {
+            if (confirm('Session expired. Refresh?')) {
                 window.location.reload()
             }
         }
-
-        if (response.status === 403) {
-            // Forbidden
-            preventDefault()
-
-            alert('You do not have permission to perform this action')
-        }
     })
 })
+```
+
+**Action-specific success notification:**
+
+```blade
+<script>
+    $wire.intercept('save', ({ onSuccess, onError }) => {
+        onSuccess(() => showToast('Saved!'))
+        onError(() => showToast('Failed to save', 'error'))
+    })
+</script>
 ```
 
 ## Global Livewire events
@@ -649,40 +607,6 @@ You can sync component state with localStorage using `$watch`:
 </script>
 ```
 
-### Custom loading indicators
-
-Use interceptors to add custom loading states specific to your design:
-
-```blade
-<script>
-    $wire.intercept(({ onSend, onSuccess }) => {
-        onSend(() => {
-            $wire.$el.classList.add('opacity-50', 'pointer-events-none');
-            $wire.$el.querySelector('.spinner')?.classList.remove('hidden');
-        });
-
-        onSuccess(() => {
-            $wire.$el.classList.remove('opacity-50', 'pointer-events-none');
-            $wire.$el.querySelector('.spinner')?.classList.add('hidden');
-        });
-    });
-</script>
-```
-
-### Confirming destructive actions
-
-Use interceptors to add confirmation dialogs for specific actions:
-
-```blade
-<script>
-    $wire.intercept('delete', ({ cancel }) => {
-        if (!confirm('Are you sure you want to delete this?')) {
-            cancel();
-        }
-    });
-</script>
-```
-
 ## Best practices
 
 ### Component scripts vs global scripts
@@ -883,10 +807,23 @@ let $wire = {
     // Remove an upload after it's been temporarily uploaded but not saved...
     $removeUpload(name, tmpFilename, finish, error) { ... },
 
-    // Register an interceptor for this component instance
-    // Usage: $wire.intercept(({ onSend, onSuccess }) => { ... })
-    // Or scope to specific action: $wire.intercept('save', ({ onSuccess }) => { ... })
-    intercept(methodOrCallback, callback) { ... },
+    // Register an action interceptor for this component instance
+    // Usage: $wire.intercept(({ action, onSend, onCancel, onSuccess, onError, onFailure, onFinish }) => { ... })
+    // Or scope to specific action: $wire.intercept('save', ({ action, onSuccess }) => { ... })
+    intercept(actionOrCallback, callback) { ... },
+
+    // Alias for intercept
+    interceptAction(actionOrCallback, callback) { ... },
+
+    // Register a message interceptor for this component instance
+    // Usage: $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onError, onFailure, onFinish }) => { ... })
+    // Or scope to specific action: $wire.interceptMessage('save', callback)
+    interceptMessage(actionOrCallback, callback) { ... },
+
+    // Register a request interceptor for this component instance
+    // Usage: $wire.interceptRequest(({ request, onSend, onCancel, onSuccess, onError, onFailure, onFinish }) => { ... })
+    // Or scope to specific action: $wire.interceptRequest('save', callback)
+    interceptRequest(actionOrCallback, callback) { ... },
 
     // Retrieve the underlying "component" object...
     __instance() { ... },

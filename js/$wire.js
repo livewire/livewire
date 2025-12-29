@@ -5,7 +5,7 @@ import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
-import { fireAction, intercept } from '@/request'
+import { fireAction, interceptComponentAction, interceptComponentMessage, interceptComponentRequest } from '@/request'
 import { getErrorsObject } from '@/features/supportErrors'
 import { findRefEl } from '@/features/supportRefs'
 import { checkDirty } from './directives/wire-dirty'
@@ -42,6 +42,9 @@ let aliases = {
     'entangle': '$entangle',
     'dispatch': '$dispatch',
     'intercept': '$intercept',
+    'interceptAction': '$interceptAction',
+    'interceptMessage': '$interceptMessage',
+    'interceptRequest': '$interceptRequest',
     'dispatchTo': '$dispatchTo',
     'dispatchSelf': '$dispatchSelf',
     'removeUpload': '$removeUpload',
@@ -175,7 +178,7 @@ wireProperty('$refs', (component) => {
 wireProperty('$dirty', (component) => (property) => {
     let reactive = Alpine.reactive({ dirty: false })
 
-    intercept(component, ({ onFinish }) => {
+    interceptComponentMessage(component, ({ onFinish }) => {
         onFinish(() => {
             queueMicrotask(() => {
                 reactive.dirty = checkDirty(component, property)
@@ -190,25 +193,20 @@ wireProperty('$dirty', (component) => (property) => {
     return reactive.dirty
 })
 
-wireProperty('$intercept', (component) => (method, callback = null) => {
-    if (callback === null && typeof method === 'function') {
-        callback = method
+wireProperty('$intercept', (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentAction(component, actionNameOrCallback, maybeCallback)
+})
 
-        return intercept(component, callback)
-    }
+wireProperty('$interceptAction', (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentAction(component, actionNameOrCallback, maybeCallback)
+})
 
-    return intercept(component, (options) => {
-        let action = options.message.getActions().find(action => action.name === method)
+wireProperty('$interceptMessage', (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentMessage(component, actionNameOrCallback, maybeCallback)
+})
 
-        if (action) {
-            let el = action?.origin?.el
-
-            callback({
-                ...options,
-                el,
-            })
-        }
-    })
+wireProperty('$interceptRequest', (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentRequest(component, actionNameOrCallback, maybeCallback)
 })
 
 wireProperty('$errors', (component) => getErrorsObject(component))
