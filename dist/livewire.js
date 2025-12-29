@@ -5755,6 +5755,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "hook": "$hook",
     "watch": "$watch",
     "dirty": "$dirty",
+    "effect": "$effect",
     "commit": "$commit",
     "errors": "$errors",
     "island": "$island",
@@ -5907,6 +5908,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     let unwatch = module_default.watch(getter, callback);
     component.addCleanup(unwatch);
+  });
+  wireProperty("$effect", (component) => (callback) => {
+    let effect3 = module_default.effect(callback);
+    component.addCleanup(effect3);
+    return effect3;
   });
   wireProperty("$refresh", (component) => async () => {
     return fireAction(component, "$refresh");

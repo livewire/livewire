@@ -11503,6 +11503,7 @@ var aliases = {
   "hook": "$hook",
   "watch": "$watch",
   "dirty": "$dirty",
+  "effect": "$effect",
   "commit": "$commit",
   "errors": "$errors",
   "island": "$island",
@@ -11655,6 +11656,11 @@ wireProperty("$watch", (component) => (path, callback) => {
   };
   let unwatch = import_alpinejs2.default.watch(getter, callback);
   component.addCleanup(unwatch);
+});
+wireProperty("$effect", (component) => (callback) => {
+  let effect = import_alpinejs2.default.effect(callback);
+  component.addCleanup(effect);
+  return effect;
 });
 wireProperty("$refresh", (component) => async () => {
   return fireAction(component, "$refresh");
