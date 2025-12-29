@@ -2118,7 +2118,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       initInterceptors2.push(callback);
     }
     var markerDispenser = 1;
-    function initTree(el, walker = walk, intercept2 = () => {
+    function initTree(el, walker = walk, intercept = () => {
     }) {
       if (findClosest(el, (i) => i._x_ignore))
         return;
@@ -2126,7 +2126,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         walker(el, (el2, skip) => {
           if (el2._x_marker)
             return;
-          intercept2(el2, skip);
+          intercept(el2, skip);
           initInterceptors2.forEach((i) => i(el2, skip));
           directives(el2, el2.attributes).forEach((handle) => handle());
           if (!el2._x_ignore)
@@ -10030,6 +10030,9 @@ var MessageRequest = class {
   invokeOnSuccess({ response, body, json }) {
     this.interceptors.forEach((interceptor) => interceptor.onSuccess({ response, body, json }));
   }
+  invokeOnFinish() {
+    this.interceptors.forEach((interceptor) => interceptor.onFinish());
+  }
 };
 var PageRequest = class {
   controller = new AbortController();
@@ -10113,6 +10116,8 @@ var RequestInterceptor = class {
   };
   onSuccess = () => {
   };
+  onFinish = () => {
+  };
   constructor(request, callback) {
     this.request = request;
     this.callback = callback;
@@ -10127,7 +10132,8 @@ var RequestInterceptor = class {
       onStream: (callback2) => this.onStream = callback2,
       onRedirect: (callback2) => this.onRedirect = callback2,
       onDump: (callback2) => this.onDump = callback2,
-      onSuccess: (callback2) => this.onSuccess = callback2
+      onSuccess: (callback2) => this.onSuccess = callback2,
+      onFinish: (callback2) => this.onFinish = callback2
     });
   }
   init() {
@@ -10430,7 +10436,7 @@ var Message = class {
       body,
       preventDefault
     }));
-    Array.from(this.actions).forEach((action) => action.invokeOnError({ response, body }));
+    Array.from(this.actions).forEach((action) => action.invokeOnError({ response, body, preventDefault }));
     let json = null;
     try {
       json = JSON.parse(body);
@@ -10510,6 +10516,7 @@ var Message = class {
 var Action = class {
   squashedActions = /* @__PURE__ */ new Set();
   onSendCallbacks = [];
+  onCancelCallbacks = [];
   onSuccessCallbacks = [];
   onErrorCallbacks = [];
   onFailureCallbacks = [];
@@ -10533,6 +10540,7 @@ var Action = class {
     if (this.cancelled)
       return;
     this.cancelled = true;
+    this.invokeOnCancel();
     this.invokeOnFinish();
     this.rejectPromise({ status: null, body: null, json: null, errors: null });
     this.squashedActions.forEach((action) => action.cancel());
@@ -10575,6 +10583,7 @@ var Action = class {
     callback({
       action: this,
       onSend: (cb) => this.onSendCallbacks.push(cb),
+      onCancel: (cb) => this.onCancelCallbacks.push(cb),
       onSuccess: (cb) => this.onSuccessCallbacks.push(cb),
       onError: (cb) => this.onErrorCallbacks.push(cb),
       onFailure: (cb) => this.onFailureCallbacks.push(cb),
@@ -10585,13 +10594,17 @@ var Action = class {
     this.onSendCallbacks.forEach((cb) => cb({ call }));
     this.squashedActions.forEach((action) => action.invokeOnSend({ call }));
   }
+  invokeOnCancel() {
+    this.onCancelCallbacks.forEach((cb) => cb());
+    this.squashedActions.forEach((action) => action.invokeOnCancel());
+  }
   invokeOnSuccess(result) {
     this.onSuccessCallbacks.forEach((cb) => cb(result));
     this.squashedActions.forEach((action) => action.invokeOnSuccess(result));
   }
-  invokeOnError({ response, body }) {
-    this.onErrorCallbacks.forEach((cb) => cb({ response, body }));
-    this.squashedActions.forEach((action) => action.invokeOnError({ response, body }));
+  invokeOnError({ response, body, preventDefault }) {
+    this.onErrorCallbacks.forEach((cb) => cb({ response, body, preventDefault }));
+    this.squashedActions.forEach((action) => action.invokeOnError({ response, body, preventDefault }));
   }
   invokeOnFailure({ error: error2 }) {
     this.onFailureCallbacks.forEach((cb) => cb({ error: error2 }));
@@ -10725,19 +10738,10 @@ function setNextActionMetadata(metadata) {
 function setNextActionInterceptor(callback) {
   outstandingActionInterceptors.push(callback);
 }
-function intercept(component, callback) {
-  return interceptors.addInterceptor(component, callback);
-}
 function interceptAction(callback) {
   actionInterceptors.push(callback);
   return () => {
     actionInterceptors.splice(actionInterceptors.indexOf(callback), 1);
-  };
-}
-function interceptPartition(callback) {
-  partitionInterceptors.push(callback);
-  return () => {
-    partitionInterceptors.splice(partitionInterceptors.indexOf(callback), 1);
   };
 }
 function interceptMessage(callback) {
@@ -10745,6 +10749,52 @@ function interceptMessage(callback) {
 }
 function interceptRequest(callback) {
   return interceptors.addRequestInterceptor(callback);
+}
+function interceptPartition(callback) {
+  partitionInterceptors.push(callback);
+  return () => {
+    partitionInterceptors.splice(partitionInterceptors.indexOf(callback), 1);
+  };
+}
+function interceptComponentAction(component, actionNameOrCallback, maybeCallback) {
+  let actionName = typeof actionNameOrCallback === "string" ? actionNameOrCallback : null;
+  let callback = actionName ? maybeCallback : actionNameOrCallback;
+  return interceptAction(({ action, ...rest }) => {
+    if (action.component !== component)
+      return;
+    if (actionName && action.name !== actionName)
+      return;
+    callback({ action, ...rest });
+  });
+}
+function interceptComponentMessage(component, actionNameOrCallback, maybeCallback) {
+  let actionName = typeof actionNameOrCallback === "string" ? actionNameOrCallback : null;
+  let callback = actionName ? maybeCallback : actionNameOrCallback;
+  return interceptors.addInterceptor(component, ({ message, ...rest }) => {
+    if (actionName) {
+      let hasAction = Array.from(message.actions).some((a) => a.name === actionName);
+      if (!hasAction)
+        return;
+    }
+    callback({ message, ...rest });
+  });
+}
+function interceptComponentRequest(component, actionNameOrCallback, maybeCallback) {
+  let actionName = typeof actionNameOrCallback === "string" ? actionNameOrCallback : null;
+  let callback = actionName ? maybeCallback : actionNameOrCallback;
+  return interceptRequest(({ request, ...rest }) => {
+    let matchingMessages = Array.from(request.messages).filter((m) => {
+      if (m.component !== component)
+        return false;
+      if (actionName) {
+        return Array.from(m.actions).some((a) => a.name === actionName);
+      }
+      return true;
+    });
+    if (matchingMessages.length === 0)
+      return;
+    callback({ request, ...rest });
+  });
 }
 interceptMessage(({ message, onFinish }) => {
   messageBus.addActiveMessage(message);
@@ -10761,6 +10811,7 @@ function fireAction(component, method, params = [], metadata = {}) {
     callback({
       action,
       onSend: (cb) => action.onSendCallbacks.push(cb),
+      onCancel: (cb) => action.onCancelCallbacks.push(cb),
       onSuccess: (cb) => action.onSuccessCallbacks.push(cb),
       onError: (cb) => action.onErrorCallbacks.push(cb),
       onFailure: (cb) => action.onFailureCallbacks.push(cb),
@@ -10898,6 +10949,9 @@ function sendMessages() {
       failure: ({ error: error2 }) => {
         request.invokeOnFailure({ error: error2 });
       },
+      finish: () => {
+        request.invokeOnFinish();
+      },
       response: ({ response }) => {
         request.invokeOnResponse({ response });
       },
@@ -11005,6 +11059,7 @@ async function sendRequest(request, handlers) {
     if (request.isCancelled())
       return;
     handlers.failure({ error: e });
+    handlers.finish();
     return;
   }
   handlers.response({ response });
@@ -11019,6 +11074,7 @@ async function sendRequest(request, handlers) {
   handlers.parsed({ response, responseBody });
   if (!response.ok) {
     handlers.error({ response, responseBody });
+    handlers.finish();
     return;
   }
   if (response.redirected) {
@@ -11031,6 +11087,7 @@ async function sendRequest(request, handlers) {
   }
   let responseJson = JSON.parse(responseBody);
   handlers.success({ response, responseBody, responseJson });
+  handlers.finish();
 }
 async function interceptStreamAndReturnFinalResponse(response, callback) {
   let reader = response.body.getReader();
@@ -11453,6 +11510,9 @@ var aliases = {
   "entangle": "$entangle",
   "dispatch": "$dispatch",
   "intercept": "$intercept",
+  "interceptAction": "$interceptAction",
+  "interceptMessage": "$interceptMessage",
+  "interceptRequest": "$interceptRequest",
   "dispatchTo": "$dispatchTo",
   "dispatchSelf": "$dispatchSelf",
   "removeUpload": "$removeUpload",
@@ -11550,7 +11610,7 @@ wireProperty("$refs", (component) => {
 });
 wireProperty("$dirty", (component) => (property) => {
   let reactive = import_alpinejs2.default.reactive({ dirty: false });
-  intercept(component, ({ onFinish }) => {
+  interceptComponentMessage(component, ({ onFinish }) => {
     onFinish(() => {
       queueMicrotask(() => {
         reactive.dirty = checkDirty(component, property);
@@ -11562,21 +11622,17 @@ wireProperty("$dirty", (component) => (property) => {
   });
   return reactive.dirty;
 });
-wireProperty("$intercept", (component) => (method, callback = null) => {
-  if (callback === null && typeof method === "function") {
-    callback = method;
-    return intercept(component, callback);
-  }
-  return intercept(component, (options) => {
-    let action = options.message.getActions().find((action2) => action2.name === method);
-    if (action) {
-      let el = action?.origin?.el;
-      callback({
-        ...options,
-        el
-      });
-    }
-  });
+wireProperty("$intercept", (component) => (actionNameOrCallback, maybeCallback) => {
+  return interceptComponentAction(component, actionNameOrCallback, maybeCallback);
+});
+wireProperty("$interceptAction", (component) => (actionNameOrCallback, maybeCallback) => {
+  return interceptComponentAction(component, actionNameOrCallback, maybeCallback);
+});
+wireProperty("$interceptMessage", (component) => (actionNameOrCallback, maybeCallback) => {
+  return interceptComponentMessage(component, actionNameOrCallback, maybeCallback);
+});
+wireProperty("$interceptRequest", (component) => (actionNameOrCallback, maybeCallback) => {
+  return interceptComponentRequest(component, actionNameOrCallback, maybeCallback);
 });
 wireProperty("$errors", (component) => getErrorsObject(component));
 wireProperty("$call", (component) => async (method, ...params) => {

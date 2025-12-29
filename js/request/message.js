@@ -161,7 +161,7 @@ export default class Message {
         }))
 
         // Invoke action-level onError callbacks
-        Array.from(this.actions).forEach(action => action.invokeOnError({ response, body }))
+        Array.from(this.actions).forEach(action => action.invokeOnError({ response, body, preventDefault }))
 
         // Try to parse body as JSON for the rejection payload
         let json = null
