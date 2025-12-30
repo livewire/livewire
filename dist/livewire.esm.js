@@ -10677,6 +10677,36 @@ function dirtyTargets(el) {
   return targets;
 }
 
+// js/features/supportJsModules.js
+var pendingComponentAssets = /* @__PURE__ */ new WeakMap();
+on("effect", ({ component, effects }) => {
+  let scriptModuleHash = effects.scriptModule;
+  if (scriptModuleHash) {
+    let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+    let path = `${getUriPrefix()}/js/${encodedName}.js?v=${scriptModuleHash}`;
+    pendingComponentAssets.set(component, Alpine.reactive({
+      loading: true,
+      afterLoaded: []
+    }));
+    import(path).then((module) => {
+      module.run.call(component.$wire, component.$wire, component.$wire.js);
+      pendingComponentAssets.get(component).loading = false;
+      pendingComponentAssets.get(component).afterLoaded.forEach((callback) => callback());
+      pendingComponentAssets.delete(component);
+    });
+  }
+});
+function assetIsPendingFor(component) {
+  return pendingComponentAssets.has(component) && pendingComponentAssets.get(component).loading;
+}
+function runAfterAssetIsLoadedFor(component, callback) {
+  if (assetIsPendingFor(component)) {
+    pendingComponentAssets.get(component).afterLoaded.push(() => callback());
+  } else {
+    callback();
+  }
+}
+
 // js/$wire.js
 var properties = {};
 var fallback;
@@ -10782,6 +10812,21 @@ wireProperty("$js", (component) => {
     set(target, property, value) {
       component.addJsAction(property, value);
       return true;
+    },
+    get(target, property) {
+      if (assetIsPendingFor(component)) {
+        let resolver = null;
+        let promise = new Promise((resolve) => {
+          resolver = resolve;
+        });
+        return (...params) => {
+          runAfterAssetIsLoadedFor(component, () => {
+            resolver(component.getJsAction(property)(...params));
+          });
+          return promise;
+        };
+      }
+      return target[property];
     }
   });
 });
@@ -13604,18 +13649,6 @@ import_alpinejs15.default.interceptInit((el) => {
         }
       });
     }
-  }
-});
-
-// js/features/supportJsModules.js
-on("effect", ({ component, effects }) => {
-  let scriptModuleHash = effects.scriptModule;
-  if (scriptModuleHash) {
-    let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
-    let path = `${getUriPrefix()}/js/${encodedName}.js?v=${scriptModuleHash}`;
-    import(path).then((module) => {
-      module.run.call(component.$wire, component.$wire, component.$wire.js);
-    });
   }
 });
 

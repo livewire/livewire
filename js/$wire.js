@@ -9,6 +9,7 @@ import { fireAction, interceptComponentAction, interceptComponentMessage, interc
 import { getErrorsObject } from '@/features/supportErrors'
 import { findRefEl } from '@/features/supportRefs'
 import { checkDirty } from './directives/wire-dirty'
+import { assetIsPendingFor, runAfterAssetIsLoadedFor } from './features/supportJsModules'
 
 let properties = {}
 let fallback
@@ -144,6 +145,30 @@ wireProperty('$js', (component) => {
             component.addJsAction(property, value)
 
             return true
+        },
+        get(target, property) {
+            // Scripts in view-based components are imported dynamically,
+            // which means they run asynchronously. This causes issues with
+            // things like wire:text="$js.foo()" not being available on page load.
+            // To patch this, we return a promise that resolves the $js action
+            // after the script is fully imported and executed...
+            if (assetIsPendingFor(component)) {
+                let resolver = null
+
+                let promise = new Promise((resolve) => {
+                    resolver = resolve
+                })
+
+                return (...params) => {
+                    runAfterAssetIsLoadedFor(component, () => {
+                        resolver(component.getJsAction(property)(...params))
+                    })
+
+                    return promise
+                }
+            }
+
+            return target[property]
         }
     })
 })
