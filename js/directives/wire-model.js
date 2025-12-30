@@ -126,10 +126,12 @@ function componentIsMissingProperty(component, property) {
 
         if (! parent) return true
 
-        return componentIsMissingProperty(parent, property.split('$parent.')[1])
+        return componentIsMissingProperty(parent, property.slice(7).replace(/^\./, ''))
     }
 
-    let baseProperty = property.split('.')[0]
+    // Extract base property, handling both "foo.bar" and "['foo'].bar"
+    let match = property.match(/^\[['"]?([^\]'"]+)['"]?\]/) || property.match(/^([^.\[]+)/)
+    let baseProperty = match[1]
 
     return ! Object.keys(component.canonical).includes(baseProperty)
 }
