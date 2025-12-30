@@ -9406,17 +9406,22 @@ function isPrimitive(subject) {
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
+function parsePathSegments(path) {
+  if (path === "")
+    return [];
+  return path.replace(/\[(['"]?)(.+?)\1\]/g, ".$2").replace(/^\./, "").split(".");
+}
 function dataGet(object, key) {
   if (key === "")
     return object;
-  return key.split(".").reduce((carry, i) => {
+  return parsePathSegments(key).reduce((carry, i) => {
     return carry?.[i];
   }, object);
 }
 function dataSet(object, key, value) {
-  let segments = key.split(".");
+  let segments = parsePathSegments(key);
   if (segments.length === 1) {
-    return object[key] = value;
+    return object[segments[0]] = value;
   }
   let firstSegment = segments.shift();
   let restOfSegments = segments.join(".");
@@ -13515,12 +13520,7 @@ function evaluateExpression(el, expression, options = {}) {
 function evaluateActionExpression(el, expression, options = {}) {
   if (!expression || expression.trim() === "")
     return;
-  let negated = false;
-  if (expression.startsWith("!")) {
-    negated = true;
-    expression = expression.slice(1).trim();
-  }
-  let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`;
+  let contextualExpression = contextualizeExpression(expression);
   try {
     let result = import_alpinejs6.default.evaluateRaw(el, contextualExpression, options);
     if (result instanceof Promise && result._livewireAction) {
@@ -13534,6 +13534,20 @@ function evaluateActionExpression(el, expression, options = {}) {
 ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     console.error(error2);
   }
+}
+function contextualizeExpression(expression) {
+  let SKIP = ["true", "false", "null", "undefined", "this", "$wire", "$js", "$el", "$event"];
+  let strings = [];
+  let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (m) => {
+    strings.push(m);
+    return `___${strings.length - 1}___`;
+  });
+  result = result.replace(/(?<![.\w$])([a-zA-Z_]\w*)/g, (m, ident) => {
+    if (SKIP.includes(ident) || /^___\d+___$/.test(ident))
+      return ident;
+    return "$wire." + ident;
+  });
+  return result.replace(/___(\d+)___/g, (m, i) => strings[i]);
 }
 
 // js/features/supportScriptsAndAssets.js
@@ -14875,9 +14889,10 @@ function componentIsMissingProperty(component, property) {
     let parent = findComponentByEl(component.el.parentElement, false);
     if (!parent)
       return true;
-    return componentIsMissingProperty(parent, property.split("$parent.")[1]);
+    return componentIsMissingProperty(parent, property.slice(7).replace(/^\./, ""));
   }
-  let baseProperty = property.split(".")[0];
+  let match = property.match(/^\[['"]?([^\]'"]+)['"]?\]/) || property.match(/^([^.\[]+)/);
+  let baseProperty = match[1];
   return !Object.keys(component.canonical).includes(baseProperty);
 }
 function debounce(func, wait) {
