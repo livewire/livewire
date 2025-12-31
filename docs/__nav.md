@@ -28,6 +28,7 @@ Features:
     File Downloads: { uri: /docs/4.x/downloads, file: /downloads.md }
     Teleport: { uri: /docs/4.x/teleport, file: /teleport.md }
 HTML Directives:
+    wire:bind: { uri: /docs/4.x/wire-bind, file: /wire-bind.md }
     wire:click: { uri: /docs/4.x/wire-click, file: /wire-click.md }
     wire:submit: { uri: /docs/4.x/wire-submit, file: /wire-submit.md }
     wire:model: { uri: /docs/4.x/wire-model, file: /wire-model.md }

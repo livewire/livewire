@@ -13055,14 +13055,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
   function contextualizeExpression(expression) {
-    let SKIP = ["true", "false", "null", "undefined", "this", "$wire", "$js", "$el", "$event"];
+    let SKIP = ["true", "false", "null", "undefined", "this", "$wire", "$event"];
     let strings = [];
     let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (m) => {
       strings.push(m);
       return `___${strings.length - 1}___`;
     });
-    result = result.replace(/(?<![.\w$])([a-zA-Z_]\w*)/g, (m, ident) => {
+    result = result.replace(/(?<![.\w$])(\$?[a-zA-Z_]\w*)/g, (m, ident, offset2) => {
       if (SKIP.includes(ident) || /^___\d+___$/.test(ident))
+        return ident;
+      if (result[offset2 + m.length] === ":")
         return ident;
       return "$wire." + ident;
     });
@@ -14571,6 +14573,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let expression = value.trim();
         module_default.bind(el, {
           ["x-text" + modifierString]() {
+            return evaluateActionExpression(el, expression);
+          }
+        });
+      }
+    }
+  });
+
+  // js/directives/wire-bind.js
+  module_default.interceptInit((el) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:bind:")) {
+        let { name, value } = el.attributes[i];
+        let remainder = name.split("wire:bind")[1];
+        let expression = value.trim();
+        module_default.bind(el, {
+          ["x-bind" + remainder]() {
             return evaluateActionExpression(el, expression);
           }
         });

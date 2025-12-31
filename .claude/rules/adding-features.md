@@ -53,6 +53,7 @@ When adding a feature, these files may need updates:
 | New attribute | `src/Attributes/{AttributeName}.php` (surface file, extends base) |
 | New directive JS | `js/directives/index.js` → add import |
 | New feature JS | `js/features/index.js` → add import |
+| Documentation | `docs/__nav.md` → appropriate section (see Documentation section below) |
 
 ---
 
@@ -245,4 +246,65 @@ phpunit --testsuite="Browser" src/Features/Support{Feature}/BrowserTest.php
 After JS changes, run:
 ```bash
 npm run build
+```
+
+---
+
+## Documentation
+
+Documentation lives in the `docs/` directory.
+
+### File Structure
+
+```
+docs/
+├── __nav.md                → Navigation menu (YAML format)
+├── wire-{name}.md          → Documentation for wire: directives
+├── attribute-{name}.md     → Documentation for PHP attributes
+├── directive-{name}.md     → Documentation for Blade directives
+└── {feature}.md            → Documentation for general features
+```
+
+### Registration Checklist
+
+| You created... | Register it in... |
+|----------------|-------------------|
+| `wire-{name}.md` | `docs/__nav.md` → `HTML Directives:` section (alphabetically) |
+| `attribute-{name}.md` | `docs/__nav.md` → `PHP Attributes:` section (alphabetically) |
+| `directive-{name}.md` | `docs/__nav.md` → `Blade Directives:` section |
+| General feature docs | `docs/__nav.md` → `Features:` section |
+
+### Documentation Format
+
+Follow this structure for directive documentation:
+
+```markdown
+
+`wire:{name}` is a directive that [brief description].
+
+[Compare to similar features or Alpine equivalents if applicable]
+
+## Basic usage
+
+[Practical example with PHP component and Blade template]
+
+## [Additional sections as needed]
+
+[More examples, edge cases, or advanced usage]
+
+## Reference
+
+```blade
+wire:{name}="expression"
+```
+
+[List modifiers if any, or note "This directive has no modifiers."]
+```
+
+### Navigation Entry Format
+
+In `docs/__nav.md`, add entries in YAML format:
+
+```yaml
+wire:{name}: { uri: /docs/4.x/wire-{name}, file: /wire-{name}.md }
 ```

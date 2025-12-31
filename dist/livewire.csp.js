@@ -2929,7 +2929,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
         return obj;
       }
-      var Alpine24 = {
+      var Alpine25 = {
         get reactive() {
           return reactive;
         },
@@ -3000,7 +3000,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         data,
         bind: bind2
       };
-      var alpine_default = Alpine24;
+      var alpine_default = Alpine25;
       var safemap = /* @__PURE__ */ new WeakMap();
       var globals = /* @__PURE__ */ new Set();
       Object.getOwnPropertyNames(globalThis).forEach((key) => {
@@ -7939,8 +7939,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // node_modules/@alpinejs/collapse/dist/module.esm.js
-  function src_default(Alpine24) {
-    Alpine24.directive("collapse", collapse);
+  function src_default(Alpine25) {
+    Alpine25.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
       if (!modifiers.includes("min"))
         return;
@@ -7960,7 +7960,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!el._x_isShown)
         el.style.overflow = "hidden";
       let setFunction = (el2, styles) => {
-        let revertFunction = Alpine24.setStyles(el2, styles);
+        let revertFunction = Alpine25.setStyles(el2, styles);
         return styles.height ? () => {
         } : revertFunction;
       };
@@ -7983,7 +7983,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           if (current === full) {
             current = floor2;
           }
-          Alpine24.transition(el, Alpine24.setStyles, {
+          Alpine25.transition(el, Alpine25.setStyles, {
             during: transitionStyles,
             start: { height: current + "px" },
             end: { height: full + "px" }
@@ -7997,7 +7997,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }, after = () => {
         }) {
           let full = el.getBoundingClientRect().height;
-          Alpine24.transition(el, setFunction, {
+          Alpine25.transition(el, setFunction, {
             during: transitionStyles,
             start: { height: full + "px" },
             end: { height: floor2 + "px" }
@@ -8780,14 +8780,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     trap.updateContainerElements(elements);
     return trap;
   };
-  function src_default2(Alpine24) {
+  function src_default2(Alpine25) {
     let lastFocused;
     let currentFocused;
     window.addEventListener("focusin", () => {
       lastFocused = currentFocused;
       currentFocused = document.activeElement;
     });
-    Alpine24.magic("focus", (el) => {
+    Alpine25.magic("focus", (el) => {
       let within = el;
       return {
         __noscroll: false,
@@ -8891,7 +8891,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       };
     });
-    Alpine24.directive("trap", Alpine24.skipDuringClone(
+    Alpine25.directive("trap", Alpine25.skipDuringClone(
       (el, { expression, modifiers }, { effect, evaluateLater, cleanup }) => {
         let evaluator = evaluateLater(expression);
         let oldValue = false;
@@ -8911,7 +8911,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         if (modifiers.includes("inert")) {
           options.onPostActivate = () => {
-            Alpine24.nextTick(() => {
+            Alpine25.nextTick(() => {
               undoInert = setInert(el);
             });
           };
@@ -8990,7 +8990,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var module_default2 = src_default2;
 
   // node_modules/@alpinejs/persist/dist/module.esm.js
-  function src_default3(Alpine24) {
+  function src_default3(Alpine25) {
     let persist = () => {
       let alias;
       let storage;
@@ -9005,11 +9005,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           setItem: dummy.set.bind(dummy)
         };
       }
-      return Alpine24.interceptor((initialValue, getter, setter, path, key) => {
+      return Alpine25.interceptor((initialValue, getter, setter, path, key) => {
         let lookup = alias || `_x_${path}`;
         let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
         setter(initial);
-        Alpine24.effect(() => {
+        Alpine25.effect(() => {
           let value = getter();
           storageSet(lookup, value, storage);
           setter(value);
@@ -9025,12 +9025,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         };
       });
     };
-    Object.defineProperty(Alpine24, "$persist", { get: () => persist() });
-    Alpine24.magic("persist", persist);
-    Alpine24.persist = (key, { get, set }, storage = localStorage) => {
+    Object.defineProperty(Alpine25, "$persist", { get: () => persist() });
+    Alpine25.magic("persist", persist);
+    Alpine25.persist = (key, { get, set }, storage = localStorage) => {
       let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
       set(initial);
-      Alpine24.effect(() => {
+      Alpine25.effect(() => {
         let value = get();
         storageSet(key, value, storage);
         set(value);
@@ -9052,8 +9052,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var module_default3 = src_default3;
 
   // node_modules/@alpinejs/intersect/dist/module.esm.js
-  function src_default4(Alpine24) {
-    Alpine24.directive("intersect", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
+  function src_default4(Alpine25) {
+    Alpine25.directive("intersect", Alpine25.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
       let evaluate2 = evaluateLater(expression);
       let options = {
         rootMargin: getRootMargin(modifiers),
@@ -11319,8 +11319,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       node = node.nextElementSibling;
     }
   }
-  function src_default5(Alpine24) {
-    Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate: evaluate2, cleanup }) => {
+  function src_default5(Alpine25) {
+    Alpine25.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate: evaluate2, cleanup }) => {
       if (value === "config") {
         return;
       }
@@ -11451,8 +11451,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var module_default5 = src_default5;
 
   // node_modules/@alpinejs/resize/dist/module.esm.js
-  function src_default6(Alpine24) {
-    Alpine24.directive("resize", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
+  function src_default6(Alpine25) {
+    Alpine25.directive("resize", Alpine25.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
       let evaluator = evaluateLater(expression);
       let evaluate2 = (width, height) => {
         evaluator(() => {
@@ -12669,21 +12669,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       platform: platformWithCache
     });
   };
-  function src_default7(Alpine24) {
-    Alpine24.magic("anchor", (el) => {
+  function src_default7(Alpine25) {
+    Alpine25.magic("anchor", (el) => {
       if (!el._x_anchor)
         throw "Alpine: No x-anchor directive found on element using $anchor...";
       return el._x_anchor;
     });
-    Alpine24.interceptClone((from, to) => {
+    Alpine25.interceptClone((from, to) => {
       if (from && from._x_anchor && !to._x_anchor) {
         to._x_anchor = from._x_anchor;
       }
     });
-    Alpine24.directive("anchor", Alpine24.skipDuringClone(
+    Alpine25.directive("anchor", Alpine25.skipDuringClone(
       (el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
         let { placement, offsetValue, unstyled } = getOptions(modifiers);
-        el._x_anchor = Alpine24.reactive({ x: 0, y: 0 });
+        el._x_anchor = Alpine25.reactive({ x: 0, y: 0 });
         let reference = evaluate2(expression);
         if (!reference)
           throw "Alpine: no element provided to x-anchor...";
@@ -13427,8 +13427,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var showProgressBar = true;
   var restoreScroll = true;
   var autofocus = false;
-  function navigate_default(Alpine24) {
-    Alpine24.navigate = (url, options = {}) => {
+  function navigate_default(Alpine25) {
+    Alpine25.navigate = (url, options = {}) => {
       let { preserveScroll = false } = options;
       let destination = createUrlObjectFromString2(url);
       let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
@@ -13440,11 +13440,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return;
       navigateTo(destination, { preserveScroll });
     };
-    Alpine24.navigate.disableProgressBar = () => {
+    Alpine25.navigate.disableProgressBar = () => {
       showProgressBar = false;
     };
-    Alpine24.addInitSelector(() => `[${Alpine24.prefixed("navigate")}]`);
-    Alpine24.directive("navigate", (el, { modifiers }) => {
+    Alpine25.addInitSelector(() => `[${Alpine25.prefixed("navigate")}]`);
+    Alpine25.directive("navigate", (el, { modifiers }) => {
       let shouldPrefetchOnHover = modifiers.includes("hover");
       let preserveScroll = modifiers.includes("preserve-scroll");
       shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
@@ -13485,7 +13485,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
-        preventAlpineFromPickingUpDomChanges(Alpine24, (andAfterAllThis) => {
+        preventAlpineFromPickingUpDomChanges(Alpine25, (andAfterAllThis) => {
           enablePersist && storePersistantElementsForLater((persistedEl) => {
             packUpPersistedTeleports(persistedEl);
             packUpPersistedPopovers(persistedEl);
@@ -13507,7 +13507,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 setTimeout(() => {
                   autofocus && autofocusElementsWithTheAutofocusAttribute();
                 });
-                nowInitializeAlpineOnTheNewPage(Alpine24);
+                nowInitializeAlpineOnTheNewPage(Alpine25);
                 fireEventForOtherLibrariesToHookInto("alpine:navigated");
                 showProgressBar && finishAndHideProgressBar();
               });
@@ -13544,7 +13544,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         storeScrollInformationInHtmlBeforeNavigatingAway();
         fireEventForOtherLibrariesToHookInto("alpine:navigating");
         updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
-        preventAlpineFromPickingUpDomChanges(Alpine24, (andAfterAllThis) => {
+        preventAlpineFromPickingUpDomChanges(Alpine25, (andAfterAllThis) => {
           enablePersist && storePersistantElementsForLater((persistedEl) => {
             packUpPersistedTeleports(persistedEl);
             packUpPersistedPopovers(persistedEl);
@@ -13559,7 +13559,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             restoreScrollPositionOrScrollToTop();
             andAfterAllThis(() => {
               autofocus && autofocusElementsWithTheAutofocusAttribute();
-              nowInitializeAlpineOnTheNewPage(Alpine24);
+              nowInitializeAlpineOnTheNewPage(Alpine25);
               fireEventForOtherLibrariesToHookInto("alpine:navigated");
             });
           });
@@ -13575,10 +13575,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       fetchHtml(fromDestination, callback, errorCallback);
     });
   }
-  function preventAlpineFromPickingUpDomChanges(Alpine24, callback) {
-    Alpine24.stopObservingMutations();
+  function preventAlpineFromPickingUpDomChanges(Alpine25, callback) {
+    Alpine25.stopObservingMutations();
     callback((afterAllThis) => {
-      Alpine24.startObservingMutations();
+      Alpine25.startObservingMutations();
       queueMicrotask(() => {
         afterAllThis();
       });
@@ -13593,8 +13593,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     document.dispatchEvent(event);
     return event.defaultPrevented;
   }
-  function nowInitializeAlpineOnTheNewPage(Alpine24) {
-    Alpine24.initTree(document.body, void 0, (el, skip) => {
+  function nowInitializeAlpineOnTheNewPage(Alpine25) {
+    Alpine25.initTree(document.body, void 0, (el, skip) => {
       if (el._x_wasPersisted)
         skip();
     });
@@ -13617,8 +13617,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/plugins/history/index.js
-  function history(Alpine24) {
-    Alpine24.magic("queryString", (el, { interceptor }) => {
+  function history(Alpine25) {
+    Alpine25.magic("queryString", (el, { interceptor }) => {
       let alias;
       let alwaysShow = false;
       let usePush = false;
@@ -13627,9 +13627,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let { initial, replace: replace2, push: push2, pop } = track(queryKey, initialSeedValue, alwaysShow);
         setter(initial);
         if (!usePush) {
-          Alpine24.effect(() => replace2(getter()));
+          Alpine25.effect(() => replace2(getter()));
         } else {
-          Alpine24.effect(() => push2(getter()));
+          Alpine25.effect(() => push2(getter()));
           pop(async (newValue) => {
             setter(newValue);
             let tillTheEndOfTheMicrotaskQueue = () => Promise.resolve();
@@ -13652,7 +13652,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         };
       });
     });
-    Alpine24.history = { track };
+    Alpine25.history = { track };
   }
   function track(name, initialSeedValue, alwaysShow = false, except = null) {
     let { has, get, set, remove } = queryStringUtils();
@@ -14182,15 +14182,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     to.setAttribute("id", fromId);
     to.id = fromId;
   }
-  function src_default8(Alpine24) {
-    Alpine24.morph = morph;
-    Alpine24.morphBetween = morphBetween;
+  function src_default8(Alpine25) {
+    Alpine25.morph = morph;
+    Alpine25.morphBetween = morphBetween;
   }
   var module_default8 = src_default8;
 
   // node_modules/@alpinejs/mask/dist/module.esm.js
-  function src_default9(Alpine24) {
-    Alpine24.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
+  function src_default9(Alpine25) {
+    Alpine25.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
       let templateFn = () => expression;
       let lastInputValue = "";
       queueMicrotask(() => {
@@ -14199,7 +14199,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           effect(() => {
             templateFn = (input) => {
               let result;
-              Alpine24.dontAutoEvaluateFunctions(() => {
+              Alpine25.dontAutoEvaluateFunctions(() => {
                 evaluator((value2) => {
                   result = typeof value2 === "function" ? value2(input) : value2;
                 }, { scope: {
@@ -14451,7 +14451,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/index.js
-  var import_alpinejs22 = __toESM(require_module_cjs());
+  var import_alpinejs23 = __toESM(require_module_cjs());
 
   // js/features/supportListeners.js
   on("effect", ({ component, effects }) => {
@@ -14512,14 +14512,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
   function contextualizeExpression(expression) {
-    let SKIP = ["true", "false", "null", "undefined", "this", "$wire", "$js", "$el", "$event"];
+    let SKIP = ["true", "false", "null", "undefined", "this", "$wire", "$event"];
     let strings = [];
     let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (m) => {
       strings.push(m);
       return `___${strings.length - 1}___`;
     });
-    result = result.replace(/(?<![.\w$])([a-zA-Z_]\w*)/g, (m, ident) => {
+    result = result.replace(/(?<![.\w$])(\$?[a-zA-Z_]\w*)/g, (m, ident, offset2) => {
       if (SKIP.includes(ident) || /^___\d+___$/.test(ident))
+        return ident;
+      if (result[offset2 + m.length] === ":")
         return ident;
       return "$wire." + ident;
     });
@@ -16049,6 +16051,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
+  // js/directives/wire-bind.js
+  var import_alpinejs22 = __toESM(require_module_cjs());
+  import_alpinejs22.default.interceptInit((el) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:bind:")) {
+        let { name, value } = el.attributes[i];
+        let remainder = name.split("wire:bind")[1];
+        let expression = value.trim();
+        import_alpinejs22.default.bind(el, {
+          ["x-bind" + remainder]() {
+            return evaluateActionExpression(el, expression);
+          }
+        });
+      }
+    }
+  });
+
   // js/index.js
   var Livewire2 = {
     directive,
@@ -16068,7 +16087,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     dispatch: dispatchGlobal,
     on: on2,
     get navigate() {
-      return import_alpinejs22.default.navigate;
+      return import_alpinejs23.default.navigate;
     }
   };
   var warnAboutMultipleInstancesOf = (entity) => console.warn(`Detected multiple instances of ${entity} running`);
@@ -16077,7 +16096,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   if (window.Alpine)
     warnAboutMultipleInstancesOf("Alpine");
   window.Livewire = Livewire2;
-  window.Alpine = import_alpinejs22.default;
+  window.Alpine = import_alpinejs23.default;
   if (window.livewireScriptConfig === void 0) {
     window.Alpine.__fromLivewire = true;
     document.addEventListener("DOMContentLoaded", () => {

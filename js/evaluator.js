@@ -34,8 +34,8 @@ export function evaluateActionExpression(el, expression, options = {}) {
     }
 }
 
-function contextualizeExpression(expression) {
-    let SKIP = ['true', 'false', 'null', 'undefined', 'this', '$wire', '$js', '$el', '$event']
+export function contextualizeExpression(expression) {
+    let SKIP = ['true', 'false', 'null', 'undefined', 'this', '$wire', '$event']
     let strings = []
 
     // 1. Yank out string literals so we don't touch them
@@ -45,8 +45,10 @@ function contextualizeExpression(expression) {
     })
 
     // 2. Prefix identifiers not after a dot (skip placeholders from step 1)
-    result = result.replace(/(?<![.\w$])([a-zA-Z_]\w*)/g, (m, ident) => {
+    //    Also skip object keys (identifiers immediately followed by colon)
+    result = result.replace(/(?<![.\w$])(\$?[a-zA-Z_]\w*)/g, (m, ident, offset) => {
         if (SKIP.includes(ident) || /^___\d+___$/.test(ident)) return ident
+        if (result[offset + m.length] === ':') return ident
         return '$wire.' + ident
     })
 
