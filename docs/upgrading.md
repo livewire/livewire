@@ -128,6 +128,29 @@ Using `Route::livewire()` is now the preferred method and is required for single
 
 [Learn more about routing →](/docs/4.x/components#page-components)
 
+### `wire:model` now ignores child events by default
+
+In v3, `wire:model` would respond to input/change events that bubbled up from child elements. This caused unexpected behavior when using `wire:model` on container elements (like modals or accordions) that contained form inputs—clearing an input inside would bubble up and potentially close the modal.
+
+In v4, `wire:model` now only listens for events originating directly on the element itself (equivalent to the `.self` modifier behavior).
+
+If you have code that relies on capturing events from child elements, add the `.bubble` modifier:
+
+```blade
+<!-- Before (v3) - listened to child events by default -->
+<div wire:model="value">
+    <input type="text">
+</div>
+
+<!-- After (v4) - add .bubble to restore old behavior -->
+<div wire:model.bubble="value">
+    <input type="text">
+</div>
+```
+
+> [!tip] Most apps won't need changes
+> This change primarily affects non-standard uses of `wire:model` on container elements. Standard form input bindings (inputs, selects, textareas) are unaffected.
+
 ### Use `wire:navigate:scroll`
 
 When using `wire:scroll` to preserve scroll in a scrollable container across `wire:navigate` requests in v3, you will need to instead us `wire:navigate:scroll` in v4:

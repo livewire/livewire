@@ -26,6 +26,11 @@ directive('model', ({ el, directive, component, cleanup }) => {
         return handleFileUpload(el, expression, component, cleanup)
     }
 
+    if (! modifiers.includes('self') && ! modifiers.includes('bubble')) {
+        // Make wire:model self-binding by default...
+        modifiers.push('self')
+    }
+
     let isLive = modifiers.includes('live')
     let isLazy = modifiers.includes('lazy') || modifiers.includes('change')
     let onBlur = modifiers.includes('blur')

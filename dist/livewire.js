@@ -14332,6 +14332,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (el.type && el.type.toLowerCase() === "file") {
       return handleFileUpload(el, expression, component, cleanup2);
     }
+    if (!modifiers.includes("self") && !modifiers.includes("bubble")) {
+      modifiers.push("self");
+    }
     let isLive = modifiers.includes("live");
     let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
     let onBlur = modifiers.includes("blur");

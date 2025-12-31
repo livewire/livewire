@@ -31,6 +31,35 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@text', 'livewire');
     }
 
+    public function test_wire_model_self_by_default_or_with_bubble_modifier()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = '';
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div wire:model="foo">
+                        <input type="text" dusk="default-input">
+                    </div>
+
+                    <div wire:model.bubble="foo">
+                        <input type="text" dusk="bubble-input">
+                    </div>
+
+                    <span wire:text="foo" dusk="text"></span>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->typeSlowly('@default-input', 'livewire', 50)
+            ->assertDontSeeIn('@text', 'livewire')
+            ->typeSlowly('@bubble-input', 'livewire', 50)
+            ->assertSeeIn('@text', 'livewire');
+    }
+
     public function test_wire_model_dot_blur()
     {
         Livewire::visit(new class extends Component {
