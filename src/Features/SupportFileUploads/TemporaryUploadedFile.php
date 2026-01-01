@@ -274,17 +274,67 @@ class TemporaryUploadedFile extends UploadedFile
             if (str($subject)->startsWith('livewire-files:')) {
                 $paths = json_decode(str($subject)->after('livewire-files:'), true);
 
+                // Validate and claim all paths before creating files
+                foreach ($paths as $path) {
+                    static::ensurePathIsValidForCurrentSession($path);
+                    static::removePathFromSession($path);
+                }
+
                 return collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
             }
         }
 
         if (is_array($subject)) {
             foreach ($subject as $key => $value) {
-                $subject[$key] =  static::unserializeFromLivewireRequest($value);
+                $subject[$key] = static::unserializeFromLivewireRequest($value);
             }
         }
 
         return $subject;
+    }
+
+    public static function sessionKey(): string
+    {
+        return 'livewire_temp_uploads';
+    }
+
+    public static function registerPathsInSession(array $paths): void
+    {
+        $key = static::sessionKey();
+        $current = session()->get($key, []);
+
+        // Clean up stale entries older than 24 hours (matches file cleanup in cleanupOldUploads)
+        $cutoff = now()->subDay()->timestamp;
+        $current = array_filter($current, fn($timestamp) => $timestamp > $cutoff);
+
+        foreach ($paths as $path) {
+            $current[$path] = now()->timestamp;
+        }
+
+        session()->put($key, $current);
+    }
+
+    public static function ensurePathIsValidForCurrentSession(string $path): void
+    {
+        $key = static::sessionKey();
+        $current = session()->get($key, []);
+
+        if (! is_array($current) || ! array_key_exists($path, $current)) {
+            throw new \Symfony\Component\HttpKernel\Exception\HttpException(
+                403,
+                'Invalid or unrecognized temporary upload reference.',
+            );
+        }
+    }
+
+    public static function removePathFromSession(string $path): void
+    {
+        $key = static::sessionKey();
+        $current = session()->get($key, []);
+
+        unset($current[$path]);
+
+        session()->put($key, $current);
     }
 
     public function serializeForLivewireResponse()

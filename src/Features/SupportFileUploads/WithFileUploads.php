@@ -32,9 +32,16 @@ trait WithFileUploads
         }
 
         if ($isMultiple) {
+            // Validate and immediately remove each path
+            foreach ($tmpPath as $path) {
+                TemporaryUploadedFile::ensurePathIsValidForCurrentSession($path);
+                TemporaryUploadedFile::removePathFromSession($path);
+            }
+
             $file = collect($tmpPath)->map(function ($i) {
                 return TemporaryUploadedFile::createFromLivewire($i);
             })->toArray();
+
             $this->dispatch('upload:finished', name: $name, tmpFilenames: collect($file)->map->getFilename()->toArray())->self();
 
             if ($append) {
@@ -46,7 +53,12 @@ trait WithFileUploads
                 }
             }
         } else {
+            // Validate and immediately remove path
+            TemporaryUploadedFile::ensurePathIsValidForCurrentSession($tmpPath[0]);
+            TemporaryUploadedFile::removePathFromSession($tmpPath[0]);
+
             $file = TemporaryUploadedFile::createFromLivewire($tmpPath[0]);
+
             $this->dispatch('upload:finished', name: $name, tmpFilenames: [$file->getFilename()])->self();
 
             // If the property is an array, but the upload ISNT set to "multiple"
