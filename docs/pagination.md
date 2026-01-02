@@ -426,9 +426,39 @@ For visual-only loading states (like opacity changes), you can use Livewire's au
 
 [Learn more about loading states →](/docs/4.x/loading-states)
 
+# Auto-adjust Pagination After Deleting Items
+
+When working with paginated lists in Livewire, deleting the **last item on the current page** can leave the page empty. This can lead to a confusing user experience where an empty page is displayed.
+
+The **`adjustPageIfEmpty`** helper automatically moves the paginator to the previous page if the current page becomes empty, ensuring users always see data when it exists.
+
+```php
+use Livewire\Component;
+use Livewire\WithPagination;
+use App\Models\Post;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+class PostsTable extends Component
+{
+    use WithPagination;
+
+    #[Computed()]
+    public function posts(): LengthAwarePaginator
+    {
+        return Post::paginate(10);
+    }
+
+    public function deleteQuestion(Post $post): void
+    {
+        $post->delete();
+
+        $this->adjustPageIfEmpty($this->posts);
+    }
+}
+```
+
 ## See also
 
 - **[URL Query Parameters](/docs/4.x/url)** — Sync pagination state with URL
 - **[Loading States](/docs/4.x/loading-states)** — Show feedback during page changes
 - **[Computed Properties](/docs/4.x/computed-properties)** — Efficiently query paginated data
-

@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportPagination;
 
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Str;
 
@@ -39,6 +40,13 @@ trait HandlesPagination
     public function resetPage($pageName = 'page')
     {
         $this->setPage(1, $pageName);
+    }
+
+    public function adjustPageIfEmpty(LengthAwarePaginator $paginator, string $pageName = 'page')
+    {
+        if ($paginator->isEmpty() && $this->getPage($pageName) > 1) {
+            $this->previousPage($pageName);
+        }
     }
 
     public function setPage($page, $pageName = 'page')
