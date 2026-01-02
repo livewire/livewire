@@ -263,6 +263,8 @@ wireProperty('$watch', (component) => (path, callback) => {
     let unwatch = Alpine.watch(getter, callback)
 
     component.addCleanup(unwatch)
+
+    return unwatch
 })
 
 wireProperty('$effect', (component) => (callback) => {
