@@ -3,7 +3,6 @@ shouldHideProgressBar() && Alpine.navigate.disableProgressBar()
 
 document.addEventListener('alpine:navigate', e => forwardEvent('livewire:navigate', e))
 document.addEventListener('alpine:navigating', e => forwardEvent('livewire:navigating', e))
-document.addEventListener('alpine:navigating:swap', e => forwardEvent('livewire:navigating:swap', e))
 document.addEventListener('alpine:navigated', e => forwardEvent('livewire:navigated', e))
 
 function forwardEvent(name, original) {
