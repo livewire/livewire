@@ -262,7 +262,7 @@ For example, if you have a modal with `wire:model="showModal"` and an input fiel
 In rare cases where you want `wire:model` to also respond to events bubbling up from child elements, you can use the `.bubble` modifier:
 
 ```blade
-<div wire:model.bubble="value">
+<div wire:model.deep="value">
     <input type="text"> <!-- Changes here will update $value -->
 </div>
 ```

@@ -26,7 +26,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
         return handleFileUpload(el, expression, component, cleanup)
     }
 
-    if (! modifiers.includes('self') && ! modifiers.includes('bubble')) {
+    if (! modifiers.includes('self') && ! modifiers.includes('deep')) {
         // Make wire:model self-binding by default...
         modifiers.push('self')
     }

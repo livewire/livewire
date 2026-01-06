@@ -44,7 +44,7 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
                         <input type="text" dusk="default-input">
                     </div>
 
-                    <div wire:model.bubble="foo">
+                    <div wire:model.deep="foo">
                         <input type="text" dusk="bubble-input">
                     </div>
 

@@ -143,7 +143,7 @@ If you have code that relies on capturing events from child elements, add the `.
 </div>
 
 <!-- After (v4) - add .bubble to restore old behavior -->
-<div wire:model.bubble="value">
+<div wire:model.deep="value">
     <input type="text">
 </div>
 ```
