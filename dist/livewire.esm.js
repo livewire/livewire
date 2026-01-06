@@ -12736,7 +12736,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 }
 function contextualizeExpression(expression) {
-  let SKIP = ["true", "false", "null", "undefined", "this", "$wire", "$event"];
+  let SKIP = ["JSON", "true", "false", "null", "undefined", "this", "$wire", "$event"];
   let strings = [];
   let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (m) => {
     strings.push(m);
@@ -12891,6 +12891,8 @@ globalDirective("transition", ({ el, directive: directive2, cleanup }) => {
   el.style.viewTransitionName = transitionName;
 });
 async function transitionDomMutation(component, callback) {
+  if (!component.el.querySelector("[wire:transition]"))
+    return callback();
   let style = document.createElement("style");
   style.textContent = `
         @media (prefers-reduced-motion: reduce) {
@@ -12957,7 +12959,7 @@ async function morph2(component, el, html) {
   });
   trigger("morphed", { el, component });
 }
-function morphFragment(component, startNode, endNode, toHTML) {
+async function morphFragment(component, startNode, endNode, toHTML) {
   let fromContainer = startNode.parentElement;
   let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
   let toContainer = document.createElement(fromContainerTag);
@@ -12976,7 +12978,9 @@ function morphFragment(component, startNode, endNode, toHTML) {
     parentProviderWrapper.__livewire = parentComponent;
   }
   trigger("island.morph", { startNode, endNode, component });
-  import_alpinejs9.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+  await transitionDomMutation(component, () => {
+    import_alpinejs9.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+  });
   trigger("island.morphed", { startNode, endNode, component });
 }
 function getMorphConfig(component) {
@@ -13417,8 +13421,8 @@ interceptMessage(({ message, onSuccess, onStream }) => {
   onSuccess(({ payload, onMorph }) => {
     onMorph(async () => {
       let fragments = payload.effects.islandFragments || [];
-      fragments.forEach((fragmentHtml) => {
-        renderIsland(message.component, fragmentHtml);
+      fragments.forEach(async (fragmentHtml) => {
+        await renderIsland(message.component, fragmentHtml);
       });
     });
   });
@@ -13430,7 +13434,7 @@ function closestIsland(el) {
     }
   });
 }
-function renderIsland(component, islandHtml) {
+async function renderIsland(component, islandHtml) {
   let metadata = extractFragmentMetadataFromHtml(islandHtml);
   let fragment = findFragment(component.el, {
     isMatch: ({ type, token }) => {
@@ -13445,7 +13449,7 @@ function renderIsland(component, islandHtml) {
   let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
   let mode = incomingMetadata.mode || "morph";
   if (mode === "morph") {
-    morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
+    await morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
   } else if (mode === "append") {
     fragment.append(parentElementTag, strippedContent);
   } else if (mode === "prepend") {
@@ -13458,13 +13462,13 @@ interceptMessage(({ message, onSuccess, onStream }) => {
   onSuccess(({ payload, onMorph }) => {
     onMorph(async () => {
       let fragments = payload.effects.slotFragments || [];
-      fragments.forEach((fragmentHtml) => {
-        renderSlot(message.component, fragmentHtml);
+      fragments.forEach(async (fragmentHtml) => {
+        await renderSlot(message.component, fragmentHtml);
       });
     });
   });
 });
-function renderSlot(component, fragmentHtml) {
+async function renderSlot(component, fragmentHtml) {
   let metadata = extractFragmentMetadataFromHtml(fragmentHtml);
   let targetComponent = findComponent(metadata.id);
   let fragment = findFragment(targetComponent.el, {
@@ -13475,7 +13479,7 @@ function renderSlot(component, fragmentHtml) {
   if (!fragment)
     return;
   let strippedContent = extractInnerHtmlFromFragmentHtml(fragmentHtml);
-  morphFragment(targetComponent, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
+  await morphFragment(targetComponent, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
 }
 
 // js/features/supportDataLoading.js

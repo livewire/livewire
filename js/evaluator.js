@@ -35,7 +35,7 @@ export function evaluateActionExpression(el, expression, options = {}) {
 }
 
 export function contextualizeExpression(expression) {
-    let SKIP = ['true', 'false', 'null', 'undefined', 'this', '$wire', '$event']
+    let SKIP = ['JSON', 'true', 'false', 'null', 'undefined', 'this', '$wire', '$event']
     let strings = []
 
     // 1. Yank out string literals so we don't touch them
