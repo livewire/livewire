@@ -13211,7 +13211,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el.style.viewTransitionName = transitionName;
   });
   async function transitionDomMutation(component, callback) {
-    if (!component.el.querySelector("[wire:transition]"))
+    if (!component.el.querySelector("[wire\\:transition]"))
       return callback();
     let style = document.createElement("style");
     style.textContent = `

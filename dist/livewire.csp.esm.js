@@ -13696,7 +13696,7 @@ globalDirective("transition", ({ el, directive: directive2, cleanup }) => {
   el.style.viewTransitionName = transitionName;
 });
 async function transitionDomMutation(component, callback) {
-  if (!component.el.querySelector("[wire:transition]"))
+  if (!component.el.querySelector("[wire\\:transition]"))
     return callback();
   let style = document.createElement("style");
   style.textContent = `

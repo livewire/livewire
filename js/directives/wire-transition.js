@@ -8,7 +8,7 @@ globalDirective('transition', ({ el, directive, cleanup }) => {
 
 export async function transitionDomMutation(component, callback) {
     // Only transition if there is a [wire:transition] element within the component...
-    if (! component.el.querySelector('[wire:transition]')) return callback()
+    if (! component.el.querySelector('[wire\\:transition]')) return callback()
 
     // Disable root transitions for the page...
     let style = document.createElement('style')
