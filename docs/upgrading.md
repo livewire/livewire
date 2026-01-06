@@ -168,6 +168,24 @@ When using `wire:scroll` to preserve scroll in a scrollable container across `wi
 
 These changes may affect certain parts of your application depending on which features you use.
 
+### `wire:transition` now uses View Transitions API
+
+In v3, `wire:transition` was a wrapper around Alpine's `x-transition` directive, supporting modifiers like `.opacity`, `.scale`, `.duration.200ms`, and `.origin.top`.
+
+In v4, `wire:transition` uses the browser's native [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) instead. Basic usage still works—elements will fade in and out smoothly—but all modifiers have been removed.
+
+```blade
+<!-- This still works in v4 -->
+<div wire:transition>...</div>
+
+<!-- These modifiers are no longer supported -->
+<div wire:transition.opacity>...</div> <!-- [tl! remove] -->
+<div wire:transition.scale.origin.top>...</div> <!-- [tl! remove] -->
+<div wire:transition.duration.500ms>...</div> <!-- [tl! remove] -->
+```
+
+[Learn more about wire:transition →](/docs/4.x/wire-transition)
+
 ### Performance improvements
 
 Livewire v4 includes significant performance improvements to the request handling system:

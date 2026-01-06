@@ -10,7 +10,7 @@ export class MessageInterceptor {
     onFinish = () => {}
     onSync = () => {}
     onEffect = () => {}
-    onMorph = () => {}
+    onMorph = async () => {}
     onRender = () => {}
 
     constructor(message, callback) {

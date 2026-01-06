@@ -2,8 +2,9 @@ import { trigger } from "@/hooks"
 import { findComponentByEl } from "@/store"
 import Alpine from 'alpinejs'
 import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFragmentMarker } from "./fragment"
+import { transitionDomMutation } from "./directives/wire-transition"
 
-export function morph(component, el, html) {
+export async function morph(component, el, html) {
     let wrapperTag = el.parentElement
         // If the root element is a "tr", we need the wrapper to be a "table"...
         ? el.parentElement.tagName.toLowerCase()
@@ -63,12 +64,14 @@ export function morph(component, el, html) {
         }
     })
 
-    Alpine.morph(el, to, getMorphConfig(component))
+    await transitionDomMutation(component, () => {
+        Alpine.morph(el, to, getMorphConfig(component))
+    })
 
     trigger('morphed', { el, component })
 }
 
-export function morphFragment(component, startNode, endNode, toHTML) {
+export async function morphFragment(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement
     let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
 
@@ -94,7 +97,9 @@ export function morphFragment(component, startNode, endNode, toHTML) {
 
     trigger('island.morph', { startNode, endNode, component })
 
-    Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
+    await transitionDomMutation(component, () => {
+        Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
+    })
 
     trigger('island.morphed', { startNode, endNode, component })
 }

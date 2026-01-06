@@ -4326,7 +4326,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     onEffect = () => {
     };
-    onMorph = () => {
+    onMorph = async () => {
     };
     onRender = () => {
     };
@@ -4729,8 +4729,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     invokeOnEffect() {
       this.interceptors.forEach((interceptor2) => interceptor2.onEffect());
     }
-    invokeOnMorph() {
-      this.interceptors.forEach((interceptor2) => interceptor2.onMorph());
+    async invokeOnMorph() {
+      this.interceptors.forEach(async (interceptor2) => {
+        await interceptor2.onMorph();
+      });
     }
     invokeOnRender() {
       this.interceptors.forEach((interceptor2) => interceptor2.onRender());
@@ -5290,11 +5292,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 queueMicrotask(() => {
                   if (message.isCancelled())
                     return;
-                  message.invokeOnMorph();
-                  setTimeout(() => {
-                    if (message.isCancelled())
-                      return;
-                    message.invokeOnRender();
+                  message.invokeOnMorph().finally(() => {
+                    setTimeout(() => {
+                      if (message.isCancelled())
+                        return;
+                      message.invokeOnRender();
+                    });
                   });
                 });
               }
@@ -13202,8 +13205,42 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
+  // js/directives/wire-transition.js
+  globalDirective("transition", ({ el, directive: directive3, cleanup: cleanup2 }) => {
+    let transitionName = directive3.expression || "match-element";
+    el.style.viewTransitionName = transitionName;
+  });
+  async function transitionDomMutation(component, callback) {
+    let style = document.createElement("style");
+    style.textContent = `
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+                animation: none !important;
+            }
+        }
+
+        ::view-transition-old(root) {
+            animation: none !important;
+            opacity: 0 !important;
+        }
+
+        ::view-transition-new(root) {
+            animation: none !important;
+            opacity: 1 !important;
+        }
+    `;
+    document.head.appendChild(style);
+    let transition2 = document.startViewTransition(() => {
+      callback();
+    });
+    transition2.finished.finally(() => {
+      style.remove();
+    });
+    await transition2.updateCallbackDone;
+  }
+
   // js/morph.js
-  function morph2(component, el, html) {
+  async function morph2(component, el, html) {
     let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
     let customElement = customElements.get(wrapperTag);
     wrapperTag = customElement ? customElement.name : wrapperTag;
@@ -13235,7 +13272,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         child.replaceWith(existingComponent.cloneNode(true));
       }
     });
-    module_default.morph(el, to, getMorphConfig(component));
+    await transitionDomMutation(component, () => {
+      module_default.morph(el, to, getMorphConfig(component));
+    });
     trigger2("morphed", { el, component });
   }
   function morphFragment(component, startNode, endNode, toHTML) {
@@ -13337,11 +13376,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/supportMorphDom.js
   interceptMessage(({ message, onSuccess }) => {
     onSuccess(({ payload, onMorph }) => {
-      onMorph(() => {
+      onMorph(async () => {
         let html = payload.effects.html;
         if (!html)
           return;
-        morph2(message.component, message.component.el, html);
+        await morph2(message.component, message.component.el, html);
       });
     });
   });
@@ -13694,7 +13733,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       renderIsland(message.component, islandFragment);
     });
     onSuccess(({ payload, onMorph }) => {
-      onMorph(() => {
+      onMorph(async () => {
         let fragments = payload.effects.islandFragments || [];
         fragments.forEach((fragmentHtml) => {
           renderIsland(message.component, fragmentHtml);
@@ -13735,7 +13774,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/supportSlots.js
   interceptMessage(({ message, onSuccess, onStream }) => {
     onSuccess(({ payload, onMorph }) => {
-      onMorph(() => {
+      onMorph(async () => {
         let fragments = payload.effects.slotFragments || [];
         fragments.forEach((fragmentHtml) => {
           renderSlot(message.component, fragmentHtml);
@@ -13910,7 +13949,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           oldHeight = document.body.scrollHeight;
           oldScroll = window.scrollY;
         });
-        onMorph(() => {
+        onMorph(async () => {
           let heightDiff = document.body.scrollHeight - oldHeight;
           window.scrollTo(0, oldScroll + heightDiff);
           oldHeight = null;
@@ -13984,44 +14023,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       }
     }
-  });
-
-  // js/directives/wire-transition.js
-  on2("morph.added", ({ el }) => {
-    el.__addedByMorph = true;
-  });
-  directive2("transition", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
-    for (let i = 0; i < el.attributes.length; i++) {
-      if (el.attributes[i].name.startsWith("wire:show")) {
-        module_default.bind(el, {
-          [directive3.rawName.replace("wire:transition", "x-transition")]: directive3.expression
-        });
-        return;
-      }
-    }
-    let visibility = module_default.reactive({ state: el.__addedByMorph ? false : true });
-    module_default.bind(el, {
-      [directive3.rawName.replace("wire:", "x-")]: "",
-      "x-show"() {
-        return visibility.state;
-      }
-    });
-    el.__addedByMorph && setTimeout(() => visibility.state = true);
-    let cleanups2 = [];
-    cleanups2.push(on2("morph.removing", ({ el: el2, skip }) => {
-      skip();
-      el2.addEventListener("transitionend", () => {
-        el2.remove();
-      });
-      visibility.state = false;
-      cleanups2.push(on2("morph", ({ component: morphComponent }) => {
-        if (morphComponent !== component)
-          return;
-        el2.remove();
-        cleanups2.forEach((i) => i());
-      }));
-    }));
-    cleanup2(() => cleanups2.forEach((i) => i()));
   });
 
   // js/debounce.js
@@ -14334,7 +14335,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (el.type && el.type.toLowerCase() === "file") {
       return handleFileUpload(el, expression, component, cleanup2);
     }
-    if (!modifiers.includes("self") && !modifiers.includes("bubble")) {
+    if (!modifiers.includes("self") && !modifiers.includes("deep")) {
       modifiers.push("self");
     }
     let isLive = modifiers.includes("live");

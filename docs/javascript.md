@@ -205,7 +205,7 @@ $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onError,
 
         onSync(() => {})    // After state synced
         onEffect(() => {})  // After effects processed
-        onMorph(() => {})   // After DOM morphed
+        onMorph(async () => {})   // After DOM morphed (must be async)
         onRender(() => {})  // After render complete
     })
 

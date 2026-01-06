@@ -408,12 +408,12 @@ function sendMessages() {
                             queueMicrotask(() => {
                                 if (message.isCancelled()) return
 
-                                message.invokeOnMorph()
+                                message.invokeOnMorph().finally(() => {
+                                    setTimeout(() => {
+                                        if (message.isCancelled()) return
 
-                                setTimeout(() => {
-                                    if (message.isCancelled()) return
-
-                                    message.invokeOnRender()
+                                        message.invokeOnRender()
+                                    })
                                 })
                             })
                         }

@@ -54,11 +54,11 @@ interceptMessage(({ message, onSuccess, onStream }) => {
     })
 
     onSuccess(({ payload, onMorph }) => {
-        onMorph(() => {
+        onMorph(async () => {
             let fragments = payload.effects.islandFragments || []
 
-            fragments.forEach(fragmentHtml => {
-                renderIsland(message.component, fragmentHtml)
+            fragments.forEach(async fragmentHtml => {
+                await renderIsland(message.component, fragmentHtml)
             })
         })
     })
@@ -72,7 +72,7 @@ export function closestIsland(el) {
     })
 }
 
-export function renderIsland(component, islandHtml) {
+export async function renderIsland(component, islandHtml) {
     let metadata = extractFragmentMetadataFromHtml(islandHtml)
 
     let fragment = findFragment(component.el, {
@@ -92,7 +92,7 @@ export function renderIsland(component, islandHtml) {
     let mode = incomingMetadata.mode || 'morph'
 
     if (mode === 'morph') {
-        morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent)
+        await morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent)
     } else if (mode === 'append') {
         fragment.append(parentElementTag, strippedContent)
     } else if (mode === 'prepend') {
