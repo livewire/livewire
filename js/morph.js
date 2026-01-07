@@ -64,7 +64,7 @@ export async function morph(component, el, html) {
         }
     })
 
-    await transitionDomMutation(component, () => {
+    await transitionDomMutation(el, to, () => {
         Alpine.morph(el, to, getMorphConfig(component))
     })
 
@@ -97,7 +97,7 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
 
     trigger('island.morph', { startNode, endNode, component })
 
-    await transitionDomMutation(component, () => {
+    await transitionDomMutation(fromContainer, toContainer, () => {
         Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
     })
 
