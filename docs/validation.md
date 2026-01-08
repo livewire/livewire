@@ -267,7 +267,7 @@ public function save()
 }
 ```
 
-Form objects are a useful abstraction for most larger datasets and a variety of additional features that make them even more powerful. For more information, check out the comprehensive [form object documentation](/docs/forms#extracting-a-form-object).
+Form objects are a useful abstraction for most larger datasets and a variety of additional features that make them even more powerful. For more information, check out the comprehensive [form object documentation](/docs/4.x/forms#extracting-a-form-object).
 
 ## Real-time validation
 
@@ -644,10 +644,44 @@ public function test_cant_create_post_without_title_and_content()
 }
 ```
 
-For more information on other testing utilities provided by Livewire, check out the [testing documentation](/docs/testing).
+For more information on other testing utilities provided by Livewire, check out the [testing documentation](/docs/4.x/testing).
+
+## Accessing errors in JavaScript
+
+Livewire provides a `$errors` magic property for client-side access to validation errors:
+
+```blade
+<form wire:submit="save">
+    <input type="email" wire:model="email">
+
+    <div wire:show="$errors.has('email')">
+        <span wire:text="$errors.first('email')"></span>
+    </div>
+
+    <button type="submit">Save</button>
+</form>
+```
+
+### Available methods
+
+- `$errors.has('field')` - Check if a field has errors
+- `$errors.first('field')` - Get the first error message for a field
+- `$errors.get('field')` - Get all error messages for a field
+- `$errors.all()` - Get all errors for all fields
+- `$errors.clear()` - Clear all errors
+- `$errors.clear('field')` - Clear errors for a specific field
+
+When using Alpine.js, access `$errors` through `$wire.$errors`.
 
 ## Deprecated `[#Rule]` attribute
 
 When Livewire v3 first launched, it used the term "Rule" instead of "Validate" for it's validation attributes (`#[Rule]`).
 
 Because of naming conflicts with Laravel rule objects, this has since been changed to `#[Validate]`. Both are supported in Livewire v3, however it is recommended that you change all occurrences of `#[Rule]` with `#[Validate]` to stay current.
+
+## See also
+
+- **[Forms](/docs/4.x/forms)** — Validate form inputs with real-time feedback
+- **[Properties](/docs/4.x/properties)** — Validate property values before persisting
+- **[Validate Attribute](/docs/4.x/attribute-validate)** — Use #[Validate] for property validation
+- **[Actions](/docs/4.x/actions)** — Validate data in action methods

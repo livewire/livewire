@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportEvents;
 
-use Livewire\Mechanisms\ComponentRegistry;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 trait TestsEvents
@@ -80,11 +79,11 @@ trait TestsEvents
 
     protected function testDispatchedTo($target, $value)
     {
-        $name = app(ComponentRegistry::class)->getName($target);
+        $name = app('livewire.factory')->resolveComponentName($target);
 
         return (bool) collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($name, $value) {
             return $item['name'] === $value
-                && $item['to'] === $name;
+                && $item['component'] === $name;
         });
     }
 }

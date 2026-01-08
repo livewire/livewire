@@ -210,6 +210,23 @@ class UnitTest extends \Tests\TestCase
 
         Relation::requireMorphMap(false);
     }
+
+    public function test_model_synth_rejects_non_model_classes()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid model class');
+
+        $component = Livewire::test(ArticleComponent::class);
+
+        // Create a synth instance and try to hydrate with a non-Model class
+        $synth = new ModelSynth(
+            new \Livewire\Mechanisms\HandleComponents\ComponentContext($component->instance()),
+            'article'
+        );
+
+        // This should throw because stdClass doesn't extend Model
+        $synth->hydrate(null, ['class' => \stdClass::class]);
+    }
 }
 
 #[\Attribute]
@@ -217,13 +234,18 @@ class Lazy {
     //
 }
 
-class ArticleComponent extends TestComponent
+class ArticleComponent extends \Livewire\Component
 {
     public $article;
 
     public function mount()
     {
         $this->article = Article::first();
+    }
+
+    public function render()
+    {
+        return '<div>{{ $article->title }}</div>';
     }
 }
 

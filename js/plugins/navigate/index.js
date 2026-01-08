@@ -48,6 +48,8 @@ export default function (Alpine) {
 
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
+            }, () => {
+                showProgressBar && finishAndHideProgressBar()
             })
         })
 
@@ -58,6 +60,8 @@ export default function (Alpine) {
 
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
+            }, () => {
+                showProgressBar && finishAndHideProgressBar()
             })
 
             whenItIsReleased(() => {
@@ -120,6 +124,8 @@ export default function (Alpine) {
                     })
                 })
             })
+        }, () => {
+            showProgressBar && finishAndHideProgressBar()
         })
     }
 
@@ -194,9 +200,9 @@ export default function (Alpine) {
     })
 }
 
-function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
+function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback, errorCallback) {
     getPretchedHtmlOr(fromDestination, callback, () => {
-        fetchHtml(fromDestination, callback)
+        fetchHtml(fromDestination, callback, errorCallback)
     })
 }
 

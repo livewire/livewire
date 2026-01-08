@@ -17,7 +17,7 @@ class LayoutCommand extends FileManipulationCommand
     {
         $baseViewPath = resource_path('views');
 
-        $layout = str(config('livewire.layout'));
+        $layout = str(config('livewire.component_layout'));
 
         $layoutPath = $this->layoutPath($baseViewPath, $layout);
 
@@ -62,7 +62,27 @@ class LayoutCommand extends FileManipulationCommand
 
     protected function layoutPath($baseViewPath, $layout)
     {
-        $directories = $layout->explode('.');
+        // Handle namespaced views like 'layouts::app'
+        if ($layout->contains('::')) {
+            [$namespace, $name] = $layout->explode('::');
+            
+            // Check if this namespace is registered in Livewire config
+            $namespacePath = config("livewire.component_namespaces.{$namespace}");
+            
+            if ($namespacePath) {
+                // Use the configured namespace path
+                $baseViewPath = $namespacePath;
+            } else {
+                // Default to resources/views/{namespace}
+                $baseViewPath = resource_path("views/{$namespace}");
+            }
+            
+            // Now process the name part (e.g., 'app' or 'admin.dashboard')
+            $directories = str($name)->explode('.');
+        } else {
+            // Non-namespaced view, process normally
+            $directories = $layout->explode('.');
+        }
 
         $name = Str::kebab($directories->pop());
 

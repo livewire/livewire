@@ -236,6 +236,32 @@ class UnitTest extends \Tests\TestCase
         $output = $this->render('<livewire:foo />');
 
         $this->assertStringContainsString('Test', $output);
+
+        // When the template is rendered, there should be 1 loop in the stack, which will be a count of 0 so we don't have an offset compared to the loop indexes...
+        $this->assertEquals(0, SupportCompiledWireKeys::$currentLoop['count']);
+    }
+
+    public function test_for_loop_trackers_are_used_when_used_within_a_livewire_context()
+    {
+        $this->markTestSkipped('For loops are not supported yet as there is no loop index available...');
+
+        Livewire::component('foo', new class extends \Livewire\Component
+        {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @for ($i = 0; $i < 3; $i++)
+                        <span>Test</span>
+                    @endfor
+                </div>
+                HTML;
+            }
+        });
+
+        $output = $this->render('<livewire:foo />');
+
+        $this->assertStringContainsString('Test', $output);
         
         // When the template is rendered, there should be 1 loop in the stack, which will be a count of 0 so we don't have an offset compared to the loop indexes...
         $this->assertEquals(0, SupportCompiledWireKeys::$currentLoop['count']);
@@ -573,9 +599,9 @@ class UnitTest extends \Tests\TestCase
                 <<<'HTML'
                 <div>
                     @forelse([1, 2] as $post)
-                        @for($i=0; $i < 10; $i++)
+                        @foreach(range(0, 10) as $i)
                             <span> {{ $i }} </span>
-                        @endfor
+                        @endforeach
                     @empty
                         <span> {{ $someProperty }} </span>
                     @endforelse
@@ -584,9 +610,9 @@ class UnitTest extends \Tests\TestCase
                 <<<'HTML'
                 <div>
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = [1, 2]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $post): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php for($i=0; $i < 10; $i++): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = range(0, 10); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                             <span> <?php echo e($i); ?> </span>
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endfor; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         <span> <?php echo e($someProperty); ?> </span>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
@@ -617,13 +643,101 @@ class UnitTest extends \Tests\TestCase
                 <<<'HTML'
                 <div> @for ($i=0; $i<3; $i++)<span> {{ $someProperty }} </span> @endfor Else</div>
                 HTML
-            ]
+            ],
+            32 => [
+                0,
+                <<<'HTML'
+                <style>
+                    @supports (filter: drop-shadow(0 0 0 #ccc)) {
+                        background-color: blue;
+                    }
+                </style>
+                HTML
+            ],
+            33 => [
+                0,
+                <<<'HTML'
+                <div>
+                    @@if (true)
+                </div>
+                HTML
+            ],
+            34 => [
+                0,
+                <<<'HTML'
+                <div>
+                    <script>
+                        @if (app()->environment('production'))
+                            console.debug('tracking enabled');
+                        @else
+                            console.debug('tracking disabled');
+                        @endif
+                    </script>
+                </div>
+                HTML
+            ],
+            35 => [
+                0,
+                <<<'HTML'
+                <div>
+                    <style>
+                        @if (app()->environment('local'))
+                            body {
+                                background-color: red;
+                            }
+                        @endif
+                    </style>
+                </div>
+                HTML
+            ],
+            36 => [
+                1,
+                <<<'HTML'
+                <div>
+                    <div id="label">
+                        @if (now()->dayName === 'Friday')
+                            Friday
+                        @endif
+                    </div>
+
+                    <script type="text/javascript">
+                        @if (now()->dayName === 'Friday')
+                            document.getElementById('label').style.color = 'red';
+                        @endif
+                    </script>
+                </div>
+                HTML
+            ],
+            37 => [
+                2,
+                <<<'HTML'
+                <div>
+                    <div id="label">
+                        @if (now()->dayName === 'Friday')
+                            Friday
+                        @endif
+                    </div>
+
+                    <script type="text/javascript">
+                        @if (now()->dayName === 'Friday')
+                            document.getElementById('label').style.color = 'red';
+                        @endif
+                    </script>
+
+                    <div id="label">
+                        @if (now()->dayName === 'Friday')
+                            Friday
+                        @endif
+                    </div>
+                </div>
+                HTML
+            ],
         ];
     }
 
     protected function reloadFeatures()
     {
-        // We need to remove these two precompilers so we can test if the 
+        // We need to remove these two precompilers so we can test if the
         // feature is disabled and whether they get registered again...
         $precompilers = \Livewire\invade(app('blade.compiler'))->precompilers;
 
@@ -632,7 +746,7 @@ class UnitTest extends \Tests\TestCase
 
             $closureClass = (new \ReflectionFunction($precompiler))->getClosureScopeClass()->getName();
 
-            return $closureClass !== SupportCompiledWireKeys::class 
+            return $closureClass !== SupportCompiledWireKeys::class
                 && $closureClass !== SupportMorphAwareBladeCompilation::class;
         });
 

@@ -1,5 +1,6 @@
 import { on } from '@/hooks'
 import Alpine from 'alpinejs'
+import { evaluateExpression } from '../evaluator'
 
 let executedScripts = new WeakMap
 
@@ -37,7 +38,13 @@ on('effect', ({ component, effects }) => {
                 let scriptContent = extractScriptTagContent(content)
 
                 Alpine.dontAutoEvaluateFunctions(() => {
-                    Alpine.evaluate(component.el, scriptContent, { '$wire': component.$wire, '$js': component.$wire.$js })
+                    evaluateExpression(component.el, scriptContent, {
+                        context: component.$wire,
+                        scope: {
+                            '$wire': component.$wire,
+                            '$js': component.$wire.js,
+                        },
+                    })
                 })
             })
         })
@@ -73,9 +80,9 @@ function extractScriptTagContent(rawHtml) {
 async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
     if (executedAssets.has(key)) return
 
-    await callback()
-
     executedAssets.add(key)
+
+    await callback()
 }
 
 async function addAssetsToHeadTagOfPage(rawHtml) {

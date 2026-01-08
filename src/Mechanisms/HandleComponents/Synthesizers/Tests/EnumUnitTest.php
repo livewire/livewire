@@ -39,6 +39,20 @@ class EnumUnitTest extends \Tests\TestCase
             ->call('save')
             ->assertHasNoErrors();
     }
+
+    public function test_an_array_of_enums()
+    {
+        Livewire::test(ComponentWithEnumArray::class)
+            ->set('list', [ValidatedEnum::TEST])
+            ->assertSet('list', [ValidatedEnum::TEST])
+            ->set('list', [ValidatedEnum::BAR])
+            ->assertSet('list', [ValidatedEnum::BAR])
+            ->set('list', [ValidatedEnum::BAR, ValidatedEnum::TEST])
+            ->assertSet('list', [ValidatedEnum::BAR, ValidatedEnum::TEST])
+            ->set('list', [])
+            ->assertSet('list', [])
+        ;
+    }
 }
 
 enum TestingEnum: string
@@ -49,6 +63,12 @@ enum TestingEnum: string
 enum ValidatedEnum: string
 {
     case TEST = 'test';
+    case BAR = 'bar';
+}
+
+class ComponentWithEnumArray extends TestComponent
+{
+    public $list = [];
 }
 
 class ComponentWithPublicEnumCasters extends TestComponent

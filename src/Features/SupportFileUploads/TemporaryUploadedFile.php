@@ -13,6 +13,7 @@ class TemporaryUploadedFile extends UploadedFile
     protected $disk;
     protected $storage;
     protected $path;
+    protected $metaFileData;
 
     public function __construct($path, $disk)
     {
@@ -45,8 +46,15 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getSize(): int
     {
-        if (app()->runningUnitTests() && str($this->getFilename())->contains('-size=')) {
-            return (int) str($this->getFilename())->between('-size=', '.')->__toString();
+        if (app()->runningUnitTests()) {
+            if (isset($this->metaFileData()['size'])) {
+                return $this->metaFileData()['size'];
+            }
+
+            // This is for backwards compatibility when test file meta data was stored in the filename...
+            if (str($this->getFilename())->contains('-size=')) {
+                return (int) str($this->getFilename())->between('-size=', '.')->__toString();
+            }
         }
 
         return (int) $this->storage->size($this->path);
@@ -54,12 +62,19 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getMimeType(): string
     {
-        if (app()->runningUnitTests() && str($this->getFilename())->contains('-mimeType=')) {
-            $escapedMimeType = str($this->getFilename())->between('-mimeType=', '-');
+        if (app()->runningUnitTests()) {
+            if (isset($this->metaFileData()['type'])) {
+                return $this->metaFileData()['type'];
+            }
 
-            // MimeTypes contain slashes, but we replaced them with underscores in `SupportTesting\Testable`
-            // to ensure the filename is valid, so we now need to revert that.
-            return (string) $escapedMimeType->replace('_', '/');
+            // This is for backwards compatibility when test file meta data was stored in the filename...
+            if (str($this->getFilename())->contains('-mimeType=')) {
+                $escapedMimeType = str($this->getFilename())->between('-mimeType=', '-');
+
+                // MimeTypes contain slashes, but we replaced them with underscores in `SupportTesting\Testable`
+                // to ensure the filename is valid, so we now need to revert that.
+                return (string) $escapedMimeType->replace('_', '/');
+            }
         }
 
         $mimeType = $this->storage->mimeType($this->path);
@@ -92,7 +107,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getClientOriginalName(): string
     {
-        return $this->extractOriginalNameFromFilePath($this->path);
+        return $this->extractOriginalNameFromMetaFileData() ?? $this->extractOriginalNameFromFilePath($this->path);
     }
 
     public function dimensions()
@@ -172,6 +187,14 @@ class TemporaryUploadedFile extends UploadedFile
         return $newPath;
     }
 
+    public static function generateHashName($file)
+    {
+        $hash = str()->random(40);
+        $extension = '.'.$file->getClientOriginalExtension();
+
+        return $hash.$extension;
+    }
+
     public static function generateHashNameWithOriginalNameEmbedded($file)
     {
         $hash = str()->random(30);
@@ -183,8 +206,15 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function hashName($path = null)
     {
-        if (app()->runningUnitTests() && str($this->getFilename())->contains('-hash=')) {
-            return str($this->getFilename())->between('-hash=', '-mimeType')->value();
+        if (app()->runningUnitTests()) {
+            if (isset($this->metaFileData()['hash'])) {
+                return $this->metaFileData()['hash'];
+            }
+
+            // This is for backwards compatibility when test file meta data was stored in the filename...
+            if (str($this->getFilename())->contains('-hash=')) {
+                return str($this->getFilename())->between('-hash=', '-mimeType')->value();
+            }
         }
 
         return parent::hashName($path);
@@ -193,6 +223,25 @@ class TemporaryUploadedFile extends UploadedFile
     public function extractOriginalNameFromFilePath($path)
     {
         return base64_decode(head(explode('-', last(explode('-meta', str($path)->replace('_', '/'))))));
+    }
+
+    public function extractOriginalNameFromMetaFileData()
+    {
+        return $this->metaFileData()['name'] ?? null;
+    }
+
+    public function metaFileData()
+    {
+        if (is_null($this->metaFileData)) {
+            $this->metaFileData = [];
+
+            if ($contents = $this->storage->get($this->path.'.json')) {
+                $contents = json_decode($contents, true);
+
+                $this->metaFileData = $contents;
+            }
+        }
+        return $this->metaFileData;
     }
 
     public static function createFromLivewire($filePath)
