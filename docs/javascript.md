@@ -675,6 +675,7 @@ console.log(component.snapshot)
 
 ## See also
 
+- **[Styles](/docs/4.x/styles)** — Add scoped CSS to your components
 - **[Alpine](/docs/4.x/alpine)** — Use Alpine for client-side interactivity
 - **[Actions](/docs/4.x/actions)** — Create JavaScript actions in components
 - **[Properties](/docs/4.x/properties)** — Access properties from JavaScript with $wire

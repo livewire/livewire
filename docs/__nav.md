@@ -15,6 +15,7 @@ Essentials:
     Testing: { uri: /docs/4.x/testing, file: /testing.md }
 Features:
     Alpine: { uri: /docs/4.x/alpine, file: /alpine.md }
+    Styles: { uri: /docs/4.x/styles, file: /styles.md }
     Navigate: { uri: /docs/4.x/navigate, file: /navigate.md }
     Islands: { uri: /docs/4.x/islands, file: /islands.md }
     Lazy Loading: { uri: /docs/4.x/lazy, file: /lazy.md }

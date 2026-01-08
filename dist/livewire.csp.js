@@ -15532,6 +15532,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = href;
+    let nonce2 = getNonce();
+    if (nonce2)
+      link.nonce = nonce2;
     document.head.appendChild(link);
   }
 

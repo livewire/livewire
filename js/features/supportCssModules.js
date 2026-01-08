@@ -1,5 +1,5 @@
 import { on } from '@/hooks'
-import { getUriPrefix } from '@/utils'
+import { getUriPrefix, getNonce } from '@/utils'
 
 let loadedStyles = new Set()
 
@@ -31,5 +31,9 @@ function injectStylesheet(href) {
     let link = document.createElement('link')
     link.rel = 'stylesheet'
     link.href = href
+
+    let nonce = getNonce()
+    if (nonce) link.nonce = nonce
+
     document.head.appendChild(link)
 }

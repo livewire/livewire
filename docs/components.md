@@ -71,10 +71,12 @@ This creates a directory with all related files together:
 
 ```
 resources/views/components/post/⚡create/
-├── create.php        # PHP class
-├── create.blade.php  # Blade template
-├── create.js         # JavaScript (optional, with --js flag)
-└── create.test.php   # Pest test (optional, with --test flag)
+├── create.php          # PHP class
+├── create.blade.php    # Blade template
+├── create.js           # JavaScript (optional)
+├── create.css          # Scoped styles (optional)
+├── create.global.css   # Global styles (optional)
+└── create.test.php     # Pest test (optional, with --test flag)
 ```
 
 ### Converting between formats
