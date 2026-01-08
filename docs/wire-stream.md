@@ -159,3 +159,15 @@ Append/replace can also be specified at the target element level by appending or
 // Replace contents...
 <div wire:stream.replace="target">
 ```
+
+## Reference
+
+```blade
+wire:stream="name"
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.replace` | Replace the element's contents instead of appending |

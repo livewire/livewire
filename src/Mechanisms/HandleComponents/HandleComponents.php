@@ -8,6 +8,8 @@ use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Exceptions\MaxNestingDepthExceededException;
+use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\View;
 
@@ -24,6 +26,9 @@ class HandleComponents extends Mechanism
         Synthesizers\FloatSynth::class
     ];
 
+    // Performance optimization: Cache which synthesizer matches which type
+    protected $synthesizerTypeCache = [];
+
     public static $renderStack = [];
     public static $componentStack = [];
 
@@ -38,12 +43,12 @@ class HandleComponents extends Mechanism
     {
         $parent = app('livewire')->current();
 
-        if ($html = $this->shortCircuitMount($name, $params, $key, $parent, $slots)) return $html;
-
         $component = app('livewire')->new($name);
 
-        // Separate params into component properties and HTML attributes
+        // Separate params into component properties and HTML attributes...
         [$componentParams, $htmlAttributes] = $this->separateParamsAndAttributes($component, $params);
+
+        if ($html = $this->shortCircuitMount($name, $componentParams, $key, $parent, $slots, $htmlAttributes)) return $html;
 
         if (! empty($slots)) {
             $component->withSlots($slots, $parent);
@@ -58,7 +63,7 @@ class HandleComponents extends Mechanism
         $context = new ComponentContext($component, mounting: true);
 
         if (config('app.debug')) $start = microtime(true);
-        $finish = trigger('mount', $component, $componentParams, $key, $parent);
+        $finish = trigger('mount', $component, $componentParams, $key, $parent, $htmlAttributes);
         if (config('app.debug')) trigger('profile', 'mount', $component->getId(), [$start, microtime(true)]);
 
         if (config('app.debug')) $start = microtime(true);
@@ -93,19 +98,25 @@ class HandleComponents extends Mechanism
         $mountParams = $this->getMountMethodParameters($component);
 
         foreach ($params as $key => $value) {
-            $camelKey = str($key)->camel()->toString();
+            $processedKey = $key;
+
+            // Convert only kebab-case params to camelCase for matching...
+            if (str($processedKey)->contains('-')) {
+                $processedKey = str($processedKey)->camel()->toString();
+            }
 
             // Check if this is a reserved param
             if ($this->isReservedParam($key)) {
                 $componentParams[$key] = $value;
             }
+
             // Check if this maps to a component property or mount param
             elseif (
-                array_key_exists($camelKey, $componentProperties)
-                || in_array($camelKey, $mountParams)
+                array_key_exists($processedKey, $componentProperties)
+                || in_array($processedKey, $mountParams)
                 || is_numeric($key) // if the key is numeric, it's likely a mount parameter...
             ) {
-                $componentParams[$camelKey] = $value;
+                $componentParams[$processedKey] = $value;
             } else {
                 // Keep as HTML attribute (preserve kebab-case)
                 $htmlAttributes[$key] = $value;
@@ -117,8 +128,8 @@ class HandleComponents extends Mechanism
 
     protected function isReservedParam($key)
     {
-        $exact = ['lazy', 'wire:ref'];
-        $startsWith = ['@', 'wire:model'];
+        $exact = ['lazy', 'defer', 'lazy.bundle', 'defer.bundle', 'wire:ref'];
+        $startsWith = ['@'];
 
         // Check exact matches
         if (in_array($key, $exact)) {
@@ -151,13 +162,13 @@ class HandleComponents extends Mechanism
         return $parameters;
     }
 
-    protected function shortCircuitMount($name, $params, $key, $parent, $slots)
+    protected function shortCircuitMount($name, $params, $key, $parent, $slots, $htmlAttributes)
     {
         $newHtml = null;
 
         trigger('pre-mount', $name, $params, $key, $parent, function ($html) use (&$newHtml) {
             $newHtml = $html;
-        }, $slots);
+        }, $slots, $htmlAttributes);
 
         return $newHtml;
     }
@@ -288,6 +299,11 @@ class HandleComponents extends Mechanism
             return $value;
         }
 
+        // Validate class against denylist before any synthesizer can instantiate it...
+        if (isset($meta['class'])) {
+            SecurityPolicy::validateClass($meta['class']);
+        }
+
         $synth = $this->propertySynth($meta['s'], $context, $path);
 
         return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path) {
@@ -304,6 +320,11 @@ class HandleComponents extends Mechanism
         // Nested properties get set as `__rm__` when they are removed. We don't want to hydrate these.
         if ($this->isRemoval($value) && str($path)->contains('.')) {
             return $value;
+        }
+
+        // Validate class against denylist before any synthesizer can instantiate it...
+        if (isset($meta['class'])) {
+            SecurityPolicy::validateClass($meta['class']);
         }
 
         $synth = $this->propertySynth($meta['s'], $context, $path);
@@ -366,9 +387,15 @@ class HandleComponents extends Mechanism
 
         $fileName = str($dotName)->replace('.', '/')->__toString();
 
-        $viewOrString = method_exists($component, 'render')
-            ? wrap($component)->render()
-            : View::file($viewPath . '/' . $fileName . '.blade.php');
+       $viewOrString = null;
+
+        if (method_exists($component, 'render')) {
+            $viewOrString = wrap($component)->render();
+        } elseif ($component->hasProvidedView()) {
+            $viewOrString = $component->getProvidedView();
+        } else {
+            $viewOrString = View::file($viewPath . '/' . $fileName . '.blade.php');
+        }
 
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
 
@@ -407,6 +434,11 @@ class HandleComponents extends Mechanism
     public function updateProperty($component, $path, $value, $context)
     {
         $segments = explode('.', $path);
+
+        $maxDepth = config('livewire.payload.max_nesting_depth');
+        if ($maxDepth !== null && count($segments) > $maxDepth) {
+            throw new MaxNestingDepthExceededException($path, $maxDepth);
+        }
 
         $property = array_shift($segments);
 
@@ -535,12 +567,18 @@ class HandleComponents extends Mechanism
 
     protected function callMethods($root, $calls, $componentContext)
     {
+        $maxCalls = config('livewire.payload.max_calls');
+
+        if ($maxCalls !== null && count($calls) > $maxCalls) {
+            throw new TooManyCallsException(count($calls), $maxCalls);
+        }
+
         $returns = [];
 
         foreach ($calls as $idx => $call) {
             $method = $call['method'];
             $params = $call['params'];
-            $context = $call['context'] ?? [];
+            $metadata = $call['metadata'] ?? [];
 
             $earlyReturnCalled = false;
             $earlyReturn = null;
@@ -549,7 +587,7 @@ class HandleComponents extends Mechanism
                 $earlyReturn = $return;
             };
 
-            $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $context);
+            $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $metadata, $idx);
 
             if ($earlyReturnCalled) {
                 $returns[] = $finish($earlyReturn);
@@ -574,6 +612,11 @@ class HandleComponents extends Mechanism
             if (config('app.debug')) trigger('profile', 'call'.$idx, $root->getId(), [$start, microtime(true)]);
 
             $returns[] = $finish($return);
+
+            // Support `Wire:click.renderless`...
+            if ($metadata['renderless'] ?? false) {
+                $root->skipRender();
+            }
         }
 
         $componentContext->addEffect('returns', $returns);
@@ -609,13 +652,22 @@ class HandleComponents extends Mechanism
 
     protected function getSynthesizerByTarget($target, $context, $path)
     {
-        foreach ($this->propertySynthesizers as $synth) {
-            if ($synth::match($target)) {
-                return new $synth($context, $path);
+        // Performance optimization: Cache synthesizer matches by runtime type...
+        $type = get_debug_type($target);
+
+        if (! isset($this->synthesizerTypeCache[$type])) {
+            foreach ($this->propertySynthesizers as $synth) {
+                if ($synth::match($target)) {
+                    $this->synthesizerTypeCache[$type] = $synth;
+
+                    return new $synth($context, $path);
+                }
             }
+
+            throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
         }
 
-        throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
+        return new $this->synthesizerTypeCache[$type]($context, $path);
     }
 
     protected function getSynthesizerByType($type, $context, $path)

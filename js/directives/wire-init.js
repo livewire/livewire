@@ -1,8 +1,11 @@
 import { directive } from "@/directives"
 import { evaluateActionExpression } from '../evaluator'
+import { setNextActionOrigin } from "@/request"
 
 directive('init', ({ component, el, directive }) => {
     let fullMethod = directive.expression ? directive.expression : '$refresh'
 
-    evaluateActionExpression(component, el, fullMethod)
+    setNextActionOrigin({ el, directive })
+
+    evaluateActionExpression(el, fullMethod)
 })

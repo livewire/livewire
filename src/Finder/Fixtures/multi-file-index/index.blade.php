@@ -1,0 +1,1 @@
+<div>Finder Test Multi-file Index Component</div>

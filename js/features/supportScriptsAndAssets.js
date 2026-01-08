@@ -38,9 +38,11 @@ on('effect', ({ component, effects }) => {
                 let scriptContent = extractScriptTagContent(content)
 
                 Alpine.dontAutoEvaluateFunctions(() => {
-                    evaluateExpression(component, component.el, scriptContent, {
+                    evaluateExpression(component.el, scriptContent, {
+                        context: component.$wire,
                         scope: {
-                            '$js': component.$wire.$js,
+                            '$wire': component.$wire,
+                            '$js': component.$wire.js,
                         },
                     })
                 })
@@ -78,9 +80,9 @@ function extractScriptTagContent(rawHtml) {
 async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
     if (executedAssets.has(key)) return
 
-    await callback()
-
     executedAssets.add(key)
+
+    await callback()
 }
 
 async function addAssetsToHeadTagOfPage(rawHtml) {

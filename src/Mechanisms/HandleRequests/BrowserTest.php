@@ -20,7 +20,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 );
 
                 return $response;
-            });
+            })->name('custom');
         });
 
         Livewire::visit(new class extends \Livewire\Component {

@@ -2,8 +2,6 @@
 
 namespace Livewire\Features\SupportEvents;
 
-use Livewire\Mechanisms\ComponentRegistry;
-
 class Event
 {
     protected $name;
@@ -74,8 +72,12 @@ class Event
         return $this;
     }
 
-    public function to($component = null, $ref = null, $el = null)
+    public function to($component = null, $ref = null, $el = null, $self = null)
     {
+        if ($self) {
+            return $this->self();
+        }
+
         if ($ref) {
             return $this->ref($ref);
         }
@@ -95,7 +97,7 @@ class Event
         ];
 
         if ($this->self) $output['self'] = true;
-        if ($this->component) $output['component'] = app(ComponentRegistry::class)->getName($this->component);
+        if ($this->component) $output['component'] = app('livewire.factory')->resolveComponentName($this->component);
         if ($this->ref) $output['ref'] = $this->ref;
         if ($this->el) $output['el'] = $this->el;
 

@@ -33,3 +33,4 @@
 /src/**/Tests       export-ignore
 /src/**/*Test.php   export-ignore
 /src/**/Test.php    export-ignore
+/src/**/Fixtures    export-ignore

@@ -78,24 +78,37 @@ export function each(subject, callback) {
 }
 
 /**
- * Get a property from an object with support for dot-notation.
+ * Parse a path string into segments, supporting dot and bracket notation.
+ * e.g. "foo.bar", "foo[0].bar", "foo['hey'].baz"
+ */
+function parsePathSegments(path) {
+    if (path === '') return []
+
+    return path
+        .replace(/\[(['"]?)(.+?)\1\]/g, '.$2')  // Convert brackets to dots: foo['bar'] → foo.bar, foo[0] → foo.0
+        .replace(/^\./, '')                      // Remove leading dot if present
+        .split('.')
+}
+
+/**
+ * Get a property from an object with support for dot-notation and bracket-notation.
  */
 export function dataGet(object, key) {
     if (key === '') return object
 
-    return key.split('.').reduce((carry, i) => {
+    return parsePathSegments(key).reduce((carry, i) => {
         return carry?.[i]
     }, object)
 }
 
 /**
- * Set a property on an object with support for dot-notation.
+ * Set a property on an object with support for dot-notation and bracket-notation.
  */
 export function dataSet(object, key, value) {
-    let segments = key.split('.')
+    let segments = parsePathSegments(key)
 
     if (segments.length === 1) {
-        return object[key] = value
+        return object[segments[0]] = value
     }
 
     let firstSegment = segments.shift()
@@ -220,6 +233,13 @@ export function getNonce() {
 }
 
 /**
+ * Livewire's encoded URI prefix...
+ */
+export function getUriPrefix() {
+    return document.querySelector('[data-uri-prefix]')?.getAttribute('data-uri-prefix') ?? window.livewireScriptConfig['uriPrefix'] ?? null
+}
+
+/**
  * Livewire's update URI. This is configurable via Livewire::setUpdateRoute(...)
  */
 export function getUpdateUri() {
@@ -234,4 +254,34 @@ export function splitDumpFromContent(content) {
     let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s)
 
     return [dump, content.replace(dump, '')]
+}
+
+export function walkUpwards(el, callback) {
+    let current = el
+
+    while (current) {
+        let stop = undefined
+
+        callback(current, { stop: (value) => value === undefined ? stop = current : stop = value })
+
+        if (stop !== undefined) return stop
+
+        if (current._x_teleportBack) current = current._x_teleportBack
+
+        current = current.parentElement
+    }
+}
+
+export function walkBackwards(el, callback) {
+    let current = el
+
+    while (current) {
+        let stop = undefined
+
+        callback(current, { stop: (value) => value === undefined ? stop = current : stop = value })
+
+        if (stop !== undefined) return stop
+
+        current = current.previousSibling
+    }
 }

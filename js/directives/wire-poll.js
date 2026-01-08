@@ -1,6 +1,5 @@
 import { directive, getDirectives } from "@/directives"
-import { on } from '@/hooks'
-import Action from '@/v4/requests/action'
+import { setNextActionMetadata, setNextActionOrigin } from '@/request'
 import { evaluateActionExpression } from '../evaluator'
 
 directive('poll', ({ el, directive, component }) => {
@@ -19,57 +18,17 @@ directive('poll', ({ el, directive, component }) => {
     stopWhen(() => theElementIsDisconnected(el))
 })
 
-on('component.init', ({ component }) => {
-    if (! window.livewireV4) return
-
-    let islands = component.islands
-
-    if (! islands || Object.keys(islands).length === 0) return
-
-    Object.values(islands).forEach(island => {
-        if (!island.poll) return
-
-        let interval = extractDurationFrom([island.poll], 2000)
-
-        let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-            let action = new Action(component, '$refresh')
-
-            action.addContext({
-                type: 'poll',
-                island: { name: island.name },
-            })
-
-            action.fire()
-        }, interval)
-
-        start()
-
-        pauseWhile(() => livewireIsOffline())
-        stopWhen(() => theElementIsDisconnected(component.el))
-    })
-})
-
 function triggerComponentRequest(el, directive, component) {
-    if (window.livewireV4) {
-        component.addActionContext({
-            type: 'poll',
-            el,
-            directive,
-        })
+    // Set targetEl to null to prevent data-loading on poll actions
+    setNextActionOrigin({ el, directive, targetEl: null })
+    setNextActionMetadata({ type: 'poll' })
 
-        let fullMethod = directive.expression ? directive.expression : '$refresh'
+    let fullMethod = directive.expression ? directive.expression : '$refresh'
 
-        evaluateActionExpression(component, el, fullMethod)
-
-        return
-    }
-
-    let fullMethod = directive.expression ? directive.expression : '$commit'
-
-    evaluateActionExpression(component, el, fullMethod)
+    evaluateActionExpression(el, fullMethod)
 }
 
-function poll(callback, interval = 2000) {
+export function poll(callback, interval = 2000) {
     let pauseConditions = []
     let throttleConditions = []
     let stopConditions = []
@@ -125,7 +84,7 @@ let isOffline = false
 window.addEventListener('offline', () => isOffline = true)
 window.addEventListener('online', () => isOffline = false)
 
-function livewireIsOffline() {
+export function livewireIsOffline() {
     return isOffline
 }
 
@@ -160,11 +119,11 @@ function theElementIsNotInTheViewport(el) {
     )
 }
 
-function theElementIsDisconnected(el) {
+export function theElementIsDisconnected(el) {
     return el.isConnected === false
 }
 
-function extractDurationFrom(modifiers, defaultDuration) {
+export function extractDurationFrom(modifiers, defaultDuration) {
     let durationInMilliSeconds
     let durationInMilliSecondsString = modifiers.find(mod => mod.match(/([0-9]+)ms/))
     let durationInSecondsString = modifiers.find(mod => mod.match(/([0-9]+)s/))
