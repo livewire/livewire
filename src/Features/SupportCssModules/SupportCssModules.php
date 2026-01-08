@@ -32,7 +32,7 @@ class SupportCssModules extends ComponentHook
             $css = file_get_contents($path);
 
             // Wrap in component selector for scoping
-            $wrappedCss = "[wire:name=\"{$component}\"] {\n{$css}\n}";
+            $wrappedCss = "[wire\\:name=\"{$component}\"] {\n{$css}\n}";
 
             $filemtime = filemtime($path);
 
@@ -40,6 +40,7 @@ class SupportCssModules extends ComponentHook
                 $wrappedCss,
                 $filemtime,
                 $component.'.css',
+                'text/css; charset=utf-8',
             );
         });
 
@@ -69,6 +70,7 @@ class SupportCssModules extends ComponentHook
                 $css,
                 $filemtime,
                 $component.'.global.css',
+                'text/css; charset=utf-8',
             );
         });
     }
