@@ -2502,7 +2502,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     onlyDuringClone,
     addRootSelector,
     addInitSelector,
-    flushScheduler: flushJobs,
     setErrorHandler,
     interceptClone,
     addScopeToNode,
