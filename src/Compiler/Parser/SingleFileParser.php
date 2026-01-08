@@ -10,6 +10,8 @@ class SingleFileParser extends Parser
         public string $path,
         public string $contents,
         public ?string $scriptPortion,
+        public ?string $stylePortion,
+        public ?string $globalStylePortion,
         public string $classPortion,
         public ?string $placeholderPortion,
         public string $viewPortion,
@@ -22,6 +24,8 @@ class SingleFileParser extends Parser
         $mutableContents = $compiler->prepareViewForCompilation($contents, $path);
 
         $scriptPortion = static::extractScriptPortion($mutableContents);
+        $stylePortion = static::extractStylePortion($mutableContents);
+        $globalStylePortion = static::extractGlobalStylePortion($mutableContents);
         $classPortion = static::extractClassPortion($mutableContents);
         $placeholderPortion = static::extractPlaceholderPortion($mutableContents);
 
@@ -31,6 +35,8 @@ class SingleFileParser extends Parser
             $path,
             $contents,
             $scriptPortion,
+            $stylePortion,
+            $globalStylePortion,
             $classPortion,
             $placeholderPortion,
             $viewPortion,
@@ -78,6 +84,50 @@ class SingleFileParser extends Parser
         return $scriptTag;
     }
 
+    public static function extractStylePortion(string &$contents): ?string
+    {
+        // Get the view portion (everything after the PHP class)
+        $viewContents = static::getViewPortion($contents);
+
+        // Find style tags that are at the start of a line, but NOT <style global>
+        $pattern = '/(?:^|\n)\s*(<style\b(?![^>]*\bglobal\b)[^>]*>.*?<\/style>)/s';
+        preg_match_all($pattern, $viewContents, $matches);
+
+        if (empty($matches[1])) {
+            return null;
+        }
+
+        // Take the last style tag (most likely to be at root level)
+        $styleTag = end($matches[1]);
+
+        // Remove it from the original contents
+        $contents = str_replace($styleTag, '', $contents);
+
+        return $styleTag;
+    }
+
+    public static function extractGlobalStylePortion(string &$contents): ?string
+    {
+        // Get the view portion (everything after the PHP class)
+        $viewContents = static::getViewPortion($contents);
+
+        // Find style tags with "global" attribute
+        $pattern = '/(?:^|\n)\s*(<style\b[^>]*\bglobal\b[^>]*>.*?<\/style>)/s';
+        preg_match_all($pattern, $viewContents, $matches);
+
+        if (empty($matches[1])) {
+            return null;
+        }
+
+        // Take the last global style tag
+        $styleTag = end($matches[1]);
+
+        // Remove it from the original contents
+        $contents = str_replace($styleTag, '', $contents);
+
+        return $styleTag;
+    }
+
     private static function getViewPortion(string $contents): string
     {
         // Remove the PHP class portion to get just the view
@@ -100,7 +150,7 @@ class SingleFileParser extends Parser
         return false;
     }
 
-    public function generateClassContents(?string $viewFileName = null, ?string $placeholderFileName = null, ?string $scriptFileName = null): string
+    public function generateClassContents(?string $viewFileName = null, ?string $placeholderFileName = null, ?string $scriptFileName = null, ?string $styleFileName = null, ?string $globalStyleFileName = null): string
     {
         $classContents = trim($this->classPortion);
 
@@ -118,6 +168,14 @@ class SingleFileParser extends Parser
 
         if ($scriptFileName) {
             $classContents = $this->injectScriptMethod($classContents, $scriptFileName);
+        }
+
+        if ($styleFileName) {
+            $classContents = $this->injectStyleMethod($classContents, $styleFileName);
+        }
+
+        if ($globalStyleFileName) {
+            $classContents = $this->injectGlobalStyleMethod($classContents, $globalStyleFileName);
         }
 
         return $classContents;
@@ -211,6 +269,32 @@ class SingleFileParser extends Parser
         }
 
         return $this->cleanupJavaScriptIndentation($scriptContents);
+    }
+
+    public function generateStyleContents(): ?string
+    {
+        if ($this->stylePortion === null) return null;
+
+        $pattern = '/<style\b[^>]*>(.*?)<\/style>/s';
+
+        if (preg_match($pattern, $this->stylePortion, $matches)) {
+            return trim($matches[1]);
+        }
+
+        return null;
+    }
+
+    public function generateGlobalStyleContents(): ?string
+    {
+        if ($this->globalStylePortion === null) return null;
+
+        $pattern = '/<style\b[^>]*>(.*?)<\/style>/s';
+
+        if (preg_match($pattern, $this->globalStylePortion, $matches)) {
+            return trim($matches[1]);
+        }
+
+        return null;
     }
 
     protected function cleanupJavaScriptIndentation(string $source): string

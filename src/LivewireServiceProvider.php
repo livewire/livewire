@@ -193,6 +193,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportTransitions\SupportTransitions::class,
             Features\SupportStreaming\SupportStreaming::class,
             Features\SupportJsModules\SupportJsModules::class,
+            Features\SupportCssModules\SupportCssModules::class,
             Features\SupportNavigate\SupportNavigate::class,
             Features\SupportEntangle\SupportEntangle::class,
             Features\SupportWireRef\SupportWireRef::class,
