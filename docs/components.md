@@ -377,7 +377,7 @@ Route::livewire('/admin/users', 'admin::users-table');
 If you want Livewire to discover components in additional directories beyond the defaults, you can configure them in your `config/livewire.php` file:
 
 ```php
-'component_paths' => [
+'component_locations' => [
     resource_path('views/components'),
     resource_path('views/admin/components'),
     resource_path('views/widgets'),
