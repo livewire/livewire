@@ -607,6 +607,18 @@ You can sync component state with localStorage using `$watch`:
 </script>
 ```
 
+### Using the `@js` directive
+
+If you need to output PHP data for use in JavaScript directly, you can use the `@js` directive.
+
+```blade
+<script>
+    let posts = @js($posts)
+
+    // "posts" will now be a JavaScript array of post data from PHP.
+</script>
+```
+
 ## Best practices
 
 ### Component scripts vs global scripts
