@@ -12890,8 +12890,10 @@ globalDirective("transition", ({ el, directive: directive2, cleanup }) => {
   let transitionName = directive2.expression || "match-element";
   el.style.viewTransitionName = transitionName;
 });
-async function transitionDomMutation(component, callback) {
-  if (!component.el.querySelector("[wire\\:transition]"))
+async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
+  if (options.skip)
+    return callback();
+  if (!fromEl.querySelector("[wire\\:transition]") && !toEl.querySelector("[wire\\:transition]"))
     return callback();
   let style = document.createElement("style");
   style.textContent = `
@@ -12912,9 +12914,13 @@ async function transitionDomMutation(component, callback) {
         }
     `;
   document.head.appendChild(style);
-  let transition = document.startViewTransition(() => {
-    callback();
-  });
+  let transitionConfig = {
+    update: () => callback()
+  };
+  if (options.type) {
+    transitionConfig.types = [options.type];
+  }
+  let transition = document.startViewTransition(transitionConfig);
   transition.finished.finally(() => {
     style.remove();
   });
@@ -12954,9 +12960,10 @@ async function morph2(component, el, html) {
       child.replaceWith(existingComponent.cloneNode(true));
     }
   });
-  await transitionDomMutation(component, () => {
+  let transitionOptions = component.effects.transition || {};
+  await transitionDomMutation(el, to, () => {
     import_alpinejs9.default.morph(el, to, getMorphConfig(component));
-  });
+  }, transitionOptions);
   trigger("morphed", { el, component });
 }
 async function morphFragment(component, startNode, endNode, toHTML) {
@@ -12978,9 +12985,10 @@ async function morphFragment(component, startNode, endNode, toHTML) {
     parentProviderWrapper.__livewire = parentComponent;
   }
   trigger("island.morph", { startNode, endNode, component });
-  await transitionDomMutation(component, () => {
+  let transitionOptions = component.effects.transition || {};
+  await transitionDomMutation(fromContainer, toContainer, () => {
     import_alpinejs9.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
-  });
+  }, transitionOptions);
   trigger("island.morphed", { startNode, endNode, component });
 }
 function getMorphConfig(component) {

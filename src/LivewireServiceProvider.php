@@ -190,6 +190,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportWithMethod\SupportWithMethod::class,
             Features\SupportIsolating\SupportIsolating::class,
             Features\SupportRedirects\SupportRedirects::class,
+            Features\SupportTransitions\SupportTransitions::class,
             Features\SupportStreaming\SupportStreaming::class,
             Features\SupportJsModules\SupportJsModules::class,
             Features\SupportNavigate\SupportNavigate::class,

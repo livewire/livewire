@@ -6,7 +6,10 @@ globalDirective('transition', ({ el, directive, cleanup }) => {
     el.style.viewTransitionName = transitionName
 })
 
-export async function transitionDomMutation(fromEl, toEl, callback) {
+export async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
+    // Skip transitions entirely if requested...
+    if (options.skip) return callback()
+
     // Only transition if there is a [wire:transition] element within either the from or to elements...
     if (! fromEl.querySelector('[wire\\:transition]') && ! toEl.querySelector('[wire\\:transition]')) return callback()
 
@@ -33,9 +36,16 @@ export async function transitionDomMutation(fromEl, toEl, callback) {
 
     document.head.appendChild(style)
 
-    let transition = document.startViewTransition(() => {
-        callback()
-    })
+    let transitionConfig = {
+        update: () => callback(),
+    }
+
+    // Add transition types if provided...
+    if (options.type) {
+        transitionConfig.types = [options.type]
+    }
+
+    let transition = document.startViewTransition(transitionConfig)
 
     transition.finished.finally(() => {
         style.remove()

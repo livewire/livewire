@@ -66,6 +66,7 @@ PHP Attributes:
     Renderless: { uri: /docs/4.x/attribute-renderless, file: /attribute-renderless.md }
     Session: { uri: /docs/4.x/attribute-session, file: /attribute-session.md }
     Title: { uri: /docs/4.x/attribute-title, file: /attribute-title.md }
+    Transition: { uri: /docs/4.x/attribute-transition, file: /attribute-transition.md }
     Url: { uri: /docs/4.x/attribute-url, file: /attribute-url.md }
     Validate: { uri: /docs/4.x/attribute-validate, file: /attribute-validate.md }
 Blade Directives:
