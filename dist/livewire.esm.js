@@ -15,7 +15,10 @@ var __copyProps = (to, from, except, desc) => {
   }
   return to;
 };
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 
 // ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
@@ -41,7 +44,10 @@ var require_module_cjs = __commonJS({
       }
       return to;
     };
-    var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
+    var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(
+      isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target,
+      mod
+    ));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var require_shared_cjs = __commonJS2({
       "node_modules/@vue/shared/dist/shared.cjs.js"(exports2) {
@@ -353,7 +359,9 @@ var require_module_cjs = __commonJS({
         };
         var isPlainObject = (val) => toTypeString(val) === "[object Object]";
         var isIntegerKey = (key) => isString(key) && key !== "NaN" && key[0] !== "-" && "" + parseInt(key, 10) === key;
-        var isReservedProp = /* @__PURE__ */ makeMap(",key,ref,onVnodeBeforeMount,onVnodeMounted,onVnodeBeforeUpdate,onVnodeUpdated,onVnodeBeforeUnmount,onVnodeUnmounted");
+        var isReservedProp = /* @__PURE__ */ makeMap(
+          ",key,ref,onVnodeBeforeMount,onVnodeMounted,onVnodeBeforeUpdate,onVnodeUpdated,onVnodeBeforeUnmount,onVnodeUnmounted"
+        );
         var cacheStringFunction = (fn) => {
           const cache = /* @__PURE__ */ Object.create(null);
           return (str) => {
@@ -960,10 +968,18 @@ var require_module_cjs = __commonJS({
             has(key) {
               return has$1.call(this, key, true);
             },
-            add: createReadonlyMethod("add"),
-            set: createReadonlyMethod("set"),
-            delete: createReadonlyMethod("delete"),
-            clear: createReadonlyMethod("clear"),
+            add: createReadonlyMethod(
+              "add"
+            ),
+            set: createReadonlyMethod(
+              "set"
+            ),
+            delete: createReadonlyMethod(
+              "delete"
+            ),
+            clear: createReadonlyMethod(
+              "clear"
+            ),
             forEach: createForEach(true, false)
           };
           const shallowReadonlyInstrumentations2 = {
@@ -976,10 +992,18 @@ var require_module_cjs = __commonJS({
             has(key) {
               return has$1.call(this, key, true);
             },
-            add: createReadonlyMethod("add"),
-            set: createReadonlyMethod("set"),
-            delete: createReadonlyMethod("delete"),
-            clear: createReadonlyMethod("clear"),
+            add: createReadonlyMethod(
+              "add"
+            ),
+            set: createReadonlyMethod(
+              "set"
+            ),
+            delete: createReadonlyMethod(
+              "delete"
+            ),
+            clear: createReadonlyMethod(
+              "clear"
+            ),
             forEach: createForEach(true, true)
           };
           const iteratorMethods = ["keys", "values", "entries", Symbol.iterator];
@@ -1290,8 +1314,8 @@ var require_module_cjs = __commonJS({
     });
     var module_exports = {};
     __export(module_exports, {
-      Alpine: () => src_default,
-      default: () => module_default
+      Alpine: () => src_default2,
+      default: () => module_default2
     });
     module.exports = __toCommonJS(module_exports);
     var flushPending = false;
@@ -1580,20 +1604,32 @@ var require_module_cjs = __commonJS({
     }
     var mergeProxyTrap = {
       ownKeys({ objects }) {
-        return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
+        return Array.from(
+          new Set(objects.flatMap((i) => Object.keys(i)))
+        );
       },
       has({ objects }, name) {
         if (name == Symbol.unscopables)
           return false;
-        return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name) || Reflect.has(obj, name));
+        return objects.some(
+          (obj) => Object.prototype.hasOwnProperty.call(obj, name) || Reflect.has(obj, name)
+        );
       },
       get({ objects }, name, thisProxy) {
         if (name == "toJSON")
           return collapseProxies;
-        return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
+        return Reflect.get(
+          objects.find(
+            (obj) => Reflect.has(obj, name)
+          ) || {},
+          name,
+          thisProxy
+        );
       },
       set({ objects }, name, value, thisProxy) {
-        const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
+        const target = objects.find(
+          (obj) => Object.prototype.hasOwnProperty.call(obj, name)
+        ) || objects[objects.length - 1];
         const descriptor = Object.getOwnPropertyDescriptor(target, name);
         if ((descriptor == null ? void 0 : descriptor.set) && (descriptor == null ? void 0 : descriptor.get))
           return descriptor.set.call(thisProxy, value) || true;
@@ -1699,8 +1735,18 @@ var require_module_cjs = __commonJS({
         handleError(e, el, expression);
       }
     }
-    function handleError(error2, el, expression = void 0) {
-      error2 = Object.assign(error2 != null ? error2 : { message: "No error message given." }, { el, expression });
+    function handleError(...args) {
+      return errorHandler(...args);
+    }
+    var errorHandler = normalErrorHandler;
+    function setErrorHandler(handler4) {
+      errorHandler = handler4;
+    }
+    function normalErrorHandler(error2, el, expression = void 0) {
+      error2 = Object.assign(
+        error2 != null ? error2 : { message: "No error message given." },
+        { el, expression }
+      );
       console.warn(`Alpine Expression Error: ${error2.message}
 
 ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
@@ -1728,6 +1774,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function setEvaluator(newEvaluator) {
       theEvaluatorFunction = newEvaluator;
     }
+    var theRawEvaluatorFunction;
+    function setRawEvaluator(newEvaluator) {
+      theRawEvaluatorFunction = newEvaluator;
+    }
     function normalEvaluator(el, expression) {
       let overriddenMagics = {};
       injectMagics(overriddenMagics, el);
@@ -1738,6 +1788,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function generateEvaluatorFromFunction(dataStack, func) {
       return (receiver = () => {
       }, { scope: scope2 = {}, params = [], context } = {}) => {
+        if (!shouldAutoEvaluateFunctions) {
+          runIfTypeOfFunction(receiver, func, mergeProxies([scope2, ...dataStack]), params);
+          return;
+        }
         let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
         runIfTypeOfFunction(receiver, result);
       };
@@ -1752,7 +1806,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression.trim()) || /^(let|const)\s/.test(expression.trim()) ? `(async()=>{ ${expression} })()` : expression;
       const safeAsyncFunction = () => {
         try {
-          let func2 = new AsyncFunction(["__self", "scope"], `with (scope) { __self.result = ${rightSideSafeExpression} }; __self.finished = true; return __self.result;`);
+          let func2 = new AsyncFunction(
+            ["__self", "scope"],
+            `with (scope) { __self.result = ${rightSideSafeExpression} }; __self.finished = true; return __self.result;`
+          );
           Object.defineProperty(func2, "name", {
             value: `[Alpine] ${expression}`
           });
@@ -1798,6 +1855,39 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         value.then((i) => receiver(i));
       } else {
         receiver(value);
+      }
+    }
+    function evaluateRaw(...args) {
+      return theRawEvaluatorFunction(...args);
+    }
+    function normalRawEvaluator(el, expression, extras = {}) {
+      var _a, _b;
+      let overriddenMagics = {};
+      injectMagics(overriddenMagics, el);
+      let dataStack = [overriddenMagics, ...closestDataStack(el)];
+      let scope2 = mergeProxies([(_a = extras.scope) != null ? _a : {}, ...dataStack]);
+      let params = (_b = extras.params) != null ? _b : [];
+      if (expression.includes("await")) {
+        let AsyncFunction = Object.getPrototypeOf(async function() {
+        }).constructor;
+        let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression.trim()) || /^(let|const)\s/.test(expression.trim()) ? `(async()=>{ ${expression} })()` : expression;
+        let func = new AsyncFunction(
+          ["scope"],
+          `with (scope) { let __result = ${rightSideSafeExpression}; return __result }`
+        );
+        let result = func.call(extras.context, scope2);
+        return result;
+      } else {
+        let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression.trim()) || /^(let|const)\s/.test(expression.trim()) ? `(()=>{ ${expression} })()` : expression;
+        let func = new Function(
+          ["scope"],
+          `with (scope) { let __result = ${rightSideSafeExpression}; return __result }`
+        );
+        let result = func.call(extras.context, scope2);
+        if (typeof result === "function" && shouldAutoEvaluateFunctions) {
+          return result.apply(scope2, params);
+        }
+        return result;
       }
     }
     var prefixAsString = "x-";
@@ -1927,6 +2017,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     var alpineAttributeRegex = () => new RegExp(`^${prefixAsString}([^:^.]+)\\b`);
     function toParsedDirectives(transformedAttributeMap, originalAttributeOverride) {
       return ({ name, value }) => {
+        if (name === value)
+          value = "";
         let typeMatch = name.match(alpineAttributeRegex());
         let valueMatch = name.match(/:([a-zA-Z0-9\-_:]+)/);
         let modifiers = name.match(/\.[^.\]]+(?=[^\]]*$)/g) || [];
@@ -1964,12 +2056,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return directiveOrder.indexOf(typeA) - directiveOrder.indexOf(typeB);
     }
     function dispatch3(el, name, detail = {}) {
-      el.dispatchEvent(new CustomEvent(name, {
-        detail,
-        bubbles: true,
-        composed: true,
-        cancelable: true
-      }));
+      el.dispatchEvent(
+        new CustomEvent(name, {
+          detail,
+          bubbles: true,
+          composed: true,
+          cancelable: true
+        })
+      );
     }
     function walk(el, callback) {
       if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
@@ -2041,6 +2135,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return el;
       if (el._x_teleportBack)
         el = el._x_teleportBack;
+      if (el.parentNode instanceof ShadowRoot) {
+        return findClosest(el.parentNode.host, callback);
+      }
       if (!el.parentElement)
         return;
       return findClosest(el.parentElement, callback);
@@ -2492,12 +2589,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function onlyDuringClone(callback) {
       return (...args) => isCloning && callback(...args);
     }
-    var interceptors = [];
+    var interceptors2 = [];
     function interceptClone(callback) {
-      interceptors.push(callback);
+      interceptors2.push(callback);
     }
     function cloneNode(from, to) {
-      interceptors.forEach((i) => i(from, to));
+      interceptors2.forEach((i) => i(from, to));
       isCloning = true;
       dontRegisterReactiveSideEffects(() => {
         initTree(to, (el, callback) => {
@@ -2724,10 +2821,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return el.type === "radio" || el.localName === "ui-radio";
     }
     function debounce2(func, wait) {
-      var timeout;
+      let timeout;
       return function() {
-        var context = this, args = arguments;
-        var later = function() {
+        const context = this, args = arguments;
+        const later = function() {
           timeout = null;
           func.apply(context, args);
         };
@@ -2735,7 +2832,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         timeout = setTimeout(later, wait);
       };
     }
-    function throttle(func, limit) {
+    function throttle2(func, limit) {
       let inThrottle;
       return function() {
         let context = this, args = arguments;
@@ -2863,7 +2960,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       return obj;
     }
-    var Alpine23 = {
+    var Alpine24 = {
       get reactive() {
         return reactive;
       },
@@ -2876,7 +2973,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.14.9",
+      version: "3.15.3",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -2890,13 +2987,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       onlyDuringClone,
       addRootSelector,
       addInitSelector,
+      setErrorHandler,
       interceptClone,
       addScopeToNode,
       deferMutations,
       mapAttributes,
       evaluateLater,
       interceptInit,
+      initInterceptors,
+      injectMagics,
       setEvaluator,
+      setRawEvaluator,
       mergeProxies,
       extractProp,
       findClosest,
@@ -2909,9 +3010,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       mutateDom,
       directive: directive2,
       entangle,
-      throttle,
+      throttle: throttle2,
       debounce: debounce2,
       evaluate,
+      evaluateRaw,
       initTree,
       nextTick,
       prefixed: prefix,
@@ -2929,7 +3031,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       data,
       bind: bind2
     };
-    var alpine_default = Alpine23;
+    var alpine_default = Alpine24;
     var import_reactivity10 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
@@ -3027,21 +3129,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el._x_removeModelListeners["default"]();
         let outerGet = el._x_model.get;
         let outerSet = el._x_model.set;
-        let releaseEntanglement = entangle({
-          get() {
-            return outerGet();
+        let releaseEntanglement = entangle(
+          {
+            get() {
+              return outerGet();
+            },
+            set(value) {
+              outerSet(value);
+            }
           },
-          set(value) {
-            outerSet(value);
+          {
+            get() {
+              return innerGet();
+            },
+            set(value) {
+              innerSet(value);
+            }
           }
-        }, {
-          get() {
-            return innerGet();
-          },
-          set(value) {
-            innerSet(value);
-          }
-        });
+        );
         cleanup(releaseEntanglement);
       });
     });
@@ -3084,10 +3189,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           placeInDom(el._x_teleport, target2, modifiers);
         });
       };
-      cleanup(() => mutateDom(() => {
-        clone2.remove();
-        destroyTree(clone2);
-      }));
+      cleanup(
+        () => mutateDom(() => {
+          clone2.remove();
+          destroyTree(clone2);
+        })
+      );
     });
     var teleportContainerDuringClone = document.createElement("div");
     function getTarget(expression) {
@@ -3137,7 +3244,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (modifiers.includes("throttle")) {
         let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
         let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-        handler4 = throttle(handler4, wait);
+        handler4 = throttle2(handler4, wait);
       }
       if (modifiers.includes("prevent"))
         handler4 = wrapHandler(handler4, (next, e) => {
@@ -3196,7 +3303,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return !Array.isArray(subject) && !isNaN(subject);
     }
     function kebabCase2(subject) {
-      if ([" ", "_"].includes(subject))
+      if ([" ", "_"].includes(
+        subject
+      ))
         return subject;
       return subject.replace(/([a-z])([A-Z])/g, "$1-$2").replace(/[_\s]/, "-").toLowerCase();
     }
@@ -3208,7 +3317,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
       let keyModifiers = modifiers.filter((i) => {
-        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
+        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
       });
       if (keyModifiers.includes("debounce")) {
         let debounceIndex = keyModifiers.indexOf("debounce");
@@ -3305,14 +3414,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             el.setAttribute("name", expression);
         });
       }
-      var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
+      let event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
       let removeListener = isCloning ? () => {
       } : on3(el, event, modifiers, (e) => {
         setValue(getInputValue(el, modifiers, e, getValue()));
       });
       if (modifiers.includes("fill")) {
         if ([void 0, null, ""].includes(getValue()) || isCheckbox(el) && Array.isArray(getValue()) || el.tagName.toLowerCase() === "select" && el.multiple) {
-          setValue(getInputValue(el, modifiers, { target: el }, getValue()));
+          setValue(
+            getInputValue(el, modifiers, { target: el }, getValue())
+          );
         }
       }
       if (!el._x_removeModelListeners)
@@ -3548,13 +3659,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el._x_isShown = true;
       };
       let clickAwayCompatibleShow = () => setTimeout(show);
-      let toggle = once((value) => value ? show() : hide(), (value) => {
-        if (typeof el._x_toggleAndCascadeWithTransitions === "function") {
-          el._x_toggleAndCascadeWithTransitions(el, value, show, hide);
-        } else {
-          value ? clickAwayCompatibleShow() : hide();
+      let toggle = once(
+        (value) => value ? show() : hide(),
+        (value) => {
+          if (typeof el._x_toggleAndCascadeWithTransitions === "function") {
+            el._x_toggleAndCascadeWithTransitions(el, value, show, hide);
+          } else {
+            value ? clickAwayCompatibleShow() : hide();
+          }
         }
-      });
+      );
       let oldValue;
       let firstTime = true;
       effect3(() => evaluate2((value) => {
@@ -3570,15 +3684,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     directive2("for", (el, { expression }, { effect: effect3, cleanup }) => {
       let iteratorNames = parseForExpression(expression);
       let evaluateItems = evaluateLater(el, iteratorNames.items);
-      let evaluateKey = evaluateLater(el, el._x_keyExpression || "index");
+      let evaluateKey = evaluateLater(
+        el,
+        el._x_keyExpression || "index"
+      );
       el._x_prevKeys = [];
       el._x_lookup = {};
       effect3(() => loop(el, iteratorNames, evaluateItems, evaluateKey));
       cleanup(() => {
-        Object.values(el._x_lookup).forEach((el2) => mutateDom(() => {
-          destroyTree(el2);
-          el2.remove();
-        }));
+        Object.values(el._x_lookup).forEach((el2) => mutateDom(
+          () => {
+            destroyTree(el2);
+            el2.remove();
+          }
+        ));
         delete el._x_prevKeys;
         delete el._x_lookup;
       });
@@ -3825,15 +3944,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     alpine_default.setEvaluator(normalEvaluator);
+    alpine_default.setRawEvaluator(normalRawEvaluator);
     alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
-    var src_default = alpine_default;
-    var module_default = src_default;
+    var src_default2 = alpine_default;
+    var module_default2 = src_default2;
   }
 });
 
-// ../alpine/packages/collapse/dist/module.cjs.js
+// node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3853,12 +3973,12 @@ var require_module_cjs2 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      collapse: () => src_default,
-      default: () => module_default
+      collapse: () => src_default2,
+      default: () => module_default2
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
-      Alpine23.directive("collapse", collapse3);
+    function src_default2(Alpine24) {
+      Alpine24.directive("collapse", collapse3);
       collapse3.inline = (el, { modifiers }) => {
         if (!modifiers.includes("min"))
           return;
@@ -3878,7 +3998,7 @@ var require_module_cjs2 = __commonJS({
         if (!el._x_isShown)
           el.style.overflow = "hidden";
         let setFunction = (el2, styles) => {
-          let revertFunction = Alpine23.setStyles(el2, styles);
+          let revertFunction = Alpine24.setStyles(el2, styles);
           return styles.height ? () => {
           } : revertFunction;
         };
@@ -3901,7 +4021,7 @@ var require_module_cjs2 = __commonJS({
             if (current === full) {
               current = floor;
             }
-            Alpine23.transition(el, Alpine23.setStyles, {
+            Alpine24.transition(el, Alpine24.setStyles, {
               during: transitionStyles,
               start: { height: current + "px" },
               end: { height: full + "px" }
@@ -3915,7 +4035,7 @@ var require_module_cjs2 = __commonJS({
           }, after = () => {
           }) {
             let full = el.getBoundingClientRect().height;
-            Alpine23.transition(el, setFunction, {
+            Alpine24.transition(el, setFunction, {
               during: transitionStyles,
               start: { height: full + "px" },
               end: { height: floor + "px" }
@@ -3948,13 +4068,13 @@ var require_module_cjs2 = __commonJS({
       }
       return rawValue;
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
-// ../alpine/packages/focus/dist/module.cjs.js
+// node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -3976,7 +4096,10 @@ var require_module_cjs3 = __commonJS({
       }
       return to;
     };
-    var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
+    var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(
+      isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target,
+      mod
+    ));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var require_dist = __commonJS2({
       "node_modules/tabbable/dist/index.js"(exports2) {
@@ -4745,20 +4868,20 @@ var require_module_cjs3 = __commonJS({
     });
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      focus: () => src_default
+      default: () => module_default2,
+      focus: () => src_default2
     });
     module.exports = __toCommonJS(module_exports);
     var import_focus_trap = __toESM2(require_focus_trap());
     var import_tabbable = __toESM2(require_dist());
-    function src_default(Alpine23) {
+    function src_default2(Alpine24) {
       let lastFocused;
       let currentFocused;
       window.addEventListener("focusin", () => {
         lastFocused = currentFocused;
         currentFocused = document.activeElement;
       });
-      Alpine23.magic("focus", (el) => {
+      Alpine24.magic("focus", (el) => {
         let within = el;
         return {
           __noscroll: false,
@@ -4862,59 +4985,67 @@ var require_module_cjs3 = __commonJS({
           }
         };
       });
-      Alpine23.directive("trap", Alpine23.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup }) => {
-        let evaluator = evaluateLater(expression);
-        let oldValue = false;
-        let options = {
-          escapeDeactivates: false,
-          allowOutsideClick: true,
-          fallbackFocus: () => el
-        };
-        if (modifiers.includes("noautofocus")) {
-          options.initialFocus = false;
-        } else {
-          let autofocusEl = el.querySelector("[autofocus]");
-          if (autofocusEl)
-            options.initialFocus = autofocusEl;
+      Alpine24.directive("trap", Alpine24.skipDuringClone(
+        (el, { expression, modifiers }, { effect, evaluateLater, cleanup }) => {
+          let evaluator = evaluateLater(expression);
+          let oldValue = false;
+          let options = {
+            escapeDeactivates: false,
+            allowOutsideClick: true,
+            fallbackFocus: () => el
+          };
+          let undoInert = () => {
+          };
+          if (modifiers.includes("noautofocus")) {
+            options.initialFocus = false;
+          } else {
+            let autofocusEl = el.querySelector("[autofocus]");
+            if (autofocusEl)
+              options.initialFocus = autofocusEl;
+          }
+          if (modifiers.includes("inert")) {
+            options.onPostActivate = () => {
+              Alpine24.nextTick(() => {
+                undoInert = setInert(el);
+              });
+            };
+          }
+          let trap = (0, import_focus_trap.createFocusTrap)(el, options);
+          let undoDisableScrolling = () => {
+          };
+          const releaseFocus = () => {
+            undoInert();
+            undoInert = () => {
+            };
+            undoDisableScrolling();
+            undoDisableScrolling = () => {
+            };
+            trap.deactivate({
+              returnFocus: !modifiers.includes("noreturn")
+            });
+          };
+          effect(() => evaluator((value) => {
+            if (oldValue === value)
+              return;
+            if (value && !oldValue) {
+              if (modifiers.includes("noscroll"))
+                undoDisableScrolling = disableScrolling();
+              setTimeout(() => {
+                trap.activate();
+              }, 15);
+            }
+            if (!value && oldValue) {
+              releaseFocus();
+            }
+            oldValue = !!value;
+          }));
+          cleanup(releaseFocus);
+        },
+        (el, { expression, modifiers }, { evaluate }) => {
+          if (modifiers.includes("inert") && evaluate(expression))
+            setInert(el);
         }
-        let trap = (0, import_focus_trap.createFocusTrap)(el, options);
-        let undoInert = () => {
-        };
-        let undoDisableScrolling = () => {
-        };
-        const releaseFocus = () => {
-          undoInert();
-          undoInert = () => {
-          };
-          undoDisableScrolling();
-          undoDisableScrolling = () => {
-          };
-          trap.deactivate({
-            returnFocus: !modifiers.includes("noreturn")
-          });
-        };
-        effect(() => evaluator((value) => {
-          if (oldValue === value)
-            return;
-          if (value && !oldValue) {
-            if (modifiers.includes("noscroll"))
-              undoDisableScrolling = disableScrolling();
-            if (modifiers.includes("inert"))
-              undoInert = setInert(el);
-            setTimeout(() => {
-              trap.activate();
-            }, 15);
-          }
-          if (!value && oldValue) {
-            releaseFocus();
-          }
-          oldValue = !!value;
-        }));
-        cleanup(releaseFocus);
-      }, (el, { expression, modifiers }, { evaluate }) => {
-        if (modifiers.includes("inert") && evaluate(expression))
-          setInert(el);
-      }));
+      ));
     }
     function setInert(el) {
       let undos = [];
@@ -4950,13 +5081,13 @@ var require_module_cjs3 = __commonJS({
         document.documentElement.style.paddingRight = paddingRight;
       };
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
-// ../alpine/packages/persist/dist/module.cjs.js
+// node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4976,101 +5107,12 @@ var require_module_cjs4 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      persist: () => src_default
+      default: () => module_default2,
+      intersect: () => src_default2
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
-      let persist3 = () => {
-        let alias;
-        let storage;
-        try {
-          storage = localStorage;
-        } catch (e) {
-          console.error(e);
-          console.warn("Alpine: $persist is using temporary storage since localStorage is unavailable.");
-          let dummy = /* @__PURE__ */ new Map();
-          storage = {
-            getItem: dummy.get.bind(dummy),
-            setItem: dummy.set.bind(dummy)
-          };
-        }
-        return Alpine23.interceptor((initialValue, getter, setter, path, key) => {
-          let lookup = alias || `_x_${path}`;
-          let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
-          setter(initial);
-          Alpine23.effect(() => {
-            let value = getter();
-            storageSet(lookup, value, storage);
-            setter(value);
-          });
-          return initial;
-        }, (func) => {
-          func.as = (key) => {
-            alias = key;
-            return func;
-          }, func.using = (target) => {
-            storage = target;
-            return func;
-          };
-        });
-      };
-      Object.defineProperty(Alpine23, "$persist", { get: () => persist3() });
-      Alpine23.magic("persist", persist3);
-      Alpine23.persist = (key, { get, set }, storage = localStorage) => {
-        let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
-        set(initial);
-        Alpine23.effect(() => {
-          let value = get();
-          storageSet(key, value, storage);
-          set(value);
-        });
-      };
-    }
-    function storageHas(key, storage) {
-      return storage.getItem(key) !== null;
-    }
-    function storageGet(key, storage) {
-      let value = storage.getItem(key, storage);
-      if (value === void 0)
-        return;
-      return JSON.parse(value);
-    }
-    function storageSet(key, value, storage) {
-      storage.setItem(key, JSON.stringify(value));
-    }
-    var module_default = src_default;
-  }
-});
-
-// ../alpine/packages/intersect/dist/module.cjs.js
-var require_module_cjs5 = __commonJS({
-  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
-    var __defProp2 = Object.defineProperty;
-    var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
-    var __getOwnPropNames2 = Object.getOwnPropertyNames;
-    var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all2) => {
-      for (var name in all2)
-        __defProp2(target, name, { get: all2[name], enumerable: true });
-    };
-    var __copyProps2 = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
-      }
-      return to;
-    };
-    var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var module_exports = {};
-    __export(module_exports, {
-      default: () => module_default,
-      intersect: () => src_default
-    });
-    module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
-      Alpine23.directive("intersect", Alpine23.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
+    function src_default2(Alpine24) {
+      Alpine24.directive("intersect", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
         let evaluate = evaluateLater(expression);
         let options = {
           rootMargin: getRootMargin(modifiers),
@@ -5121,7 +5163,1145 @@ var require_module_cjs5 = __commonJS({
       values = values.filter((v) => v !== void 0);
       return values.length ? values.join(" ").trim() : fallback2;
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
+  }
+});
+
+// ../alpine/packages/sort/dist/module.cjs.js
+var require_module_cjs5 = __commonJS({
+  "../alpine/packages/sort/dist/module.cjs.js"(exports, module) {
+    var __create2 = Object.create;
+    var __defProp2 = Object.defineProperty;
+    var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __getProtoOf2 = Object.getPrototypeOf;
+    var __hasOwnProp2 = Object.prototype.hasOwnProperty;
+    var __commonJS2 = (cb, mod) => function __require() {
+      return mod || (0, cb[__getOwnPropNames2(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+    };
+    var __export = (target, all2) => {
+      for (var name in all2)
+        __defProp2(target, name, { get: all2[name], enumerable: true });
+    };
+    var __copyProps2 = (to, from, except, desc) => {
+      if (from && typeof from === "object" || typeof from === "function") {
+        for (let key of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key) && key !== except)
+            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+      }
+      return to;
+    };
+    var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(
+      isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target,
+      mod
+    ));
+    var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
+    var require_Sortable_min = __commonJS2({
+      "node_modules/sortablejs/Sortable.min.js"(exports2, module2) {
+        !function(t, e) {
+          "object" == typeof exports2 && "undefined" != typeof module2 ? module2.exports = e() : "function" == typeof define && define.amd ? define(e) : (t = t || self).Sortable = e();
+        }(exports2, function() {
+          "use strict";
+          function e(e2, t2) {
+            var n2, o2 = Object.keys(e2);
+            return Object.getOwnPropertySymbols && (n2 = Object.getOwnPropertySymbols(e2), t2 && (n2 = n2.filter(function(t3) {
+              return Object.getOwnPropertyDescriptor(e2, t3).enumerable;
+            })), o2.push.apply(o2, n2)), o2;
+          }
+          function I(o2) {
+            for (var t2 = 1; t2 < arguments.length; t2++) {
+              var i2 = null != arguments[t2] ? arguments[t2] : {};
+              t2 % 2 ? e(Object(i2), true).forEach(function(t3) {
+                var e2, n2;
+                e2 = o2, t3 = i2[n2 = t3], n2 in e2 ? Object.defineProperty(e2, n2, { value: t3, enumerable: true, configurable: true, writable: true }) : e2[n2] = t3;
+              }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(o2, Object.getOwnPropertyDescriptors(i2)) : e(Object(i2)).forEach(function(t3) {
+                Object.defineProperty(o2, t3, Object.getOwnPropertyDescriptor(i2, t3));
+              });
+            }
+            return o2;
+          }
+          function o(t2) {
+            return (o = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(t3) {
+              return typeof t3;
+            } : function(t3) {
+              return t3 && "function" == typeof Symbol && t3.constructor === Symbol && t3 !== Symbol.prototype ? "symbol" : typeof t3;
+            })(t2);
+          }
+          function a() {
+            return (a = Object.assign || function(t2) {
+              for (var e2 = 1; e2 < arguments.length; e2++) {
+                var n2, o2 = arguments[e2];
+                for (n2 in o2)
+                  Object.prototype.hasOwnProperty.call(o2, n2) && (t2[n2] = o2[n2]);
+              }
+              return t2;
+            }).apply(this, arguments);
+          }
+          function i(t2, e2) {
+            if (null == t2)
+              return {};
+            var n2, o2 = function(t3, e3) {
+              if (null == t3)
+                return {};
+              for (var n3, o3 = {}, i3 = Object.keys(t3), r3 = 0; r3 < i3.length; r3++)
+                n3 = i3[r3], 0 <= e3.indexOf(n3) || (o3[n3] = t3[n3]);
+              return o3;
+            }(t2, e2);
+            if (Object.getOwnPropertySymbols)
+              for (var i2 = Object.getOwnPropertySymbols(t2), r2 = 0; r2 < i2.length; r2++)
+                n2 = i2[r2], 0 <= e2.indexOf(n2) || Object.prototype.propertyIsEnumerable.call(t2, n2) && (o2[n2] = t2[n2]);
+            return o2;
+          }
+          function r(t2) {
+            return function(t3) {
+              if (Array.isArray(t3))
+                return l(t3);
+            }(t2) || function(t3) {
+              if ("undefined" != typeof Symbol && null != t3[Symbol.iterator] || null != t3["@@iterator"])
+                return Array.from(t3);
+            }(t2) || function(t3, e2) {
+              if (t3) {
+                if ("string" == typeof t3)
+                  return l(t3, e2);
+                var n2 = Object.prototype.toString.call(t3).slice(8, -1);
+                return "Map" === (n2 = "Object" === n2 && t3.constructor ? t3.constructor.name : n2) || "Set" === n2 ? Array.from(t3) : "Arguments" === n2 || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n2) ? l(t3, e2) : void 0;
+              }
+            }(t2) || function() {
+              throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+            }();
+          }
+          function l(t2, e2) {
+            (null == e2 || e2 > t2.length) && (e2 = t2.length);
+            for (var n2 = 0, o2 = new Array(e2); n2 < e2; n2++)
+              o2[n2] = t2[n2];
+            return o2;
+          }
+          function t(t2) {
+            if ("undefined" != typeof window && window.navigator)
+              return !!navigator.userAgent.match(t2);
+          }
+          var y = t(/(?:Trident.*rv[ :]?11\.|msie|iemobile|Windows Phone)/i), w = t(/Edge/i), s = t(/firefox/i), u = t(/safari/i) && !t(/chrome/i) && !t(/android/i), n = t(/iP(ad|od|hone)/i), c = t(/chrome/i) && t(/android/i), d = { capture: false, passive: false };
+          function h(t2, e2, n2) {
+            t2.addEventListener(e2, n2, !y && d);
+          }
+          function f(t2, e2, n2) {
+            t2.removeEventListener(e2, n2, !y && d);
+          }
+          function p(t2, e2) {
+            if (e2 && (">" === e2[0] && (e2 = e2.substring(1)), t2))
+              try {
+                if (t2.matches)
+                  return t2.matches(e2);
+                if (t2.msMatchesSelector)
+                  return t2.msMatchesSelector(e2);
+                if (t2.webkitMatchesSelector)
+                  return t2.webkitMatchesSelector(e2);
+              } catch (t3) {
+                return;
+              }
+          }
+          function P(t2, e2, n2, o2) {
+            if (t2) {
+              n2 = n2 || document;
+              do {
+                if (null != e2 && (">" !== e2[0] || t2.parentNode === n2) && p(t2, e2) || o2 && t2 === n2)
+                  return t2;
+              } while (t2 !== n2 && (t2 = (i2 = t2).host && i2 !== document && i2.host.nodeType ? i2.host : i2.parentNode));
+            }
+            var i2;
+            return null;
+          }
+          var g, m = /\s+/g;
+          function k(t2, e2, n2) {
+            var o2;
+            t2 && e2 && (t2.classList ? t2.classList[n2 ? "add" : "remove"](e2) : (o2 = (" " + t2.className + " ").replace(m, " ").replace(" " + e2 + " ", " "), t2.className = (o2 + (n2 ? " " + e2 : "")).replace(m, " ")));
+          }
+          function R(t2, e2, n2) {
+            var o2 = t2 && t2.style;
+            if (o2) {
+              if (void 0 === n2)
+                return document.defaultView && document.defaultView.getComputedStyle ? n2 = document.defaultView.getComputedStyle(t2, "") : t2.currentStyle && (n2 = t2.currentStyle), void 0 === e2 ? n2 : n2[e2];
+              o2[e2 = !(e2 in o2 || -1 !== e2.indexOf("webkit")) ? "-webkit-" + e2 : e2] = n2 + ("string" == typeof n2 ? "" : "px");
+            }
+          }
+          function v(t2, e2) {
+            var n2 = "";
+            if ("string" == typeof t2)
+              n2 = t2;
+            else
+              do {
+                var o2 = R(t2, "transform");
+              } while (o2 && "none" !== o2 && (n2 = o2 + " " + n2), !e2 && (t2 = t2.parentNode));
+            var i2 = window.DOMMatrix || window.WebKitCSSMatrix || window.CSSMatrix || window.MSCSSMatrix;
+            return i2 && new i2(n2);
+          }
+          function b(t2, e2, n2) {
+            if (t2) {
+              var o2 = t2.getElementsByTagName(e2), i2 = 0, r2 = o2.length;
+              if (n2)
+                for (; i2 < r2; i2++)
+                  n2(o2[i2], i2);
+              return o2;
+            }
+            return [];
+          }
+          function O() {
+            var t2 = document.scrollingElement;
+            return t2 || document.documentElement;
+          }
+          function X(t2, e2, n2, o2, i2) {
+            if (t2.getBoundingClientRect || t2 === window) {
+              var r2, a2, l2, s2, c2, u2, d2 = t2 !== window && t2.parentNode && t2 !== O() ? (a2 = (r2 = t2.getBoundingClientRect()).top, l2 = r2.left, s2 = r2.bottom, c2 = r2.right, u2 = r2.height, r2.width) : (l2 = a2 = 0, s2 = window.innerHeight, c2 = window.innerWidth, u2 = window.innerHeight, window.innerWidth);
+              if ((e2 || n2) && t2 !== window && (i2 = i2 || t2.parentNode, !y))
+                do {
+                  if (i2 && i2.getBoundingClientRect && ("none" !== R(i2, "transform") || n2 && "static" !== R(i2, "position"))) {
+                    var h2 = i2.getBoundingClientRect();
+                    a2 -= h2.top + parseInt(R(i2, "border-top-width")), l2 -= h2.left + parseInt(R(i2, "border-left-width")), s2 = a2 + r2.height, c2 = l2 + r2.width;
+                    break;
+                  }
+                } while (i2 = i2.parentNode);
+              return o2 && t2 !== window && (o2 = (e2 = v(i2 || t2)) && e2.a, t2 = e2 && e2.d, e2 && (s2 = (a2 /= t2) + (u2 /= t2), c2 = (l2 /= o2) + (d2 /= o2))), { top: a2, left: l2, bottom: s2, right: c2, width: d2, height: u2 };
+            }
+          }
+          function Y(t2, e2, n2) {
+            for (var o2 = M(t2, true), i2 = X(t2)[e2]; o2; ) {
+              var r2 = X(o2)[n2];
+              if (!("top" === n2 || "left" === n2 ? r2 <= i2 : i2 <= r2))
+                return o2;
+              if (o2 === O())
+                break;
+              o2 = M(o2, false);
+            }
+            return false;
+          }
+          function B(t2, e2, n2, o2) {
+            for (var i2 = 0, r2 = 0, a2 = t2.children; r2 < a2.length; ) {
+              if ("none" !== a2[r2].style.display && a2[r2] !== Ft.ghost && (o2 || a2[r2] !== Ft.dragged) && P(a2[r2], n2.draggable, t2, false)) {
+                if (i2 === e2)
+                  return a2[r2];
+                i2++;
+              }
+              r2++;
+            }
+            return null;
+          }
+          function F(t2, e2) {
+            for (var n2 = t2.lastElementChild; n2 && (n2 === Ft.ghost || "none" === R(n2, "display") || e2 && !p(n2, e2)); )
+              n2 = n2.previousElementSibling;
+            return n2 || null;
+          }
+          function j(t2, e2) {
+            var n2 = 0;
+            if (!t2 || !t2.parentNode)
+              return -1;
+            for (; t2 = t2.previousElementSibling; )
+              "TEMPLATE" === t2.nodeName.toUpperCase() || t2 === Ft.clone || e2 && !p(t2, e2) || n2++;
+            return n2;
+          }
+          function E(t2) {
+            var e2 = 0, n2 = 0, o2 = O();
+            if (t2)
+              do {
+                var i2 = v(t2), r2 = i2.a, i2 = i2.d;
+              } while (e2 += t2.scrollLeft * r2, n2 += t2.scrollTop * i2, t2 !== o2 && (t2 = t2.parentNode));
+            return [e2, n2];
+          }
+          function M(t2, e2) {
+            if (!t2 || !t2.getBoundingClientRect)
+              return O();
+            var n2 = t2, o2 = false;
+            do {
+              if (n2.clientWidth < n2.scrollWidth || n2.clientHeight < n2.scrollHeight) {
+                var i2 = R(n2);
+                if (n2.clientWidth < n2.scrollWidth && ("auto" == i2.overflowX || "scroll" == i2.overflowX) || n2.clientHeight < n2.scrollHeight && ("auto" == i2.overflowY || "scroll" == i2.overflowY)) {
+                  if (!n2.getBoundingClientRect || n2 === document.body)
+                    return O();
+                  if (o2 || e2)
+                    return n2;
+                  o2 = true;
+                }
+              }
+            } while (n2 = n2.parentNode);
+            return O();
+          }
+          function D(t2, e2) {
+            return Math.round(t2.top) === Math.round(e2.top) && Math.round(t2.left) === Math.round(e2.left) && Math.round(t2.height) === Math.round(e2.height) && Math.round(t2.width) === Math.round(e2.width);
+          }
+          function S(e2, n2) {
+            return function() {
+              var t2;
+              g || (1 === (t2 = arguments).length ? e2.call(this, t2[0]) : e2.apply(this, t2), g = setTimeout(function() {
+                g = void 0;
+              }, n2));
+            };
+          }
+          function H(t2, e2, n2) {
+            t2.scrollLeft += e2, t2.scrollTop += n2;
+          }
+          function _(t2) {
+            var e2 = window.Polymer, n2 = window.jQuery || window.Zepto;
+            return e2 && e2.dom ? e2.dom(t2).cloneNode(true) : n2 ? n2(t2).clone(true)[0] : t2.cloneNode(true);
+          }
+          function C(t2, e2) {
+            R(t2, "position", "absolute"), R(t2, "top", e2.top), R(t2, "left", e2.left), R(t2, "width", e2.width), R(t2, "height", e2.height);
+          }
+          function T(t2) {
+            R(t2, "position", ""), R(t2, "top", ""), R(t2, "left", ""), R(t2, "width", ""), R(t2, "height", "");
+          }
+          function L(n2, o2, i2) {
+            var r2 = {};
+            return Array.from(n2.children).forEach(function(t2) {
+              var e2;
+              P(t2, o2.draggable, n2, false) && !t2.animated && t2 !== i2 && (e2 = X(t2), r2.left = Math.min(null !== (t2 = r2.left) && void 0 !== t2 ? t2 : 1 / 0, e2.left), r2.top = Math.min(null !== (t2 = r2.top) && void 0 !== t2 ? t2 : 1 / 0, e2.top), r2.right = Math.max(null !== (t2 = r2.right) && void 0 !== t2 ? t2 : -1 / 0, e2.right), r2.bottom = Math.max(null !== (t2 = r2.bottom) && void 0 !== t2 ? t2 : -1 / 0, e2.bottom));
+            }), r2.width = r2.right - r2.left, r2.height = r2.bottom - r2.top, r2.x = r2.left, r2.y = r2.top, r2;
+          }
+          var K = "Sortable" + new Date().getTime();
+          function x() {
+            var e2, o2 = [];
+            return { captureAnimationState: function() {
+              o2 = [], this.options.animation && [].slice.call(this.el.children).forEach(function(t2) {
+                var e3, n2;
+                "none" !== R(t2, "display") && t2 !== Ft.ghost && (o2.push({ target: t2, rect: X(t2) }), e3 = I({}, o2[o2.length - 1].rect), !t2.thisAnimationDuration || (n2 = v(t2, true)) && (e3.top -= n2.f, e3.left -= n2.e), t2.fromRect = e3);
+              });
+            }, addAnimationState: function(t2) {
+              o2.push(t2);
+            }, removeAnimationState: function(t2) {
+              o2.splice(function(t3, e3) {
+                for (var n2 in t3)
+                  if (t3.hasOwnProperty(n2)) {
+                    for (var o3 in e3)
+                      if (e3.hasOwnProperty(o3) && e3[o3] === t3[n2][o3])
+                        return Number(n2);
+                  }
+                return -1;
+              }(o2, { target: t2 }), 1);
+            }, animateAll: function(t2) {
+              var c2 = this;
+              if (!this.options.animation)
+                return clearTimeout(e2), void ("function" == typeof t2 && t2());
+              var u2 = false, d2 = 0;
+              o2.forEach(function(t3) {
+                var e3 = 0, n2 = t3.target, o3 = n2.fromRect, i2 = X(n2), r2 = n2.prevFromRect, a2 = n2.prevToRect, l2 = t3.rect, s2 = v(n2, true);
+                s2 && (i2.top -= s2.f, i2.left -= s2.e), n2.toRect = i2, n2.thisAnimationDuration && D(r2, i2) && !D(o3, i2) && (l2.top - i2.top) / (l2.left - i2.left) == (o3.top - i2.top) / (o3.left - i2.left) && (t3 = l2, s2 = r2, r2 = a2, a2 = c2.options, e3 = Math.sqrt(Math.pow(s2.top - t3.top, 2) + Math.pow(s2.left - t3.left, 2)) / Math.sqrt(Math.pow(s2.top - r2.top, 2) + Math.pow(s2.left - r2.left, 2)) * a2.animation), D(i2, o3) || (n2.prevFromRect = o3, n2.prevToRect = i2, e3 = e3 || c2.options.animation, c2.animate(n2, l2, i2, e3)), e3 && (u2 = true, d2 = Math.max(d2, e3), clearTimeout(n2.animationResetTimer), n2.animationResetTimer = setTimeout(function() {
+                  n2.animationTime = 0, n2.prevFromRect = null, n2.fromRect = null, n2.prevToRect = null, n2.thisAnimationDuration = null;
+                }, e3), n2.thisAnimationDuration = e3);
+              }), clearTimeout(e2), u2 ? e2 = setTimeout(function() {
+                "function" == typeof t2 && t2();
+              }, d2) : "function" == typeof t2 && t2(), o2 = [];
+            }, animate: function(t2, e3, n2, o3) {
+              var i2, r2;
+              o3 && (R(t2, "transition", ""), R(t2, "transform", ""), i2 = (r2 = v(this.el)) && r2.a, r2 = r2 && r2.d, i2 = (e3.left - n2.left) / (i2 || 1), r2 = (e3.top - n2.top) / (r2 || 1), t2.animatingX = !!i2, t2.animatingY = !!r2, R(t2, "transform", "translate3d(" + i2 + "px," + r2 + "px,0)"), this.forRepaintDummy = t2.offsetWidth, R(t2, "transition", "transform " + o3 + "ms" + (this.options.easing ? " " + this.options.easing : "")), R(t2, "transform", "translate3d(0,0,0)"), "number" == typeof t2.animated && clearTimeout(t2.animated), t2.animated = setTimeout(function() {
+                R(t2, "transition", ""), R(t2, "transform", ""), t2.animated = false, t2.animatingX = false, t2.animatingY = false;
+              }, o3));
+            } };
+          }
+          var A = [], N = { initializeByDefault: true }, W = { mount: function(e2) {
+            for (var t2 in N)
+              !N.hasOwnProperty(t2) || t2 in e2 || (e2[t2] = N[t2]);
+            A.forEach(function(t3) {
+              if (t3.pluginName === e2.pluginName)
+                throw "Sortable: Cannot mount plugin ".concat(e2.pluginName, " more than once");
+            }), A.push(e2);
+          }, pluginEvent: function(e2, n2, o2) {
+            var t2 = this;
+            this.eventCanceled = false, o2.cancel = function() {
+              t2.eventCanceled = true;
+            };
+            var i2 = e2 + "Global";
+            A.forEach(function(t3) {
+              n2[t3.pluginName] && (n2[t3.pluginName][i2] && n2[t3.pluginName][i2](I({ sortable: n2 }, o2)), n2.options[t3.pluginName] && n2[t3.pluginName][e2] && n2[t3.pluginName][e2](I({ sortable: n2 }, o2)));
+            });
+          }, initializePlugins: function(n2, o2, i2, t2) {
+            for (var e2 in A.forEach(function(t3) {
+              var e3 = t3.pluginName;
+              (n2.options[e3] || t3.initializeByDefault) && ((t3 = new t3(n2, o2, n2.options)).sortable = n2, t3.options = n2.options, n2[e3] = t3, a(i2, t3.defaults));
+            }), n2.options) {
+              var r2;
+              n2.options.hasOwnProperty(e2) && (void 0 !== (r2 = this.modifyOption(n2, e2, n2.options[e2])) && (n2.options[e2] = r2));
+            }
+          }, getEventProperties: function(e2, n2) {
+            var o2 = {};
+            return A.forEach(function(t2) {
+              "function" == typeof t2.eventProperties && a(o2, t2.eventProperties.call(n2[t2.pluginName], e2));
+            }), o2;
+          }, modifyOption: function(e2, n2, o2) {
+            var i2;
+            return A.forEach(function(t2) {
+              e2[t2.pluginName] && t2.optionListeners && "function" == typeof t2.optionListeners[n2] && (i2 = t2.optionListeners[n2].call(e2[t2.pluginName], o2));
+            }), i2;
+          } };
+          function z(t2) {
+            var e2 = t2.sortable, n2 = t2.rootEl, o2 = t2.name, i2 = t2.targetEl, r2 = t2.cloneEl, a2 = t2.toEl, l2 = t2.fromEl, s2 = t2.oldIndex, c2 = t2.newIndex, u2 = t2.oldDraggableIndex, d2 = t2.newDraggableIndex, h2 = t2.originalEvent, f2 = t2.putSortable, p2 = t2.extraEventProperties;
+            if (e2 = e2 || n2 && n2[K]) {
+              var g2, m2 = e2.options, t2 = "on" + o2.charAt(0).toUpperCase() + o2.substr(1);
+              !window.CustomEvent || y || w ? (g2 = document.createEvent("Event")).initEvent(o2, true, true) : g2 = new CustomEvent(o2, { bubbles: true, cancelable: true }), g2.to = a2 || n2, g2.from = l2 || n2, g2.item = i2 || n2, g2.clone = r2, g2.oldIndex = s2, g2.newIndex = c2, g2.oldDraggableIndex = u2, g2.newDraggableIndex = d2, g2.originalEvent = h2, g2.pullMode = f2 ? f2.lastPutMode : void 0;
+              var v2, b2 = I(I({}, p2), W.getEventProperties(o2, e2));
+              for (v2 in b2)
+                g2[v2] = b2[v2];
+              n2 && n2.dispatchEvent(g2), m2[t2] && m2[t2].call(e2, g2);
+            }
+          }
+          function G(t2, e2) {
+            var n2 = (o2 = 2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : {}).evt, o2 = i(o2, U);
+            W.pluginEvent.bind(Ft)(t2, e2, I({ dragEl: V, parentEl: Z, ghostEl: $, rootEl: Q, nextEl: J, lastDownEl: tt, cloneEl: et, cloneHidden: nt, dragStarted: gt, putSortable: st, activeSortable: Ft.active, originalEvent: n2, oldIndex: ot, oldDraggableIndex: rt, newIndex: it, newDraggableIndex: at, hideGhostForTarget: Rt, unhideGhostForTarget: Xt, cloneNowHidden: function() {
+              nt = true;
+            }, cloneNowShown: function() {
+              nt = false;
+            }, dispatchSortableEvent: function(t3) {
+              q({ sortable: e2, name: t3, originalEvent: n2 });
+            } }, o2));
+          }
+          var U = ["evt"];
+          function q(t2) {
+            z(I({ putSortable: st, cloneEl: et, targetEl: V, rootEl: Q, oldIndex: ot, oldDraggableIndex: rt, newIndex: it, newDraggableIndex: at }, t2));
+          }
+          var V, Z, $, Q, J, tt, et, nt, ot, it, rt, at, lt, st, ct, ut, dt, ht, ft, pt, gt, mt, vt, bt, yt, wt = false, Et = false, Dt = [], St = false, _t = false, Ct = [], Tt = false, xt = [], Ot = "undefined" != typeof document, Mt = n, At = w || y ? "cssFloat" : "float", Nt = Ot && !c && !n && "draggable" in document.createElement("div"), It = function() {
+            if (Ot) {
+              if (y)
+                return false;
+              var t2 = document.createElement("x");
+              return t2.style.cssText = "pointer-events:auto", "auto" === t2.style.pointerEvents;
+            }
+          }(), Pt = function(t2, e2) {
+            var n2 = R(t2), o2 = parseInt(n2.width) - parseInt(n2.paddingLeft) - parseInt(n2.paddingRight) - parseInt(n2.borderLeftWidth) - parseInt(n2.borderRightWidth), i2 = B(t2, 0, e2), r2 = B(t2, 1, e2), a2 = i2 && R(i2), l2 = r2 && R(r2), s2 = a2 && parseInt(a2.marginLeft) + parseInt(a2.marginRight) + X(i2).width, t2 = l2 && parseInt(l2.marginLeft) + parseInt(l2.marginRight) + X(r2).width;
+            if ("flex" === n2.display)
+              return "column" === n2.flexDirection || "column-reverse" === n2.flexDirection ? "vertical" : "horizontal";
+            if ("grid" === n2.display)
+              return n2.gridTemplateColumns.split(" ").length <= 1 ? "vertical" : "horizontal";
+            if (i2 && a2.float && "none" !== a2.float) {
+              e2 = "left" === a2.float ? "left" : "right";
+              return !r2 || "both" !== l2.clear && l2.clear !== e2 ? "horizontal" : "vertical";
+            }
+            return i2 && ("block" === a2.display || "flex" === a2.display || "table" === a2.display || "grid" === a2.display || o2 <= s2 && "none" === n2[At] || r2 && "none" === n2[At] && o2 < s2 + t2) ? "vertical" : "horizontal";
+          }, kt = function(t2) {
+            function l2(r2, a2) {
+              return function(t3, e3, n3, o2) {
+                var i2 = t3.options.group.name && e3.options.group.name && t3.options.group.name === e3.options.group.name;
+                if (null == r2 && (a2 || i2))
+                  return true;
+                if (null == r2 || false === r2)
+                  return false;
+                if (a2 && "clone" === r2)
+                  return r2;
+                if ("function" == typeof r2)
+                  return l2(r2(t3, e3, n3, o2), a2)(t3, e3, n3, o2);
+                e3 = (a2 ? t3 : e3).options.group.name;
+                return true === r2 || "string" == typeof r2 && r2 === e3 || r2.join && -1 < r2.indexOf(e3);
+              };
+            }
+            var e2 = {}, n2 = t2.group;
+            n2 && "object" == o(n2) || (n2 = { name: n2 }), e2.name = n2.name, e2.checkPull = l2(n2.pull, true), e2.checkPut = l2(n2.put), e2.revertClone = n2.revertClone, t2.group = e2;
+          }, Rt = function() {
+            !It && $ && R($, "display", "none");
+          }, Xt = function() {
+            !It && $ && R($, "display", "");
+          };
+          Ot && !c && document.addEventListener("click", function(t2) {
+            if (Et)
+              return t2.preventDefault(), t2.stopPropagation && t2.stopPropagation(), t2.stopImmediatePropagation && t2.stopImmediatePropagation(), Et = false;
+          }, true);
+          function Yt(t2) {
+            if (V) {
+              t2 = t2.touches ? t2.touches[0] : t2;
+              var e2 = (i2 = t2.clientX, r2 = t2.clientY, Dt.some(function(t3) {
+                var e3 = t3[K].options.emptyInsertThreshold;
+                if (e3 && !F(t3)) {
+                  var n3 = X(t3), o3 = i2 >= n3.left - e3 && i2 <= n3.right + e3, e3 = r2 >= n3.top - e3 && r2 <= n3.bottom + e3;
+                  return o3 && e3 ? a2 = t3 : void 0;
+                }
+              }), a2);
+              if (e2) {
+                var n2, o2 = {};
+                for (n2 in t2)
+                  t2.hasOwnProperty(n2) && (o2[n2] = t2[n2]);
+                o2.target = o2.rootEl = e2, o2.preventDefault = void 0, o2.stopPropagation = void 0, e2[K]._onDragOver(o2);
+              }
+            }
+            var i2, r2, a2;
+          }
+          function Bt(t2) {
+            V && V.parentNode[K]._isOutsideThisEl(t2.target);
+          }
+          function Ft(t2, e2) {
+            if (!t2 || !t2.nodeType || 1 !== t2.nodeType)
+              throw "Sortable: `el` must be an HTMLElement, not ".concat({}.toString.call(t2));
+            this.el = t2, this.options = e2 = a({}, e2), t2[K] = this;
+            var n2, o2, i2 = { group: null, sort: true, disabled: false, store: null, handle: null, draggable: /^[uo]l$/i.test(t2.nodeName) ? ">li" : ">*", swapThreshold: 1, invertSwap: false, invertedSwapThreshold: null, removeCloneOnHide: true, direction: function() {
+              return Pt(t2, this.options);
+            }, ghostClass: "sortable-ghost", chosenClass: "sortable-chosen", dragClass: "sortable-drag", ignore: "a, img", filter: null, preventOnFilter: true, animation: 0, easing: null, setData: function(t3, e3) {
+              t3.setData("Text", e3.textContent);
+            }, dropBubble: false, dragoverBubble: false, dataIdAttr: "data-id", delay: 0, delayOnTouchOnly: false, touchStartThreshold: (Number.parseInt ? Number : window).parseInt(window.devicePixelRatio, 10) || 1, forceFallback: false, fallbackClass: "sortable-fallback", fallbackOnBody: false, fallbackTolerance: 0, fallbackOffset: { x: 0, y: 0 }, supportPointer: false !== Ft.supportPointer && "PointerEvent" in window && !u, emptyInsertThreshold: 5 };
+            for (n2 in W.initializePlugins(this, t2, i2), i2)
+              n2 in e2 || (e2[n2] = i2[n2]);
+            for (o2 in kt(e2), this)
+              "_" === o2.charAt(0) && "function" == typeof this[o2] && (this[o2] = this[o2].bind(this));
+            this.nativeDraggable = !e2.forceFallback && Nt, this.nativeDraggable && (this.options.touchStartThreshold = 1), e2.supportPointer ? h(t2, "pointerdown", this._onTapStart) : (h(t2, "mousedown", this._onTapStart), h(t2, "touchstart", this._onTapStart)), this.nativeDraggable && (h(t2, "dragover", this), h(t2, "dragenter", this)), Dt.push(this.el), e2.store && e2.store.get && this.sort(e2.store.get(this) || []), a(this, x());
+          }
+          function jt(t2, e2, n2, o2, i2, r2, a2, l2) {
+            var s2, c2, u2 = t2[K], d2 = u2.options.onMove;
+            return !window.CustomEvent || y || w ? (s2 = document.createEvent("Event")).initEvent("move", true, true) : s2 = new CustomEvent("move", { bubbles: true, cancelable: true }), s2.to = e2, s2.from = t2, s2.dragged = n2, s2.draggedRect = o2, s2.related = i2 || e2, s2.relatedRect = r2 || X(e2), s2.willInsertAfter = l2, s2.originalEvent = a2, t2.dispatchEvent(s2), c2 = d2 ? d2.call(u2, s2, a2) : c2;
+          }
+          function Ht(t2) {
+            t2.draggable = false;
+          }
+          function Lt() {
+            Tt = false;
+          }
+          function Kt(t2) {
+            return setTimeout(t2, 0);
+          }
+          function Wt(t2) {
+            return clearTimeout(t2);
+          }
+          Ft.prototype = { constructor: Ft, _isOutsideThisEl: function(t2) {
+            this.el.contains(t2) || t2 === this.el || (mt = null);
+          }, _getDirection: function(t2, e2) {
+            return "function" == typeof this.options.direction ? this.options.direction.call(this, t2, e2, V) : this.options.direction;
+          }, _onTapStart: function(e2) {
+            if (e2.cancelable) {
+              var n2 = this, o2 = this.el, t2 = this.options, i2 = t2.preventOnFilter, r2 = e2.type, a2 = e2.touches && e2.touches[0] || e2.pointerType && "touch" === e2.pointerType && e2, l2 = (a2 || e2).target, s2 = e2.target.shadowRoot && (e2.path && e2.path[0] || e2.composedPath && e2.composedPath()[0]) || l2, c2 = t2.filter;
+              if (!function(t3) {
+                xt.length = 0;
+                var e3 = t3.getElementsByTagName("input"), n3 = e3.length;
+                for (; n3--; ) {
+                  var o3 = e3[n3];
+                  o3.checked && xt.push(o3);
+                }
+              }(o2), !V && !(/mousedown|pointerdown/.test(r2) && 0 !== e2.button || t2.disabled) && !s2.isContentEditable && (this.nativeDraggable || !u || !l2 || "SELECT" !== l2.tagName.toUpperCase()) && !((l2 = P(l2, t2.draggable, o2, false)) && l2.animated || tt === l2)) {
+                if (ot = j(l2), rt = j(l2, t2.draggable), "function" == typeof c2) {
+                  if (c2.call(this, e2, l2, this))
+                    return q({ sortable: n2, rootEl: s2, name: "filter", targetEl: l2, toEl: o2, fromEl: o2 }), G("filter", n2, { evt: e2 }), void (i2 && e2.cancelable && e2.preventDefault());
+                } else if (c2 = c2 && c2.split(",").some(function(t3) {
+                  if (t3 = P(s2, t3.trim(), o2, false))
+                    return q({ sortable: n2, rootEl: t3, name: "filter", targetEl: l2, fromEl: o2, toEl: o2 }), G("filter", n2, { evt: e2 }), true;
+                }))
+                  return void (i2 && e2.cancelable && e2.preventDefault());
+                t2.handle && !P(s2, t2.handle, o2, false) || this._prepareDragStart(e2, a2, l2);
+              }
+            }
+          }, _prepareDragStart: function(t2, e2, n2) {
+            var o2, i2 = this, r2 = i2.el, a2 = i2.options, l2 = r2.ownerDocument;
+            n2 && !V && n2.parentNode === r2 && (o2 = X(n2), Q = r2, Z = (V = n2).parentNode, J = V.nextSibling, tt = n2, lt = a2.group, ct = { target: Ft.dragged = V, clientX: (e2 || t2).clientX, clientY: (e2 || t2).clientY }, ft = ct.clientX - o2.left, pt = ct.clientY - o2.top, this._lastX = (e2 || t2).clientX, this._lastY = (e2 || t2).clientY, V.style["will-change"] = "all", o2 = function() {
+              G("delayEnded", i2, { evt: t2 }), Ft.eventCanceled ? i2._onDrop() : (i2._disableDelayedDragEvents(), !s && i2.nativeDraggable && (V.draggable = true), i2._triggerDragStart(t2, e2), q({ sortable: i2, name: "choose", originalEvent: t2 }), k(V, a2.chosenClass, true));
+            }, a2.ignore.split(",").forEach(function(t3) {
+              b(V, t3.trim(), Ht);
+            }), h(l2, "dragover", Yt), h(l2, "mousemove", Yt), h(l2, "touchmove", Yt), h(l2, "mouseup", i2._onDrop), h(l2, "touchend", i2._onDrop), h(l2, "touchcancel", i2._onDrop), s && this.nativeDraggable && (this.options.touchStartThreshold = 4, V.draggable = true), G("delayStart", this, { evt: t2 }), !a2.delay || a2.delayOnTouchOnly && !e2 || this.nativeDraggable && (w || y) ? o2() : Ft.eventCanceled ? this._onDrop() : (h(l2, "mouseup", i2._disableDelayedDrag), h(l2, "touchend", i2._disableDelayedDrag), h(l2, "touchcancel", i2._disableDelayedDrag), h(l2, "mousemove", i2._delayedDragTouchMoveHandler), h(l2, "touchmove", i2._delayedDragTouchMoveHandler), a2.supportPointer && h(l2, "pointermove", i2._delayedDragTouchMoveHandler), i2._dragStartTimer = setTimeout(o2, a2.delay)));
+          }, _delayedDragTouchMoveHandler: function(t2) {
+            t2 = t2.touches ? t2.touches[0] : t2;
+            Math.max(Math.abs(t2.clientX - this._lastX), Math.abs(t2.clientY - this._lastY)) >= Math.floor(this.options.touchStartThreshold / (this.nativeDraggable && window.devicePixelRatio || 1)) && this._disableDelayedDrag();
+          }, _disableDelayedDrag: function() {
+            V && Ht(V), clearTimeout(this._dragStartTimer), this._disableDelayedDragEvents();
+          }, _disableDelayedDragEvents: function() {
+            var t2 = this.el.ownerDocument;
+            f(t2, "mouseup", this._disableDelayedDrag), f(t2, "touchend", this._disableDelayedDrag), f(t2, "touchcancel", this._disableDelayedDrag), f(t2, "mousemove", this._delayedDragTouchMoveHandler), f(t2, "touchmove", this._delayedDragTouchMoveHandler), f(t2, "pointermove", this._delayedDragTouchMoveHandler);
+          }, _triggerDragStart: function(t2, e2) {
+            e2 = e2 || "touch" == t2.pointerType && t2, !this.nativeDraggable || e2 ? this.options.supportPointer ? h(document, "pointermove", this._onTouchMove) : h(document, e2 ? "touchmove" : "mousemove", this._onTouchMove) : (h(V, "dragend", this), h(Q, "dragstart", this._onDragStart));
+            try {
+              document.selection ? Kt(function() {
+                document.selection.empty();
+              }) : window.getSelection().removeAllRanges();
+            } catch (t3) {
+            }
+          }, _dragStarted: function(t2, e2) {
+            var n2;
+            wt = false, Q && V ? (G("dragStarted", this, { evt: e2 }), this.nativeDraggable && h(document, "dragover", Bt), n2 = this.options, t2 || k(V, n2.dragClass, false), k(V, n2.ghostClass, true), Ft.active = this, t2 && this._appendGhost(), q({ sortable: this, name: "start", originalEvent: e2 })) : this._nulling();
+          }, _emulateDragOver: function() {
+            if (ut) {
+              this._lastX = ut.clientX, this._lastY = ut.clientY, Rt();
+              for (var t2 = document.elementFromPoint(ut.clientX, ut.clientY), e2 = t2; t2 && t2.shadowRoot && (t2 = t2.shadowRoot.elementFromPoint(ut.clientX, ut.clientY)) !== e2; )
+                e2 = t2;
+              if (V.parentNode[K]._isOutsideThisEl(t2), e2)
+                do {
+                  if (e2[K]) {
+                    if (e2[K]._onDragOver({ clientX: ut.clientX, clientY: ut.clientY, target: t2, rootEl: e2 }) && !this.options.dragoverBubble)
+                      break;
+                  }
+                } while (e2 = (t2 = e2).parentNode);
+              Xt();
+            }
+          }, _onTouchMove: function(t2) {
+            if (ct) {
+              var e2 = this.options, n2 = e2.fallbackTolerance, o2 = e2.fallbackOffset, i2 = t2.touches ? t2.touches[0] : t2, r2 = $ && v($, true), a2 = $ && r2 && r2.a, l2 = $ && r2 && r2.d, e2 = Mt && yt && E(yt), a2 = (i2.clientX - ct.clientX + o2.x) / (a2 || 1) + (e2 ? e2[0] - Ct[0] : 0) / (a2 || 1), l2 = (i2.clientY - ct.clientY + o2.y) / (l2 || 1) + (e2 ? e2[1] - Ct[1] : 0) / (l2 || 1);
+              if (!Ft.active && !wt) {
+                if (n2 && Math.max(Math.abs(i2.clientX - this._lastX), Math.abs(i2.clientY - this._lastY)) < n2)
+                  return;
+                this._onDragStart(t2, true);
+              }
+              $ && (r2 ? (r2.e += a2 - (dt || 0), r2.f += l2 - (ht || 0)) : r2 = { a: 1, b: 0, c: 0, d: 1, e: a2, f: l2 }, r2 = "matrix(".concat(r2.a, ",").concat(r2.b, ",").concat(r2.c, ",").concat(r2.d, ",").concat(r2.e, ",").concat(r2.f, ")"), R($, "webkitTransform", r2), R($, "mozTransform", r2), R($, "msTransform", r2), R($, "transform", r2), dt = a2, ht = l2, ut = i2), t2.cancelable && t2.preventDefault();
+            }
+          }, _appendGhost: function() {
+            if (!$) {
+              var t2 = this.options.fallbackOnBody ? document.body : Q, e2 = X(V, true, Mt, true, t2), n2 = this.options;
+              if (Mt) {
+                for (yt = t2; "static" === R(yt, "position") && "none" === R(yt, "transform") && yt !== document; )
+                  yt = yt.parentNode;
+                yt !== document.body && yt !== document.documentElement ? (yt === document && (yt = O()), e2.top += yt.scrollTop, e2.left += yt.scrollLeft) : yt = O(), Ct = E(yt);
+              }
+              k($ = V.cloneNode(true), n2.ghostClass, false), k($, n2.fallbackClass, true), k($, n2.dragClass, true), R($, "transition", ""), R($, "transform", ""), R($, "box-sizing", "border-box"), R($, "margin", 0), R($, "top", e2.top), R($, "left", e2.left), R($, "width", e2.width), R($, "height", e2.height), R($, "opacity", "0.8"), R($, "position", Mt ? "absolute" : "fixed"), R($, "zIndex", "100000"), R($, "pointerEvents", "none"), Ft.ghost = $, t2.appendChild($), R($, "transform-origin", ft / parseInt($.style.width) * 100 + "% " + pt / parseInt($.style.height) * 100 + "%");
+            }
+          }, _onDragStart: function(t2, e2) {
+            var n2 = this, o2 = t2.dataTransfer, i2 = n2.options;
+            G("dragStart", this, { evt: t2 }), Ft.eventCanceled ? this._onDrop() : (G("setupClone", this), Ft.eventCanceled || ((et = _(V)).removeAttribute("id"), et.draggable = false, et.style["will-change"] = "", this._hideClone(), k(et, this.options.chosenClass, false), Ft.clone = et), n2.cloneId = Kt(function() {
+              G("clone", n2), Ft.eventCanceled || (n2.options.removeCloneOnHide || Q.insertBefore(et, V), n2._hideClone(), q({ sortable: n2, name: "clone" }));
+            }), e2 || k(V, i2.dragClass, true), e2 ? (Et = true, n2._loopId = setInterval(n2._emulateDragOver, 50)) : (f(document, "mouseup", n2._onDrop), f(document, "touchend", n2._onDrop), f(document, "touchcancel", n2._onDrop), o2 && (o2.effectAllowed = "move", i2.setData && i2.setData.call(n2, o2, V)), h(document, "drop", n2), R(V, "transform", "translateZ(0)")), wt = true, n2._dragStartId = Kt(n2._dragStarted.bind(n2, e2, t2)), h(document, "selectstart", n2), gt = true, u && R(document.body, "user-select", "none"));
+          }, _onDragOver: function(n2) {
+            var o2, i2, r2, t2, e2, a2 = this.el, l2 = n2.target, s2 = this.options, c2 = s2.group, u2 = Ft.active, d2 = lt === c2, h2 = s2.sort, f2 = st || u2, p2 = this, g2 = false;
+            if (!Tt) {
+              if (void 0 !== n2.preventDefault && n2.cancelable && n2.preventDefault(), l2 = P(l2, s2.draggable, a2, true), O2("dragOver"), Ft.eventCanceled)
+                return g2;
+              if (V.contains(n2.target) || l2.animated && l2.animatingX && l2.animatingY || p2._ignoreWhileAnimating === l2)
+                return A2(false);
+              if (Et = false, u2 && !s2.disabled && (d2 ? h2 || (i2 = Z !== Q) : st === this || (this.lastPutMode = lt.checkPull(this, u2, V, n2)) && c2.checkPut(this, u2, V, n2))) {
+                if (r2 = "vertical" === this._getDirection(n2, l2), o2 = X(V), O2("dragOverValid"), Ft.eventCanceled)
+                  return g2;
+                if (i2)
+                  return Z = Q, M2(), this._hideClone(), O2("revert"), Ft.eventCanceled || (J ? Q.insertBefore(V, J) : Q.appendChild(V)), A2(true);
+                var m2 = F(a2, s2.draggable);
+                if (m2 && (S2 = n2, c2 = r2, x2 = X(F((D2 = this).el, D2.options.draggable)), D2 = L(D2.el, D2.options, $), !(c2 ? S2.clientX > D2.right + 10 || S2.clientY > x2.bottom && S2.clientX > x2.left : S2.clientY > D2.bottom + 10 || S2.clientX > x2.right && S2.clientY > x2.top) || m2.animated)) {
+                  if (m2 && (t2 = n2, e2 = r2, C2 = X(B((_2 = this).el, 0, _2.options, true)), _2 = L(_2.el, _2.options, $), e2 ? t2.clientX < _2.left - 10 || t2.clientY < C2.top && t2.clientX < C2.right : t2.clientY < _2.top - 10 || t2.clientY < C2.bottom && t2.clientX < C2.left)) {
+                    var v2 = B(a2, 0, s2, true);
+                    if (v2 === V)
+                      return A2(false);
+                    if (E2 = X(l2 = v2), false !== jt(Q, a2, V, o2, l2, E2, n2, false))
+                      return M2(), a2.insertBefore(V, v2), Z = a2, N2(), A2(true);
+                  } else if (l2.parentNode === a2) {
+                    var b2, y2, w2, E2 = X(l2), D2 = V.parentNode !== a2, S2 = (S2 = V.animated && V.toRect || o2, x2 = l2.animated && l2.toRect || E2, _2 = (e2 = r2) ? S2.left : S2.top, t2 = e2 ? S2.right : S2.bottom, C2 = e2 ? S2.width : S2.height, v2 = e2 ? x2.left : x2.top, S2 = e2 ? x2.right : x2.bottom, x2 = e2 ? x2.width : x2.height, !(_2 === v2 || t2 === S2 || _2 + C2 / 2 === v2 + x2 / 2)), _2 = r2 ? "top" : "left", C2 = Y(l2, "top", "top") || Y(V, "top", "top"), v2 = C2 ? C2.scrollTop : void 0;
+                    if (mt !== l2 && (y2 = E2[_2], St = false, _t = !S2 && s2.invertSwap || D2), 0 !== (b2 = function(t3, e3, n3, o3, i3, r3, a3, l3) {
+                      var s3 = o3 ? t3.clientY : t3.clientX, c3 = o3 ? n3.height : n3.width, t3 = o3 ? n3.top : n3.left, o3 = o3 ? n3.bottom : n3.right, n3 = false;
+                      if (!a3) {
+                        if (l3 && bt < c3 * i3) {
+                          if (St = !St && (1 === vt ? t3 + c3 * r3 / 2 < s3 : s3 < o3 - c3 * r3 / 2) ? true : St)
+                            n3 = true;
+                          else if (1 === vt ? s3 < t3 + bt : o3 - bt < s3)
+                            return -vt;
+                        } else if (t3 + c3 * (1 - i3) / 2 < s3 && s3 < o3 - c3 * (1 - i3) / 2)
+                          return function(t4) {
+                            return j(V) < j(t4) ? 1 : -1;
+                          }(e3);
+                      }
+                      if ((n3 = n3 || a3) && (s3 < t3 + c3 * r3 / 2 || o3 - c3 * r3 / 2 < s3))
+                        return t3 + c3 / 2 < s3 ? 1 : -1;
+                      return 0;
+                    }(n2, l2, E2, r2, S2 ? 1 : s2.swapThreshold, null == s2.invertedSwapThreshold ? s2.swapThreshold : s2.invertedSwapThreshold, _t, mt === l2)))
+                      for (var T2 = j(V); (w2 = Z.children[T2 -= b2]) && ("none" === R(w2, "display") || w2 === $); )
+                        ;
+                    if (0 === b2 || w2 === l2)
+                      return A2(false);
+                    vt = b2;
+                    var x2 = (mt = l2).nextElementSibling, D2 = false, S2 = jt(Q, a2, V, o2, l2, E2, n2, D2 = 1 === b2);
+                    if (false !== S2)
+                      return 1 !== S2 && -1 !== S2 || (D2 = 1 === S2), Tt = true, setTimeout(Lt, 30), M2(), D2 && !x2 ? a2.appendChild(V) : l2.parentNode.insertBefore(V, D2 ? x2 : l2), C2 && H(C2, 0, v2 - C2.scrollTop), Z = V.parentNode, void 0 === y2 || _t || (bt = Math.abs(y2 - X(l2)[_2])), N2(), A2(true);
+                  }
+                } else {
+                  if (m2 === V)
+                    return A2(false);
+                  if ((l2 = m2 && a2 === n2.target ? m2 : l2) && (E2 = X(l2)), false !== jt(Q, a2, V, o2, l2, E2, n2, !!l2))
+                    return M2(), m2 && m2.nextSibling ? a2.insertBefore(V, m2.nextSibling) : a2.appendChild(V), Z = a2, N2(), A2(true);
+                }
+                if (a2.contains(V))
+                  return A2(false);
+              }
+              return false;
+            }
+            function O2(t3, e3) {
+              G(t3, p2, I({ evt: n2, isOwner: d2, axis: r2 ? "vertical" : "horizontal", revert: i2, dragRect: o2, targetRect: E2, canSort: h2, fromSortable: f2, target: l2, completed: A2, onMove: function(t4, e4) {
+                return jt(Q, a2, V, o2, t4, X(t4), n2, e4);
+              }, changed: N2 }, e3));
+            }
+            function M2() {
+              O2("dragOverAnimationCapture"), p2.captureAnimationState(), p2 !== f2 && f2.captureAnimationState();
+            }
+            function A2(t3) {
+              return O2("dragOverCompleted", { insertion: t3 }), t3 && (d2 ? u2._hideClone() : u2._showClone(p2), p2 !== f2 && (k(V, (st || u2).options.ghostClass, false), k(V, s2.ghostClass, true)), st !== p2 && p2 !== Ft.active ? st = p2 : p2 === Ft.active && st && (st = null), f2 === p2 && (p2._ignoreWhileAnimating = l2), p2.animateAll(function() {
+                O2("dragOverAnimationComplete"), p2._ignoreWhileAnimating = null;
+              }), p2 !== f2 && (f2.animateAll(), f2._ignoreWhileAnimating = null)), (l2 === V && !V.animated || l2 === a2 && !l2.animated) && (mt = null), s2.dragoverBubble || n2.rootEl || l2 === document || (V.parentNode[K]._isOutsideThisEl(n2.target), t3 || Yt(n2)), !s2.dragoverBubble && n2.stopPropagation && n2.stopPropagation(), g2 = true;
+            }
+            function N2() {
+              it = j(V), at = j(V, s2.draggable), q({ sortable: p2, name: "change", toEl: a2, newIndex: it, newDraggableIndex: at, originalEvent: n2 });
+            }
+          }, _ignoreWhileAnimating: null, _offMoveEvents: function() {
+            f(document, "mousemove", this._onTouchMove), f(document, "touchmove", this._onTouchMove), f(document, "pointermove", this._onTouchMove), f(document, "dragover", Yt), f(document, "mousemove", Yt), f(document, "touchmove", Yt);
+          }, _offUpEvents: function() {
+            var t2 = this.el.ownerDocument;
+            f(t2, "mouseup", this._onDrop), f(t2, "touchend", this._onDrop), f(t2, "pointerup", this._onDrop), f(t2, "touchcancel", this._onDrop), f(document, "selectstart", this);
+          }, _onDrop: function(t2) {
+            var e2 = this.el, n2 = this.options;
+            it = j(V), at = j(V, n2.draggable), G("drop", this, { evt: t2 }), Z = V && V.parentNode, it = j(V), at = j(V, n2.draggable), Ft.eventCanceled || (St = _t = wt = false, clearInterval(this._loopId), clearTimeout(this._dragStartTimer), Wt(this.cloneId), Wt(this._dragStartId), this.nativeDraggable && (f(document, "drop", this), f(e2, "dragstart", this._onDragStart)), this._offMoveEvents(), this._offUpEvents(), u && R(document.body, "user-select", ""), R(V, "transform", ""), t2 && (gt && (t2.cancelable && t2.preventDefault(), n2.dropBubble || t2.stopPropagation()), $ && $.parentNode && $.parentNode.removeChild($), (Q === Z || st && "clone" !== st.lastPutMode) && et && et.parentNode && et.parentNode.removeChild(et), V && (this.nativeDraggable && f(V, "dragend", this), Ht(V), V.style["will-change"] = "", gt && !wt && k(V, (st || this).options.ghostClass, false), k(V, this.options.chosenClass, false), q({ sortable: this, name: "unchoose", toEl: Z, newIndex: null, newDraggableIndex: null, originalEvent: t2 }), Q !== Z ? (0 <= it && (q({ rootEl: Z, name: "add", toEl: Z, fromEl: Q, originalEvent: t2 }), q({ sortable: this, name: "remove", toEl: Z, originalEvent: t2 }), q({ rootEl: Z, name: "sort", toEl: Z, fromEl: Q, originalEvent: t2 }), q({ sortable: this, name: "sort", toEl: Z, originalEvent: t2 })), st && st.save()) : it !== ot && 0 <= it && (q({ sortable: this, name: "update", toEl: Z, originalEvent: t2 }), q({ sortable: this, name: "sort", toEl: Z, originalEvent: t2 })), Ft.active && (null != it && -1 !== it || (it = ot, at = rt), q({ sortable: this, name: "end", toEl: Z, originalEvent: t2 }), this.save())))), this._nulling();
+          }, _nulling: function() {
+            G("nulling", this), Q = V = Z = $ = J = et = tt = nt = ct = ut = gt = it = at = ot = rt = mt = vt = st = lt = Ft.dragged = Ft.ghost = Ft.clone = Ft.active = null, xt.forEach(function(t2) {
+              t2.checked = true;
+            }), xt.length = dt = ht = 0;
+          }, handleEvent: function(t2) {
+            switch (t2.type) {
+              case "drop":
+              case "dragend":
+                this._onDrop(t2);
+                break;
+              case "dragenter":
+              case "dragover":
+                V && (this._onDragOver(t2), function(t3) {
+                  t3.dataTransfer && (t3.dataTransfer.dropEffect = "move");
+                  t3.cancelable && t3.preventDefault();
+                }(t2));
+                break;
+              case "selectstart":
+                t2.preventDefault();
+            }
+          }, toArray: function() {
+            for (var t2, e2 = [], n2 = this.el.children, o2 = 0, i2 = n2.length, r2 = this.options; o2 < i2; o2++)
+              P(t2 = n2[o2], r2.draggable, this.el, false) && e2.push(t2.getAttribute(r2.dataIdAttr) || function(t3) {
+                var e3 = t3.tagName + t3.className + t3.src + t3.href + t3.textContent, n3 = e3.length, o3 = 0;
+                for (; n3--; )
+                  o3 += e3.charCodeAt(n3);
+                return o3.toString(36);
+              }(t2));
+            return e2;
+          }, sort: function(t2, e2) {
+            var n2 = {}, o2 = this.el;
+            this.toArray().forEach(function(t3, e3) {
+              e3 = o2.children[e3];
+              P(e3, this.options.draggable, o2, false) && (n2[t3] = e3);
+            }, this), e2 && this.captureAnimationState(), t2.forEach(function(t3) {
+              n2[t3] && (o2.removeChild(n2[t3]), o2.appendChild(n2[t3]));
+            }), e2 && this.animateAll();
+          }, save: function() {
+            var t2 = this.options.store;
+            t2 && t2.set && t2.set(this);
+          }, closest: function(t2, e2) {
+            return P(t2, e2 || this.options.draggable, this.el, false);
+          }, option: function(t2, e2) {
+            var n2 = this.options;
+            if (void 0 === e2)
+              return n2[t2];
+            var o2 = W.modifyOption(this, t2, e2);
+            n2[t2] = void 0 !== o2 ? o2 : e2, "group" === t2 && kt(n2);
+          }, destroy: function() {
+            G("destroy", this);
+            var t2 = this.el;
+            t2[K] = null, f(t2, "mousedown", this._onTapStart), f(t2, "touchstart", this._onTapStart), f(t2, "pointerdown", this._onTapStart), this.nativeDraggable && (f(t2, "dragover", this), f(t2, "dragenter", this)), Array.prototype.forEach.call(t2.querySelectorAll("[draggable]"), function(t3) {
+              t3.removeAttribute("draggable");
+            }), this._onDrop(), this._disableDelayedDragEvents(), Dt.splice(Dt.indexOf(this.el), 1), this.el = t2 = null;
+          }, _hideClone: function() {
+            nt || (G("hideClone", this), Ft.eventCanceled || (R(et, "display", "none"), this.options.removeCloneOnHide && et.parentNode && et.parentNode.removeChild(et), nt = true));
+          }, _showClone: function(t2) {
+            "clone" === t2.lastPutMode ? nt && (G("showClone", this), Ft.eventCanceled || (V.parentNode != Q || this.options.group.revertClone ? J ? Q.insertBefore(et, J) : Q.appendChild(et) : Q.insertBefore(et, V), this.options.group.revertClone && this.animate(V, et), R(et, "display", ""), nt = false)) : this._hideClone();
+          } }, Ot && h(document, "touchmove", function(t2) {
+            (Ft.active || wt) && t2.cancelable && t2.preventDefault();
+          }), Ft.utils = { on: h, off: f, css: R, find: b, is: function(t2, e2) {
+            return !!P(t2, e2, t2, false);
+          }, extend: function(t2, e2) {
+            if (t2 && e2)
+              for (var n2 in e2)
+                e2.hasOwnProperty(n2) && (t2[n2] = e2[n2]);
+            return t2;
+          }, throttle: S, closest: P, toggleClass: k, clone: _, index: j, nextTick: Kt, cancelNextTick: Wt, detectDirection: Pt, getChild: B }, Ft.get = function(t2) {
+            return t2[K];
+          }, Ft.mount = function() {
+            for (var t2 = arguments.length, e2 = new Array(t2), n2 = 0; n2 < t2; n2++)
+              e2[n2] = arguments[n2];
+            (e2 = e2[0].constructor === Array ? e2[0] : e2).forEach(function(t3) {
+              if (!t3.prototype || !t3.prototype.constructor)
+                throw "Sortable: Mounted plugin must be a constructor function, not ".concat({}.toString.call(t3));
+              t3.utils && (Ft.utils = I(I({}, Ft.utils), t3.utils)), W.mount(t3);
+            });
+          }, Ft.create = function(t2, e2) {
+            return new Ft(t2, e2);
+          };
+          var zt, Gt, Ut, qt, Vt, Zt, $t = [], Qt = !(Ft.version = "1.15.2");
+          function Jt() {
+            $t.forEach(function(t2) {
+              clearInterval(t2.pid);
+            }), $t = [];
+          }
+          function te() {
+            clearInterval(Zt);
+          }
+          var ee, ne = S(function(n2, t2, e2, o2) {
+            if (t2.scroll) {
+              var i2, r2 = (n2.touches ? n2.touches[0] : n2).clientX, a2 = (n2.touches ? n2.touches[0] : n2).clientY, l2 = t2.scrollSensitivity, s2 = t2.scrollSpeed, c2 = O(), u2 = false;
+              Gt !== e2 && (Gt = e2, Jt(), zt = t2.scroll, i2 = t2.scrollFn, true === zt && (zt = M(e2, true)));
+              var d2 = 0, h2 = zt;
+              do {
+                var f2 = h2, p2 = X(f2), g2 = p2.top, m2 = p2.bottom, v2 = p2.left, b2 = p2.right, y2 = p2.width, w2 = p2.height, E2 = void 0, D2 = void 0, S2 = f2.scrollWidth, _2 = f2.scrollHeight, C2 = R(f2), T2 = f2.scrollLeft, p2 = f2.scrollTop, D2 = f2 === c2 ? (E2 = y2 < S2 && ("auto" === C2.overflowX || "scroll" === C2.overflowX || "visible" === C2.overflowX), w2 < _2 && ("auto" === C2.overflowY || "scroll" === C2.overflowY || "visible" === C2.overflowY)) : (E2 = y2 < S2 && ("auto" === C2.overflowX || "scroll" === C2.overflowX), w2 < _2 && ("auto" === C2.overflowY || "scroll" === C2.overflowY)), T2 = E2 && (Math.abs(b2 - r2) <= l2 && T2 + y2 < S2) - (Math.abs(v2 - r2) <= l2 && !!T2), p2 = D2 && (Math.abs(m2 - a2) <= l2 && p2 + w2 < _2) - (Math.abs(g2 - a2) <= l2 && !!p2);
+                if (!$t[d2])
+                  for (var x2 = 0; x2 <= d2; x2++)
+                    $t[x2] || ($t[x2] = {});
+                $t[d2].vx == T2 && $t[d2].vy == p2 && $t[d2].el === f2 || ($t[d2].el = f2, $t[d2].vx = T2, $t[d2].vy = p2, clearInterval($t[d2].pid), 0 == T2 && 0 == p2 || (u2 = true, $t[d2].pid = setInterval(function() {
+                  o2 && 0 === this.layer && Ft.active._onTouchMove(Vt);
+                  var t3 = $t[this.layer].vy ? $t[this.layer].vy * s2 : 0, e3 = $t[this.layer].vx ? $t[this.layer].vx * s2 : 0;
+                  "function" == typeof i2 && "continue" !== i2.call(Ft.dragged.parentNode[K], e3, t3, n2, Vt, $t[this.layer].el) || H($t[this.layer].el, e3, t3);
+                }.bind({ layer: d2 }), 24))), d2++;
+              } while (t2.bubbleScroll && h2 !== c2 && (h2 = M(h2, false)));
+              Qt = u2;
+            }
+          }, 30), c = function(t2) {
+            var e2 = t2.originalEvent, n2 = t2.putSortable, o2 = t2.dragEl, i2 = t2.activeSortable, r2 = t2.dispatchSortableEvent, a2 = t2.hideGhostForTarget, t2 = t2.unhideGhostForTarget;
+            e2 && (i2 = n2 || i2, a2(), e2 = e2.changedTouches && e2.changedTouches.length ? e2.changedTouches[0] : e2, e2 = document.elementFromPoint(e2.clientX, e2.clientY), t2(), i2 && !i2.el.contains(e2) && (r2("spill"), this.onSpill({ dragEl: o2, putSortable: n2 })));
+          };
+          function oe() {
+          }
+          function ie() {
+          }
+          oe.prototype = { startIndex: null, dragStart: function(t2) {
+            t2 = t2.oldDraggableIndex;
+            this.startIndex = t2;
+          }, onSpill: function(t2) {
+            var e2 = t2.dragEl, n2 = t2.putSortable;
+            this.sortable.captureAnimationState(), n2 && n2.captureAnimationState();
+            t2 = B(this.sortable.el, this.startIndex, this.options);
+            t2 ? this.sortable.el.insertBefore(e2, t2) : this.sortable.el.appendChild(e2), this.sortable.animateAll(), n2 && n2.animateAll();
+          }, drop: c }, a(oe, { pluginName: "revertOnSpill" }), ie.prototype = { onSpill: function(t2) {
+            var e2 = t2.dragEl, t2 = t2.putSortable || this.sortable;
+            t2.captureAnimationState(), e2.parentNode && e2.parentNode.removeChild(e2), t2.animateAll();
+          }, drop: c }, a(ie, { pluginName: "removeOnSpill" });
+          var re, ae, le, se, ce, ue = [], de = [], he = false, fe = false, pe = false;
+          function ge(n2, o2) {
+            de.forEach(function(t2, e2) {
+              e2 = o2.children[t2.sortableIndex + (n2 ? Number(e2) : 0)];
+              e2 ? o2.insertBefore(t2, e2) : o2.appendChild(t2);
+            });
+          }
+          function me() {
+            ue.forEach(function(t2) {
+              t2 !== le && t2.parentNode && t2.parentNode.removeChild(t2);
+            });
+          }
+          return Ft.mount(new function() {
+            function t2() {
+              for (var t3 in this.defaults = { scroll: true, forceAutoScrollFallback: false, scrollSensitivity: 30, scrollSpeed: 10, bubbleScroll: true }, this)
+                "_" === t3.charAt(0) && "function" == typeof this[t3] && (this[t3] = this[t3].bind(this));
+            }
+            return t2.prototype = { dragStarted: function(t3) {
+              t3 = t3.originalEvent;
+              this.sortable.nativeDraggable ? h(document, "dragover", this._handleAutoScroll) : this.options.supportPointer ? h(document, "pointermove", this._handleFallbackAutoScroll) : t3.touches ? h(document, "touchmove", this._handleFallbackAutoScroll) : h(document, "mousemove", this._handleFallbackAutoScroll);
+            }, dragOverCompleted: function(t3) {
+              t3 = t3.originalEvent;
+              this.options.dragOverBubble || t3.rootEl || this._handleAutoScroll(t3);
+            }, drop: function() {
+              this.sortable.nativeDraggable ? f(document, "dragover", this._handleAutoScroll) : (f(document, "pointermove", this._handleFallbackAutoScroll), f(document, "touchmove", this._handleFallbackAutoScroll), f(document, "mousemove", this._handleFallbackAutoScroll)), te(), Jt(), clearTimeout(g), g = void 0;
+            }, nulling: function() {
+              Vt = Gt = zt = Qt = Zt = Ut = qt = null, $t.length = 0;
+            }, _handleFallbackAutoScroll: function(t3) {
+              this._handleAutoScroll(t3, true);
+            }, _handleAutoScroll: function(e2, n2) {
+              var o2, i2 = this, r2 = (e2.touches ? e2.touches[0] : e2).clientX, a2 = (e2.touches ? e2.touches[0] : e2).clientY, t3 = document.elementFromPoint(r2, a2);
+              Vt = e2, n2 || this.options.forceAutoScrollFallback || w || y || u ? (ne(e2, this.options, t3, n2), o2 = M(t3, true), !Qt || Zt && r2 === Ut && a2 === qt || (Zt && te(), Zt = setInterval(function() {
+                var t4 = M(document.elementFromPoint(r2, a2), true);
+                t4 !== o2 && (o2 = t4, Jt()), ne(e2, i2.options, t4, n2);
+              }, 10), Ut = r2, qt = a2)) : this.options.bubbleScroll && M(t3, true) !== O() ? ne(e2, this.options, M(t3, false), false) : Jt();
+            } }, a(t2, { pluginName: "scroll", initializeByDefault: true });
+          }()), Ft.mount(ie, oe), Ft.mount(new function() {
+            function t2() {
+              this.defaults = { swapClass: "sortable-swap-highlight" };
+            }
+            return t2.prototype = { dragStart: function(t3) {
+              t3 = t3.dragEl;
+              ee = t3;
+            }, dragOverValid: function(t3) {
+              var e2 = t3.completed, n2 = t3.target, o2 = t3.onMove, i2 = t3.activeSortable, r2 = t3.changed, a2 = t3.cancel;
+              i2.options.swap && (t3 = this.sortable.el, i2 = this.options, n2 && n2 !== t3 && (t3 = ee, ee = false !== o2(n2) ? (k(n2, i2.swapClass, true), n2) : null, t3 && t3 !== ee && k(t3, i2.swapClass, false)), r2(), e2(true), a2());
+            }, drop: function(t3) {
+              var e2, n2, o2 = t3.activeSortable, i2 = t3.putSortable, r2 = t3.dragEl, a2 = i2 || this.sortable, l2 = this.options;
+              ee && k(ee, l2.swapClass, false), ee && (l2.swap || i2 && i2.options.swap) && r2 !== ee && (a2.captureAnimationState(), a2 !== o2 && o2.captureAnimationState(), n2 = ee, t3 = (e2 = r2).parentNode, l2 = n2.parentNode, t3 && l2 && !t3.isEqualNode(n2) && !l2.isEqualNode(e2) && (i2 = j(e2), r2 = j(n2), t3.isEqualNode(l2) && i2 < r2 && r2++, t3.insertBefore(n2, t3.children[i2]), l2.insertBefore(e2, l2.children[r2])), a2.animateAll(), a2 !== o2 && o2.animateAll());
+            }, nulling: function() {
+              ee = null;
+            } }, a(t2, { pluginName: "swap", eventProperties: function() {
+              return { swapItem: ee };
+            } });
+          }()), Ft.mount(new function() {
+            function t2(o2) {
+              for (var t3 in this)
+                "_" === t3.charAt(0) && "function" == typeof this[t3] && (this[t3] = this[t3].bind(this));
+              o2.options.avoidImplicitDeselect || (o2.options.supportPointer ? h(document, "pointerup", this._deselectMultiDrag) : (h(document, "mouseup", this._deselectMultiDrag), h(document, "touchend", this._deselectMultiDrag))), h(document, "keydown", this._checkKeyDown), h(document, "keyup", this._checkKeyUp), this.defaults = { selectedClass: "sortable-selected", multiDragKey: null, avoidImplicitDeselect: false, setData: function(t4, e2) {
+                var n2 = "";
+                ue.length && ae === o2 ? ue.forEach(function(t5, e3) {
+                  n2 += (e3 ? ", " : "") + t5.textContent;
+                }) : n2 = e2.textContent, t4.setData("Text", n2);
+              } };
+            }
+            return t2.prototype = { multiDragKeyDown: false, isMultiDrag: false, delayStartGlobal: function(t3) {
+              t3 = t3.dragEl;
+              le = t3;
+            }, delayEnded: function() {
+              this.isMultiDrag = ~ue.indexOf(le);
+            }, setupClone: function(t3) {
+              var e2 = t3.sortable, t3 = t3.cancel;
+              if (this.isMultiDrag) {
+                for (var n2 = 0; n2 < ue.length; n2++)
+                  de.push(_(ue[n2])), de[n2].sortableIndex = ue[n2].sortableIndex, de[n2].draggable = false, de[n2].style["will-change"] = "", k(de[n2], this.options.selectedClass, false), ue[n2] === le && k(de[n2], this.options.chosenClass, false);
+                e2._hideClone(), t3();
+              }
+            }, clone: function(t3) {
+              var e2 = t3.sortable, n2 = t3.rootEl, o2 = t3.dispatchSortableEvent, t3 = t3.cancel;
+              this.isMultiDrag && (this.options.removeCloneOnHide || ue.length && ae === e2 && (ge(true, n2), o2("clone"), t3()));
+            }, showClone: function(t3) {
+              var e2 = t3.cloneNowShown, n2 = t3.rootEl, t3 = t3.cancel;
+              this.isMultiDrag && (ge(false, n2), de.forEach(function(t4) {
+                R(t4, "display", "");
+              }), e2(), ce = false, t3());
+            }, hideClone: function(t3) {
+              var e2 = this, n2 = (t3.sortable, t3.cloneNowHidden), t3 = t3.cancel;
+              this.isMultiDrag && (de.forEach(function(t4) {
+                R(t4, "display", "none"), e2.options.removeCloneOnHide && t4.parentNode && t4.parentNode.removeChild(t4);
+              }), n2(), ce = true, t3());
+            }, dragStartGlobal: function(t3) {
+              t3.sortable;
+              !this.isMultiDrag && ae && ae.multiDrag._deselectMultiDrag(), ue.forEach(function(t4) {
+                t4.sortableIndex = j(t4);
+              }), ue = ue.sort(function(t4, e2) {
+                return t4.sortableIndex - e2.sortableIndex;
+              }), pe = true;
+            }, dragStarted: function(t3) {
+              var e2, n2 = this, t3 = t3.sortable;
+              this.isMultiDrag && (this.options.sort && (t3.captureAnimationState(), this.options.animation && (ue.forEach(function(t4) {
+                t4 !== le && R(t4, "position", "absolute");
+              }), e2 = X(le, false, true, true), ue.forEach(function(t4) {
+                t4 !== le && C(t4, e2);
+              }), he = fe = true)), t3.animateAll(function() {
+                he = fe = false, n2.options.animation && ue.forEach(function(t4) {
+                  T(t4);
+                }), n2.options.sort && me();
+              }));
+            }, dragOver: function(t3) {
+              var e2 = t3.target, n2 = t3.completed, t3 = t3.cancel;
+              fe && ~ue.indexOf(e2) && (n2(false), t3());
+            }, revert: function(t3) {
+              var n2, o2, e2 = t3.fromSortable, i2 = t3.rootEl, r2 = t3.sortable, a2 = t3.dragRect;
+              1 < ue.length && (ue.forEach(function(t4) {
+                r2.addAnimationState({ target: t4, rect: fe ? X(t4) : a2 }), T(t4), t4.fromRect = a2, e2.removeAnimationState(t4);
+              }), fe = false, n2 = !this.options.removeCloneOnHide, o2 = i2, ue.forEach(function(t4, e3) {
+                e3 = o2.children[t4.sortableIndex + (n2 ? Number(e3) : 0)];
+                e3 ? o2.insertBefore(t4, e3) : o2.appendChild(t4);
+              }));
+            }, dragOverCompleted: function(t3) {
+              var e2, n2 = t3.sortable, o2 = t3.isOwner, i2 = t3.insertion, r2 = t3.activeSortable, a2 = t3.parentEl, l2 = t3.putSortable, t3 = this.options;
+              i2 && (o2 && r2._hideClone(), he = false, t3.animation && 1 < ue.length && (fe || !o2 && !r2.options.sort && !l2) && (e2 = X(le, false, true, true), ue.forEach(function(t4) {
+                t4 !== le && (C(t4, e2), a2.appendChild(t4));
+              }), fe = true), o2 || (fe || me(), 1 < ue.length ? (o2 = ce, r2._showClone(n2), r2.options.animation && !ce && o2 && de.forEach(function(t4) {
+                r2.addAnimationState({ target: t4, rect: se }), t4.fromRect = se, t4.thisAnimationDuration = null;
+              })) : r2._showClone(n2)));
+            }, dragOverAnimationCapture: function(t3) {
+              var e2 = t3.dragRect, n2 = t3.isOwner, t3 = t3.activeSortable;
+              ue.forEach(function(t4) {
+                t4.thisAnimationDuration = null;
+              }), t3.options.animation && !n2 && t3.multiDrag.isMultiDrag && (se = a({}, e2), e2 = v(le, true), se.top -= e2.f, se.left -= e2.e);
+            }, dragOverAnimationComplete: function() {
+              fe && (fe = false, me());
+            }, drop: function(t3) {
+              var e2 = t3.originalEvent, n2 = t3.rootEl, o2 = t3.parentEl, i2 = t3.sortable, r2 = t3.dispatchSortableEvent, a2 = t3.oldIndex, l2 = t3.putSortable, s2 = l2 || this.sortable;
+              if (e2) {
+                var c2, u2, d2, h2 = this.options, f2 = o2.children;
+                if (!pe)
+                  if (h2.multiDragKey && !this.multiDragKeyDown && this._deselectMultiDrag(), k(le, h2.selectedClass, !~ue.indexOf(le)), ~ue.indexOf(le))
+                    ue.splice(ue.indexOf(le), 1), re = null, z({ sortable: i2, rootEl: n2, name: "deselect", targetEl: le, originalEvent: e2 });
+                  else {
+                    if (ue.push(le), z({ sortable: i2, rootEl: n2, name: "select", targetEl: le, originalEvent: e2 }), e2.shiftKey && re && i2.el.contains(re)) {
+                      var p2 = j(re), t3 = j(le);
+                      if (~p2 && ~t3 && p2 !== t3)
+                        for (var g2, m2 = p2 < t3 ? (g2 = p2, t3) : (g2 = t3, p2 + 1); g2 < m2; g2++)
+                          ~ue.indexOf(f2[g2]) || (k(f2[g2], h2.selectedClass, true), ue.push(f2[g2]), z({ sortable: i2, rootEl: n2, name: "select", targetEl: f2[g2], originalEvent: e2 }));
+                    } else
+                      re = le;
+                    ae = s2;
+                  }
+                pe && this.isMultiDrag && (fe = false, (o2[K].options.sort || o2 !== n2) && 1 < ue.length && (c2 = X(le), u2 = j(le, ":not(." + this.options.selectedClass + ")"), !he && h2.animation && (le.thisAnimationDuration = null), s2.captureAnimationState(), he || (h2.animation && (le.fromRect = c2, ue.forEach(function(t4) {
+                  var e3;
+                  t4.thisAnimationDuration = null, t4 !== le && (e3 = fe ? X(t4) : c2, t4.fromRect = e3, s2.addAnimationState({ target: t4, rect: e3 }));
+                })), me(), ue.forEach(function(t4) {
+                  f2[u2] ? o2.insertBefore(t4, f2[u2]) : o2.appendChild(t4), u2++;
+                }), a2 === j(le) && (d2 = false, ue.forEach(function(t4) {
+                  t4.sortableIndex !== j(t4) && (d2 = true);
+                }), d2 && (r2("update"), r2("sort")))), ue.forEach(function(t4) {
+                  T(t4);
+                }), s2.animateAll()), ae = s2), (n2 === o2 || l2 && "clone" !== l2.lastPutMode) && de.forEach(function(t4) {
+                  t4.parentNode && t4.parentNode.removeChild(t4);
+                });
+              }
+            }, nullingGlobal: function() {
+              this.isMultiDrag = pe = false, de.length = 0;
+            }, destroyGlobal: function() {
+              this._deselectMultiDrag(), f(document, "pointerup", this._deselectMultiDrag), f(document, "mouseup", this._deselectMultiDrag), f(document, "touchend", this._deselectMultiDrag), f(document, "keydown", this._checkKeyDown), f(document, "keyup", this._checkKeyUp);
+            }, _deselectMultiDrag: function(t3) {
+              if (!(void 0 !== pe && pe || ae !== this.sortable || t3 && P(t3.target, this.options.draggable, this.sortable.el, false) || t3 && 0 !== t3.button))
+                for (; ue.length; ) {
+                  var e2 = ue[0];
+                  k(e2, this.options.selectedClass, false), ue.shift(), z({ sortable: this.sortable, rootEl: this.sortable.el, name: "deselect", targetEl: e2, originalEvent: t3 });
+                }
+            }, _checkKeyDown: function(t3) {
+              t3.key === this.options.multiDragKey && (this.multiDragKeyDown = true);
+            }, _checkKeyUp: function(t3) {
+              t3.key === this.options.multiDragKey && (this.multiDragKeyDown = false);
+            } }, a(t2, { pluginName: "multiDrag", utils: { select: function(t3) {
+              var e2 = t3.parentNode[K];
+              e2 && e2.options.multiDrag && !~ue.indexOf(t3) && (ae && ae !== e2 && (ae.multiDrag._deselectMultiDrag(), ae = e2), k(t3, e2.options.selectedClass, true), ue.push(t3));
+            }, deselect: function(t3) {
+              var e2 = t3.parentNode[K], n2 = ue.indexOf(t3);
+              e2 && e2.options.multiDrag && ~n2 && (k(t3, e2.options.selectedClass, false), ue.splice(n2, 1));
+            } }, eventProperties: function() {
+              var n2 = this, o2 = [], i2 = [];
+              return ue.forEach(function(t3) {
+                var e2;
+                o2.push({ multiDragElement: t3, index: t3.sortableIndex }), e2 = fe && t3 !== le ? -1 : fe ? j(t3, ":not(." + n2.options.selectedClass + ")") : j(t3), i2.push({ multiDragElement: t3, index: e2 });
+              }), { items: r(ue), clones: [].concat(de), oldIndicies: o2, newIndicies: i2 };
+            }, optionListeners: { multiDragKey: function(t3) {
+              return "ctrl" === (t3 = t3.toLowerCase()) ? t3 = "Control" : 1 < t3.length && (t3 = t3.charAt(0).toUpperCase() + t3.substr(1)), t3;
+            } } });
+          }()), Ft;
+        });
+      }
+    });
+    var module_exports = {};
+    __export(module_exports, {
+      default: () => module_default2,
+      sort: () => src_default2
+    });
+    module.exports = __toCommonJS(module_exports);
+    var import_sortablejs = __toESM2(require_Sortable_min());
+    function walk(el, callback) {
+      if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
+        Array.from(el.children).forEach((el2) => walk(el2, callback));
+        return;
+      }
+      let skip = false;
+      callback(el, () => skip = true);
+      if (skip)
+        return;
+      let node = el.firstElementChild;
+      while (node) {
+        walk(node, callback, false);
+        node = node.nextElementSibling;
+      }
+    }
+    function src_default2(Alpine24) {
+      Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate, cleanup }) => {
+        if (value === "config") {
+          return;
+        }
+        if (value === "handle") {
+          return;
+        }
+        if (value === "group") {
+          return;
+        }
+        if (value === "key" || value === "item") {
+          if ([void 0, null, ""].includes(expression))
+            return;
+          el._x_sort_key = evaluate(expression);
+          return;
+        }
+        let preferences = {
+          hideGhost: !modifiers.includes("ghost"),
+          useHandles: !!el.querySelector("[x-sort\\:handle],[wire\\:sort\\:handle]"),
+          group: getGroupName(el, modifiers)
+        };
+        let handleSort = generateSortHandler(expression, evaluate);
+        let config = getConfigurationOverrides(el, modifiers, evaluate);
+        let sortable = initSortable(el, config, preferences, (key, position) => {
+          handleSort(key, position);
+        });
+        cleanup(() => sortable.destroy());
+      });
+    }
+    function generateSortHandler(expression, evaluate) {
+      if ([void 0, null, ""].includes(expression))
+        return () => {
+        };
+      return (key, position) => {
+        evaluate(expression, { scope: {
+          $key: key,
+          $item: key,
+          $position: position
+        }, params: [
+          key,
+          position
+        ] });
+      };
+    }
+    function getConfigurationOverrides(el, modifiers, evaluate) {
+      if (el.hasAttribute("x-sort:config")) {
+        return evaluate(el.getAttribute("x-sort:config"));
+      }
+      if (el.hasAttribute("wire:sort:config")) {
+        return evaluate(el.getAttribute("wire:sort:config"));
+      }
+      return {};
+    }
+    function initSortable(el, config, preferences, handle) {
+      let ghostRef;
+      let options = {
+        animation: 150,
+        handle: preferences.useHandles ? "[x-sort\\:handle],[wire\\:sort\\:handle]" : null,
+        group: preferences.group,
+        scroll: true,
+        forceAutoScrollFallback: true,
+        scrollSensitivity: 50,
+        preventOnFilter: false,
+        filter(e) {
+          if (e.target.hasAttribute("x-sort:ignore") || e.target.hasAttribute("wire:sort:ignore"))
+            return true;
+          if (e.target.closest("[x-sort\\:ignore]") || e.target.closest("[wire\\:sort\\:ignore]"))
+            return true;
+          if (!el.querySelector("[x-sort\\:item],[wire\\:sort\\:item]"))
+            return false;
+          let itemHasAttribute = e.target.closest("[x-sort\\:item],[wire\\:sort\\:item]");
+          return itemHasAttribute ? false : true;
+        },
+        onSort(e) {
+          if (e.from !== e.to) {
+            if (e.to !== e.target) {
+              return;
+            }
+          }
+          let key = void 0;
+          walk(e.item, (el2, skip) => {
+            if (key !== void 0)
+              return;
+            if (el2._x_sort_key) {
+              key = el2._x_sort_key;
+              skip();
+            }
+          });
+          let position = e.newIndex;
+          if (key !== void 0 || key !== null) {
+            handle(key, position);
+          }
+        },
+        onStart() {
+          document.body.classList.add("sorting");
+          ghostRef = document.querySelector(".sortable-ghost");
+          if (preferences.hideGhost && ghostRef)
+            ghostRef.style.opacity = "0";
+        },
+        onEnd() {
+          document.body.classList.remove("sorting");
+          if (preferences.hideGhost && ghostRef)
+            ghostRef.style.opacity = "1";
+          ghostRef = void 0;
+          keepElementsWithinMorphMarkers(el);
+        }
+      };
+      return new import_sortablejs.default(el, { ...options, ...config });
+    }
+    function keepElementsWithinMorphMarkers(el) {
+      let cursor = el.firstChild;
+      while (cursor.nextSibling) {
+        if (cursor.textContent.trim() === "[if ENDBLOCK]><![endif]") {
+          el.append(cursor);
+          break;
+        }
+        cursor = cursor.nextSibling;
+      }
+    }
+    function getGroupName(el, modifiers) {
+      if (el.hasAttribute("x-sort:group")) {
+        return el.getAttribute("x-sort:group");
+      }
+      if (el.hasAttribute("wire:sort:group")) {
+        return el.getAttribute("wire:sort:group");
+      }
+      return modifiers.indexOf("group") !== -1 ? modifiers[modifiers.indexOf("group") + 1] : null;
+    }
+    var module_default2 = src_default2;
   }
 });
 
@@ -5147,12 +6327,12 @@ var require_module_cjs6 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      resize: () => src_default
+      default: () => module_default2,
+      resize: () => src_default2
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
-      Alpine23.directive("resize", Alpine23.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
+    function src_default2(Alpine24) {
+      Alpine24.directive("resize", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
         let evaluator = evaluateLater(expression);
         let evaluate = (width, height) => {
           evaluator(() => {
@@ -5193,13 +6373,13 @@ var require_module_cjs6 = __commonJS({
       }
       return [width, height];
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
-// ../alpine/packages/anchor/dist/module.cjs.js
+// node_modules/@alpinejs/anchor/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5219,8 +6399,8 @@ var require_module_cjs7 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      anchor: () => src_default,
-      default: () => module_default
+      anchor: () => src_default2,
+      default: () => module_default2
     });
     module.exports = __toCommonJS(module_exports);
     var min = Math.min;
@@ -6396,45 +7576,48 @@ var require_module_cjs7 = __commonJS({
         platform: platformWithCache
       });
     };
-    function src_default(Alpine23) {
-      Alpine23.magic("anchor", (el) => {
+    function src_default2(Alpine24) {
+      Alpine24.magic("anchor", (el) => {
         if (!el._x_anchor)
           throw "Alpine: No x-anchor directive found on element using $anchor...";
         return el._x_anchor;
       });
-      Alpine23.interceptClone((from, to) => {
+      Alpine24.interceptClone((from, to) => {
         if (from && from._x_anchor && !to._x_anchor) {
           to._x_anchor = from._x_anchor;
         }
       });
-      Alpine23.directive("anchor", Alpine23.skipDuringClone((el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
-        let { placement, offsetValue, unstyled } = getOptions(modifiers);
-        el._x_anchor = Alpine23.reactive({ x: 0, y: 0 });
-        let reference = evaluate2(expression);
-        if (!reference)
-          throw "Alpine: no element provided to x-anchor...";
-        let compute = () => {
-          let previousValue;
-          computePosition2(reference, el, {
-            placement,
-            middleware: [flip(), shift({ padding: 5 }), offset(offsetValue)]
-          }).then(({ x, y }) => {
-            unstyled || setStyles(el, x, y);
-            if (JSON.stringify({ x, y }) !== previousValue) {
-              el._x_anchor.x = x;
-              el._x_anchor.y = y;
-            }
-            previousValue = JSON.stringify({ x, y });
-          });
-        };
-        let release = autoUpdate(reference, el, () => compute());
-        cleanup(() => release());
-      }, (el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
-        let { placement, offsetValue, unstyled } = getOptions(modifiers);
-        if (el._x_anchor) {
-          unstyled || setStyles(el, el._x_anchor.x, el._x_anchor.y);
+      Alpine24.directive("anchor", Alpine24.skipDuringClone(
+        (el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
+          let { placement, offsetValue, unstyled } = getOptions(modifiers);
+          el._x_anchor = Alpine24.reactive({ x: 0, y: 0 });
+          let reference = evaluate2(expression);
+          if (!reference)
+            throw "Alpine: no element provided to x-anchor...";
+          let compute = () => {
+            let previousValue;
+            computePosition2(reference, el, {
+              placement,
+              middleware: [flip(), shift({ padding: 5 }), offset(offsetValue)]
+            }).then(({ x, y }) => {
+              unstyled || setStyles(el, x, y);
+              if (JSON.stringify({ x, y }) !== previousValue) {
+                el._x_anchor.x = x;
+                el._x_anchor.y = y;
+              }
+              previousValue = JSON.stringify({ x, y });
+            });
+          };
+          let release = autoUpdate(reference, el, () => compute());
+          cleanup(() => release());
+        },
+        (el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
+          let { placement, offsetValue, unstyled } = getOptions(modifiers);
+          if (el._x_anchor) {
+            unstyled || setStyles(el, el._x_anchor.x, el._x_anchor.y);
+          }
         }
-      }));
+      ));
     }
     function setStyles(el, x, y) {
       Object.assign(el.style, {
@@ -6454,7 +7637,7 @@ var require_module_cjs7 = __commonJS({
       let unstyled = modifiers.includes("no-style");
       return { placement, offsetValue, unstyled };
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
@@ -6757,8 +7940,8 @@ var require_module_cjs8 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      morph: () => src_default
+      default: () => module_default2,
+      morph: () => src_default2
     });
     module.exports = __toCommonJS(module_exports);
     function morph3(from, toHtml, options) {
@@ -7135,17 +8318,17 @@ var require_module_cjs8 = __commonJS({
       to.setAttribute("id", fromId);
       to.id = fromId;
     }
-    function src_default(Alpine23) {
-      Alpine23.morph = morph3;
-      Alpine23.morphBetween = morphBetween;
+    function src_default2(Alpine24) {
+      Alpine24.morph = morph3;
+      Alpine24.morphBetween = morphBetween;
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
-// ../alpine/packages/mask/dist/module.cjs.js
+// node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs9 = __commonJS({
-  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7165,13 +8348,13 @@ var require_module_cjs9 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      mask: () => src_default,
+      default: () => module_default2,
+      mask: () => src_default2,
       stripDown: () => stripDown
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
-      Alpine23.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
+    function src_default2(Alpine24) {
+      Alpine24.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
         queueMicrotask(() => {
@@ -7180,7 +8363,7 @@ var require_module_cjs9 = __commonJS({
             effect(() => {
               templateFn = (input) => {
                 let result;
-                Alpine23.dontAutoEvaluateFunctions(() => {
+                Alpine24.dontAutoEvaluateFunctions(() => {
                   evaluator((value2) => {
                     result = typeof value2 === "function" ? value2(input) : value2;
                   }, { scope: {
@@ -7245,7 +8428,13 @@ var require_module_cjs9 = __commonJS({
       let unformattedValue = el.value;
       callback();
       let beforeLeftOfCursorBeforeFormatting = unformattedValue.slice(0, cursorPosition);
-      let newPosition = buildUp(template, stripDown(template, beforeLeftOfCursorBeforeFormatting)).length;
+      let newPosition = buildUp(
+        template,
+        stripDown(
+          template,
+          beforeLeftOfCursorBeforeFormatting
+        )
+      ).length;
       el.setSelectionRange(newPosition, newPosition);
     }
     function stripDown(template, input) {
@@ -7337,7 +8526,7 @@ var require_module_cjs9 = __commonJS({
       });
       return template;
     }
-    var module_default = src_default;
+    var module_default2 = src_default2;
   }
 });
 
@@ -7383,12 +8572,14 @@ var WeakBag = class {
   }
 };
 function dispatch(target, name, detail = {}, bubbles = true) {
-  target.dispatchEvent(new CustomEvent(name, {
-    detail,
-    bubbles,
-    composed: true,
-    cancelable: true
-  }));
+  target.dispatchEvent(
+    new CustomEvent(name, {
+      detail,
+      bubbles,
+      composed: true,
+      cancelable: true
+    })
+  );
 }
 function listen(target, name, handler) {
   target.addEventListener(name, handler);
@@ -7412,17 +8603,22 @@ function isPrimitive(subject) {
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
+function parsePathSegments(path) {
+  if (path === "")
+    return [];
+  return path.replace(/\[(['"]?)(.+?)\1\]/g, ".$2").replace(/^\./, "").split(".");
+}
 function dataGet(object, key) {
   if (key === "")
     return object;
-  return key.split(".").reduce((carry, i) => {
+  return parsePathSegments(key).reduce((carry, i) => {
     return carry?.[i];
   }, object);
 }
 function dataSet(object, key, value) {
-  let segments = key.split(".");
+  let segments = parsePathSegments(key);
   if (segments.length === 1) {
-    return object[key] = value;
+    return object[segments[0]] = value;
   }
   let firstSegment = segments.shift();
   let restOfSegments = segments.join(".");
@@ -7485,12 +8681,15 @@ function getNonce() {
     nonce = window.livewireScriptConfig["nonce"];
     return nonce;
   }
-  const elWithNonce = document.querySelector("style[data-livewire-style][nonce]");
+  let elWithNonce = document.querySelector("style[data-livewire-style][nonce]");
   if (elWithNonce) {
     nonce = elWithNonce.nonce;
     return nonce;
   }
   return null;
+}
+function getUriPrefix() {
+  return document.querySelector("[data-uri-prefix]")?.getAttribute("data-uri-prefix") ?? window.livewireScriptConfig["uriPrefix"] ?? null;
 }
 function getUpdateUri() {
   return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
@@ -7501,6 +8700,28 @@ function contentIsFromDump(content) {
 function splitDumpFromContent(content) {
   let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
   return [dump, content.replace(dump, "")];
+}
+function walkUpwards(el, callback) {
+  let current = el;
+  while (current) {
+    let stop = void 0;
+    callback(current, { stop: (value) => value === void 0 ? stop = current : stop = value });
+    if (stop !== void 0)
+      return stop;
+    if (current._x_teleportBack)
+      current = current._x_teleportBack;
+    current = current.parentElement;
+  }
+}
+function walkBackwards(el, callback) {
+  let current = el;
+  while (current) {
+    let stop = void 0;
+    callback(current, { stop: (value) => value === void 0 ? stop = current : stop = value });
+    if (stop !== void 0)
+      return stop;
+    current = current.previousSibling;
+  }
 }
 
 // js/features/supportFileUploads.js
@@ -7521,10 +8742,12 @@ function handleFileUpload(el, property, component, cleanup) {
   let cancel = () => el.dispatchEvent(new CustomEvent("livewire-upload-cancel", { bubbles: true, detail: { id: component.id, property } }));
   let progress = (progressEvent) => {
     var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
-    el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
-      bubbles: true,
-      detail: { progress: percentCompleted }
-    }));
+    el.dispatchEvent(
+      new CustomEvent("livewire-upload-progress", {
+        bubbles: true,
+        detail: { progress: percentCompleted }
+      })
+    );
   };
   let eventHandler = (e) => {
     if (e.target.files.length === 0)
@@ -7583,17 +8806,19 @@ var UploadManager = class {
       finishCallback,
       errorCallback,
       progressCallback,
-      cancelledCallback
+      cancelledCallback,
+      append: false
     });
   }
-  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = true) {
     this.setUpload(name, {
       files: Array.from(files),
       multiple: true,
       finishCallback,
       errorCallback,
       progressCallback,
-      cancelledCallback
+      cancelledCallback,
+      append
     });
   }
   removeUpload(name, tmpFilename, finishCallback) {
@@ -7646,7 +8871,7 @@ var UploadManager = class {
     request.addEventListener("load", () => {
       if ((request.status + "")[0] === "2") {
         let paths = retrievePaths(request.response && JSON.parse(request.response));
-        this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
+        this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple, this.uploadBag.first(name).append);
         return;
       }
       let errors = null;
@@ -7737,26 +8962,49 @@ function upload(component, name, file, finishCallback = () => {
 }, cancelledCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
-  uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback);
+  uploadManager.upload(
+    name,
+    file,
+    finishCallback,
+    errorCallback,
+    progressCallback,
+    cancelledCallback
+  );
 }
 function uploadMultiple(component, name, files, finishCallback = () => {
 }, errorCallback = () => {
 }, progressCallback = () => {
 }, cancelledCallback = () => {
-}) {
+}, append = true) {
   let uploadManager = getUploadManager(component);
-  uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback);
+  uploadManager.uploadMultiple(
+    name,
+    files,
+    finishCallback,
+    errorCallback,
+    progressCallback,
+    cancelledCallback,
+    append
+  );
 }
 function removeUpload(component, name, tmpFilename, finishCallback = () => {
 }, errorCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
-  uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
+  uploadManager.removeUpload(
+    name,
+    tmpFilename,
+    finishCallback,
+    errorCallback
+  );
 }
 function cancelUpload(component, name, cancelledCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
-  uploadManager.cancelUpload(name, cancelledCallback);
+  uploadManager.cancelUpload(
+    name,
+    cancelledCallback
+  );
 }
 
 // js/features/supportEntangle.js
@@ -7807,6 +9055,9 @@ function cloneIfObject(value) {
   return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
 }
 
+// js/$wire.js
+var import_alpinejs2 = __toESM(require_module_cjs());
+
 // js/hooks.js
 var listeners = [];
 function on(name, callback) {
@@ -7852,11 +9103,289 @@ function runFinishers(finishers, result) {
   return latest;
 }
 
-// js/request/modal.js
+// js/request/interactions.js
+function coordinateNetworkInteractions(messageBus2) {
+  interceptPartition(({ message, compileRequest }) => {
+    if (!message.component.isIsolated)
+      return;
+    compileRequest([message]);
+  });
+  interceptPartition(({ message, compileRequest }) => {
+    if (message.component.isLazy && !message.component.hasBeenLazyLoaded && message.component.isLazyIsolated) {
+      compileRequest([message]);
+    }
+  });
+  interceptPartition(({ message, compileRequest }) => {
+    let component = message.component;
+    let bundledMessages = [];
+    component.getDeepChildrenWithBindings((child) => {
+      let action = constructAction(child, "$commit");
+      let message2 = createOrAddToOutstandingMessage(action);
+      bundledMessages.push(message2);
+    });
+    if (bundledMessages.length > 0) {
+      compileRequest([message, ...bundledMessages]);
+    }
+  });
+  interceptAction(({ action }) => {
+    let isRenderless = action?.origin?.directive?.modifiers.includes("renderless");
+    if (isRenderless) {
+      action.metadata.renderless = true;
+    }
+    let message = messageBus2.activeMessageMatchingScope(action);
+    if (message) {
+      if (message.isAsync() || action.isAsync())
+        return;
+      if (action.metadata.type === "poll") {
+        return action.cancel();
+      }
+      if (Array.from(message.actions).every((action2) => action2.metadata.type === "poll")) {
+        return message.cancel();
+      }
+      if (Array.from(message.actions).every((action2) => action2.metadata.type === "model.live")) {
+        if (action.metadata.type === "model.live") {
+          return;
+        }
+      }
+      action.defer();
+      message.addInterceptor(({ onFinish }) => {
+        onFinish(() => action.fire());
+      });
+    }
+  });
+}
+
+// js/request/request.js
+var MessageRequest = class {
+  messages = /* @__PURE__ */ new Set();
+  controller = new AbortController();
+  interceptors = [];
+  cancelled = false;
+  uri = null;
+  payload = null;
+  options = null;
+  addMessage(message) {
+    message.setRequest(this);
+    this.messages.add(message);
+  }
+  getActiveMessages() {
+    return new Set([...this.messages].filter((message) => !message.isCancelled()));
+  }
+  initInterceptors(interceptorRegistry) {
+    this.interceptors = interceptorRegistry.getRequestInterceptors(this);
+    this.messages.forEach((message) => {
+      let messageInterceptors = interceptorRegistry.getMessageInterceptors(message);
+      message.setInterceptors(messageInterceptors);
+    });
+    this.interceptors.forEach((interceptor) => interceptor.init());
+    this.messages.forEach((message) => {
+      message.getInterceptors().forEach((interceptor) => interceptor.init());
+    });
+  }
+  cancel() {
+    if (this.cancelled)
+      return;
+    this.cancelled = true;
+    this.controller.abort();
+    this.messages.forEach((message) => {
+      if (message.isCancelled())
+        return;
+      message.cancel();
+    });
+  }
+  hasAllCancelledMessages() {
+    return this.getActiveMessages().size === 0;
+  }
+  isCancelled() {
+    return this.cancelled;
+  }
+  invokeOnSend({ responsePromise }) {
+    this.interceptors.forEach((interceptor) => interceptor.onSend({ responsePromise }));
+    this.messages.forEach((message) => message.invokeOnSend());
+  }
+  invokeOnCancel() {
+    this.interceptors.forEach((interceptor) => interceptor.onCancel());
+  }
+  invokeOnFailure({ error: error2 }) {
+    this.interceptors.forEach((interceptor) => interceptor.onFailure({ error: error2 }));
+    this.messages.forEach((message) => message.invokeOnFailure(error2));
+  }
+  invokeOnResponse({ response }) {
+    this.interceptors.forEach((interceptor) => interceptor.onResponse({ response }));
+  }
+  invokeOnStream({ response }) {
+    this.interceptors.forEach((interceptor) => interceptor.onStream({ response }));
+  }
+  invokeOnParsed({ response, body }) {
+    this.interceptors.forEach((interceptor) => interceptor.onParsed({ response, body }));
+  }
+  invokeOnRedirect({ url, preventDefault }) {
+    this.interceptors.forEach((interceptor) => interceptor.onRedirect({ url, preventDefault }));
+  }
+  invokeOnDump({ html, preventDefault }) {
+    this.interceptors.forEach((interceptor) => interceptor.onDump({ html, preventDefault }));
+  }
+  invokeOnError({ response, body, preventDefault }) {
+    this.interceptors.forEach((interceptor) => interceptor.onError({ response, body, preventDefault }));
+    this.messages.forEach((message) => message.invokeOnError({ response, body, preventDefault }));
+  }
+  invokeOnSuccess({ response, body, json }) {
+    this.interceptors.forEach((interceptor) => interceptor.onSuccess({ response, body, json }));
+  }
+  invokeOnFinish() {
+    this.interceptors.forEach((interceptor) => interceptor.onFinish());
+  }
+};
+var PageRequest = class {
+  controller = new AbortController();
+  constructor(uri) {
+    this.uri = uri;
+  }
+  cancel() {
+    this.controller.abort();
+  }
+  isCancelled() {
+    return this.controller.signal.aborted;
+  }
+};
+
+// js/request/interceptor.js
+var MessageInterceptor = class {
+  onSend = () => {
+  };
+  onCancel = () => {
+  };
+  onFailure = () => {
+  };
+  onError = () => {
+  };
+  onStream = () => {
+  };
+  onSuccess = () => {
+  };
+  onFinish = () => {
+  };
+  onSync = () => {
+  };
+  onEffect = () => {
+  };
+  onMorph = async () => {
+  };
+  onRender = () => {
+  };
+  constructor(message, callback) {
+    this.message = message;
+    this.callback = callback;
+    this.callback({
+      message: this.message,
+      cancel: () => {
+        let attachedToMessage = this.message.getInterceptors().includes(this);
+        if (!attachedToMessage) {
+          this.onCancel();
+        }
+        this.message.cancel();
+      },
+      onSend: (callback2) => this.onSend = callback2,
+      onCancel: (callback2) => this.onCancel = callback2,
+      onFailure: (callback2) => this.onFailure = callback2,
+      onError: (callback2) => this.onError = callback2,
+      onStream: (callback2) => this.onStream = callback2,
+      onSuccess: (callback2) => this.onSuccess = callback2,
+      onFinish: (callback2) => this.onFinish = callback2
+    });
+  }
+  init() {
+  }
+};
+var RequestInterceptor = class {
+  onSend = () => {
+  };
+  onCancel = () => {
+  };
+  onFailure = () => {
+  };
+  onResponse = () => {
+  };
+  onParsed = () => {
+  };
+  onError = () => {
+  };
+  onStream = () => {
+  };
+  onRedirect = () => {
+  };
+  onDump = () => {
+  };
+  onSuccess = () => {
+  };
+  onFinish = () => {
+  };
+  constructor(request, callback) {
+    this.request = request;
+    this.callback = callback;
+    this.callback({
+      request: this.request,
+      onSend: (callback2) => this.onSend = callback2,
+      onCancel: (callback2) => this.onCancel = callback2,
+      onFailure: (callback2) => this.onFailure = callback2,
+      onResponse: (callback2) => this.onResponse = callback2,
+      onParsed: (callback2) => this.onParsed = callback2,
+      onError: (callback2) => this.onError = callback2,
+      onStream: (callback2) => this.onStream = callback2,
+      onRedirect: (callback2) => this.onRedirect = callback2,
+      onDump: (callback2) => this.onDump = callback2,
+      onSuccess: (callback2) => this.onSuccess = callback2,
+      onFinish: (callback2) => this.onFinish = callback2
+    });
+  }
+  init() {
+  }
+};
+var InterceptorRegistry = class {
+  messageInterceptorCallbacks = [];
+  messageInterceptorCallbacksByComponent = new WeakBag();
+  requestInterceptorCallbacks = [];
+  addInterceptor(component, callback) {
+    this.messageInterceptorCallbacksByComponent.add(component, callback);
+    return () => {
+      this.messageInterceptorCallbacksByComponent.delete(component, callback);
+    };
+  }
+  addMessageInterceptor(callback) {
+    this.messageInterceptorCallbacks.push(callback);
+    return () => {
+      this.messageInterceptorCallbacks.splice(this.messageInterceptorCallbacks.indexOf(callback), 1);
+    };
+  }
+  addRequestInterceptor(callback) {
+    this.requestInterceptorCallbacks.push(callback);
+    return () => {
+      this.requestInterceptorCallbacks.splice(this.requestInterceptorCallbacks.indexOf(callback), 1);
+    };
+  }
+  getMessageInterceptors(message) {
+    let callbacks = [
+      ...this.messageInterceptorCallbacksByComponent.get(message.component),
+      ...this.messageInterceptorCallbacks
+    ];
+    return callbacks.map((callback) => {
+      return new MessageInterceptor(message, callback);
+    });
+  }
+  getRequestInterceptors(request) {
+    return this.requestInterceptorCallbacks.map((callback) => {
+      return new RequestInterceptor(request, callback);
+    });
+  }
+};
+
+// js/utils/modal.js
 function showHtmlModal(html) {
   let page = document.createElement("html");
   page.innerHTML = html;
-  page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
+  page.querySelectorAll("a").forEach(
+    (a) => a.setAttribute("target", "_top")
+  );
   let modal = document.getElementById("livewire-error");
   if (typeof modal != "undefined" && modal != null) {
     modal.innerHTML = "";
@@ -7894,1548 +9423,1014 @@ function cleanupModal(modal) {
   document.body.style.overflow = "visible";
 }
 
-// js/request/pool.js
-var RequestPool = class {
-  constructor() {
-    this.commits = /* @__PURE__ */ new Set();
-  }
-  add(commit) {
-    this.commits.add(commit);
-  }
-  delete(commit) {
-    this.commits.delete(commit);
-  }
-  hasCommitFor(component) {
-    return !!this.findCommitByComponent(component);
-  }
-  findCommitByComponent(component) {
-    for (let [idx, commit] of this.commits.entries()) {
-      if (commit.component === component)
-        return commit;
+// js/request/messageBus.js
+var componentSymbols = /* @__PURE__ */ new WeakMap();
+var componentIslandSymbols = /* @__PURE__ */ new WeakMap();
+function scopeSymbolFromMessage(message) {
+  let component = message.component;
+  let hasAllIslands = Array.from(message.actions).every((action) => action.metadata.island);
+  if (hasAllIslands) {
+    let islandName = Array.from(message.actions).map((action) => action.metadata.island.name).sort().join("|");
+    let islandSymbols = componentIslandSymbols.get(component);
+    if (!islandSymbols) {
+      islandSymbols = { [islandName]: Symbol() };
+      componentIslandSymbols.set(component, islandSymbols);
     }
+    if (!islandSymbols[islandName]) {
+      islandSymbols[islandName] = Symbol();
+    }
+    return islandSymbols[islandName];
   }
-  shouldHoldCommit(commit) {
-    return !commit.isolate;
+  if (!componentSymbols.has(component)) {
+    componentSymbols.set(component, Symbol());
   }
-  empty() {
-    return this.commits.size === 0;
+  return componentSymbols.get(component);
+}
+function scopeSymbolFromAction(action) {
+  let component = action.component;
+  let isIsland = !!action.metadata.island;
+  if (isIsland) {
+    let islandName = action.metadata.island.name;
+    let islandSymbols = componentIslandSymbols.get(component);
+    if (!islandSymbols) {
+      islandSymbols = { [islandName]: Symbol() };
+      componentIslandSymbols.set(component, islandSymbols);
+    }
+    if (!islandSymbols[islandName]) {
+      islandSymbols[islandName] = Symbol();
+    }
+    return islandSymbols[islandName];
   }
-  async send() {
-    this.prepare();
-    await sendRequest(this);
+  if (!componentSymbols.has(component)) {
+    componentSymbols.set(component, Symbol());
   }
-  prepare() {
-    this.commits.forEach((i) => i.prepare());
+  return componentSymbols.get(component);
+}
+var MessageBus = class {
+  pendingMessages = /* @__PURE__ */ new Set();
+  activeMessages = /* @__PURE__ */ new Set();
+  bufferingMessages = /* @__PURE__ */ new Set();
+  constructor() {
   }
-  payload() {
-    let commitPayloads = [];
-    let successReceivers = [];
-    let failureReceivers = [];
-    this.commits.forEach((commit) => {
-      let [payload, succeed2, fail2] = commit.toRequestPayload();
-      commitPayloads.push(payload);
-      successReceivers.push(succeed2);
-      failureReceivers.push(fail2);
+  messageBuffer(message, callback) {
+    if (this.bufferingMessages.has(message)) {
+      return;
+    }
+    this.bufferingMessages.add(message);
+    setTimeout(() => {
+      callback();
+      this.bufferingMessages.delete(message);
+    }, 5);
+  }
+  addPendingMessage(message) {
+    this.pendingMessages.add(message);
+  }
+  clearPendingMessages() {
+    this.pendingMessages.clear();
+  }
+  getPendingMessages() {
+    return Array.from(this.pendingMessages);
+  }
+  addActiveMessage(message) {
+    this.activeMessages.add(message);
+  }
+  removeActiveMessage(message) {
+    this.activeMessages.delete(message);
+  }
+  findScopedPendingMessage(action) {
+    if (action.isAsync())
+      return null;
+    let actionScope = scopeSymbolFromAction(action);
+    return Array.from(this.pendingMessages).find((message) => {
+      if (message.component !== action.component)
+        return false;
+      return Array.from(message.actions).some(
+        (existingAction) => scopeSymbolFromAction(existingAction) === actionScope
+      );
     });
-    let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
-    let fail = () => failureReceivers.forEach((receiver) => receiver());
-    return [commitPayloads, succeed, fail];
+  }
+  activeMessageMatchingScope(action) {
+    return Array.from(this.activeMessages).find((message) => this.matchesScope(message, action));
+  }
+  matchesScope(message, action) {
+    return message.scope === scopeSymbolFromAction(action);
+  }
+  allScopedMessages(action) {
+    return [...Array.from(this.activeMessages), ...Array.from(this.pendingMessages)].filter((message) => {
+      return this.matchesScope(message, action);
+    });
+  }
+  eachPendingMessage(callback) {
+    Array.from(this.pendingMessages).forEach(callback);
   }
 };
 
-// js/request/commit.js
-var Commit = class {
+// js/request/message.js
+var Message = class {
+  actions = /* @__PURE__ */ new Set();
+  snapshot = null;
+  updates = null;
+  calls = null;
+  payload = null;
+  responsePayload = null;
+  interceptors = [];
+  cancelled = false;
+  request = null;
+  _scope = null;
+  get scope() {
+    if (!this._scope) {
+      throw new Error("Message scope has not been set yet");
+    }
+    return this._scope;
+  }
+  set scope(scope) {
+    this._scope = scope;
+  }
   constructor(component) {
     this.component = component;
-    this.isolate = false;
-    this.calls = [];
-    this.receivers = [];
-    this.resolvers = [];
   }
-  addResolver(resolver) {
-    this.resolvers.push(resolver);
+  addAction(action) {
+    let actionsByFingerprint = /* @__PURE__ */ new Map();
+    Array.from(this.actions).forEach((action2) => {
+      actionsByFingerprint.set(action2.fingerprint, action2);
+    });
+    if (actionsByFingerprint.has(action.fingerprint)) {
+      actionsByFingerprint.get(action.fingerprint).addSquashedAction(action);
+      return;
+    }
+    action.message = this;
+    this.actions.add(action);
   }
-  addCall(method, params, receiver) {
-    this.calls.push({
-      path: "",
-      method,
-      params,
-      handleReturn(value) {
-        receiver(value);
-      }
+  removeAction(action) {
+    this.actions.delete(action);
+    action.message = null;
+    if (this.actions.size === 0) {
+      this.cancel();
+    }
+  }
+  getActions() {
+    return Array.from(this.actions);
+  }
+  hasActionForIsland(island) {
+    return this.getActions().some((action) => {
+      return action.metadata.island?.name === island.metadata.name;
     });
   }
-  prepare() {
-    trigger("commit.prepare", { component: this.component });
+  hasActionForComponent() {
+    return this.getActions().some((action) => {
+      return action.metadata.island === void 0;
+    });
   }
-  getEncodedSnapshotWithLatestChildrenMergedIn() {
-    let { snapshotEncoded, children, snapshot } = this.component;
-    let childIds = children.map((child) => child.id);
-    let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
-    return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
+  setInterceptors(interceptors2) {
+    this.interceptors = interceptors2;
   }
-  toRequestPayload() {
-    let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
-    let updates = this.component.mergeQueuedUpdates(propertiesDiff);
-    let snapshotEncoded = this.getEncodedSnapshotWithLatestChildrenMergedIn();
-    let payload = {
-      snapshot: snapshotEncoded,
-      updates,
-      calls: this.calls.map((i) => ({
-        path: i.path,
-        method: i.method,
-        params: i.params
-      }))
-    };
+  addInterceptor(callback) {
+    let interceptor = new MessageInterceptor(this, callback);
+    this.interceptors.push(interceptor);
+    interceptor.init();
+  }
+  setRequest(request) {
+    this.request = request;
+  }
+  getInterceptors() {
+    return this.interceptors;
+  }
+  cancel() {
+    if (this.cancelled)
+      return;
+    this.cancelled = true;
+    this.invokeOnCancel();
+    if (this.request?.hasAllCancelledMessages()) {
+      this.request.cancel();
+    }
+  }
+  isCancelled() {
+    return this.cancelled;
+  }
+  isAsync() {
+    return Array.from(this.actions).every((action) => action.isAsync());
+  }
+  invokeOnSend() {
+    this.interceptors.forEach((interceptor) => interceptor.onSend({
+      payload: this.payload
+    }));
+    Array.from(this.actions).forEach((action, index) => {
+      let call = this.calls[index];
+      action.invokeOnSend({ call });
+    });
+  }
+  invokeOnCancel() {
+    this.interceptors.forEach((interceptor) => interceptor.onCancel());
+    this.rejectActionPromises({ status: null, body: null, json: null, errors: null });
+    Array.from(this.actions).forEach((action) => action.invokeOnFinish());
+    this.invokeOnFinish();
+  }
+  invokeOnFailure(error2) {
+    this.interceptors.forEach((interceptor) => interceptor.onFailure({ error: error2 }));
+    Array.from(this.actions).forEach((action) => action.invokeOnFailure({ error: error2 }));
+    this.rejectActionPromises({ status: null, body: null, json: null, errors: null });
+    Array.from(this.actions).forEach((action) => action.invokeOnFinish());
+    this.invokeOnFinish();
+  }
+  invokeOnError({ response, body, preventDefault }) {
+    this.interceptors.forEach((interceptor) => interceptor.onError({
+      response,
+      body,
+      preventDefault
+    }));
+    Array.from(this.actions).forEach((action) => action.invokeOnError({ response, body, preventDefault }));
+    let json = null;
+    try {
+      json = JSON.parse(body);
+    } catch (e) {
+    }
+    this.rejectActionPromises({ status: response.status, body, json, errors: null });
+    Array.from(this.actions).forEach((action) => action.invokeOnFinish());
+    this.invokeOnFinish();
+  }
+  invokeOnStream({ json }) {
+    this.interceptors.forEach((interceptor) => interceptor.onStream({ json }));
+  }
+  invokeOnSuccess() {
+    this.interceptors.forEach((interceptor) => {
+      interceptor.onSuccess({
+        payload: this.responsePayload,
+        onSync: (callback) => interceptor.onSync = callback,
+        onEffect: (callback) => interceptor.onEffect = callback,
+        onMorph: (callback) => interceptor.onMorph = callback,
+        onRender: (callback) => interceptor.onRender = callback
+      });
+    });
+    let returns = this.responsePayload.effects["returns"] || [];
+    let returnsMeta = this.responsePayload.effects["returnsMeta"] || {};
+    this.resolveActionPromises(returns, returnsMeta);
+    this.invokeOnFinish();
+  }
+  invokeOnSync() {
+    this.interceptors.forEach((interceptor) => interceptor.onSync());
+  }
+  invokeOnEffect() {
+    this.interceptors.forEach((interceptor) => interceptor.onEffect());
+  }
+  async invokeOnMorph() {
+    this.interceptors.forEach(async (interceptor) => {
+      await interceptor.onMorph();
+    });
+  }
+  invokeOnRender() {
+    this.interceptors.forEach((interceptor) => interceptor.onRender());
+  }
+  invokeOnFinish() {
+    this.interceptors.forEach((interceptor) => interceptor.onFinish());
+  }
+  rejectActionPromises({ status, body, json, errors }) {
+    Array.from(this.actions).forEach((action) => {
+      action.rejectPromise({ status, body, json, errors });
+    });
+  }
+  resolveActionPromises(returns, returnsMeta) {
+    let resolvedActions = /* @__PURE__ */ new Set();
+    returns.forEach((value, index) => {
+      let action = Array.from(this.actions)[index];
+      if (!action)
+        return;
+      let meta = returnsMeta[index];
+      if (meta?.errors) {
+        action.rejectPromise({ status: 422, body: null, json: null, errors: meta.errors });
+        action.invokeOnFinish();
+        resolvedActions.add(action);
+        return;
+      }
+      action.invokeOnSuccess(value);
+      action.resolvePromise(value);
+      action.invokeOnFinish();
+      resolvedActions.add(action);
+    });
+    Array.from(this.actions).forEach((action) => {
+      if (resolvedActions.has(action))
+        return;
+      action.invokeOnSuccess(void 0);
+      action.resolvePromise();
+      action.invokeOnFinish();
+    });
+  }
+};
+
+// js/request/action.js
+var Action = class {
+  squashedActions = /* @__PURE__ */ new Set();
+  onSendCallbacks = [];
+  onCancelCallbacks = [];
+  onSuccessCallbacks = [];
+  onErrorCallbacks = [];
+  onFailureCallbacks = [];
+  onFinishCallbacks = [];
+  message = null;
+  cancelled = false;
+  deferred = false;
+  _fire = null;
+  constructor(component, name, params = [], metadata = {}, origin = null) {
+    this.component = component;
+    this.name = name;
+    this.params = params;
+    this.metadata = metadata;
+    this.origin = origin;
+    this.promise = new Promise((resolve, reject) => {
+      this.promiseResolution = { resolve, reject };
+    });
+    this.promise._livewireAction = this;
+  }
+  cancel() {
+    if (this.cancelled)
+      return;
+    this.cancelled = true;
+    this.invokeOnCancel();
+    this.invokeOnFinish();
+    this.rejectPromise({ status: null, body: null, json: null, errors: null });
+    this.squashedActions.forEach((action) => action.cancel());
+    if (this.message) {
+      this.message.removeAction(this);
+    }
+  }
+  isCancelled() {
+    return this.cancelled;
+  }
+  defer() {
+    this.deferred = true;
+  }
+  isDeferred() {
+    return this.deferred;
+  }
+  fire() {
+    if (this._fire) {
+      this._fire(this);
+    }
+  }
+  get fingerprint() {
+    let componentId = this.component.id;
+    let name = this.name;
+    let params = JSON.stringify(this.params);
+    let metadata = JSON.stringify(this.metadata);
+    return window.btoa(String.fromCharCode(...new TextEncoder().encode(componentId + name + params + metadata)));
+  }
+  isAsync() {
+    let asyncMethods = this.component.snapshot.memo?.async || [];
+    let methodIsMarkedAsync = asyncMethods.includes(this.name);
+    let actionIsAsync = this.origin?.directive?.modifiers.includes("async") || !!this.metadata.async;
+    return methodIsMarkedAsync || actionIsAsync;
+  }
+  isJson() {
+    let jsonMethods = this.component.snapshot.memo?.json || [];
+    return jsonMethods.includes(this.name);
+  }
+  addInterceptor(callback) {
+    callback({
+      action: this,
+      onSend: (cb) => this.onSendCallbacks.push(cb),
+      onCancel: (cb) => this.onCancelCallbacks.push(cb),
+      onSuccess: (cb) => this.onSuccessCallbacks.push(cb),
+      onError: (cb) => this.onErrorCallbacks.push(cb),
+      onFailure: (cb) => this.onFailureCallbacks.push(cb),
+      onFinish: (cb) => this.onFinishCallbacks.push(cb)
+    });
+  }
+  invokeOnSend({ call }) {
+    this.onSendCallbacks.forEach((cb) => cb({ call }));
+    this.squashedActions.forEach((action) => action.invokeOnSend({ call }));
+  }
+  invokeOnCancel() {
+    this.onCancelCallbacks.forEach((cb) => cb());
+    this.squashedActions.forEach((action) => action.invokeOnCancel());
+  }
+  invokeOnSuccess(result) {
+    this.onSuccessCallbacks.forEach((cb) => cb(result));
+    this.squashedActions.forEach((action) => action.invokeOnSuccess(result));
+  }
+  invokeOnError({ response, body, preventDefault }) {
+    this.onErrorCallbacks.forEach((cb) => cb({ response, body, preventDefault }));
+    this.squashedActions.forEach((action) => action.invokeOnError({ response, body, preventDefault }));
+  }
+  invokeOnFailure({ error: error2 }) {
+    this.onFailureCallbacks.forEach((cb) => cb({ error: error2 }));
+    this.squashedActions.forEach((action) => action.invokeOnFailure({ error: error2 }));
+  }
+  invokeOnFinish() {
+    this.onFinishCallbacks.forEach((cb) => cb());
+    this.squashedActions.forEach((action) => action.invokeOnFinish());
+  }
+  mergeMetadata(metadata) {
+    this.metadata = { ...this.metadata, ...metadata };
+  }
+  rejectPromise(error2) {
+    this.squashedActions.forEach((action) => action.rejectPromise(error2));
+    this.promiseResolution.reject(error2);
+  }
+  addSquashedAction(action) {
+    this.squashedActions.add(action);
+  }
+  resolvePromise(value) {
+    this.squashedActions.forEach((action) => action.resolvePromise(value));
+    this.promiseResolution.resolve(value);
+  }
+};
+
+// js/request/legacy.js
+function registerLegacyEventSupport(interceptRequest2, interceptMessage2) {
+  interceptRequest2(({
+    request,
+    onFailure,
+    onResponse,
+    onError,
+    onSuccess
+  }) => {
+    let respondCallbacks = [];
     let succeedCallbacks = [];
     let failCallbacks = [];
+    trigger("request", {
+      url: request.uri,
+      options: request.options,
+      payload: request.options.body,
+      respond: (i) => respondCallbacks.push(i),
+      succeed: (i) => succeedCallbacks.push(i),
+      fail: (i) => failCallbacks.push(i)
+    });
+    onResponse(({ response }) => {
+      respondCallbacks.forEach((callback) => callback({
+        status: response.status,
+        response
+      }));
+    });
+    onSuccess(({ response, json }) => {
+      succeedCallbacks.forEach((callback) => callback({
+        status: response.status,
+        json
+      }));
+    });
+    onFailure(({ error: error2 }) => {
+      failCallbacks.forEach((callback) => callback({
+        status: 503,
+        content: null,
+        preventDefault: () => {
+        }
+      }));
+    });
+    onError(({ response, body, preventDefault }) => {
+      failCallbacks.forEach((callback) => callback({
+        status: response.status,
+        content: body,
+        preventDefault
+      }));
+    });
+  });
+  interceptMessage2(({
+    message,
+    onCancel,
+    onError,
+    onSuccess,
+    onFinish
+  }) => {
     let respondCallbacks = [];
-    let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
-    let fail = () => failCallbacks.forEach((i) => i());
-    let respond = () => respondCallbacks.forEach((i) => i());
-    let finishTarget = trigger("commit", {
-      component: this.component,
-      commit: payload,
+    let succeedCallbacks = [];
+    let failCallbacks = [];
+    trigger("commit", {
+      component: message.component,
+      commit: message.payload,
+      respond: (callback) => {
+        respondCallbacks.push(callback);
+      },
       succeed: (callback) => {
         succeedCallbacks.push(callback);
       },
       fail: (callback) => {
         failCallbacks.push(callback);
-      },
-      respond: (callback) => {
-        respondCallbacks.push(callback);
       }
     });
-    let handleResponse = (response) => {
-      let { snapshot, effects } = response;
-      respond();
-      this.component.mergeNewSnapshot(snapshot, effects, updates);
-      this.component.processEffects(this.component.effects);
-      if (effects["returns"]) {
-        let returns = effects["returns"];
-        let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
-        returnHandlerStack.forEach((handleReturn, index) => {
-          handleReturn(returns[index]);
-        });
-      }
-      let parsedSnapshot = JSON.parse(snapshot);
-      finishTarget({ snapshot: parsedSnapshot, effects });
-      this.resolvers.forEach((i) => i());
-      succeed(response);
-    };
-    let handleFailure = () => {
-      respond();
-      fail();
-    };
-    return [payload, handleResponse, handleFailure];
-  }
-};
-
-// js/request/bus.js
-var CommitBus = class {
-  constructor() {
-    this.commits = /* @__PURE__ */ new Set();
-    this.pools = /* @__PURE__ */ new Set();
-  }
-  add(component) {
-    let commit = this.findCommitOr(component, () => {
-      let newCommit = new Commit(component);
-      this.commits.add(newCommit);
-      return newCommit;
+    onFinish(() => {
+      respondCallbacks.forEach((callback) => callback());
     });
-    bufferPoolingForFiveMs(commit, () => {
-      let pool = this.findPoolWithComponent(commit.component);
-      if (!pool) {
-        this.createAndSendNewPool();
-      }
-    });
-    return commit;
-  }
-  findCommitOr(component, callback) {
-    for (let [idx, commit] of this.commits.entries()) {
-      if (commit.component === component) {
-        return commit;
-      }
-    }
-    return callback();
-  }
-  findPoolWithComponent(component) {
-    for (let [idx, pool] of this.pools.entries()) {
-      if (pool.hasCommitFor(component))
-        return pool;
-    }
-  }
-  createAndSendNewPool() {
-    trigger("commit.pooling", { commits: this.commits });
-    let pools = this.corraleCommitsIntoPools();
-    trigger("commit.pooled", { pools });
-    pools.forEach((pool) => {
-      if (pool.empty())
-        return;
-      this.pools.add(pool);
-      pool.send().then(() => {
-        this.pools.delete(pool);
-        queueMicrotask(() => {
-          this.sendAnyQueuedCommits();
-        });
+    onSuccess(({ payload, onSync, onMorph, onRender }) => {
+      onRender(() => {
+        succeedCallbacks.forEach((callback) => callback({
+          snapshot: payload.snapshot,
+          effects: payload.effects
+        }));
       });
     });
-  }
-  corraleCommitsIntoPools() {
-    let pools = /* @__PURE__ */ new Set();
-    for (let [idx, commit] of this.commits.entries()) {
-      if (this.findPoolWithComponent(commit.component))
-        continue;
-      let hasFoundPool = false;
-      pools.forEach((pool) => {
-        if (pool.shouldHoldCommit(commit)) {
-          pool.add(commit);
-          hasFoundPool = true;
-        }
-      });
-      if (!hasFoundPool) {
-        let newPool = new RequestPool();
-        newPool.add(commit);
-        pools.add(newPool);
-      }
-      this.commits.delete(commit);
-    }
-    return pools;
-  }
-  sendAnyQueuedCommits() {
-    if (this.commits.size > 0) {
-      this.createAndSendNewPool();
-    }
-  }
-};
-var buffersByCommit = /* @__PURE__ */ new WeakMap();
-function bufferPoolingForFiveMs(commit, callback) {
-  if (buffersByCommit.has(commit))
-    return;
-  buffersByCommit.set(commit, setTimeout(() => {
-    callback();
-    buffersByCommit.delete(commit);
-  }, 5));
+    onError(() => {
+      failCallbacks.forEach((callback) => callback());
+    });
+    onCancel(() => {
+      failCallbacks.forEach((callback) => callback());
+    });
+  });
 }
 
 // js/request/index.js
-var commitBus = new CommitBus();
-async function requestCommit(component) {
-  let commit = commitBus.add(component);
-  let promise = new Promise((resolve) => {
-    commit.addResolver(resolve);
-  });
-  promise.commit = commit;
-  return promise;
+var outstandingActionOrigin = null;
+var outstandingActionMetadata = {};
+var outstandingActionInterceptors = [];
+var interceptors = new InterceptorRegistry();
+var messageBus = new MessageBus();
+var actionInterceptors = [];
+var partitionInterceptors = [];
+function setNextActionOrigin(origin) {
+  outstandingActionOrigin = origin;
 }
-async function requestCall(component, method, params) {
-  let commit = commitBus.add(component);
-  let promise = new Promise((resolve) => {
-    commit.addCall(method, params, (value) => resolve(value));
-  });
-  promise.commit = commit;
-  return promise;
+function setNextActionMetadata(metadata) {
+  outstandingActionMetadata = metadata;
 }
-async function sendRequest(pool) {
-  let [payload, handleSuccess, handleFailure] = pool.payload();
-  window.controller = new AbortController();
-  let options = {
-    method: "POST",
-    body: JSON.stringify({
-      _token: getCsrfToken(),
-      components: payload
-    }),
-    headers: {
-      "Content-type": "application/json",
-      "X-Livewire": ""
-    },
-    signal: window.controller.signal
+function setNextActionInterceptor(callback) {
+  outstandingActionInterceptors.push(callback);
+}
+function interceptAction(callback) {
+  actionInterceptors.push(callback);
+  return () => {
+    actionInterceptors.splice(actionInterceptors.indexOf(callback), 1);
   };
-  let succeedCallbacks = [];
-  let failCallbacks = [];
-  let respondCallbacks = [];
-  let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
-  let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
-  let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
-  let finishProfile = trigger("request.profile", options);
-  let updateUri = getUpdateUri();
-  trigger("request", {
-    url: updateUri,
-    options,
-    payload: options.body,
-    respond: (i) => respondCallbacks.push(i),
-    succeed: (i) => succeedCallbacks.push(i),
-    fail: (i) => failCallbacks.push(i)
+}
+function interceptMessage(callback) {
+  return interceptors.addMessageInterceptor(callback);
+}
+function interceptRequest(callback) {
+  return interceptors.addRequestInterceptor(callback);
+}
+function interceptPartition(callback) {
+  partitionInterceptors.push(callback);
+  return () => {
+    partitionInterceptors.splice(partitionInterceptors.indexOf(callback), 1);
+  };
+}
+function interceptComponentAction(component, actionNameOrCallback, maybeCallback) {
+  let actionName = typeof actionNameOrCallback === "string" ? actionNameOrCallback : null;
+  let callback = actionName ? maybeCallback : actionNameOrCallback;
+  return interceptAction(({ action, ...rest }) => {
+    if (action.component !== component)
+      return;
+    if (actionName && action.name !== actionName)
+      return;
+    callback({ action, ...rest });
+  });
+}
+function interceptComponentMessage(component, actionNameOrCallback, maybeCallback) {
+  let actionName = typeof actionNameOrCallback === "string" ? actionNameOrCallback : null;
+  let callback = actionName ? maybeCallback : actionNameOrCallback;
+  return interceptors.addInterceptor(component, ({ message, ...rest }) => {
+    if (actionName) {
+      let hasAction = Array.from(message.actions).some((a) => a.name === actionName);
+      if (!hasAction)
+        return;
+    }
+    callback({ message, ...rest });
+  });
+}
+function interceptComponentRequest(component, actionNameOrCallback, maybeCallback) {
+  let actionName = typeof actionNameOrCallback === "string" ? actionNameOrCallback : null;
+  let callback = actionName ? maybeCallback : actionNameOrCallback;
+  return interceptRequest(({ request, ...rest }) => {
+    let matchingMessages = Array.from(request.messages).filter((m) => {
+      if (m.component !== component)
+        return false;
+      if (actionName) {
+        return Array.from(m.actions).some((a) => a.name === actionName);
+      }
+      return true;
+    });
+    if (matchingMessages.length === 0)
+      return;
+    callback({ request, ...rest });
+  });
+}
+interceptMessage(({ message, onFinish }) => {
+  messageBus.addActiveMessage(message);
+  onFinish(() => messageBus.removeActiveMessage(message));
+});
+queueMicrotask(() => {
+  coordinateNetworkInteractions(messageBus);
+});
+function fireAction(component, method, params = [], metadata = {}) {
+  if (component.__isWireProxy)
+    component = component.__instance;
+  let action = constructAction(component, method, params, metadata);
+  actionInterceptors.forEach((callback) => {
+    callback({
+      action,
+      onSend: (cb) => action.onSendCallbacks.push(cb),
+      onCancel: (cb) => action.onCancelCallbacks.push(cb),
+      onSuccess: (cb) => action.onSuccessCallbacks.push(cb),
+      onError: (cb) => action.onErrorCallbacks.push(cb),
+      onFailure: (cb) => action.onFailureCallbacks.push(cb),
+      onFinish: (cb) => action.onFinishCallbacks.push(cb)
+    });
+  });
+  if (action.isCancelled() || action.isDeferred())
+    return action.promise;
+  return fireActionInstance(action);
+}
+function constructAction(component, method, params, metadata) {
+  let origin = outstandingActionOrigin;
+  let pendingInterceptors = outstandingActionInterceptors;
+  outstandingActionOrigin = null;
+  outstandingActionInterceptors = [];
+  metadata = {
+    ...metadata,
+    ...outstandingActionMetadata
+  };
+  outstandingActionMetadata = {};
+  let action = new Action(component, method, params, metadata, origin);
+  action._fire = fireActionInstance;
+  pendingInterceptors.forEach((callback) => action.addInterceptor(callback));
+  return action;
+}
+function fireActionInstance(action) {
+  let message = createOrAddToOutstandingMessage(action);
+  messageBus.messageBuffer(message, () => {
+    sendMessages();
+  });
+  return action.promise;
+}
+function createOrAddToOutstandingMessage(action) {
+  let message = messageBus.findScopedPendingMessage(action);
+  if (!message)
+    message = new Message(action.component);
+  message.addAction(action);
+  messageBus.addPendingMessage(message);
+  return message;
+}
+function sendMessages() {
+  let requests = /* @__PURE__ */ new Set();
+  messageBus.eachPendingMessage((message) => {
+    partitionInterceptors.forEach((callback) => {
+      callback({
+        message,
+        compileRequest: (messages2) => {
+          if (Array.from(requests).some((request2) => Array.from(request2.messages).some((message2) => messages2.includes(message2)))) {
+            throw new Error("A request already contains one of the messages in this array");
+          }
+          let request = new MessageRequest();
+          messages2.forEach((message2) => request.addMessage(message2));
+          requests.add(request);
+          return request;
+        }
+      });
+    });
+  });
+  let messages = messageBus.getPendingMessages();
+  messageBus.clearPendingMessages();
+  for (let message of messages) {
+    if (Array.from(requests).some((request) => request.messages.has(message))) {
+      continue;
+    }
+    let hasFoundRequest = false;
+    requests.forEach((request) => {
+      if (!hasFoundRequest) {
+        let hasMessageForSameComponent = Array.from(request.messages).some((m) => m.component === message.component);
+        if (hasMessageForSameComponent)
+          return;
+        request.addMessage(message);
+        hasFoundRequest = true;
+      }
+    });
+    if (!hasFoundRequest) {
+      let request = new MessageRequest();
+      request.addMessage(message);
+      requests.add(request);
+    }
+  }
+  requests.forEach((request) => {
+    request.messages.forEach((message) => {
+      message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn();
+      message.updates = message.component.getUpdates();
+      message.calls = Array.from(message.actions).map((i) => ({
+        method: i.name,
+        params: i.params,
+        metadata: i.metadata
+      }));
+      message.payload = {
+        snapshot: message.snapshot,
+        updates: message.updates,
+        calls: message.calls
+      };
+    });
+  });
+  requests.forEach((request) => {
+    request.messages.forEach((message) => {
+      message.scope = scopeSymbolFromMessage(message);
+    });
+  });
+  requests.forEach((request) => {
+    request.uri = getUpdateUri();
+    Object.defineProperty(request, "payload", {
+      get() {
+        return {
+          _token: getCsrfToken(),
+          components: Array.from(request.messages, (i) => i.payload)
+        };
+      }
+    });
+    Object.defineProperty(request, "options", {
+      get() {
+        return {
+          method: "POST",
+          body: JSON.stringify(request.payload),
+          headers: {
+            "Content-type": "application/json",
+            "X-Livewire": "1"
+          },
+          signal: request.controller.signal
+        };
+      }
+    });
+  });
+  requests.forEach((request) => {
+    request.initInterceptors(interceptors);
+    if (request.hasAllCancelledMessages()) {
+      request.cancel();
+    }
+    sendRequest(request, {
+      send: ({ responsePromise }) => {
+        request.invokeOnSend({ responsePromise });
+      },
+      failure: ({ error: error2 }) => {
+        request.invokeOnFailure({ error: error2 });
+      },
+      finish: () => {
+        request.invokeOnFinish();
+      },
+      response: ({ response }) => {
+        request.invokeOnResponse({ response });
+      },
+      stream: async ({ response }) => {
+        request.invokeOnStream({ response });
+        let finalResponse = "";
+        try {
+          finalResponse = await interceptStreamAndReturnFinalResponse(response, (json) => {
+            let componentId = json.id;
+            request.messages.forEach((message) => {
+              if (message.component.id === componentId) {
+                message.invokeOnStream({ json });
+              }
+            });
+            trigger("stream", json);
+          });
+        } catch (e) {
+          request.cancel();
+          throw e;
+        }
+        return finalResponse;
+      },
+      parsed: ({ response, responseBody }) => {
+        request.invokeOnParsed({ response, body: responseBody });
+      },
+      error: ({ response, responseBody }) => {
+        let preventDefault = false;
+        request.invokeOnError({ response, body: responseBody, preventDefault: () => preventDefault = true });
+        if (preventDefault)
+          return;
+        if (response.status === 419) {
+          confirm(
+            "This page has expired.\nWould you like to refresh the page?"
+          ) && window.location.reload();
+        }
+        if (response.aborted)
+          return;
+        showHtmlModal(responseBody);
+      },
+      redirect: (url) => {
+        let preventDefault = false;
+        request.invokeOnRedirect({ url, preventDefault: () => preventDefault = true });
+        if (preventDefault)
+          return;
+        window.location.href = url;
+      },
+      dump: (html) => {
+        let preventDefault = false;
+        request.invokeOnDump({ html, preventDefault: () => preventDefault = true });
+        if (preventDefault)
+          return;
+        showHtmlModal(html);
+      },
+      success: async ({ response, responseBody, responseJson }) => {
+        request.invokeOnSuccess({ response, body: responseBody, json: responseJson });
+        await triggerAsync("payload.intercept", responseJson);
+        let messageResponsePayloads = responseJson.components;
+        request.messages.forEach((message) => {
+          messageResponsePayloads.forEach((payload) => {
+            if (message.isCancelled())
+              return;
+            let { snapshot: snapshotEncoded, effects } = payload;
+            let snapshot = JSON.parse(snapshotEncoded);
+            if (snapshot.memo.id === message.component.id) {
+              message.responsePayload = { snapshot, effects };
+              message.invokeOnSuccess();
+              if (message.isCancelled())
+                return;
+              message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates);
+              message.invokeOnSync();
+              if (message.isCancelled())
+                return;
+              message.component.processEffects(effects, request);
+              message.invokeOnEffect();
+              if (message.isCancelled())
+                return;
+              queueMicrotask(() => {
+                if (message.isCancelled())
+                  return;
+                message.invokeOnMorph().finally(() => {
+                  setTimeout(() => {
+                    if (message.isCancelled())
+                      return;
+                    message.invokeOnRender();
+                  });
+                });
+              });
+            }
+          });
+        });
+      }
+    });
+  });
+}
+async function sendRequest(request, handlers) {
+  let response;
+  try {
+    if (request.isCancelled())
+      return;
+    let responsePromise = fetch(request.uri, request.options);
+    if (request.isCancelled())
+      return;
+    handlers.send({ responsePromise });
+    response = await responsePromise;
+  } catch (e) {
+    if (request.isCancelled())
+      return;
+    handlers.failure({ error: e });
+    handlers.finish();
+    return;
+  }
+  handlers.response({ response });
+  let responseBody = null;
+  if (response.headers.has("X-Livewire-Stream")) {
+    responseBody = await handlers.stream({ response });
+  } else {
+    responseBody = await response.text();
+  }
+  if (request.isCancelled())
+    return;
+  handlers.parsed({ response, responseBody });
+  if (!response.ok) {
+    handlers.error({ response, responseBody });
+    handlers.finish();
+    return;
+  }
+  if (response.redirected) {
+    handlers.redirect(response.url);
+  }
+  if (contentIsFromDump(responseBody)) {
+    let dump;
+    [dump, responseBody] = splitDumpFromContent(responseBody);
+    handlers.dump(dump);
+  }
+  let responseJson = JSON.parse(responseBody);
+  handlers.success({ response, responseBody, responseJson });
+  handlers.finish();
+}
+async function interceptStreamAndReturnFinalResponse(response, callback) {
+  let reader = response.body.getReader();
+  let remainingResponse = "";
+  while (true) {
+    let { done, value: chunk } = await reader.read();
+    let decoder = new TextDecoder();
+    let output = decoder.decode(chunk);
+    let [streams, remaining] = extractStreamObjects(remainingResponse + output);
+    streams.forEach((stream) => {
+      callback(stream);
+    });
+    remainingResponse = remaining;
+    if (done)
+      return remainingResponse;
+  }
+}
+function extractStreamObjects(raw) {
+  let regex = /({"stream":true.*?"endStream":true})/g;
+  let matches = raw.match(regex);
+  let parsed = [];
+  if (matches) {
+    for (let i = 0; i < matches.length; i++) {
+      parsed.push(JSON.parse(matches[i]).body);
+    }
+  }
+  let remaining = raw.replace(regex, "");
+  return [parsed, remaining];
+}
+async function sendNavigateRequest(uri, callback, errorCallback) {
+  let request = new PageRequest(uri);
+  let options = {
+    headers: {
+      "X-Livewire-Navigate": "1"
+    },
+    signal: request.controller.signal
+  };
+  trigger("navigate.request", {
+    uri,
+    options
   });
   let response;
   try {
-    response = await fetch(updateUri, options);
-  } catch (e) {
-    finishProfile({ content: "{}", failed: true });
-    handleFailure();
-    fail({
-      status: 503,
-      content: null,
-      preventDefault: () => {
-      }
-    });
-    return;
+    response = await fetch(uri, options);
+    let destination = getDestination(uri, response);
+    let html = await response.text();
+    let status = response.status;
+    callback(html, destination, status);
+  } catch (error2) {
+    errorCallback(error2);
+    throw error2;
   }
-  let mutableObject = {
-    status: response.status,
-    response
+}
+function getDestination(uri, response) {
+  let destination = createUrlObjectFromString(uri);
+  let finalDestination = createUrlObjectFromString(response.url);
+  if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
+    finalDestination.hash = destination.hash;
+  }
+  return finalDestination;
+}
+function createUrlObjectFromString(urlString) {
+  return urlString !== null && new URL(urlString, document.baseURI);
+}
+registerLegacyEventSupport(interceptRequest, interceptMessage);
+
+// js/features/supportErrors.js
+function getErrorsObject(component) {
+  return {
+    messages() {
+      return component.snapshot.memo.errors;
+    },
+    keys() {
+      return Object.keys(this.messages());
+    },
+    has(...keys) {
+      if (this.isEmpty())
+        return false;
+      if (keys.length === 0 || keys.length === 1 && keys[0] == null)
+        return this.any();
+      if (keys.length === 1 && Array.isArray(keys[0]))
+        keys = keys[0];
+      for (let key of keys) {
+        if (this.first(key) === "")
+          return false;
+      }
+      return true;
+    },
+    hasAny(keys) {
+      if (this.isEmpty())
+        return false;
+      if (keys.length === 1 && Array.isArray(keys[0]))
+        keys = keys[0];
+      for (let key of keys) {
+        if (this.has(key))
+          return true;
+      }
+      return false;
+    },
+    missing(...keys) {
+      if (keys.length === 1 && Array.isArray(keys[0]))
+        keys = keys[0];
+      return !this.hasAny(keys);
+    },
+    first(key = null) {
+      let messages = key === null ? this.all() : this.get(key);
+      let firstMessage = messages.length > 0 ? messages[0] : "";
+      return Array.isArray(firstMessage) ? firstMessage[0] : firstMessage;
+    },
+    get(key) {
+      return component.snapshot.memo.errors[key] || [];
+    },
+    all() {
+      return Object.values(this.messages()).flat();
+    },
+    isEmpty() {
+      return !this.any();
+    },
+    isNotEmpty() {
+      return this.any();
+    },
+    any() {
+      return Object.keys(this.messages()).length > 0;
+    },
+    count() {
+      return Object.values(this.messages()).reduce((total, array) => {
+        return total + array.length;
+      }, 0);
+    }
   };
-  respond(mutableObject);
-  response = mutableObject.response;
-  let content = await response.text();
-  if (!response.ok) {
-    finishProfile({ content: "{}", failed: true });
-    let preventDefault = false;
-    handleFailure();
-    fail({
-      status: response.status,
-      content,
-      preventDefault: () => preventDefault = true
-    });
-    if (preventDefault)
-      return;
-    if (response.status === 419) {
-      handlePageExpiry();
-    }
-    if (response.aborted) {
-      return;
-    } else {
-      return showFailureModal(content);
-    }
-  }
-  if (response.redirected) {
-    window.location.href = response.url;
-  }
-  if (contentIsFromDump(content)) {
-    let dump;
-    [dump, content] = splitDumpFromContent(content);
-    showHtmlModal(dump);
-    finishProfile({ content: "{}", failed: true });
-  } else {
-    finishProfile({ content, failed: false });
-  }
-  let { components: components2, assets } = JSON.parse(content);
-  await triggerAsync("payload.intercept", { components: components2, assets });
-  await handleSuccess(components2);
-  succeed({ status: response.status, json: JSON.parse(content) });
-}
-function handlePageExpiry() {
-  confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
-}
-function showFailureModal(content) {
-  let html = content;
-  showHtmlModal(html);
 }
 
-// js/$wire.js
-var import_alpinejs2 = __toESM(require_module_cjs());
-
-// js/v4/requests/requestBus.js
-var RequestBus = class {
-  booted = false;
-  requests = /* @__PURE__ */ new Set();
-  boot() {
-    this.booted = true;
-    console.log("v4 requests enabled");
-  }
-  add(request) {
-    this.cancelRequestsThatShouldBeCancelled(request.shouldCancel());
-    this.requests.add(request);
-    request.send();
-  }
-  remove(request) {
-    this.requests.delete(request);
-  }
-  cancelRequestsThatShouldBeCancelled(shouldCancel) {
-    this.requests.forEach((request) => {
-      if (shouldCancel(request)) {
-        request.cancel();
-      }
-    });
-  }
-};
-var instance = new RequestBus();
-var requestBus_default = instance;
-
-// js/v4/requests/message.js
-var Message = class {
-  updates = {};
-  actions = [];
-  payload = {};
-  resolvers = [];
-  status = "waiting";
-  succeedCallbacks = [];
-  failCallbacks = [];
-  respondCallbacks = [];
-  finishTarget = null;
-  request = null;
-  isolate = false;
-  constructor(component) {
-    this.component = component;
-  }
-  addAction(method, params, resolve) {
-    if (!this.isMagicAction(method)) {
-      this.removeAllMagicActions();
-    }
-    if (this.isMagicAction(method)) {
-      this.findAndRemoveAction(method);
-      this.actions.push({
-        method,
-        params,
-        handleReturn: () => {
-        }
-      });
-      this.resolvers.push(resolve);
-      return;
-    }
-    this.actions.push({
-      method,
-      params,
-      handleReturn: resolve
-    });
-  }
-  magicActions() {
-    return [
-      "$refresh",
-      "$set",
-      "$sync"
-    ];
-  }
-  isMagicAction(method) {
-    return this.magicActions().includes(method);
-  }
-  removeAllMagicActions() {
-    this.actions = this.actions.filter((i) => !this.isMagicAction(i.method));
-  }
-  findAndRemoveAction(method) {
-    this.actions = this.actions.filter((i) => i.method !== method);
-  }
-  cancelIfItShouldBeCancelled() {
-    if (this.isSucceeded())
-      return;
-    this.cancel();
-  }
-  buffer() {
-    this.status = "buffering";
-  }
-  prepare() {
-    trigger("message.prepare", { component: this.component });
-    this.status = "preparing";
-    this.updates = this.component.getUpdates();
-    let snapshot = this.component.getEncodedSnapshotWithLatestChildrenMergedIn();
-    this.payload = {
-      snapshot,
-      updates: this.updates,
-      calls: this.actions.map((i) => ({
-        method: i.method,
-        params: i.params
-      }))
-    };
-    this.finishTarget = trigger("commit", {
-      component: this.component,
-      commit: this.payload,
-      succeed: (callback) => {
-        this.succeedCallbacks.push(callback);
-      },
-      fail: (callback) => {
-        this.failCallbacks.push(callback);
-      },
-      respond: (callback) => {
-        this.respondCallbacks.push(callback);
-      }
-    });
-  }
-  respond() {
-    this.respondCallbacks.forEach((i) => i());
-  }
-  succeed(response) {
-    if (this.isCancelled())
-      return;
-    this.status = "succeeded";
-    this.respond();
-    let { snapshot, effects } = response;
-    this.component.mergeNewSnapshot(snapshot, effects, this.updates);
-    this.component.processEffects(this.component.effects);
-    this.resolvers.forEach((i) => i());
-    if (effects["returns"]) {
-      let returns = effects["returns"];
-      let returnHandlerStack = this.actions.map(({ handleReturn }) => handleReturn);
-      returnHandlerStack.forEach((handleReturn, index) => {
-        handleReturn(returns[index]);
-      });
-    }
-    let parsedSnapshot = JSON.parse(snapshot);
-    this.finishTarget({ snapshot: parsedSnapshot, effects });
-    this.succeedCallbacks.forEach((i) => i(response));
-  }
-  fail() {
-    this.status = "failed";
-    this.respond();
-    this.failCallbacks.forEach((i) => i());
-  }
-  cancel() {
-    this.status = "cancelled";
-  }
-  isBuffering() {
-    return this.status === "buffering";
-  }
-  isPreparing() {
-    return this.status === "preparing";
-  }
-  isSucceeded() {
-    return this.status === "succeeded";
-  }
-  isCancelled() {
-    return this.status === "cancelled";
-  }
-  isFailed() {
-    return this.status === "failed";
-  }
-  isFinished() {
-    return this.isSucceeded() || this.isCancelled() || this.isFailed();
-  }
-};
-
-// js/v4/requests/request.js
-var Request = class {
-  controller = new AbortController();
-  respondCallbacks = [];
-  succeedCallbacks = [];
-  errorCallbacks = [];
-  cancel() {
-    this.controller.abort("cancelled");
-  }
-  finish() {
-    requestBus_default.remove(this);
-  }
-  isCancelled() {
-    return this.controller.signal.aborted;
-  }
-  cancelIfItShouldBeCancelled() {
-    console.error("cancelIfItShouldBeCancelled must be implemented");
-  }
-  shouldCancel() {
-    console.error("shouldCancel must be implemented");
-  }
-  async send() {
-    console.error("send must be implemented");
-  }
-  addRespondCallback(callback) {
-    this.respondCallbacks.push(callback);
-  }
-  addSucceedCallback(callback) {
-    this.succeedCallbacks.push(callback);
-  }
-  addErrorCallback(callback) {
-    this.errorCallbacks.push(callback);
-  }
-};
-
-// js/v4/requests/messageRequest.js
-var MessageRequest = class extends Request {
-  messages = /* @__PURE__ */ new Set();
-  finishProfile = null;
-  addMessage(message) {
-    this.messages.add(message);
-    message.request = this;
-  }
-  deleteMessage(message) {
-    this.messages.delete(message);
-  }
-  hasMessageFor(component) {
-    return !!this.findMessageByComponent(component);
-  }
-  findMessageByComponent(component) {
-    return Array.from(this.messages).find((message) => message.component.id === component.id);
-  }
-  isEmpty() {
-    return this.messages.size === 0;
-  }
-  shouldCancel() {
-    return (request) => {
-      return request.constructor.name === MessageRequest.name && Array.from(request.messages).some((message) => this.hasMessageFor(message.component));
-    };
-  }
-  async send() {
-    let payload = {
-      _token: getCsrfToken(),
-      components: Array.from(this.messages, (i) => i.payload)
-    };
-    let options = {
-      method: "POST",
-      body: JSON.stringify(payload),
-      headers: {
-        "Content-type": "application/json",
-        "X-Livewire": "1"
-      },
-      signal: this.controller.signal
-    };
-    this.finishProfile = trigger("request.profile", options);
-    let updateUri = getUpdateUri();
-    trigger("request", {
-      url: updateUri,
-      options,
-      payload: options.body,
-      respond: (i) => this.respondCallbacks.push(i),
-      succeed: (i) => this.succeedCallbacks.push(i),
-      fail: (i) => this.errorCallbacks.push(i)
-    });
-    let response;
-    try {
-      response = await fetch(updateUri, options);
-    } catch (e) {
-      this.finish();
-      this.error();
-      return;
-    }
-    this.finish();
-    let mutableObject = {
-      status: response.status,
-      response
-    };
-    this.respond(mutableObject);
-    response = mutableObject.response;
-    let content = await response.text();
-    if (!response.ok) {
-      this.fail(response, content);
-      return;
-    }
-    this.redirectIfNeeded(response);
-    await this.succeed(response, content);
-  }
-  redirectIfNeeded(response) {
-    if (response.redirected) {
-      window.location.href = response.url;
-    }
-  }
-  respond(mutableObject) {
-    this.respondCallbacks.forEach((i) => i(mutableObject));
-  }
-  async succeed(response, content) {
-    if (contentIsFromDump(content)) {
-      let dump;
-      [dump, content] = splitDumpFromContent(content);
-      showHtmlModal(dump);
-      this.finishProfile({ content: "{}", failed: true });
-    } else {
-      this.finishProfile({ content, failed: false });
-    }
-    let { components: components2, assets } = JSON.parse(content);
-    await triggerAsync("payload.intercept", { components: components2, assets });
-    this.messages.forEach((message) => {
-      components2.forEach((component) => {
-        let snapshot = JSON.parse(component.snapshot);
-        if (snapshot.memo.id === message.component.id) {
-          message.succeed(component);
-        }
-      });
-    });
-    this.succeedCallbacks.forEach((i) => i({ status: response.status, json: JSON.parse(content) }));
-  }
-  cancel() {
-    this.messages.forEach((message) => {
-      message.cancelIfItShouldBeCancelled();
-    });
-    super.cancel();
-  }
-  error() {
-    this.finishProfile({ content: "{}", failed: true });
-    let preventDefault = false;
-    this.messages.forEach((message) => {
-      message.fail();
-    });
-    this.errorCallbacks.forEach((i) => i({
-      status: 503,
-      content: null,
-      preventDefault: () => preventDefault = true
-    }));
-  }
-  fail(response, content) {
-    this.finishProfile({ content: "{}", failed: true });
-    let preventDefault = false;
-    this.messages.forEach((message) => {
-      message.fail();
-    });
-    this.errorCallbacks.forEach((i) => i({
-      status: response.status,
-      content,
-      preventDefault: () => preventDefault = true
-    }));
-    if (preventDefault)
-      return;
-    if (response.status === 419) {
-      this.handlePageExpiry();
-    }
-    if (response.aborted) {
-      return;
-    } else {
-      return this.showFailureModal(content);
-    }
-  }
-  handlePageExpiry() {
-    confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
-  }
-  showFailureModal(content) {
-    let html = content;
-    showHtmlModal(html);
-  }
-};
-
-// js/v4/requests/messageBroker.js
-var MessageBroker = class {
-  messages = /* @__PURE__ */ new Map();
-  getMessage(component) {
-    let message = this.messages.get(component.id);
-    if (!message) {
-      message = new Message(component);
-      this.messages.set(component.id, message);
-    }
-    return message;
-  }
-  addAction(component, method, params = []) {
-    let message = this.getMessage(component);
-    let promise = new Promise((resolve) => {
-      message.addAction(method, params, resolve);
-    });
-    this.send(message);
-    return promise;
-  }
-  send(message) {
-    this.bufferMessageForFiveMs(message);
-  }
-  bufferMessageForFiveMs(message) {
-    if (message.isBuffering())
-      return;
-    message.buffer();
-    setTimeout(() => {
-      this.prepareRequests();
-    }, 5);
-  }
-  prepareRequests() {
-    trigger("message.pooling", { messages: this.messages });
-    let messages = new Set(this.messages.values());
-    this.messages.clear();
-    if (messages.size === 0)
-      return;
-    messages.forEach((message) => {
-      message.prepare();
-    });
-    let requests = this.corraleMessagesIntoRequests(messages);
-    trigger("message.pooled", { requests });
-    this.sendRequests(requests);
-  }
-  corraleMessagesIntoRequests(messages) {
-    let requests = /* @__PURE__ */ new Set();
-    for (let message of messages) {
-      let hasFoundRequest = false;
-      requests.forEach((request) => {
-        if (!hasFoundRequest && !message.isolate) {
-          request.addMessage(message);
-          hasFoundRequest = true;
-        }
-      });
-      if (!hasFoundRequest) {
-        let request = new MessageRequest();
-        request.addMessage(message);
-        requests.add(request);
-      }
-    }
-    return requests;
-  }
-  sendRequests(requests) {
-    requests.forEach((request) => {
-      requestBus_default.add(request);
-    });
-  }
-};
-var instance2 = new MessageBroker();
-var messageBroker_default = instance2;
-
-// js/$wire.js
-var properties = {};
-var fallback;
-function wireProperty(name, callback, component = null) {
-  properties[name] = callback;
-}
-function wireFallback(callback) {
-  fallback = callback;
-}
-var aliases = {
-  "on": "$on",
-  "el": "$el",
-  "id": "$id",
-  "js": "$js",
-  "get": "$get",
-  "set": "$set",
-  "ref": "$ref",
-  "call": "$call",
-  "hook": "$hook",
-  "watch": "$watch",
-  "commit": "$commit",
-  "upload": "$upload",
-  "entangle": "$entangle",
-  "dispatch": "$dispatch",
-  "dispatchTo": "$dispatchTo",
-  "dispatchSelf": "$dispatchSelf",
-  "removeUpload": "$removeUpload",
-  "cancelUpload": "$cancelUpload",
-  "uploadMultiple": "$uploadMultiple"
-};
-function generateWireObject(component, state) {
-  return new Proxy({}, {
-    get(target, property) {
-      if (property === "__instance")
-        return component;
-      if (property in aliases) {
-        return getProperty(component, aliases[property]);
-      } else if (property in properties) {
-        return getProperty(component, property);
-      } else if (property in state) {
-        return state[property];
-      } else if (!["then"].includes(property)) {
-        return getFallback(component)(property);
-      }
-    },
-    set(target, property, value) {
-      if (property in state) {
-        state[property] = value;
-      }
-      return true;
-    }
-  });
-}
-function getProperty(component, name) {
-  return properties[name](component);
-}
-function getFallback(component) {
-  return fallback(component);
-}
-import_alpinejs2.default.magic("wire", (el, { cleanup }) => {
-  let component;
-  return new Proxy({}, {
-    get(target, property) {
-      if (!component)
-        component = closestComponent(el);
-      if (["$entangle", "entangle"].includes(property)) {
-        return generateEntangleFunction(component, cleanup);
-      }
-      return component.$wire[property];
-    },
-    set(target, property, value) {
-      if (!component)
-        component = closestComponent(el);
-      component.$wire[property] = value;
-      return true;
-    }
-  });
-});
-wireProperty("__instance", (component) => component);
-wireProperty("$get", (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property));
-wireProperty("$el", (component) => {
-  return component.el;
-});
-wireProperty("$id", (component) => {
-  return component.id;
-});
-wireProperty("$js", (component) => {
-  let fn = component.addJsAction.bind(component);
-  let jsActions = component.getJsActions();
-  Object.keys(jsActions).forEach((name) => {
-    fn[name] = component.getJsAction(name);
-  });
-  return fn;
-});
-wireProperty("$set", (component) => async (property, value, live = true) => {
-  dataSet(component.reactive, property, value);
-  if (live) {
-    if (requestBus_default.booted) {
-      component.queueUpdate(property, value);
-      return messageBroker_default.addAction(component, "$set");
-    }
-    component.queueUpdate(property, value);
-    return await requestCommit(component);
-  }
-  return Promise.resolve();
-});
-wireProperty("$ref", (component) => (name) => {
+// js/features/supportRefs.js
+function findRefEl(component, name) {
   let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`);
   if (!refEl)
-    throw `Ref "${name}" not found`;
-  return refEl.__livewire?.$wire;
-});
-wireProperty("$call", (component) => async (method, ...params) => {
-  return await component.$wire[method](...params);
-});
-wireProperty("$island", (component) => async (name) => {
-  return await component.$wire.call("__island", name);
-});
-wireProperty("$entangle", (component) => (name, live = false) => {
-  return generateEntangleFunction(component)(name, live);
-});
-wireProperty("$toggle", (component) => (name, live = true) => {
-  return component.$wire.set(name, !component.$wire.get(name), live);
-});
-wireProperty("$watch", (component) => (path, callback) => {
-  let getter = () => {
-    return dataGet(component.reactive, path);
-  };
-  let unwatch = import_alpinejs2.default.watch(getter, callback);
-  component.addCleanup(unwatch);
-});
-wireProperty("$refresh", (component) => async () => {
-  if (requestBus_default.booted) {
-    return messageBroker_default.addAction(component, "$refresh");
-  }
-  return component.$wire.$commit();
-});
-wireProperty("$commit", (component) => async () => {
-  if (requestBus_default.booted) {
-    return messageBroker_default.addAction(component, "$sync");
-  }
-  return await requestCommit(component);
-});
-wireProperty("$on", (component) => (...params) => listen2(component, ...params));
-wireProperty("$hook", (component) => (name, callback) => {
-  let unhook = on(name, ({ component: hookComponent, ...params }) => {
-    if (hookComponent === void 0)
-      return callback(params);
-    if (hookComponent.id === component.id)
-      return callback({ component: hookComponent, ...params });
-  });
-  component.addCleanup(unhook);
-  return unhook;
-});
-wireProperty("$dispatch", (component) => (...params) => dispatch2(component, ...params));
-wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
-wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
-wireProperty("$upload", (component) => (...params) => upload(component, ...params));
-wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
-wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
-wireProperty("$cancelUpload", (component) => (...params) => cancelUpload(component, ...params));
-var parentMemo = /* @__PURE__ */ new WeakMap();
-wireProperty("$parent", (component) => {
-  if (parentMemo.has(component))
-    return parentMemo.get(component).$wire;
-  let parent = component.parent;
-  parentMemo.set(component, parent);
-  return parent.$wire;
-});
-var overriddenMethods = /* @__PURE__ */ new WeakMap();
-function overrideMethod(component, method, callback) {
-  if (!overriddenMethods.has(component)) {
-    overriddenMethods.set(component, {});
-  }
-  let obj = overriddenMethods.get(component);
-  obj[method] = callback;
-  overriddenMethods.set(component, obj);
-}
-wireFallback((component) => (property) => async (...params) => {
-  if (params.length === 1 && params[0] instanceof Event) {
-    params = [];
-  }
-  if (overriddenMethods.has(component)) {
-    let overrides = overriddenMethods.get(component);
-    if (typeof overrides[property] === "function") {
-      return overrides[property](params);
-    }
-  }
-  if (requestBus_default.booted) {
-    return messageBroker_default.addAction(component, property, params);
-  }
-  return await requestCall(component, property, params);
-});
-
-// js/component.js
-var Component = class {
-  constructor(el) {
-    if (el.__livewire)
-      throw "Component already initialized";
-    el.__livewire = this;
-    this.el = el;
-    this.id = el.getAttribute("wire:id");
-    this.__livewireId = this.id;
-    this.snapshotEncoded = el.getAttribute("wire:snapshot");
-    this.snapshot = JSON.parse(this.snapshotEncoded);
-    if (!this.snapshot) {
-      throw `Snapshot missing on Livewire component with id: ` + this.id;
-    }
-    this.name = this.snapshot.memo.name;
-    this.effects = JSON.parse(el.getAttribute("wire:effects"));
-    this.originalEffects = deepClone(this.effects);
-    this.canonical = extractData(deepClone(this.snapshot.data));
-    this.ephemeral = extractData(deepClone(this.snapshot.data));
-    this.reactive = Alpine.reactive(this.ephemeral);
-    this.queuedUpdates = {};
-    this.jsActions = {};
-    this.$wire = generateWireObject(this, this.reactive);
-    this.cleanups = [];
-    this.processEffects(this.effects);
-  }
-  mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
-    let snapshot = JSON.parse(snapshotEncoded);
-    let oldCanonical = deepClone(this.canonical);
-    let updatedOldCanonical = this.applyUpdates(oldCanonical, updates);
-    let newCanonical = extractData(deepClone(snapshot.data));
-    let dirty = diff(updatedOldCanonical, newCanonical);
-    this.snapshotEncoded = snapshotEncoded;
-    this.snapshot = snapshot;
-    this.effects = effects;
-    this.canonical = extractData(deepClone(snapshot.data));
-    let newData = extractData(deepClone(snapshot.data));
-    Object.entries(dirty).forEach(([key, value]) => {
-      let rootKey = key.split(".")[0];
-      this.reactive[rootKey] = newData[rootKey];
-    });
-    return dirty;
-  }
-  queueUpdate(propertyName, value) {
-    this.queuedUpdates[propertyName] = value;
-  }
-  mergeQueuedUpdates(diff2) {
-    Object.entries(this.queuedUpdates).forEach(([updateKey, updateValue]) => {
-      Object.entries(diff2).forEach(([diffKey, diffValue]) => {
-        if (diffKey.startsWith(updateValue)) {
-          delete diff2[diffKey];
-        }
-      });
-      diff2[updateKey] = updateValue;
-    });
-    this.queuedUpdates = [];
-    return diff2;
-  }
-  getUpdates() {
-    let propertiesDiff = diff(this.canonical, this.ephemeral);
-    return this.mergeQueuedUpdates(propertiesDiff);
-  }
-  applyUpdates(object, updates) {
-    for (let key in updates) {
-      dataSet(object, key, updates[key]);
-    }
-    return object;
-  }
-  replayUpdate(snapshot, html) {
-    let effects = { ...this.effects, html };
-    this.mergeNewSnapshot(JSON.stringify(snapshot), effects);
-    this.processEffects({ html });
-  }
-  processEffects(effects) {
-    trigger("effects", this, effects);
-    trigger("effect", {
-      component: this,
-      effects,
-      cleanup: (i) => this.addCleanup(i)
-    });
-  }
-  get children() {
-    let meta = this.snapshot.memo;
-    let childIds = Object.values(meta.children).map((i) => i[1]);
-    return childIds.filter((id) => hasComponent(id)).map((id) => findComponent(id));
-  }
-  get parent() {
-    return closestComponent(this.el.parentElement);
-  }
-  getEncodedSnapshotWithLatestChildrenMergedIn() {
-    let { snapshotEncoded, children, snapshot } = this;
-    let childIds = children.map((child) => child.id);
-    let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
-    return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
-  }
-  inscribeSnapshotAndEffectsOnElement() {
-    let el = this.el;
-    el.setAttribute("wire:snapshot", this.snapshotEncoded);
-    let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
-    if (this.originalEffects.url) {
-      effects.url = this.originalEffects.url;
-    }
-    if (this.originalEffects.scripts) {
-      effects.scripts = this.originalEffects.scripts;
-    }
-    el.setAttribute("wire:effects", JSON.stringify(effects));
-  }
-  addJsAction(name, action) {
-    this.jsActions[name] = action;
-  }
-  hasJsAction(name) {
-    return this.jsActions[name] !== void 0;
-  }
-  getJsAction(name) {
-    return this.jsActions[name].bind(this.$wire);
-  }
-  getJsActions() {
-    return this.jsActions;
-  }
-  addCleanup(cleanup) {
-    this.cleanups.push(cleanup);
-  }
-  cleanup() {
-    delete this.el.__livewire;
-    while (this.cleanups.length > 0) {
-      this.cleanups.pop()();
-    }
-  }
-};
-
-// js/morph.js
-var import_alpinejs3 = __toESM(require_module_cjs());
-
-// js/features/supportIslands.js
-on("stream", (payload) => {
-  if (payload.type !== "island")
-    return;
-  let { id, name, content } = payload;
-  if (!hasComponent(id))
-    return;
-  let component = findComponent(id);
-  streamIsland(component, name, content);
-});
-function streamIsland(component, name, content) {
-  renderIsland(component, name, content);
-}
-on("effect", ({ component, effects }) => {
-  let islands = effects.islands || [];
-  islands.forEach((island) => {
-    let { name, content } = island;
-    queueMicrotask(() => {
-      queueMicrotask(() => {
-        renderIsland(component, name, content);
-      });
-    });
-  });
-});
-function renderIsland(component, name, content) {
-  let { startNode, endNode } = findIslandComments(component.el, name);
-  if (!startNode || !endNode)
-    return;
-  let { content: strippedContent, mode } = stripIslandCommentsAndExtractMode(content, name);
-  let parentElement = startNode.parentElement;
-  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-  if (mode === "append") {
-    let container = document.createElement(parentElementTag);
-    container.innerHTML = strippedContent;
-    Array.from(container.childNodes).forEach((node) => {
-      endNode.parentNode.insertBefore(node, endNode);
-    });
-  } else if (mode === "prepend") {
-    let container = document.createElement(parentElementTag);
-    container.innerHTML = strippedContent;
-    Array.from(container.childNodes).reverse().forEach((node) => {
-      startNode.parentNode.insertBefore(node, startNode.nextSibling);
-    });
-  } else {
-    morphIsland(component, startNode, endNode, strippedContent);
-  }
-}
-function skipIslandContents(el, toEl, skipUntil) {
-  if (isStartMarker(el) && isStartMarker(toEl)) {
-    let mode = extractIslandMode(toEl);
-    skipUntil((node) => isEndMarker(node));
-    if (mode === "skip") {
-      skipUntil((node) => isEndMarker(node));
-    } else if (mode === "prepend") {
-      let sibling = toEl.nextSibling;
-      let siblings = [];
-      while (sibling && !isEndMarker(sibling)) {
-        siblings.push(sibling);
-        sibling = sibling.nextSibling;
-      }
-      siblings.forEach((node) => {
-        el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
-      });
-      skipUntil((node) => isEndMarker(node));
-    } else if (mode === "append") {
-      let endMarker = el.nextSibling;
-      while (endMarker && !isEndMarker(endMarker)) {
-        endMarker = endMarker.nextSibling;
-      }
-      let sibling = toEl.nextSibling;
-      let siblings = [];
-      while (sibling && !isEndMarker(sibling)) {
-        siblings.push(sibling);
-        sibling = sibling.nextSibling;
-      }
-      siblings.forEach((node) => {
-        endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
-      });
-      skipUntil((node) => isEndMarker(node));
-    }
-  }
-}
-function isStartMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
-}
-function isEndMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
-}
-function extractIslandMode(el) {
-  let mode = el.textContent.match(/\[if ISLAND:.*:(\w+)\]/)?.[1];
-  return mode || "replace";
-}
-function stripIslandCommentsAndExtractMode(content, islandName) {
-  let mode = "replace";
-  const modeMatch = content.match(new RegExp(`\\[if ISLAND:${islandName}:(\\w+)\\]><\\!\\[endif\\]`));
-  if (modeMatch) {
-    mode = modeMatch[1];
-  }
-  let startComment = new RegExp(`<!--\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
-  let endComment = new RegExp(`<!--\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
-  let stripped = content.replace(startComment, "").replace(endComment, "");
-  return {
-    content: stripped.trim(),
-    mode
-  };
-}
-function findIslandComments(rootEl, islandName) {
-  let startNode = null;
-  let endNode = null;
-  walkElements(rootEl, (el, skip) => {
-    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-      return skip();
-    }
-    Array.from(el.childNodes).forEach((node) => {
-      if (node.nodeType === Node.COMMENT_NODE) {
-        if (node.textContent.match(new RegExp(`\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
-          startNode = node;
-        }
-        if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
-          endNode = node;
-        }
-      }
-    });
-  });
-  return { startNode, endNode };
-}
-function walkElements(el, callback) {
-  let skip = false;
-  callback(el, () => skip = true);
-  if (skip)
-    return;
-  Array.from(el.children).forEach((child) => {
-    walkElements(child, callback);
-  });
-}
-
-// js/morph.js
-function morph(component, el, html) {
-  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-  let wrapper = document.createElement(wrapperTag);
-  wrapper.innerHTML = html;
-  let parentComponent;
-  try {
-    parentComponent = closestComponent(el.parentElement);
-  } catch (e) {
-  }
-  parentComponent && (wrapper.__livewire = parentComponent);
-  let to = wrapper.firstElementChild;
-  to.setAttribute("wire:snapshot", component.snapshotEncoded);
-  let effects = { ...component.effects };
-  delete effects.html;
-  to.setAttribute("wire:effects", JSON.stringify(effects));
-  to.__livewire = component;
-  trigger("morph", { el, toEl: to, component });
-  let existingComponentsMap = {};
-  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
-    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
-  });
-  to.querySelectorAll("[wire\\:id]").forEach((child) => {
-    if (child.hasAttribute("wire:snapshot"))
-      return;
-    let wireId = child.getAttribute("wire:id");
-    let existingComponent = existingComponentsMap[wireId];
-    if (existingComponent) {
-      child.replaceWith(existingComponent.cloneNode(true));
-    }
-  });
-  import_alpinejs3.default.morph(el, to, getMorphConfig(component));
-  trigger("morphed", { el, component });
-}
-function morphIsland(component, startNode, endNode, toHTML) {
-  let fromContainer = startNode.parentElement;
-  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
-  let toContainer = document.createElement(fromContainerTag);
-  toContainer.innerHTML = toHTML;
-  toContainer.__livewire = component;
-  let parentElement = component.el.parentElement;
-  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-  let parentComponent;
-  try {
-    parentComponent = parentElement ? closestComponent(parentElement) : null;
-  } catch (e) {
-  }
-  if (parentComponent) {
-    let parentProviderWrapper = document.createElement(parentElementTag);
-    parentProviderWrapper.appendChild(toContainer);
-    parentProviderWrapper.__livewire = parentComponent;
-  }
-  trigger("island.morph", { startNode, endNode, component });
-  import_alpinejs3.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
-  trigger("island.morphed", { startNode, endNode, component });
-}
-function getMorphConfig(component) {
-  return {
-    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
-      skipSlotContents(el, toEl, skipUntil);
-      skipIslandContents(el, toEl, skipUntil);
-      if (isntElement(el))
-        return;
-      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
-      if (el.__livewire_replace === true)
-        el.innerHTML = toEl.innerHTML;
-      if (el.__livewire_replace_self === true) {
-        el.outerHTML = toEl.outerHTML;
-        return skip();
-      }
-      if (el.__livewire_ignore === true)
-        return skip();
-      if (el.__livewire_ignore_self === true)
-        childrenOnly();
-      if (el.__livewire_ignore_children === true)
-        return skipChildren();
-      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
-        return skip();
-      if (isComponentRootEl(el))
-        toEl.__livewire = component;
-    },
-    updated: (el) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.updated", { el, component });
-    },
-    removing: (el, skip) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.removing", { el, component, skip });
-    },
-    removed: (el) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.removed", { el, component });
-    },
-    adding: (el) => {
-      trigger("morph.adding", { el, component });
-    },
-    added: (el) => {
-      if (isntElement(el))
-        return;
-      const closestComponentId = closestComponent(el).id;
-      trigger("morph.added", { el });
-    },
-    key: (el) => {
-      if (isntElement(el))
-        return;
-      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
-    },
-    lookahead: false
-  };
-}
-function isntElement(el) {
-  return typeof el.hasAttribute !== "function";
-}
-function isComponentRootEl(el) {
-  return el.hasAttribute("wire:id");
-}
-
-// js/features/supportSlots.js
-on("effect", ({ component, effects }) => {
-  let slots = effects.slots;
-  if (!slots)
-    return;
-  let parentId = component.el.getAttribute("wire:id");
-  Object.entries(slots).forEach(([childId, childSlots]) => {
-    let childComponent = findComponent(childId);
-    if (!childComponent)
-      return;
-    Object.entries(childSlots).forEach(([name, content]) => {
-      queueMicrotask(() => {
-        queueMicrotask(() => {
-          queueMicrotask(() => {
-            let fullName = parentId ? `${name}:${parentId}` : name;
-            let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
-            if (!startNode || !endNode)
-              return;
-            let strippedContent = stripSlotComments(content, fullName);
-            morphIsland(childComponent, startNode, endNode, strippedContent);
-          });
-        });
-      });
-    });
-  });
-});
-function stripSlotComments(content, slotName) {
-  let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
-  let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
-  let stripped = content.replace(startComment, "").replace(endComment, "");
-  return stripped.trim();
-}
-function findSlotComments(rootEl, slotName) {
-  let startNode = null;
-  let endNode = null;
-  walkElements2(rootEl, (el, skip) => {
-    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-      return skip();
-    }
-    Array.from(el.childNodes).forEach((node) => {
-      if (node.nodeType === Node.COMMENT_NODE) {
-        if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
-          startNode = node;
-        }
-        if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
-          endNode = node;
-        }
-      }
-    });
-  });
-  return { startNode, endNode };
-}
-function walkElements2(el, callback) {
-  let skip = false;
-  callback(el, () => skip = true);
-  if (skip)
-    return;
-  Array.from(el.children).forEach((child) => {
-    walkElements2(child, callback);
-  });
-}
-function skipSlotContents(el, toEl, skipUntil) {
-  if (isStartMarker2(el) && isStartMarker2(toEl)) {
-    skipUntil((node) => isEndMarker2(node));
-  }
-}
-function isStartMarker2(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
-}
-function isEndMarker2(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
-}
-function extractSlotData(el) {
-  let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
-  let match = el.textContent.match(regex);
-  if (!match)
-    return;
-  return {
-    name: match[1],
-    parentId: match[2] || null
-  };
-}
-function checkPreviousSiblingForSlotStartMarker(el) {
-  let node = el.previousSibling;
-  while (node) {
-    if (isEndMarker2(node)) {
-      return null;
-    }
-    if (isStartMarker2(node)) {
-      return node;
-    }
-    node = node.previousSibling;
-  }
-  return null;
-}
-
-// js/store.js
-var components = {};
-function initComponent(el) {
-  let component = new Component(el);
-  if (components[component.id])
-    throw "Component already registered";
-  let cleanup = (i) => component.addCleanup(i);
-  trigger("component.init", { component, cleanup });
-  components[component.id] = component;
-  return component;
-}
-function destroyComponent(id) {
-  let component = components[id];
-  if (!component)
-    return;
-  component.cleanup();
-  delete components[id];
-}
-function hasComponent(id) {
-  return !!components[id];
-}
-function findComponent(id) {
-  let component = components[id];
-  if (!component)
-    throw "Component not found: " + id;
-  return component;
-}
-function closestComponent(el, strict = true) {
-  let slotStartMarker = checkPreviousSiblingForSlotStartMarker(el);
-  if (slotStartMarker) {
-    let { name, parentId } = extractSlotData(slotStartMarker);
-    if (parentId) {
-      return findComponent(parentId);
-    }
-  }
-  let closestRoot = Alpine.findClosest(el, (i) => i.__livewire);
-  if (!closestRoot) {
-    if (strict)
-      throw "Could not find Livewire component in DOM tree";
-    return;
-  }
-  return closestRoot.__livewire;
-}
-function componentsByName(name) {
-  return Object.values(components).filter((component) => {
-    return name == component.name;
-  });
-}
-function getByName(name) {
-  return componentsByName(name).map((i) => i.$wire);
-}
-function find(id) {
-  let component = components[id];
-  return component && component.$wire;
-}
-function first() {
-  return Object.values(components)[0].$wire;
-}
-function all() {
-  return Object.values(components);
-}
-
-// js/events.js
-function dispatch2(component, name, params) {
-  dispatchEvent(component.el, name, params);
-}
-function dispatchGlobal(name, params) {
-  dispatchEvent(window, name, params);
-}
-function dispatchSelf(component, name, params) {
-  dispatchEvent(component.el, name, params, false);
-}
-function dispatchTo(componentName, name, params) {
-  let targets = componentsByName(componentName);
-  targets.forEach((target) => {
-    dispatchEvent(target.el, name, params, false);
-  });
-}
-function listen2(component, name, callback) {
-  component.el.addEventListener(name, (e) => {
-    callback(e.detail);
-  });
-}
-function on2(eventName, callback) {
-  let handler = (e) => {
-    if (!e.__livewire)
-      return;
-    callback(e.detail);
-  };
-  window.addEventListener(eventName, handler);
-  return () => {
-    window.removeEventListener(eventName, handler);
-  };
-}
-function dispatchEvent(target, name, params, bubbles = true) {
-  if (typeof params === "string") {
-    params = [params];
-  }
-  let e = new CustomEvent(name, { bubbles, detail: params });
-  e.__livewire = { name, params, receivedBy: [] };
-  target.dispatchEvent(e);
+    return console.error(`Ref "${name}" not found in component "${component.id}"`);
+  return refEl;
 }
 
 // js/directives.js
@@ -9505,6 +10500,7 @@ var Directive = class {
     this.rawName = this.raw = rawName;
     this.el = el;
     this.eventContext;
+    this.wire;
     this.value = value;
     this.modifiers = modifiers;
     this.expression = this.el.getAttribute(this.rawName);
@@ -9521,39 +10517,1077 @@ var Directive = class {
     return methods[0].params;
   }
   parseOutMethodsAndParams(rawMethod) {
-    let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
-    let method = rawMethod;
-    let params = [];
-    let methodAndParamString = method.match(methodRegex);
     let methods = [];
-    let slicedLength = 0;
-    while (methodAndParamString) {
-      method = methodAndParamString[1];
-      let func = new Function("$event", `return (function () {
-                for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
-                    p[k] = arguments[k];
-                }
-                return [].concat(p);
-            })(${methodAndParamString[2]})`);
-      params = func(this.eventContext);
-      methods.push({ method, params });
-      slicedLength += methodAndParamString[0].length;
-      methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex);
-    }
-    if (methods.length === 0) {
+    let parsedMethods = this.splitAndParseMethods(rawMethod);
+    for (let { method, paramString } of parsedMethods) {
+      let params = [];
+      if (paramString.length > 0) {
+        let argumentsToArray = function() {
+          for (var l = arguments.length, p = new Array(l), k = 0; k < l; k++) {
+            p[k] = arguments[k];
+          }
+          return [].concat(p);
+        };
+        try {
+          params = Alpine.evaluate(
+            document,
+            "argumentsToArray(" + paramString + ")",
+            {
+              scope: { argumentsToArray }
+            }
+          );
+        } catch (error2) {
+          console.warn("Failed to parse parameters:", paramString, error2);
+          params = [];
+        }
+      }
       methods.push({ method, params });
     }
     return methods;
   }
+  splitAndParseMethods(methodExpression) {
+    let methods = [];
+    let current = "";
+    let parenCount = 0;
+    let inString = false;
+    let stringChar = null;
+    let trimmedExpression = methodExpression.trim();
+    for (let i = 0; i < trimmedExpression.length; i++) {
+      let char = trimmedExpression[i];
+      if (!inString) {
+        if (char === '"' || char === "'") {
+          inString = true;
+          stringChar = char;
+          current += char;
+        } else if (char === "(") {
+          parenCount++;
+          current += char;
+        } else if (char === ")") {
+          parenCount--;
+          current += char;
+        } else if (char === "," && parenCount === 0) {
+          methods.push(this.parseMethodCall(current.trim()));
+          current = "";
+        } else {
+          current += char;
+        }
+      } else {
+        if (char === stringChar && trimmedExpression[i - 1] !== "\\") {
+          inString = false;
+          stringChar = null;
+        }
+        current += char;
+      }
+    }
+    if (current.trim().length > 0) {
+      methods.push(this.parseMethodCall(current.trim()));
+    }
+    return methods;
+  }
+  parseMethodCall(methodString) {
+    let methodMatch = methodString.match(/^([^(]+)\(/);
+    if (!methodMatch) {
+      return {
+        method: methodString.trim(),
+        paramString: ""
+      };
+    }
+    let method = methodMatch[1].trim();
+    let paramStart = methodMatch[0].length - 1;
+    let lastParenIndex = methodString.lastIndexOf(")");
+    if (lastParenIndex === -1) {
+      throw new Error(`Missing closing parenthesis for method "${method}"`);
+    }
+    let paramString = methodString.slice(paramStart + 1, lastParenIndex).trim();
+    return {
+      method,
+      paramString
+    };
+  }
 };
+
+// js/directives/shared.js
+function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = null) {
+  isTruthy = directive2.modifiers.includes("remove") ? !isTruthy : isTruthy;
+  if (directive2.modifiers.includes("class")) {
+    let classes = directive2.expression.split(" ").filter(String);
+    if (isTruthy) {
+      el.classList.add(...classes);
+    } else {
+      el.classList.remove(...classes);
+    }
+  } else if (directive2.modifiers.includes("attr")) {
+    if (isTruthy) {
+      el.setAttribute(directive2.expression, true);
+    } else {
+      el.removeAttribute(directive2.expression);
+    }
+  } else {
+    let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
+    let display = ["inline", "list-item", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive2.modifiers.includes(i))[0] || "inline-block";
+    display = directive2.modifiers.includes("remove") && !isTruthy ? cache : display;
+    el.style.display = isTruthy ? display : "none";
+  }
+}
+
+// js/directives/wire-dirty.js
+var refreshDirtyStatesByComponent = new WeakBag();
+on("commit", ({ component, respond }) => {
+  respond(() => {
+    setTimeout(() => {
+      refreshDirtyStatesByComponent.each(component, (i) => i(false));
+    });
+  });
+});
+directive("dirty", ({ el, directive: directive2, component }) => {
+  let targets = dirtyTargets(el);
+  let oldIsDirty = false;
+  let initialDisplay = el.style.display;
+  let refreshDirtyState = (isDirty) => {
+    toggleBooleanStateDirective(el, directive2, isDirty, initialDisplay);
+    oldIsDirty = isDirty;
+  };
+  refreshDirtyStatesByComponent.add(component, refreshDirtyState);
+  Alpine.effect(() => {
+    let isDirty = false;
+    isDirty = checkDirty(component, targets.length === 0 ? void 0 : targets);
+    if (oldIsDirty !== isDirty) {
+      refreshDirtyState(isDirty);
+    }
+    oldIsDirty = isDirty;
+  });
+});
+function checkDirty(component, targets) {
+  let isDirty = false;
+  if (targets === void 0) {
+    isDirty = JSON.stringify(component.canonical) !== JSON.stringify(component.reactive);
+  } else if (Array.isArray(targets)) {
+    for (let i = 0; i < targets.length; i++) {
+      if (isDirty)
+        break;
+      let target = targets[i];
+      isDirty = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target));
+    }
+  } else {
+    isDirty = JSON.stringify(dataGet(component.canonical, targets)) !== JSON.stringify(dataGet(component.reactive, targets));
+  }
+  return isDirty;
+}
+function dirtyTargets(el) {
+  let directives = getDirectives(el);
+  let targets = [];
+  if (directives.has("model")) {
+    targets.push(directives.get("model").expression);
+  }
+  if (directives.has("target")) {
+    targets = targets.concat(
+      directives.get("target").expression.split(",").map((s) => s.trim())
+    );
+  }
+  return targets;
+}
+
+// js/features/supportJsModules.js
+var pendingComponentAssets = /* @__PURE__ */ new WeakMap();
+on("effect", ({ component, effects }) => {
+  let scriptModuleHash = effects.scriptModule;
+  if (scriptModuleHash) {
+    let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+    let path = `${getUriPrefix()}/js/${encodedName}.js?v=${scriptModuleHash}`;
+    pendingComponentAssets.set(component, Alpine.reactive({
+      loading: true,
+      afterLoaded: []
+    }));
+    import(path).then((module) => {
+      module.run.call(component.$wire, component.$wire, component.$wire.js);
+      pendingComponentAssets.get(component).loading = false;
+      pendingComponentAssets.get(component).afterLoaded.forEach((callback) => callback());
+      pendingComponentAssets.delete(component);
+    });
+  }
+});
+function assetIsPendingFor(component) {
+  return pendingComponentAssets.has(component) && pendingComponentAssets.get(component).loading;
+}
+function runAfterAssetIsLoadedFor(component, callback) {
+  if (assetIsPendingFor(component)) {
+    pendingComponentAssets.get(component).afterLoaded.push(() => callback());
+  } else {
+    callback();
+  }
+}
+
+// js/$wire.js
+var properties = {};
+var fallback;
+function wireProperty(name, callback, component = null) {
+  properties[name] = callback;
+}
+function wireFallback(callback) {
+  fallback = callback;
+}
+var aliases = {
+  "on": "$on",
+  "el": "$el",
+  "id": "$id",
+  "js": "$js",
+  "get": "$get",
+  "set": "$set",
+  "refs": "$refs",
+  "call": "$call",
+  "hook": "$hook",
+  "watch": "$watch",
+  "dirty": "$dirty",
+  "effect": "$effect",
+  "commit": "$commit",
+  "errors": "$errors",
+  "island": "$island",
+  "upload": "$upload",
+  "entangle": "$entangle",
+  "dispatch": "$dispatch",
+  "intercept": "$intercept",
+  "interceptAction": "$interceptAction",
+  "interceptMessage": "$interceptMessage",
+  "interceptRequest": "$interceptRequest",
+  "dispatchTo": "$dispatchTo",
+  "dispatchSelf": "$dispatchSelf",
+  "removeUpload": "$removeUpload",
+  "cancelUpload": "$cancelUpload",
+  "uploadMultiple": "$uploadMultiple"
+};
+function generateWireObject(component, state) {
+  let isScoped = false;
+  return new Proxy({}, {
+    get(target, property) {
+      if (property === "__instance")
+        return component;
+      if (property in aliases) {
+        return getProperty(component, aliases[property]);
+      } else if (property in properties) {
+        return getProperty(component, property);
+      } else if (property in state) {
+        return state[property];
+      } else if (!["then"].includes(property)) {
+        return getFallback(component)(property);
+      }
+    },
+    set(target, property, value) {
+      if (property in state) {
+        state[property] = value;
+      }
+      return true;
+    }
+  });
+}
+function getProperty(component, name) {
+  return properties[name](component);
+}
+function getFallback(component) {
+  return fallback(component);
+}
+import_alpinejs2.default.magic("wire", (el, { cleanup }) => {
+  let component;
+  return new Proxy({}, {
+    get(target, property) {
+      if (!component)
+        component = findComponentByEl(el);
+      if (["$entangle", "entangle"].includes(property)) {
+        return generateEntangleFunction(component, cleanup);
+      }
+      return component.$wire[property];
+    },
+    set(target, property, value) {
+      if (!component)
+        component = findComponentByEl(el);
+      component.$wire[property] = value;
+      return true;
+    }
+  });
+});
+wireProperty("__instance", (component) => component);
+wireProperty("$get", (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property));
+wireProperty("$el", (component) => {
+  return component.el;
+});
+wireProperty("$id", (component) => {
+  return component.id;
+});
+wireProperty("$js", (component) => {
+  let fn = component.addJsAction.bind(component);
+  let jsActions = component.getJsActions();
+  Object.keys(jsActions).forEach((name) => {
+    fn[name] = component.getJsAction(name);
+  });
+  return new Proxy(fn, {
+    set(target, property, value) {
+      component.addJsAction(property, value);
+      return true;
+    },
+    get(target, property) {
+      if (assetIsPendingFor(component)) {
+        let resolver = null;
+        let promise = new Promise((resolve) => {
+          resolver = resolve;
+        });
+        return (...params) => {
+          runAfterAssetIsLoadedFor(component, () => {
+            resolver(component.getJsAction(property)(...params));
+          });
+          return promise;
+        };
+      }
+      return target[property];
+    }
+  });
+});
+wireProperty("$set", (component) => async (property, value, live = true) => {
+  dataSet(component.reactive, property, value);
+  if (live) {
+    component.queueUpdate(property, value);
+    return fireAction(component, "$set");
+  }
+  return Promise.resolve();
+});
+wireProperty("$refs", (component) => {
+  let fn = (name) => findRefEl(component, name);
+  return new Proxy(fn, {
+    get(target, property) {
+      if (property in target) {
+        return target[property];
+      }
+      return fn(property);
+    }
+  });
+});
+wireProperty("$dirty", (component) => (property) => {
+  let reactive = import_alpinejs2.default.reactive({ dirty: false });
+  interceptComponentMessage(component, ({ onFinish }) => {
+    onFinish(() => {
+      queueMicrotask(() => {
+        reactive.dirty = checkDirty(component, property);
+      });
+    });
+  });
+  import_alpinejs2.default.effect(() => {
+    reactive.dirty = checkDirty(component, property);
+  });
+  return reactive.dirty;
+});
+wireProperty("$intercept", (component) => (actionNameOrCallback, maybeCallback) => {
+  return interceptComponentAction(component, actionNameOrCallback, maybeCallback);
+});
+wireProperty("$interceptAction", (component) => (actionNameOrCallback, maybeCallback) => {
+  return interceptComponentAction(component, actionNameOrCallback, maybeCallback);
+});
+wireProperty("$interceptMessage", (component) => (actionNameOrCallback, maybeCallback) => {
+  return interceptComponentMessage(component, actionNameOrCallback, maybeCallback);
+});
+wireProperty("$interceptRequest", (component) => (actionNameOrCallback, maybeCallback) => {
+  return interceptComponentRequest(component, actionNameOrCallback, maybeCallback);
+});
+wireProperty("$errors", (component) => getErrorsObject(component));
+wireProperty("$call", (component) => async (method, ...params) => {
+  return await component.$wire[method](...params);
+});
+wireProperty("$island", (component) => async (name, options = {}) => {
+  return fireAction(component, "$refresh", [], {
+    island: { name, ...options }
+  });
+});
+wireProperty("$entangle", (component) => (name, live = false) => {
+  return generateEntangleFunction(component)(name, live);
+});
+wireProperty("$toggle", (component) => (name, live = true) => {
+  return component.$wire.set(name, !component.$wire.get(name), live);
+});
+wireProperty("$watch", (component) => (path, callback) => {
+  let getter = () => {
+    return dataGet(component.reactive, path);
+  };
+  let unwatch = import_alpinejs2.default.watch(getter, callback);
+  component.addCleanup(unwatch);
+});
+wireProperty("$effect", (component) => (callback) => {
+  let effect = import_alpinejs2.default.effect(callback);
+  component.addCleanup(effect);
+  return effect;
+});
+wireProperty("$refresh", (component) => async () => {
+  return fireAction(component, "$refresh");
+});
+wireProperty("$commit", (component) => async () => {
+  return fireAction(component, "$commit");
+});
+wireProperty("$on", (component) => (...params) => listen2(component, ...params));
+wireProperty("$hook", (component) => (name, callback) => {
+  let unhook = on(name, ({ component: hookComponent, ...params }) => {
+    if (hookComponent === void 0)
+      return callback(params);
+    if (hookComponent.id === component.id)
+      return callback({ component: hookComponent, ...params });
+  });
+  component.addCleanup(unhook);
+  return unhook;
+});
+wireProperty("$dispatch", (component) => (...params) => dispatch2(component, ...params));
+wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
+wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
+wireProperty("$upload", (component) => (...params) => upload(component, ...params));
+wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
+wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
+wireProperty("$cancelUpload", (component) => (...params) => cancelUpload(component, ...params));
+var parentMemo = /* @__PURE__ */ new WeakMap();
+wireProperty("$parent", (component) => {
+  if (parentMemo.has(component))
+    return parentMemo.get(component).$wire;
+  let parent = component.parent;
+  parentMemo.set(component, parent);
+  return parent.$wire;
+});
+var overriddenMethods = /* @__PURE__ */ new WeakMap();
+function overrideMethod(component, method, callback) {
+  if (!overriddenMethods.has(component)) {
+    overriddenMethods.set(component, {});
+  }
+  let obj = overriddenMethods.get(component);
+  obj[method] = callback;
+  overriddenMethods.set(component, obj);
+}
+wireFallback((component) => (property) => (...params) => {
+  if (params.length === 1 && params[0] instanceof Event) {
+    params = [];
+  }
+  if (overriddenMethods.has(component)) {
+    let overrides = overriddenMethods.get(component);
+    if (typeof overrides[property] === "function") {
+      return overrides[property](params);
+    }
+  }
+  return fireAction(component, property, params);
+});
+
+// js/component.js
+var Component = class {
+  constructor(el) {
+    if (el.__livewire)
+      throw "Component already initialized";
+    el.__livewire = this;
+    this.el = el;
+    this.id = el.getAttribute("wire:id");
+    this.key = el.getAttribute("wire:key");
+    this.__livewireId = this.id;
+    this.snapshotEncoded = el.getAttribute("wire:snapshot");
+    this.snapshot = JSON.parse(this.snapshotEncoded);
+    if (!this.snapshot) {
+      throw `Snapshot missing on Livewire component with id: ` + this.id;
+    }
+    this.name = this.snapshot.memo.name;
+    this.effects = JSON.parse(el.getAttribute("wire:effects"));
+    this.originalEffects = deepClone(this.effects);
+    this.canonical = extractData(deepClone(this.snapshot.data));
+    this.ephemeral = extractData(deepClone(this.snapshot.data));
+    this.reactive = Alpine.reactive(this.ephemeral);
+    this.queuedUpdates = {};
+    this.jsActions = {};
+    this.$wire = generateWireObject(this, this.reactive);
+    el.$wire = this.$wire;
+    this.cleanups = [];
+    this.processEffects(this.effects);
+  }
+  addActionContext(context) {
+    if (context.el || context.directive) {
+      setNextActionOrigin({
+        el: context.el,
+        directive: context.directive
+      });
+    }
+  }
+  intercept(action, callback = null) {
+    return this.$wire.$intercept(action, callback);
+  }
+  mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
+    let snapshot = JSON.parse(snapshotEncoded);
+    let oldCanonical = deepClone(this.canonical);
+    let updatedOldCanonical = this.applyUpdates(oldCanonical, updates);
+    let newCanonical = extractData(deepClone(snapshot.data));
+    let dirty = diff(updatedOldCanonical, newCanonical);
+    this.snapshotEncoded = snapshotEncoded;
+    this.snapshot = snapshot;
+    this.effects = effects;
+    this.canonical = extractData(deepClone(snapshot.data));
+    let newData = extractData(deepClone(snapshot.data));
+    Object.entries(dirty).forEach(([key, value]) => {
+      let rootKey = key.split(".")[0];
+      this.reactive[rootKey] = newData[rootKey];
+    });
+    return dirty;
+  }
+  queueUpdate(propertyName, value) {
+    this.queuedUpdates[propertyName] = value;
+  }
+  mergeQueuedUpdates(diff2) {
+    Object.entries(this.queuedUpdates).forEach(([updateKey, updateValue]) => {
+      Object.entries(diff2).forEach(([diffKey, diffValue]) => {
+        if (diffKey.startsWith(updateValue)) {
+          delete diff2[diffKey];
+        }
+      });
+      diff2[updateKey] = updateValue;
+    });
+    this.queuedUpdates = [];
+    return diff2;
+  }
+  getUpdates() {
+    let propertiesDiff = diff(this.canonical, this.ephemeral);
+    return this.mergeQueuedUpdates(propertiesDiff);
+  }
+  applyUpdates(object, updates) {
+    for (let key in updates) {
+      dataSet(object, key, updates[key]);
+    }
+    return object;
+  }
+  replayUpdate(snapshot, html) {
+    let effects = { ...this.effects, html };
+    this.mergeNewSnapshot(JSON.stringify(snapshot), effects);
+    this.processEffects({ html });
+  }
+  processEffects(effects, request) {
+    trigger("effects", this, effects);
+    trigger("effect", {
+      component: this,
+      effects,
+      cleanup: (i) => this.addCleanup(i),
+      request
+    });
+  }
+  get children() {
+    let componentEl = this.el;
+    let children = [];
+    componentEl.querySelectorAll("[wire\\:id]").forEach((el) => {
+      let parentComponentEl = el.parentElement.closest("[wire\\:id]");
+      if (parentComponentEl !== componentEl)
+        return;
+      let componentInstance = el.__livewire;
+      if (!componentInstance)
+        return;
+      children.push(componentInstance);
+    });
+    return children;
+  }
+  get islands() {
+    let islands = this.snapshot.memo.islands;
+    return islands;
+  }
+  get parent() {
+    return findComponentByEl(this.el.parentElement);
+  }
+  get isIsolated() {
+    return this.snapshot.memo.isolate;
+  }
+  get isLazy() {
+    return this.snapshot.memo.lazyLoaded !== void 0;
+  }
+  get hasBeenLazyLoaded() {
+    return this.snapshot.memo.lazyLoaded === true;
+  }
+  get isLazyIsolated() {
+    return !!this.snapshot.memo.lazyIsolated;
+  }
+  getDeepChildrenWithBindings(callback) {
+    this.getDeepChildren((child) => {
+      if (child.hasReactiveProps() || child.hasWireModelableBindings()) {
+        callback(child);
+      }
+    });
+  }
+  hasReactiveProps() {
+    let meta = this.snapshot.memo;
+    let props = meta.props;
+    return !!props;
+  }
+  hasWireModelableBindings() {
+    let meta = this.snapshot.memo;
+    let bindings = meta.bindings;
+    return !!bindings;
+  }
+  getDeepChildren(callback) {
+    this.children.forEach((child) => {
+      callback(child);
+      child.getDeepChildren(callback);
+    });
+  }
+  getEncodedSnapshotWithLatestChildrenMergedIn() {
+    let { snapshotEncoded, children, snapshot } = this;
+    let childrenMemo = {};
+    children.forEach((child) => {
+      childrenMemo[child.key] = [child.el.tagName.toLowerCase(), child.id];
+    });
+    return snapshotEncoded.replace(
+      /"children":\{[^}]*\}/,
+      `"children":${JSON.stringify(childrenMemo)}`
+    );
+  }
+  inscribeSnapshotAndEffectsOnElement() {
+    let el = this.el;
+    el.setAttribute("wire:snapshot", this.snapshotEncoded);
+    let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
+    if (this.originalEffects.url) {
+      effects.url = this.originalEffects.url;
+    }
+    if (this.originalEffects.scripts) {
+      effects.scripts = this.originalEffects.scripts;
+    }
+    el.setAttribute("wire:effects", JSON.stringify(effects));
+    el.setAttribute("wire:key", this.key);
+  }
+  addJsAction(name, action) {
+    this.jsActions[name] = action;
+  }
+  hasJsAction(name) {
+    return this.jsActions[name] !== void 0;
+  }
+  getJsAction(name) {
+    return this.jsActions[name].bind(this.$wire);
+  }
+  getJsActions() {
+    return this.jsActions;
+  }
+  addCleanup(cleanup) {
+    this.cleanups.push(cleanup);
+  }
+  cleanup() {
+    delete this.el.__livewire;
+    while (this.cleanups.length > 0) {
+      this.cleanups.pop()();
+    }
+  }
+};
+
+// js/fragment.js
+function closestFragment(el, { isMatch, hasReachedBoundary }) {
+  if (!hasReachedBoundary)
+    hasReachedBoundary = () => false;
+  let current = el;
+  while (current) {
+    let sibling = current.previousSibling;
+    let foundEndMarker = [];
+    while (sibling) {
+      if (isEndFragmentMarker(sibling)) {
+        foundEndMarker.push("a");
+      }
+      if (isStartFragmentMarker(sibling)) {
+        if (foundEndMarker.length > 0) {
+          foundEndMarker.pop();
+        } else {
+          let metadata = extractFragmentMetadataFromMarkerNode(sibling);
+          if (isMatch(metadata)) {
+            return new Fragment(sibling);
+          }
+        }
+      }
+      sibling = sibling.previousSibling;
+    }
+    current = current.parentElement;
+    if (current && hasReachedBoundary({ el: current })) {
+      break;
+    }
+  }
+  return null;
+}
+function findFragment(el, { isMatch, hasReachedBoundary }) {
+  if (!hasReachedBoundary)
+    hasReachedBoundary = () => false;
+  let startNode = null;
+  let rootEl = el;
+  walkElements(rootEl, (el2, { skip, stop }) => {
+    if (el2.hasAttribute && el2 !== rootEl && hasReachedBoundary({ el: el2 })) {
+      return skip();
+    }
+    Array.from(el2.childNodes).forEach((node) => {
+      if (isStartFragmentMarker(node)) {
+        let metadata = extractFragmentMetadataFromMarkerNode(node);
+        if (isMatch(metadata)) {
+          startNode = node;
+          stop();
+        }
+      }
+    });
+  });
+  return startNode && new Fragment(startNode);
+}
+function isStartFragmentMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if FRAGMENT");
+}
+function isEndFragmentMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ENDFRAGMENT");
+}
+function walkElements(el, callback) {
+  let skip = false;
+  let stop = false;
+  callback(el, { skip: () => skip = true, stop: () => stop = true });
+  if (skip || stop)
+    return;
+  Array.from(el.children).forEach((child) => {
+    walkElements(child, callback);
+    if (stop)
+      return;
+  });
+}
+var Fragment = class {
+  constructor(startMarkerNode) {
+    this.startMarkerNode = startMarkerNode;
+    this.metadata = extractFragmentMetadataFromMarkerNode(startMarkerNode);
+  }
+  get endMarkerNode() {
+    return findMatchingEndMarkerNode(this.startMarkerNode, this.metadata);
+  }
+  append(mountContainerTagName, html) {
+    let container = document.createElement(mountContainerTagName);
+    container.innerHTML = html;
+    Array.from(container.childNodes).forEach((node) => {
+      this.endMarkerNode.before(node);
+    });
+  }
+  prepend(mountContainerTagName, html) {
+    let container = document.createElement(mountContainerTagName);
+    container.innerHTML = html;
+    Array.from(container.childNodes).reverse().forEach((node) => {
+      this.startMarkerNode.after(node);
+    });
+  }
+};
+function findMatchingEndMarkerNode(startMarkerNode, metadata) {
+  let current = startMarkerNode;
+  while (current) {
+    if (isEndFragmentMarker(current)) {
+      let currentMetadata = extractFragmentMetadataFromMarkerNode(current);
+      if (Object.keys(metadata).every((key) => metadata[key] === currentMetadata[key])) {
+        return current;
+      }
+    }
+    current = current.nextSibling;
+  }
+  return null;
+}
+function extractInnerHtmlFromFragmentHtml(fragmentHtml) {
+  let regex = /<!--\[if FRAGMENT\b.*?\]><!\[endif\]-->([\s\S]*)<!--\[if ENDFRAGMENT\b.*?\]><!\[endif\]-->/i;
+  let match = fragmentHtml.match(regex);
+  if (!match)
+    throw new Error("Invalid fragment marker");
+  let [_, html] = match;
+  return html;
+}
+function extractFragmentMetadataFromHtml(fragmentHtml) {
+  let regex = /\[if (FRAGMENT|ENDFRAGMENT):(.*?)\]/;
+  let match = fragmentHtml.match(regex);
+  if (!match)
+    throw new Error("Invalid fragment marker");
+  let [_, __, encodedMetadata] = match;
+  return decodeMetadata(encodedMetadata);
+}
+function extractFragmentMetadataFromMarkerNode(startMarkerNode) {
+  let regex = /\[if (FRAGMENT|ENDFRAGMENT):(.*?)\]/;
+  let match = startMarkerNode.textContent.match(regex);
+  if (!match)
+    throw new Error("Invalid fragment marker");
+  let [_, __, encodedMetadata] = match;
+  return decodeMetadata(encodedMetadata);
+}
+function decodeMetadata(encodedMetadata) {
+  let metadata = {};
+  let pairs = encodedMetadata.split("|");
+  pairs.forEach((pair) => {
+    let [key, value] = pair.split("=");
+    metadata[key] = value;
+  });
+  return metadata;
+}
+
+// js/store.js
+var components = {};
+function initComponent(el) {
+  let component = new Component(el);
+  if (components[component.id])
+    throw "Component already registered";
+  let cleanup = (i) => component.addCleanup(i);
+  trigger("component.init", { component, cleanup });
+  components[component.id] = component;
+  return component;
+}
+function destroyComponent(id) {
+  let component = components[id];
+  if (!component)
+    return;
+  component.cleanup();
+  delete components[id];
+}
+function hasComponent(id) {
+  return !!components[id];
+}
+function findComponent(id, strict = true) {
+  let component = components[id];
+  if (!component) {
+    if (strict)
+      throw "Component not found: " + id;
+    return;
+  }
+  return component;
+}
+function findComponentByEl(el, strict = true) {
+  let componentId = walkUpwards(el, (node, { stop }) => {
+    if (node.__livewire)
+      return stop(node.__livewire.id);
+    let endMarkers = [];
+    let slotParentId = walkBackwards(node, (siblingNode, { stop: stop2 }) => {
+      if (isEndFragmentMarker(siblingNode)) {
+        let metadata = extractFragmentMetadataFromMarkerNode(siblingNode);
+        if (metadata.type !== "slot")
+          return;
+        endMarkers.push("a");
+        return;
+      }
+      if (isStartFragmentMarker(siblingNode)) {
+        let metadata = extractFragmentMetadataFromMarkerNode(siblingNode);
+        if (metadata.type !== "slot")
+          return;
+        if (endMarkers.length > 0) {
+          endMarkers.pop();
+        } else {
+          return stop2(metadata.parent);
+        }
+      }
+    });
+    if (slotParentId)
+      return stop(slotParentId);
+  });
+  let component = findComponent(componentId, strict);
+  if (!component) {
+    if (strict)
+      throw "Could not find Livewire component in DOM tree";
+    return;
+  }
+  return component;
+}
+function componentsByName(name) {
+  return Object.values(components).filter((component) => {
+    return name == component.name;
+  });
+}
+function getByName(name) {
+  return componentsByName(name).map((i) => i.$wire);
+}
+function find(id) {
+  let component = components[id];
+  return component && component.$wire;
+}
+function first() {
+  return Object.values(components)[0].$wire;
+}
+function all() {
+  return Object.values(components);
+}
+
+// js/events.js
+function dispatch2(component, name, params) {
+  dispatchEvent(component.el, name, params);
+}
+function dispatchGlobal(name, params) {
+  dispatchEvent(window, name, params);
+}
+function dispatchSelf(component, name, params) {
+  dispatchEvent(component.el, name, params, false);
+}
+function dispatchEl(component, selector, name, params) {
+  let targets = component.el.querySelectorAll(selector);
+  targets.forEach((target) => {
+    dispatchEvent(target, name, params, false);
+  });
+}
+function dispatchTo(componentName, name, params) {
+  let targets = componentsByName(componentName);
+  targets.forEach((target) => {
+    dispatchEvent(target.el, name, params, false);
+  });
+}
+function dispatchRef(component, ref, name, params) {
+  let el = findRefEl(component, ref);
+  dispatchEvent(el, name, params, false);
+}
+function listen2(component, name, callback) {
+  component.el.addEventListener(name, (e) => {
+    callback(e.detail);
+  });
+}
+function on2(eventName, callback) {
+  let handler = (e) => {
+    if (!e.__livewire)
+      return;
+    callback(e.detail);
+  };
+  window.addEventListener(eventName, handler);
+  return () => {
+    window.removeEventListener(eventName, handler);
+  };
+}
+function dispatchEvent(target, name, params, bubbles = true) {
+  if (typeof params === "string") {
+    params = [params];
+  }
+  let e = new CustomEvent(name, { bubbles, detail: params });
+  e.__livewire = { name, params, receivedBy: [] };
+  target.dispatchEvent(e);
+}
 
 // js/lifecycle.js
 var import_collapse = __toESM(require_module_cjs2());
 var import_focus = __toESM(require_module_cjs3());
-var import_persist2 = __toESM(require_module_cjs4());
-var import_intersect = __toESM(require_module_cjs5());
+
+// node_modules/@alpinejs/persist/dist/module.esm.js
+function src_default(Alpine24) {
+  let persist = () => {
+    let alias;
+    let storage;
+    try {
+      storage = localStorage;
+    } catch (e) {
+      console.error(e);
+      console.warn("Alpine: $persist is using temporary storage since localStorage is unavailable.");
+      let dummy = /* @__PURE__ */ new Map();
+      storage = {
+        getItem: dummy.get.bind(dummy),
+        setItem: dummy.set.bind(dummy)
+      };
+    }
+    return Alpine24.interceptor((initialValue, getter, setter, path, key) => {
+      let lookup = alias || `_x_${path}`;
+      let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
+      setter(initial);
+      Alpine24.effect(() => {
+        let value = getter();
+        storageSet(lookup, value, storage);
+        setter(value);
+      });
+      return initial;
+    }, (func) => {
+      func.as = (key) => {
+        alias = key;
+        return func;
+      }, func.using = (target) => {
+        storage = target;
+        return func;
+      };
+    });
+  };
+  Object.defineProperty(Alpine24, "$persist", { get: () => persist() });
+  Alpine24.magic("persist", persist);
+  Alpine24.persist = (key, { get, set }, storage = localStorage) => {
+    let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
+    set(initial);
+    Alpine24.effect(() => {
+      let value = get();
+      storageSet(key, value, storage);
+      set(value);
+    });
+  };
+}
+function storageHas(key, storage) {
+  return storage.getItem(key) !== null;
+}
+function storageGet(key, storage) {
+  let value = storage.getItem(key);
+  if (value === void 0)
+    return;
+  return JSON.parse(value);
+}
+function storageSet(key, value, storage) {
+  storage.setItem(key, JSON.stringify(value));
+}
+var module_default = src_default;
+
+// js/lifecycle.js
+var import_intersect = __toESM(require_module_cjs4());
+var import_sort = __toESM(require_module_cjs5());
 var import_resize = __toESM(require_module_cjs6());
 var import_anchor = __toESM(require_module_cjs7());
+
+// js/plugins/history/utils.js
+function unwrap(object) {
+  if (object === void 0)
+    return void 0;
+  return JSON.parse(JSON.stringify(object));
+}
+function batch(callback) {
+  let batch2 = {
+    queued: false,
+    updates: {},
+    add(updates) {
+      Object.assign(batch2.updates, updates);
+      if (batch2.queued)
+        return;
+      batch2.queued = true;
+      queueMicrotask(batch2.flush);
+    },
+    flush() {
+      if (Object.keys(batch2.updates).length) {
+        callback(batch2.updates);
+      }
+      batch2.queued = false;
+      batch2.updates = {};
+    }
+  };
+  return batch2;
+}
+
+// js/plugins/history/coordinator.js
+var HistoryCoordinator = class {
+  constructor() {
+    this.url = null;
+    this.errorHandlers = {};
+    this.batch = batch((updates) => {
+      let url = this.getUrl();
+      this.writeToHistory("replaceState", url, (state) => {
+        state.alpine = { ...state.alpine, ...unwrap(updates) };
+        return state;
+      });
+      this.url = null;
+    });
+  }
+  addErrorHandler(key, callback) {
+    this.errorHandlers[key] = callback;
+  }
+  getUrl() {
+    return this.url ?? new URL(window.location.href);
+  }
+  replaceState(url, updates) {
+    this.url = url;
+    this.batch.add(updates);
+  }
+  pushState(url, updates) {
+    this.batch.flush();
+    this.writeToHistory("pushState", url, (state) => {
+      state = { alpine: { ...state.alpine, ...unwrap(updates) } };
+      return state;
+    });
+  }
+  writeToHistory(method, url, callback) {
+    let state = window.history.state || {};
+    if (!state.alpine)
+      state.alpine = {};
+    state = callback(state);
+    try {
+      window.history[method](state, "", url.toString());
+    } catch (error2) {
+      Object.values(this.errorHandlers).forEach(
+        (handler) => typeof handler === "function" && handler(error2, url)
+      );
+      this.errorHandlers = {};
+      console.error(error2);
+    }
+  }
+};
+var historyCoordinator = new HistoryCoordinator();
+var coordinator_default = historyCoordinator;
 
 // js/plugins/navigate/history.js
 var Snapshot = class {
@@ -9598,8 +11632,12 @@ var snapshotCache = {
     }
   }
 };
+var currentPageStatus = null;
+function storeCurrentPageStatus(status) {
+  currentPageStatus = status;
+}
 function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
-  let url = new URL(window.location.href, document.baseURI);
+  let url = coordinator_default.getUrl();
   replaceUrl(url, document.documentElement.outerHTML);
 }
 function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key, url) {
@@ -9612,6 +11650,9 @@ function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
   window.addEventListener("popstate", (e) => {
     let state = e.state || {};
     let alpine = state.alpine || {};
+    if (currentPageStatus && (currentPageStatus < 200 || currentPageStatus >= 300)) {
+      return window.location.href = alpine.url;
+    }
     if (Object.keys(state).length === 0)
       return;
     if (!alpine.snapshotIdx)
@@ -9636,21 +11677,16 @@ function replaceUrl(url, html) {
 function updateUrl(method, url, html) {
   let key = url.toString() + "-" + Math.random();
   method === "pushState" ? snapshotCache.push(key, new Snapshot(url, html)) : snapshotCache.replace(key = snapshotCache.currentKey ?? key, new Snapshot(url, html));
-  let state = history.state || {};
-  if (!state.alpine)
-    state.alpine = {};
-  state.alpine.snapshotIdx = key;
-  state.alpine.url = url.toString();
-  try {
-    history[method](state, JSON.stringify(document.title), url);
-    snapshotCache.currentKey = key;
-    snapshotCache.currentUrl = url;
-  } catch (error2) {
+  coordinator_default.addErrorHandler("navigate", (error2) => {
     if (error2 instanceof DOMException && error2.name === "SecurityError") {
-      console.error("Livewire: You can't use wire:navigate with a link to a different root domain: " + url);
+      console.error(
+        "Livewire: You can't use wire:navigate with a link to a different root domain: " + url
+      );
     }
-    console.error(error2);
-  }
+  });
+  coordinator_default[method](url, { snapshotIdx: key, url: url.toString() });
+  snapshotCache.currentKey = key;
+  snapshotCache.currentUrl = url;
 }
 
 // js/plugins/navigate/links.js
@@ -9701,100 +11737,25 @@ function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
   });
 }
 function extractDestinationFromLink(linkEl) {
-  return createUrlObjectFromString(linkEl.getAttribute("href"));
+  return createUrlObjectFromString2(linkEl.getAttribute("href"));
 }
-function createUrlObjectFromString(urlString) {
+function createUrlObjectFromString2(urlString) {
   return urlString !== null && new URL(urlString, document.baseURI);
 }
 function getUriStringFromUrlObject(urlObject) {
   return urlObject.pathname + urlObject.search + urlObject.hash;
 }
 
-// js/v4/requests/pageRequest.js
-var PageRequest = class extends Request {
-  constructor(uri) {
-    super();
-    this.uri = uri;
-  }
-  shouldCancel() {
-    return (request) => {
-      return [
-        PageRequest.name,
-        MessageRequest.name
-      ].includes(request.constructor.name);
-    };
-  }
-  async send() {
-    let options = {
-      headers: {
-        "X-Livewire-Navigate": "1"
-      },
-      signal: this.controller.signal
-    };
-    trigger("navigate.request", {
-      url: this.uri,
-      options
-    });
-    try {
-      let response = await fetch(this.uri, options);
-      let destination = this.getDestination(response);
-      let html = await response.text();
-      this.succeedCallbacks.forEach((callback) => callback(html, destination));
-    } catch (error2) {
-      this.errorCallbacks.forEach((callback) => callback(error2));
-      throw error2;
-    }
-  }
-  getDestination(response) {
-    let destination = createUrlObjectFromString(this.uri);
-    let finalDestination = createUrlObjectFromString(response.url);
-    if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
-      finalDestination.hash = destination.hash;
-    }
-    return finalDestination;
-  }
-};
-
 // js/plugins/navigate/fetch.js
 function fetchHtml(destination, callback, errorCallback) {
   let uri = getUriStringFromUrlObject(destination);
-  performFetch(uri, (html, finalDestination) => {
+  performFetch(uri, (html, finalDestination, status) => {
+    storeCurrentPageStatus(status);
     callback(html, finalDestination);
   }, errorCallback);
 }
 function performFetch(uri, callback, errorCallback) {
-  if (requestBus_default.booted) {
-    return performFetchV4(uri, callback, errorCallback);
-  }
-  let options = {
-    headers: {
-      "X-Livewire-Navigate": ""
-    }
-  };
-  trigger("navigate.request", {
-    url: uri,
-    options
-  });
-  let finalDestination;
-  fetch(uri, options).then((response) => {
-    let destination = createUrlObjectFromString(uri);
-    finalDestination = createUrlObjectFromString(response.url);
-    if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
-      finalDestination.hash = destination.hash;
-    }
-    return response.text();
-  }).then((html) => {
-    callback(html, finalDestination);
-  }).catch((error2) => {
-    errorCallback();
-    throw error2;
-  });
-}
-function performFetchV4(uri, callback, errorCallback) {
-  let request = new PageRequest(uri);
-  request.addSucceedCallback(callback);
-  request.addErrorCallback(errorCallback);
-  requestBus_default.add(request);
+  sendNavigateRequest(uri, callback, errorCallback);
 }
 
 // js/plugins/navigate/prefetch.js
@@ -9805,7 +11766,8 @@ function prefetchHtml(destination, callback, errorCallback) {
   if (prefetches[uri])
     return;
   prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
-  performFetch(uri, (html, routedUri) => {
+  performFetch(uri, (html, routedUri, status) => {
+    storeCurrentPageStatus(status);
     callback(html, routedUri);
   }, () => {
     delete prefetches[uri];
@@ -9839,19 +11801,19 @@ function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
 }
 
 // js/plugins/navigate/teleport.js
-var import_alpinejs4 = __toESM(require_module_cjs());
+var import_alpinejs3 = __toESM(require_module_cjs());
 function packUpPersistedTeleports(persistedEl) {
-  import_alpinejs4.default.mutateDom(() => {
+  import_alpinejs3.default.mutateDom(() => {
     persistedEl.querySelectorAll("[data-teleport-template]").forEach((i) => i._x_teleport.remove());
   });
 }
 function removeAnyLeftOverStaleTeleportTargets(body) {
-  import_alpinejs4.default.mutateDom(() => {
+  import_alpinejs3.default.mutateDom(() => {
     body.querySelectorAll("[data-teleport-target]").forEach((i) => i.remove());
   });
 }
 function unPackPersistedTeleports(persistedEl) {
-  import_alpinejs4.default.walk(persistedEl, (el, skip) => {
+  import_alpinejs3.default.walk(persistedEl, (el, skip) => {
     if (!el._x_teleport)
       return;
     el._x_teleportPutBack();
@@ -9866,7 +11828,7 @@ function isTeleportTarget(el) {
 function storeScrollInformationInHtmlBeforeNavigatingAway() {
   document.body.setAttribute("data-scroll-x", document.body.scrollLeft);
   document.body.setAttribute("data-scroll-y", document.body.scrollTop);
-  document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach((el) => {
+  document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:navigate\\:scroll]"]).forEach((el) => {
     el.setAttribute("data-scroll-x", el.scrollLeft);
     el.setAttribute("data-scroll-y", el.scrollTop);
   });
@@ -9888,20 +11850,20 @@ function restoreScrollPositionOrScrollToTop() {
   queueMicrotask(() => {
     queueMicrotask(() => {
       scroll(document.body);
-      document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach(scroll);
+      document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:navigate\\:scroll]"]).forEach(scroll);
     });
   });
 }
 
 // js/plugins/navigate/persist.js
-var import_alpinejs5 = __toESM(require_module_cjs());
+var import_alpinejs4 = __toESM(require_module_cjs());
 var els = {};
 function storePersistantElementsForLater(callback) {
   els = {};
   document.querySelectorAll("[x-persist]").forEach((i) => {
     els[i.getAttribute("x-persist")] = i;
     callback(i);
-    import_alpinejs5.default.mutateDom(() => {
+    import_alpinejs4.default.mutateDom(() => {
       i.remove();
     });
   });
@@ -9915,14 +11877,14 @@ function putPersistantElementsBack(callback) {
     usedPersists.push(i.getAttribute("x-persist"));
     old._x_wasPersisted = true;
     callback(old, i);
-    import_alpinejs5.default.mutateDom(() => {
+    import_alpinejs4.default.mutateDom(() => {
       i.replaceWith(old);
     });
   });
   Object.entries(els).forEach(([key, el]) => {
     if (usedPersists.includes(key))
       return;
-    import_alpinejs5.default.destroyTree(el);
+    import_alpinejs4.default.destroyTree(el);
   });
   els = {};
 }
@@ -10113,7 +12075,9 @@ function swapCurrentPageWithNewHtml(html, andThen) {
 function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes2) {
   newBody.querySelectorAll("script").forEach((i) => {
     if (i.hasAttribute("data-navigate-once")) {
-      let hash = simpleHash(ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing));
+      let hash = simpleHash(
+        ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing)
+      );
       if (oldBodyScriptTagHashes2.includes(hash))
         return;
     }
@@ -10151,7 +12115,11 @@ function mergeNewHead(newHead) {
         }
         if (isScript(child)) {
           try {
-            remoteScriptsPromises.push(injectScriptTagAndWaitForItToFullyLoad(cloneScriptTag(child)));
+            remoteScriptsPromises.push(
+              injectScriptTagAndWaitForItToFullyLoad(
+                cloneScriptTag(child)
+              )
+            );
           } catch (error2) {
           }
         } else {
@@ -10238,10 +12206,10 @@ var enablePersist = true;
 var showProgressBar = true;
 var restoreScroll = true;
 var autofocus = false;
-function navigate_default(Alpine23) {
-  Alpine23.navigate = (url, options = {}) => {
+function navigate_default(Alpine24) {
+  Alpine24.navigate = (url, options = {}) => {
     let { preserveScroll = false } = options;
-    let destination = createUrlObjectFromString(url);
+    let destination = createUrlObjectFromString2(url);
     let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
       url: destination,
       history: false,
@@ -10251,11 +12219,11 @@ function navigate_default(Alpine23) {
       return;
     navigateTo(destination, { preserveScroll });
   };
-  Alpine23.navigate.disableProgressBar = () => {
+  Alpine24.navigate.disableProgressBar = () => {
     showProgressBar = false;
   };
-  Alpine23.addInitSelector(() => `[${Alpine23.prefixed("navigate")}]`);
-  Alpine23.directive("navigate", (el, { modifiers }) => {
+  Alpine24.addInitSelector(() => `[${Alpine24.prefixed("navigate")}]`);
+  Alpine24.directive("navigate", (el, { modifiers }) => {
     let shouldPrefetchOnHover = modifiers.includes("hover");
     let preserveScroll = modifiers.includes("preserve-scroll");
     shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
@@ -10296,7 +12264,7 @@ function navigate_default(Alpine23) {
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
       updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
-      preventAlpineFromPickingUpDomChanges(Alpine23, (andAfterAllThis) => {
+      preventAlpineFromPickingUpDomChanges(Alpine24, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
           packUpPersistedPopovers(persistedEl);
@@ -10318,7 +12286,7 @@ function navigate_default(Alpine23) {
               setTimeout(() => {
                 autofocus && autofocusElementsWithTheAutofocusAttribute();
               });
-              nowInitializeAlpineOnTheNewPage(Alpine23);
+              nowInitializeAlpineOnTheNewPage(Alpine24);
               fireEventForOtherLibrariesToHookInto("alpine:navigated");
               showProgressBar && finishAndHideProgressBar();
             });
@@ -10329,51 +12297,54 @@ function navigate_default(Alpine23) {
       showProgressBar && finishAndHideProgressBar();
     });
   }
-  whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
-    ifThePageBeingVisitedHasntBeenCached((url) => {
-      let destination = createUrlObjectFromString(url);
+  whenTheBackOrForwardButtonIsClicked(
+    (ifThePageBeingVisitedHasntBeenCached) => {
+      ifThePageBeingVisitedHasntBeenCached((url) => {
+        let destination = createUrlObjectFromString2(url);
+        let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
+          url: destination,
+          history: true,
+          cached: false
+        });
+        if (prevented)
+          return;
+        navigateTo(destination, { shouldPushToHistoryState: false });
+      });
+    },
+    (html, url, currentPageUrl, currentPageKey) => {
+      let destination = createUrlObjectFromString2(url);
       let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,
         history: true,
-        cached: false
+        cached: true
       });
       if (prevented)
         return;
-      navigateTo(destination, { shouldPushToHistoryState: false });
-    });
-  }, (html, url, currentPageUrl, currentPageKey) => {
-    let destination = createUrlObjectFromString(url);
-    let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
-      url: destination,
-      history: true,
-      cached: true
-    });
-    if (prevented)
-      return;
-    storeScrollInformationInHtmlBeforeNavigatingAway();
-    fireEventForOtherLibrariesToHookInto("alpine:navigating");
-    updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
-    preventAlpineFromPickingUpDomChanges(Alpine23, (andAfterAllThis) => {
-      enablePersist && storePersistantElementsForLater((persistedEl) => {
-        packUpPersistedTeleports(persistedEl);
-        packUpPersistedPopovers(persistedEl);
-      });
-      swapCurrentPageWithNewHtml(html, () => {
-        removeAnyLeftOverStaleProgressBars();
-        removeAnyLeftOverStaleTeleportTargets(document.body);
-        enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
-          unPackPersistedTeleports(persistedEl);
-          unPackPersistedPopovers(persistedEl);
+      storeScrollInformationInHtmlBeforeNavigatingAway();
+      fireEventForOtherLibrariesToHookInto("alpine:navigating");
+      updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
+      preventAlpineFromPickingUpDomChanges(Alpine24, (andAfterAllThis) => {
+        enablePersist && storePersistantElementsForLater((persistedEl) => {
+          packUpPersistedTeleports(persistedEl);
+          packUpPersistedPopovers(persistedEl);
         });
-        restoreScrollPositionOrScrollToTop();
-        andAfterAllThis(() => {
-          autofocus && autofocusElementsWithTheAutofocusAttribute();
-          nowInitializeAlpineOnTheNewPage(Alpine23);
-          fireEventForOtherLibrariesToHookInto("alpine:navigated");
+        swapCurrentPageWithNewHtml(html, () => {
+          removeAnyLeftOverStaleProgressBars();
+          removeAnyLeftOverStaleTeleportTargets(document.body);
+          enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+            unPackPersistedTeleports(persistedEl);
+            unPackPersistedPopovers(persistedEl);
+          });
+          restoreScrollPositionOrScrollToTop();
+          andAfterAllThis(() => {
+            autofocus && autofocusElementsWithTheAutofocusAttribute();
+            nowInitializeAlpineOnTheNewPage(Alpine24);
+            fireEventForOtherLibrariesToHookInto("alpine:navigated");
+          });
         });
       });
-    });
-  });
+    }
+  );
   setTimeout(() => {
     fireEventForOtherLibrariesToHookInto("alpine:navigated");
   });
@@ -10383,10 +12354,10 @@ function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback, errorCallback) 
     fetchHtml(fromDestination, callback, errorCallback);
   });
 }
-function preventAlpineFromPickingUpDomChanges(Alpine23, callback) {
-  Alpine23.stopObservingMutations();
+function preventAlpineFromPickingUpDomChanges(Alpine24, callback) {
+  Alpine24.stopObservingMutations();
   callback((afterAllThis) => {
-    Alpine23.startObservingMutations();
+    Alpine24.startObservingMutations();
     queueMicrotask(() => {
       afterAllThis();
     });
@@ -10401,8 +12372,8 @@ function fireEventForOtherLibrariesToHookInto(name, detail) {
   document.dispatchEvent(event);
   return event.defaultPrevented;
 }
-function nowInitializeAlpineOnTheNewPage(Alpine23) {
-  Alpine23.initTree(document.body, void 0, (el, skip) => {
+function nowInitializeAlpineOnTheNewPage(Alpine24) {
+  Alpine24.initTree(document.body, void 0, (el, skip) => {
     if (el._x_wasPersisted)
       skip();
   });
@@ -10425,8 +12396,8 @@ function cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement() {
 }
 
 // js/plugins/history/index.js
-function history2(Alpine23) {
-  Alpine23.magic("queryString", (el, { interceptor }) => {
+function history(Alpine24) {
+  Alpine24.magic("queryString", (el, { interceptor }) => {
     let alias;
     let alwaysShow = false;
     let usePush = false;
@@ -10435,9 +12406,9 @@ function history2(Alpine23) {
       let { initial, replace: replace2, push: push2, pop } = track(queryKey, initialSeedValue, alwaysShow);
       setter(initial);
       if (!usePush) {
-        Alpine23.effect(() => replace2(getter()));
+        Alpine24.effect(() => replace2(getter()));
       } else {
-        Alpine23.effect(() => push2(getter()));
+        Alpine24.effect(() => push2(getter()));
         pop(async (newValue) => {
           setter(newValue);
           let tillTheEndOfTheMicrotaskQueue = () => Promise.resolve();
@@ -10460,11 +12431,11 @@ function history2(Alpine23) {
       };
     });
   });
-  Alpine23.history = { track };
+  Alpine24.history = { track };
 }
 function track(name, initialSeedValue, alwaysShow = false, except = null) {
   let { has, get, set, remove } = queryStringUtils();
-  let url = new URL(window.location.href);
+  let url = coordinator_default.getUrl();
   let isInitiallyPresentInUrl = has(url, name);
   let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue;
   let initialValueMemo = JSON.stringify(initialValue);
@@ -10478,7 +12449,7 @@ function track(name, initialSeedValue, alwaysShow = false, except = null) {
   let update = (strategy, newValue) => {
     if (lock)
       return;
-    let url2 = new URL(window.location.href);
+    let url2 = coordinator_default.getUrl();
     if (!alwaysShow && !isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
       url2 = remove(url2, name);
     } else if (newValue === void 0) {
@@ -10520,31 +12491,10 @@ function track(name, initialSeedValue, alwaysShow = false, except = null) {
   };
 }
 function replace(url, key, object) {
-  let state = window.history.state || {};
-  if (!state.alpine)
-    state.alpine = {};
-  state.alpine[key] = unwrap(object);
-  try {
-    window.history.replaceState(state, "", url.toString());
-  } catch (e) {
-    console.error(e);
-  }
+  coordinator_default.replaceState(url, { [key]: object });
 }
 function push(url, key, object) {
-  let state = window.history.state || {};
-  if (!state.alpine)
-    state.alpine = {};
-  state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };
-  try {
-    window.history.pushState(state, "", url.toString());
-  } catch (e) {
-    console.error(e);
-  }
-}
-function unwrap(object) {
-  if (object === void 0)
-    return void 0;
-  return JSON.parse(JSON.stringify(object));
+  coordinator_default.pushState(url, { [key]: object });
 }
 function queryStringUtils() {
   return {
@@ -10637,28 +12587,29 @@ function fromQueryString(search, queryKey) {
 }
 
 // js/lifecycle.js
-var import_morph3 = __toESM(require_module_cjs8());
+var import_morph = __toESM(require_module_cjs8());
 var import_mask = __toESM(require_module_cjs9());
-var import_alpinejs6 = __toESM(require_module_cjs());
+var import_alpinejs5 = __toESM(require_module_cjs());
 function start() {
   setTimeout(() => ensureLivewireScriptIsntMisplaced());
   dispatch(document, "livewire:init");
   dispatch(document, "livewire:initializing");
-  import_alpinejs6.default.plugin(import_morph3.default);
-  import_alpinejs6.default.plugin(history2);
-  import_alpinejs6.default.plugin(import_intersect.default);
-  import_alpinejs6.default.plugin(import_resize.default);
-  import_alpinejs6.default.plugin(import_collapse.default);
-  import_alpinejs6.default.plugin(import_anchor.default);
-  import_alpinejs6.default.plugin(import_focus.default);
-  import_alpinejs6.default.plugin(import_persist2.default);
-  import_alpinejs6.default.plugin(navigate_default);
-  import_alpinejs6.default.plugin(import_mask.default);
-  import_alpinejs6.default.addRootSelector(() => "[wire\\:id]");
-  import_alpinejs6.default.onAttributesAdded((el, attributes) => {
+  import_alpinejs5.default.plugin(import_morph.default);
+  import_alpinejs5.default.plugin(history);
+  import_alpinejs5.default.plugin(import_intersect.default);
+  import_alpinejs5.default.plugin(import_sort.default);
+  import_alpinejs5.default.plugin(import_resize.default);
+  import_alpinejs5.default.plugin(import_collapse.default);
+  import_alpinejs5.default.plugin(import_anchor.default);
+  import_alpinejs5.default.plugin(import_focus.default);
+  import_alpinejs5.default.plugin(module_default);
+  import_alpinejs5.default.plugin(navigate_default);
+  import_alpinejs5.default.plugin(import_mask.default);
+  import_alpinejs5.default.addRootSelector(() => "[wire\\:id]");
+  import_alpinejs5.default.onAttributesAdded((el, attributes) => {
     if (!Array.from(attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
       return;
-    let component = closestComponent(el, false);
+    let component = findComponentByEl(el, false);
     if (!component)
       return;
     attributes.forEach((attribute) => {
@@ -10666,36 +12617,50 @@ function start() {
         return;
       let directive2 = extractDirective(el, attribute.name);
       trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-        import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
+        import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
       } });
     });
   });
-  import_alpinejs6.default.interceptInit(import_alpinejs6.default.skipDuringClone((el) => {
-    if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
-      return;
-    if (el.hasAttribute("wire:id") && !el.__livewire && !hasComponent(el.getAttribute("wire:id"))) {
-      let component2 = initComponent(el);
-      import_alpinejs6.default.onAttributeRemoved(el, "wire:id", () => {
-        destroyComponent(component2.id);
-      });
-    }
-    let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
-    directives.forEach((directive2) => {
-      trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
-        import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
-      } });
-    });
-    let component = closestComponent(el, false);
-    if (component) {
-      trigger("element.init", { el, component });
-      directives.forEach((directive2) => {
-        trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-          import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
-        } });
-      });
-    }
-  }));
-  import_alpinejs6.default.start();
+  import_alpinejs5.default.interceptInit(
+    import_alpinejs5.default.skipDuringClone(
+      (el) => {
+        if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+          return;
+        if (el.hasAttribute("wire:id") && !el.__livewire && !hasComponent(el.getAttribute("wire:id"))) {
+          let component2 = initComponent(el);
+          import_alpinejs5.default.onAttributeRemoved(el, "wire:id", () => {
+            destroyComponent(component2.id);
+          });
+        }
+        let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+        directives.forEach((directive2) => {
+          trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
+            import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
+          } });
+        });
+        let component = findComponentByEl(el, false);
+        if (component) {
+          trigger("element.init", { el, component });
+          directives.forEach((directive2) => {
+            trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
+              import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
+            } });
+          });
+        }
+      },
+      (el) => {
+        if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+          return;
+        let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+        directives.forEach((directive2) => {
+          trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
+            import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
+          } });
+        });
+      }
+    )
+  );
+  import_alpinejs5.default.start();
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   dispatch(document, "livewire:initialized");
 }
@@ -10710,117 +12675,7 @@ function ensureLivewireScriptIsntMisplaced() {
 }
 
 // js/index.js
-var import_alpinejs21 = __toESM(require_module_cjs());
-
-// js/v4/features/supportPropsAndModelablesV4.js
-on("message.pooling", ({ messages }) => {
-  messages.forEach((message) => {
-    let component = message.component;
-    getDeepChildrenWithBindings(component, (child) => {
-      child.$wire.$commit();
-    });
-  });
-});
-on("message.pooled", ({ requests }) => {
-  let messages = getRequestsMessages(requests);
-  messages.forEach((message) => {
-    let component = message.component;
-    getDeepChildrenWithBindings(component, (child) => {
-      colocateRequestsByComponent(requests, component, child);
-    });
-  });
-});
-function getRequestsMessages(requests) {
-  let messages = [];
-  requests.forEach((request) => {
-    request.messages.forEach((message) => {
-      messages.push(message);
-    });
-  });
-  return messages;
-}
-function colocateRequestsByComponent(requests, component, foreignComponent) {
-  let request = findRequestWithComponent(requests, component);
-  let foreignRequest = findRequestWithComponent(requests, foreignComponent);
-  let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
-  foreignRequest.deleteMessage(foreignMessage);
-  request.addMessage(foreignMessage);
-  requests.forEach((request2) => {
-    if (request2.isEmpty())
-      requests.delete(request2);
-  });
-}
-function findRequestWithComponent(requests, component) {
-  return Array.from(requests).find((request) => request.hasMessageFor(component));
-}
-function getDeepChildrenWithBindings(component, callback) {
-  getDeepChildren(component, (child) => {
-    if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
-      callback(child);
-    }
-  });
-}
-function hasReactiveProps(component) {
-  let meta = component.snapshot.memo;
-  let props = meta.props;
-  return !!props;
-}
-function hasWireModelableBindings(component) {
-  let meta = component.snapshot.memo;
-  let bindings = meta.bindings;
-  return !!bindings;
-}
-function getDeepChildren(component, callback) {
-  component.children.forEach((child) => {
-    callback(child);
-    getDeepChildren(child, callback);
-  });
-}
-
-// js/v4/features/supportIsolatingV4.js
-var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
-on("component.init", ({ component }) => {
-  let memo = component.snapshot.memo;
-  if (memo.isolate !== true)
-    return;
-  componentsThatAreIsolated.add(component);
-});
-on("message.pooling", ({ messages }) => {
-  messages.forEach((message) => {
-    if (!componentsThatAreIsolated.has(message.component))
-      return;
-    message.isolate = true;
-  });
-});
-
-// js/v4/features/supportLazyLoadingV4.js
-var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
-var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
-on("component.init", ({ component }) => {
-  let memo = component.snapshot.memo;
-  if (memo.lazyLoaded === void 0)
-    return;
-  componentsThatAreLazy.add(component);
-  if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-    componentsThatWantToBeBundled.add(component);
-  }
-});
-on("message.pooling", ({ messages }) => {
-  messages.forEach((message) => {
-    if (!componentsThatAreLazy.has(message.component))
-      return;
-    if (componentsThatWantToBeBundled.has(message.component)) {
-      message.isolate = false;
-      componentsThatWantToBeBundled.delete(message.component);
-    } else {
-      message.isolate = true;
-    }
-    componentsThatAreLazy.delete(message.component);
-  });
-});
-
-// js/v4/requests/index.js
-requestBus_default.boot();
+var import_alpinejs22 = __toESM(require_module_cjs());
 
 // js/features/supportListeners.js
 on("effect", ({ component, effects }) => {
@@ -10849,6 +12704,55 @@ function registerListeners(component, listeners2) {
 
 // js/features/supportScriptsAndAssets.js
 var import_alpinejs7 = __toESM(require_module_cjs());
+
+// js/evaluator.js
+var import_alpinejs6 = __toESM(require_module_cjs());
+function evaluateExpression(el, expression, options = {}) {
+  if (!expression || expression.trim() === "")
+    return;
+  let result = import_alpinejs6.default.evaluateRaw(el, expression, options);
+  if (result instanceof Promise) {
+    result.catch(() => {
+    });
+  }
+  return result;
+}
+function evaluateActionExpression(el, expression, options = {}) {
+  if (!expression || expression.trim() === "")
+    return;
+  let contextualExpression = contextualizeExpression(expression);
+  try {
+    let result = import_alpinejs6.default.evaluateRaw(el, contextualExpression, options);
+    if (result instanceof Promise && result._livewireAction) {
+      result.catch(() => {
+      });
+    }
+    return result;
+  } catch (error2) {
+    console.warn(`Livewire Expression Error: ${error2.message}
+
+${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
+    console.error(error2);
+  }
+}
+function contextualizeExpression(expression) {
+  let SKIP = ["JSON", "true", "false", "null", "undefined", "this", "$wire", "$event"];
+  let strings = [];
+  let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (m) => {
+    strings.push(m);
+    return `___${strings.length - 1}___`;
+  });
+  result = result.replace(/(?<![.\w$])(\$?[a-zA-Z_]\w*)/g, (m, ident, offset) => {
+    if (SKIP.includes(ident) || /^___\d+___$/.test(ident))
+      return ident;
+    if (result[offset + m.length] === ":")
+      return ident;
+    return "$wire." + ident;
+  });
+  return result.replace(/___(\d+)___/g, (m, i) => strings[i]);
+}
+
+// js/features/supportScriptsAndAssets.js
 var executedScripts = /* @__PURE__ */ new WeakMap();
 var executedAssets = /* @__PURE__ */ new Set();
 on("payload.intercept", async ({ assets }) => {
@@ -10877,11 +12781,11 @@ on("effect", ({ component, effects }) => {
       onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
         let scriptContent = extractScriptTagContent(content);
         import_alpinejs7.default.dontAutoEvaluateFunctions(() => {
-          import_alpinejs7.default.evaluate(component.el, scriptContent, {
+          evaluateExpression(component.el, scriptContent, {
             context: component.$wire,
             scope: {
               "$wire": component.$wire,
-              "$js": component.$wire.$js
+              "$js": component.$wire.js
             }
           });
         });
@@ -10911,8 +12815,8 @@ function extractScriptTagContent(rawHtml) {
 async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
   if (executedAssets.has(key))
     return;
-  await callback();
   executedAssets.add(key);
+  await callback();
 }
 async function addAssetsToHeadTagOfPage(rawHtml) {
   let newDocument = new DOMParser().parseFromString(rawHtml, "text/html");
@@ -10957,7 +12861,7 @@ function cloneScriptTag2(el) {
 // js/features/supportJsEvaluation.js
 var import_alpinejs8 = __toESM(require_module_cjs());
 import_alpinejs8.default.magic("js", (el) => {
-  let component = closestComponent(el);
+  let component = findComponentByEl(el);
   return component.$wire.js;
 });
 on("effect", ({ component, effects }) => {
@@ -10966,26 +12870,201 @@ on("effect", ({ component, effects }) => {
   if (js) {
     Object.entries(js).forEach(([method, body]) => {
       overrideMethod(component, method, () => {
-        import_alpinejs8.default.evaluate(component.el, body);
+        evaluateExpression(component.el, body);
       });
     });
   }
   if (xjs) {
     xjs.forEach(({ expression, params }) => {
       params = Object.values(params);
-      import_alpinejs8.default.evaluate(component.el, expression, { scope: component.jsActions, params });
+      evaluateExpression(component.el, expression, { scope: component.jsActions, params });
     });
   }
 });
 
+// js/morph.js
+var import_alpinejs9 = __toESM(require_module_cjs());
+
+// js/directives/wire-transition.js
+globalDirective("transition", ({ el, directive: directive2, cleanup }) => {
+  let transitionName = directive2.expression || "match-element";
+  el.style.viewTransitionName = transitionName;
+});
+async function transitionDomMutation(component, callback) {
+  if (!component.el.querySelector("[wire\\:transition]"))
+    return callback();
+  let style = document.createElement("style");
+  style.textContent = `
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+                animation: none !important;
+            }
+        }
+
+        ::view-transition-old(root) {
+            animation: none !important;
+            opacity: 0 !important;
+        }
+
+        ::view-transition-new(root) {
+            animation: none !important;
+            opacity: 1 !important;
+        }
+    `;
+  document.head.appendChild(style);
+  let transition = document.startViewTransition(() => {
+    callback();
+  });
+  transition.finished.finally(() => {
+    style.remove();
+  });
+  await transition.updateCallbackDone;
+}
+
+// js/morph.js
+async function morph2(component, el, html) {
+  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+  let customElement = customElements.get(wrapperTag);
+  wrapperTag = customElement ? customElement.name : wrapperTag;
+  let wrapper = document.createElement(wrapperTag);
+  wrapper.innerHTML = html;
+  let parentComponent;
+  try {
+    parentComponent = findComponentByEl(el.parentElement);
+  } catch (e) {
+  }
+  parentComponent && (wrapper.__livewire = parentComponent);
+  let to = wrapper.firstElementChild;
+  to.setAttribute("wire:snapshot", component.snapshotEncoded);
+  let effects = { ...component.effects };
+  delete effects.html;
+  to.setAttribute("wire:effects", JSON.stringify(effects));
+  to.__livewire = component;
+  trigger("morph", { el, toEl: to, component });
+  let existingComponentsMap = {};
+  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
+    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
+  });
+  to.querySelectorAll("[wire\\:id]").forEach((child) => {
+    if (child.hasAttribute("wire:snapshot"))
+      return;
+    let wireId = child.getAttribute("wire:id");
+    let existingComponent = existingComponentsMap[wireId];
+    if (existingComponent) {
+      child.replaceWith(existingComponent.cloneNode(true));
+    }
+  });
+  await transitionDomMutation(component, () => {
+    import_alpinejs9.default.morph(el, to, getMorphConfig(component));
+  });
+  trigger("morphed", { el, component });
+}
+async function morphFragment(component, startNode, endNode, toHTML) {
+  let fromContainer = startNode.parentElement;
+  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+  let toContainer = document.createElement(fromContainerTag);
+  toContainer.innerHTML = toHTML;
+  toContainer.__livewire = component;
+  let parentElement = component.el.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  let parentComponent;
+  try {
+    parentComponent = parentElement ? findComponentByEl(parentElement) : null;
+  } catch (e) {
+  }
+  if (parentComponent) {
+    let parentProviderWrapper = document.createElement(parentElementTag);
+    parentProviderWrapper.appendChild(toContainer);
+    parentProviderWrapper.__livewire = parentComponent;
+  }
+  trigger("island.morph", { startNode, endNode, component });
+  await transitionDomMutation(component, () => {
+    import_alpinejs9.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+  });
+  trigger("island.morphed", { startNode, endNode, component });
+}
+function getMorphConfig(component) {
+  return {
+    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+      if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
+        let metadata = extractFragmentMetadataFromMarkerNode(toEl);
+        if (metadata.mode !== "morph") {
+          skipUntil((node) => {
+            if (isEndFragmentMarker(node)) {
+              let endMarkerMetadata = extractFragmentMetadataFromMarkerNode(node);
+              return endMarkerMetadata.token === metadata.token;
+            }
+            return false;
+          });
+        }
+      }
+      if (isntElement(el))
+        return;
+      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
+      if (el.__livewire_replace === true)
+        el.innerHTML = toEl.innerHTML;
+      if (el.__livewire_replace_self === true) {
+        el.outerHTML = toEl.outerHTML;
+        return skip();
+      }
+      if (el.__livewire_ignore === true)
+        return skip();
+      if (el.__livewire_ignore_self === true)
+        childrenOnly();
+      if (el.__livewire_ignore_children === true)
+        return skipChildren();
+      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
+        return skip();
+      if (isComponentRootEl(el))
+        toEl.__livewire = component;
+    },
+    updated: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.updated", { el, component });
+    },
+    removing: (el, skip) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removing", { el, component, skip });
+    },
+    removed: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removed", { el, component });
+    },
+    adding: (el) => {
+      trigger("morph.adding", { el, component });
+    },
+    added: (el) => {
+      if (isntElement(el))
+        return;
+      const findComponentByElId = findComponentByEl(el).id;
+      trigger("morph.added", { el });
+    },
+    key: (el) => {
+      if (isntElement(el))
+        return;
+      return el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.id;
+    },
+    lookahead: false
+  };
+}
+function isntElement(el) {
+  return typeof el.hasAttribute !== "function";
+}
+function isComponentRootEl(el) {
+  return el.hasAttribute("wire:id");
+}
+
 // js/features/supportMorphDom.js
-on("effect", ({ component, effects }) => {
-  let html = effects.html;
-  if (!html)
-    return;
-  queueMicrotask(() => {
-    queueMicrotask(() => {
-      morph(component, component.el, html);
+interceptMessage(({ message, onSuccess }) => {
+  onSuccess(({ payload, onMorph }) => {
+    onMorph(async () => {
+      let html = payload.effects.html;
+      if (!html)
+        return;
+      await morph2(message.component, message.component.el, html);
     });
   });
 });
@@ -11001,18 +13080,22 @@ on("effect", ({ component, effects }) => {
   });
 });
 function dispatchEvents(component, dispatches) {
-  dispatches.forEach(({ name, params = {}, self: self2 = false, to }) => {
+  dispatches.forEach(({ name, params = {}, self: self2 = false, component: componentName, ref, el }) => {
     if (self2)
       dispatchSelf(component, name, params);
-    else if (to)
-      dispatchTo(to, name, params);
+    else if (componentName)
+      dispatchTo(componentName, name, params);
+    else if (ref)
+      dispatchRef(component, ref, name, params);
+    else if (el)
+      dispatchEl(component, el, name, params);
     else
       dispatch2(component, name, params);
   });
 }
 
 // js/features/supportDisablingFormsDuringRequest.js
-var import_alpinejs9 = __toESM(require_module_cjs());
+var import_alpinejs10 = __toESM(require_module_cjs());
 var cleanups = new Bag();
 on("directive.init", ({ el, directive: directive2, cleanup, component }) => setTimeout(() => {
   if (directive2.value !== "submit")
@@ -11031,7 +13114,7 @@ on("commit", ({ component, respond }) => {
 });
 function disableForm(formEl) {
   let undos = [];
-  import_alpinejs9.default.walk(formEl, (el, skip) => {
+  import_alpinejs10.default.walk(formEl, (el, skip) => {
     if (!formEl.contains(el))
       return;
     if (el.hasAttribute("wire:ignore"))
@@ -11073,74 +13156,6 @@ function markReadOnly(el) {
   return undo;
 }
 
-// js/features/supportPropsAndModelables.js
-on("commit.pooling", ({ commits }) => {
-  commits.forEach((commit) => {
-    let component = commit.component;
-    getDeepChildrenWithBindings2(component, (child) => {
-      child.$wire.$commit();
-    });
-  });
-});
-on("commit.pooled", ({ pools }) => {
-  let commits = getPooledCommits(pools);
-  commits.forEach((commit) => {
-    let component = commit.component;
-    getDeepChildrenWithBindings2(component, (child) => {
-      colocateCommitsByComponent(pools, component, child);
-    });
-  });
-});
-function getPooledCommits(pools) {
-  let commits = [];
-  pools.forEach((pool) => {
-    pool.commits.forEach((commit) => {
-      commits.push(commit);
-    });
-  });
-  return commits;
-}
-function colocateCommitsByComponent(pools, component, foreignComponent) {
-  let pool = findPoolWithComponent(pools, component);
-  let foreignPool = findPoolWithComponent(pools, foreignComponent);
-  let foreignCommit = foreignPool.findCommitByComponent(foreignComponent);
-  foreignPool.delete(foreignCommit);
-  pool.add(foreignCommit);
-  pools.forEach((pool2) => {
-    if (pool2.empty())
-      pools.delete(pool2);
-  });
-}
-function findPoolWithComponent(pools, component) {
-  for (let [idx, pool] of pools.entries()) {
-    if (pool.hasCommitFor(component))
-      return pool;
-  }
-}
-function getDeepChildrenWithBindings2(component, callback) {
-  getDeepChildren2(component, (child) => {
-    if (hasReactiveProps2(child) || hasWireModelableBindings2(child)) {
-      callback(child);
-    }
-  });
-}
-function hasReactiveProps2(component) {
-  let meta = component.snapshot.memo;
-  let props = meta.props;
-  return !!props;
-}
-function hasWireModelableBindings2(component) {
-  let meta = component.snapshot.memo;
-  let bindings = meta.bindings;
-  return !!bindings;
-}
-function getDeepChildren2(component, callback) {
-  component.children.forEach((child) => {
-    callback(child);
-    getDeepChildren2(child, callback);
-  });
-}
-
 // js/features/supportFileDownloads.js
 on("commit", ({ succeed }) => {
   succeed(({ effects }) => {
@@ -11148,7 +13163,9 @@ on("commit", ({ succeed }) => {
     if (!download)
       return;
     let urlObject = window.webkitURL || window.URL;
-    let url = urlObject.createObjectURL(base64toBlob(download.content, download.contentType));
+    let url = urlObject.createObjectURL(
+      base64toBlob(download.content, download.contentType)
+    );
     let invisibleLink = document.createElement("a");
     invisibleLink.style.display = "none";
     invisibleLink.href = url;
@@ -11177,34 +13194,8 @@ function base64toBlob(b64Data, contentType = "", sliceSize = 512) {
   return new Blob(byteArrays, { type: contentType });
 }
 
-// js/features/supportLazyLoading.js
-var componentsThatWantToBeBundled2 = /* @__PURE__ */ new WeakSet();
-var componentsThatAreLazy2 = /* @__PURE__ */ new WeakSet();
-on("component.init", ({ component }) => {
-  let memo = component.snapshot.memo;
-  if (memo.lazyLoaded === void 0)
-    return;
-  componentsThatAreLazy2.add(component);
-  if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-    componentsThatWantToBeBundled2.add(component);
-  }
-});
-on("commit.pooling", ({ commits }) => {
-  commits.forEach((commit) => {
-    if (!componentsThatAreLazy2.has(commit.component))
-      return;
-    if (componentsThatWantToBeBundled2.has(commit.component)) {
-      commit.isolate = false;
-      componentsThatWantToBeBundled2.delete(commit.component);
-    } else {
-      commit.isolate = true;
-    }
-    componentsThatAreLazy2.delete(commit.component);
-  });
-});
-
 // js/features/supportQueryString.js
-var import_alpinejs10 = __toESM(require_module_cjs());
+var import_alpinejs11 = __toESM(require_module_cjs());
 on("effect", ({ component, effects, cleanup }) => {
   let queryString = effects["url"];
   if (!queryString)
@@ -11216,10 +13207,10 @@ on("effect", ({ component, effects, cleanup }) => {
     let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
     let { replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow, except);
     if (use === "replace") {
-      let effectReference = import_alpinejs10.default.effect(() => {
+      let effectReference = import_alpinejs11.default.effect(() => {
         replace2(dataGet(component.reactive, name));
       });
-      cleanup(() => import_alpinejs10.default.release(effectReference));
+      cleanup(() => import_alpinejs11.default.release(effectReference));
     } else if (use === "push") {
       let forgetCommitHandler = on("commit", ({ component: commitComponent, succeed }) => {
         if (component !== commitComponent)
@@ -11314,108 +13305,36 @@ on("effect", ({ component, effects }) => {
   });
 });
 
-// js/features/supportIsolating.js
-var componentsThatAreIsolated2 = /* @__PURE__ */ new WeakSet();
-on("component.init", ({ component }) => {
-  let memo = component.snapshot.memo;
-  if (memo.isolate !== true)
-    return;
-  componentsThatAreIsolated2.add(component);
-});
-on("commit.pooling", ({ commits }) => {
-  commits.forEach((commit) => {
-    if (!componentsThatAreIsolated2.has(commit.component))
-      return;
-    commit.isolate = true;
-  });
-});
-
 // js/features/supportStreaming.js
-on("stream", (payload) => {
-  if (payload.type !== "update")
-    return;
-  let { id, key, value, mode } = payload;
-  if (!hasComponent(id))
-    return;
-  let component = findComponent(id);
-  if (mode === "append") {
-    component.$wire.set(key, component.$wire.get(key) + value, false);
-  } else {
-    component.$wire.set(key, value, false);
-  }
-});
-directive("stream", ({ el, directive: directive2, cleanup }) => {
-  let { expression, modifiers } = directive2;
-  let off = on("stream", (payload) => {
-    payload.type = payload.type || "html";
-    if (payload.type !== "html")
+interceptMessage(({ message, onStream }) => {
+  onStream(({ json }) => {
+    let { id, type, name, el, ref, content, mode } = json;
+    if (type === "island")
       return;
-    let { name, content, mode } = payload;
-    if (name !== expression)
-      return;
-    if (modifiers.includes("replace") || mode === "replace") {
-      el.innerHTML = content;
-    } else {
-      el.insertAdjacentHTML("beforeend", content);
-    }
-  });
-  cleanup(off);
-});
-on("request", ({ respond }) => {
-  respond((mutableObject) => {
-    let response = mutableObject.response;
-    if (!response.headers.has("X-Livewire-Stream"))
-      return;
-    mutableObject.response = {
-      ok: true,
-      redirected: false,
-      status: 200,
-      async text() {
-        let finalResponse = "";
-        try {
-          finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-            trigger("stream", streamed);
-          });
-        } catch (e) {
-          this.aborted = true;
-          this.ok = false;
-        }
-        if (contentIsFromDump(finalResponse)) {
-          this.ok = false;
-        }
-        return finalResponse;
+    let component = findComponent(id);
+    let targetEl = null;
+    if (type === "directive") {
+      replaceEl = component.el.querySelector(`[wire\\:stream.replace="${name}"]`);
+      if (replaceEl) {
+        targetEl = replaceEl;
+        mode = "replace";
+      } else {
+        targetEl = component.el.querySelector(`[wire\\:stream="${name}"]`);
       }
-    };
+    } else if (type === "ref") {
+      targetEl = findRefEl(component, ref);
+    } else if (type === "element") {
+      targetEl = component.el.querySelector(el);
+    }
+    if (!targetEl)
+      return;
+    if (mode === "replace") {
+      targetEl.innerHTML = content;
+    } else {
+      targetEl.insertAdjacentHTML("beforeend", content);
+    }
   });
 });
-async function interceptStreamAndReturnFinalResponse(response, callback) {
-  let reader = response.body.getReader();
-  let remainingResponse = "";
-  while (true) {
-    let { done, value: chunk } = await reader.read();
-    let decoder = new TextDecoder();
-    let output = decoder.decode(chunk);
-    let [streams, remaining] = extractStreamObjects(remainingResponse + output);
-    streams.forEach((stream) => {
-      callback(stream);
-    });
-    remainingResponse = remaining;
-    if (done)
-      return remainingResponse;
-  }
-}
-function extractStreamObjects(raw) {
-  let regex = /({"stream":true.*?"endStream":true})/g;
-  let matches = raw.match(regex);
-  let parsed = [];
-  if (matches) {
-    for (let i = 0; i < matches.length; i++) {
-      parsed.push(JSON.parse(matches[i]).body);
-    }
-  }
-  let remaining = raw.replace(regex, "");
-  return [parsed, remaining];
-}
 
 // js/features/supportNavigate.js
 document.addEventListener("livewire:initialized", () => {
@@ -11448,8 +13367,12 @@ function shouldHideProgressBar() {
 }
 
 // js/features/supportRedirects.js
-on("effect", ({ effects }) => {
+on("effect", ({ effects, request }) => {
   if (!effects["redirect"])
+    return;
+  let preventDefault = false;
+  request.invokeOnRedirect({ url: effects["redirect"], preventDefault: () => preventDefault = true });
+  if (preventDefault)
     return;
   let url = effects["redirect"];
   shouldRedirectUsingNavigateOr(effects, url, () => {
@@ -11457,43 +13380,339 @@ on("effect", ({ effects }) => {
   });
 });
 
-// js/directives/wire-transition.js
-var import_alpinejs11 = __toESM(require_module_cjs());
-on("morph.added", ({ el }) => {
-  el.__addedByMorph = true;
-});
-directive("transition", ({ el, directive: directive2, component, cleanup }) => {
-  for (let i = 0; i < el.attributes.length; i++) {
-    if (el.attributes[i].name.startsWith("wire:show")) {
-      import_alpinejs11.default.bind(el, {
-        [directive2.rawName.replace("wire:transition", "x-transition")]: directive2.expression
-      });
-      return;
-    }
+// js/features/supportIslands.js
+interceptAction(({ action }) => {
+  let origin = action.origin;
+  if (!origin)
+    return;
+  let { el, directive: directive2 } = origin;
+  let islandAttr = Array.from(el.attributes).find((attr) => attr.name.startsWith("wire:island"));
+  if (islandAttr) {
+    let islandName = islandAttr.value;
+    let attrParts = islandAttr.name.split(".");
+    let isPrepend = attrParts.includes("prepend");
+    let isAppend = attrParts.includes("append");
+    let mode = isPrepend ? "prepend" : isAppend ? "append" : "morph";
+    action.mergeMetadata({
+      island: {
+        name: islandName,
+        mode
+      }
+    });
+    return;
   }
-  let visibility = import_alpinejs11.default.reactive({ state: el.__addedByMorph ? false : true });
-  import_alpinejs11.default.bind(el, {
-    [directive2.rawName.replace("wire:", "x-")]: "",
-    "x-show"() {
-      return visibility.state;
+  let fragment = closestIsland(origin.el);
+  if (!fragment)
+    return;
+  action.mergeMetadata({
+    island: {
+      name: fragment.metadata.name,
+      mode: "morph"
     }
   });
-  el.__addedByMorph && setTimeout(() => visibility.state = true);
-  let cleanups2 = [];
-  cleanups2.push(on("morph.removing", ({ el: el2, skip }) => {
-    skip();
-    el2.addEventListener("transitionend", () => {
-      el2.remove();
+});
+interceptMessage(({ message, onSuccess, onStream }) => {
+  onStream(({ json }) => {
+    let { type, islandFragment } = json;
+    if (type !== "island")
+      return;
+    renderIsland(message.component, islandFragment);
+  });
+  onSuccess(({ payload, onMorph }) => {
+    onMorph(async () => {
+      let fragments = payload.effects.islandFragments || [];
+      fragments.forEach(async (fragmentHtml) => {
+        await renderIsland(message.component, fragmentHtml);
+      });
     });
-    visibility.state = false;
-    cleanups2.push(on("morph", ({ component: morphComponent }) => {
-      if (morphComponent !== component)
+  });
+});
+function closestIsland(el) {
+  return closestFragment(el, {
+    isMatch: ({ type }) => {
+      return type === "island";
+    }
+  });
+}
+async function renderIsland(component, islandHtml) {
+  let metadata = extractFragmentMetadataFromHtml(islandHtml);
+  let fragment = findFragment(component.el, {
+    isMatch: ({ type, token }) => {
+      return type === metadata.type && token === metadata.token;
+    }
+  });
+  if (!fragment)
+    return;
+  let incomingMetadata = extractFragmentMetadataFromHtml(islandHtml);
+  let strippedContent = extractInnerHtmlFromFragmentHtml(islandHtml);
+  let parentElement = fragment.startMarkerNode.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  let mode = incomingMetadata.mode || "morph";
+  if (mode === "morph") {
+    await morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
+  } else if (mode === "append") {
+    fragment.append(parentElementTag, strippedContent);
+  } else if (mode === "prepend") {
+    fragment.prepend(parentElementTag, strippedContent);
+  }
+}
+
+// js/features/supportSlots.js
+interceptMessage(({ message, onSuccess, onStream }) => {
+  onSuccess(({ payload, onMorph }) => {
+    onMorph(async () => {
+      let fragments = payload.effects.slotFragments || [];
+      fragments.forEach(async (fragmentHtml) => {
+        await renderSlot(message.component, fragmentHtml);
+      });
+    });
+  });
+});
+async function renderSlot(component, fragmentHtml) {
+  let metadata = extractFragmentMetadataFromHtml(fragmentHtml);
+  let targetComponent = findComponent(metadata.id);
+  let fragment = findFragment(targetComponent.el, {
+    isMatch: ({ name, token }) => {
+      return name === metadata.name && token === metadata.token;
+    }
+  });
+  if (!fragment)
+    return;
+  let strippedContent = extractInnerHtmlFromFragmentHtml(fragmentHtml);
+  await morphFragment(targetComponent, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
+}
+
+// js/features/supportDataLoading.js
+interceptMessage(({ message, onSend, onFinish }) => {
+  let undos = [];
+  onSend(() => {
+    message.actions.forEach((action) => {
+      let origin = action.origin;
+      if (!origin)
         return;
-      el2.remove();
-      cleanups2.forEach((i) => i());
-    }));
-  }));
-  cleanup(() => cleanups2.forEach((i) => i()));
+      let el = origin.hasOwnProperty("targetEl") ? origin.targetEl : origin.el;
+      if (!el)
+        return;
+      el.setAttribute("data-loading", "true");
+      undos.push(() => {
+        el.removeAttribute("data-loading");
+      });
+    });
+  });
+  onFinish(() => undos.forEach((undo) => undo()));
+});
+
+// js/directives/wire-current.js
+var import_alpinejs12 = __toESM(require_module_cjs());
+import_alpinejs12.default.addInitSelector(() => `[wire\\:current]`);
+var onPageChanges = /* @__PURE__ */ new Map();
+document.addEventListener("livewire:navigated", () => {
+  onPageChanges.forEach((i) => i(new URL(window.location.href)));
+});
+globalDirective("current", ({ el, directive: directive2, cleanup }) => {
+  let expression = directive2.expression;
+  let options = {
+    exact: directive2.modifiers.includes("exact"),
+    strict: directive2.modifiers.includes("strict"),
+    ignore: directive2.modifiers.includes("ignore")
+  };
+  if (options.ignore)
+    return;
+  if (expression.startsWith("#"))
+    return;
+  if (!el.hasAttribute("href"))
+    return;
+  let href = el.getAttribute("href");
+  let hrefUrl = new URL(href, window.location.href);
+  let classes = expression.split(" ").filter(String);
+  let refreshCurrent = (url) => {
+    if (pathMatches(hrefUrl, url, options)) {
+      el.classList.add(...classes);
+      el.setAttribute("data-current", "");
+    } else {
+      el.classList.remove(...classes);
+      el.removeAttribute("data-current");
+    }
+  };
+  refreshCurrent(new URL(window.location.href));
+  onPageChanges.set(el, refreshCurrent);
+  cleanup(() => onPageChanges.delete(el));
+});
+function pathMatches(hrefUrl, actualUrl, options = {}) {
+  if (hrefUrl.hostname !== actualUrl.hostname)
+    return false;
+  let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
+  let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
+  if (options.exact) {
+    return hrefPath === actualPath;
+  }
+  let hrefPathSegments = hrefPath.split("/");
+  let actualPathSegments = actualPath.split("/");
+  for (let i = 0; i < hrefPathSegments.length; i++) {
+    if (hrefPathSegments[i] !== actualPathSegments[i])
+      return false;
+  }
+  return true;
+}
+
+// js/directives/wire-navigate.js
+var import_alpinejs13 = __toESM(require_module_cjs());
+var wireNavigateSelectors = [
+  "[wire\\:navigate]",
+  "[wire\\:navigate\\.hover]",
+  "[wire\\:navigate\\.preserve-scroll]",
+  "[wire\\:navigate\\.preserve-scroll\\.hover]",
+  "[wire\\:navigate\\.hover\\.preserve-scroll]"
+];
+var wireNavigateSelector = wireNavigateSelectors.join(", ");
+var attributeMap = {
+  "wire:navigate": "x-navigate",
+  "wire:navigate.hover": "x-navigate.hover",
+  "wire:navigate.preserve-scroll": "x-navigate.preserve-scroll",
+  "wire:navigate.preserve-scroll.hover": "x-navigate.preserve-scroll.hover",
+  "wire:navigate.hover.preserve-scroll": "x-navigate.hover.preserve-scroll"
+};
+wireNavigateSelectors.forEach((selector) => {
+  import_alpinejs13.default.addInitSelector(() => selector);
+});
+import_alpinejs13.default.interceptInit(
+  import_alpinejs13.default.skipDuringClone((el) => {
+    for (let [wireAttr, alpineDirective] of Object.entries(attributeMap)) {
+      if (el.hasAttribute(wireAttr)) {
+        import_alpinejs13.default.bind(el, { [alpineDirective]: true });
+        break;
+      }
+    }
+  })
+);
+document.addEventListener("alpine:navigating", () => {
+  Livewire.all().forEach((component) => {
+    component.inscribeSnapshotAndEffectsOnElement();
+  });
+});
+
+// js/features/supportDataCurrent.js
+document.addEventListener("livewire:navigated", () => {
+  updateNavigateLinks();
+});
+document.addEventListener("DOMContentLoaded", () => {
+  updateNavigateLinks();
+});
+function updateNavigateLinks() {
+  let currentUrl = new URL(window.location.href);
+  let options = {
+    exact: true
+  };
+  document.querySelectorAll(wireNavigateSelector).forEach((el) => {
+    if (Array.from(el.attributes).some((attr) => attr.name.startsWith("wire:current")))
+      return;
+    let href = el.getAttribute("href");
+    if (!href || href.startsWith("#"))
+      return;
+    try {
+      let hrefUrl = new URL(href, window.location.href);
+      if (pathMatches(hrefUrl, currentUrl, options)) {
+        el.setAttribute("data-current", "");
+      } else {
+        el.removeAttribute("data-current");
+      }
+    } catch (e) {
+    }
+  });
+}
+
+// js/features/supportPreserveScroll.js
+interceptMessage(({ message, onSuccess }) => {
+  onSuccess(({ onSync, onMorph, onRender }) => {
+    message.actions.forEach((action) => {
+      let origin = action.origin;
+      if (!origin || !origin.directive)
+        return;
+      let directive2 = origin.directive;
+      if (!directive2.modifiers.includes("preserve-scroll"))
+        return;
+      let oldHeight;
+      let oldScroll;
+      onSync(() => {
+        oldHeight = document.body.scrollHeight;
+        oldScroll = window.scrollY;
+      });
+      onMorph(async () => {
+        let heightDiff = document.body.scrollHeight - oldHeight;
+        window.scrollTo(0, oldScroll + heightDiff);
+        oldHeight = null;
+        oldScroll = null;
+      });
+    });
+  });
+});
+
+// js/features/supportWireIntersect.js
+var import_alpinejs14 = __toESM(require_module_cjs());
+import_alpinejs14.default.interceptInit((el) => {
+  for (let i = 0; i < el.attributes.length; i++) {
+    if (el.attributes[i].name.startsWith("wire:intersect")) {
+      let { name, value } = el.attributes[i];
+      let directive2 = extractDirective(el, name);
+      let modifierString = name.split("wire:intersect")[1];
+      let expression = value.trim();
+      import_alpinejs14.default.bind(el, {
+        ["x-intersect" + modifierString](e) {
+          directive2.eventContext = e;
+          let component = el.closest("[wire\\:id]")?.__livewire;
+          component.addActionContext({
+            el,
+            directive: directive2
+          });
+          evaluateActionExpression(el, expression);
+        }
+      });
+    }
+  }
+});
+
+// js/features/supportWireSort.js
+var import_alpinejs15 = __toESM(require_module_cjs());
+import_alpinejs15.default.interceptInit((el) => {
+  for (let i = 0; i < el.attributes.length; i++) {
+    if (el.attributes[i].name.startsWith("wire:sort:item")) {
+      let directive2 = extractDirective(el, el.attributes[i].name);
+      let modifierString = directive2.modifiers.join(".");
+      let expression = directive2.expression;
+      import_alpinejs15.default.bind(el, {
+        ["x-sort:item" + modifierString]() {
+          return expression;
+        }
+      });
+    } else if (el.attributes[i].name.startsWith("wire:sort:group")) {
+      return;
+    } else if (el.attributes[i].name.startsWith("wire:sort")) {
+      let directive2 = extractDirective(el, el.attributes[i].name);
+      let attribute = directive2.rawName.replace("wire:", "x-");
+      if (directive2.modifiers.includes("async")) {
+        attribute = attribute.replace(".async", "");
+      }
+      if (directive2.modifiers.includes("renderless")) {
+        attribute = attribute.replace(".renderless", "");
+      }
+      if (directive2.modifiers.includes("prepend")) {
+        attribute = attribute.replace(".prepend", "");
+      }
+      if (directive2.modifiers.includes("append")) {
+        attribute = attribute.replace(".append", "");
+      }
+      let expression = directive2.expression;
+      import_alpinejs15.default.bind(el, {
+        [attribute]() {
+          setNextActionOrigin({ el, directive: directive2 });
+          evaluateActionExpression(el, expression, { scope: {
+            $item: this.$item,
+            $position: this.$position
+          }, params: [this.$item, this.$position] });
+        }
+      });
+    }
+  }
 });
 
 // js/debounce.js
@@ -11508,9 +13727,9 @@ function callAndClearComponentDebounces(component, callback) {
 }
 
 // js/directives/wire-wildcard.js
-var import_alpinejs12 = __toESM(require_module_cjs());
+var import_alpinejs16 = __toESM(require_module_cjs());
 on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
-  if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive2.value))
+  if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty", "sort"].includes(directive2.value))
     return;
   if (customDirectiveHasBeenRegistered(directive2.value))
     return;
@@ -11518,11 +13737,40 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
     attribute = attribute + ".prevent";
   }
-  let cleanupBinding = import_alpinejs12.default.bind(el, {
+  if (directive2.modifiers.includes("async")) {
+    attribute = attribute.replace(".async", "");
+  }
+  if (directive2.modifiers.includes("renderless")) {
+    attribute = attribute.replace(".renderless", "");
+  }
+  if (directive2.modifiers.includes("prepend")) {
+    attribute = attribute.replace(".prepend", "");
+  }
+  if (directive2.modifiers.includes("append")) {
+    attribute = attribute.replace(".append", "");
+  }
+  let cleanupBinding = import_alpinejs16.default.bind(el, {
     [attribute](e) {
+      directive2.eventContext = e;
+      directive2.wire = component.$wire;
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          import_alpinejs12.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
+          if (directive2.value === "submit") {
+            let submitButton = e.submitter || el.querySelector('button[type="submit"], input[type="submit"]');
+            setNextActionOrigin({ el, directive: directive2, targetEl: submitButton });
+          } else {
+            setNextActionOrigin({ el, directive: directive2 });
+          }
+          let livewireOptions = e.detail?.livewire;
+          if (livewireOptions?.interceptAction) {
+            setNextActionInterceptor(livewireOptions.interceptAction);
+          }
+          let expression = directive2.expression;
+          if (livewireOptions?.defaultParams !== void 0 && !expression.includes("(")) {
+            let params = Array.isArray(livewireOptions.defaultParams) ? livewireOptions.defaultParams : [livewireOptions.defaultParams];
+            expression = `${expression}(${params.map((p) => JSON.stringify(p)).join(", ")})`;
+          }
+          evaluateActionExpression(el, expression, { scope: { $event: e } });
         });
       };
       if (el.__livewire_confirm) {
@@ -11537,32 +13785,6 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
     }
   });
   cleanup(cleanupBinding);
-});
-
-// js/directives/wire-navigate.js
-var import_alpinejs13 = __toESM(require_module_cjs());
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
-import_alpinejs13.default.interceptInit(import_alpinejs13.default.skipDuringClone((el) => {
-  if (el.hasAttribute("wire:navigate")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate"]: true });
-  } else if (el.hasAttribute("wire:navigate.hover")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.hover"]: true });
-  } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
-  } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
-  } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
-  }
-}));
-document.addEventListener("alpine:navigating", () => {
-  Livewire.all().forEach((component) => {
-    component.inscribeSnapshotAndEffectsOnElement();
-  });
 });
 
 // js/directives/wire-confirm.js
@@ -11594,80 +13816,6 @@ directive("confirm", ({ el, directive: directive2 }) => {
   };
 });
 
-// js/directives/wire-current.js
-var import_alpinejs14 = __toESM(require_module_cjs());
-import_alpinejs14.default.addInitSelector(() => `[wire\\:current]`);
-var onPageChanges = /* @__PURE__ */ new Map();
-document.addEventListener("livewire:navigated", () => {
-  onPageChanges.forEach((i) => i(new URL(window.location.href)));
-});
-globalDirective("current", ({ el, directive: directive2, cleanup }) => {
-  let expression = directive2.expression;
-  let options = {
-    exact: directive2.modifiers.includes("exact"),
-    strict: directive2.modifiers.includes("strict")
-  };
-  if (expression.startsWith("#"))
-    return;
-  if (!el.hasAttribute("href"))
-    return;
-  let href = el.getAttribute("href");
-  let hrefUrl = new URL(href, window.location.href);
-  let classes = expression.split(" ").filter(String);
-  let refreshCurrent = (url) => {
-    if (pathMatches(hrefUrl, url, options)) {
-      el.classList.add(...classes);
-      el.setAttribute("data-current", "");
-    } else {
-      el.classList.remove(...classes);
-      el.removeAttribute("data-current");
-    }
-  };
-  refreshCurrent(new URL(window.location.href));
-  onPageChanges.set(el, refreshCurrent);
-  cleanup(() => onPageChanges.delete(el));
-});
-function pathMatches(hrefUrl, actualUrl, options) {
-  if (hrefUrl.hostname !== actualUrl.hostname)
-    return false;
-  let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
-  let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
-  if (options.exact) {
-    return hrefPath === actualPath;
-  }
-  let hrefPathSegments = hrefPath.split("/");
-  let actualPathSegments = actualPath.split("/");
-  for (let i = 0; i < hrefPathSegments.length; i++) {
-    if (hrefPathSegments[i] !== actualPathSegments[i])
-      return false;
-  }
-  return true;
-}
-
-// js/directives/shared.js
-function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = null) {
-  isTruthy = directive2.modifiers.includes("remove") ? !isTruthy : isTruthy;
-  if (directive2.modifiers.includes("class")) {
-    let classes = directive2.expression.split(" ").filter(String);
-    if (isTruthy) {
-      el.classList.add(...classes);
-    } else {
-      el.classList.remove(...classes);
-    }
-  } else if (directive2.modifiers.includes("attr")) {
-    if (isTruthy) {
-      el.setAttribute(directive2.expression, true);
-    } else {
-      el.removeAttribute(directive2.expression);
-    }
-  } else {
-    let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
-    let display = ["inline", "list-item", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive2.modifiers.includes(i))[0] || "inline-block";
-    display = directive2.modifiers.includes("remove") && !isTruthy ? cache : display;
-    el.style.display = isTruthy ? display : "none";
-  }
-}
-
 // js/directives/wire-offline.js
 var offlineHandlers = /* @__PURE__ */ new Set();
 var onlineHandlers = /* @__PURE__ */ new Set();
@@ -11688,7 +13836,7 @@ directive("offline", ({ el, directive: directive2, cleanup }) => {
 directive("loading", ({ el, directive: directive2, component, cleanup }) => {
   let { targets, inverted } = getTargets(el);
   let [delay, abortDelay] = applyDelay(directive2);
-  let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
+  let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
     () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
     () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
   ]);
@@ -11739,15 +13887,26 @@ function applyDelay(directive2) {
     }
   ];
 }
-function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
-  return on("commit", ({ component: iComponent, commit: payload, respond }) => {
-    if (iComponent !== component)
+function whenTargetsArePartOfRequest(component, el, targets, inverted, [startLoading, endLoading]) {
+  return interceptMessage(({ message, onSend, onFinish }) => {
+    if (component !== message.component)
       return;
-    if (targets.length > 0 && containsTargets(payload, targets) === inverted)
+    let island = closestIsland(el);
+    if (island && !message.hasActionForIsland(island)) {
       return;
-    startLoading();
-    respond(() => {
-      endLoading();
+    }
+    if (!island && !message.hasActionForComponent()) {
+      return;
+    }
+    let matches = true;
+    onSend(({ payload }) => {
+      if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
+        matches = false;
+      }
+      matches && startLoading();
+    });
+    onFinish(() => {
+      matches && endLoading();
     });
   });
 }
@@ -11809,18 +13968,14 @@ function getTargets(el) {
   let inverted = false;
   if (directives.has("target")) {
     let directive2 = directives.get("target");
-    let raw = directive2.expression;
     if (directive2.modifiers.includes("except"))
       inverted = true;
-    if (raw.includes("(") && raw.includes(")")) {
-      targets = targets.concat(directive2.methods.map((method) => ({ target: method.method, params: quickHash(JSON.stringify(method.params)) })));
-    } else if (raw.includes(",")) {
-      raw.split(",").map((i) => i.trim()).forEach((target) => {
-        targets.push({ target });
+    directive2.methods.forEach(({ method, params }) => {
+      targets.push({
+        target: method,
+        params: params && params.length > 0 ? quickHash(JSON.stringify(params)) : void 0
       });
-    } else {
-      targets.push({ target: raw });
-    }
+    });
   } else {
     let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "navigate", "target", "loading", "poll", "ignore", "key", "id"];
     directives.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
@@ -11852,64 +14007,17 @@ directive("ignore", ({ el, directive: directive2 }) => {
 });
 
 // js/directives/wire-cloak.js
-var import_alpinejs15 = __toESM(require_module_cjs());
-import_alpinejs15.default.interceptInit((el) => {
+var import_alpinejs17 = __toESM(require_module_cjs());
+import_alpinejs17.default.interceptInit((el) => {
   if (el.hasAttribute("wire:cloak")) {
-    import_alpinejs15.default.mutateDom(() => el.removeAttribute("wire:cloak"));
+    import_alpinejs17.default.mutateDom(() => el.removeAttribute("wire:cloak"));
   }
 });
-
-// js/directives/wire-dirty.js
-var refreshDirtyStatesByComponent = new WeakBag();
-on("commit", ({ component, respond }) => {
-  respond(() => {
-    setTimeout(() => {
-      refreshDirtyStatesByComponent.each(component, (i) => i(false));
-    });
-  });
-});
-directive("dirty", ({ el, directive: directive2, component }) => {
-  let targets = dirtyTargets(el);
-  let oldIsDirty = false;
-  let initialDisplay = el.style.display;
-  let refreshDirtyState = (isDirty) => {
-    toggleBooleanStateDirective(el, directive2, isDirty, initialDisplay);
-    oldIsDirty = isDirty;
-  };
-  refreshDirtyStatesByComponent.add(component, refreshDirtyState);
-  Alpine.effect(() => {
-    let isDirty = false;
-    if (targets.length === 0) {
-      isDirty = JSON.stringify(component.canonical) !== JSON.stringify(component.reactive);
-    } else {
-      for (let i = 0; i < targets.length; i++) {
-        if (isDirty)
-          break;
-        let target = targets[i];
-        isDirty = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target));
-      }
-    }
-    if (oldIsDirty !== isDirty) {
-      refreshDirtyState(isDirty);
-    }
-    oldIsDirty = isDirty;
-  });
-});
-function dirtyTargets(el) {
-  let directives = getDirectives(el);
-  let targets = [];
-  if (directives.has("model")) {
-    targets.push(directives.get("model").expression);
-  }
-  if (directives.has("target")) {
-    targets = targets.concat(directives.get("target").expression.split(",").map((s) => s.trim()));
-  }
-  return targets;
-}
 
 // js/directives/wire-model.js
-var import_alpinejs16 = __toESM(require_module_cjs());
+var import_alpinejs18 = __toESM(require_module_cjs());
 directive("model", ({ el, directive: directive2, component, cleanup }) => {
+  component = findComponentByEl(el);
   let { expression, modifiers } = directive2;
   if (!expression) {
     return console.warn("Livewire: [wire:model] is missing a value.", el);
@@ -11920,13 +14028,29 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
   if (el.type && el.type.toLowerCase() === "file") {
     return handleFileUpload(el, expression, component, cleanup);
   }
+  if (!modifiers.includes("self") && !modifiers.includes("deep")) {
+    modifiers.push("self");
+  }
   let isLive = modifiers.includes("live");
   let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
   let onBlur = modifiers.includes("blur");
   let isDebounced = modifiers.includes("debounce");
-  let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit() : () => component.$wire.$commit();
-  let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
-  import_alpinejs16.default.bind(el, {
+  let isThrottled = modifiers.includes("throttle");
+  let update = () => {
+    setNextActionOrigin({ el, directive: directive2 });
+    if (isLive || isDebounced) {
+      setNextActionMetadata({ type: "model.live" });
+    }
+    expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
+  };
+  let debouncedUpdate = update;
+  if (isLive && isRealtimeInput(el) || isDebounced) {
+    debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(modifiers, "debounce") || 150);
+  }
+  if (isThrottled) {
+    debouncedUpdate = throttle(debouncedUpdate, parseModifierDuration(modifiers, "throttle") || 150);
+  }
+  import_alpinejs18.default.bind(el, {
     ["@change"]() {
       isLazy && update();
     },
@@ -11951,21 +14075,32 @@ function getModifierTail(modifiers) {
     "lazy",
     "defer"
   ].includes(i));
+  if (modifiers.includes("debounce")) {
+    let index = modifiers.indexOf("debounce");
+    let hasDuration = parseModifierDuration(modifiers, "debounce") !== void 0;
+    modifiers.splice(index, hasDuration ? 2 : 1);
+  }
+  if (modifiers.includes("throttle")) {
+    let index = modifiers.indexOf("throttle");
+    let hasDuration = parseModifierDuration(modifiers, "throttle") !== void 0;
+    modifiers.splice(index, hasDuration ? 2 : 1);
+  }
   if (modifiers.length === 0)
     return "";
   return "." + modifiers.join(".");
 }
-function isTextInput(el) {
-  return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type);
+function isRealtimeInput(el) {
+  return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type) || el.tagName.toUpperCase() === "UI-SLIDER" || el.tagName.toUpperCase() === "UI-COMPOSER";
 }
 function componentIsMissingProperty(component, property) {
   if (property.startsWith("$parent")) {
-    let parent = closestComponent(component.el.parentElement, false);
+    let parent = findComponentByEl(component.el.parentElement, false);
     if (!parent)
       return true;
-    return componentIsMissingProperty(parent, property.split("$parent.")[1]);
+    return componentIsMissingProperty(parent, property.slice(7).replace(/^\./, ""));
   }
-  let baseProperty = property.split(".")[0];
+  let match = property.match(/^\[['"]?([^\]'"]+)['"]?\]/) || property.match(/^([^.\[]+)/);
+  let baseProperty = match[1];
   return !Object.keys(component.canonical).includes(baseProperty);
 }
 function debounce(func, wait) {
@@ -11980,20 +14115,38 @@ function debounce(func, wait) {
     timeout = setTimeout(later, wait);
   };
 }
+function throttle(func, limit) {
+  let inThrottle;
+  return function() {
+    let context = this, args = arguments;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+}
+function parseModifierDuration(modifiers, key) {
+  let index = modifiers.indexOf(key);
+  if (index === -1)
+    return void 0;
+  let nextModifier = modifiers[modifiers.indexOf(key) + 1] || "invalid-wait";
+  let duration = nextModifier.split("ms")[0];
+  return !isNaN(duration) ? duration : void 0;
+}
 
 // js/directives/wire-init.js
-var import_alpinejs17 = __toESM(require_module_cjs());
-directive("init", ({ el, directive: directive2 }) => {
-  let fullMethod = directive2.expression ?? "$refresh";
-  import_alpinejs17.default.evaluate(el, `$wire.${fullMethod}`);
+directive("init", ({ component, el, directive: directive2 }) => {
+  let fullMethod = directive2.expression ? directive2.expression : "$refresh";
+  setNextActionOrigin({ el, directive: directive2 });
+  evaluateActionExpression(el, fullMethod);
 });
 
 // js/directives/wire-poll.js
-var import_alpinejs18 = __toESM(require_module_cjs());
-directive("poll", ({ el, directive: directive2 }) => {
+directive("poll", ({ el, directive: directive2, component }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
   let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-    triggerComponentRequest(el, directive2);
+    triggerComponentRequest(el, directive2, component);
   }, interval);
   start2();
   throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive2));
@@ -12002,8 +14155,11 @@ directive("poll", ({ el, directive: directive2 }) => {
   pauseWhile(() => livewireIsOffline());
   stopWhen(() => theElementIsDisconnected(el));
 });
-function triggerComponentRequest(el, directive2) {
-  import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
+function triggerComponentRequest(el, directive2, component) {
+  setNextActionOrigin({ el, directive: directive2, targetEl: null });
+  setNextActionMetadata({ type: "poll" });
+  let fullMethod = directive2.expression ? directive2.expression : "$refresh";
+  evaluateActionExpression(el, fullMethod);
 }
 function poll(callback, interval = 2e3) {
   let pauseConditions = [];
@@ -12098,10 +14254,10 @@ import_alpinejs19.default.interceptInit((el) => {
     if (el.attributes[i].name.startsWith("wire:show")) {
       let { name, value } = el.attributes[i];
       let modifierString = name.split("wire:show")[1];
-      let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+      let expression = value.trim();
       import_alpinejs19.default.bind(el, {
         ["x-show" + modifierString]() {
-          return import_alpinejs19.default.evaluate(el, expression);
+          return evaluateActionExpression(el, expression);
         }
       });
     }
@@ -12115,10 +14271,27 @@ import_alpinejs20.default.interceptInit((el) => {
     if (el.attributes[i].name.startsWith("wire:text")) {
       let { name, value } = el.attributes[i];
       let modifierString = name.split("wire:text")[1];
-      let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+      let expression = value.trim();
       import_alpinejs20.default.bind(el, {
         ["x-text" + modifierString]() {
-          return import_alpinejs20.default.evaluate(el, expression);
+          return evaluateActionExpression(el, expression);
+        }
+      });
+    }
+  }
+});
+
+// js/directives/wire-bind.js
+var import_alpinejs21 = __toESM(require_module_cjs());
+import_alpinejs21.default.interceptInit((el) => {
+  for (let i = 0; i < el.attributes.length; i++) {
+    if (el.attributes[i].name.startsWith("wire:bind:")) {
+      let { name, value } = el.attributes[i];
+      let remainder = name.split("wire:bind")[1];
+      let expression = value.trim();
+      import_alpinejs21.default.bind(el, {
+        ["x-bind" + remainder]() {
+          return evaluateActionExpression(el, expression);
         }
       });
     }
@@ -12129,6 +14302,10 @@ import_alpinejs20.default.interceptInit((el) => {
 var Livewire2 = {
   directive,
   dispatchTo,
+  interceptAction: (callback) => interceptAction(callback),
+  interceptMessage: (callback) => interceptMessage(callback),
+  interceptRequest: (callback) => interceptRequest(callback),
+  fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),
   start,
   first,
   find,
@@ -12140,7 +14317,7 @@ var Livewire2 = {
   dispatch: dispatchGlobal,
   on: on2,
   get navigate() {
-    return import_alpinejs21.default.navigate;
+    return import_alpinejs22.default.navigate;
   }
 };
 var warnAboutMultipleInstancesOf = (entity) => console.warn(`Detected multiple instances of ${entity} running`);
@@ -12149,7 +14326,7 @@ if (window.Livewire)
 if (window.Alpine)
   warnAboutMultipleInstancesOf("Alpine");
 window.Livewire = Livewire2;
-window.Alpine = import_alpinejs21.default;
+window.Alpine = import_alpinejs22.default;
 if (window.livewireScriptConfig === void 0) {
   window.Alpine.__fromLivewire = true;
   document.addEventListener("DOMContentLoaded", () => {
@@ -12159,13 +14336,18 @@ if (window.livewireScriptConfig === void 0) {
     Livewire2.start();
   });
 }
-var export_Alpine = import_alpinejs21.default;
+var export_Alpine = import_alpinejs22.default;
 export {
   export_Alpine as Alpine,
   Livewire2 as Livewire
 };
 /* NProgress, (c) 2013, 2014 Rico Sta. Cruz - http://ricostacruz.com/nprogress
  * @license MIT */
+/*! Bundled license information:
+
+sortablejs/Sortable.min.js:
+  (*! Sortable 1.15.2 - MIT | git://github.com/SortableJS/Sortable.git *)
+*/
 /*! Bundled license information:
 
 tabbable/dist/index.js:

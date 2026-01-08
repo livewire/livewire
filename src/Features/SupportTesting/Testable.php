@@ -60,16 +60,18 @@ class Testable
      */
     static function normalizeAndRegisterComponentName($name)
     {
-        if (is_array($otherComponents = $name)) {
-            $name = array_shift($otherComponents);
+        if (is_array($components = $name)) {
+            $firstComponent = array_values($components)[0];
 
-            foreach ($otherComponents as $key => $value) {
+            foreach ($components as $key => $value) {
                 if (is_numeric($key)) {
-                    app('livewire')->isDiscoverable($name) || app('livewire')->component($value);
+                    app('livewire')->exists($value) || app('livewire')->component($value);
                 } else {
                     app('livewire')->component($key, $value);
                 }
             }
+
+            return app('livewire.factory')->resolveComponentName($firstComponent);
         } elseif (is_object($name)) {
             $anonymousClassComponent = $name;
 
@@ -369,6 +371,27 @@ class Testable
         if ($property === 'target') return $this->lastState->getComponent();
 
         return $this->instance()->$property;
+    }
+
+    /**
+     * @param string $property
+     * @param mixed $value
+     */
+    function __set($property, $value)
+    {
+        if ($property === 'snapshot') {
+            $this->lastState = new ComponentState(
+                $this->lastState->getComponent(),
+                $this->lastState->getResponse(),
+                $this->lastState->getView(),
+                $this->lastState->getHtml(),
+                $value,
+                $this->lastState->getEffects(),
+            );
+            return;
+        }
+
+        $this->setProperty($property, $value);
     }
 
     /**

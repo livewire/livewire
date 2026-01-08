@@ -11,7 +11,7 @@
             "request": "launch",
             "port": 9003,
             "pathMappings": {
-                "/Users/calebporzio/Code/livewire-stream": "${workspaceFolder}"
+                "/Users/calebporzio/Code/livewire": "${workspaceFolder}"
             }
         }
     ]

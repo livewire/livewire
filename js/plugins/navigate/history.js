@@ -1,3 +1,4 @@
+import historyCoordinator from "@/plugins/history/coordinator"
 
 class Snapshot {
     constructor(url, html) {
@@ -57,11 +58,18 @@ let snapshotCache = {
     }
 }
 
+let currentPageStatus = null
+
+export function storeCurrentPageStatus(status) {
+    currentPageStatus = status
+}
+
 export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
+    // Get the URL with all querystring changes...
+    let url = historyCoordinator.getUrl()
+    
     // Create a history state entry for the initial page load.
     // (This is so later hitting back can restore this page).
-    let url = new URL(window.location.href, document.baseURI)
-
     replaceUrl(url, document.documentElement.outerHTML)
 }
 
@@ -83,6 +91,11 @@ export function whenTheBackOrForwardButtonIsClicked(
         let state = e.state || {}
 
         let alpine = state.alpine || {}
+
+        // If the current page is not a 2xx status code, then we want to force a full page refresh to ensure that the error page assets aren't kept in the DOM...
+        if (currentPageStatus && (currentPageStatus < 200 || currentPageStatus >= 300)) {
+            return window.location.href = alpine.url
+        }
 
         // If state is an empty object, then the popstate has probably been triggered
         // by anchor tags `#my-heading`, so we don't want to handle them.
@@ -122,27 +135,17 @@ function updateUrl(method, url, html) {
         ? snapshotCache.push(key, new Snapshot(url, html))
         : snapshotCache.replace(key = (snapshotCache.currentKey ?? key), new Snapshot(url, html))
 
-    let state = history.state || {}
-
-    if (!state.alpine) state.alpine = {}
-
-    state.alpine.snapshotIdx = key
-    state.alpine.url = url.toString()
-
-    try {
-        // 640k character limit:
-        history[method](state, JSON.stringify(document.title), url)
-
-        snapshotCache.currentKey = key
-        snapshotCache.currentUrl = url
-    } catch (error) {
+    historyCoordinator.addErrorHandler('navigate', error => {
         if (error instanceof DOMException && error.name === 'SecurityError') {
             console.error(
                 "Livewire: You can't use wire:navigate with a link to a different root domain: " +
                     url
             )
         }
+    })
 
-        console.error(error)
-    }
+    historyCoordinator[method](url, { snapshotIdx: key, url: url.toString() })
+
+    snapshotCache.currentKey = key
+    snapshotCache.currentUrl = url
 }

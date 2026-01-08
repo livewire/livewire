@@ -1,3 +1,0 @@
-Layout [{{ $foo }}]
-
-{{ $slot }}

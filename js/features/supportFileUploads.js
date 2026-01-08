@@ -113,10 +113,11 @@ class UploadManager {
             errorCallback,
             progressCallback,
             cancelledCallback,
+            append: false,
         })
     }
 
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = true) {
         this.setUpload(name, {
             files: Array.from(files),
             multiple: true,
@@ -124,6 +125,7 @@ class UploadManager {
             errorCallback,
             progressCallback,
             cancelledCallback,
+            append,
         })
     }
 
@@ -192,7 +194,7 @@ class UploadManager {
             if ((request.status+'')[0] === '2') {
                 let paths = retrievePaths(request.response && JSON.parse(request.response))
 
-                this.component.$wire.call('_finishUpload', name, paths, this.uploadBag.first(name).multiple)
+                this.component.$wire.call('_finishUpload', name, paths, this.uploadBag.first(name).multiple, this.uploadBag.first(name).append)
 
                 return
             }
@@ -338,6 +340,7 @@ export function uploadMultiple(
     errorCallback = () => { },
     progressCallback = () => { },
     cancelledCallback = () => { },
+    append = true,
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -348,6 +351,7 @@ export function uploadMultiple(
         errorCallback,
         progressCallback,
         cancelledCallback,
+        append,
     )
 }
 

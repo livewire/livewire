@@ -28,3 +28,11 @@ To use `wire:cloak`, add the directive to any element you want to hide during pa
 ```
 
 In the above example, without `wire:cloak`, both icons would be shown before Livewire initializes. However, with `wire:cloak`, both elements will be hidden until initialization.
+
+## Reference
+
+```blade
+wire:cloak
+```
+
+This directive has no modifiers.
