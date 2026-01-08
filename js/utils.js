@@ -175,10 +175,48 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     // Are they the same?
     if (left === right) return { changed: false, consolidated: false }
 
+    // Track if we're doing a type conversion from empty array/null/undefined to object
+    // In this case, we want granular diffs, not consolidation
+    let convertedToObject = false
+
+    // Helper to check if an array has non-numeric (string) keys
+    // Arrays with string keys need granular diffs because JSON.stringify ignores them
+    let hasNonNumericKeys = (arr) => {
+        return isArray(arr) && Object.keys(arr).some(k => isNaN(parseInt(k)))
+    }
+
     // Are they COMPLETELY different types?
     if (typeof left !== typeof right || (isObject(left) && isArray(right)) || (isArray(left) && isObject(right))) {
-        diffs[path] = right
-        return { changed: true, consolidated: false }
+        // Special case: if left is an empty array and right is an object,
+        // treat the empty array as an empty object so we get granular diffs.
+        // This handles the case where wire:model.live="tableFilters.filter_1.value"
+        // updates tableFilters from [] to { filter_1: { value: 'foo' } }
+        if (isArray(left) && left.length === 0 && isObject(right)) {
+            left = {}
+            convertedToObject = true
+            // Fall through to continue with object comparison below
+        }
+        // Special case: if left is undefined/null and right is an object,
+        // treat left as an empty object to get granular diffs for new properties
+        else if ((left === undefined || left === null) && isObject(right)) {
+            left = {}
+            convertedToObject = true
+            // Fall through to continue with object comparison below
+        } else {
+            diffs[path] = right
+            return { changed: true, consolidated: false }
+        }
+    }
+
+    // Special case: if both are arrays but right has non-numeric keys,
+    // we need granular diffs because JSON.stringify ignores string keys on arrays.
+    // Treat both as objects to properly diff the string keys.
+    if (isArray(left) && isArray(right) && hasNonNumericKeys(right)) {
+        // Treat the arrays as objects for comparison
+        // If left was empty, mark as converted to object to prevent consolidation
+        if (Object.keys(left).length === 0) {
+            convertedToObject = true
+        }
     }
 
     // Is either side a primitive value (a leaf node)?
@@ -192,7 +230,9 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     let rightKeys = Object.keys(right)
 
     // If the size changed, consolidate at this level
-    if (leftKeys.length !== rightKeys.length) {
+    // BUT if we converted to object, don't consolidate - we're adding new items
+    // and should produce granular diffs for query string handling
+    if (leftKeys.length !== rightKeys.length && !convertedToObject) {
         // For root level, we can't consolidate to a single key, so diff each root property
         if (path === '') {
             Object.keys(right).forEach(key => {
@@ -209,7 +249,7 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     // Check if all keys are the same (no additions/removals)
     let keysMatch = leftKeys.every(k => rightKeys.includes(k))
 
-    if (!keysMatch) {
+    if (!keysMatch && !convertedToObject) {
         // Keys differ (some added, some removed) - consolidate
         if (path !== '') {
             diffs[path] = dataGet(rootRight, path)
@@ -232,7 +272,8 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
 
     // If all children changed AND none of them were already consolidated, consolidate to this level
     // (unless we're at root). This prevents double-consolidation up the tree.
-    if (path !== '' && totalChildren > 0 && changedCount === totalChildren && consolidatedCount === 0) {
+    // ALSO skip consolidation if we converted to object - we're adding new items, not replacing
+    if (path !== '' && totalChildren > 0 && changedCount === totalChildren && consolidatedCount === 0 && !convertedToObject) {
         diffs[path] = dataGet(rootRight, path)
         return { changed: true, consolidated: true }
     }

@@ -239,4 +239,30 @@ describe('diffAndConsolidate', () => {
             data: { '0': 'x' }
         })
     })
+
+    it('preserves dot notation when empty array becomes object with nested properties', () => {
+        // This is the scenario from wire:model.live="tableFilters.filter_1.value"
+        // where tableFilters starts as [] and becomes { filter_1: { value: 'foo' } }
+        expect(diffAndConsolidate(
+            { tableFilters: [] },
+            { tableFilters: { filter_1: { value: 'foo' } } }
+        )).toEqual({
+            'tableFilters.filter_1.value': 'foo'
+        })
+    })
+
+    it('handles arrays with non-numeric (string) keys', () => {
+        // When JS sets arr['filter_1'] = value on an array, it adds a string property.
+        // JSON.stringify ignores string keys on arrays, so we need granular diffs.
+        let leftArr = []
+        let rightArr = []
+        rightArr['filter_1'] = { value: 'foo' }
+
+        expect(diffAndConsolidate(
+            { tableFilters: leftArr },
+            { tableFilters: rightArr }
+        )).toEqual({
+            'tableFilters.filter_1.value': 'foo'
+        })
+    })
 })
