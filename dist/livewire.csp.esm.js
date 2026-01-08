@@ -2957,6 +2957,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       onlyDuringClone,
       addRootSelector,
       addInitSelector,
+      flushScheduler: flushJobs,
       setErrorHandler,
       interceptClone,
       addScopeToNode,
@@ -9408,6 +9409,9 @@ function isPrimitive(subject) {
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
+function deeplyEqual(a, b) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
 function parsePathSegments(path) {
   if (path === "")
     return [];
@@ -9452,6 +9456,62 @@ function diff(left, right, diffs = {}, path = "") {
     diffs[`${path}.${key}`] = "__rm__";
   });
   return diffs;
+}
+function diffAndConsolidate(left, right) {
+  let diffs = {};
+  diffRecursive(left, right, "", diffs, left, right);
+  return diffs;
+}
+function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
+  if (left === right)
+    return { changed: false, consolidated: false };
+  if (typeof left !== typeof right || isObject(left) && isArray(right) || isArray(left) && isObject(right)) {
+    diffs[path] = right;
+    return { changed: true, consolidated: false };
+  }
+  if (isPrimitive(left) || isPrimitive(right)) {
+    diffs[path] = right;
+    return { changed: true, consolidated: false };
+  }
+  let leftKeys = Object.keys(left);
+  let rightKeys = Object.keys(right);
+  if (leftKeys.length !== rightKeys.length) {
+    if (path === "") {
+      Object.keys(right).forEach((key) => {
+        if (!deeplyEqual(left[key], right[key])) {
+          diffs[key] = right[key];
+        }
+      });
+      return { changed: true, consolidated: true };
+    }
+    diffs[path] = dataGet(rootRight, path);
+    return { changed: true, consolidated: true };
+  }
+  let keysMatch = leftKeys.every((k) => rightKeys.includes(k));
+  if (!keysMatch) {
+    if (path !== "") {
+      diffs[path] = dataGet(rootRight, path);
+      return { changed: true, consolidated: true };
+    }
+  }
+  let childDiffs = {};
+  let changedCount = 0;
+  let consolidatedCount = 0;
+  let totalChildren = rightKeys.length;
+  rightKeys.forEach((key) => {
+    let childPath = path === "" ? key : `${path}.${key}`;
+    let result = diffRecursive(left[key], right[key], childPath, childDiffs, rootLeft, rootRight);
+    if (result.changed)
+      changedCount++;
+    if (result.consolidated)
+      consolidatedCount++;
+  });
+  if (path !== "" && totalChildren > 0 && changedCount === totalChildren && consolidatedCount === 0) {
+    diffs[path] = dataGet(rootRight, path);
+    return { changed: true, consolidated: true };
+  }
+  Object.assign(diffs, childDiffs);
+  return { changed: changedCount > 0, consolidated: consolidatedCount > 0 };
 }
 function extractData(payload) {
   let value = isSynthetic(payload) ? payload[0] : payload;
@@ -11843,7 +11903,7 @@ var Component = class {
     return diff2;
   }
   getUpdates() {
-    let propertiesDiff = diff(this.canonical, this.ephemeral);
+    let propertiesDiff = diffAndConsolidate(this.canonical, this.ephemeral);
     return this.mergeQueuedUpdates(propertiesDiff);
   }
   applyUpdates(object, updates) {
@@ -13695,8 +13755,8 @@ globalDirective("transition", ({ el, directive: directive2, cleanup }) => {
   let transitionName = directive2.expression || "match-element";
   el.style.viewTransitionName = transitionName;
 });
-async function transitionDomMutation(component, callback) {
-  if (!component.el.querySelector("[wire\\:transition]"))
+async function transitionDomMutation(fromEl, toEl, callback) {
+  if (!fromEl.querySelector("[wire\\:transition]") && !toEl.querySelector("[wire\\:transition]"))
     return callback();
   let style = document.createElement("style");
   style.textContent = `
@@ -13759,7 +13819,7 @@ async function morph2(component, el, html) {
       child.replaceWith(existingComponent.cloneNode(true));
     }
   });
-  await transitionDomMutation(component, () => {
+  await transitionDomMutation(el, to, () => {
     import_alpinejs9.default.morph(el, to, getMorphConfig(component));
   });
   trigger("morphed", { el, component });
@@ -13783,7 +13843,7 @@ async function morphFragment(component, startNode, endNode, toHTML) {
     parentProviderWrapper.__livewire = parentComponent;
   }
   trigger("island.morph", { startNode, endNode, component });
-  await transitionDomMutation(component, () => {
+  await transitionDomMutation(fromContainer, toContainer, () => {
     import_alpinejs9.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
   });
   trigger("island.morphed", { startNode, endNode, component });

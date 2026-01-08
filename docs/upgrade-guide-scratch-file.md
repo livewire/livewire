@@ -64,6 +64,18 @@ the request system has been completely overhauled (the stuff im trying to note i
 - make wire:poll non-blocking so that it doesn't block newly initiated wire:clicks and such and also isn't blocked by them
 - let wire:model.live erquests run in parallel against each other so that you can type fast and see results quickly
 
+## medium impact breaking changes
+
+### Update hooks now consolidate array/object changes
+
+When replacing an entire array or object from the frontend (e.g., `$wire.items = ['new', 'values']`), Livewire now sends a single consolidated update instead of granular updates for each index.
+
+**Before:** Setting `$wire.items = ['a', 'b']` on an array of 4 items would fire `updatingItems`/`updatedItems` hooks multiple times - once for each index change plus `__rm__` removals.
+
+**After:** The same operation fires the hooks once with the full new array value, matching V2 behavior.
+
+If your code relies on individual index hooks firing when replacing entire arrays, you may need to adjust. Single-item changes (like `wire:model="items.0"`) still fire granular hooks as expected.
+
 ## deeper things to know
 Livewire.hook('morph',  ({ el, component }) => {
 	// Runs just before the child elements in `component` are morphed

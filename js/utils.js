@@ -122,7 +122,8 @@ export function dataSet(object, key, value) {
 }
 
 /**
- * Create a flat, dot-notated diff of two obejcts.
+ * Create a flat, dot-notated diff of two objects.
+ * @deprecated Use diffAndConsolidate instead for smarter update consolidation
  */
 export function diff(left, right, diffs = {}, path = '') {
     // Are they the same?
@@ -155,6 +156,92 @@ export function diff(left, right, diffs = {}, path = '') {
     })
 
     return diffs
+}
+
+/**
+ * Create a flat, dot-notated diff of two objects with automatic consolidation.
+ * When multiple items in an array/object change or the size changes,
+ * the diff is consolidated to the parent level instead of individual items.
+ */
+export function diffAndConsolidate(left, right) {
+    let diffs = {}
+
+    diffRecursive(left, right, '', diffs, left, right)
+
+    return diffs
+}
+
+function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
+    // Are they the same?
+    if (left === right) return { changed: false, consolidated: false }
+
+    // Are they COMPLETELY different types?
+    if (typeof left !== typeof right || (isObject(left) && isArray(right)) || (isArray(left) && isObject(right))) {
+        diffs[path] = right
+        return { changed: true, consolidated: false }
+    }
+
+    // Is either side a primitive value (a leaf node)?
+    if (isPrimitive(left) || isPrimitive(right)) {
+        diffs[path] = right
+        return { changed: true, consolidated: false }
+    }
+
+    // Both are objects/arrays - check if we should consolidate at this level
+    let leftKeys = Object.keys(left)
+    let rightKeys = Object.keys(right)
+
+    // If the size changed, consolidate at this level
+    if (leftKeys.length !== rightKeys.length) {
+        // For root level, we can't consolidate to a single key, so diff each root property
+        if (path === '') {
+            Object.keys(right).forEach(key => {
+                if (!deeplyEqual(left[key], right[key])) {
+                    diffs[key] = right[key]
+                }
+            })
+            return { changed: true, consolidated: true }
+        }
+        diffs[path] = dataGet(rootRight, path)
+        return { changed: true, consolidated: true }
+    }
+
+    // Check if all keys are the same (no additions/removals)
+    let keysMatch = leftKeys.every(k => rightKeys.includes(k))
+
+    if (!keysMatch) {
+        // Keys differ (some added, some removed) - consolidate
+        if (path !== '') {
+            diffs[path] = dataGet(rootRight, path)
+            return { changed: true, consolidated: true }
+        }
+    }
+
+    // Recursively diff children
+    let childDiffs = {}
+    let changedCount = 0
+    let consolidatedCount = 0
+    let totalChildren = rightKeys.length
+
+    rightKeys.forEach(key => {
+        let childPath = path === '' ? key : `${path}.${key}`
+        let result = diffRecursive(left[key], right[key], childPath, childDiffs, rootLeft, rootRight)
+        if (result.changed) changedCount++
+        if (result.consolidated) consolidatedCount++
+    })
+
+    // If all children changed AND none of them were already consolidated, consolidate to this level
+    // (unless we're at root). This prevents double-consolidation up the tree.
+    if (path !== '' && totalChildren > 0 && changedCount === totalChildren && consolidatedCount === 0) {
+        diffs[path] = dataGet(rootRight, path)
+        return { changed: true, consolidated: true }
+    }
+
+    // Otherwise, add individual child diffs
+    Object.assign(diffs, childDiffs)
+
+    // If any child was consolidated, bubble that up to prevent further consolidation
+    return { changed: changedCount > 0, consolidated: consolidatedCount > 0 }
 }
 
 /**
