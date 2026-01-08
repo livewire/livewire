@@ -273,7 +273,9 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     // If all children changed AND none of them were already consolidated, consolidate to this level
     // (unless we're at root). This prevents double-consolidation up the tree.
     // ALSO skip consolidation if we converted to object - we're adding new items, not replacing
-    if (path !== '' && totalChildren > 0 && changedCount === totalChildren && consolidatedCount === 0 && !convertedToObject) {
+    // Only consolidate if there are MULTIPLE children - single property changes should remain granular
+    // for wire:target to work correctly (e.g., wire:target="form.text" needs "form.text" not "form")
+    if (path !== '' && totalChildren > 1 && changedCount === totalChildren && consolidatedCount === 0 && !convertedToObject) {
         diffs[path] = dataGet(rootRight, path)
         return { changed: true, consolidated: true }
     }
