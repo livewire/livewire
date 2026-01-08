@@ -20,9 +20,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../alpine/packages/csp/dist/module.cjs.js
+// node_modules/@alpinejs/csp/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1987,8 +1987,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     var alpineAttributeRegex = () => new RegExp(`^${prefixAsString}([^:^.]+)\\b`);
     function toParsedDirectives(transformedAttributeMap, originalAttributeOverride) {
       return ({ name, value }) => {
-        if (name === value)
-          value = "";
         let typeMatch = name.match(alpineAttributeRegex());
         let valueMatch = name.match(/:([a-zA-Z0-9\-_:]+)/);
         let modifiers = name.match(/\.[^.\]]+(?=[^\]]*$)/g) || [];
@@ -5972,9 +5970,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/sort/dist/module.cjs.js
+// node_modules/@alpinejs/sort/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/sort/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/sort/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -6978,7 +6976,7 @@ var require_module_cjs5 = __commonJS({
       }
     }
     function src_default2(Alpine24) {
-      Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate, cleanup }) => {
+      Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate, evaluateLater, cleanup }) => {
         if (value === "config") {
           return;
         }
@@ -6999,7 +6997,7 @@ var require_module_cjs5 = __commonJS({
           useHandles: !!el.querySelector("[x-sort\\:handle],[wire\\:sort\\:handle]"),
           group: getGroupName(el, modifiers)
         };
-        let handleSort = generateSortHandler(expression, evaluate);
+        let handleSort = generateSortHandler(expression, evaluateLater);
         let config = getConfigurationOverrides(el, modifiers, evaluate);
         let sortable = initSortable(el, config, preferences, (key, position) => {
           handleSort(key, position);
@@ -7007,19 +7005,25 @@ var require_module_cjs5 = __commonJS({
         cleanup(() => sortable.destroy());
       });
     }
-    function generateSortHandler(expression, evaluate) {
+    function generateSortHandler(expression, evaluateLater) {
       if ([void 0, null, ""].includes(expression))
         return () => {
         };
+      let handle = evaluateLater(expression);
       return (key, position) => {
-        evaluate(expression, { scope: {
-          $key: key,
-          $item: key,
-          $position: position
-        }, params: [
-          key,
-          position
-        ] });
+        Alpine.dontAutoEvaluateFunctions(() => {
+          handle(
+            (received) => {
+              if (typeof received === "function")
+                received(key, position);
+            },
+            { scope: {
+              $key: key,
+              $item: key,
+              $position: position
+            } }
+          );
+        });
       };
     }
     function getConfigurationOverrides(el, modifiers, evaluate) {
@@ -8723,9 +8727,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -14527,6 +14531,33 @@ import_alpinejs15.default.interceptInit((el) => {
     }
   }
 });
+
+// js/features/supportCssModules.js
+var loadedStyles = /* @__PURE__ */ new Set();
+on("effect", ({ component, effects }) => {
+  if (effects.styleModule) {
+    let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+    let path = `${getUriPrefix()}/css/${encodedName}.css?v=${effects.styleModule}`;
+    if (!loadedStyles.has(path)) {
+      loadedStyles.add(path);
+      injectStylesheet(path);
+    }
+  }
+  if (effects.globalStyleModule) {
+    let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+    let path = `${getUriPrefix()}/css/${encodedName}.global.css?v=${effects.globalStyleModule}`;
+    if (!loadedStyles.has(path)) {
+      loadedStyles.add(path);
+      injectStylesheet(path);
+    }
+  }
+});
+function injectStylesheet(href) {
+  let link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = href;
+  document.head.appendChild(link);
+}
 
 // js/debounce.js
 var callbacksByComponent = new WeakBag();

@@ -21,9 +21,9 @@
     mod
   ));
 
-  // ../alpine/packages/csp/dist/module.cjs.js
+  // node_modules/@alpinejs/csp/dist/module.cjs.js
   var require_module_cjs = __commonJS({
-    "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
+    "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
       var __create2 = Object.create;
       var __defProp2 = Object.defineProperty;
       var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1988,8 +1988,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       var alpineAttributeRegex = () => new RegExp(`^${prefixAsString}([^:^.]+)\\b`);
       function toParsedDirectives(transformedAttributeMap, originalAttributeOverride) {
         return ({ name, value }) => {
-          if (name === value)
-            value = "";
           let typeMatch = name.match(alpineAttributeRegex());
           let valueMatch = name.match(/:([a-zA-Z0-9\-_:]+)/);
           let modifiers = name.match(/\.[^.\]]+(?=[^\]]*$)/g) || [];
@@ -9111,7 +9109,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/sort/dist/module.esm.js
+  // node_modules/@alpinejs/sort/dist/module.esm.js
   function ownKeys2(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -11325,7 +11323,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
   function src_default5(Alpine24) {
-    Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate: evaluate2, cleanup }) => {
+    Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate: evaluate2, evaluateLater, cleanup }) => {
       if (value === "config") {
         return;
       }
@@ -11346,7 +11344,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         useHandles: !!el.querySelector("[x-sort\\:handle],[wire\\:sort\\:handle]"),
         group: getGroupName(el, modifiers)
       };
-      let handleSort = generateSortHandler(expression, evaluate2);
+      let handleSort = generateSortHandler(expression, evaluateLater);
       let config = getConfigurationOverrides(el, modifiers, evaluate2);
       let sortable = initSortable(el, config, preferences, (key, position) => {
         handleSort(key, position);
@@ -11354,19 +11352,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanup(() => sortable.destroy());
     });
   }
-  function generateSortHandler(expression, evaluate2) {
+  function generateSortHandler(expression, evaluateLater) {
     if ([void 0, null, ""].includes(expression))
       return () => {
       };
+    let handle = evaluateLater(expression);
     return (key, position) => {
-      evaluate2(expression, { scope: {
-        $key: key,
-        $item: key,
-        $position: position
-      }, params: [
-        key,
-        position
-      ] });
+      Alpine.dontAutoEvaluateFunctions(() => {
+        handle(
+          (received) => {
+            if (typeof received === "function")
+              received(key, position);
+          },
+          { scope: {
+            $key: key,
+            $item: key,
+            $position: position
+          } }
+        );
+      });
     };
   }
   function getConfigurationOverrides(el, modifiers, evaluate2) {
@@ -13812,7 +13816,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -15503,6 +15507,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
   });
+
+  // js/features/supportCssModules.js
+  var loadedStyles = /* @__PURE__ */ new Set();
+  on("effect", ({ component, effects }) => {
+    if (effects.styleModule) {
+      let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+      let path = `${getUriPrefix()}/css/${encodedName}.css?v=${effects.styleModule}`;
+      if (!loadedStyles.has(path)) {
+        loadedStyles.add(path);
+        injectStylesheet(path);
+      }
+    }
+    if (effects.globalStyleModule) {
+      let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+      let path = `${getUriPrefix()}/css/${encodedName}.global.css?v=${effects.globalStyleModule}`;
+      if (!loadedStyles.has(path)) {
+        loadedStyles.add(path);
+        injectStylesheet(path);
+      }
+    }
+  });
+  function injectStylesheet(href) {
+    let link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  }
 
   // js/debounce.js
   var callbacksByComponent = new WeakBag();

@@ -68,4 +68,20 @@ class EndpointResolver
     {
         return static::prefix() . '/js/{component}.js';
     }
+
+    /**
+     * Get the path for component CSS modules (scoped styles).
+     */
+    public static function componentCssPath(): string
+    {
+        return static::prefix() . '/css/{component}.css';
+    }
+
+    /**
+     * Get the path for component global CSS modules.
+     */
+    public static function componentGlobalCssPath(): string
+    {
+        return static::prefix() . '/css/{component}.global.css';
+    }
 }

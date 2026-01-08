@@ -40,9 +40,11 @@ class CacheManager
         $classPath = $this->getClassPath($sourcePath);
         $viewPath = $this->getViewPath($sourcePath);
         $scriptPath = $this->getScriptPath($sourcePath);
+        $stylePath = $this->getStylePath($sourcePath);
+        $globalStylePath = $this->getGlobalStylePath($sourcePath);
 
         $times = [];
-        foreach ([$classPath, $viewPath, $scriptPath] as $path) {
+        foreach ([$classPath, $viewPath, $scriptPath, $stylePath, $globalStylePath] as $path) {
             if (file_exists($path)) {
                 $times[] = filemtime($path);
             }
@@ -84,6 +86,20 @@ class CacheManager
         return $this->cacheDirectory . '/scripts/' . $hash . '.js';
     }
 
+    public function getStylePath(string $sourcePath): string
+    {
+        $hash = $this->getHash($sourcePath);
+
+        return $this->cacheDirectory . '/styles/' . $hash . '.css';
+    }
+
+    public function getGlobalStylePath(string $sourcePath): string
+    {
+        $hash = $this->getHash($sourcePath);
+
+        return $this->cacheDirectory . '/styles/' . $hash . '.global.css';
+    }
+
     public function getPlaceholderPath(string $sourcePath): string
     {
         $hash = $this->getHash($sourcePath);
@@ -120,6 +136,24 @@ class CacheManager
         File::ensureDirectoryExists($this->cacheDirectory . '/scripts');
 
         File::put($scriptPath, $contents);
+    }
+
+    public function writeStyleFile(string $sourcePath, string $contents): void
+    {
+        $stylePath = $this->getStylePath($sourcePath);
+
+        File::ensureDirectoryExists($this->cacheDirectory . '/styles');
+
+        File::put($stylePath, $contents);
+    }
+
+    public function writeGlobalStyleFile(string $sourcePath, string $contents): void
+    {
+        $stylePath = $this->getGlobalStylePath($sourcePath);
+
+        File::ensureDirectoryExists($this->cacheDirectory . '/styles');
+
+        File::put($stylePath, $contents);
     }
 
     public function writePlaceholderFile(string $sourcePath, string $contents): void
@@ -172,7 +206,7 @@ class CacheManager
             if (is_dir($cacheDirectory)) {
                 // Count files before clearing for informative output
                 $totalFiles = 0;
-                foreach (['classes', 'views', 'scripts', 'placeholders'] as $subdir) {
+                foreach (['classes', 'views', 'scripts', 'styles', 'placeholders'] as $subdir) {
                     $path = $cacheDirectory . '/' . $subdir;
                     if (is_dir($path)) {
                         $totalFiles += count(glob($path . '/*'));
@@ -186,6 +220,7 @@ class CacheManager
                 File::makeDirectory($cacheDirectory . '/classes', 0755, true);
                 File::makeDirectory($cacheDirectory . '/views', 0755, true);
                 File::makeDirectory($cacheDirectory . '/scripts', 0755, true);
+                File::makeDirectory($cacheDirectory . '/styles', 0755, true);
                 File::makeDirectory($cacheDirectory . '/placeholders', 0755, true);
 
                 // Recreate .gitignore
