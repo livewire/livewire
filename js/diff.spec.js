@@ -265,4 +265,15 @@ describe('diffAndConsolidate', () => {
             'tableFilters.filter_1.value': 'foo'
         })
     })
+
+    it('does not consolidate single property changes', () => {
+        // Single property changes should remain granular for wire:target to work
+        // e.g., wire:target="form.text" needs "form.text" not "form"
+        expect(diffAndConsolidate(
+            { form: { text: '' } },
+            { form: { text: 'Text' } }
+        )).toEqual({
+            'form.text': 'Text'
+        })
+    })
 })
