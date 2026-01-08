@@ -36,13 +36,13 @@ class ComponentHookRegistry
         static::$components = new WeakMap;
 
         foreach (static::$componentHooks as $hook) {
-            on('mount', function ($component, $params, $key, $parent) use ($hook) {
+            on('mount', function ($component, $params, $key, $parent, $attributes) use ($hook) {
                 if (! $hook = static::initializeHook($hook, $component)) {
                     return;
                 }
 
                 $hook->callBoot();
-                $hook->callMount($params, $parent);
+                $hook->callMount($params, $parent, $attributes);
             });
 
             on('hydrate', function ($component, $memo) use ($hook) {

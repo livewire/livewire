@@ -10,6 +10,7 @@ import Action from './action.js'
 
 let outstandingActionOrigin = null
 let outstandingActionMetadata = {}
+let outstandingActionInterceptors = []
 let interceptors = new InterceptorRegistry
 let messageBus = new MessageBus()
 let actionInterceptors = []
@@ -23,8 +24,8 @@ export function setNextActionMetadata(metadata) {
     outstandingActionMetadata = metadata
 }
 
-export function intercept(component, callback) {
-    return interceptors.addInterceptor(component, callback)
+export function setNextActionInterceptor(callback) {
+    outstandingActionInterceptors.push(callback)
 }
 
 export function interceptAction(callback) {
@@ -35,6 +36,14 @@ export function interceptAction(callback) {
     }
 }
 
+export function interceptMessage(callback) {
+    return interceptors.addMessageInterceptor(callback)
+}
+
+export function interceptRequest(callback) {
+    return interceptors.addRequestInterceptor(callback)
+}
+
 export function interceptPartition(callback) {
     partitionInterceptors.push(callback)
 
@@ -43,12 +52,54 @@ export function interceptPartition(callback) {
     }
 }
 
-export function interceptMessage(callback) {
-    return interceptors.addMessageInterceptor(callback)
+// Component-scoped interceptors...
+
+export function interceptComponentAction(component, actionNameOrCallback, maybeCallback) {
+    let actionName = typeof actionNameOrCallback === 'string' ? actionNameOrCallback : null
+    let callback = actionName ? maybeCallback : actionNameOrCallback
+
+    return interceptAction(({ action, ...rest }) => {
+        if (action.component !== component) return
+        if (actionName && action.name !== actionName) return
+
+        callback({ action, ...rest })
+    })
 }
 
-export function interceptRequest(callback) {
-    return interceptors.addRequestInterceptor(callback)
+export function interceptComponentMessage(component, actionNameOrCallback, maybeCallback) {
+    let actionName = typeof actionNameOrCallback === 'string' ? actionNameOrCallback : null
+    let callback = actionName ? maybeCallback : actionNameOrCallback
+
+    return interceptors.addInterceptor(component, ({ message, ...rest }) => {
+        if (actionName) {
+            let hasAction = Array.from(message.actions).some(a => a.name === actionName)
+
+            if (! hasAction) return
+        }
+
+        callback({ message, ...rest })
+    })
+}
+
+export function interceptComponentRequest(component, actionNameOrCallback, maybeCallback) {
+    let actionName = typeof actionNameOrCallback === 'string' ? actionNameOrCallback : null
+    let callback = actionName ? maybeCallback : actionNameOrCallback
+
+    return interceptRequest(({ request, ...rest }) => {
+        let matchingMessages = Array.from(request.messages).filter(m => {
+            if (m.component !== component) return false
+
+            if (actionName) {
+                return Array.from(m.actions).some(a => a.name === actionName)
+            }
+
+            return true
+        })
+
+        if (matchingMessages.length === 0) return
+
+        callback({ request, ...rest })
+    })
 }
 
 interceptMessage(({ message, onFinish }) => {
@@ -63,27 +114,33 @@ queueMicrotask(() => {
 })
 
 export function fireAction(component, method, params = [], metadata = {}) {
-    let action = constructAction(component, method, params, metadata)
+    if (component.__isWireProxy) component = component.__instance
 
-    let prevented = false
+    let action = constructAction(component, method, params, metadata)
 
     actionInterceptors.forEach(callback => {
         callback({
             action,
-            reject: () => { action.rejectPromise(); prevented = true },
-            defer: () => prevented = true,
+            onSend: (cb) => action.onSendCallbacks.push(cb),
+            onCancel: (cb) => action.onCancelCallbacks.push(cb),
+            onSuccess: (cb) => action.onSuccessCallbacks.push(cb),
+            onError: (cb) => action.onErrorCallbacks.push(cb),
+            onFailure: (cb) => action.onFailureCallbacks.push(cb),
+            onFinish: (cb) => action.onFinishCallbacks.push(cb),
         })
     })
 
-    if (prevented) return action.promise
+    if (action.isCancelled() || action.isDeferred()) return action.promise
 
     return fireActionInstance(action)
 }
 
 export function constructAction(component, method, params, metadata) {
     let origin = outstandingActionOrigin
+    let pendingInterceptors = outstandingActionInterceptors
 
     outstandingActionOrigin = null
+    outstandingActionInterceptors = []
 
     metadata = {
         ...metadata,
@@ -92,7 +149,15 @@ export function constructAction(component, method, params, metadata) {
 
     outstandingActionMetadata = {}
 
-    return new Action(component, method, params, metadata, origin)
+    let action = new Action(component, method, params, metadata, origin)
+
+    // Set fire function to avoid circular dependency
+    action._fire = fireActionInstance
+
+    // Attach any per-action interceptors (from event.detail.livewire.interceptAction)
+    pendingInterceptors.forEach(callback => action.addInterceptor(callback))
+
+    return action
 }
 
 export function fireActionInstance(action) {
@@ -154,6 +219,11 @@ function sendMessages() {
 
         requests.forEach(request => {
             if (! hasFoundRequest) {
+                // Don't add to a request that already has a message for the same component
+                let hasMessageForSameComponent = Array.from(request.messages).some(m => m.component === message.component)
+
+                if (hasMessageForSameComponent) return
+
                 request.addMessage(message)
 
                 hasFoundRequest = true
@@ -174,7 +244,7 @@ function sendMessages() {
             message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn()
             message.updates = message.component.getUpdates()
             message.calls = Array.from(message.actions).map(i => ({
-                method: i.method,
+                method: i.name,
                 params: i.params,
                 metadata: i.metadata,
             }))
@@ -182,7 +252,6 @@ function sendMessages() {
             message.payload = {
                 snapshot: message.snapshot,
                 updates: message.updates,
-                // @todo: Rename to "actions"...
                 calls: message.calls,
             }
         })
@@ -226,38 +295,41 @@ function sendMessages() {
         request.initInterceptors(interceptors)
 
         if (request.hasAllCancelledMessages()) {
-            request.abort()
+            request.cancel()
         }
 
         sendRequest(request, {
             send: ({ responsePromise }) => {
-                request.onSend({ responsePromise })
+                request.invokeOnSend({ responsePromise })
             },
             failure: ({ error }) => {
-                request.onFailure({ error })
+                request.invokeOnFailure({ error })
+            },
+            finish: () => {
+                request.invokeOnFinish()
             },
             response: ({ response }) => {
-                request.onResponse({ response })
+                request.invokeOnResponse({ response })
             },
             stream: async ({ response }) => {
-                request.onStream({ response })
+                request.invokeOnStream({ response })
 
                 let finalResponse = ''
 
                 try {
-                    finalResponse = await interceptStreamAndReturnFinalResponse(response, streamedJson => {
-                        let componentId = streamedJson.id
+                    finalResponse = await interceptStreamAndReturnFinalResponse(response, json => {
+                        let componentId = json.id
 
                         request.messages.forEach(message => {
                             if (message.component.id === componentId) {
-                                message.onStream({ streamedJson })
+                                message.invokeOnStream({ json })
                             }
                         })
 
-                        trigger('stream', streamedJson)
+                        trigger('stream', json)
                     })
                 } catch (e) {
-                    request.abort()
+                    request.cancel()
 
                     throw e
                 }
@@ -265,12 +337,12 @@ function sendMessages() {
                 return finalResponse
             },
             parsed: ({ response, responseBody }) => {
-                request.onParsed({ response, responseBody })
+                request.invokeOnParsed({ response, body: responseBody })
             },
             error: ({ response, responseBody }) => {
                 let preventDefault = false
 
-                request.onError({ response, responseBody, preventDefault: () => preventDefault = true })
+                request.invokeOnError({ response, body: responseBody, preventDefault: () => preventDefault = true })
 
                 if (preventDefault) return
 
@@ -287,23 +359,23 @@ function sendMessages() {
             redirect: (url) => {
                 let preventDefault = false
 
-                request.onRedirect({ url, preventDefault: () => preventDefault = true })
+                request.invokeOnRedirect({ url, preventDefault: () => preventDefault = true })
 
                 if (preventDefault) return
 
                 window.location.href = url
             },
-            dump: (content) => {
+            dump: (html) => {
                 let preventDefault = false
 
-                request.onDump({ content, preventDefault: () => preventDefault = true })
+                request.invokeOnDump({ html, preventDefault: () => preventDefault = true })
 
                 if (preventDefault) return
 
-                showHtmlModal(content)
+                showHtmlModal(html)
             },
             success: async ({ response, responseBody, responseJson }) => {
-                request.onSuccess({ response, responseBody, responseJson })
+                request.invokeOnSuccess({ response, body: responseBody, json: responseJson })
 
                 await triggerAsync('payload.intercept', responseJson)
 
@@ -319,29 +391,29 @@ function sendMessages() {
                         if (snapshot.memo.id === message.component.id) {
                             message.responsePayload = { snapshot, effects }
 
-                            message.onSuccess()
+                            message.invokeOnSuccess()
                             if (message.isCancelled()) return
 
                             message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
 
-                            message.onSync()
+                            message.invokeOnSync()
                             if (message.isCancelled()) return
 
                             // Trigger any side effects from the payload like "morph" and "dispatch event"...
                             message.component.processEffects(effects, request)
 
-                            message.onEffect()
+                            message.invokeOnEffect()
                             if (message.isCancelled()) return
 
                             queueMicrotask(() => {
                                 if (message.isCancelled()) return
 
-                                message.onMorph()
+                                message.invokeOnMorph().finally(() => {
+                                    setTimeout(() => {
+                                        if (message.isCancelled()) return
 
-                                setTimeout(() => {
-                                    if (message.isCancelled()) return
-
-                                    message.onRender()
+                                        message.invokeOnRender()
+                                    })
                                 })
                             })
                         }
@@ -356,18 +428,19 @@ async function sendRequest(request, handlers) {
     let response
 
     try {
-        if (request.isAborted()) return
+        if (request.isCancelled()) return
 
         let responsePromise = fetch(request.uri, request.options)
 
-        if (request.isAborted()) return
+        if (request.isCancelled()) return
         handlers.send({ responsePromise })
 
         response = await responsePromise
     } catch (e) {
-        if (request.isAborted()) return
+        if (request.isCancelled()) return
 
         handlers.failure({ error: e })
+        handlers.finish()
 
         return
     }
@@ -382,13 +455,14 @@ async function sendRequest(request, handlers) {
         responseBody = await response.text()
     }
 
-    if (request.isAborted()) return
+    if (request.isCancelled()) return
 
     handlers.parsed({ response, responseBody })
 
     // Handle error response...
     if (! response.ok) {
         handlers.error({ response, responseBody })
+        handlers.finish()
 
         return
     }
@@ -414,6 +488,7 @@ async function sendRequest(request, handlers) {
     let responseJson = JSON.parse(responseBody)
 
     handlers.success({ response, responseBody, responseJson })
+    handlers.finish()
 }
 
 async function interceptStreamAndReturnFinalResponse(response, callback) {
@@ -481,7 +556,9 @@ export async function sendNavigateRequest(uri, callback, errorCallback) {
 
         let html = await response.text()
 
-        callback(html, destination)
+        let status = response.status
+
+        callback(html, destination, status)
     } catch (error) {
         errorCallback(error)
 
@@ -508,104 +585,6 @@ function createUrlObjectFromString(urlString) {
     return urlString !== null && new URL(urlString, document.baseURI)
 }
 
-// Support legacy 'request' event...
-interceptRequest(({
-    request,
-    onFailure,
-    onResponse,
-    onError,
-    onSuccess,
-}) => {
-    let respondCallbacks = []
-    let succeedCallbacks = []
-    let failCallbacks = []
-
-    trigger('request', {
-        url: request.uri,
-        options: request.options,
-        payload: request.options.body,
-        respond: i => respondCallbacks.push(i),
-        succeed: i => succeedCallbacks.push(i),
-        fail: i => failCallbacks.push(i),
-    })
-
-    onResponse(({ response }) => {
-        respondCallbacks.forEach(callback => callback({
-            status: response.status,
-            response,
-        }))
-    })
-
-    onSuccess(({ response, responseJson }) => {
-        succeedCallbacks.forEach(callback => callback({
-            status: response.status,
-            json: responseJson,
-        }))
-    })
-
-    onFailure(({ error }) => {
-        failCallbacks.forEach(callback => callback({
-            status: 503,
-            content: null,
-            preventDefault: () => {},
-        }))
-    })
-
-    onError(({ response, responseBody, preventDefault }) => {
-        failCallbacks.forEach(callback => callback({
-            status: response.status,
-            content: responseBody,
-            preventDefault,
-        }))
-    })
-})
-
-// Support legacy 'commit' event...
-interceptMessage(({
-    message,
-    onCancel,
-    onError,
-    onSuccess,
-    onFinish,
-}) => {
-    // Allow other areas of the codebase to hook into the lifecycle
-    // of an individual commit...
-    let respondCallbacks = []
-    let succeedCallbacks = []
-    let failCallbacks = []
-
-    trigger('commit', {
-        component: message.component,
-        commit: message.payload,
-        respond: (callback) => {
-            respondCallbacks.push(callback)
-        },
-        succeed: (callback) => {
-            succeedCallbacks.push(callback)
-        },
-        fail: (callback) => {
-            failCallbacks.push(callback)
-        },
-    })
-
-    onFinish(() => {
-        respondCallbacks.forEach(callback => callback())
-    })
-
-    onSuccess(({ payload, onSync, onMorph, onRender }) => {
-        onRender(() => {
-            succeedCallbacks.forEach(callback => callback({
-                snapshot: payload.snapshot,
-                effects: payload.effects,
-            }))
-        })
-    })
-
-    onError(() => {
-        failCallbacks.forEach(callback => callback())
-    })
-
-    onCancel(() => {
-        failCallbacks.forEach(callback => callback())
-    })
-})
+// Load legacy event support ('request' and 'commit' events)
+import { registerLegacyEventSupport } from './legacy.js'
+registerLegacyEventSupport(interceptRequest, interceptMessage)

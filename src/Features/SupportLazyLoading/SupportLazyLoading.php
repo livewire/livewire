@@ -51,13 +51,17 @@ class SupportLazyLoading extends ComponentHook
         $isolate = true;
 
         if (isset($params['lazy']) && $params['lazy']) $shouldBeLazy = true;
+        if (isset($params['lazy.bundle']) && $params['lazy.bundle']) $shouldBeLazy = true;
         if (isset($params['defer']) && $params['defer']) $shouldBeLazy = true;
+        if (isset($params['defer.bundle']) && $params['defer.bundle']) $shouldBeLazy = true;
 
         if (isset($params['lazy']) && $params['lazy'] === 'on-load') $isDeferred = true;
+        if (isset($params['lazy.bundle']) && $params['lazy.bundle'] === 'on-load') $isDeferred = true;
         if (isset($params['defer']) && $params['defer']) $isDeferred = true;
+        if (isset($params['defer.bundle']) && $params['defer.bundle']) $isDeferred = true;
 
-        if (isset($params['lazy:bundle']) && $params['lazy:bundle']) $isolate = false;
-        if (isset($params['defer:bundle']) && $params['defer:bundle']) $isolate = false;
+        if (isset($params['lazy.bundle']) && $params['lazy.bundle']) $isolate = false;
+        if (isset($params['defer.bundle']) && $params['defer.bundle']) $isolate = false;
 
         $reflectionClass = new \ReflectionClass($this->component);
         $lazyAttribute = $reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)[0] ?? null;

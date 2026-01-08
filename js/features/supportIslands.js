@@ -7,16 +7,20 @@ interceptAction(({ action }) => {
 
     if (! origin) return
 
-    let el = origin.el
+    let { el, directive } = origin
 
-    let islandAttributeName = el.getAttribute('wire:island')
-    let prependIslandAttributeName = el.getAttribute('wire:island.prepend')
-    let appendIslandAttributeName = el.getAttribute('wire:island.append')
+    // Check for wire:island with modifiers (e.g., wire:island.append="foo")
+    let islandAttr = Array.from(el.attributes).find(attr => attr.name.startsWith('wire:island'))
 
-    let islandName = islandAttributeName || prependIslandAttributeName || appendIslandAttributeName
+    if (islandAttr) {
+        let islandName = islandAttr.value
 
-    if (islandName) {
-        let mode = appendIslandAttributeName ? 'append' : (prependIslandAttributeName ? 'prepend' : 'morph')
+        // Parse modifiers from attribute name (e.g., "wire:island.append" -> ["append"])
+        let attrParts = islandAttr.name.split('.')
+        let isPrepend = attrParts.includes('prepend')
+        let isAppend = attrParts.includes('append')
+
+        let mode = isPrepend ? 'prepend' : (isAppend ? 'append' : 'morph')
 
         action.mergeMetadata({
             island: {
@@ -41,8 +45,8 @@ interceptAction(({ action }) => {
 })
 
 interceptMessage(({ message, onSuccess, onStream }) => {
-    onStream(({ streamedJson }) => {
-        let { type, islandFragment } = streamedJson
+    onStream(({ json }) => {
+        let { type, islandFragment } = json
 
         if (type !== 'island') return
 
@@ -50,11 +54,11 @@ interceptMessage(({ message, onSuccess, onStream }) => {
     })
 
     onSuccess(({ payload, onMorph }) => {
-        onMorph(() => {
+        onMorph(async () => {
             let fragments = payload.effects.islandFragments || []
 
-            fragments.forEach(fragmentHtml => {
-                renderIsland(message.component, fragmentHtml)
+            fragments.forEach(async fragmentHtml => {
+                await renderIsland(message.component, fragmentHtml)
             })
         })
     })
@@ -68,7 +72,7 @@ export function closestIsland(el) {
     })
 }
 
-export function renderIsland(component, islandHtml) {
+export async function renderIsland(component, islandHtml) {
     let metadata = extractFragmentMetadataFromHtml(islandHtml)
 
     let fragment = findFragment(component.el, {
@@ -85,10 +89,10 @@ export function renderIsland(component, islandHtml) {
     let parentElement = fragment.startMarkerNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
 
-    mode = incomingMetadata.mode || 'morph'
+    let mode = incomingMetadata.mode || 'morph'
 
     if (mode === 'morph') {
-        morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent)
+        await morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent)
     } else if (mode === 'append') {
         fragment.append(parentElementTag, strippedContent)
     } else if (mode === 'prepend') {

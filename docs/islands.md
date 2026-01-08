@@ -7,14 +7,13 @@ This gives you the performance benefits of breaking components into smaller piec
 To create an island, wrap any portion of your Blade template with the `@island` directive:
 
 ```blade
-<?php
+<?php // resources/views/components/⚡dashboard.blade.php
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Revenue;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function revenue()
     {
@@ -48,14 +47,13 @@ Because the expensive calculation is inside a computed property—which evaluate
 Sometimes you have expensive computations or slow API calls that shouldn't block your initial page load. You can defer an island's initial render until after the page loads using the `lazy` parameter:
 
 ```blade
-<?php
+<?php // resources/views/components/⚡dashboard.blade.php
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Revenue;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function revenue()
     {
@@ -166,14 +164,13 @@ Both islands will update together whenever one is triggered.
 Instead of replacing content entirely, islands can append or prepend new content. This is perfect for pagination, infinite scroll, or real-time feeds:
 
 ```blade
-<?php
+<?php // resources/views/components/⚡activity-feed.blade.php
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Activity;
 
-new class extends Component
-{
+new class extends Component {
     public $page = 1;
 
     public function loadMore()
@@ -194,7 +191,7 @@ new class extends Component
 <div>
     @island(name: 'feed')
         @foreach ($this->activities as $activity)
-            <x-activity-item :activity="$activity" />
+            <x-activity-item wire:key="{{ $activity->id }}" :activity="$activity" />
         @endforeach
     @endisland
 
@@ -205,7 +202,6 @@ new class extends Component
 ```
 
 Available modes:
-- `wire:island` - Replace/morph content (default)
 - `wire:island.append` - Add to the end
 - `wire:island.prepend` - Add to the beginning
 
@@ -297,337 +293,6 @@ You can use `wire:poll` within an island to refresh just that island on an inter
 
 The polling is scoped to the island — only the island will refresh every 3 seconds, not the entire component.
 
-## Rendering islands imperatively
-
-In addition to using `wire:island` to trigger island updates, you can programmatically render islands from within your component actions using the `renderIsland()` method.
-
-### Basic imperative rendering
-
-The `renderIsland()` method renders an island and includes it in the response alongside the normal component render:
-
-```php
-<?php
-
-use Livewire\Component;
-
-new class extends Component
-{
-    public $count = 0;
-
-    public function increment()
-    {
-        $this->count++;
-
-        // Re-render the 'counter' island in addition to the full component
-        $this->renderIsland('counter');
-    }
-};
-?>
-```
-
-```blade
-<div>
-    @island(name: 'counter')
-        <div>Count: {{ $count }}</div>
-    @endisland
-
-    <button wire:click="increment">Increment</button>
-</div>
-```
-
-When the "Increment" button is clicked, both the full component and the 'counter' island will render and be sent to the frontend.
-
-### Skipping the component render
-
-Often when rendering an island imperatively, you don't need to re-render the entire component. Use `skipRender()` to only send the island update:
-
-```php
-<?php
-
-use Livewire\Component;
-
-new class extends Component
-{
-    public $count = 0;
-
-    public function increment()
-    {
-        $this->count++;
-
-        // Only render the island, not the whole component
-        $this->renderIsland('counter');
-        $this->skipRender();
-    }
-};
-?>
-```
-
-Now only the island will update, improving performance by avoiding unnecessary rendering.
-
-### Render modes
-
-The `renderIsland()` method accepts a `mode` parameter to control how the island content is inserted:
-
-```php
-public function addActivity()
-{
-    // Replace the island content (default)
-    $this->renderIsland('feed', mode: 'morph');
-
-    // Append to the end of the island
-    $this->renderIsland('feed', mode: 'append');
-
-    // Prepend to the beginning of the island
-    $this->renderIsland('feed', mode: 'prepend');
-
-    $this->skipRender();
-}
-```
-
-Available modes:
-- `morph` (default) - Replaces/morphs island content entirely
-- `append` - Adds content to the end of the island
-- `prepend` - Adds content to the beginning of the island
-
-### Providing scope with `with`
-
-You can pass additional data to an island using the `with` parameter. This data will be available as variables within the island template:
-
-```php
-<?php
-
-use Livewire\Component;
-
-new class extends Component
-{
-    public function showNotification($message, $type)
-    {
-        $this->renderIsland('notification', with: [
-            'message' => $message,
-            'type' => $type,
-        ]);
-
-        $this->skipRender();
-    }
-};
-?>
-```
-
-```blade
-<div>
-    @island(name: 'notification')
-        <div class="alert alert-{{ $type }}">
-            {{ $message }}
-        </div>
-    @endisland
-
-    <button wire:click="showNotification('Success!', 'success')">
-        Show Notification
-    </button>
-</div>
-```
-
-The `with` data takes precedence over component properties, allowing you to override values for specific island renders.
-
-### Default scope on the island
-
-You can provide default values for the `with` scope directly on the island directive. These defaults are used when the island renders normally, but can be overridden by the imperative `with` parameter:
-
-```blade
-<?php
-
-use Livewire\Component;
-
-new class extends Component
-{
-    public $count = 10;
-
-    public function resetCounter()
-    {
-        // Override the default 'count' from the directive
-        $this->renderIsland('counter', with: ['count' => 0]);
-        $this->skipRender();
-    }
-};
-?>
-
-<div>
-    @island(name: 'counter', with: ['count' => $this->count])
-        <div>Count: {{ $count }}</div>
-    @endisland
-
-    <button wire:click="resetCounter">Reset to Zero</button>
-</div>
-```
-
-The scope precedence order is:
-1. Runtime `with` from `renderIsland()` (highest priority)
-2. Directive `with` from `@island(with: [...])`
-3. Component properties (lowest priority)
-
-## Streaming to islands
-
-The `streamIsland()` method provides real-time streaming updates to islands. Unlike `renderIsland()`, which includes the island in the response, `streamIsland()` immediately sends the content to the browser as soon as it's called.
-
-### Basic streaming
-
-Here's an example of streaming activity updates as they happen:
-
-```php
-<?php
-
-use Livewire\Component;
-
-new class extends Component
-{
-    public function streamUpdates()
-    {
-        // Stream content to the island immediately
-        $this->streamIsland('activity', '<div>New sale: $500</div>', mode: 'append');
-
-        // Skip rendering the rest of the component
-        $this->skipRender();
-    }
-};
-?>
-```
-
-```blade
-<div>
-    @island(name: 'activity')
-        <!-- Activity items will be streamed here -->
-    @endisland
-
-    <button wire:click.async="streamUpdates">Stream Updates</button>
-</div>
-```
-
-> [!tip] Use `.async` with streaming
-> Streaming works best with async actions (`wire:click.async`) since you typically want the stream to start immediately without waiting for other requests.
-
-### Multiple stream calls
-
-You can call `streamIsland()` multiple times within a single action. This is perfect for streaming responses piece by piece, like a chat interface:
-
-```php
-<?php
-
-use Livewire\Component;
-use App\Services\AiService;
-
-new class extends Component
-{
-    public function streamChatResponse($prompt)
-    {
-        $ai = new AiService();
-
-        // Stream each chunk as it arrives from the AI
-        foreach ($ai->streamResponse($prompt) as $chunk) {
-            $this->streamIsland('chat', $chunk, mode: 'append');
-        }
-
-        $this->skipRender();
-    }
-};
-?>
-```
-
-```blade
-<div>
-    <div>
-        @island(name: 'chat')
-            <!-- Chat response will stream here word by word -->
-        @endisland
-    </div>
-
-    <button wire:click.async="streamChatResponse('Tell me a story')">
-        Start Streaming
-    </button>
-</div>
-```
-
-Each call to `streamIsland()` with `mode: 'append'` will add content to the island in real-time as the AI generates it.
-
-### Streaming with scope
-
-Like `renderIsland()`, you can pass data to `streamIsland()` using the `with` parameter:
-
-```php
-public function streamNotifications()
-{
-    foreach ($this->getLatestNotifications() as $notification) {
-        $this->streamIsland('notifications', with: [
-            'title' => $notification->title,
-            'body' => $notification->body,
-            'timestamp' => $notification->created_at,
-        ], mode: 'prepend');
-    }
-
-    $this->skipRender();
-}
-```
-
-```blade
-@island(name: 'notifications')
-    <div class="notification">
-        <h4>{{ $title }}</h4>
-        <p>{{ $body }}</p>
-        <span class="timestamp">{{ $timestamp }}</span>
-    </div>
-@endisland
-```
-
-The `streamIsland()` method has the same signature as `renderIsland()`:
-
-```php
-streamIsland(
-    string $name,           // Island name
-    ?string $content = null, // Pre-rendered content (null = render island view)
-    string $mode = 'morph',  // 'morph', 'append', or 'prepend'
-    array $with = []         // Additional scope data
-)
-```
-
-## Triggering islands from the template
-
-In addition to calling `renderIsland()` from your component actions, you can trigger island renders directly from your template using the `$island()` magic method.
-
-### Basic usage
-
-```blade
-<div>
-    @island(name: 'stats')
-        <div>Statistics: {{ $this->stats }}</div>
-    @endisland
-
-    <button wire:click="$island('stats')">
-        Refresh Stats
-    </button>
-</div>
-```
-
-When the button is clicked, the `stats` island will re-render without requiring a component action.
-
-### Specifying render mode
-
-You can pass options to control how the island renders:
-
-```blade
-<button wire:click="$island('feed', { mode: 'append' })">
-    Load More
-</button>
-
-<button wire:click="$island('feed', { mode: 'prepend' })">
-    Add to Top
-</button>
-
-<button wire:click="$island('feed', { mode: 'morph' })">
-    Refresh Feed
-</button>
-```
-
-This is particularly useful for building interfaces where users can trigger specific island updates without writing component actions for each interaction.
-
 ## Considerations
 
 While islands provide powerful isolation, keep in mind:
@@ -686,3 +351,10 @@ While islands provide powerful isolation, keep in mind:
 - Performance bottlenecks in large components
 
 Islands aren't necessary for static content, tightly coupled UI, or simple components that already render quickly.
+
+## See also
+
+- **[Nesting](/docs/4.x/nesting)** — Alternative approach using child components
+- **[Lazy Loading](/docs/4.x/lazy)** — Defer loading of expensive content
+- **[Computed Properties](/docs/4.x/computed-properties)** — Optimize island performance with memoization
+- **[@island](/docs/4.x/directive-island)** — Create isolated update regions

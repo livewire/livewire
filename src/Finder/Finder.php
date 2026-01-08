@@ -6,6 +6,12 @@ use Livewire\Component;
 
 class Finder
 {
+    private const ZAP = "\u{26A1}";
+    private const ZAP_VS15 = "\u{26A1}\u{FE0E}";
+    private const ZAP_VS16 = "\u{26A1}\u{FE0F}";
+
+    protected $classLocations = [];
+
     protected $viewLocations = [];
 
     protected $classNamespaces = [];
@@ -16,22 +22,10 @@ class Finder
 
     protected $viewComponents = [];
 
-    public function addLocation($path = null, $class = null): void
-    {
-        if ($class !== null) $this->classNamespaces[] = $this->normalizeClassName($class);
-        if ($path !== null) $this->viewLocations[] = $path;
-    }
-
-    public function addNamespace($namespace, $path = null, $class = null): void
-    {
-        if ($class !== null) $this->classNamespaces[$namespace] = $this->normalizeClassName($class);
-        if ($path !== null) $this->viewNamespaces[$namespace] = $path;
-    }
-
-    public function addComponent($name = null, $path = null, $class = null): void
+    public function addComponent($name = null, $viewPath = null, $class = null): void
     {
         // Support $name being used a single argument for class-based components...
-        if ($name !== null && $class === null && $path === null) {
+        if ($name !== null && $class === null && $viewPath === null) {
             $class = $name;
 
             $name = null;
@@ -42,18 +36,41 @@ class Finder
         }
 
         // Support $class being used a single named argument for class-based components...
-        if ($name === null && $class !== null && $path === null) {
+        if ($name === null && $class !== null && $viewPath === null) {
             $name = $this->generateHashName($class);
         }
 
-        if ($name == null && $class === null && $path !== null) {
+        if ($name == null && $class === null && $viewPath !== null) {
             throw new \Exception('You must provide a name when registering a single/multi-file component');
         }
 
         if ($name) {
             if ($class !== null) $this->classComponents[$name] = $this->normalizeClassName($class);
-            elseif ($path !== null) $this->viewComponents[$name] = $path;
+            elseif ($viewPath !== null) $this->viewComponents[$name] = $viewPath;
         }
+    }
+
+    public function addLocation($viewPath = null, $classNamespace = null): void
+    {
+        if ($classNamespace !== null) $this->classLocations[] = $this->normalizeClassName($classNamespace);
+        if ($viewPath !== null) $this->viewLocations[] = $viewPath;
+    }
+
+    public function addNamespace($namespace, $viewPath = null, $classNamespace = null, $classPath = null, $classViewPath = null): void
+    {
+        if ($classNamespace !== null) {
+            $this->classNamespaces[$namespace] = [
+                'classNamespace' => $this->normalizeClassName($classNamespace),
+                'classPath' => $classPath,
+                'classViewPath' => $classViewPath,
+            ];
+        }
+        if ($viewPath !== null) $this->viewNamespaces[$namespace] = $viewPath;
+    }
+
+    public function getClassNamespace(string $namespace): array
+    {
+        return $this->classNamespaces[$namespace];
     }
 
     public function normalizeName($nameComponentOrClass): ?string
@@ -83,7 +100,7 @@ class Finder
                 return $name;
             }
 
-            $result = $this->generateNameFromClass($class, $this->classNamespaces);
+            $result = $this->generateNameFromClass($class);
 
             return $result;
         }
@@ -91,7 +108,7 @@ class Finder
         return $nameComponentOrClass;
     }
 
-    protected function parseNamespaceAndName($name): array
+    public function parseNamespaceAndName($name): array
     {
         if (str_contains($name, '::')) {
             [$namespace, $componentName] = explode('::', $name, 2);
@@ -105,9 +122,10 @@ class Finder
     {
         [$namespace, $componentName] = $this->parseNamespaceAndName($name);
 
+        // Check if the component is in a namespace...
         if ($namespace !== null) {
-            if (isset($this->classNamespaces[$namespace])) {
-                $class = $this->generateClassFromName($componentName, [$this->classNamespaces[$namespace]]);
+            if (isset($this->classNamespaces[$namespace]['classNamespace'])) {
+                $class = $this->generateClassFromName($componentName, [$this->classNamespaces[$namespace]['classNamespace']]);
 
                 if (class_exists($class)) {
                     return $class;
@@ -117,11 +135,13 @@ class Finder
             return null;
         }
 
+        // Check if the component is explicitly registered...
         if (isset($this->classComponents[$name])) {
             return $this->classComponents[$name];
         }
 
-        $class = $this->generateClassFromName($name, $this->classNamespaces);
+        // Check if the component is in a class location...
+        $class = $this->generateClassFromName($name, $this->classLocations);
 
         if (! class_exists($class)) {
             return null;
@@ -169,15 +189,15 @@ class Finder
             $leadingPath = $leadingSegments ? str_replace('.', '/', $leadingSegments) . '/' : '';
 
             $paths = [
-                'singleFileWithZap' => $location . '/' . $leadingPath . '⚡' . $trailingPath . '.blade.php',
-                'singleFileWithZapVariation15' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath . '.blade.php',
-                'singleFileWithZapVariation16' => $location . '/' . $leadingPath . '⚡️' . $trailingPath . '.blade.php',
-                'singleFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index.blade.php',
-                'singleFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index.blade.php',
-                'singleFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/⚡️index.blade.php',
-                'singleFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath . '.blade.php',
-                'singleFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath . '.blade.php',
-                'singleFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡️' . $trailingPath . '.blade.php',
+                'singleFileWithZap' => $location . '/' . $leadingPath . self::ZAP . $trailingPath . '.blade.php',
+                'singleFileWithZapVariation15' => $location . '/' . $leadingPath . self::ZAP_VS15 . $trailingPath . '.blade.php',
+                'singleFileWithZapVariation16' => $location . '/' . $leadingPath . self::ZAP_VS16 . $trailingPath . '.blade.php',
+                'singleFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP . 'index.blade.php',
+                'singleFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS15 . 'index.blade.php',
+                'singleFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS16 . 'index.blade.php',
+                'singleFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP . $trailingPath . '.blade.php',
+                'singleFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS15 . $trailingPath . '.blade.php',
+                'singleFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS16 . $trailingPath . '.blade.php',
                 'singleFile' => $location . '/' . $leadingPath . $trailingPath . '.blade.php',
                 'singleFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index.blade.php',
                 'singleFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath . '.blade.php',
@@ -236,15 +256,15 @@ class Finder
 
 
             $dirs = [
-                'multiFileWithZap' => $location . '/' . $leadingPath . '⚡' . $trailingPath,
-                'multiFileWithZapVariation15' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath,
-                'multiFileWithZapVariation16' => $location . '/' . $leadingPath . '⚡️' . $trailingPath,
-                'multiFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index',
-                'multiFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index',
-                'multiFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/⚡️index',
-                'multiFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡' . $trailingPath,
-                'multiFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath,
-                'multiFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡️' . $trailingPath,
+                'multiFileWithZap' => $location . '/' . $leadingPath . self::ZAP . $trailingPath,
+                'multiFileWithZapVariation15' => $location . '/' . $leadingPath . self::ZAP_VS15 . $trailingPath,
+                'multiFileWithZapVariation16' => $location . '/' . $leadingPath . self::ZAP_VS16 . $trailingPath,
+                'multiFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP . 'index',
+                'multiFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS15 . 'index',
+                'multiFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS16 . 'index',
+                'multiFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP . $trailingPath,
+                'multiFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS15 . $trailingPath,
+                'multiFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS16 . $trailingPath,
                 'multiFile' => $location . '/' . $leadingPath . $trailingPath,
                 'multiFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index',
                 'multiFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath,
@@ -256,7 +276,7 @@ class Finder
                 $fileBaseName = str_contains($baseName, 'index') ? 'index' : $baseName;
 
                 // Strip out the emoji from folder name to derive the file name...
-                $fileBaseName = preg_replace('/⚡[\x{FE0E}\x{FE0F}]?/u', '', $fileBaseName);
+                $fileBaseName = preg_replace('/' . self::ZAP . '[\x{FE0E}\x{FE0F}]?/u', '', $fileBaseName);
 
                 if (
                     is_dir($dir)
@@ -270,7 +290,7 @@ class Finder
         return $path;
     }
 
-    protected function generateClassFromName($name, $classNamespaces = [])
+    protected function generateClassFromName($name, $classNamespaces = []): string
     {
         $baseClass = collect(str($name)->explode('.'))
             ->map(fn ($segment) => (string) str($segment)->studly())
@@ -290,7 +310,7 @@ class Finder
         return $this->normalizeClassName($baseClass);
     }
 
-    protected function generateNameFromClass($class, $classNamespaces = []): string
+    protected function generateNameFromClass($class): string
     {
         $class = str_replace(
             ['/', '\\'],
@@ -319,6 +339,11 @@ class Finder
         if ($secondToLastSegment && $lastSegment === $secondToLastSegment) {
             $fullName = $fullName->replaceLast('.' . $lastSegment, '');
         }
+
+        $classNamespaces = collect($this->classNamespaces)
+            ->map(fn ($classNamespace) => $classNamespace['classNamespace'])
+            ->merge($this->classLocations)
+            ->toArray();
 
         foreach ($classNamespaces as $classNamespace) {
             $namespace = str_replace(
@@ -401,7 +426,7 @@ class Finder
 
         // Determine if emoji should be used (get from config)
         $useEmoji = config('livewire.make_command.emoji', true);
-        $prefix = $useEmoji ? '⚡' : '';
+        $prefix = $useEmoji ? self::ZAP : '';
 
         // Build the file path
         return $location . '/' . $leadingPath . $prefix . $lastSegment . '.blade.php';
@@ -428,13 +453,13 @@ class Finder
 
         // Determine if emoji should be used (get from config)
         $useEmoji = config('livewire.make_command.emoji', true);
-        $prefix = $useEmoji ? '⚡' : '';
+        $prefix = $useEmoji ? self::ZAP : '';
 
         // Build the directory path
         return $location . '/' . $leadingPath . $prefix . $lastSegment;
     }
 
-    public function resolveClassComponentFilePaths(string $name): array
+    public function resolveClassComponentFilePaths(string $name): ?array
     {
         [$namespace, $componentName] = $this->parseNamespaceAndName($name);
 
@@ -449,11 +474,24 @@ class Finder
         $viewSegments = array_map(fn($segment) => str($segment)->kebab()->toString(), $segments);
         $viewName = implode('.', $viewSegments);
 
-        // Build the class file path
-        $classPath = app_path('Livewire/' . str_replace('\\', '/', $className) . '.php');
+        if ($namespace !== null) {
+            if (! isset($this->classNamespaces[$namespace])) {
+                return null;
+            }
 
-        // Build the view file path using the configured view path
-        $configuredViewPath = config('livewire.view_path', resource_path('views/livewire'));
+            $classNamespaceDetails  = $this->classNamespaces[$namespace];
+
+            $configuredClassPath = $classNamespaceDetails['classPath'];
+            $configuredViewPath = $classNamespaceDetails['classViewPath'];
+        } else {
+            $configuredClassPath = config('livewire.class_path', app_path('Livewire'));
+            $configuredViewPath = config('livewire.view_path', resource_path('views/livewire'));
+        }
+
+        // Build the class file path
+        $classPath = $configuredClassPath . '/' . str_replace('\\', '/', $className) . '.php';
+
+        // Build the view file path
         $viewPath = $configuredViewPath . '/' . str_replace('.', '/', $viewName) . '.blade.php';
 
         return [

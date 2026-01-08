@@ -19,8 +19,7 @@ composer require livewire/livewire:^4.0@beta
 After updating, clear your application's cache:
 
 ```bash
-php artisan config:clear
-php artisan view:clear
+php artisan optimize:clear
 ```
 
 > [!info] View all changes on GitHub
@@ -33,6 +32,9 @@ These changes are most likely to affect your application and should be reviewed 
 ### Config file updates
 
 Several configuration keys have been renamed, reorganized, or have new defaults. Update your `config/livewire.php` file:
+
+> [!tip] View the full config file
+> For reference, you can view the complete v4 config file on GitHub: [livewire.php →](https://github.com/livewire/livewire/blob/main/config/livewire.php)
 
 #### Renamed configuration keys
 
@@ -64,9 +66,9 @@ The layout now uses the `layouts::` namespace by default, pointing to `resources
 'smart_wire_keys' => true,
 ```
 
-This enables automatic intelligent wire:key generation for loops, reducing the need for manual wire:key attributes.
+This helps prevent wire:key issues on deeply nested components. Note: You still need to add `wire:key` manually in loops—this setting doesn't eliminate that requirement.
 
-[Learn more about wire:key →](/docs/nesting#wire-key)
+[Learn more about wire:key →](/docs/4.x/nesting#rendering-children-in-a-loop)
 
 #### New configuration options
 
@@ -105,7 +107,7 @@ Configure default component format and emoji usage. Set `type` to `'class'` to m
 'csp_safe' => false,
 ```
 
-Enable Content Security Policy mode to avoid `unsafe-eval` violations. When enabled, Livewire uses the Alpine CSP build. Note: This mode restricts complex JavaScript expressions in directives like `wire:click="addToCart($event.detail.productId)"` or global references like `window.location`.
+Enable Content Security Policy mode to avoid `unsafe-eval` violations. When enabled, Livewire uses the [Alpine CSP build](https://alpinejs.dev/advanced/csp). Note: This mode restricts complex JavaScript expressions in directives like `wire:click="addToCart($event.detail.productId)"` or global references like `window.location`.
 
 ### Routing changes
 
@@ -124,11 +126,65 @@ Route::livewire('/dashboard', 'pages::dashboard');
 
 Using `Route::livewire()` is now the preferred method and is required for single-file and multi-file components to work correctly as full-page components.
 
-[Learn more about routing →](/docs/components#full-page-components)
+[Learn more about routing →](/docs/4.x/components#page-components)
+
+### `wire:model` now ignores child events by default
+
+In v3, `wire:model` would respond to input/change events that bubbled up from child elements. This caused unexpected behavior when using `wire:model` on container elements (like modals or accordions) that contained form inputs—clearing an input inside would bubble up and potentially close the modal.
+
+In v4, `wire:model` now only listens for events originating directly on the element itself (equivalent to the `.self` modifier behavior).
+
+If you have code that relies on capturing events from child elements, add the `.bubble` modifier:
+
+```blade
+<!-- Before (v3) - listened to child events by default -->
+<div wire:model="value">
+    <input type="text">
+</div>
+
+<!-- After (v4) - add .bubble to restore old behavior -->
+<div wire:model.deep="value">
+    <input type="text">
+</div>
+```
+
+> [!tip] Most apps won't need changes
+> This change primarily affects non-standard uses of `wire:model` on container elements. Standard form input bindings (inputs, selects, textareas) are unaffected.
+
+### Use `wire:navigate:scroll`
+
+When using `wire:scroll` to preserve scroll in a scrollable container across `wire:navigate` requests in v3, you will need to instead us `wire:navigate:scroll` in v4:
+
+```
+@persist('sidebar')
+    <div class="overflow-y-scroll" wire:scroll> <!-- [tl! remove] -->
+    <div class="overflow-y-scroll" wire:navigate:scroll> <!-- [tl! add] -->
+        <!-- ... -->
+    </div>
+@endpersist
+```
 
 ## Medium-impact changes
 
 These changes may affect certain parts of your application depending on which features you use.
+
+### `wire:transition` now uses View Transitions API
+
+In v3, `wire:transition` was a wrapper around Alpine's `x-transition` directive, supporting modifiers like `.opacity`, `.scale`, `.duration.200ms`, and `.origin.top`.
+
+In v4, `wire:transition` uses the browser's native [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) instead. Basic usage still works—elements will fade in and out smoothly—but all modifiers have been removed.
+
+```blade
+<!-- This still works in v4 -->
+<div wire:transition>...</div>
+
+<!-- These modifiers are no longer supported -->
+<div wire:transition.opacity>...</div> <!-- [tl! remove] -->
+<div wire:transition.scale.origin.top>...</div> <!-- [tl! remove] -->
+<div wire:transition.duration.500ms>...</div> <!-- [tl! remove] -->
+```
+
+[Learn more about wire:transition →](/docs/4.x/wire-transition)
 
 ### Performance improvements
 
@@ -165,7 +221,7 @@ $this->stream('#container', 'Hello');
 $this->stream('Hello', el: '#container');
 ```
 
-[Learn more about streaming →](/docs/wire-stream)
+[Learn more about streaming →](/docs/4.x/wire-stream)
 
 **Component mounting (internal):**
 
@@ -204,6 +260,29 @@ $wire.$js.bookmark = () => {
 ```
 
 The new syntax is cleaner and more intuitive.
+
+#### Deprecated: `$js` without prefix
+
+The use of `$js` in scripts without `$wire.$js` or `this.$js` prefix has been deprecated:
+
+```js
+// Deprecated (v3)
+$js('bookmark', () => {
+    // Toggle bookmark...
+})
+
+// New (v4)
+$wire.$js.bookmark = () => {
+    // Toggle bookmark...
+}
+// Or
+this.$js.bookmark = () => {
+    // Toggle bookmark...
+}
+```
+
+> [!tip] Old syntax still works
+> Both `$wire.$js('bookmark', ...)` and `$js('bookmark', ...)` will continue to work in v4 for backward compatibility, but you should migrate to the new syntax when convenient.
 
 #### Deprecated: `commit` and `request` hooks
 
@@ -316,9 +395,64 @@ Livewire.interceptRequest(({ request, onResponse, onSuccess, onError, onFailure 
 1. **More granular error handling**: The new system separates network failures (`onFailure`) from server errors (`onError`)
 2. **Better lifecycle hooks**: Message interceptors provide additional hooks like `onSync`, `onMorph`, and `onRender`
 3. **Cancellation support**: Both messages and requests can be cancelled/aborted
-4. **Component scoping**: Interceptors can be scoped to specific components using `Livewire.intercept($wire, ...)`
+4. **Component scoping**: Message interceptors can be scoped to specific components using `$wire.intercept(...)`
 
-For complete documentation on the new interceptor system, see the [JavaScript Interceptors documentation](/docs/javascript#interceptors).
+For complete documentation on the new interceptor system, see the [JavaScript Interceptors documentation](/docs/4.x/javascript#interceptors).
+
+## Upgrading Volt
+
+Livewire v4 now supports single-file components, which use the same syntax as Volt class-based components. This means you can migrate from Volt to Livewire's built-in single-file components.
+
+### Update component imports
+
+Replace all instances of `Livewire\Volt\Component` with `Livewire\Component`:
+
+```php
+// Before (Volt)
+use Livewire\Volt\Component;
+
+new class extends Component { ... }
+
+// After (Livewire v4)
+use Livewire\Component;
+
+new class extends Component { ... }
+```
+
+### Remove Volt service provider
+
+Delete the Volt service provider file:
+
+```bash
+rm app/Providers/VoltServiceProvider.php
+```
+
+Then remove it from the providers array in `bootstrap/providers.php`:
+
+```php
+// Before
+return [
+    App\Providers\AppServiceProvider::class,
+    App\Providers\VoltServiceProvider::class,
+];
+
+// After
+return [
+    App\Providers\AppServiceProvider::class,
+];
+```
+
+### Remove Volt package
+
+Uninstall the Volt package:
+
+```bash
+composer remove livewire/volt
+```
+
+### Install Livewire v4
+
+After completing the above changes, install Livewire v4. Your existing Volt class-based components will work without modification since they use the same syntax as Livewire's single-file components.
 
 ## New features in v4
 
@@ -338,13 +472,13 @@ php artisan make:livewire create-post --mfc  # Multi-file
 php artisan livewire:convert create-post     # Convert between formats
 ```
 
-[Learn more about component formats →](/docs/components)
+[Learn more about component formats →](/docs/4.x/components)
 
 **Slots and attribute forwarding**
 
 Components now support slots and automatic attribute bag forwarding using `{{ $attributes }}`, making component composition more flexible.
 
-[Learn more about nesting components →](/docs/nesting)
+[Learn more about nesting components →](/docs/4.x/nesting)
 
 **JavaScript in view-based components**
 
@@ -364,7 +498,7 @@ View-based components can now include `<script>` tags without the `@script` wrap
 </script>
 ```
 
-[Learn more about JavaScript in components →](/docs/javascript)
+[Learn more about JavaScript in components →](/docs/4.x/javascript)
 
 ### Islands
 
@@ -376,9 +510,7 @@ Islands allow you to create isolated regions within a component that update inde
 @endisland
 ```
 
-Islands also support imperative rendering and streaming from your component actions.
-
-[Learn more about islands →](/docs/islands)
+[Learn more about islands →](/docs/4.x/islands)
 
 ### Loading improvements
 
@@ -400,8 +532,8 @@ class Revenue extends Component { ... }
 Control whether multiple lazy/deferred components load in parallel or bundled together:
 
 ```blade
-<livewire:revenue lazy lazy:bundle />
-<livewire:expenses defer defer:bundle />
+<livewire:revenue lazy.bundle />
+<livewire:expenses defer.bundle />
 ```
 
 ```php
@@ -409,7 +541,7 @@ Control whether multiple lazy/deferred components load in parallel or bundled to
 class Revenue extends Component { ... }
 ```
 
-[Learn more about lazy and deferred loading →](/docs/lazy)
+[Learn more about lazy and deferred loading →](/docs/4.x/lazy)
 
 ### Async actions
 
@@ -424,7 +556,7 @@ Run actions in parallel without blocking other requests using the `.async` modif
 public function logActivity() { ... }
 ```
 
-[Learn more about async actions →](/docs/actions#parallel-execution-with-async)
+[Learn more about async actions →](/docs/4.x/actions#parallel-execution-with-async)
 
 ### New directives and modifiers
 
@@ -435,16 +567,16 @@ Built-in support for sortable lists with drag-and-drop:
 ```blade
 <ul wire:sort="updateOrder">
     @foreach ($items as $item)
-        <li wire:sort:item="{{ $item->id }}">{{ $item->name }}</li>
+        <li wire:sort:item="{{ $item->id }}" wire:key="{{ $item->id }}">{{ $item->name }}</li>
     @endforeach
 </ul>
 ```
 
-[Learn more about wire:sort →](/docs/wire-sort)
+[Learn more about wire:sort →](/docs/4.x/wire-sort)
 
 **`wire:intersect` - Viewport intersection**
 
-Run actions when elements enter or leave the viewport, similar to Alpine's `x-intersect`:
+Run actions when elements enter or leave the viewport, similar to Alpine's [`x-intersect`](https://alpinejs.dev/plugins/intersect):
 
 ```blade
 <!-- Basic usage -->
@@ -468,25 +600,27 @@ Available modifiers:
 - `.threshold.X` - Custom visibility percentage (0-100)
 - `.margin.Xpx` or `.margin.X%` - Intersection margin
 
-[Learn more about wire:intersect →](/docs/wire-intersect)
+[Learn more about wire:intersect →](/docs/4.x/wire-intersect)
 
 **`wire:ref` - Element references**
 
 Easily reference and interact with elements in your template:
 
 ```blade
-@foreach ($comments as $comment)
-    <div wire:ref="comment-{{ $comment->id }}">
-        {{ $comment->body }}
-    </div>
-@endforeach
+<div wire:ref="modal">
+    <!-- Modal content -->
+</div>
 
-<button wire:click="$refs['comment-123'].scrollIntoView()">
-    Scroll to Comment
-</button>
+<button wire:click="$js.scrollToModal">Scroll to modal</button>
+
+<script>
+    this.$js.scrollToModal = () => {
+        this.$refs.modal.scrollIntoView()
+    }
+</script>
 ```
 
-[Learn more about wire:ref →](/docs/wire-ref)
+[Learn more about wire:ref →](/docs/4.x/wire-ref)
 
 **`.renderless` modifier**
 
@@ -497,8 +631,6 @@ Skip component re-rendering directly from the template:
 ```
 
 This is an alternative to the `#[Renderless]` attribute for actions that don't need to update the UI.
-
-[Learn more about actions →](/docs/actions)
 
 **`.preserve-scroll` modifier**
 
@@ -513,12 +645,12 @@ Preserve scroll position during updates to prevent layout jumps:
 Every element that triggers a network request automatically receives a `data-loading` attribute, making it easy to style loading states with Tailwind:
 
 ```blade
-<button wire:click="save" class="data-[loading]:opacity-50 data-[loading]:pointer-events-none">
+<button wire:click="save" class="data-loading:opacity-50 data-loading:pointer-events-none">
     Save Changes
 </button>
 ```
 
-[Learn more about loading states →](/docs/wire-loading)
+[Learn more about loading states →](/docs/4.x/loading-states)
 
 ### JavaScript improvements
 
@@ -527,12 +659,12 @@ Every element that triggers a network request automatically receives a `data-loa
 Access your component's error bag from JavaScript:
 
 ```blade
-<div x-show="$wire.$errors.has('email')">
-    <span x-text="$wire.$errors.first('email')"></span>
+<div wire:show="$errors.has('email')">
+    <span wire:text="$errors.first('email')"></span>
 </div>
 ```
 
-[Learn more about validation →](/docs/validation)
+[Learn more about validation →](/docs/4.x/validation)
 
 **`$intercept` magic**
 
@@ -540,27 +672,25 @@ Intercept and modify Livewire requests from JavaScript:
 
 ```blade
 <script>
-$wire.$intercept('save', ({ proceed }) => {
-    if (confirm('Save changes?')) {
-        proceed()
-    }
+this.$intercept('save', ({ ... }) => {
+    // ...
 })
 </script>
 ```
 
-[Learn more about JavaScript interceptors →](/docs/javascript#interceptors)
+[Learn more about JavaScript interceptors →](/docs/4.x/javascript#interceptors)
 
 **Island targeting from JavaScript**
 
 Trigger island renders directly from the template:
 
 ```blade
-<button wire:click="$island('stats', { mode: 'prepend' })">
-    Update Stats
+<button wire:click="loadMore" wire:island.append="stats">
+    Load more
 </button>
 ```
 
-[Learn more about islands →](/docs/islands)
+[Learn more about islands →](/docs/4.x/islands)
 
 ## Getting help
 
@@ -568,4 +698,3 @@ If you encounter issues during the upgrade:
 
 - Check the [documentation](https://livewire.laravel.com) for detailed feature guides
 - Visit the [GitHub discussions](https://github.com/livewire/livewire/discussions) for community support
-- Report bugs on [GitHub issues](https://github.com/livewire/livewire/issues)

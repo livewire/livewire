@@ -1,5 +1,5 @@
 import Alpine from 'alpinejs'
-import { evaluateActionExpressionWithoutComponentScope } from '../evaluator'
+import { evaluateActionExpression } from '../evaluator'
 
 Alpine.interceptInit(el => {
     for (let i = 0; i < el.attributes.length; i++) {
@@ -12,7 +12,7 @@ Alpine.interceptInit(el => {
 
             Alpine.bind(el, {
                 ['x-text' + modifierString]() {
-                    return evaluateActionExpressionWithoutComponentScope(el, expression)
+                    return evaluateActionExpression(el, expression)
                 }
             })
         }

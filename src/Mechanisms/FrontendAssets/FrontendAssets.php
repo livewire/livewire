@@ -6,6 +6,7 @@ use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Mechanisms\Mechanism;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use function Livewire\on;
 
 class FrontendAssets extends Mechanism
@@ -21,12 +22,12 @@ class FrontendAssets extends Mechanism
     {
         app($this::class)->setScriptRoute(function ($handle) {
             return config('app.debug')
-                ? Route::get('/livewire/livewire.js', $handle)
-                : Route::get('/livewire/livewire.min.js', $handle);
+                ? Route::get(EndpointResolver::scriptPath(minified: false), $handle)
+                : Route::get(EndpointResolver::scriptPath(minified: true), $handle);
         });
 
-        Route::get('/livewire/livewire.min.js.map', [static::class, 'maps']);
-        Route::get('/livewire/livewire.csp.min.js.map', [static::class, 'cspMaps']);
+        Route::get(EndpointResolver::mapPath(csp: false), [static::class, 'maps']);
+        Route::get(EndpointResolver::mapPath(csp: true), [static::class, 'cspMaps']);
 
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
         Blade::directive('livewireScriptConfig', [static::class, 'livewireScriptConfig']);
@@ -208,6 +209,8 @@ class FrontendAssets extends Mechanism
 
         $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
 
+        $uriPrefix = app('livewire')->getUriPrefix();
+
         $updateUri = app('livewire')->getUpdateUri();
 
         $extraAttributes = Utils::stringifyHtmlAttributes(
@@ -215,7 +218,7 @@ class FrontendAssets extends Mechanism
         );
 
         return <<<HTML
-        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
+        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-uri-prefix="{$uriPrefix}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 
@@ -230,6 +233,7 @@ class FrontendAssets extends Mechanism
         $attributes = json_encode([
             'csrf' => app()->has('session.store') ? csrf_token() : '',
             'uri' => app('livewire')->getUpdateUri(),
+            'uriPrefix' => app('livewire')->getUriPrefix(),
             'progressBar' => $progressBar,
             'nonce' => isset($options['nonce']) ? $options['nonce'] : '',
         ]);

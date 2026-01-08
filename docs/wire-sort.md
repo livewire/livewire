@@ -13,8 +13,7 @@ Here's a basic example of a sortable todo list:
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 
-new class extends Component
-{
+new class extends Component {
     public Todo $todo;
 
     public function sortItem($item, $position)
@@ -52,8 +51,7 @@ By assigning the same group name to multiple sortable containers, items can be d
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 
-new class extends Component
-{
+new class extends Component {
     public User $user;
 
     public function sortItem($item, $position)
@@ -122,3 +120,15 @@ You can prevent specific areas within a sortable item from triggering drag opera
 ```
 
 Clicking and dragging within an element marked with `wire:sort:ignore` will have no effect, allowing users to interact with buttons and other controls without accidentally triggering a sort operation.
+
+## Reference
+
+```blade
+wire:sort="method"
+wire:sort:item="id"
+wire:sort:group="name"
+wire:sort:handle
+wire:sort:ignore
+```
+
+This directive has no modifiers.

@@ -55,7 +55,7 @@ not sure where to note but view-based component files are prefixed withemojis by
 - `.renderless` is now an avaialble modifier like .async as an alternative to the existing #[Renderless] action/method attribute
 - CSP-mode. If you set `csp_safe` to true in your config livewire will now use the alpine CSP build and your whole app will avoid unsafe eval violations. there are many restrictions when using this mode. you can no longer put complex js or global expressions like: `wire:click="doSomething($event.detail.foo)"` or global things like `wire:click="redirectHere(window.location.href)"`
 - defer loading in addition to lazy. <livewire:component defer> attribute #[Defer] attribute for class (same signatures as lazy)
-- can use additional `lazy:bundle` or `defer:bundle` additional syntax to flag the lazy load to bundle multiple lazy loads instead of them being isolated/parralel. There's also `#[Defer|Lazy(bundle: true)]` for this.
+- can use additional `lazy.bundle` or `defer.bundle` additional syntax to flag the lazy load to bundle multiple lazy loads instead of them being isolated/parralel. There's also `#[Defer|Lazy(bundle: true)]` for this.
 -kinda big one. view-based components can have <script></script> at the bottom with now `@script` wrapper and they work differently. their source is made available via a faux js file to frontend so caching and native module code can work. also they automatically bind this. ($wire is what this is ) and $wire is still available but this. is preferred.
 
 

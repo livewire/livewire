@@ -3,8 +3,8 @@ import { interceptMessage } from '@/request'
 import { findComponent } from '@/store'
 
 interceptMessage(({ message, onStream }) => {
-    onStream(({ streamedJson }) => {
-        let { id, type, name, el, ref, content, mode } = streamedJson
+    onStream(({ json }) => {
+        let { id, type, name, el, ref, content, mode } = json
 
         // Early return for islands because they are handled by the islands feature...
         if (type === 'island') return

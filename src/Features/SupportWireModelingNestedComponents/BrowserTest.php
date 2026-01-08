@@ -268,6 +268,29 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeNothingIn('@child.ephemeral', '')
         ;
     }
+
+    public function test_can_still_forward_wire_model_attribute()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                <div>
+                    <livewire:child wire:model="foo" class="foo" />
+                </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                <div {{ $attributes }} dusk="child">
+                    <!-- ... -->
+                </div>
+                HTML; }
+            },
+        ])
+        ->assertAttribute('@child', 'wire:model', 'foo')
+        ->assertAttribute('@child', 'class', 'foo')
+        ;
+    }
 }
 
 class CreatePost extends Form

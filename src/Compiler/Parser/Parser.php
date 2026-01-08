@@ -52,9 +52,19 @@ class Parser
 
     protected function ensureAnonymousClassHasReturn(string $contents): string
     {
-        if (preg_match('/\bnew\b/', $contents) && !preg_match('/\breturn\s+new\b/', $contents)) {
-            return preg_replace('/\bnew\b/', 'return new', $contents, 1);
+        // Find the position of the first "new"...
+        if (preg_match('/\bnew\b/', $contents, $newMatch, PREG_OFFSET_CAPTURE)) {
+            $newPosition = $newMatch[0][1];
+
+            // Check if "return new" exists and find where "new" starts in that match...
+            $hasReturnNew = preg_match('/\breturn\s+(new\b)/', $contents, $returnNewMatch, PREG_OFFSET_CAPTURE);
+
+            // If "return new" does not exist or "new" is not at the same position as "return new", add "return"...
+            if (!$hasReturnNew || $returnNewMatch[1][1] !== $newPosition) {
+                $contents = substr_replace($contents, 'return ', $newPosition, 0);
+            }
         }
+
         return $contents;
     }
 
@@ -87,9 +97,9 @@ class Parser
             $position = $lastMatch[1];
             return substr_replace($contents, <<<PHP
 
-    protected function view()
+    protected function view(\$data = [])
     {
-        return app('view')->file('{$viewFileName}');
+        return app('view')->file('{$viewFileName}', \$data);
     }
 }
 PHP

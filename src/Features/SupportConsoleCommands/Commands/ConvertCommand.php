@@ -116,7 +116,7 @@ class ConvertCommand extends Command
         $testPath = $directory . '/' . $componentName . '.test.php';
         $jsPath = $directory . '/' . $componentName . '.js';
 
-        $parser = SingleFileParser::parse($sfcPath);
+        $parser = SingleFileParser::parse(app('livewire.compiler'), $sfcPath);
 
         $this->ensureDirectoryExists($directory);
 
@@ -127,7 +127,17 @@ class ConvertCommand extends Command
         $this->files->put($classPath, $classContents);
         $this->files->put($viewPath, $viewContents);
 
-        if ($this->option('test')) {
+        // Check for existing test file next to SFC
+        $sfcTestPath = str_replace('.blade.php', '.test.php', $sfcPath);
+        $existingTestFile = $this->files->exists($sfcTestPath);
+
+        if ($existingTestFile) {
+            // Move existing test file into MFC directory
+            $testContents = $this->files->get($sfcTestPath);
+            $this->files->put($testPath, $testContents);
+            $this->files->delete($sfcTestPath);
+        } elseif ($this->option('test')) {
+            // Create new test file if --test flag passed and no existing test
             $this->files->put($testPath, $this->buildMultiFileComponentTest($name));
         }
 
@@ -167,21 +177,9 @@ class ConvertCommand extends Command
             return 1;
         }
 
-        // Check if test file exists and warn user it will be deleted
-        if ($this->files->exists($testPath)) {
-            // Skip interactive prompts in testing environment
-            if (! app()->runningUnitTests()) {
-                $this->components->warn('A test file exists for this component.');
-                $continue = confirm('Converting to single-file will delete the test file. Continue?', default: false);
+        $testFileExists = $this->files->exists($testPath);
 
-                if (! $continue) {
-                    $this->components->info('Conversion cancelled.');
-                    return 0;
-                }
-            }
-        }
-
-        $parser = MultiFileParser::parse($mfcPath);
+        $parser = MultiFileParser::parse(app('livewire.compiler'), $mfcPath);
 
         // Generate the single-file component contents
         $sfcContents = $parser->generateContentsForSingleFile();
@@ -189,6 +187,13 @@ class ConvertCommand extends Command
         $this->ensureDirectoryExists(dirname($sfcPath));
 
         $this->files->put($sfcPath, $sfcContents);
+
+        // Move test file out before deleting directory
+        if ($testFileExists) {
+            $testContents = $this->files->get($testPath);
+            $sfcTestPath = str_replace('.blade.php', '.test.php', $sfcPath);
+            $this->files->put($sfcTestPath, $testContents);
+        }
 
         // Delete the multi-file directory
         $this->files->deleteDirectory($mfcPath);
@@ -251,7 +256,7 @@ class ConvertCommand extends Command
         return [
             ['sfc', null, InputOption::VALUE_NONE, 'Convert to single-file component'],
             ['mfc', null, InputOption::VALUE_NONE, 'Convert to multi-file component'],
-            ['test', null, InputOption::VALUE_NONE, 'Create a test file for multi-file components'],
+            ['test', null, InputOption::VALUE_NONE, 'Create a test file when converting to multi-file (if one does not exist)'],
             ['emoji', null, InputOption::VALUE_REQUIRED, 'Use emoji in file/directory names (true or false)'],
         ];
     }

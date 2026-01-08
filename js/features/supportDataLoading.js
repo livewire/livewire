@@ -1,20 +1,24 @@
 import { interceptMessage } from '@/request'
 
-interceptMessage(({ actions, onSend, onFinish }) => {
+interceptMessage(({ message, onSend, onFinish }) => {
     let undos = []
 
     onSend(() => {
-        actions.forEach(action => {
+        message.actions.forEach(action => {
             let origin = action.origin
 
-            if (! origin || ! origin.el) return
+            if (! origin) return
 
-            if (action.metadata?.type === 'poll') return
+            // Use targetEl if explicitly set (can be null to skip data-loading entirely)
+            let el = origin.hasOwnProperty('targetEl') ? origin.targetEl : origin.el
 
-            origin.el.setAttribute('data-loading', 'true')
+            // Skip if no element to apply data-loading to
+            if (! el) return
+
+            el.setAttribute('data-loading', 'true')
 
             undos.push(() => {
-                origin.el.removeAttribute('data-loading')
+                el.removeAttribute('data-loading')
             })
         })
     })

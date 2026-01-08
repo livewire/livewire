@@ -10,20 +10,27 @@ class BrowserTest extends \Tests\BrowserTestCase
     public static function tweakApplicationHook()
     {
         return function () {
-            app('livewire.finder')->addComponent('sfc-scripts', path: __DIR__ . '/fixtures/sfc-scripts.blade.php');
-
-            Route::livewire('/sfc-scripts', 'sfc-scripts');
+            app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');
         };
     }
 
     public function test_single_file_component_script()
     {
-        $this->browse(function ($browser) {
-            $browser
-                ->visit('/sfc-scripts')
-                ->waitForLivewireToLoad()
-                ->assertSeeIn('@foo', 'baz')
-            ;
-        });
+        Livewire::visit('sfc-scripts')
+            ->waitForLivewireToLoad()
+            // Pause for a moment to allow the script to be loaded...
+            ->pause(100)
+            ->assertSeeIn('@foo', 'baz');
+    }
+
+    public function test_single_file_component_script_with_js_action()
+    {
+        Livewire::visit('sfc-scripts-with-js-action')
+            ->waitForLivewireToLoad()
+            // Pause for a moment to allow the script to be loaded...
+            ->pause(100)
+            ->assertSeeIn('@foo', 'bar')
+            ->click('@set-foo')
+            ->assertSeeIn('@foo', 'baz');
     }
 }

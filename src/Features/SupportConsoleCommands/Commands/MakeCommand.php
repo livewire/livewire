@@ -49,6 +49,11 @@ class MakeCommand extends Command
 
         $name = $this->normalizeComponentName($name);
 
+        // If --test flag is provided and component already exists, just create the test
+        if ($this->option('test') && $this->componentExistsInAnyForm($name)) {
+            return $this->createTestForExistingComponent($name);
+        }
+
         // Check if component already exists in ANY form before proceeding
         if ($this->componentExistsInAnyForm($name)) {
             $this->components->error('Component already exists.');
@@ -105,12 +110,25 @@ class MakeCommand extends Command
 
     protected function createClassBasedComponent(string $name): int
     {
+        [$namespace, $componentName] = $this->finder->parseNamespaceAndName($name);
+
+        if ($namespace !== null) {
+            $classNamespaceDetails = $this->finder->getClassNamespace($namespace);
+
+            if ($classNamespaceDetails === null) {
+                $this->components->error('Namespace not found.');
+                return 1;
+            }
+        } else {
+            $classNamespaceDetails = null;
+        }
+
         $paths = $this->finder->resolveClassComponentFilePaths($name);
 
         $this->ensureDirectoryExists(dirname($paths['class']));
         $this->ensureDirectoryExists(dirname($paths['view']));
 
-        $classContent = $this->buildClassBasedComponentClass($name);
+        $classContent = $this->buildClassBasedComponentClass($componentName, $classNamespaceDetails);
         $viewContent = $this->buildClassBasedComponentView();
 
         $this->files->put($paths['class'], $classContent);
@@ -166,6 +184,13 @@ class MakeCommand extends Command
         $content = $this->buildSingleFileComponent();
 
         $this->files->put($path, $content);
+
+        // Create test file if --test flag is present
+        if ($this->option('test')) {
+            $testPath = $this->getSingleFileComponentTestPath($path);
+            $testContent = $this->buildSingleFileComponentTest($name);
+            $this->files->put($testPath, $testContent);
+        }
 
         $this->components->info(sprintf('Livewire component [%s] created successfully.', $path));
 
@@ -245,17 +270,23 @@ class MakeCommand extends Command
         return config('livewire.make_command.emoji', true);
     }
 
-    protected function buildClassBasedComponentClass(string $name): string
+    protected function buildClassBasedComponentClass(string $componentName, ?array $classNamespaceDetails = null): string
     {
         $stub = $this->files->get($this->getStubPath('livewire.stub'));
 
-        $segments = explode('.', $name);
+        $segments = explode('.', $componentName);
 
         $className = Str::studly(end($segments));
 
         $namespaceSegments = array_slice($segments, 0, -1);
 
-        $namespace = 'App\\Livewire';
+        if ($classNamespaceDetails !== null) {
+            $namespace = $classNamespaceDetails['classNamespace'];
+            $viewPath = $classNamespaceDetails['classViewPath'];
+        } else {
+            $namespace = 'App\\Livewire';
+            $viewPath = config('livewire.view_path', resource_path('views/livewire'));
+        }
 
         if (! empty($namespaceSegments)) {
             $namespace .= '\\' . collect($namespaceSegments)
@@ -264,7 +295,6 @@ class MakeCommand extends Command
         }
 
         // Get the configured view path and extract the view namespace from it
-        $viewPath = config('livewire.view_path', resource_path('views/livewire'));
         $viewNamespace = $this->extractViewNamespace($viewPath);
 
         $viewName = $viewNamespace . '.' . collect($segments)
@@ -328,6 +358,59 @@ class MakeCommand extends Command
         return $this->files->get($this->getStubPath('livewire-mfc-js.stub'));
     }
 
+    protected function getSingleFileComponentTestPath(string $sfcPath): string
+    {
+        // Convert: /path/⚡foo.blade.php → /path/⚡foo.test.php
+        return str_replace('.blade.php', '.test.php', $sfcPath);
+    }
+
+    protected function buildSingleFileComponentTest(string $name): string
+    {
+        // Use same stub as MFC, same format
+        $stub = $this->files->get($this->getStubPath('livewire-mfc-test.stub'));
+
+        $componentName = collect(explode('.', $name))
+            ->map(fn($segment) => Str::kebab($segment))
+            ->implode('.');
+
+        $stub = str_replace('[component-name]', $componentName, $stub);
+
+        return $stub;
+    }
+
+    protected function getClassBasedComponentTestPath(string $name): string
+    {
+        $segments = explode('.', $name);
+
+        $className = Str::studly(end($segments)) . 'Test';
+
+        $namespaceSegments = array_slice($segments, 0, -1);
+
+        $path = base_path('tests/Feature/Livewire');
+
+        if (! empty($namespaceSegments)) {
+            $path .= '/' . collect($namespaceSegments)
+                ->map(fn($segment) => Str::studly($segment))
+                ->implode('/');
+        }
+
+        return $path . '/' . $className . '.php';
+    }
+
+    protected function buildClassBasedComponentTest(string $name): string
+    {
+        // Use same Pest-style stub as MFC/SFC for consistency
+        $stub = $this->files->get($this->getStubPath('livewire-mfc-test.stub'));
+
+        $componentName = collect(explode('.', $name))
+            ->map(fn($segment) => Str::kebab($segment))
+            ->implode('.');
+
+        $stub = str_replace('[component-name]', $componentName, $stub);
+
+        return $stub;
+    }
+
     protected function getStubPath(string $stub): string
     {
         $customPath = $this->laravel->basePath('stubs/' . $stub);
@@ -371,14 +454,89 @@ class MakeCommand extends Command
             return true;
         }
 
+        // Check for single-file component
+        $sfcPath = $finder->resolveSingleFileComponentPathForCreation($name);
+        if ($this->files->exists($sfcPath)) {
+            return true;
+        }
+
         // Check for class-based component
         $paths = $finder->resolveClassComponentFilePaths($name);
         if (isset($paths['class']) && $this->files->exists($paths['class'])) {
             return true;
         }
 
-        // Note: We don't check for SFC here because SFC->MFC upgrade is a valid operation
         return false;
+    }
+
+    protected function createTestForExistingComponent(string $name): int
+    {
+        $finder = $this->finder;
+
+        // Check for multi-file component first
+        $mfcPath = $finder->resolveMultiFileComponentPath($name);
+        if ($mfcPath && $this->files->exists($mfcPath) && $this->files->isDirectory($mfcPath)) {
+            $componentName = basename($mfcPath);
+            if ($this->shouldUseEmoji()) {
+                $componentName = str_replace(['⚡', '⚡︎', '⚡️'], '', $componentName);
+            }
+
+            $testPath = $mfcPath . '/' . $componentName . '.test.php';
+
+            if ($this->files->exists($testPath)) {
+                $this->components->error('Test file already exists.');
+                return 1;
+            }
+
+            $testContent = $this->buildMultiFileComponentTest($name);
+            $this->files->put($testPath, $testContent);
+
+            $this->components->info(sprintf('Livewire test [%s] created successfully.', $testPath));
+
+            return 0;
+        }
+
+        // Check for single-file component
+        $sfcPath = $finder->resolveSingleFileComponentPathForCreation($name);
+        if ($this->files->exists($sfcPath)) {
+            $testPath = $this->getSingleFileComponentTestPath($sfcPath);
+
+            if ($this->files->exists($testPath)) {
+                $this->components->error('Test file already exists.');
+                return 1;
+            }
+
+            $testContent = $this->buildSingleFileComponentTest($name);
+            $this->files->put($testPath, $testContent);
+
+            $this->components->info(sprintf('Livewire test [%s] created successfully.', $testPath));
+
+            return 0;
+        }
+
+        // Check for class-based component
+        $paths = $finder->resolveClassComponentFilePaths($name);
+        if (isset($paths['class']) && $this->files->exists($paths['class'])) {
+            // For class-based components, create test in tests/Feature/Livewire directory
+            $testPath = $this->getClassBasedComponentTestPath($name);
+
+            $this->ensureDirectoryExists(dirname($testPath));
+
+            if ($this->files->exists($testPath)) {
+                $this->components->error('Test file already exists.');
+                return 1;
+            }
+
+            $testContent = $this->buildClassBasedComponentTest($name);
+            $this->files->put($testPath, $testContent);
+
+            $this->components->info(sprintf('Livewire test [%s] created successfully.', $testPath));
+
+            return 0;
+        }
+
+        $this->components->error('Component not found.');
+        return 1;
     }
 
     protected function getArguments()
@@ -395,7 +553,7 @@ class MakeCommand extends Command
             ['mfc', null, InputOption::VALUE_NONE, 'Create a multi-file component'],
             ['class', null, InputOption::VALUE_NONE, 'Create a class-based component'],
             ['type', null, InputOption::VALUE_REQUIRED, 'Component type (sfc, mfc, or class)'],
-            ['test', null, InputOption::VALUE_NONE, 'Create a test file for multi-file components'],
+            ['test', null, InputOption::VALUE_NONE, 'Create a test file'],
             ['emoji', null, InputOption::VALUE_REQUIRED, 'Use emoji in file/directory names (true or false)'],
             ['js', null, InputOption::VALUE_NONE, 'Create a JavaScript file for multi-file components'],
         ];

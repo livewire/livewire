@@ -374,6 +374,27 @@ class Testable
     }
 
     /**
+     * @param string $property
+     * @param mixed $value
+     */
+    function __set($property, $value)
+    {
+        if ($property === 'snapshot') {
+            $this->lastState = new ComponentState(
+                $this->lastState->getComponent(),
+                $this->lastState->getResponse(),
+                $this->lastState->getView(),
+                $this->lastState->getHtml(),
+                $value,
+                $this->lastState->getEffects(),
+            );
+            return;
+        }
+
+        $this->setProperty($property, $value);
+    }
+
+    /**
      * @param string $method
      *
      * @return $this

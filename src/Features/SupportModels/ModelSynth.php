@@ -55,13 +55,18 @@ class ModelSynth extends Synth {
     }
 
     function hydrate($data, $meta) {
-        $class = $meta['class'];
+        $class = $meta['class'] ?? null;
 
         // If no alias found, this returns `null`
         $aliasClass = Relation::getMorphedModel($class);
 
         if (! is_null($aliasClass)) {
             $class = $aliasClass;
+        }
+
+        // Verify class extends Model even though checksum protects this...
+        if (! $class || ! is_a($class, Model::class, true)) {
+            throw new \Exception('Livewire: Invalid model class.');
         }
 
         // If no key is provided then an empty model is returned
