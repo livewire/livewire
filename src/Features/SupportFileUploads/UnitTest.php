@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-use App\Livewire\UploadFile;
 use Carbon\Carbon;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Livewire\WithFileUploads;
@@ -13,7 +12,6 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
-use Illuminate\Http\Testing\FileFactory;
 use Illuminate\Support\Arr;
 use Tests\TestComponent;
 
@@ -27,14 +25,50 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
     }
 
-    public function test_s3_driver_only_supports_single_file_uploads()
+    public function test_s3_driver_supports_multiple_file_uploads()
     {
         config()->set('livewire.temporary_file_upload.disk', 's3');
 
-        $this->expectException(S3DoesntSupportMultipleFileUploads::class);
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photos', [
+                UploadedFile::fake()->image('avatar.jpg'),
+                UploadedFile::fake()->image('avatar2.jpg'),
+            ]);
+
+        $tmpFilenames = $component->viewData('photos');
+
+        $component->call('_removeUpload', 'photos', $tmpFilenames[0]->getFilename())
+            ->assertDispatched('upload:removed', name: 'photos', tmpFilename: $tmpFilenames[0]->getFilename());
+
+        $tmpFiles = $component->call('$refresh')->viewData('photos');
+        $this->assertCount(1, $tmpFiles);
+    }
+
+    public function test_s3_cleans_up_orphaned_files_when_multi_file_upload_fails_mid_process()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
+        Storage::fake('tmp-for-tests');
+
+        $completedPaths = ['file1.jpg', 'file2.jpg'];
+
+        foreach ($completedPaths as $path) {
+            Storage::disk('tmp-for-tests')->put(
+                FileUploadConfiguration::path($path),
+                'fake-content'
+            );
+        }
+
+        foreach ($completedPaths as $path) {
+            Storage::disk('tmp-for-tests')->assertExists(FileUploadConfiguration::path($path));
+        }
 
         Livewire::test(FileUploadComponent::class)
-            ->set('photos', [UploadedFile::fake()->image('avatar.jpg')]);
+            ->call('_uploadErrored', 'photos', null, true, $completedPaths);
+
+        foreach ($completedPaths as $path) {
+            Storage::disk('tmp-for-tests')->assertMissing(FileUploadConfiguration::path($path));
+        }
     }
 
     public function test_can_set_a_file_as_a_property_and_store_it()
@@ -66,7 +100,6 @@ class UnitTest extends \Tests\TestCase
 
     public function test_cant_remove_a_file_property_with_mismatched_filename_provided()
     {
-
         $file = UploadedFile::fake()->image('avatar.jpg');
 
         $component = Livewire::test(FileUploadComponent::class)
@@ -75,7 +108,6 @@ class UnitTest extends \Tests\TestCase
         $component->call('_removeUpload', 'photo', 'mismatched-filename.png')
             ->assertNotDispatched('upload:removed', name: 'photo', tmpFilename: 'mismatched-filename.png')
             ->assertNotSet('photo', null);
-
     }
 
     public function test_can_remove_a_file_from_an_array_of_files_property()

@@ -5105,6 +5105,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function deepClone(obj) {
     return JSON.parse(JSON.stringify(obj));
   }
+  function deeplyEqual(a, b) {
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
   function parsePathSegments(path) {
     if (path === "")
       return [];
@@ -5149,6 +5152,79 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       diffs[`${path}.${key}`] = "__rm__";
     });
     return diffs;
+  }
+  function diffAndConsolidate(left, right) {
+    let diffs = {};
+    diffRecursive(left, right, "", diffs, left, right);
+    return diffs;
+  }
+  function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
+    if (left === right)
+      return { changed: false, consolidated: false };
+    let convertedToObject = false;
+    let hasNonNumericKeys = (arr) => {
+      return isArray(arr) && Object.keys(arr).some((k) => isNaN(parseInt(k)));
+    };
+    if (typeof left !== typeof right || isObject(left) && isArray(right) || isArray(left) && isObject(right)) {
+      if (isArray(left) && left.length === 0 && isObject(right)) {
+        left = {};
+        convertedToObject = true;
+      } else if ((left === void 0 || left === null) && isObject(right)) {
+        left = {};
+        convertedToObject = true;
+      } else {
+        diffs[path] = right;
+        return { changed: true, consolidated: false };
+      }
+    }
+    if (isArray(left) && isArray(right) && hasNonNumericKeys(right)) {
+      if (Object.keys(left).length === 0) {
+        convertedToObject = true;
+      }
+    }
+    if (isPrimitive(left) || isPrimitive(right)) {
+      diffs[path] = right;
+      return { changed: true, consolidated: false };
+    }
+    let leftKeys = Object.keys(left);
+    let rightKeys = Object.keys(right);
+    if (leftKeys.length !== rightKeys.length && !convertedToObject) {
+      if (path === "") {
+        Object.keys(right).forEach((key) => {
+          if (!deeplyEqual(left[key], right[key])) {
+            diffs[key] = right[key];
+          }
+        });
+        return { changed: true, consolidated: true };
+      }
+      diffs[path] = dataGet(rootRight, path);
+      return { changed: true, consolidated: true };
+    }
+    let keysMatch = leftKeys.every((k) => rightKeys.includes(k));
+    if (!keysMatch && !convertedToObject) {
+      if (path !== "") {
+        diffs[path] = dataGet(rootRight, path);
+        return { changed: true, consolidated: true };
+      }
+    }
+    let childDiffs = {};
+    let changedCount = 0;
+    let consolidatedCount = 0;
+    let totalChildren = rightKeys.length;
+    rightKeys.forEach((key) => {
+      let childPath = path === "" ? key : `${path}.${key}`;
+      let result = diffRecursive(left[key], right[key], childPath, childDiffs, rootLeft, rootRight);
+      if (result.changed)
+        changedCount++;
+      if (result.consolidated)
+        consolidatedCount++;
+    });
+    if (path !== "" && totalChildren > 1 && changedCount === totalChildren && consolidatedCount === 0 && !convertedToObject) {
+      diffs[path] = dataGet(rootRight, path);
+      return { changed: true, consolidated: true };
+    }
+    Object.assign(diffs, childDiffs);
+    return { changed: changedCount > 0, consolidated: consolidatedCount > 0 };
   }
   function extractData(payload) {
     let value = isSynthetic(payload) ? payload[0] : payload;
@@ -5295,7 +5371,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
         setUploadLoading(this.component, name);
-        this.handleS3PreSignedUrl(name, payload);
+        Array.isArray(payload) ? this.handleMultipleS3PreSignedUrl(name, payload) : this.handleS3PreSignedUrl(name, payload);
       });
       this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
       this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
@@ -5359,6 +5435,61 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return [payload.path];
       });
     }
+    handleMultipleS3PreSignedUrl(name, payloads) {
+      let files = this.uploadBag.first(name).files;
+      let completedPaths = [];
+      const uploadFileToS3 = (file, payload, onSuccess, onError, onProgress) => {
+        let { url, headers } = payload;
+        delete headers.Host;
+        const request = new XMLHttpRequest();
+        request.open("PUT", url);
+        for (const [key, value] of Object.entries(headers)) {
+          request.setRequestHeader(key, value);
+        }
+        request.upload.addEventListener("progress", (e) => {
+          e.detail = {};
+          e.detail.progress = Math.floor(e.loaded * 100 / e.total);
+          onProgress(e);
+        });
+        request.addEventListener("load", () => {
+          request.status.toString().startsWith("2") ? onSuccess(payload.path) : onError(request);
+        });
+        request.addEventListener("error", onError);
+        request.send(file);
+        return request;
+      };
+      const uploadNextFile = (index2 = 0) => {
+        if (index2 >= payloads.length) {
+          this.component.$wire.call("_finishUpload", name, completedPaths, payloads.length > 1);
+          return;
+        }
+        const file = files[index2];
+        const payload = payloads[index2];
+        this.uploadBag.first(name).request = uploadFileToS3(
+          file,
+          payload,
+          (path) => {
+            completedPaths.push(path);
+            uploadNextFile(index2 + 1);
+          },
+          (error2) => {
+            this.component.$wire.call("_uploadErrored", name, error2, payloads.length > 1, completedPaths);
+          },
+          (e) => {
+            const totalFiles = payloads.length;
+            const completedFiles = index2;
+            const currentFileProgress = e.detail.progress;
+            const aggregateProgress = Math.floor((completedFiles * 100 + currentFileProgress) / totalFiles);
+            e.detail.progress = aggregateProgress;
+            e.detail.currentFile = index2 + 1;
+            e.detail.totalFiles = totalFiles;
+            e.detail.currentFileProgress = currentFileProgress;
+            this.uploadBag.first(name).progressCallback(e);
+          }
+        );
+      };
+      uploadNextFile();
+    }
     makeRequest(name, formData, method, url, headers, retrievePaths) {
       let request = new XMLHttpRequest();
       request.open(method, url);
@@ -5389,7 +5520,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let fileInfos = uploadObject.files.map((file) => {
         return { name: file.name, size: file.size, type: file.type };
       });
-      this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
+      this.component.$wire.call("_startUpload", name, fileInfos);
       setUploadLoading(this.component, name);
     }
     markUploadFinished(name, tmpFilenames) {
@@ -7540,7 +7671,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return diff2;
     }
     getUpdates() {
-      let propertiesDiff = diff(this.canonical, this.ephemeral);
+      let propertiesDiff = diffAndConsolidate(this.canonical, this.ephemeral);
       return this.mergeQueuedUpdates(propertiesDiff);
     }
     applyUpdates(object, updates) {
@@ -13490,7 +13621,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-        fireEventForOtherLibrariesToHookInto("alpine:navigating");
+        let swapCallbacks = [];
+        fireEventForOtherLibrariesToHookInto("alpine:navigating", {
+          onSwap: (callback) => swapCallbacks.push(callback)
+        });
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
@@ -13511,6 +13645,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               unPackPersistedPopovers(persistedEl);
             });
             !preserveScroll && restoreScrollPositionOrScrollToTop();
+            swapCallbacks.forEach((callback) => callback());
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
                 setTimeout(() => {
@@ -13551,7 +13686,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (prevented)
           return;
         storeScrollInformationInHtmlBeforeNavigatingAway();
-        fireEventForOtherLibrariesToHookInto("alpine:navigating");
+        let swapCallbacks = [];
+        fireEventForOtherLibrariesToHookInto("alpine:navigating", {
+          onSwap: (callback) => swapCallbacks.push(callback)
+        });
         updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
         preventAlpineFromPickingUpDomChanges(Alpine24, (andAfterAllThis) => {
           enablePersist && storePersistantElementsForLater((persistedEl) => {
@@ -13566,6 +13704,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               unPackPersistedPopovers(persistedEl);
             });
             restoreScrollPositionOrScrollToTop();
+            swapCallbacks.forEach((callback) => callback());
             andAfterAllThis(() => {
               autofocus && autofocusElementsWithTheAutofocusAttribute();
               nowInitializeAlpineOnTheNewPage(Alpine24);
@@ -15107,7 +15246,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let component = findComponent(id);
       let targetEl = null;
       if (type === "directive") {
-        replaceEl = component.el.querySelector(`[wire\\:stream.replace="${name}"]`);
+        const replaceEl = component.el.querySelector(`[wire\\:stream\\.replace="${name}"]`);
         if (replaceEl) {
           targetEl = replaceEl;
           mode = "replace";

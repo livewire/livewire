@@ -3,7 +3,7 @@ import { getCsrfToken } from '@/utils';
 let uploadManagers = new WeakMap
 
 function getUploadManager(component) {
-    if (! uploadManagers.has(component)) {
+    if (!uploadManagers.has(component)) {
         let manager = new UploadManager(component)
 
         uploadManagers.set(component, manager)
@@ -17,12 +17,12 @@ function getUploadManager(component) {
 export function handleFileUpload(el, property, component, cleanup) {
     let manager = getUploadManager(component)
 
-    let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true, detail: { id: component.id, property} }))
-    let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true, detail: { id: component.id, property} }))
-    let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true, detail: { id: component.id, property} }))
-    let cancel = () => el.dispatchEvent(new CustomEvent('livewire-upload-cancel', { bubbles: true, detail: { id: component.id, property} }))
+    let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true, detail: { id: component.id, property } }))
+    let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true, detail: { id: component.id, property } }))
+    let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true, detail: { id: component.id, property } }))
+    let cancel = () => el.dispatchEvent(new CustomEvent('livewire-upload-cancel', { bubbles: true, detail: { id: component.id, property } }))
     let progress = (progressEvent) => {
-        var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
+        var percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
 
         el.dispatchEvent(
             new CustomEvent('livewire-upload-progress', {
@@ -48,14 +48,14 @@ export function handleFileUpload(el, property, component, cleanup) {
     // If the Livewire property has changed to null or an empty string, then reset the input...
     component.$wire.$watch(property, (value) => {
         // This watch will only be released when the component is removed. However, the
-        // actual file-upload element may be removed from the DOM withou the entire
+        // actual file-upload element may be removed from the DOM without the entire
         // component being removed. In this case, let's just bail early on this.
-        if (! el.isConnected) return
+        if (!el.isConnected) return
 
         if (value === null || value === '') {
             el.value = ''
         }
-        
+
         // If the file input is a multiple file input and the value has been reset to an empty array, then reset the input...
         if (el.multiple && Array.isArray(value) && value.length === 0) {
             el.value = ''
@@ -86,7 +86,7 @@ class UploadManager {
 
     registerListeners() {
         this.component.$wire.$on('upload:generatedSignedUrl', ({ name, url }) => {
-            // We have to add reduntant "setLoading" calls because the dom-patch
+            // We have to add redundant "setLoading" calls because the dom-patch
             // from the first response will clear the setUploadLoading call
             // from the first upload call.
             setUploadLoading(this.component, name)
@@ -97,7 +97,9 @@ class UploadManager {
         this.component.$wire.$on('upload:generatedSignedUrlForS3', ({ name, payload }) => {
             setUploadLoading(this.component, name)
 
-            this.handleS3PreSignedUrl(name, payload)
+            Array.isArray(payload)
+                ? this.handleMultipleS3PreSignedUrl(name, payload)
+                : this.handleS3PreSignedUrl(name, payload)
         })
 
         this.component.$wire.$on('upload:finished', ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames))
@@ -174,6 +176,79 @@ class UploadManager {
         })
     }
 
+    handleMultipleS3PreSignedUrl(name, payloads) {
+        let files = this.uploadBag.first(name).files
+        let completedPaths = []
+
+        const uploadFileToS3 = (file, payload, onSuccess, onError, onProgress) => {
+            let { url, headers } = payload
+
+            delete headers.Host
+
+            const request = new XMLHttpRequest()
+            request.open('PUT', url)
+
+            for (const [key, value] of Object.entries(headers)) {
+                request.setRequestHeader(key, value)
+            }
+
+            request.upload.addEventListener('progress', (e) => {
+                e.detail = {}
+                e.detail.progress = Math.floor((e.loaded * 100) / e.total)
+                onProgress(e)
+            })
+
+            request.addEventListener('load', () => {
+                request.status.toString().startsWith('2') ? onSuccess(payload.path) : onError(request)
+            })
+
+            request.addEventListener('error', onError)
+            request.send(file)
+
+            return request
+        }
+
+        // Sequential upload: Files are uploaded one at a time to provide better
+        // progress tracking and more predictable error handling. This also prevents
+        // overwhelming the browser with too many concurrent S3 connections.
+        const uploadNextFile = (index = 0) => {
+            if (index >= payloads.length) {
+                this.component.$wire.call('_finishUpload', name, completedPaths, payloads.length > 1)
+                return
+            }
+
+            const file = files[index]
+            const payload = payloads[index]
+
+            this.uploadBag.first(name).request = uploadFileToS3(
+                file,
+                payload,
+                (path) => {
+                    completedPaths.push(path)
+                    uploadNextFile(index + 1)
+                },
+                (error) => {
+                    this.component.$wire.call('_uploadErrored', name, error, payloads.length > 1, completedPaths)
+                },
+                (e) => {
+                    const totalFiles = payloads.length
+                    const completedFiles = index
+                    const currentFileProgress = e.detail.progress
+                    const aggregateProgress = Math.floor(((completedFiles * 100) + currentFileProgress) / totalFiles)
+
+                    e.detail.progress = aggregateProgress
+                    e.detail.currentFile = index + 1
+                    e.detail.totalFiles = totalFiles
+                    e.detail.currentFileProgress = currentFileProgress
+
+                    this.uploadBag.first(name).progressCallback(e)
+                }
+            )
+        }
+
+        uploadNextFile()
+    }
+
     makeRequest(name, formData, method, url, headers, retrievePaths) {
         let request = new XMLHttpRequest()
 
@@ -191,7 +266,7 @@ class UploadManager {
         })
 
         request.addEventListener('load', () => {
-            if ((request.status+'')[0] === '2') {
+            if ((request.status + '')[0] === '2') {
                 let paths = retrievePaths(request.response && JSON.parse(request.response))
 
                 this.component.$wire.call('_finishUpload', name, paths, this.uploadBag.first(name).multiple, this.uploadBag.first(name).append)
@@ -218,7 +293,7 @@ class UploadManager {
             return { name: file.name, size: file.size, type: file.type }
         })
 
-        this.component.$wire.call('_startUpload', name, fileInfos, uploadObject.multiple);
+        this.component.$wire.call('_startUpload', name, fileInfos);
 
         setUploadLoading(this.component, name)
     }
@@ -263,7 +338,7 @@ export default class MessageBag {
     }
 
     add(name, thing) {
-        if (! this.bag[name]) {
+        if (!this.bag[name]) {
             this.bag[name] = []
         }
 
@@ -275,7 +350,7 @@ export default class MessageBag {
     }
 
     first(name) {
-        if (! this.bag[name]) return null
+        if (!this.bag[name]) return null
 
         return this.bag[name][0]
     }

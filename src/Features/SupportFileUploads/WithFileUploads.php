@@ -10,14 +10,16 @@ use Livewire\Attributes\Renderless;
 trait WithFileUploads
 {
     #[Renderless]
-    function _startUpload($name, $fileInfo, $isMultiple)
+    function _startUpload($name, $fileInfo)
     {
         if (FileUploadConfiguration::isUsingS3()) {
-            throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
+            $payloads = collect($fileInfo)
+                ->map(fn ($info) => UploadedFile::fake()->create($info['name'], $info['size'] / 1024, $info['type']))
+                ->map(fn ($file) => GenerateSignedUploadUrl::forS3($file));
 
-            $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
+            $payload = $payloads->containsOneItem() ? $payloads->first() : $payloads->all();
 
-            $this->dispatch('upload:generatedSignedUrlForS3', name: $name, payload: GenerateSignedUploadUrl::forS3($file))->self();
+            $this->dispatch('upload:generatedSignedUrlForS3', name: $name, payload: $payload)->self();
 
             return;
         }
@@ -59,8 +61,16 @@ trait WithFileUploads
         app('livewire')->updateProperty($this, $name, $file);
     }
 
-    function _uploadErrored($name, $errorsInJson, $isMultiple) {
+    function _uploadErrored($name, $errorsInJson, $isMultiple, $completedPaths = []) {
         $this->dispatch('upload:errored', name: $name)->self();
+
+        if (FileUploadConfiguration::isUsingS3() && filled($completedPaths)) {
+            $storage = FileUploadConfiguration::storage();
+            foreach ($completedPaths as $path) {
+                $fullPath = FileUploadConfiguration::path($path);
+                $storage->delete($fullPath);
+            }
+        }
 
         if (is_null($errorsInJson)) {
             // Handle any translations/custom names

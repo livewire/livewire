@@ -191,7 +191,7 @@ class UnitTest extends \Tests\TestCase
         ->assertSee('First-1');
     }
 
-    public function test_it_does_not_trigger_ClassMorphViolationException_when_morh_map_is_enforced()
+    public function test_it_does_not_trigger_ClassMorphViolationException_when_morph_map_is_enforced()
     {
         // reset morph
         Relation::morphMap([], false);
