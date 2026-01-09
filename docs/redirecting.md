@@ -96,26 +96,18 @@ public function save()
 }
 ```
 
-## Redirect to Controller action
+## Redirect to controller actions
 
-Livewire allows you to perform redirects to any Laravel route, including those handled by controller actions. This is useful when you want to navigate the user away from the Livewire component to a traditional Laravel controller route after an event such as form submission or action completion.
+If you want to redirect to a route handled by a controller action, you can use `redirectAction()`:
 
 ```php
-use App\Controllers\UserController;
-
-Route::get('/users', [UserController::class, 'show']);
+$this->redirectAction([UserController::class, 'index']);
 ```
 
-You can redirect to the controller's action like so:
+You can pass parameters to the controller action as the second argument:
 
 ```php
-    $this->redirectAction([UserController::class, 'show']);
-```
-
-You may use the second argument of the method `redirectAction` like so:
-
-```php
-    $this->redirectAction([UserController::class, 'show'], ['id' => 1]);
+$this->redirectAction([UserController::class, 'show'], ['id' => 1]);
 ```
 
 ## Flash messages
