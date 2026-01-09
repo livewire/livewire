@@ -371,9 +371,6 @@
   function deepClone(obj) {
     return JSON.parse(JSON.stringify(obj));
   }
-  function deeplyEqual(a, b) {
-    return JSON.stringify(a) === JSON.stringify(b);
-  }
   function parsePathSegments(path) {
     if (path === "")
       return [];
@@ -418,62 +415,6 @@
       diffs[`${path}.${key}`] = "__rm__";
     });
     return diffs;
-  }
-  function diffAndConsolidate(left, right) {
-    let diffs = {};
-    diffRecursive(left, right, "", diffs, left, right);
-    return diffs;
-  }
-  function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
-    if (left === right)
-      return { changed: false, consolidated: false };
-    if (typeof left !== typeof right || isObject(left) && isArray(right) || isArray(left) && isObject(right)) {
-      diffs[path] = right;
-      return { changed: true, consolidated: false };
-    }
-    if (isPrimitive(left) || isPrimitive(right)) {
-      diffs[path] = right;
-      return { changed: true, consolidated: false };
-    }
-    let leftKeys = Object.keys(left);
-    let rightKeys = Object.keys(right);
-    if (leftKeys.length !== rightKeys.length) {
-      if (path === "") {
-        Object.keys(right).forEach((key) => {
-          if (!deeplyEqual(left[key], right[key])) {
-            diffs[key] = right[key];
-          }
-        });
-        return { changed: true, consolidated: true };
-      }
-      diffs[path] = dataGet(rootRight, path);
-      return { changed: true, consolidated: true };
-    }
-    let keysMatch = leftKeys.every((k) => rightKeys.includes(k));
-    if (!keysMatch) {
-      if (path !== "") {
-        diffs[path] = dataGet(rootRight, path);
-        return { changed: true, consolidated: true };
-      }
-    }
-    let childDiffs = {};
-    let changedCount = 0;
-    let consolidatedCount = 0;
-    let totalChildren = rightKeys.length;
-    rightKeys.forEach((key) => {
-      let childPath = path === "" ? key : `${path}.${key}`;
-      let result = diffRecursive(left[key], right[key], childPath, childDiffs, rootLeft, rootRight);
-      if (result.changed)
-        changedCount++;
-      if (result.consolidated)
-        consolidatedCount++;
-    });
-    if (path !== "" && totalChildren > 0 && changedCount === totalChildren && consolidatedCount === 0) {
-      diffs[path] = dataGet(rootRight, path);
-      return { changed: true, consolidated: true };
-    }
-    Object.assign(diffs, childDiffs);
-    return { changed: changedCount > 0, consolidated: consolidatedCount > 0 };
   }
   function extractData(payload) {
     let value = isSynthetic(payload) ? payload[0] : payload;
@@ -834,7 +775,7 @@
     );
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -1532,8 +1473,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var alpineAttributeRegex = () => new RegExp(`^${prefixAsString}([^:^.]+)\\b`);
   function toParsedDirectives(transformedAttributeMap, originalAttributeOverride) {
     return ({ name, value }) => {
-      if (name === value)
-        value = "";
       let typeMatch = name.match(alpineAttributeRegex());
       let valueMatch = name.match(/:([a-zA-Z0-9\-_:]+)/);
       let modifiers = name.match(/\.[^.\]]+(?=[^\]]*$)/g) || [];
@@ -6154,7 +6093,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return diff2;
     }
     getUpdates() {
-      let propertiesDiff = diffAndConsolidate(this.canonical, this.ephemeral);
+      let propertiesDiff = diff(this.canonical, this.ephemeral);
       return this.mergeQueuedUpdates(propertiesDiff);
     }
     applyUpdates(object, updates) {
@@ -7723,7 +7662,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // ../alpine/packages/sort/dist/module.esm.js
+  // node_modules/@alpinejs/sort/dist/module.esm.js
   function ownKeys3(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -9936,8 +9875,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       node = node.nextElementSibling;
     }
   }
-  function src_default6(Alpine3) {
-    Alpine3.directive("sort", (el, { value, modifiers, expression }, { effect: effect3, evaluate: evaluate3, cleanup: cleanup2 }) => {
+  function src_default6(Alpine22) {
+    Alpine22.directive("sort", (el, { value, modifiers, expression }, { effect: effect3, evaluate: evaluate3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       if (value === "config") {
         return;
       }
@@ -9958,7 +9897,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         useHandles: !!el.querySelector("[x-sort\\:handle],[wire\\:sort\\:handle]"),
         group: getGroupName(el, modifiers)
       };
-      let handleSort = generateSortHandler(expression, evaluate3);
+      let handleSort = generateSortHandler(expression, evaluateLater2);
       let config = getConfigurationOverrides(el, modifiers, evaluate3);
       let sortable = initSortable(el, config, preferences, (key, position) => {
         handleSort(key, position);
@@ -9966,19 +9905,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanup2(() => sortable.destroy());
     });
   }
-  function generateSortHandler(expression, evaluate3) {
+  function generateSortHandler(expression, evaluateLater2) {
     if ([void 0, null, ""].includes(expression))
       return () => {
       };
+    let handle = evaluateLater2(expression);
     return (key, position) => {
-      evaluate3(expression, { scope: {
-        $key: key,
-        $item: key,
-        $position: position
-      }, params: [
-        key,
-        position
-      ] });
+      Alpine.dontAutoEvaluateFunctions(() => {
+        handle(
+          (received) => {
+            if (typeof received === "function")
+              received(key, position);
+          },
+          { scope: {
+            $key: key,
+            $item: key,
+            $position: position
+          } }
+        );
+      });
     };
   }
   function getConfigurationOverrides(el, modifiers, evaluate3) {
@@ -12422,7 +12367,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -13269,7 +13214,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let transitionName = directive3.expression || "match-element";
     el.style.viewTransitionName = transitionName;
   });
-  async function transitionDomMutation(fromEl, toEl, callback) {
+  async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
+    if (options.skip)
+      return callback();
     if (!fromEl.querySelector("[wire\\:transition]") && !toEl.querySelector("[wire\\:transition]"))
       return callback();
     let style = document.createElement("style");
@@ -13291,9 +13238,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
     `;
     document.head.appendChild(style);
-    let transition2 = document.startViewTransition(() => {
-      callback();
-    });
+    let transitionConfig = {
+      update: () => callback()
+    };
+    if (options.type) {
+      transitionConfig.types = [options.type];
+    }
+    let transition2 = document.startViewTransition(transitionConfig);
     transition2.finished.finally(() => {
       style.remove();
     });
@@ -13333,9 +13284,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         child.replaceWith(existingComponent.cloneNode(true));
       }
     });
+    let transitionOptions = component.effects.transition || {};
     await transitionDomMutation(el, to, () => {
       module_default.morph(el, to, getMorphConfig(component));
-    });
+    }, transitionOptions);
     trigger2("morphed", { el, component });
   }
   async function morphFragment(component, startNode, endNode, toHTML) {
@@ -13357,9 +13309,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       parentProviderWrapper.__livewire = parentComponent;
     }
     trigger2("island.morph", { startNode, endNode, component });
+    let transitionOptions = component.effects.transition || {};
     await transitionDomMutation(fromContainer, toContainer, () => {
       module_default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
-    });
+    }, transitionOptions);
     trigger2("island.morphed", { startNode, endNode, component });
   }
   function getMorphConfig(component) {
@@ -14087,6 +14040,36 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
   });
+
+  // js/features/supportCssModules.js
+  var loadedStyles = /* @__PURE__ */ new Set();
+  on2("effect", ({ component, effects }) => {
+    if (effects.styleModule) {
+      let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+      let path = `${getUriPrefix()}/css/${encodedName}.css?v=${effects.styleModule}`;
+      if (!loadedStyles.has(path)) {
+        loadedStyles.add(path);
+        injectStylesheet(path);
+      }
+    }
+    if (effects.globalStyleModule) {
+      let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+      let path = `${getUriPrefix()}/css/${encodedName}.global.css?v=${effects.globalStyleModule}`;
+      if (!loadedStyles.has(path)) {
+        loadedStyles.add(path);
+        injectStylesheet(path);
+      }
+    }
+  });
+  function injectStylesheet(href) {
+    let link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    let nonce2 = getNonce();
+    if (nonce2)
+      link.nonce = nonce2;
+    document.head.appendChild(link);
+  }
 
   // js/debounce.js
   var callbacksByComponent = new WeakBag();
