@@ -36,7 +36,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             $finder = new Finder;
 
             $finder->addLocation(class: config('livewire.class_namespace'));
-            $finder->addLocation(path: config('livewire.view_path'));
+            $finder->addLocation(viewPath: config('livewire.view_path'));
 
             return $finder;
         });
