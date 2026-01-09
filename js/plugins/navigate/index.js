@@ -109,7 +109,7 @@ export default function (Alpine) {
                     replaceUrl(finalDestination, html)
                 }
 
-                swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
+                swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading, transitionFinished) => {
                     removeAnyLeftOverStaleTeleportTargets(document.body)
 
                     enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
@@ -127,8 +127,10 @@ export default function (Alpine) {
 
                             nowInitializeAlpineOnTheNewPage(Alpine)
 
-                            fireEventForOtherLibrariesToHookInto('alpine:navigated')
-                            showProgressBar && finishAndHideProgressBar()
+                            transitionFinished.then(() => {
+                                fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                                showProgressBar && finishAndHideProgressBar()
+                            })
                         })
                     })
                 }, { transition: shouldTransition })
@@ -178,7 +180,7 @@ export default function (Alpine) {
                     packUpPersistedPopovers(persistedEl)
                 })
 
-                swapCurrentPageWithNewHtml(html, () => {
+                swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading, transitionFinished) => {
                     removeAnyLeftOverStaleProgressBars()
 
                     removeAnyLeftOverStaleTeleportTargets(document.body)
@@ -195,7 +197,9 @@ export default function (Alpine) {
 
                         nowInitializeAlpineOnTheNewPage(Alpine)
 
-                        fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                        transitionFinished.then(() => {
+                            fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                        })
                     })
                 }, { transition: enableTransition })
             })

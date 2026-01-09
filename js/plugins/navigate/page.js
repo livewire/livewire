@@ -32,9 +32,9 @@ export function swapCurrentPageWithNewHtml(html, andThen, options = {}) {
         document.body.replaceWith(newBody)
 
         Alpine.destroyTree(oldBody)
-
-        andThen(i => afterRemoteScriptsHaveLoaded = i)
     }
+
+    let transitionFinished = Promise.resolve()
 
     if (options.transition && document.startViewTransition) {
         // Inject styles to handle view transitions properly
@@ -52,12 +52,14 @@ export function swapCurrentPageWithNewHtml(html, andThen, options = {}) {
 
         let transition = document.startViewTransition(() => swap())
 
-        transition.finished.finally(() => {
+        transitionFinished = transition.finished.finally(() => {
             style.remove()
         })
     } else {
         swap()
     }
+
+    andThen(i => afterRemoteScriptsHaveLoaded = i, transitionFinished)
 }
 
 function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes) {
