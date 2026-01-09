@@ -12,12 +12,12 @@ class SupportNestingComponents extends ComponentHook
 {
     static function provide()
     {
-        on('pre-mount', function ($name, $params, $key, $parent, $hijack, $slots) {
+        on('pre-mount', function ($name, $params, $key, $parent, $hijack, $slots, $attributes) {
             // If this has already been rendered spoof it...
             if ($parent && static::hasPreviouslyRenderedChild($parent, $key)) {
                 [$tag, $childId] = static::getPreviouslyRenderedChild($parent, $key);
 
-                $finish = trigger('mount.stub', $tag, $childId, $params, $parent, $key, $slots);
+                $finish = trigger('mount.stub', $tag, $childId, $params, $parent, $key, $slots, $attributes);
 
                 $idAttribute = " wire:id=\"{$childId}\"";
                 $nameAttribute = " wire:name=\"{$name}\"";
@@ -92,7 +92,22 @@ class SupportNestingComponents extends ComponentHook
 
     static function getPreviouslyRenderedChild($parent, $key)
     {
-        return store($parent)->get('previousChildren')[$key];
+        $child = store($parent)->get('previousChildren')[$key];
+
+        [$tag, $childId] = $child;
+
+        // Validate tag name - only allow valid HTML tag characters (letters, numbers, hyphens)
+        // Must start with a letter to be a valid HTML tag
+        if (! preg_match('/^[a-zA-Z][a-zA-Z0-9\-]*$/', $tag)) {
+            throw new \Exception('Invalid Livewire child tag name. Tag names must only contain letters, numbers, and hyphens.');
+        }
+
+        // Validate child ID format - only allow alphanumeric and hyphens
+        if (! preg_match('/^[a-zA-Z0-9\-]+$/', $childId)) {
+            throw new \Exception('Invalid Livewire child component ID format.');
+        }
+
+        return $child;
     }
 
     function keepRenderedChildren()

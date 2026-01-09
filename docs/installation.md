@@ -39,7 +39,9 @@ This creates a layout file at `resources/views/layouts/app.blade.php` with the f
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>{{ $title ?? 'Page Title' }}</title>
+        <title>{{ $title ?? config('app.name') }}</title>
+
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
     </head>
@@ -61,7 +63,7 @@ The `@livewireStyles` and `@livewireScripts` directives include the necessary Ja
 Livewire is "zero-config", meaning you can use it by following conventions without any additional configuration. However, if needed, you can publish and customize Livewire's configuration file:
 
 ```shell
-php artisan livewire:publish --config
+php artisan livewire:config
 ```
 
 This will create a new `livewire.php` file in your Laravel application's `config` directory where you can customize various Livewire settings.
@@ -87,10 +89,11 @@ First, add the `@livewireScriptConfig` directive to your layout file:
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>{{ $title ?? 'Page Title' }}</title>
+        <title>{{ $title ?? config('app.name') }}</title>
+
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
-        @vite(['resources/js/app.js'])
     </head>
     <body>
         {{ $slot }}

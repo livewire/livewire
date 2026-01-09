@@ -8,12 +8,12 @@ Apply the `#[Layout]` attribute to a full-page component to use a specific layou
 <?php // resources/views/pages/posts/⚡index.blade.php
 
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-#[Layout('layouts.dashboard')] // [tl! highlight]
-new class extends Component
-{
+new #[Layout('layouts::dashboard')] class extends Component { // [tl! highlight]
+    #[Computed]
     public function posts()
     {
         return Post::all();
@@ -24,7 +24,7 @@ new class extends Component
 <div>
     <h1>Posts</h1>
     @foreach ($this->posts as $post)
-        <div>{{ $post->title }}</div>
+        <div wire:key="{{ $post->id }}">{{ $post->title }}</div>
     @endforeach
 </div>
 ```
@@ -36,7 +36,7 @@ This component will render using the `resources/views/layouts/dashboard.blade.ph
 By default, Livewire uses the layout specified in your `config/livewire.php` file:
 
 ```php
-'layout' => 'components.layouts.app',
+'layout' => 'layouts::app',
 ```
 
 The `#[Layout]` attribute overrides this default for specific components.
@@ -46,9 +46,7 @@ The `#[Layout]` attribute overrides this default for specific components.
 You can pass additional data to your layout using array syntax:
 
 ```php
-#[Layout('layouts.dashboard', ['title' => 'Posts Dashboard'])] // [tl! highlight]
-new class extends Component
-{
+new #[Layout('layouts::dashboard', ['title' => 'Posts Dashboard'])] class extends Component { // [tl! highlight]
     // ...
 };
 ```
@@ -76,12 +74,11 @@ Instead of the attribute, you can use the `layout()` method in your `render()` m
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public function render()
     {
         return view('livewire.posts.index')
-            ->layout('layouts.dashboard', ['title' => 'Posts']); // [tl! highlight]
+            ->layout('layouts::dashboard', ['title' => 'Posts']); // [tl! highlight]
     }
 };
 ```
@@ -94,16 +91,13 @@ A common pattern is to use different layouts for different sections of your app:
 
 ```php
 // Admin pages
-#[Layout('layouts.admin')]
-new class extends Component { }
+new #[Layout('layouts::admin')] class extends Component { }
 
 // Marketing pages
-#[Layout('layouts.marketing')]
-new class extends Component { }
+new #[Layout('layouts::marketing')] class extends Component { }
 
 // Dashboard pages
-#[Layout('layouts.dashboard')]
-new class extends Component { }
+new #[Layout('layouts::dashboard')] class extends Component { }
 ```
 
 ## When to use
@@ -121,3 +115,17 @@ Use `#[Layout]` when:
 ## Learn more
 
 For more information about full-page components and layouts, see the [Pages documentation](/docs/4.x/pages#layouts).
+
+## Reference
+
+```php
+#[Layout(
+    string $name,
+    array $params = [],
+)]
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$name` | `string` | *required* | The name of the Blade layout to use |
+| `$params` | `array` | `[]` | Additional data to pass to the layout |

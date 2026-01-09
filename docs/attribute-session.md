@@ -12,8 +12,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Session] // [tl! highlight]
     public $search = '';
 
@@ -31,7 +30,7 @@ new class extends Component
     <input type="text" wire:model.live="search" placeholder="Search posts...">
 
     @foreach($this->posts as $post)
-        <div>{{ $post->title }}</div>
+        <div wire:key="{{ $post->id }}">{{ $post->title }}</div>
     @endforeach
 </div>
 ```
@@ -68,8 +67,7 @@ By default, Livewire generates session keys using the component and property nam
 use Livewire\Attributes\Session;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Session(key: 'post_search')] // [tl! highlight]
     public $search = '';
 };
@@ -88,8 +86,7 @@ use Livewire\Attributes\Session;
 use Livewire\Component;
 use App\Models\Author;
 
-new class extends Component
-{
+new class extends Component {
     public Author $author;
 
     #[Session(key: 'search-{author.id}')] // [tl! highlight]
@@ -121,8 +118,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Transaction;
 
-new class extends Component
-{
+new class extends Component {
     #[Session]
     public $dateRange = '30days';
 
@@ -163,7 +159,7 @@ new class extends Component
     </select>
 
     @foreach($this->transactions as $transaction)
-        <div>{{ $transaction->description }}</div>
+        <div wire:key="{{ $transaction->id }}">{{ $transaction->description }}</div>
     @endforeach
 </div>
 ```
@@ -185,6 +181,17 @@ Users can set their preferred filters and they'll persist across sessions, page 
 * Complete Eloquent models
 * Binary data or file contents
 
-## Learn more
+> [!tip] Alternative: URL persistence
+> If you want state to be shareable via URL or bookmarkable, consider using the [`#[Url]` attribute](/docs/4.x/url) instead of `#[Session]`. URL parameters persist state in the address bar while session properties keep the URL clean.
 
-For more information about session properties and alternatives like URL persistence, see the [Session Properties documentation](/docs/4.x/session-properties).
+## Reference
+
+```php
+#[Session(
+    ?string $key = null,
+)]
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$key` | `?string` | `null` | Custom session key (auto-generated if not provided) |

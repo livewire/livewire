@@ -11,8 +11,7 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Validate('required|min:3')] // [tl! highlight]
     public $title = '';
 
@@ -64,8 +63,7 @@ By default, `#[Validate]` validates properties as they're updated:
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Validate('required|email|unique:users,email')]
     public $email = '';
 
@@ -96,8 +94,7 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Validate('required|min:3', onUpdate: false)] // [tl! highlight]
     public $title = '';
 
@@ -153,8 +150,7 @@ Validate array properties and their children:
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Validate([
         'tasks' => 'required|array|min:1',
         'tasks.*' => 'required|string|min:3',
@@ -212,8 +208,7 @@ use Livewire\Component;
 use App\Mail\ContactMessage;
 use Illuminate\Support\Facades\Mail;
 
-new class extends Component
-{
+new class extends Component {
     #[Validate('required|min:2', as: 'name')]
     public $name = '';
 
@@ -275,3 +270,25 @@ Users get immediate feedback as they fill out the form, with friendly field name
 ## Learn more
 
 For comprehensive documentation on validation, including form objects, custom rules, and testing, see the [Validation documentation](/docs/4.x/validation).
+
+## Reference
+
+```php
+#[Validate(
+    mixed $rule = null,
+    ?string $attribute = null,
+    ?string $as = null,
+    mixed $message = null,
+    bool $onUpdate = true,
+    bool $translate = true,
+)]
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$rule` | `mixed` | `null` | The validation rule(s) to apply |
+| `$attribute` | `?string` | `null` | Custom attribute name for validation error messages |
+| `$as` | `?string` | `null` | Friendly name to display in validation error messages |
+| `$message` | `mixed` | `null` | Custom error message(s) for validation failures |
+| `$onUpdate` | `bool` | `true` | Whether to run validation when the property is updated |
+| `$translate` | `bool` | `true` | Whether to translate validation messages |

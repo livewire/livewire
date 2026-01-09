@@ -14,8 +14,7 @@ Below is an example of a `post.create` Livewire component that redirects the use
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
 	public $title = '';
 
     public $content = '';
@@ -103,8 +102,7 @@ To pass flash data along with a redirect, you can use Laravel's `session()->flas
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     // ...
 
     public function update()
@@ -128,3 +126,10 @@ Assuming the page being redirected to contain the following Blade snippet, the u
     </div>
 @endif
 ```
+
+## See also
+
+- **[Navigate](/docs/4.x/navigate)** — Use SPA navigation for redirects
+- **[Actions](/docs/4.x/actions)** — Redirect after action completion
+- **[Forms](/docs/4.x/forms)** — Redirect after successful form submission
+- **[Pages](/docs/4.x/pages)** — Navigate between page components

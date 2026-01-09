@@ -11,8 +11,7 @@ use Livewire\Attributes\Validate;
 use Livewire\WithFileUploads;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     use WithFileUploads;
 
     #[Validate('image|max:1024')] // 1MB Max
@@ -94,8 +93,7 @@ use Livewire\Attributes\Validate;
 use Livewire\WithFileUploads;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     use WithFileUploads;
 
     #[Validate(['photos.*' => 'image|max:1024'])]
@@ -147,8 +145,7 @@ use Livewire\Attributes\Validate;
 use Livewire\WithFileUploads;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     use WithFileUploads;
 
     #[Validate('image|max:1024')]
@@ -223,8 +220,7 @@ Below is an example of the `upload-photo` component required to make the previou
 use Livewire\WithFileUploads;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     use WithFileUploads;
 
     public $photo;
@@ -265,7 +261,7 @@ Now, when a user uploads a file, the file will never actually be stored on your 
 > [!info] Publishing Livewire's configuration file
 > Before customizing the file upload disk, you must first publish Livewire's configuration file to your application's `/config` directory by running the following command:
 > ```shell
-> php artisan livewire:publish --config
+> php artisan livewire:config
 > ```
 
 ### Configuring automatic file cleanup
@@ -287,7 +283,7 @@ Now, any temporary files older than 24 hours will be cleaned up by S3 automatica
 
 Although `wire:model` for file uploads works differently than other `wire:model` input types under the hood, the interface for showing loading indicators remains the same.
 
-You can display a loading indicator scoped to the file upload like so:
+You can display a loading indicator scoped to the file upload using `wire:loading`:
 
 ```blade
 <input type="file" wire:model="photo">
@@ -295,9 +291,19 @@ You can display a loading indicator scoped to the file upload like so:
 <div wire:loading wire:target="photo">Uploading...</div>
 ```
 
+Or more simply using Livewire's automatic `data-loading` attribute:
+
+```blade
+<div>
+    <input type="file" wire:model="photo">
+
+    <div class="not-data-loading:hidden">Uploading...</div>
+</div>
+```
+
 Now, while the file is uploading, the "Uploading..." message will be shown and then hidden when the upload is finished.
 
-For more information on loading states, check out our comprehensive [loading state documentation](/docs/4.x/wire-loading).
+[Learn more about loading states →](/docs/4.x/loading-states)
 
 ## Progress indicators
 
@@ -371,7 +377,6 @@ For these scenarios, Livewire exposes dedicated JavaScript functions.
 These functions exist on a JavaScript component object, which can be accessed using Livewire's convenient `$wire` object from within your Livewire component's template:
 
 ```blade
-@script
 <script>
     let file = $wire.el.querySelector('input[type="file"]').files[0]
 
@@ -396,7 +401,6 @@ These functions exist on a JavaScript component object, which can be accessed us
     // Cancel an upload...
     $wire.cancelUpload('photos')
 </script>
-@endscript
 ```
 
 ## Configuration
@@ -437,3 +441,10 @@ Temporary files are uploaded to the specified disk's `livewire-tmp/` directory. 
     'directory' => 'tmp',
 ],
 ```
+
+## See also
+
+- **[Forms](/docs/4.x/forms)** — Handle file uploads in forms
+- **[Validation](/docs/4.x/validation)** — Validate uploaded files
+- **[Loading States](/docs/4.x/loading-states)** — Show upload progress indicators
+- **[wire:model](/docs/4.x/wire-model)** — Bind file inputs to properties

@@ -11,8 +11,7 @@ use Livewire\Attributes\Reactive;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Reactive] // [tl! highlight]
     public $todos;
 
@@ -42,8 +41,7 @@ Here's what happens without `#[Reactive]`:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $todos = [];
 
     public function addTodo($text)
@@ -98,8 +96,7 @@ Here's a practical example of a search component with reactive results:
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public $query = '';
 
     public function posts()
@@ -122,8 +119,7 @@ new class extends Component
 use Livewire\Attributes\Reactive;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Reactive] // [tl! highlight]
     public $posts;
 };
@@ -131,7 +127,7 @@ new class extends Component
 
 <div>
     @foreach($posts as $post)
-        <div>{{ $post->title }}</div>
+        <div wire:key="{{ $post->id }}">{{ $post->title }}</div>
     @endforeach
 </div>
 ```

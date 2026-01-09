@@ -34,19 +34,19 @@ class LivewireManager
         $this->addComponent($name, class: $class);
     }
 
-    function addComponent($name, $path = null, $class = null)
+    function addComponent($name, $viewPath = null, $class = null)
     {
-        app('livewire.finder')->addComponent($name, class: $class, path: $path);
+        app('livewire.finder')->addComponent($name, class: $class, viewPath: $viewPath);
     }
 
-    function addNamespace($namespace, $path = null, $class = null)
+    function addLocation($viewPath = null, $classNamespace = null)
     {
-        return app('livewire.finder')->addNamespace($namespace, class: $class, path: $path);
+        return app('livewire.finder')->addLocation(classNamespace: $classNamespace, viewPath: $viewPath);
     }
 
-    function addLocation($path = null, $class = null)
+    function addNamespace($namespace, $viewPath = null, $classNamespace = null, $classPath = null, $classViewPath = null)
     {
-        return app('livewire.finder')->addLocation(class: $class, path: $path);
+        return app('livewire.finder')->addNamespace($namespace, classNamespace: $classNamespace, viewPath: $viewPath, classPath: $classPath, classViewPath: $classViewPath);
     }
 
     function componentHook($hook)
@@ -158,6 +158,11 @@ class LivewireManager
     function setUpdateRoute($callback)
     {
         return app(HandleRequests::class)->setUpdateRoute($callback);
+    }
+
+    function getUriPrefix()
+    {
+        return app(HandleRequests::class)->getUriPrefix();
     }
 
     function getUpdateUri()

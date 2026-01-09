@@ -13,8 +13,7 @@ Below is a `show-post` component that stores a `Post` model's ID as a public pro
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
 	#[Locked] // [tl! highlight]
     public $id;
 
@@ -37,8 +36,7 @@ By adding the `#[Locked]` attribute, you are ensured that the `$id` property wil
 > use Livewire\Component;
 > use App\Models\Post;
 >
-> new class extends Component
-> {
+> new class extends Component {
 >    public Post $post; // [tl! highlight]
 >
 >    public function mount($postId)

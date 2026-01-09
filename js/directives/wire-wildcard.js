@@ -1,7 +1,7 @@
 import { callAndClearComponentDebounces } from '@/debounce'
 import { customDirectiveHasBeenRegistered } from '@/directives'
 import { on } from '@/hooks'
-import { setNextActionOrigin } from '@/request'
+import { setNextActionOrigin, setNextActionInterceptor } from '@/request'
 import Alpine from 'alpinejs'
 import { evaluateActionExpression } from '../evaluator'
 
@@ -43,9 +43,35 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
 
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
-                    setNextActionOrigin({ el, directive })
+                    // For wire:submit, apply data-loading to the submit button, not the form
+                    if (directive.value === 'submit') {
+                        let submitButton = e.submitter || el.querySelector('button[type="submit"], input[type="submit"]')
+                        setNextActionOrigin({ el, directive, targetEl: submitButton })
+                    } else {
+                        setNextActionOrigin({ el, directive })
+                    }
 
-                    evaluateActionExpression(component, el, directive.expression, { scope: { $event: e } })
+                    // Check for Livewire event options in $event.detail.livewire
+                    let livewireOptions = e.detail?.livewire
+
+                    if (livewireOptions?.interceptAction) {
+                        setNextActionInterceptor(livewireOptions.interceptAction)
+                    }
+
+                    let expression = directive.expression
+
+                    // Handle defaultParams - if expression has no parentheses, append the default params
+                    // This uses a simple heuristic: if the expression contains '(', we assume params
+                    // are already provided. This works for common cases like "someMethod" but will
+                    // skip adding params for edge cases like "someMethod.bind(this)" or "obj['method()']"
+                    if (livewireOptions?.defaultParams !== undefined && !expression.includes('(')) {
+                        let params = Array.isArray(livewireOptions.defaultParams)
+                            ? livewireOptions.defaultParams
+                            : [livewireOptions.defaultParams]
+                        expression = `${expression}(${params.map(p => JSON.stringify(p)).join(', ')})`
+                    }
+
+                    evaluateActionExpression(el, expression, { scope: { $event: e } })
                 })
             }
 

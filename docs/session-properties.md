@@ -17,8 +17,7 @@ use Livewire\Attributes\Session;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Session] // [tl! highlight]
     public $search;
 

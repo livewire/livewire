@@ -11,8 +11,7 @@ use Livewire\Attributes\Js;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public $title = '';
 
     public function save()
@@ -42,8 +41,7 @@ Instead of the `#[Js]` attribute, you can use the `js()` method for one-off Java
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public $title = '';
 
     public function save()
@@ -96,8 +94,7 @@ There's an important distinction:
 use Livewire\Attributes\Js;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $count = 0;
 
     // Server-side method that returns JavaScript
@@ -114,14 +111,12 @@ new class extends Component
     <button wire:click="showCount">Show Count</button>
 </div>
 
-@script
 <script>
     // Pure client-side JavaScript action
-    $js.incrementLocal = () => {
+    this.$js.incrementLocal = () => {
         console.log('No server request made')
     }
 </script>
-@endscript
 ```
 
 ## Learn more

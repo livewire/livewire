@@ -26,10 +26,16 @@ directive('model', ({ el, directive, component, cleanup }) => {
         return handleFileUpload(el, expression, component, cleanup)
     }
 
+    if (! modifiers.includes('self') && ! modifiers.includes('deep')) {
+        // Make wire:model self-binding by default...
+        modifiers.push('self')
+    }
+
     let isLive = modifiers.includes('live')
     let isLazy = modifiers.includes('lazy') || modifiers.includes('change')
     let onBlur = modifiers.includes('blur')
     let isDebounced = modifiers.includes('debounce')
+    let isThrottled = modifiers.includes('throttle')
 
     // Trigger a network request (only if .live or .lazy is added to wire:model)...
     let update = () => {
@@ -44,11 +50,15 @@ directive('model', ({ el, directive, component, cleanup }) => {
             : component.$wire.$commit()
     }
 
-    // If a plain wire:model is added to a text input, debounce the
-    // trigerring of network requests.
-    let debouncedUpdate = isTextInput(el) && ! isDebounced && isLive
-        ? debounce(update, 150)
-        : update
+    let debouncedUpdate = update
+
+    if ((isLive && isRealtimeInput(el)) || isDebounced) {
+        debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(modifiers, 'debounce') || 150)
+    }
+
+    if (isThrottled) {
+        debouncedUpdate = throttle(debouncedUpdate, parseModifierDuration(modifiers, 'throttle') || 150)
+    }
 
     Alpine.bind(el, {
         ['@change']() {
@@ -77,16 +87,34 @@ function getModifierTail(modifiers) {
         'lazy', 'defer'
     ].includes(i))
 
+    if (modifiers.includes('debounce')) {
+        let index = modifiers.indexOf('debounce')
+        let hasDuration = parseModifierDuration(modifiers, 'debounce') !== undefined
+
+        // Delete the subsequent modifier if it's a duration...
+        modifiers.splice(index, hasDuration ? 2 : 1)
+    }
+
+    if (modifiers.includes('throttle')) {
+        let index = modifiers.indexOf('throttle')
+        let hasDuration = parseModifierDuration(modifiers, 'throttle') !== undefined
+
+        // Delete the subsequent modifier if it's a duration...
+        modifiers.splice(index, hasDuration ? 2 : 1)
+    }
+
     if (modifiers.length === 0) return ''
 
     return '.' + modifiers.join('.')
 }
 
-function isTextInput(el) {
+function isRealtimeInput(el) {
     return (
         ['INPUT', 'TEXTAREA'].includes(el.tagName.toUpperCase()) &&
         !['checkbox', 'radio'].includes(el.type)
     )
+        || el.tagName.toUpperCase() === 'UI-SLIDER' // Flux UI
+        || el.tagName.toUpperCase() === 'UI-COMPOSER' // Flux UI
 }
 
 function isDirty(subject, dirty) {
@@ -103,10 +131,12 @@ function componentIsMissingProperty(component, property) {
 
         if (! parent) return true
 
-        return componentIsMissingProperty(parent, property.split('$parent.')[1])
+        return componentIsMissingProperty(parent, property.slice(7).replace(/^\./, ''))
     }
 
-    let baseProperty = property.split('.')[0]
+    // Extract base property, handling both "foo.bar" and "['foo'].bar"
+    let match = property.match(/^\[['"]?([^\]'"]+)['"]?\]/) || property.match(/^([^.\[]+)/)
+    let baseProperty = match[1]
 
     return ! Object.keys(component.canonical).includes(baseProperty)
 }
@@ -127,4 +157,30 @@ function debounce(func, wait) {
 
       timeout = setTimeout(later, wait)
     }
+}
+
+function throttle(func, limit) {
+    let inThrottle
+
+    return function() {
+        let context = this, args = arguments
+
+        if (! inThrottle) {
+            func.apply(context, args)
+
+            inThrottle = true
+
+            setTimeout(() => inThrottle = false, limit)
+        }
+    }
+}
+
+function parseModifierDuration(modifiers, key) {
+    let index = modifiers.indexOf(key)
+    if (index === -1) return undefined
+
+    let nextModifier = modifiers[modifiers.indexOf(key)+1] || 'invalid-wait'
+    let duration = nextModifier.split('ms')[0]
+
+    return ! isNaN(duration) ? duration : undefined
 }

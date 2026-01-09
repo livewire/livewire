@@ -18,8 +18,7 @@ This creates a single-file component at:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $title = '';
 
     public function save()
@@ -56,7 +55,7 @@ php artisan make:livewire pages::post.create
 
 This creates the component at `resources/views/pages/post/⚡create.blade.php`. This organization makes it clear which components are pages versus reusable UI components.
 
-Learn more about using components as pages in the [Page components section](#page-components) below.
+Learn more about using components as pages in the [Page components section](#page-components) below. You can also register your own custom namespaces—see the [Component namespaces documentation](/docs/4.x/pages#component-namespaces).
 
 ### Multi-file components
 
@@ -71,11 +70,13 @@ php artisan make:livewire post.create --mfc
 This creates a directory with all related files together:
 
 ```
-resources/views/components/⚡post.create/
-├── post.create.php        # PHP class
-├── post.create.blade.php  # Blade template
-├── post.create.js         # JavaScript (optional, with --js flag)
-└── post.create.test.php   # Pest test (optional, with --test flag)
+resources/views/components/post/⚡create/
+├── create.php          # PHP class
+├── create.blade.php    # Blade template
+├── create.js           # JavaScript (optional)
+├── create.css          # Scoped styles (optional)
+├── create.global.css   # Global styles (optional)
+└── create.test.php     # Pest test (optional, with --test flag)
 ```
 
 ### Converting between formats
@@ -120,7 +121,6 @@ This combines all files back into a single file and deletes the directory.
 - Better for large, complex components
 - Improved IDE support and navigation
 - Clearer separation when components have significant JavaScript
-- Easier to test with dedicated test files
 
 **Class-based components:**
 - Familiar to developers from Livewire v2/v3
@@ -133,7 +133,7 @@ This combines all files back into a single file and deletes the directory.
 You can include a Livewire component within any Blade template using the `<livewire:component-name />` syntax:
 
 ```blade
-<livewire:post.create />
+<livewire:component-name />
 ```
 
 If the component is located in a sub-directory, you can indicate this using the dot (`.`) character:
@@ -143,7 +143,7 @@ If the component is located in a sub-directory, you can indicate this using the 
 <livewire:post.create />
 ```
 
-For page components, use the namespace prefix:
+For namespaced components—like `pages::`—use the namespace prefix:
 
 ```blade
 <livewire:pages::post.create />
@@ -170,8 +170,7 @@ Data passed into components is received through the `mount()` method:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $title;
 
     public function mount($title = null)
@@ -192,8 +191,7 @@ To reduce boilerplate code, you can omit the `mount()` method and Livewire will 
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $title; // Automatically set from prop
 
     // ...
@@ -201,7 +199,7 @@ new class extends Component
 ```
 
 > [!warning] These properties are not reactive by default
-> The `$title` property will not update automatically if the outer `:title="$initialValue"` changes after the initial page load. This is a common point of confusion when using Livewire, especially for developers who have used JavaScript frameworks like Vue or React and assume these "parameters" behave like "reactive props" in those frameworks. But, don't worry, Livewire allows you to opt-in to [making your props reactive](/docs/4.x/nesting#reactive-props).
+> The `$title` property will not update automatically if the outer `:title="$initialValue"` changes after the initial page load. This is a common point of confusion when using Livewire, especially for developers who have used JavaScript frameworks like Vue or React and assume these parameters behave like "reactive props" in those frameworks. But, don't worry, Livewire allows you to opt-in to [making your props reactive](/docs/4.x/nesting#reactive-props).
 
 ### Passing route parameters as props
 
@@ -216,8 +214,7 @@ Route::livewire('/posts/{id}', 'pages::post.show');
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $postId;
 
     public function mount($id)
@@ -239,8 +236,7 @@ Route::livewire('/posts/{post}', 'pages::post.show');
 use App\Models\Post;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post; // Automatically bound from route
 
     // No mount() needed - Livewire handles it automatically
@@ -278,8 +274,7 @@ The simplest approach is using public properties, which are automatically availa
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $title = 'My Post';
 };
 ```
@@ -297,8 +292,8 @@ public $title = 'My Post';           // Available as {{ $title }}
 protected $apiKey = 'secret-key';    // Available as {{ $this->apiKey }}
 ```
 
-> [!info] Protected properties are not sent to the frontend
-> Unlike public properties, protected properties are never sent to the frontend and cannot be manipulated by users. This makes them safe for sensitive data. However, they are not persisted between requests, which limits their usefulness in most Livewire scenarios. They're best used for static values defined in the property declaration that you don't want exposed to the frontend.
+> [!info] Protected properties are not sent to the client
+> Unlike public properties, protected properties are never sent to the frontend and cannot be manipulated by users. This makes them safe for sensitive data. However, they are not persisted between requests, which limits their usefulness in most Livewire scenarios. They're best used for static values defined in the property declaration that you don't want exposed client-side.
 
 For complete information about properties, including persistence behavior and advanced features, see the [properties documentation](/docs/4.x/properties).
 
@@ -319,12 +314,12 @@ public function posts()
 ```blade
 <div>
     @foreach ($this->posts as $post)
-        <article>{{ $post->title }}</article>
+        <article wire:key="{{ $post->id }}">{{ $post->title }}</article>
     @endforeach
 </div>
 ```
 
-Notice the `$this->` prefix - this tells Livewire to call the method and cache the result. For more details, see the [computed properties section](/docs/4.x/properties#computed-properties) in the properties documentation.
+Notice the `$this->` prefix - this tells Livewire to call the method and cache the result for the current request only (not between requests). For more details, see the [computed properties section](/docs/4.x/properties#computed-properties) in the properties documentation.
 
 ### Passing data from render()
 
@@ -384,7 +379,7 @@ Route::livewire('/admin/users', 'admin::users-table');
 If you want Livewire to discover components in additional directories beyond the defaults, you can configure them in your `config/livewire.php` file:
 
 ```php
-'component_paths' => [
+'component_locations' => [
     resource_path('views/components'),
     resource_path('views/admin/components'),
     resource_path('views/widgets'),
@@ -405,7 +400,7 @@ use Livewire\Livewire;
 // In a service provider's boot() method (e.g., App\Providers\AppServiceProvider)
 Livewire::addComponent(
     name: 'custom-button',
-    path: resource_path('views/ui/button.blade.php')
+    viewPath: resource_path('views/ui/button.blade.php')
 );
 ```
 
@@ -413,7 +408,7 @@ Livewire::addComponent(
 
 ```php
 Livewire::addLocation(
-    path: resource_path('views/admin/components')
+    viewPath: resource_path('views/admin/components')
 );
 ```
 
@@ -422,15 +417,44 @@ Livewire::addLocation(
 ```php
 Livewire::addNamespace(
     namespace: 'ui',
-    path: resource_path('views/ui')
+    viewPath: resource_path('views/ui')
 );
 ```
 
 This approach is useful when you need to register components conditionally or when building Laravel packages that provide Livewire components.
 
+#### Registering class-based components
+
+For class-based components, use the same methods but with the `class` parameter instead of `path`:
+
+```php
+use Livewire\Livewire;
+
+// In a service provider's boot() method (e.g., App\Providers\AppServiceProvider)
+
+// Register an individual class-based component
+Livewire::addComponent(
+    name: 'todos',
+    class: \App\Livewire\Todos::class
+);
+
+// Register a location for class-based components
+Livewire::addLocation(
+    classNamespace: 'App\\Admin\\Livewire'
+);
+
+// Create a namespace for class-based components
+Livewire::addNamespace(
+    namespace: 'admin',
+    classNamespace: 'App\\Admin\\Livewire',
+    classPath: app_path('Admin/Livewire'),
+    classViewPath: resource_path('views/admin/livewire')
+);
+```
+
 ## Class-based components
 
-For teams migrating from Livewire v3 or those who prefer a more traditional Laravel structure, Livewire fully supports class-based components. This approach separates the PHP class and Blade view into different files in their conventional Laravel locations.
+For teams migrating from Livewire v3 or those who prefer a more traditional Laravel structure, Livewire fully supports class-based components. This approach separates the PHP class and Blade view into different files in their conventional locations.
 
 ### Creating class-based components
 
@@ -468,15 +492,13 @@ class CreatePost extends Component
 
 **Use class-based components when:**
 - Migrating from Livewire v2/v3
-- Your team prefers traditional Laravel file structure
+- Your team prefers a more traditional file structure
 - You have established conventions around class-based architecture
-- Working in a large team that values consistent separation patterns
 
 **Use single-file or multi-file components when:**
 - Starting a new Livewire v4 project
 - You want better component colocation
-- Your team prefers modern component-based patterns
-- You want the benefits of single-file simplicity with the option to split later
+- You want to use the latest Livewire conventions
 
 ### Configuring default component type
 
@@ -486,34 +508,6 @@ If you want class-based components by default, configure it in `config/livewire.
 'make_command' => [
     'type' => 'class',
 ],
-```
-
-### Registering class-based components
-
-Class-based components can be registered manually using the same methods shown earlier, but with the `class` parameter instead of `path`:
-
-```php
-use Livewire\Livewire;
-use App\Livewire\CustomButton;
-
-// In a service provider's boot() method (e.g., App\Providers\AppServiceProvider)
-
-// Register an individual class-based component
-Livewire::addComponent(
-    name: 'custom-button',
-    class: CustomButton::class
-);
-
-// Register a location for class-based components
-Livewire::addLocation(
-    class: 'App\\Admin\\Livewire'
-);
-
-// Create a namespace for class-based components
-Livewire::addNamespace(
-    namespace: 'admin',
-    class: 'App\\Admin\\Livewire'
-);
 ```
 
 ## Customizing component stubs
@@ -542,8 +536,6 @@ This creates stub files in your application that you can modify:
 **Additional stubs:**
 * `stubs/livewire.attribute.stub` — Attribute classes
 * `stubs/livewire.form.stub` — Form classes
-* `stubs/livewire.test.stub` — PHPUnit test files
-* `stubs/livewire.pest-test.stub` — Pest test files
 
 Once published, Livewire will automatically use your custom stubs when generating new components.
 
@@ -556,9 +548,8 @@ Once published, Livewire will automatically use your custom stubs when generatin
 **Solutions:**
 - Verify the component file exists at the expected path
 - Check that the component name in your view matches the file structure (dots for subdirectories)
-- For namespaced components, ensure the namespace is defined in `config/livewire.php`
+- For namespaced components, ensure the namespace is defined in `config/livewire.php` or manually registered in a service provider
 - Try clearing your view cache: `php artisan view:clear`
-- If using class-based components, ensure the namespace in the PHP file is correct
 
 ### Component shows blank or doesn't render
 
@@ -567,30 +558,18 @@ Once published, Livewire will automatically use your custom stubs when generatin
 - Syntax errors in the PHP section of your component
 - Check your Laravel logs for detailed error messages
 
-### Namespace not working
-
-**Symptom:** Namespaced components like `pages::post.create` not found
-
-**Solutions:**
-- Ensure the namespace is defined in `config/livewire.php` under `component_namespaces`
-- Check the path mapping is correct: `'pages' => resource_path('views/pages')`
-- Verify the component file exists in the correct directory
-- Clear your config cache: `php artisan config:clear`
-
 ### Class name conflicts
 
 **Symptom:** Errors about duplicate class names when using single-file components
 
 **Solution:** This can happen if you have multiple single-file components with the same name in different directories. Either:
 - Rename one of the components to be unique
-- Convert to class-based components where you have full control over namespaces
+- Namespace one of the directories for more clear separation
 
-## Next steps
+## See also
 
-Now that you understand Livewire components, here are the key concepts to explore next:
-
-- **[Properties](/docs/4.x/properties)** — Learn how component properties work, including types, security, and reactivity
-- **[Actions](/docs/4.x/actions)** — Understand how to handle user interactions with methods and events
-- **[Forms](/docs/4.x/forms)** — Build powerful forms with real-time validation and file uploads
-- **[Pages](/docs/4.x/pages)** — Master page components, layouts, and routing
-- **[Nesting](/docs/4.x/nesting)** — Learn how to compose components and communicate between them
+- **[Properties](/docs/4.x/properties)** — Manage component state and data
+- **[Actions](/docs/4.x/actions)** — Handle user interactions with methods
+- **[Pages](/docs/4.x/pages)** — Use components as full pages with routing
+- **[Nesting](/docs/4.x/nesting)** — Compose components together and pass data between them
+- **[Lifecycle Hooks](/docs/4.x/lifecycle-hooks)** — Execute code at specific points in a component's lifecycle

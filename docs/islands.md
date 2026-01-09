@@ -13,8 +13,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Revenue;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function revenue()
     {
@@ -54,8 +53,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Revenue;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function revenue()
     {
@@ -172,8 +170,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Activity;
 
-new class extends Component
-{
+new class extends Component {
     public $page = 1;
 
     public function loadMore()
@@ -194,19 +191,19 @@ new class extends Component
 <div>
     @island(name: 'feed')
         @foreach ($this->activities as $activity)
-            <x-activity-item :activity="$activity" />
+            <x-activity-item wire:key="{{ $activity->id }}" :activity="$activity" />
         @endforeach
     @endisland
 
-    <button type="button" wire:click.append="loadMore" wire:island="feed">
+    <button type="button" wire:click="loadMore" wire:island.append="feed">
         Load more
     </button>
 </div>
 ```
 
 Available modes:
-- `.append` - Add to the end
-- `.prepend` - Add to the beginning
+- `wire:island.append` - Add to the end
+- `wire:island.prepend` - Add to the beginning
 
 ## Nested islands
 
@@ -354,3 +351,10 @@ While islands provide powerful isolation, keep in mind:
 - Performance bottlenecks in large components
 
 Islands aren't necessary for static content, tightly coupled UI, or simple components that already render quickly.
+
+## See also
+
+- **[Nesting](/docs/4.x/nesting)** — Alternative approach using child components
+- **[Lazy Loading](/docs/4.x/lazy)** — Defer loading of expensive content
+- **[Computed Properties](/docs/4.x/computed-properties)** — Optimize island performance with memoization
+- **[@island](/docs/4.x/directive-island)** — Create isolated update regions

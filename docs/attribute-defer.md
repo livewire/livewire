@@ -11,9 +11,7 @@ use Livewire\Attributes\Defer;
 use Livewire\Component;
 use App\Models\Transaction;
 
-#[Defer] // [tl! highlight]
-new class extends Component
-{
+new #[Defer] class extends Component { // [tl! highlight]
     public $amount;
 
     public function mount()
@@ -51,9 +49,7 @@ use Livewire\Attributes\Defer;
 use Livewire\Component;
 use App\Models\Transaction;
 
-#[Defer]
-new class extends Component
-{
+new #[Defer] class extends Component {
     public $amount;
 
     public function mount()
@@ -92,9 +88,7 @@ By default, deferred components load in parallel with independent network reques
 use Livewire\Attributes\Defer;
 use Livewire\Component;
 
-#[Defer(bundle: true)] // [tl! highlight]
-new class extends Component
-{
+new #[Defer(bundle: true)] class extends Component { // [tl! highlight]
     // ...
 };
 ```
@@ -132,3 +126,15 @@ Use `#[Defer]` when:
 ## Learn more
 
 For complete documentation on lazy and deferred loading, including placeholders and bundling strategies, see the [Lazy Loading documentation](/docs/4.x/lazy).
+
+## Reference
+
+```php
+#[Defer(
+    bool|null $bundle = null,
+)]
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$bundle` | `bool\|null` | `null` | Bundle multiple deferred components into a single network request |

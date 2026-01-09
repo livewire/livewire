@@ -10,8 +10,7 @@ Apply the `#[On]` attribute to any method that should be called when an event is
 use Livewire\Attributes\On;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[On('post-created')] // [tl! highlight]
     public function updatePostList($title)
     {
@@ -32,8 +31,7 @@ To dispatch an event that triggers listeners, use the `dispatch()` method:
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public $title = '';
 
     public function save()
@@ -78,8 +76,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     #[On('post-updated.{post.id}')] // [tl! highlight]
@@ -159,8 +156,7 @@ Here's a practical example of a notification bell that listens for new notificat
 use Livewire\Attributes\On;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $unreadCount = 0;
 
     public function mount()
@@ -202,3 +198,15 @@ $this->dispatch('notification-sent');
 ## Learn more
 
 For more information about events, dispatching to specific components, and Laravel Echo integration, see the [Events documentation](/docs/4.x/events).
+
+## Reference
+
+```php
+#[On(
+    string $event,
+)]
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$event` | `string` | *required* | The name of the event to listen for |

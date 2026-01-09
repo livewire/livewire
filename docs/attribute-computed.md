@@ -11,8 +11,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\User;
 
-new class extends Component
-{
+new class extends Component {
     public $userId;
 
     #[Computed] // [tl! highlight]
@@ -53,8 +52,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed] // [tl! highlight]
     public function posts()
     {
@@ -76,8 +74,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -155,3 +152,23 @@ Computed properties are especially useful when:
 ## Learn more
 
 For detailed information about computed properties, caching strategies, and advanced use cases, see the [Computed Properties documentation](/docs/4.x/computed-properties).
+
+## Reference
+
+```php
+#[Computed(
+    bool $persist = false,
+    int $seconds = 3600,
+    bool $cache = false,
+    ?string $key = null,
+    mixed $tags = null,
+)]
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$persist` | `bool` | `false` | Cache the value across requests for the same component instance |
+| `$seconds` | `int` | `3600` | Duration in seconds to cache the value |
+| `$cache` | `bool` | `false` | Cache the value across all component instances |
+| `$key` | `?string` | `null` | Custom cache key (auto-generated if not provided) |
+| `$tags` | `mixed` | `null` | Cache tags (requires a cache driver that supports tags) |

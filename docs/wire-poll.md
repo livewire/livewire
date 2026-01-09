@@ -76,3 +76,19 @@ Another measure you can take to only poll when necessary, is to add the `.visibl
 ```
 
 If a component using `wire:visible` is at the bottom of a long page, it won't start polling until the user scrolls it into the viewport. When the user scrolls away, it will stop polling again.
+
+## Reference
+
+```blade
+wire:poll
+wire:poll="action"
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.[number]s` | Poll interval in seconds (e.g., `.15s`) |
+| `.[number]ms` | Poll interval in milliseconds (e.g., `.15000ms`) |
+| `.keep-alive` | Continue polling even when the tab is in the background |
+| `.visible` | Only poll when the element is visible in the viewport |

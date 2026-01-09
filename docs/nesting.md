@@ -4,6 +4,9 @@ Livewire allows you to nest additional Livewire components inside of a parent co
 > [!warning] You might not need a Livewire component
 > Before you extract a portion of your template into a nested Livewire component, ask yourself: Does this content in this component need to be "live"? If not, we recommend that you create a simple [Blade component](https://laravel.com/docs/blade#components) instead. Only create a Livewire component if the component benefits from Livewire's dynamic nature or if there is a direct performance benefit.
 
+> [!tip] Consider islands for isolated updates
+> If you want to isolate re-rendering to specific regions of your component without the overhead of creating separate child components, consider using [islands](/docs/4.x/islands) instead. Islands let you create independently-updating regions within a single component without managing props, events, or child component communication.
+
 Consult our [in-depth, technical examination of Livewire component nesting](/docs/4.x/understanding-nesting) for more information on the performance, usage implications, and constraints of nested Livewire components.
 
 ## Nesting a component
@@ -15,8 +18,7 @@ To nest a Livewire component within a parent component, simply include it in the
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     //
 };
 ?>
@@ -28,7 +30,7 @@ new class extends Component
 </div>
 ```
 
-On this page's initial render, the `dashboard` component will encounter `<livewire:todos />` and render it in place. On a subsequent network request to `dashboard`, the nested `todos` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are "islands"](/docs/4.x/understanding-nesting#every-component-is-an-island).
+On this page's initial render, the `dashboard` component will encounter `<livewire:todos />` and render it in place. On a subsequent network request to `dashboard`, the nested `todos` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are independent](/docs/4.x/understanding-nesting#every-component-is-an-island).
 
 For more information about the syntax for rendering components, consult our documentation on [Rendering Components](/docs/4.x/components#rendering-components).
 
@@ -45,8 +47,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function todos()
     {
@@ -73,8 +74,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     public $todos;
 
     public function mount($todos)
@@ -144,7 +144,7 @@ You can specify the component's key by specifying a `:key` prop on the child com
     <h1>Todos</h1>
 
     @foreach ($todos as $todo)
-        <livewire:todo-item :$todo :key="$todo->id" />
+        <livewire:todo-item :$todo :wire:key="$todo->id" />
     @endforeach
 </div>
 ```
@@ -158,7 +158,7 @@ As you can see, each child component will have a unique key set to the ID of eac
 
 Developers new to Livewire expect that props are "reactive" by default. In other words, they expect that when a parent changes the value of a prop being passed into a child component, the child component will automatically be updated. However, by default, Livewire props are not reactive.
 
-When using Livewire, [every component is an island](/docs/4.x/understanding-nesting#every-component-is-an-island). This means that when an update is triggered on the parent and a network request is dispatched, only the parent component's state is sent to the server to re-render - not the child component's. The intention behind this behavior is to only send the minimal amount of data back and forth between the server and client, making updates as performant as possible.
+When using Livewire, [every component is independent](/docs/4.x/understanding-nesting#every-component-is-an-island). This means that when an update is triggered on the parent and a network request is dispatched, only the parent component's state is sent to the server to re-render - not the child component's. The intention behind this behavior is to only send the minimal amount of data back and forth between the server and client, making updates as performant as possible.
 
 But, if you want or need a prop to be reactive, you can easily enable this behavior using the `#[Reactive]` attribute parameter.
 
@@ -184,8 +184,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     #[Reactive] // [tl! highlight]
     public $todos;
 
@@ -204,6 +203,9 @@ new class extends Component
 
 Reactive properties are an incredibly powerful feature, making Livewire more similar to frontend component libraries like Vue and React. But, it is important to understand the performance implications of this feature and only add `#[Reactive]` when it makes sense for your particular scenario.
 
+> [!tip] Islands can eliminate the need for reactive props
+> If you find yourself creating child components primarily to isolate updates and using `#[Reactive]` to keep them in sync, consider using [islands](/docs/4.x/islands) instead. Islands provide isolated re-rendering within a single component without the need for reactive props or child component communication.
+
 ## Binding to child data using `wire:model`
 
 Another powerful pattern for sharing state between parent and child components is using `wire:model` directly on a child component via Livewire's `Modelable` feature.
@@ -220,8 +222,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     public $todo = '';
 
     public function add()
@@ -251,7 +252,7 @@ As you can see in the `todos` template, `wire:model` is being used to bind the `
 
     <div>
         @foreach ($this->todos as $todo)
-            <livewire:todo-item :$todo :key="$todo->id" />
+            <livewire:todo-item :$todo :wire:key="$todo->id" />
         @endforeach
     </div>
 </div>
@@ -267,8 +268,7 @@ Below is the `todo-input` component with the `#[Modelable]` attribute added abov
 use Livewire\Attributes\Modelable;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Modelable] // [tl! highlight]
     public $value = '';
 };
@@ -298,8 +298,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     #[Computed]
@@ -317,7 +316,7 @@ new class extends Component
 
 <div>
     @foreach ($this->comments as $comment)
-        <livewire:comment :$comment :key="$comment->id">
+        <livewire:comment :$comment :wire:key="$comment->id">
             <button wire:click="removeComment({{ $comment->id }})">
                 Remove
             </button>
@@ -334,8 +333,7 @@ Now that content has been passed to the `Comment` child component, you can rende
 use Livewire\Component;
 use App\Models\Comment;
 
-new class extends Component
-{
+new class extends Component {
     public Comment $comment;
 };
 ?>
@@ -361,7 +359,7 @@ Below is an example of passing both a default slot and a named `actions` slot to
 ```blade
 <div>
     @foreach ($this->comments as $comment)
-        <livewire:comment :$comment :key="$comment->id">
+        <livewire:comment :$comment :wire:key="$comment->id">
             <livewire:slot name="actions">
                 <button wire:click="removeComment({{ $comment->id }})">
                     Remove
@@ -374,7 +372,7 @@ Below is an example of passing both a default slot and a named `actions` slot to
 </div>
 ```
 
-You can access named slots in the child component by passing the slot name to the `$slot` variable:
+You can access named slots in the child component by passing the slot name to the `$slots` variable:
 
 ```blade
 <div>
@@ -382,7 +380,7 @@ You can access named slots in the child component by passing the slot name to th
     <p>{{ $comment->body }}</p>
 
     <div class="actions">
-        {{ $slot('actions') }}
+        {{ $slots['actions'] }}
     </div>
 
     <div class="metadata">
@@ -393,16 +391,16 @@ You can access named slots in the child component by passing the slot name to th
 
 ### Checking if a slot was provided
 
-You can check if a slot was provided by the parent using the `has()` method on the `$slot` variable. This is helpful when you want to conditionally render content based on whether or not a slot is present:
+You can check if a slot was provided by the parent using the `has()` method on the `$slots` variable. This is helpful when you want to conditionally render content based on whether or not a slot is present:
 
 ```blade
 <div>
     <p>{{ $comment->author }}</p>
     <p>{{ $comment->body }}</p>
 
-    @if ($slot->has('actions'))
+    @if ($slots->has('actions'))
         <div class="actions">
-            {{ $slot('actions') }}
+            {{ $slots['actions'] }}
         </div>
     @endif
 
@@ -431,6 +429,122 @@ You can apply these attributes in the child component using the `$attributes` va
 
 Attributes that match public property names are automatically passed as props and excluded from `$attributes`. Any remaining attributes like `class`, `id`, or `data-*` are available through `$attributes`.
 
+## Islands vs nested components
+
+When building Livewire applications, you'll often face a choice: Should you create a nested child component or use an island? Both approaches allow you to isolate updates to specific regions, but they serve different purposes.
+
+### When to use islands
+
+Islands are ideal when you want performance isolation without architectural complexity. Use islands when:
+
+**You need performance optimization without the overhead**
+
+If your primary goal is to prevent expensive computations from running unnecessarily, islands are the simpler solution:
+
+```blade
+{{-- Island: Simple performance isolation --}}
+@island
+    <div>
+        Revenue: {{ $this->expensiveRevenue }}
+        <button wire:click="$refresh">Refresh</button>
+    </div>
+@endisland
+```
+
+This achieves the same performance benefit as a child component, but without creating a separate component file, managing props, or setting up event communication.
+
+**You want to defer or lazy load content**
+
+Islands excel at deferring expensive operations until after the initial page load:
+
+```blade
+@island(lazy: true)
+    <div>{{ $this->slowApiCall }}</div>
+@endisland
+```
+
+**You have multiple independent UI regions**
+
+When you have several regions that update independently but don't need separate logic:
+
+```blade
+@island(name: 'stats')
+    <div>Stats: {{ $this->stats }}</div>
+@endisland
+
+@island(name: 'chart')
+    <div>Chart: {{ $this->chartData }}</div>
+@endisland
+```
+
+**The isolated region doesn't need its own lifecycle**
+
+Islands share the parent component's lifecycle, state, and methods. This is perfect when the region is conceptually part of the same component.
+
+### When to use nested components
+
+Nested components are better when you need true encapsulation and reusability. Use nested components when:
+
+**You need reusable, self-contained functionality**
+
+If the component will be used in multiple places with its own logic and state:
+
+```blade
+{{-- This todo-item can be reused across the application --}}
+<livewire:todo-item :$todo :wire:key="$todo->id" />
+```
+
+**You need separate lifecycle hooks**
+
+When the child needs its own `mount()`, `updated()`, or other lifecycle methods:
+
+```php
+public function mount($todo)
+{
+    $this->authorize('view', $todo);
+}
+
+public function updated($property)
+{
+    // Child-specific update logic
+}
+```
+
+**You need encapsulated state and logic**
+
+When the child has complex state management that should be isolated:
+
+```php
+// Child component with its own encapsulated state
+public $editMode = false;
+public $draft = '';
+
+public function startEdit() { /* ... */ }
+public function saveEdit() { /* ... */ }
+public function cancelEdit() { /* ... */ }
+```
+
+**You need the component to be truly independent**
+
+Nested components are truly independent, maintaining their own state across parent updates. This is valuable when you don't want parent re-renders to affect the child.
+
+**You're building a component library**
+
+When creating reusable components for your team or organization, nested components provide the proper encapsulation boundaries.
+
+### Quick decision guide
+
+Still not sure? Ask yourself:
+
+- **"Does this need to be reusable?"** → Nested component
+- **"Does this need its own lifecycle methods?"** → Nested component
+- **"Am I just trying to optimize performance?"** → Island
+- **"Do I want to defer loading expensive content?"** → Island (with `lazy` or `defer`)
+- **"Will this be used in one place only?"** → Probably an island
+- **"Does this need complex, isolated state?"** → Nested component
+
+Remember: You can always start with an island for simplicity and refactor to a nested component later if you need the additional encapsulation.
+
 ## Listening for events from children
 
 Another powerful parent-child component communication technique is Livewire's event system, which allows you to dispatch an event on the server or client that can be intercepted by other components.
@@ -447,8 +561,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     public function remove($todoId)
     {
         $todo = Todo::find($todoId);
@@ -468,7 +581,7 @@ new class extends Component
 
 <div>
     @foreach ($this->todos as $todo)
-        <livewire:todo-item :$todo :key="$todo->id" />
+        <livewire:todo-item :$todo :wire:key="$todo->id" />
     @endforeach
 </div>
 ```
@@ -484,8 +597,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     #[On('remove-todo')] // [tl! highlight]
     public function remove($todoId)
     {
@@ -506,7 +618,7 @@ new class extends Component
 
 <div>
     @foreach ($this->todos as $todo)
-        <livewire:todo-item :$todo :key="$todo->id" />
+        <livewire:todo-item :$todo :wire:key="$todo->id" />
     @endforeach
 </div>
 ```
@@ -519,8 +631,7 @@ Once the attribute has been added to the action, you can dispatch the `remove-to
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     public Todo $todo;
 
     public function remove()
@@ -556,8 +667,7 @@ You can avoid the first request entirely by dispatching the `remove-todo` event 
 use Livewire\Component;
 use App\Models\Todo;
 
-new class extends Component
-{
+new class extends Component {
     public Todo $todo;
 };
 ?>
@@ -570,6 +680,9 @@ new class extends Component
 ```
 
 As a rule of thumb, always prefer dispatching client-side when possible.
+
+> [!tip] Islands eliminate event communication overhead
+> If you're creating child components primarily to trigger parent updates via events, consider using [islands](/docs/4.x/islands) instead. Islands can call component methods directly without the indirection of events, since they share the same component context.
 
 ## Directly accessing the parent from the child
 
@@ -604,8 +717,7 @@ Dynamic child components are useful in a variety of different scenarios, but bel
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $current = 'step-one';
 
     protected $steps = [
@@ -624,7 +736,7 @@ new class extends Component
 ?>
 
 <div>
-    <livewire:dynamic-component :is="$current" :key="$current" />
+    <livewire:dynamic-component :is="$current" :wire:key="$current" />
 
     <button wire:click="next">Next</button>
 </div>
@@ -637,8 +749,7 @@ Now, if the `steps` component's `$current` prop is set to "step-one", Livewire w
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     //
 };
 ?>
@@ -651,7 +762,7 @@ new class extends Component
 If you prefer, you can use the alternative syntax:
 
 ```blade
-<livewire:is :component="$current" :key="$current" />
+<livewire:is :component="$current" :wire:key="$current" />
 ```
 
 > [!warning]
@@ -672,8 +783,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Question;
 
-new class extends Component
-{
+new class extends Component {
     public Question $question;
 
     #[Computed]
@@ -688,7 +798,7 @@ new class extends Component
     Question: {{ $question->content }}
 
     @foreach ($this->subQuestions as $subQuestion)
-        <livewire:survey-question :question="$subQuestion" :key="$subQuestion->id" />
+        <livewire:survey-question :question="$subQuestion" :wire:key="$subQuestion->id" />
     @endforeach
 </div>
 ```
@@ -712,7 +822,7 @@ Livewire internally attaches a random string key to the component like so:
 
 ```blade
 <div>
-    <livewire:todo-count :$todos key="lska" />
+    <livewire:todo-count :$todos wire:key="lska" />
 </div>
 ```
 
@@ -722,7 +832,7 @@ When the parent component is rendering and encounters a child component like the
 'children' => ['lska'],
 ```
 
-Livewire uses this list for reference on subsequent renders in order to detect if a child component has already been rendered in a previous request. If it has already been rendered, the component is skipped. Remember, [nested components are islands](/docs/4.x/understanding-nesting#every-component-is-an-island). However, if the child key is not in the list, meaning it hasn't been rendered already, Livewire will create a new instance of the component and render it in place.
+Livewire uses this list for reference on subsequent renders in order to detect if a child component has already been rendered in a previous request. If it has already been rendered, the component is skipped. Remember, [nested components are independent](/docs/4.x/understanding-nesting#every-component-is-an-island). However, if the child key is not in the list, meaning it hasn't been rendered already, Livewire will create a new instance of the component and render it in place.
 
 These nuances are all behind-the-scenes behavior that most users don't need to be aware of; however, the concept of setting a key on a child is a powerful tool for controlling child rendering.
 
@@ -732,8 +842,16 @@ Below is an example where we might want to destroy and re-initialize the `todo-c
 
 ```blade
 <div>
-    <livewire:todo-count :todos="$todos" :key="$todos->pluck('id')->join('-')" />
+    <livewire:todo-count :todos="$todos" :wire:key="$todos->pluck('id')->join('-')" />
 </div>
 ```
 
 As you can see above, we are generating a dynamic `:key` string based on the content of `$todos`. This way, the `todo-count` component will render and exist as normal until the `$todos` themselves change. At that point, the component will be re-initialized entirely from scratch, and the old component will be discarded.
+
+## See also
+
+- **[Events](/docs/4.x/events)** — Communicate between nested components
+- **[Components](/docs/4.x/components)** — Learn about rendering and organizing components
+- **[Islands](/docs/4.x/islands)** — Alternative to nesting for isolated updates
+- **[Understanding Nesting](/docs/4.x/understanding-nesting)** — Deep dive into nesting performance and behavior
+- **[Reactive Attribute](/docs/4.x/attribute-reactive)** — Make props reactive in nested components

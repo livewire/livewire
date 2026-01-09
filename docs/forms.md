@@ -12,8 +12,7 @@ Let's start by looking at a very simple form in a `post.create` component. This 
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public $title = '';
 
     public $content = '';
@@ -63,8 +62,7 @@ use Livewire\Attributes\Validate; // [tl! highlight]
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Validate('required')] // [tl! highlight]
     public $title = '';
 
@@ -147,8 +145,7 @@ use App\Livewire\Forms\PostForm;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public PostForm $form; // [tl! highlight]
 
     public function save()
@@ -216,8 +213,7 @@ Now you can call `$this->form->store()` from the component:
 use App\Livewire\Forms\PostForm;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public PostForm $form;
 
     public function save()
@@ -242,8 +238,7 @@ use App\Livewire\Forms\PostForm;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public PostForm $form;
 
     public function mount(Post $post)
@@ -510,9 +505,18 @@ Here's an example of adding a small loading spinner to the "Save" button via `wi
 </button>
 ```
 
-Now, when a user presses "Save", a small, inline spinner will show up.
+Alternatively, you can use Tailwind and Livewire's automatic `data-loading` attribute for cleaner markup:
 
-Livewire's `wire:loading` feature has a lot more to offer. Visit the [Loading documentation to learn more.](/docs/4.x/wire-loading)
+```blade
+<button type="submit">
+    <span class="in-data-loading:hidden">Save</span>
+    <span class="not-in-data-loading:hidden">
+        <svg>...</svg> <!-- SVG loading spinner -->
+    </span>
+</button>
+```
+
+[Learn more about loading states →](/docs/4.x/loading-states)
 
 ## Live-updating fields
 
@@ -572,8 +576,7 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     #[Validate('required')]
@@ -797,3 +800,11 @@ Because `x-modelable` works for both `wire:model` and `x-model`, you can also us
 ```
 
 Creating custom input elements in your application is extremely powerful but requires a deeper understanding of the utilities Livewire and Alpine provide and how they interact with each other.
+
+## See also
+
+- **[Validation](/docs/4.x/validation)** — Validate form inputs with real-time feedback
+- **[wire:model](/docs/4.x/wire-model)** — Bind form inputs to component properties
+- **[File Uploads](/docs/4.x/uploads)** — Handle file uploads in forms
+- **[Actions](/docs/4.x/actions)** — Process form submissions with actions
+- **[Loading States](/docs/4.x/loading-states)** — Show loading indicators during form submission

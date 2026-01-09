@@ -3,8 +3,9 @@
 namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Illuminate\Contracts\Console\Kernel;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+use Livewire\Livewire;
 
 class MakeCommandUnitTest extends \Tests\TestCase
 {
@@ -297,7 +298,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($this->livewireComponentsPath('⚡create-post.blade.php')));
     }
 
-    public function test_nested_component_is_created_in_pages_namespace()
+    public function test_nested_single_file_component_is_created_in_pages_namespace()
     {
         Artisan::call('make:livewire', ['name' => 'pages::blog.create-post']);
 
@@ -313,6 +314,29 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists(resource_path('views/pages/⚡dashboard/dashboard.blade.php')));
     }
 
+    public function test_class_component_is_created_in_namespace()
+    {
+        File::deleteDirectory(app_path('Foo'));
+        File::deleteDirectory(resource_path('views/foo'));
+
+        Livewire::addNamespace(
+            namespace: 'foo',
+            classNamespace: 'App\Foo',
+            classPath: app_path('Foo'),
+            classViewPath: resource_path('views/foo'),
+        );
+        
+        Artisan::call('make:livewire', ['name' => 'foo::bar', '--class' => true]);
+
+        $this->assertTrue(File::exists(resource_path('views/foo/bar.blade.php')));
+        $this->assertTrue(File::exists(app_path('Foo/Bar.php')));
+
+        $contents = File::get(app_path('Foo/Bar.php'));
+        $this->assertStringContainsString('namespace App\Foo;', $contents);
+        $this->assertStringContainsString('class Bar extends Component', $contents);
+        $this->assertStringContainsString("view('foo.bar')", $contents);
+    }
+
     public function test_component_is_created_in_layouts_namespace()
     {
         Artisan::call('make:livewire', ['name' => 'layouts::sidebar']);
@@ -325,9 +349,9 @@ class MakeCommandUnitTest extends \Tests\TestCase
         // Set the custom namespace in config
         $adminPath = resource_path('views/admin');
         $this->app['config']->set('livewire.component_namespaces.admin', $adminPath);
-        
+
         // Register the namespace with all the necessary systems (mimicking what LivewireServiceProvider does)
-        app('livewire.finder')->addNamespace('admin', path: $adminPath);
+        app('livewire.finder')->addNamespace('admin', viewPath: $adminPath);
         app('blade.compiler')->anonymousComponentPath($adminPath, 'admin');
         app('view')->addNamespace('admin', $adminPath);
 
@@ -351,5 +375,209 @@ class MakeCommandUnitTest extends \Tests\TestCase
         Artisan::call('make:livewire', ['name' => 'pages::blog.posts.create-post']);
 
         $this->assertTrue(File::exists(resource_path('views/pages/blog/posts/⚡create-post.blade.php')));
+    }
+
+    public function test_single_file_component_with_test_flag_creates_test_file()
+    {
+        Artisan::call('make:livewire', ['name' => 'foo', '--test' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo.test.php')));
+
+        $testContent = File::get($this->livewireComponentsPath('⚡foo.test.php'));
+        $this->assertStringContainsString("it('renders successfully'", $testContent);
+        $this->assertStringContainsString('foo', $testContent);
+    }
+
+    public function test_single_file_component_with_test_flag_without_emoji()
+    {
+        $this->app['config']->set('livewire.make_command.emoji', false);
+
+        Artisan::call('make:livewire', ['name' => 'bar', '--test' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('bar.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('bar.test.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡bar.test.php')));
+    }
+
+    public function test_nested_single_file_component_with_test_flag()
+    {
+        Artisan::call('make:livewire', ['name' => 'admin.users', '--test' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('admin/⚡users.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('admin/⚡users.test.php')));
+    }
+
+    public function test_converting_single_file_to_multi_file_preserves_test_file()
+    {
+        // Create SFC with test
+        Artisan::call('make:livewire', ['name' => 'foo', '--test' => true]);
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo.test.php')));
+
+        // Convert to MFC
+        Artisan::call('livewire:convert', ['name' => 'foo', '--mfc' => true]);
+
+        // Check that test file was moved into MFC directory
+        $this->assertTrue(File::isDirectory($this->livewireComponentsPath('⚡foo')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.test.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡foo.test.php')));
+
+        $testContent = File::get($this->livewireComponentsPath('⚡foo/foo.test.php'));
+        $this->assertStringContainsString("it('renders successfully'", $testContent);
+    }
+
+    public function test_converting_multi_file_to_single_file_preserves_test_file()
+    {
+        // Create MFC with test
+        Artisan::call('make:livewire', ['name' => 'bar', '--mfc' => true, '--test' => true]);
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡bar/bar.test.php')));
+
+        // Convert to SFC
+        Artisan::call('livewire:convert', ['name' => 'bar', '--sfc' => true]);
+
+        // Check that test file was moved out of MFC directory
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡bar.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡bar.test.php')));
+        $this->assertFalse(File::isDirectory($this->livewireComponentsPath('⚡bar')));
+
+        $testContent = File::get($this->livewireComponentsPath('⚡bar.test.php'));
+        $this->assertStringContainsString("it('renders successfully'", $testContent);
+    }
+
+    public function test_converting_sfc_to_mfc_without_test_flag_preserves_existing_test()
+    {
+        // Create SFC with test
+        Artisan::call('make:livewire', ['name' => 'baz', '--test' => true]);
+
+        // Convert to MFC without --test flag (should still preserve test)
+        Artisan::call('livewire:convert', ['name' => 'baz', '--mfc' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡baz/baz.test.php')));
+    }
+
+    public function test_converting_sfc_to_mfc_with_test_flag_creates_test_when_none_exists()
+    {
+        // Create SFC without test
+        Artisan::call('make:livewire', ['name' => 'qux']);
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡qux.test.php')));
+
+        // Convert to MFC with --test flag
+        Artisan::call('livewire:convert', ['name' => 'qux', '--mfc' => true, '--test' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡qux/qux.test.php')));
+    }
+
+    public function test_converting_mfc_to_sfc_without_test_file_works()
+    {
+        // Create MFC without test
+        Artisan::call('make:livewire', ['name' => 'quux', '--mfc' => true]);
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡quux/quux.test.php')));
+
+        // Convert to SFC
+        Artisan::call('livewire:convert', ['name' => 'quux', '--sfc' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡quux.blade.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡quux.test.php')));
+    }
+
+    public function test_test_flag_creates_test_for_existing_single_file_component()
+    {
+        // Create SFC without test
+        Artisan::call('make:livewire', ['name' => 'existing-sfc']);
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡existing-sfc.blade.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡existing-sfc.test.php')));
+
+        // Create test for existing component
+        $exitCode = Artisan::call('make:livewire', ['name' => 'existing-sfc', '--test' => true]);
+
+        $this->assertEquals(0, $exitCode);
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡existing-sfc.test.php')));
+
+        $testContent = File::get($this->livewireComponentsPath('⚡existing-sfc.test.php'));
+        $this->assertStringContainsString("it('renders successfully'", $testContent);
+        $this->assertStringContainsString('existing-sfc', $testContent);
+    }
+
+    public function test_test_flag_creates_test_for_existing_multi_file_component()
+    {
+        // Create MFC without test
+        Artisan::call('make:livewire', ['name' => 'existing-mfc', '--mfc' => true]);
+        $this->assertTrue(File::isDirectory($this->livewireComponentsPath('⚡existing-mfc')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡existing-mfc/existing-mfc.test.php')));
+
+        // Create test for existing component
+        $exitCode = Artisan::call('make:livewire', ['name' => 'existing-mfc', '--test' => true]);
+
+        $this->assertEquals(0, $exitCode);
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡existing-mfc/existing-mfc.test.php')));
+
+        $testContent = File::get($this->livewireComponentsPath('⚡existing-mfc/existing-mfc.test.php'));
+        $this->assertStringContainsString("it('renders successfully'", $testContent);
+        $this->assertStringContainsString('existing-mfc', $testContent);
+    }
+
+    public function test_test_flag_creates_test_for_existing_class_based_component()
+    {
+        // Create class-based component
+        Artisan::call('make:livewire', ['name' => 'existing-class', '--class' => true]);
+        $this->assertTrue(File::exists($this->livewireClassesPath('ExistingClass.php')));
+        $this->assertFalse(File::exists($this->livewireTestsPath('ExistingClassTest.php')));
+
+        // Create test for existing component
+        $exitCode = Artisan::call('make:livewire', ['name' => 'existing-class', '--test' => true]);
+
+        $this->assertEquals(0, $exitCode);
+        $this->assertTrue(File::exists($this->livewireTestsPath('ExistingClassTest.php')));
+
+        $testContent = File::get($this->livewireTestsPath('ExistingClassTest.php'));
+        $this->assertStringContainsString("it('renders successfully'", $testContent);
+        $this->assertStringContainsString('existing-class', $testContent);
+    }
+
+    public function test_test_flag_for_existing_component_errors_when_test_already_exists()
+    {
+        // Create SFC with test
+        Artisan::call('make:livewire', ['name' => 'with-test', '--test' => true]);
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡with-test.test.php')));
+
+        // Try to create test again
+        $exitCode = Artisan::call('make:livewire', ['name' => 'with-test', '--test' => true]);
+
+        $this->assertEquals(1, $exitCode);
+    }
+
+    public function test_test_flag_for_nested_existing_component()
+    {
+        // Create nested SFC without test
+        Artisan::call('make:livewire', ['name' => 'admin.settings']);
+        $this->assertTrue(File::exists($this->livewireComponentsPath('admin/⚡settings.blade.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('admin/⚡settings.test.php')));
+
+        // Create test for existing component
+        $exitCode = Artisan::call('make:livewire', ['name' => 'admin.settings', '--test' => true]);
+
+        $this->assertEquals(0, $exitCode);
+        $this->assertTrue(File::exists($this->livewireComponentsPath('admin/⚡settings.test.php')));
+
+        $testContent = File::get($this->livewireComponentsPath('admin/⚡settings.test.php'));
+        $this->assertStringContainsString('admin.settings', $testContent);
+    }
+
+    public function test_test_flag_for_nested_existing_class_based_component()
+    {
+        // Create nested class-based component
+        Artisan::call('make:livewire', ['name' => 'admin.dashboard', '--class' => true]);
+        $this->assertTrue(File::exists($this->livewireClassesPath('Admin/Dashboard.php')));
+        $this->assertFalse(File::exists($this->livewireTestsPath('Admin/DashboardTest.php')));
+
+        // Create test for existing component
+        $exitCode = Artisan::call('make:livewire', ['name' => 'admin.dashboard', '--test' => true]);
+
+        $this->assertEquals(0, $exitCode);
+        $this->assertTrue(File::exists($this->livewireTestsPath('Admin/DashboardTest.php')));
+
+        $testContent = File::get($this->livewireTestsPath('Admin/DashboardTest.php'));
+        $this->assertStringContainsString('admin.dashboard', $testContent);
     }
 }

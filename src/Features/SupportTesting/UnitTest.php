@@ -13,7 +13,6 @@ use Livewire\Livewire;
 use Closure;
 use Tests\TestComponent;
 
-// TODO - Change this to \Tests\TestCase
 class UnitTest extends \LegacyTests\Unit\TestCase
 {
     function test_can_assert_see_livewire_on_standard_blade_view()

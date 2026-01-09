@@ -19,8 +19,7 @@ use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     use WithPagination;
 
     #[Computed]
@@ -100,8 +99,7 @@ use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     use WithPagination;
 
     public $query = '';
@@ -164,8 +162,7 @@ use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Client;
 
-new class extends Component
-{
+new class extends Component {
     use WithPagination;
 
     #[Computed]
@@ -192,8 +189,7 @@ use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Invoice;
 
-new class extends Component
-{
+new class extends Component {
     use WithPagination;
 
     #[Computed]
@@ -234,8 +230,7 @@ use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     use WithPagination;
 
     public function updatingPage($page)
@@ -336,7 +331,7 @@ To accomplish this, set the `pagination_theme` configuration value in your appli
 > [!info] Publishing Livewire's configuration file
 > Before customizing the pagination theme, you must first publish Livewire's configuration file to your application's `/config` directory by running the following command:
 > ```shell
-> php artisan livewire:publish --config
+> php artisan livewire:config
 > ```
 
 ## Modifying the default pagination views
@@ -420,4 +415,20 @@ As you can see, you can use Livewire's page navigation helpers like `$this->next
     @endif
 </div>
 ```
+
+For visual-only loading states (like opacity changes), you can use Livewire's automatic `data-loading` attribute with Tailwind classes instead:
+
+```blade
+<button wire:click="nextPage" class="data-loading:opacity-50" rel="next">
+    Next
+</button>
+```
+
+[Learn more about loading states →](/docs/4.x/loading-states)
+
+## See also
+
+- **[URL Query Parameters](/docs/4.x/url)** — Sync pagination state with URL
+- **[Loading States](/docs/4.x/loading-states)** — Show feedback during page changes
+- **[Computed Properties](/docs/4.x/computed-properties)** — Efficiently query paginated data
 

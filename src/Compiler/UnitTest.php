@@ -8,6 +8,7 @@ use Livewire\Compiler\Parser\MultiFileParser;
 use Livewire\Compiler\Compiler;
 use Livewire\Compiler\CacheManager;
 use Illuminate\Support\Facades\File;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -214,7 +215,7 @@ class UnitTest extends \Tests\TestCase
     public function test_can_parse_mfc_component()
     {
         $compiler = new Compiler(new CacheManager($this->cacheDir));
-        
+
         $parser = MultiFileParser::parse($compiler, __DIR__ . '/Fixtures/mfc-component');
 
         $classContents = $parser->generateClassContents('view-path.blade.php');
@@ -334,5 +335,222 @@ class UnitTest extends \Tests\TestCase
         $viewContents = file_get_contents($cacheManager->getViewPath($sourcePath));
 
         $this->assertStringContainsString('<span>{{ $message }}</span>', $viewContents);
+    }
+
+    #[DataProvider('classReturnProvider')]
+    public function test_anonymous_class_has_return_statement_added_if_required($classContents, $expectedOutput)
+    {
+        $parser = new SingleFileParser(
+            path: '',
+            contents: '',
+            scriptPortion: null,
+            stylePortion: null,
+            globalStylePortion: null,
+            classPortion: $classContents,
+            placeholderPortion: null,
+            viewPortion: '',
+        );
+
+        $generatedClassContents = $parser->generateClassContents();
+
+        $this->assertEquals($expectedOutput, $generatedClassContents);
+    }
+
+    public static function classReturnProvider()
+    {
+        return [
+            [
+                <<<'EOT'
+                <?php
+
+                return new class extends \Livewire\Component
+                {
+                    public $message = 'Hello World';
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                return new class extends \Livewire\Component
+                {
+                    public $message = 'Hello World';
+                };
+
+                EOT,
+            ],
+            [
+                <<<'EOT'
+                <?php
+
+                new class extends \Livewire\Component
+                {
+                    public $message = 'Hello World';
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                return new class extends \Livewire\Component
+                {
+                    public $message = 'Hello World';
+                };
+
+                EOT,
+            ],
+            [
+                <<<'EOT'
+                <?php
+
+                return new class extends \Livewire\Component
+                {
+                    public $message = 'Hello World';
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                return new class extends \Livewire\Component
+                {
+                    public $message = 'Hello World';
+                };
+
+                EOT,
+            ],
+            [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                new class extends Component {
+                    public function getData()
+                    {
+                        return new Collection([]);
+                    }
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                return new class extends Component {
+                    public function getData()
+                    {
+                        return new Collection([]);
+                    }
+                };
+
+                EOT,
+            ],
+            [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                new class extends Component {
+                    public function getData()
+                    {
+                        return new class extends Model {
+                            protected $table = 'users';
+                        };
+                    }
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                return new class extends Component {
+                    public function getData()
+                    {
+                        return new class extends Model {
+                            protected $table = 'users';
+                        };
+                    }
+                };
+
+                EOT,
+            ],
+            [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Attributes\Layout;
+                use Livewire\Component;
+
+                new #[Layout('layouts.app')] class extends Component {
+                    public function getData()
+                    {
+                        return new class extends Model {
+                            protected $table = 'users';
+                        };
+                    }
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Attributes\Layout;
+                use Livewire\Component;
+
+                return new #[Layout('layouts.app')] class extends Component {
+                    public function getData()
+                    {
+                        return new class extends Model {
+                            protected $table = 'users';
+                        };
+                    }
+                };
+
+                EOT,
+            ],
+            [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Attributes\Layout;
+                use Livewire\Component;
+
+                new
+                #[Layout('layouts.app')]
+                class extends Component {
+                    public function getData()
+                    {
+                        return new class extends Model {
+                            protected $table = 'users';
+                        };
+                    }
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Attributes\Layout;
+                use Livewire\Component;
+
+                return new
+                #[Layout('layouts.app')]
+                class extends Component {
+                    public function getData()
+                    {
+                        return new class extends Model {
+                            protected $table = 'users';
+                        };
+                    }
+                };
+
+                EOT,
+            ],
+        ];
     }
 }

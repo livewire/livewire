@@ -28,11 +28,95 @@ class BrowserTest extends BrowserTestCase
         })
             ->assertSee('The data is in-sync...')
             ->check('@checkbox')
+            ->pause(50)
             ->assertDontSee('The data is in-sync')
             ->assertSee('Unsaved changes...')
             ->uncheck('@checkbox')
             ->assertSee('The data is in-sync...')
             ->assertDontSee('Unsaved changes...')
+        ;
+    }
+
+    function test_can_use_dollar_dirty_to_check_if_component_is_dirty()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model="title" />
+
+                        <div x-show="$wire.$dirty()" dusk="dirty-indicator">Component is dirty</div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertNotVisible('@dirty-indicator')
+            ->type('@input', 'Hello')
+            ->pause(50)
+            ->assertVisible('@dirty-indicator');
+        ;
+    }
+
+    function test_can_use_dollar_dirty_to_check_if_specific_property_is_dirty()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+            public $description = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="title" type="text" wire:model="title" />
+                        <input dusk="description" type="text" wire:model="description" />
+
+                        <div x-show="$wire.$dirty('title')" dusk="title-dirty">Title is dirty</div>
+                        <div x-show="$wire.$dirty('description')" dusk="description-dirty">Description is dirty</div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertNotVisible('@title-dirty')
+            ->assertNotVisible('@description-dirty')
+            ->type('@title', 'Hello')
+            ->pause(50)
+            ->assertVisible('@title-dirty')
+            ->assertNotVisible('@description-dirty')
+            ->type('@description', 'World')
+            ->pause(50)
+            ->assertVisible('@title-dirty')
+            ->assertVisible('@description-dirty')
+        ;
+    }
+
+    function test_dollar_dirty_clears_after_network_request()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model="title" />
+
+                        <button dusk="commit" type="button" wire:click="$commit">Commit</button>
+
+                        <div x-show="$wire.$dirty()" dusk="dirty-indicator">Component is dirty</div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertNotVisible('@dirty-indicator')
+            ->type('@input', 'Hello')
+            ->pause(50)
+            ->assertVisible('@dirty-indicator')
+            ->waitForLivewire()->click('@commit')
+            ->pause(50)
+            ->assertNotVisible('@dirty-indicator')
         ;
     }
 

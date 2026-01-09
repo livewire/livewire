@@ -58,7 +58,7 @@ class UnitTest extends TestCase
 
     public function test_can_use_livewire_macro_with_auto_discvovered_single_file_component()
     {
-        app('livewire.finder')->addLocation(path: __DIR__ . '/fixtures');
+        app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');
 
         Route::livewire('/component-for-routing', 'sfc-counter');
 

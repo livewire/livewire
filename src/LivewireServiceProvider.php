@@ -35,7 +35,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->app->singleton('livewire.finder', function () {
             $finder = new Finder;
 
-            $finder->addLocation(class: config('livewire.class_namespace'));
+            $finder->addLocation(classNamespace: config('livewire.class_namespace'));
             $finder->addLocation(viewPath: config('livewire.view_path'));
 
             return $finder;
@@ -126,13 +126,19 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         // Register view-based component locations and namespaces...
 
         foreach (config('livewire.component_locations', []) as $location) {
-            app('livewire.finder')->addLocation(path: $location);
+            app('livewire.finder')->addLocation(viewPath: $location);
+
+            if (! is_dir($location)) continue;
+
             app('blade.compiler')->anonymousComponentPath($location);
             app('view')->addLocation($location);
         }
 
         foreach (config('livewire.component_namespaces', []) as $namespace => $location) {
-            app('livewire.finder')->addNamespace($namespace, path: $location);
+            app('livewire.finder')->addNamespace($namespace, viewPath: $location);
+
+            if (! is_dir($location)) continue;
+
             app('blade.compiler')->anonymousComponentPath($location, $namespace);
             app('view')->addNamespace($namespace, $location);
         }
@@ -184,8 +190,10 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportWithMethod\SupportWithMethod::class,
             Features\SupportIsolating\SupportIsolating::class,
             Features\SupportRedirects\SupportRedirects::class,
+            Features\SupportTransitions\SupportTransitions::class,
             Features\SupportStreaming\SupportStreaming::class,
             Features\SupportJsModules\SupportJsModules::class,
+            Features\SupportCssModules\SupportCssModules::class,
             Features\SupportNavigate\SupportNavigate::class,
             Features\SupportEntangle\SupportEntangle::class,
             Features\SupportWireRef\SupportWireRef::class,
@@ -196,6 +204,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportModels\SupportModels::class,
             Features\SupportEvents\SupportEvents::class,
             Features\SupportSlots\SupportSlots::class,
+            Features\SupportJson\SupportJson::class,
 
             // Some features we want to have priority over others...
             Features\SupportLifecycleHooks\SupportLifecycleHooks::class,

@@ -72,8 +72,12 @@ class Event
         return $this;
     }
 
-    public function to($component = null, $ref = null, $el = null)
+    public function to($component = null, $ref = null, $el = null, $self = null)
     {
+        if ($self) {
+            return $this->self();
+        }
+
         if ($ref) {
             return $this->ref($ref);
         }

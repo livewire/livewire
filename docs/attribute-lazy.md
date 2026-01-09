@@ -11,9 +11,7 @@ use Livewire\Attributes\Lazy;
 use Livewire\Component;
 use App\Models\Transaction;
 
-#[Lazy] // [tl! highlight]
-new class extends Component
-{
+new #[Lazy] class extends Component { // [tl! highlight]
     public $amount;
 
     public function mount()
@@ -51,9 +49,7 @@ use Livewire\Attributes\Lazy;
 use Livewire\Component;
 use App\Models\Transaction;
 
-#[Lazy]
-new class extends Component
-{
+new #[Lazy] class extends Component {
     public $amount;
 
     public function mount()
@@ -92,24 +88,12 @@ By default, lazy components load in parallel with independent network requests. 
 use Livewire\Attributes\Lazy;
 use Livewire\Component;
 
-#[Lazy(bundle: true)] // [tl! highlight]
-new class extends Component
-{
+new #[Lazy(bundle: true)] class extends Component { // [tl! highlight]
     // ...
 };
 ```
 
 Now, if there are ten `revenue` components on the page, all ten will load via a single bundled network request instead of ten parallel requests.
-
-## Isolation
-
-Lazy components are isolated by default, meaning their requests don't bundle with other component updates. This allows them to load in parallel without blocking each other.
-
-If you want to disable isolation (force bundling with other updates), you can use:
-
-```php
-#[Lazy(isolate: false)] // [tl! highlight]
-```
 
 ## Alternative approach
 
@@ -143,3 +127,15 @@ Use `#[Lazy]` when:
 ## Learn more
 
 For complete documentation on lazy loading, including placeholders, bundling strategies, and passing props, see the [Lazy Loading documentation](/docs/4.x/lazy).
+
+## Reference
+
+```php
+#[Lazy(
+    bool|null $bundle = null,
+)]
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$bundle` | `bool\|null` | `null` | Bundle multiple lazy components into a single network request |

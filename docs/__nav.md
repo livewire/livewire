@@ -15,22 +15,21 @@ Essentials:
     Testing: { uri: /docs/4.x/testing, file: /testing.md }
 Features:
     Alpine: { uri: /docs/4.x/alpine, file: /alpine.md }
+    Styles: { uri: /docs/4.x/styles, file: /styles.md }
     Navigate: { uri: /docs/4.x/navigate, file: /navigate.md }
     Islands: { uri: /docs/4.x/islands, file: /islands.md }
     Lazy Loading: { uri: /docs/4.x/lazy, file: /lazy.md }
+    Loading States: { uri: /docs/4.x/loading-states, file: /loading-states.md }
     Validation: { uri: /docs/4.x/validation, file: /validation.md }
     File Uploads: { uri: /docs/4.x/uploads, file: /uploads.md }
     Pagination: { uri: /docs/4.x/pagination, file: /pagination.md }
     URL Query Parameters: { uri: /docs/4.x/url, file: /url.md }
     Computed Properties: { uri: /docs/4.x/computed-properties, file: /computed-properties.md }
-    Session Properties: { uri: /docs/4.x/session-properties, file: /session-properties.md }
     Redirecting: { uri: /docs/4.x/redirecting, file: /redirecting.md }
     File Downloads: { uri: /docs/4.x/downloads, file: /downloads.md }
-    Locked Properties: { uri: /docs/4.x/locked, file: /locked.md }
-    Request Bundling: { uri: /docs/4.x/bundling, file: /bundling.md }
-    Offline States: { uri: /docs/4.x/offline, file: /offline.md }
     Teleport: { uri: /docs/4.x/teleport, file: /teleport.md }
 HTML Directives:
+    wire:bind: { uri: /docs/4.x/wire-bind, file: /wire-bind.md }
     wire:click: { uri: /docs/4.x/wire-click, file: /wire-click.md }
     wire:submit: { uri: /docs/4.x/wire-submit, file: /wire-submit.md }
     wire:model: { uri: /docs/4.x/wire-model, file: /wire-model.md }
@@ -58,23 +57,28 @@ PHP Attributes:
     Defer: { uri: /docs/4.x/attribute-defer, file: /attribute-defer.md }
     Isolate: { uri: /docs/4.x/attribute-isolate, file: /attribute-isolate.md }
     Js: { uri: /docs/4.x/attribute-js, file: /attribute-js.md }
-    Layout: { uri: /docs/4.x/attribute-layout, file: /attribute-ayout.md }
+    Json: { uri: /docs/4.x/attribute-json, file: /attribute-json.md }
+    Layout: { uri: /docs/4.x/attribute-layout, file: /attribute-layout.md }
     Lazy: { uri: /docs/4.x/attribute-lazy, file: /attribute-lazy.md }
     Locked: { uri: /docs/4.x/attribute-locked, file: /attribute-locked.md }
     Modelable: { uri: /docs/4.x/attribute-modelable, file: /attribute-modelable.md }
     On: { uri: /docs/4.x/attribute-on, file: /attribute-on.md }
     Reactive: { uri: /docs/4.x/attribute-reactive, file: /attribute-reactive.md }
     Renderless: { uri: /docs/4.x/attribute-renderless, file: /attribute-renderless.md }
-    Rule: { uri: /docs/4.x/attribute-rule, file: /attribute-rule.md }
     Session: { uri: /docs/4.x/attribute-session, file: /attribute-session.md }
     Title: { uri: /docs/4.x/attribute-title, file: /attribute-title.md }
+    Transition: { uri: /docs/4.x/attribute-transition, file: /attribute-transition.md }
     Url: { uri: /docs/4.x/attribute-url, file: /attribute-url.md }
     Validate: { uri: /docs/4.x/attribute-validate, file: /attribute-validate.md }
-Concepts:
+Blade Directives:
+    '@island': { uri: /docs/4.x/directive-island, file: /directive-island.md }
+    '@placeholder': { uri: /docs/4.x/directive-placeholder, file: /directive-placeholder.md }
+    '@persist': { uri: /docs/4.x/directive-persist, file: /directive-persist.md }
+    '@teleport': { uri: /docs/4.x/directive-teleport, file: /directive-teleport.md }
+Advanced:
     Morphing: { uri: /docs/4.x/morphing, file: /morph.md }
     Hydration: { uri: /docs/4.x/hydration, file: /hydration.md }
     Nesting: { uri: /docs/4.x/understanding-nesting, file: /understanding-nesting.md }
-Advanced:
     Troubleshooting: { uri: /docs/4.x/troubleshooting, file: /troubleshooting.md }
     Security: { uri: /docs/4.x/security, file: /security.md }
     CSP: { uri: /docs/4.x/csp, file: /csp.md }

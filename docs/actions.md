@@ -8,8 +8,7 @@ Let's explore a basic example of calling a `save` action:
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public $title = '';
 
     public $content = '';
@@ -38,66 +37,131 @@ new class extends Component
 In the above example, when a user submits the form by clicking "Save", `wire:submit` intercepts the `submit` event and calls the `save()` action on the server.
 
 In essence, actions are a way to easily map user interactions to server-side functionality without the hassle of submitting and handling AJAX requests manually.
+## Passing parameters
 
-## Refreshing a component
+Livewire allows you to pass parameters from your Blade template to the actions in your component, giving you the opportunity to provide an action additional data or state from the frontend when the action is called.
 
-Sometimes you may want to trigger a simple "refresh" of your component. For example, if you have a component checking the status of something in the database, you may want to show a button to your users allowing them to refresh the displayed results.
+For example, let's imagine you have a `ShowPosts` component that allows users to delete a post. You can pass the post's ID as a parameter to the `delete()` action in your Livewire component. Then, the action can fetch the relevant post and delete it from the database:
 
-You can do this using Livewire's simple `$refresh` action anywhere you would normally reference your own component method:
+```php
+<?php // resources/views/components/post/⚡index.blade.php
 
-```blade
-<button type="button" wire:click="$refresh">...</button>
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
+use Livewire\Component;
+use App\Models\Post;
+
+new class extends Component {
+    #[Computed]
+    public function posts()
+    {
+        return Auth::user()->posts;
+    }
+
+    public function delete($id)
+    {
+        $post = Post::findOrFail($id);
+
+        $this->authorize('delete', $post);
+
+        $post->delete();
+    }
+};
 ```
 
-When the `$refresh` action is triggered, Livewire will make a server-roundtrip and re-render your component without calling any methods.
-
-It's important to note that any pending data updates in your component (for example `wire:model` bindings) will be applied on the server when the component is refreshed.
-
-Internally, Livewire uses the name "commit" to refer to any time a Livewire component is updated on the server. If you prefer this terminology, you can use the `$commit` helper instead of `$refresh`. The two are identical.
-
 ```blade
-<button type="button" wire:click="$commit">...</button>
+<div>
+    @foreach ($this->posts as $post)
+        <div wire:key="{{ $post->id }}">
+            <h1>{{ $post->title }}</h1>
+            <span>{{ $post->content }}</span>
+
+            <button wire:click="delete({{ $post->id }})">Delete</button> <!-- [tl! highlight] -->
+        </div>
+    @endforeach
+</div>
 ```
 
-You can also trigger a component refresh using AlpineJS in your Livewire component:
+For a post with an ID of 2, the "Delete" button in the Blade template above will render in the browser as:
 
 ```blade
-<button type="button" x-on:click="$wire.$refresh()">...</button>
+<button wire:click="delete(2)">Delete</button>
 ```
 
-Learn more by reading the [documentation for using Alpine inside Livewire](/docs/4.x/alpine).
+When this button is clicked, the `delete()` method will be called and `$id` will be passed in with a value of "2".
 
-## Confirming an action
-
-When allowing users to perform dangerous actions—such as deleting a post from the database—you may want to show them a confirmation alert to verify that they wish to perform that action.
-
-Livewire makes this easy by providing a simple directive called `wire:confirm`:
-
-```blade
-<button
-    type="button"
-    wire:click="delete"
-    wire:confirm="Are you sure you want to delete this post?"
+> [!warning] Don't trust action parameters
+> Action parameters should be treated just like HTTP request input, meaning action parameter values should not be trusted. You should always authorize ownership of an entity before updating it in the database.
 >
-    Delete post <!-- [tl! highlight:-2,1] -->
-</button>
+> For more information, consult our documentation regarding [security concerns and best practices](/docs/4.x/actions#security-concerns).
+
+
+As an added convenience, you may automatically resolve Eloquent models by a corresponding model ID that is provided to an action as a parameter. This is very similar to [route model binding](/docs/4.x/components#using-route-model-binding). To get started, type-hint an action parameter with a model class and the appropriate model will automatically be retrieved from the database and passed to the action instead of the ID:
+
+```php
+<?php // resources/views/components/post/⚡index.blade.php
+
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
+use Livewire\Component;
+use App\Models\Post;
+
+new class extends Component {
+    #[Computed]
+    public function posts()
+    {
+        return Auth::user()->posts;
+    }
+
+    public function delete(Post $post) // [tl! highlight]
+    {
+        $this->authorize('delete', $post);
+
+        $post->delete();
+    }
+};
 ```
 
-When `wire:confirm` is added to an element containing a Livewire action, when a user tries to trigger that action, they will be presented with a confirmation dialog containing the provided message. They can either press "OK" to confirm the action, or press "Cancel" or hit the escape key.
+## Dependency injection
 
-For more information, visit the [`wire:confirm` documentation page](/docs/4.x/wire-confirm).
+You can take advantage of [Laravel's dependency injection](https://laravel.com/docs/controllers#dependency-injection-and-controllers) system by type-hinting parameters in your action's signature. Livewire and Laravel will automatically resolve the action's dependencies from the container:
 
-## Parallel execution
+```php
+<?php // resources/views/components/post/⚡index.blade.php
 
-By default, actions within the same component are serialized: if one is in-flight, subsequent actions are queued until it finishes.
+use Illuminate\Support\Facades\Auth;
+use App\Repositories\PostRepository;
+use Livewire\Attributes\Computed;
+use Livewire\Component;
 
-Appending the `.async` modifier allows actions to run in parallel instead of being queued. This is helpful for fire-and-forget operations where you don't want to block subsequent actions.
+new class extends Component {
+    #[Computed]
+    public function posts()
+    {
+        return Auth::user()->posts;
+    }
+
+    public function delete(PostRepository $posts, $postId) // [tl! highlight]
+    {
+        $posts->deletePost($postId);
+    }
+};
+```
 
 ```blade
-<button type="button" wire:click.async="logActivity">Track Event</button>
+<div>
+    @foreach ($this->posts as $post)
+        <div wire:key="{{ $post->id }}">
+            <h1>{{ $post->title }}</h1>
+            <span>{{ $post->content }}</span>
+
+            <button wire:click="delete({{ $post->id }})">Delete</button> <!-- [tl! highlight] -->
+        </div>
+    @endforeach
+</div>
 ```
 
-For more information about when and how to use async actions safely, see the [parallel execution section](/docs/4.x/actions#parallel-execution-with-async).
+In this example, the `delete()` method receives an instance of `PostRepository` resolved via [Laravel's service container](https://laravel.com/docs/container#main-content) before receiving the provided `$postId` parameter.
 
 ## Event listeners
 
@@ -278,137 +342,60 @@ Livewire provides a `wire:loading` directive that makes it trivial to show and h
 </form>
 ```
 
-`wire:loading` is a powerful feature with a variety of more powerful features. [Check out the full loading documentation for more information](/docs/4.x/wire-loading).
-
-## Passing parameters
-
-Livewire allows you to pass parameters from your Blade template to the actions in your component, giving you the opportunity to provide an action additional data or state from the frontend when the action is called.
-
-For example, let's imagine you have a `ShowPosts` component that allows users to delete a post. You can pass the post's ID as a parameter to the `delete()` action in your Livewire component. Then, the action can fetch the relevant post and delete it from the database:
-
-```php
-<?php // resources/views/components/post/⚡index.blade.php
-
-use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\Computed;
-use Livewire\Component;
-use App\Models\Post;
-
-new class extends Component
-{
-    #[Computed]
-    public function posts()
-    {
-        return Auth::user()->posts;
-    }
-
-    public function delete($id)
-    {
-        $post = Post::findOrFail($id);
-
-        $this->authorize('delete', $post);
-
-        $post->delete();
-    }
-};
-```
+Alternatively, you can style loading states directly using Tailwind and Livewire's automatic `data-loading` attribute:
 
 ```blade
-<div>
-    @foreach ($this->posts as $post)
-        <div wire:key="{{ $post->id }}">
-            <h1>{{ $post->title }}</h1>
-            <span>{{ $post->content }}</span>
+<form wire:submit="save">
+    <textarea wire:model="content"></textarea>
 
-            <button wire:click="delete({{ $post->id }})">Delete</button> <!-- [tl! highlight] -->
-        </div>
-    @endforeach
-</div>
+    <button type="submit" class="data-loading:opacity-50">Save</button>
+
+    <span class="not-data-loading:hidden">Saving...</span>
+</form>
 ```
 
-For a post with an ID of 2, the "Delete" button in the Blade template above will render in the browser as:
+For most cases, using `data-loading` selectors is simpler and more flexible than `wire:loading`. [Learn more about loading states →](/docs/4.x/loading-states)
+
+## Refreshing a component
+
+Sometimes you may want to trigger a simple "refresh" of your component. For example, if you have a component checking the status of something in the database, you may want to show a button to your users allowing them to refresh the displayed results.
+
+You can do this using Livewire's simple `$refresh` action anywhere you would normally reference your own component method:
 
 ```blade
-<button wire:click="delete(2)">Delete</button>
+<button type="button" wire:click="$refresh">...</button>
 ```
 
-When this button is clicked, the `delete()` method will be called and `$id` will be passed in with a value of "2".
+When the `$refresh` action is triggered, Livewire will make a server-roundtrip and re-render your component without calling any methods.
 
-> [!warning] Don't trust action parameters
-> Action parameters should be treated just like HTTP request input, meaning action parameter values should not be trusted. You should always authorize ownership of an entity before updating it in the database.
+It's important to note that any pending data updates in your component (for example `wire:model` bindings) will be applied on the server when the component is refreshed.
+
+You can also trigger a component refresh using AlpineJS in your Livewire component:
+
+```blade
+<button type="button" x-on:click="$wire.$refresh()">...</button>
+```
+
+Learn more by reading the [documentation for using Alpine inside Livewire](/docs/4.x/alpine).
+## Confirming an action
+
+When allowing users to perform dangerous actions—such as deleting a post from the database—you may want to show them a confirmation alert to verify that they wish to perform that action.
+
+Livewire makes this easy by providing a simple directive called `wire:confirm`:
+
+```blade
+<button
+    type="button"
+    wire:click="delete"
+    wire:confirm="Are you sure you want to delete this post?"
 >
-> For more information, consult our documentation regarding [security concerns and best practices](/docs/4.x/actions#security-concerns).
-
-
-As an added convenience, you may automatically resolve Eloquent models by a corresponding model ID that is provided to an action as a parameter. This is very similar to [route model binding](/docs/4.x/components#using-route-model-binding). To get started, type-hint an action parameter with a model class and the appropriate model will automatically be retrieved from the database and passed to the action instead of the ID:
-
-```php
-<?php // resources/views/components/post/⚡index.blade.php
-
-use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\Computed;
-use Livewire\Component;
-use App\Models\Post;
-
-new class extends Component
-{
-    #[Computed]
-    public function posts()
-    {
-        return Auth::user()->posts;
-    }
-
-    public function delete(Post $post) // [tl! highlight]
-    {
-        $this->authorize('delete', $post);
-
-        $post->delete();
-    }
-};
+    Delete post <!-- [tl! highlight:-2,1] -->
+</button>
 ```
 
-## Dependency injection
+When `wire:confirm` is added to an element containing a Livewire action, when a user tries to trigger that action, they will be presented with a confirmation dialog containing the provided message. They can either press "OK" to confirm the action, or press "Cancel" or hit the escape key.
 
-You can take advantage of [Laravel's dependency injection](https://laravel.com/docs/controllers#dependency-injection-and-controllers) system by type-hinting parameters in your action's signature. Livewire and Laravel will automatically resolve the action's dependencies from the container:
-
-```php
-<?php // resources/views/components/post/⚡index.blade.php
-
-use Illuminate\Support\Facades\Auth;
-use App\Repositories\PostRepository;
-use Livewire\Attributes\Computed;
-use Livewire\Component;
-
-new class extends Component
-{
-    #[Computed]
-    public function posts()
-    {
-        return Auth::user()->posts;
-    }
-
-    public function delete(PostRepository $posts, $postId) // [tl! highlight]
-    {
-        $posts->deletePost($postId);
-    }
-};
-```
-
-```blade
-<div>
-    @foreach ($this->posts as $post)
-        <div wire:key="{{ $post->id }}">
-            <h1>{{ $post->title }}</h1>
-            <span>{{ $post->content }}</span>
-
-            <button wire:click="delete({{ $post->id }})">Delete</button> <!-- [tl! highlight] -->
-        </div>
-    @endforeach
-</div>
-```
-
-In this example, the `delete()` method receives an instance of `PostRepository` resolved via [Laravel's service container](https://laravel.com/docs/container#main-content) before receiving the provided `$postId` parameter.
-
+For more information, visit the [`wire:confirm` documentation page](/docs/4.x/wire-confirm).
 ## Calling actions from Alpine
 
 Livewire integrates seamlessly with [Alpine](https://alpinejs.dev/). In fact, under the hood, every Livewire component is also an Alpine component. This means you can take full advantage of Alpine within your components to add JavaScript powered client-side interactivity.
@@ -471,6 +458,9 @@ Using `$wire`, the action may be invoked and its returned value resolved:
 
 In this example, if the `getPostCount()` method returns "10", the `<span>` tag will also contain "10".
 
+> [!tip] Use #[Json] for JavaScript-consumed actions
+> For actions primarily consumed by JavaScript, consider using the [`#[Json]` attribute](/docs/4.x/attribute-json). It returns data via promise resolution/rejection, automatically handles validation errors with promise rejection, and skips re-rendering for better performance.
+
 Alpine knowledge is not required when using Livewire; however, it's an extremely powerful tool and knowing Alpine will augment your Livewire experience and productivity.
 
 ## JavaScript actions
@@ -490,8 +480,7 @@ Here's an example of bookmarking a post that uses a JavaScript action to optimis
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     public $bookmarked = false;
@@ -525,15 +514,13 @@ new class extends Component
     </button>
 </div>
 
-@script
 <script>
-    $js.bookmark = () => {
+    this.$js.bookmark = () => {
         $wire.bookmarked = !$wire.bookmarked
 
         $wire.bookmarkPost()
     }
 </script>
-@endscript
 ```
 
 When a user clicks the heart button, the following sequence occurs:
@@ -543,6 +530,17 @@ When a user clicks the heart button, the following sequence occurs:
 3. The `bookmarkPost()` method is called to save the change to the database
 
 This provides instant visual feedback while ensuring the bookmark state is properly persisted.
+
+> [!warning] Class-based components need @script wrapper
+> The examples above use bare `<script>` tags, which work for single-file and multi-file components. If you're using class-based components, you must wrap your script tags with the `@script` directive:
+> ```blade
+> @@script
+> <script>
+>     this.$js.bookmark = () => { /* ... */ }
+> </script>
+> @@endscript
+> ```
+> This ensures your JavaScript is properly scoped to the component.
 
 ### Calling from Alpine
 
@@ -561,8 +559,7 @@ JavaScript actions can also be called using the `js()` method from PHP:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $title = '';
 
     public function save()
@@ -581,13 +578,11 @@ new class extends Component
     <button wire:click="save">Save</button>
 </div>
 
-@script
 <script>
-    $js.onPostSaved = () => {
+    this.$js.onPostSaved = () => {
         alert('Your post has been saved successfully!')
     }
 </script>
-@endscript
 ```
 
 In this example, when the `save()` action is finished, the `postSaved` JavaScript action will be run, triggering the alert dialog.
@@ -677,8 +672,7 @@ use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     public function mount(Post $post)
@@ -715,8 +709,7 @@ If you prefer to not utilize method attributes or need to conditionally skip ren
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     public function mount(Post $post)
@@ -765,8 +758,7 @@ Alternatively, you can mark a method as async using the `#[Async]` attribute. Th
 use Livewire\Attributes\Async;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public Post $post;
 
     #[Async]
@@ -803,8 +795,7 @@ Here's an example of tracking when a user clicks on an external link:
 use Livewire\Attributes\Async;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $url;
 
     #[Async]
@@ -843,8 +834,7 @@ Consider this dangerous example:
 use Livewire\Attributes\Async;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $count = 0;
 
     #[Async] // Don't do this!
@@ -871,8 +861,7 @@ Another valid use case is fetching data from the server that will be consumed en
 use Livewire\Attributes\Async;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Async]
     public function fetchSuggestions($query)
     {
@@ -936,8 +925,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -978,8 +966,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -1011,8 +998,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -1055,8 +1041,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -1093,8 +1078,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -1144,8 +1128,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed]
     public function posts()
     {
@@ -1206,3 +1189,11 @@ class CreatePost extends Component
 Now, the `LogPostCreation` middleware will be applied only to the `createPost` action, ensuring that the activity is only being logged when users create a new post.
 
 -->
+
+## See also
+
+- **[Events](/docs/4.x/events)** — Communicate between components using events
+- **[Forms](/docs/4.x/forms)** — Handle form submissions with actions
+- **[Loading States](/docs/4.x/loading-states)** — Show feedback while actions are processing
+- **[wire:click](/docs/4.x/wire-click)** — Trigger actions from button clicks
+- **[Validation](/docs/4.x/validation)** — Validate data before processing actions

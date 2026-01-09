@@ -1,4 +1,4 @@
-import { dataSet, deepClone, diff, extractData} from '@/utils'
+import { dataSet, deepClone, diff, diffAndConsolidate, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
@@ -131,7 +131,7 @@ export class Component {
     }
 
     getUpdates() {
-        let propertiesDiff = diff(this.canonical, this.ephemeral)
+        let propertiesDiff = diffAndConsolidate(this.canonical, this.ephemeral)
 
         return this.mergeQueuedUpdates(propertiesDiff)
     }

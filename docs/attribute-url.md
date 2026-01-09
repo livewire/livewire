@@ -12,8 +12,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use App\Models\User;
 
-new class extends Component
-{
+new class extends Component {
     #[Url] // [tl! highlight]
     public $search = '';
 
@@ -71,8 +70,7 @@ Shorten or obfuscate property names in the URL with the `as` parameter:
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Url(as: 'q')] // [tl! highlight]
     public $search = '';
 };
@@ -90,8 +88,7 @@ By default, Livewire only adds query parameters when values differ from their in
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Url(except: '')] // [tl! highlight]
     public $search = '';
 
@@ -125,8 +122,7 @@ Use nullable type hints to treat empty query parameters as `null` instead of emp
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Url]
     public ?string $search; // [tl! highlight]
 };
@@ -167,8 +163,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use App\Models\Product;
 
-new class extends Component
-{
+new class extends Component {
     #[Url(as: 'q')]
     public $search = '';
 
@@ -216,7 +211,7 @@ new class extends Component
     </select>
 
     @foreach($this->products as $product)
-        <div>{{ $product->name }} - ${{ $product->price }}</div>
+        <div wire:key="{{ $product->id }}">{{ $product->name }} - ${{ $product->price }}</div>
     @endforeach
 </div>
 ```
@@ -237,3 +232,23 @@ Query parameters are indexed by search engines and included in analytics:
 ## Learn more
 
 For more information about URL query parameters, including the `queryString()` method and trait hooks, see the [URL Query Parameters documentation](/docs/4.x/url).
+
+## Reference
+
+```php
+#[Url(
+    ?string $as = null,
+    bool $history = false,
+    bool $keep = false,
+    mixed $except = null,
+    mixed $nullable = null,
+)]
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$as` | `?string` | `null` | Custom name for the query parameter in the URL |
+| `$history` | `bool` | `false` | Push URL changes to browser history (enables back button) |
+| `$keep` | `bool` | `false` | Keep the query parameter when navigating away |
+| `$except` | `mixed` | `null` | Value(s) to exclude from the URL |
+| `$nullable` | `mixed` | `null` | Value to use when query parameter is missing from URL |

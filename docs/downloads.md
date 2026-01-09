@@ -15,8 +15,7 @@ Below is an example of a `show-invoice` component that contains a "Download" but
 use Livewire\Component;
 use App\Models\Invoice;
 
-new class extends Component
-{
+new class extends Component {
     public Invoice $invoice;
 
     public function mount(Invoice $invoice)

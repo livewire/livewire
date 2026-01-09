@@ -28,8 +28,7 @@ Here's an example of using the `mount()` method to initialize the `name` and `em
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $name;
 
     public $email;
@@ -53,8 +52,7 @@ As mentioned earlier, the `mount()` method receives data passed into the compone
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public $title;
 
     public $content;
@@ -77,7 +75,7 @@ The `mount()` method is a crucial part of using Livewire. The following document
 
 * [Initializing properties](/docs/4.x/properties#initializing-properties)
 * [Receiving data from parent components](/docs/4.x/nesting#passing-props-to-children)
-* [Accessing route parameters](/docs/4.x/components#accessing-route-parameters)
+* [Accessing route parameters](/docs/4.x/pages#accessing-route-parameters)
 
 ## Boot
 
@@ -94,8 +92,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     #[Locked]
     public $postId = 1;
 
@@ -118,7 +115,7 @@ You can use this technique to have complete control over initializing a componen
 > [!warning] Always lock sensitive public properties
 > As you can see above, we are using the `#[Locked]` attribute on the `$postId` property. In a scenario like the above, where you want to ensure the `$postId` property isn't tampered with by users on the client-side, it's important to authorize the property's value before using it or add `#[Locked]` to the property ensure it is never changed.
 >
-> For more information, check out the [documentation on Locked properties](/docs/4.x/locked).
+> For more information, check out the [documentation on the Locked attribute](/docs/4.x/attribute-locked).
 
 
 ## Update
@@ -129,7 +126,7 @@ Livewire provides convenient hooks to intercept the updating of a public propert
 
 Below is an example of using `updating` to prevent the modification of the `$postId` property.
 
-It's worth noting that for this particular example, in an actual application, you should use the [`#[Locked]` attribute](/docs/4.x/locked) instead, like in the above example.
+It's worth noting that for this particular example, in an actual application, you should use the [`#[Locked]` attribute](/docs/4.x/attribute-locked) instead, like in the above example.
 
 ```php
 <?php // resources/views/components/post/⚡show.blade.php
@@ -137,8 +134,7 @@ It's worth noting that for this particular example, in an actual application, yo
 use Exception;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $postId = 1;
 
     public function updating($property, $value)
@@ -162,8 +158,7 @@ The above `updating()` method runs before the property is updated, allowing you 
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $username = '';
 
     public $email = '';
@@ -190,8 +185,7 @@ Because you are often targeting a specific property when using update hooks, Liv
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $username = '';
 
     public $email = '';
@@ -218,8 +212,7 @@ Note that when the array itself is updated instead of a specific key, the `$key`
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $preferences = [];
 
     public function updatedPreferences($value, $key)
@@ -247,8 +240,7 @@ Let's look at an example that uses both `mount()` , `hydrate()`, and `dehydrate(
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $post;
 
     public function mount($title, $content)
@@ -294,8 +286,7 @@ If you want to hook into the process of rendering a component's Blade view, you 
 use Livewire\Component;
 use App\Models\Post;
 
-new class extends Component
-{
+new class extends Component {
     public function render()
     {
         return $this->view([
@@ -333,8 +324,7 @@ This also unlocks powerful patterns when you want to stop further execution of c
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public function mount() // [tl! highlight:3]
     {
         $this->post = Post::find($this->postId);
@@ -366,8 +356,7 @@ Below is an example of a component referencing a trait called `HasPostForm`:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     use HasPostForm;
 
     // ...
@@ -438,8 +427,7 @@ Below is an example of a component using a `PostForm` form object:
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public PostForm $form;
 
     // ...
@@ -493,3 +481,10 @@ class PostForm extends Form
     // ...
 }
 ```
+
+## See also
+
+- **[Properties](/docs/4.x/properties)** — Initialize properties in mount() and boot()
+- **[Components](/docs/4.x/components)** — Understand when hooks run during component creation
+- **[Pages](/docs/4.x/pages)** — Use mount() to receive route parameters
+- **[Hydration](/docs/4.x/hydration)** — Understand the hydrate() and dehydrate() hooks
