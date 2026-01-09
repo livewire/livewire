@@ -64,9 +64,11 @@ export async function morph(component, el, html) {
         }
     })
 
+    let transitionOptions = component.effects.transition || {}
+
     await transitionDomMutation(el, to, () => {
         Alpine.morph(el, to, getMorphConfig(component))
-    })
+    }, transitionOptions)
 
     trigger('morphed', { el, component })
 }
@@ -97,9 +99,11 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
 
     trigger('island.morph', { startNode, endNode, component })
 
+    let transitionOptions = component.effects.transition || {}
+
     await transitionDomMutation(fromContainer, toContainer, () => {
         Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
-    })
+    }, transitionOptions)
 
     trigger('island.morphed', { startNode, endNode, component })
 }

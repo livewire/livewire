@@ -71,10 +71,12 @@ This creates a directory with all related files together:
 
 ```
 resources/views/components/post/⚡create/
-├── create.php        # PHP class
-├── create.blade.php  # Blade template
-├── create.js         # JavaScript (optional, with --js flag)
-└── create.test.php   # Pest test (optional, with --test flag)
+├── create.php          # PHP class
+├── create.blade.php    # Blade template
+├── create.js           # JavaScript (optional)
+├── create.css          # Scoped styles (optional)
+├── create.global.css   # Global styles (optional)
+└── create.test.php     # Pest test (optional, with --test flag)
 ```
 
 ### Converting between formats
@@ -377,7 +379,7 @@ Route::livewire('/admin/users', 'admin::users-table');
 If you want Livewire to discover components in additional directories beyond the defaults, you can configure them in your `config/livewire.php` file:
 
 ```php
-'component_paths' => [
+'component_locations' => [
     resource_path('views/components'),
     resource_path('views/admin/components'),
     resource_path('views/widgets'),
@@ -433,7 +435,7 @@ use Livewire\Livewire;
 // Register an individual class-based component
 Livewire::addComponent(
     name: 'todos',
-    \App\Livewire\Todos::class
+    class: \App\Livewire\Todos::class
 );
 
 // Register a location for class-based components

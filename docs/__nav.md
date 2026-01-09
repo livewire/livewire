@@ -15,6 +15,7 @@ Essentials:
     Testing: { uri: /docs/4.x/testing, file: /testing.md }
 Features:
     Alpine: { uri: /docs/4.x/alpine, file: /alpine.md }
+    Styles: { uri: /docs/4.x/styles, file: /styles.md }
     Navigate: { uri: /docs/4.x/navigate, file: /navigate.md }
     Islands: { uri: /docs/4.x/islands, file: /islands.md }
     Lazy Loading: { uri: /docs/4.x/lazy, file: /lazy.md }
@@ -66,6 +67,7 @@ PHP Attributes:
     Renderless: { uri: /docs/4.x/attribute-renderless, file: /attribute-renderless.md }
     Session: { uri: /docs/4.x/attribute-session, file: /attribute-session.md }
     Title: { uri: /docs/4.x/attribute-title, file: /attribute-title.md }
+    Transition: { uri: /docs/4.x/attribute-transition, file: /attribute-transition.md }
     Url: { uri: /docs/4.x/attribute-url, file: /attribute-url.md }
     Validate: { uri: /docs/4.x/attribute-validate, file: /attribute-validate.md }
 Blade Directives:

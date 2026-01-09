@@ -253,6 +253,16 @@ By default, changes are deferred until the next Livewire request. Use `.live` to
 <div x-data="{ open: $wire.entangle('showDropdown').live }">
 ```
 
+## Using the `@js` directive
+
+If you need to output PHP data for use in Alpine directly, you can use the `@js` directive.
+
+```blade
+<div x-data="{ posts: @js($posts) }">
+    ...
+</div>
+```
+
 ## Manually bundling Alpine in your JavaScript build
 
 By default, Livewire and Alpine's JavaScript is injected onto each Livewire page automatically.
