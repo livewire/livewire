@@ -22,4 +22,15 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->pause(100)
             ->assertSeeIn('@foo', 'baz');
     }
+
+    public function test_single_file_component_script_with_js_action()
+    {
+        Livewire::visit('sfc-scripts-with-js-action')
+            ->waitForLivewireToLoad()
+            // Pause for a moment to allow the script to be loaded...
+            ->pause(100)
+            ->assertSeeIn('@foo', 'bar')
+            ->click('@set-foo')
+            ->assertSeeIn('@foo', 'baz');
+    }
 }

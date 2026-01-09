@@ -4,6 +4,7 @@ export default class Action {
 
     // Interceptor callbacks
     onSendCallbacks = []
+    onCancelCallbacks = []
     onSuccessCallbacks = []
     onErrorCallbacks = []
     onFailureCallbacks = []
@@ -36,6 +37,7 @@ export default class Action {
 
         this.cancelled = true
 
+        this.invokeOnCancel()
         this.invokeOnFinish()
         this.rejectPromise({ status: null, body: null, json: null, errors: null })
 
@@ -96,6 +98,7 @@ export default class Action {
         callback({
             action: this,
             onSend: (cb) => this.onSendCallbacks.push(cb),
+            onCancel: (cb) => this.onCancelCallbacks.push(cb),
             onSuccess: (cb) => this.onSuccessCallbacks.push(cb),
             onError: (cb) => this.onErrorCallbacks.push(cb),
             onFailure: (cb) => this.onFailureCallbacks.push(cb),
@@ -109,14 +112,19 @@ export default class Action {
         this.squashedActions.forEach(action => action.invokeOnSend({ call }))
     }
 
+    invokeOnCancel() {
+        this.onCancelCallbacks.forEach(cb => cb())
+        this.squashedActions.forEach(action => action.invokeOnCancel())
+    }
+
     invokeOnSuccess(result) {
         this.onSuccessCallbacks.forEach(cb => cb(result))
         this.squashedActions.forEach(action => action.invokeOnSuccess(result))
     }
 
-    invokeOnError({ response, body }) {
-        this.onErrorCallbacks.forEach(cb => cb({ response, body }))
-        this.squashedActions.forEach(action => action.invokeOnError({ response, body }))
+    invokeOnError({ response, body, preventDefault }) {
+        this.onErrorCallbacks.forEach(cb => cb({ response, body, preventDefault }))
+        this.squashedActions.forEach(action => action.invokeOnError({ response, body, preventDefault }))
     }
 
     invokeOnFailure({ error }) {

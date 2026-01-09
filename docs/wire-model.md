@@ -251,6 +251,25 @@ If you are using a "multiple" select menu, Livewire works as expected. In this e
 </select>
 ```
 
+## Event propagation
+
+By default, `wire:model` only listens for input/change events that originate directly on the element itself, not events that bubble up from child elements. This prevents unexpected behavior when using `wire:model` on container elements like modals or accordions that contain other form inputs.
+
+For example, if you have a modal with `wire:model="showModal"` and an input field inside it, clearing that input won't accidentally close the modal by bubbling up a change event.
+
+### Listening to child events
+
+In rare cases where you want `wire:model` to also respond to events bubbling up from child elements, you can use the `.bubble` modifier:
+
+```blade
+<div wire:model.deep="value">
+    <input type="text"> <!-- Changes here will update $value -->
+</div>
+```
+
+> [!warning] Use `.bubble` sparingly
+> Most use cases don't require listening to child events. Only use `.bubble` when you specifically need to capture events from descendant elements.
+
 ## Going deeper
 
 For a more complete documentation on using `wire:model` in the context of HTML forms, visit the [Livewire forms documentation page](/docs/4.x/forms).
@@ -283,3 +302,4 @@ wire:model="propertyName"
 | `.number` | Casts text value to `int` on the server |
 | `.boolean` | Casts text value to `bool` on the server |
 | `.fill` | Uses initial value from HTML `value` attribute on page load |
+| `.bubble` | Also listen for events bubbling up from child elements |

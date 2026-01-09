@@ -28,16 +28,20 @@ export function setNextActionInterceptor(callback) {
     outstandingActionInterceptors.push(callback)
 }
 
-export function intercept(component, callback) {
-    return interceptors.addInterceptor(component, callback)
-}
-
 export function interceptAction(callback) {
     actionInterceptors.push(callback)
 
     return () => {
         actionInterceptors.splice(actionInterceptors.indexOf(callback), 1)
     }
+}
+
+export function interceptMessage(callback) {
+    return interceptors.addMessageInterceptor(callback)
+}
+
+export function interceptRequest(callback) {
+    return interceptors.addRequestInterceptor(callback)
 }
 
 export function interceptPartition(callback) {
@@ -48,12 +52,54 @@ export function interceptPartition(callback) {
     }
 }
 
-export function interceptMessage(callback) {
-    return interceptors.addMessageInterceptor(callback)
+// Component-scoped interceptors...
+
+export function interceptComponentAction(component, actionNameOrCallback, maybeCallback) {
+    let actionName = typeof actionNameOrCallback === 'string' ? actionNameOrCallback : null
+    let callback = actionName ? maybeCallback : actionNameOrCallback
+
+    return interceptAction(({ action, ...rest }) => {
+        if (action.component !== component) return
+        if (actionName && action.name !== actionName) return
+
+        callback({ action, ...rest })
+    })
 }
 
-export function interceptRequest(callback) {
-    return interceptors.addRequestInterceptor(callback)
+export function interceptComponentMessage(component, actionNameOrCallback, maybeCallback) {
+    let actionName = typeof actionNameOrCallback === 'string' ? actionNameOrCallback : null
+    let callback = actionName ? maybeCallback : actionNameOrCallback
+
+    return interceptors.addInterceptor(component, ({ message, ...rest }) => {
+        if (actionName) {
+            let hasAction = Array.from(message.actions).some(a => a.name === actionName)
+
+            if (! hasAction) return
+        }
+
+        callback({ message, ...rest })
+    })
+}
+
+export function interceptComponentRequest(component, actionNameOrCallback, maybeCallback) {
+    let actionName = typeof actionNameOrCallback === 'string' ? actionNameOrCallback : null
+    let callback = actionName ? maybeCallback : actionNameOrCallback
+
+    return interceptRequest(({ request, ...rest }) => {
+        let matchingMessages = Array.from(request.messages).filter(m => {
+            if (m.component !== component) return false
+
+            if (actionName) {
+                return Array.from(m.actions).some(a => a.name === actionName)
+            }
+
+            return true
+        })
+
+        if (matchingMessages.length === 0) return
+
+        callback({ request, ...rest })
+    })
 }
 
 interceptMessage(({ message, onFinish }) => {
@@ -76,6 +122,7 @@ export function fireAction(component, method, params = [], metadata = {}) {
         callback({
             action,
             onSend: (cb) => action.onSendCallbacks.push(cb),
+            onCancel: (cb) => action.onCancelCallbacks.push(cb),
             onSuccess: (cb) => action.onSuccessCallbacks.push(cb),
             onError: (cb) => action.onErrorCallbacks.push(cb),
             onFailure: (cb) => action.onFailureCallbacks.push(cb),
@@ -172,6 +219,11 @@ function sendMessages() {
 
         requests.forEach(request => {
             if (! hasFoundRequest) {
+                // Don't add to a request that already has a message for the same component
+                let hasMessageForSameComponent = Array.from(request.messages).some(m => m.component === message.component)
+
+                if (hasMessageForSameComponent) return
+
                 request.addMessage(message)
 
                 hasFoundRequest = true
@@ -252,6 +304,9 @@ function sendMessages() {
             },
             failure: ({ error }) => {
                 request.invokeOnFailure({ error })
+            },
+            finish: () => {
+                request.invokeOnFinish()
             },
             response: ({ response }) => {
                 request.invokeOnResponse({ response })
@@ -353,12 +408,12 @@ function sendMessages() {
                             queueMicrotask(() => {
                                 if (message.isCancelled()) return
 
-                                message.invokeOnMorph()
+                                message.invokeOnMorph().finally(() => {
+                                    setTimeout(() => {
+                                        if (message.isCancelled()) return
 
-                                setTimeout(() => {
-                                    if (message.isCancelled()) return
-
-                                    message.invokeOnRender()
+                                        message.invokeOnRender()
+                                    })
                                 })
                             })
                         }
@@ -385,6 +440,7 @@ async function sendRequest(request, handlers) {
         if (request.isCancelled()) return
 
         handlers.failure({ error: e })
+        handlers.finish()
 
         return
     }
@@ -406,6 +462,7 @@ async function sendRequest(request, handlers) {
     // Handle error response...
     if (! response.ok) {
         handlers.error({ response, responseBody })
+        handlers.finish()
 
         return
     }
@@ -431,6 +488,7 @@ async function sendRequest(request, handlers) {
     let responseJson = JSON.parse(responseBody)
 
     handlers.success({ response, responseBody, responseJson })
+    handlers.finish()
 }
 
 async function interceptStreamAndReturnFinalResponse(response, callback) {

@@ -10,7 +10,7 @@ export class MessageInterceptor {
     onFinish = () => {}
     onSync = () => {}
     onEffect = () => {}
-    onMorph = () => {}
+    onMorph = async () => {}
     onRender = () => {}
 
     constructor(message, callback) {
@@ -56,6 +56,7 @@ export class RequestInterceptor {
     onRedirect = () => {}
     onDump = () => {}
     onSuccess = () => {}
+    onFinish = () => {}
 
     constructor(request, callback) {
         this.request = request
@@ -73,6 +74,7 @@ export class RequestInterceptor {
             onRedirect: (callback) => this.onRedirect = callback,
             onDump: (callback) => this.onDump = callback,
             onSuccess: (callback) => this.onSuccess = callback,
+            onFinish: (callback) => this.onFinish = callback,
         })
     }
 

@@ -3,6 +3,7 @@
 namespace Livewire;
 
 use Livewire\Features\SupportValidation\HandlesValidation;
+use Livewire\Features\SupportTransitions\HandlesTransitions;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
 use Livewire\Features\SupportSlots\HandlesSlots;
 use Livewire\Features\SupportReleaseTokens\HandlesReleaseTokens;
@@ -30,6 +31,7 @@ abstract class Component
     use HandlesEvents;
     use HandlesIslands;
     use HandlesRedirects;
+    use HandlesTransitions;
     use HandlesStreaming;
     use HandlesAttributes;
     use HandlesValidation;

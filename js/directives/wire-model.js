@@ -26,6 +26,11 @@ directive('model', ({ el, directive, component, cleanup }) => {
         return handleFileUpload(el, expression, component, cleanup)
     }
 
+    if (! modifiers.includes('self') && ! modifiers.includes('deep')) {
+        // Make wire:model self-binding by default...
+        modifiers.push('self')
+    }
+
     let isLive = modifiers.includes('live')
     let isLazy = modifiers.includes('lazy') || modifiers.includes('change')
     let onBlur = modifiers.includes('blur')
@@ -126,10 +131,12 @@ function componentIsMissingProperty(component, property) {
 
         if (! parent) return true
 
-        return componentIsMissingProperty(parent, property.split('$parent.')[1])
+        return componentIsMissingProperty(parent, property.slice(7).replace(/^\./, ''))
     }
 
-    let baseProperty = property.split('.')[0]
+    // Extract base property, handling both "foo.bar" and "['foo'].bar"
+    let match = property.match(/^\[['"]?([^\]'"]+)['"]?\]/) || property.match(/^([^.\[]+)/)
+    let baseProperty = match[1]
 
     return ! Object.keys(component.canonical).includes(baseProperty)
 }

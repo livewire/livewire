@@ -7,6 +7,83 @@ use Livewire\Livewire;
 
 class WireModelBrowserTest extends \Tests\BrowserTestCase
 {
+    public function test_supports_bracket_notation_in_expressions()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = [
+                'bars' => [
+                    'baz' => 'qux',
+                ],
+            ];
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="text" wire:model="foo['bars']['baz']" dusk="input">
+                    <span wire:text="foo['bars']['baz']" dusk="text"></span>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->typeSlowly('@input', 'livewire', 50)
+            ->assertSeeIn('@text', 'livewire');
+    }
+
+    public function test_wire_model_self_by_default_or_with_bubble_modifier()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = '';
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div wire:model="foo">
+                        <input type="text" dusk="default-input">
+                    </div>
+
+                    <div wire:model.deep="foo">
+                        <input type="text" dusk="bubble-input">
+                    </div>
+
+                    <span wire:text="foo" dusk="text"></span>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->typeSlowly('@default-input', 'livewire', 50)
+            ->assertDontSeeIn('@text', 'livewire')
+            ->typeSlowly('@bubble-input', 'livewire', 50)
+            ->assertSeeIn('@text', 'livewire');
+    }
+
+    public function test_wire_model_dot_blur()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = [
+                'bars' => [
+                    'baz' => 'qux',
+                ],
+            ];
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="text" wire:model="foo['bars']['baz']" dusk="input">
+                    <span wire:text="foo['bars']['baz']" dusk="text"></span>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->typeSlowly('@input', 'livewire', 50)
+            ->assertSeeIn('@text', 'livewire');
+    }
+
     public function test_debounces_requests_on_input_elements_by_default()
     {
         Livewire::visit(new class extends Component {
