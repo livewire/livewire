@@ -13,11 +13,12 @@ let enablePersist = true
 let showProgressBar = true
 let restoreScroll = true
 let autofocus = false
+let enableTransition = false
 
 export default function (Alpine) {
 
     Alpine.navigate = (url, options = {}) => {
-        let { preserveScroll = false } = options
+        let { preserveScroll = false, transition = false } = options
 
         let destination = createUrlObjectFromString(url)
 
@@ -27,11 +28,15 @@ export default function (Alpine) {
 
         if (prevented) return
 
-        navigateTo(destination, { preserveScroll })
+        navigateTo(destination, { preserveScroll, transition })
     }
 
     Alpine.navigate.disableProgressBar = () => {
         showProgressBar = false
+    }
+
+    Alpine.navigate.enableTransition = () => {
+        enableTransition = true
     }
 
     Alpine.addInitSelector(() => `[${Alpine.prefixed('navigate')}]`)
@@ -40,6 +45,8 @@ export default function (Alpine) {
         let shouldPrefetchOnHover = modifiers.includes('hover')
 
         let preserveScroll = modifiers.includes('preserve-scroll')
+
+        let transition = modifiers.includes('transition')
 
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
@@ -71,13 +78,15 @@ export default function (Alpine) {
 
                 if (prevented) return
 
-                navigateTo(destination, { preserveScroll })
+                navigateTo(destination, { preserveScroll, transition })
             })
         })
     })
 
-    function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
+    function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true, transition = false }) {
         showProgressBar && showAndStartProgressBar()
+
+        let shouldTransition = transition || enableTransition
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
             fireEventForOtherLibrariesToHookInto('alpine:navigating')
@@ -122,7 +131,7 @@ export default function (Alpine) {
                             showProgressBar && finishAndHideProgressBar()
                         })
                     })
-                })
+                }, { transition: shouldTransition })
             })
         }, () => {
             showProgressBar && finishAndHideProgressBar()
@@ -188,7 +197,7 @@ export default function (Alpine) {
 
                         fireEventForOtherLibrariesToHookInto('alpine:navigated')
                     })
-                })
+                }, { transition: enableTransition })
             })
         },
     )
