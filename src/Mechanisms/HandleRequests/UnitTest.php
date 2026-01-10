@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Tests\TestCase;
 
@@ -20,6 +21,15 @@ class UnitTest extends TestCase
         $this->assertEmpty($result['components']);
         $this->assertIsArray($result['assets']);
         $this->assertEmpty($result['assets']);
+    }
 
+    public function test_default_livewire_update_route_is_registered(): void
+    {
+        $livewireUpdateRoutes = collect(Route::getRoutes()->getRoutes())->filter(function ($route) {
+            return str($route->getName())->endsWith('livewire.update');
+        });
+
+        $this->assertCount(1, $livewireUpdateRoutes);
+        $this->assertEquals('livewire/update', $livewireUpdateRoutes->first()->uri());
     }
 }
