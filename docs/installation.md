@@ -9,13 +9,10 @@ Before installing Livewire, make sure you have:
 
 ## Install Livewire
 
-> [!warning] Livewire v4 is currently in beta
-> Livewire v4 is still in active development and not yet stable. It's recommended to test thoroughly in a development environment before upgrading production applications. Breaking changes may occur between beta releases.
-
 To install Livewire, open your terminal and navigate to your Laravel application directory, then run the following command:
 
 ```shell
-composer require livewire/livewire:^4.0@beta
+composer require livewire/livewire
 ```
 
 That's it! Livewire uses Laravel's package auto-discovery, so no additional setup is required.

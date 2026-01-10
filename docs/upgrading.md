@@ -2,18 +2,15 @@
 
 Livewire v4 introduces several improvements and optimizations while maintaining backward compatibility wherever possible. This guide will help you upgrade from Livewire v3 to v4.
 
-> [!warning] Livewire v4 is currently in beta
-> Livewire v4 is still in active development and not yet stable. It's recommended to test thoroughly in a development environment before upgrading production applications. Breaking changes may occur between beta releases.
-
 > [!tip] Smooth upgrade path
 > Most applications can upgrade to v4 with minimal changes. The breaking changes are primarily configuration updates and method signature changes that only affect advanced usage.
 
 ## Installation
 
-Update your `composer.json` to require Livewire v4 beta:
+Update your `composer.json` to require Livewire v4:
 
 ```bash
-composer require livewire/livewire:^4.0@beta
+composer require livewire/livewire:^4.0
 ```
 
 After updating, clear your application's cache:
