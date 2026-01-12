@@ -259,7 +259,7 @@ For example, if you have a modal with `wire:model="showModal"` and an input fiel
 
 ### Listening to child events
 
-In rare cases where you want `wire:model` to also respond to events bubbling up from child elements, you can use the `.bubble` modifier:
+In rare cases where you want `wire:model` to also respond to events bubbling up from child elements, you can use the `.deep` modifier:
 
 ```blade
 <div wire:model.deep="value">
@@ -267,8 +267,8 @@ In rare cases where you want `wire:model` to also respond to events bubbling up 
 </div>
 ```
 
-> [!warning] Use `.bubble` sparingly
-> Most use cases don't require listening to child events. Only use `.bubble` when you specifically need to capture events from descendant elements.
+> [!warning] Use `.deep` sparingly
+> Most use cases don't require listening to child events. Only use `.deep` when you specifically need to capture events from descendant elements.
 
 ## Going deeper
 
@@ -302,4 +302,4 @@ wire:model="propertyName"
 | `.number` | Casts text value to `int` on the server |
 | `.boolean` | Casts text value to `bool` on the server |
 | `.fill` | Uses initial value from HTML `value` attribute on page load |
-| `.bubble` | Also listen for events bubbling up from child elements |
+| `.deep` | Also listen for events bubbling up from child elements |

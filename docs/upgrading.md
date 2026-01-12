@@ -134,7 +134,7 @@ In v3, `wire:model` would respond to input/change events that bubbled up from ch
 
 In v4, `wire:model` now only listens for events originating directly on the element itself (equivalent to the `.self` modifier behavior).
 
-If you have code that relies on capturing events from child elements, add the `.bubble` modifier:
+If you have code that relies on capturing events from child elements, add the `.deep` modifier:
 
 ```blade
 <!-- Before (v3) - listened to child events by default -->
@@ -142,7 +142,7 @@ If you have code that relies on capturing events from child elements, add the `.
     <input type="text">
 </div>
 
-<!-- After (v4) - add .bubble to restore old behavior -->
+<!-- After (v4) - add .deep to restore old behavior -->
 <div wire:model.deep="value">
     <input type="text">
 </div>
