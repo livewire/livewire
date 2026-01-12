@@ -153,6 +153,50 @@ PHP
         return $contents;
     }
 
+    protected function injectStyleMethod(string $contents, string $styleFileName): string
+    {
+        $pattern = '/}(\s*);/';
+        preg_match_all($pattern, $contents, $matches, PREG_OFFSET_CAPTURE);
+        $lastMatch = end($matches[0]);
+
+        if ($lastMatch) {
+            $position = $lastMatch[1];
+            return substr_replace($contents, <<<PHP
+
+    public function styleModuleSrc()
+    {
+        return '{$styleFileName}';
+    }
+}
+PHP
+            , $position, 1);
+        }
+
+        return $contents;
+    }
+
+    protected function injectGlobalStyleMethod(string $contents, string $globalStyleFileName): string
+    {
+        $pattern = '/}(\s*);/';
+        preg_match_all($pattern, $contents, $matches, PREG_OFFSET_CAPTURE);
+        $lastMatch = end($matches[0]);
+
+        if ($lastMatch) {
+            $position = $lastMatch[1];
+            return substr_replace($contents, <<<PHP
+
+    public function globalStyleModuleSrc()
+    {
+        return '{$globalStyleFileName}';
+    }
+}
+PHP
+            , $position, 1);
+        }
+
+        return $contents;
+    }
+
     protected function injectUseStatementsFromClassPortion(string $contents, string $classPortion): string
     {
         // Extract everything between <?php and "new"

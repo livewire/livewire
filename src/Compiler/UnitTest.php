@@ -344,6 +344,8 @@ class UnitTest extends \Tests\TestCase
             path: '',
             contents: '',
             scriptPortion: null,
+            stylePortion: null,
+            globalStylePortion: null,
             classPortion: $classContents,
             placeholderPortion: null,
             viewPortion: '',

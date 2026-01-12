@@ -214,6 +214,16 @@ Livewire v4 includes significant performance improvements to the request handlin
 
 These improvements happen automatically—no changes needed to your code.
 
+### Update hooks consolidate array/object changes
+
+When replacing an entire array or object from the frontend (e.g., `$wire.items = ['new', 'values']`), Livewire now sends a single consolidated update instead of granular updates for each index.
+
+**Before:** Setting `$wire.items = ['a', 'b']` on an array of 4 items would fire `updatingItems`/`updatedItems` hooks multiple times—once for each index change plus `__rm__` removals.
+
+**After:** The same operation fires the hooks once with the full new array value, matching v2 behavior.
+
+If your code relies on individual index hooks firing when replacing entire arrays, you may need to adjust. Single-item changes (like `wire:model="items.0"`) still fire granular hooks as expected.
+
 ### Method signature changes
 
 If you're extending Livewire's core functionality or using these methods directly, note these signature changes:

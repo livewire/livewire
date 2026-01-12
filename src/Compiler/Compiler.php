@@ -39,9 +39,13 @@ class Compiler
 
         $placeholderFileName = null;
         $scriptFileName = null;
+        $styleFileName = null;
+        $globalStyleFileName = null;
 
         $placeholderContents = $parser->generatePlaceholderContents();
         $scriptContents = $parser->generateScriptContents();
+        $styleContents = $parser->generateStyleContents();
+        $globalStyleContents = $parser->generateGlobalStyleContents();
 
         if ($placeholderContents !== null) {
             $placeholderFileName = $this->cacheManager->getPlaceholderPath($path);
@@ -55,10 +59,24 @@ class Compiler
             $this->cacheManager->writeScriptFile($path, $scriptContents);
         }
 
+        if ($styleContents !== null) {
+            $styleFileName = $this->cacheManager->getStylePath($path);
+
+            $this->cacheManager->writeStyleFile($path, $styleContents);
+        }
+
+        if ($globalStyleContents !== null) {
+            $globalStyleFileName = $this->cacheManager->getGlobalStylePath($path);
+
+            $this->cacheManager->writeGlobalStyleFile($path, $globalStyleContents);
+        }
+
         $this->cacheManager->writeClassFile($path, $parser->generateClassContents(
             $viewFileName,
             $placeholderFileName,
             $scriptFileName,
+            $styleFileName,
+            $globalStyleFileName,
         ));
 
         $this->cacheManager->writeViewFile($path, $parser->generateViewContents());

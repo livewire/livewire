@@ -775,7 +775,7 @@
     );
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -1473,8 +1473,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var alpineAttributeRegex = () => new RegExp(`^${prefixAsString}([^:^.]+)\\b`);
   function toParsedDirectives(transformedAttributeMap, originalAttributeOverride) {
     return ({ name, value }) => {
-      if (name === value)
-        value = "";
       let typeMatch = name.match(alpineAttributeRegex());
       let valueMatch = name.match(/:([a-zA-Z0-9\-_:]+)/);
       let modifiers = name.match(/\.[^.\]]+(?=[^\]]*$)/g) || [];
@@ -7664,7 +7662,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // ../alpine/packages/sort/dist/module.esm.js
+  // node_modules/@alpinejs/sort/dist/module.esm.js
   function ownKeys3(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -9877,8 +9875,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       node = node.nextElementSibling;
     }
   }
-  function src_default6(Alpine3) {
-    Alpine3.directive("sort", (el, { value, modifiers, expression }, { effect: effect3, evaluate: evaluate3, cleanup: cleanup2 }) => {
+  function src_default6(Alpine22) {
+    Alpine22.directive("sort", (el, { value, modifiers, expression }, { effect: effect3, evaluate: evaluate3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       if (value === "config") {
         return;
       }
@@ -9899,7 +9897,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         useHandles: !!el.querySelector("[x-sort\\:handle],[wire\\:sort\\:handle]"),
         group: getGroupName(el, modifiers)
       };
-      let handleSort = generateSortHandler(expression, evaluate3);
+      let handleSort = generateSortHandler(expression, evaluateLater2);
       let config = getConfigurationOverrides(el, modifiers, evaluate3);
       let sortable = initSortable(el, config, preferences, (key, position) => {
         handleSort(key, position);
@@ -9907,19 +9905,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanup2(() => sortable.destroy());
     });
   }
-  function generateSortHandler(expression, evaluate3) {
+  function generateSortHandler(expression, evaluateLater2) {
     if ([void 0, null, ""].includes(expression))
       return () => {
       };
+    let handle = evaluateLater2(expression);
     return (key, position) => {
-      evaluate3(expression, { scope: {
-        $key: key,
-        $item: key,
-        $position: position
-      }, params: [
-        key,
-        position
-      ] });
+      Alpine.dontAutoEvaluateFunctions(() => {
+        handle(
+          (received) => {
+            if (typeof received === "function")
+              received(key, position);
+          },
+          { scope: {
+            $key: key,
+            $item: key,
+            $position: position
+          } }
+        );
+      });
     };
   }
   function getConfigurationOverrides(el, modifiers, evaluate3) {
@@ -12363,7 +12367,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -14036,6 +14040,36 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
   });
+
+  // js/features/supportCssModules.js
+  var loadedStyles = /* @__PURE__ */ new Set();
+  on2("effect", ({ component, effects }) => {
+    if (effects.styleModule) {
+      let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+      let path = `${getUriPrefix()}/css/${encodedName}.css?v=${effects.styleModule}`;
+      if (!loadedStyles.has(path)) {
+        loadedStyles.add(path);
+        injectStylesheet(path);
+      }
+    }
+    if (effects.globalStyleModule) {
+      let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+      let path = `${getUriPrefix()}/css/${encodedName}.global.css?v=${effects.globalStyleModule}`;
+      if (!loadedStyles.has(path)) {
+        loadedStyles.add(path);
+        injectStylesheet(path);
+      }
+    }
+  });
+  function injectStylesheet(href) {
+    let link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    let nonce2 = getNonce();
+    if (nonce2)
+      link.nonce = nonce2;
+    document.head.appendChild(link);
+  }
 
   // js/debounce.js
   var callbacksByComponent = new WeakBag();
