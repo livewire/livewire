@@ -165,15 +165,7 @@ class BaseUrl extends LivewireAttribute
             return $value;
         }
 
-        try {
-            return $synth::hydrateFromType($typeName, $value);
-        } catch (\Throwable $e) {
-            if ($this->nullable && $typeAllowsNull) {
-                return null;
-            }
-
-            throw $e;
-        }
+        return $synth::hydrateFromType($typeName, $value);
     }
 
     protected function recursivelyMergeArraysWithoutAppendingDuplicateValues(&$array1, &$array2)
