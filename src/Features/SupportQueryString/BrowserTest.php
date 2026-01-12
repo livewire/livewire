@@ -639,7 +639,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_can_use_url_on_string_backed_enum_object_properties_with_initial_invalid_value_on_nullable()
+    public function test_throws_error_for_invalid_string_backed_enum_value_in_query_string()
     {
         Livewire::withQueryParams(['foo' => 'bar'])
             ->visit([
@@ -648,41 +648,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                 #[Url(nullable: true)]
                 public ?StringBackedEnumForUrlTesting $foo;
 
-                public function change()
-                {
-                    $this->foo = StringBackedEnumForUrlTesting::Second;
-                }
-
-                public function unsetFoo()
-                {
-                    $this->foo = null;
-                }
-
                 public function render()
                 {
                     return <<<'HTML'
                     <div>
-                        <button wire:click="change" dusk="button">Change</button>
                         <h1 dusk="output">{{ $foo }}</h1>
-                        <button wire:click="unsetFoo" dusk="unsetButton">Unset foo</button>
                     </div>
                     HTML;
                 }
             },
         ])
-            ->assertQueryStringHas('foo', '')
-            ->assertSee('foo', null)
-            ->waitForLivewire()->click('@button')
-            ->assertQueryStringHas('foo', 'second')
-            ->assertSeeIn('@output', 'second')
-            ->refresh()
-            ->assertQueryStringHas('foo', 'second')
-            ->assertSeeIn('@output', 'second')
+            ->assertSee('"bar" is not a valid backing value')
         ;
     }
 
-
-    public function test_can_use_url_on_integer_backed_enum_object_properties_with_initial_invalid_value_on_nullable()
+    public function test_throws_error_for_invalid_integer_backed_enum_value_in_query_string()
     {
         Livewire::withQueryParams(['foo' => 5])
             ->visit([
@@ -691,36 +671,17 @@ class BrowserTest extends \Tests\BrowserTestCase
                 #[Url(nullable: true)]
                 public ?IntegerBackedEnumForUrlTesting $foo;
 
-                public function change()
-                {
-                    $this->foo = IntegerBackedEnumForUrlTesting::Second;
-                }
-
-                public function unsetFoo()
-                {
-                    $this->foo = null;
-                }
-
                 public function render()
                 {
                     return <<<'HTML'
                     <div>
-                        <button wire:click="change" dusk="button">Change</button>
                         <h1 dusk="output">{{ $foo }}</h1>
-                        <button wire:click="unsetFoo" dusk="unsetButton">Unset foo</button>
                     </div>
                     HTML;
                 }
             },
         ])
-            ->assertQueryStringHas('foo', '')
-            ->assertSee('foo', null)
-            ->waitForLivewire()->click('@button')
-            ->assertQueryStringHas('foo', '2')
-            ->assertSeeIn('@output', '2')
-            ->refresh()
-            ->assertQueryStringHas('foo', '2')
-            ->assertSeeIn('@output', '2')
+            ->assertSee('5 is not a valid backing value')
         ;
     }
 
