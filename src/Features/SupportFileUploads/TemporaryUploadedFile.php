@@ -268,16 +268,28 @@ class TemporaryUploadedFile extends UploadedFile
     {
         if (is_string($subject)) {
             if (str($subject)->startsWith('livewire-file:')) {
-                return static::createFromLivewire(str($subject)->after('livewire-file:'));
+                $path = str($subject)->after('livewire-file:');
+
+                // Validate path is in current session
+                static::ensurePathIsValidForCurrentSession($path);
+
+                return static::createFromLivewire($path);
             }
 
             if (str($subject)->startsWith('livewire-files:')) {
                 $paths = json_decode(str($subject)->after('livewire-files:'), true);
 
-                // Validate and claim all paths before creating files
+                // Ensure JSON decode succeeded
+                if (!is_array($paths)) {
+                    throw new \Symfony\Component\HttpKernel\Exception\HttpException(
+                        400,
+                        'Invalid file upload payload.',
+                    );
+                }
+
+                // Validate all paths are in current session
                 foreach ($paths as $path) {
                     static::ensurePathIsValidForCurrentSession($path);
-                    static::removePathFromSession($path);
                 }
 
                 return collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();

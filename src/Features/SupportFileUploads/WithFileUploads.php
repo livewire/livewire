@@ -52,6 +52,9 @@ trait WithFileUploads
                     $file = array_merge($existing, $file);
                 }
             }
+
+            // Re-register validated paths so subsequent requests can hydrate them
+            TemporaryUploadedFile::registerPathsInSession($tmpPath);
         } else {
             // Validate and immediately remove path
             TemporaryUploadedFile::ensurePathIsValidForCurrentSession($tmpPath[0]);
@@ -66,6 +69,9 @@ trait WithFileUploads
             if (is_array($value = $this->getPropertyValue($name))) {
                 $file = array_merge($value, [$file]);
             }
+
+            // Re-register validated path so subsequent requests can hydrate it
+            TemporaryUploadedFile::registerPathsInSession([$tmpPath[0]]);
         }
 
         app('livewire')->updateProperty($this, $name, $file);
