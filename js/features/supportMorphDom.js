@@ -3,12 +3,12 @@ import { interceptMessage } from "@/request";
 
 interceptMessage(({ message, onSuccess }) => {
     onSuccess(({ payload, onMorph }) => {
-        onMorph(() => {
+        onMorph(async () => {
             let html = payload.effects.html
 
             if (! html) return
 
-            morph(message.component, message.component.el, html)
+            await morph(message.component, message.component.el, html)
         })
     })
 })

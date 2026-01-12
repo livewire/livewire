@@ -15,3 +15,4 @@ import './wire-init';
 import './wire-poll';
 import './wire-show';
 import './wire-text';
+import './wire-bind';

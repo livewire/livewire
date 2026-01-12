@@ -15,15 +15,7 @@ export function evaluateExpression(el, expression, options = {}) {
 export function evaluateActionExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 
-    let negated = false
-
-    if (expression.startsWith('!')) {
-        negated = true
-
-        expression = expression.slice(1).trim()
-    }
-
-    let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`
+    let contextualExpression = contextualizeExpression(expression)
 
     try {
         let result = Alpine.evaluateRaw(el, contextualExpression, options)
@@ -40,4 +32,26 @@ export function evaluateActionExpression(el, expression, options = {}) {
 
         console.error(error)
     }
+}
+
+export function contextualizeExpression(expression) {
+    let SKIP = ['JSON', 'true', 'false', 'null', 'undefined', 'this', '$wire', '$event']
+    let strings = []
+
+    // 1. Yank out string literals so we don't touch them
+    let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (m) => {
+        strings.push(m)
+        return `___${strings.length - 1}___`
+    })
+
+    // 2. Prefix identifiers not after a dot (skip placeholders from step 1)
+    //    Also skip object keys (identifiers immediately followed by colon)
+    result = result.replace(/(?<![.\w$])(\$?[a-zA-Z_]\w*)/g, (m, ident, offset) => {
+        if (SKIP.includes(ident) || /^___\d+___$/.test(ident)) return ident
+        if (result[offset + m.length] === ':') return ident
+        return '$wire.' + ident
+    })
+
+    // 3. Restore strings
+    return result.replace(/___(\d+)___/g, (m, i) => strings[i])
 }

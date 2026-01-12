@@ -161,7 +161,7 @@ export default class Message {
         }))
 
         // Invoke action-level onError callbacks
-        Array.from(this.actions).forEach(action => action.invokeOnError({ response, body }))
+        Array.from(this.actions).forEach(action => action.invokeOnError({ response, body, preventDefault }))
 
         // Try to parse body as JSON for the rejection payload
         let json = null
@@ -207,8 +207,10 @@ export default class Message {
         this.interceptors.forEach(interceptor => interceptor.onEffect())
     }
 
-    invokeOnMorph() {
-        this.interceptors.forEach(interceptor => interceptor.onMorph())
+    async invokeOnMorph() {
+        this.interceptors.forEach(async interceptor => {
+            await interceptor.onMorph()
+        })
     }
 
     invokeOnRender() {

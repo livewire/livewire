@@ -212,4 +212,38 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->select('@parent', 'foo')
             ->assertSelected('@child', 'bar');
     }
+
+    public function test_multiple_wire_set_calls_to_empty_string_are_all_sent_to_server()
+    {
+        Livewire::visit(new class extends Component {
+            public array $parent = [
+                'foo' => 'bar',
+                'baz' => 'qux',
+            ];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <span dusk="foo">{{ $parent['foo'] }}</span>
+                        <span dusk="baz">{{ $parent['baz'] }}</span>
+
+                        <button
+                            dusk="clear-both"
+                            type="button"
+                            x-on:click="$wire.set('parent.foo', ''); $wire.set('parent.baz', ''); $wire.commit()"
+                        >
+                            Clear Both
+                        </button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@foo', 'bar')
+            ->assertSeeIn('@baz', 'qux')
+            ->waitForLivewire()->click('@clear-both')
+            ->assertDontSeeIn('@foo', 'bar')
+            ->assertDontSeeIn('@baz', 'qux')
+        ;
+    }
 }

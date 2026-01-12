@@ -26,4 +26,5 @@ import './supportDataCurrent';
 import './supportPreserveScroll';
 import './supportWireIntersect';
 import './supportWireSort';
-import './supportJsModules';
+import './supportJsModules'
+import './supportCssModules';

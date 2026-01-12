@@ -690,7 +690,7 @@ class BrowserTest extends BrowserTestCase
                 <script>
                     window.requestCount = 0
 
-                    this.intercept(() => {
+                    this.interceptMessage(() => {
                         window.requestCount++
                     })
                 </script>

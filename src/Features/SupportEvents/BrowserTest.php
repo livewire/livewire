@@ -87,8 +87,10 @@ class BrowserTest extends BrowserTestCase
         })
             ->assertSeeIn('@button', 'Text')
             ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@button', 'Param Set Text')
             ->assertSeeIn('@button', 'Param Set Text')
             ->waitForLivewire()->click('@bar-button')
+            ->waitForTextIn('@button', 'Bar set text')
             ->assertSeeIn('@button', 'Bar set text');
     }
 

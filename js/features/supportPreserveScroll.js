@@ -19,7 +19,7 @@ interceptMessage(({ message, onSuccess }) => {
                 oldScroll = window.scrollY
             })
 
-            onMorph(() => {
+            onMorph(async () => {
                 let heightDiff = document.body.scrollHeight - oldHeight
                 window.scrollTo(0, oldScroll + heightDiff)
 

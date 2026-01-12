@@ -105,6 +105,10 @@ export class MessageRequest {
     invokeOnSuccess({ response, body, json }) {
         this.interceptors.forEach(interceptor => interceptor.onSuccess({ response, body, json }))
     }
+
+    invokeOnFinish() {
+        this.interceptors.forEach(interceptor => interceptor.onFinish())
+    }
 }
 
 export class PageRequest {

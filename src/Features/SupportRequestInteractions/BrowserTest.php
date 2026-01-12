@@ -29,7 +29,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -90,7 +90,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -149,7 +149,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -214,7 +214,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -288,7 +288,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -353,7 +353,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -416,7 +416,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -485,7 +485,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -555,7 +555,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -641,7 +641,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -728,7 +728,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -812,7 +812,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -900,7 +900,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -991,7 +991,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -1088,7 +1088,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)
@@ -1185,7 +1185,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <script>
                         window.intercepts = []
 
-                        this.intercept(({ message, onSend, onCancel, onSuccess }) => {
+                        this.interceptMessage(({ message, onSend, onCancel, onSuccess }) => {
                             let action = [...message.actions][0]
 
                             window.intercepts.push(`${action.name}-${action.metadata.island?.name || 'component'} started`)

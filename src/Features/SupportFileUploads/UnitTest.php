@@ -7,12 +7,12 @@ use Carbon\Carbon;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Livewire\WithFileUploads;
 use Livewire\Livewire;
+use Livewire\Facades\GenerateSignedUploadUrlFacade;
 use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache;
 use League\Flysystem\PathTraversalDetected;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
-use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
 use Illuminate\Http\Testing\FileFactory;
 use Illuminate\Support\Arr;
 use Tests\TestComponent;
@@ -441,7 +441,7 @@ class UnitTest extends \Tests\TestCase
     {
         config()->set('livewire.temporary_file_upload.middleware', DummyMiddleware::class);
 
-        $url = GenerateSignedUploadUrl::forLocal();
+        $url = GenerateSignedUploadUrlFacade::forLocal();
 
         try {
             $this->withoutExceptionHandling()->post($url);
@@ -454,7 +454,7 @@ class UnitTest extends \Tests\TestCase
     {
         config()->set('livewire.temporary_file_upload.middleware', ['throttle:60,1', DummyMiddleware::class]);
 
-        $url = GenerateSignedUploadUrl::forLocal();
+        $url = GenerateSignedUploadUrlFacade::forLocal();
 
         try {
             $this->withoutExceptionHandling()->post($url);

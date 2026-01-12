@@ -91,6 +91,20 @@ public function save()
 }
 ```
 
+## Redirect to controller actions
+
+If you want to redirect to a route handled by a controller action, you can use `redirectAction()`:
+
+```php
+$this->redirectAction([UserController::class, 'index']);
+```
+
+You can pass parameters to the controller action as the second argument:
+
+```php
+$this->redirectAction([UserController::class, 'show'], ['id' => 1]);
+```
+
 ## Flash messages
 
 In addition to allowing you to use Laravel's built-in redirection methods, Livewire also supports Laravel's [session flash data utilities](https://laravel.com/docs/session#flash-data).

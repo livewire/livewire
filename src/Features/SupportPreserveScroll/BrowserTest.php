@@ -12,7 +12,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             new class extends \Livewire\Component {
                 public function render() { return <<<'HTML'
                 <div>
-                    <button wire:click.preserve-scroll.prepend="$refresh" wire:island="foo" dusk="refresh">Refresh</button>
+                    <button wire:click.preserve-scroll="$refresh" wire:island.prepend="foo" dusk="refresh">Refresh</button>
 
                     @island(name: 'foo', always: true)
                         @foreach(range(1, 100) as $i)

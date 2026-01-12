@@ -949,7 +949,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     </div>
                     @script
                     <script>
-                        this.intercept(({ message }) => {
+                        this.interceptMessage(({ message }) => {
                             setTimeout(() => {
                                 message.cancel();
                             }, 200);
@@ -1000,7 +1000,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     </div>
                     @script
                     <script>
-                        this.intercept(({ message }) => {
+                        this.interceptMessage(({ message }) => {
                             setTimeout(() => {
                                 message.cancel();
                             }, 200);

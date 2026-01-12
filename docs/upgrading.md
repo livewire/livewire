@@ -128,6 +128,29 @@ Using `Route::livewire()` is now the preferred method and is required for single
 
 [Learn more about routing →](/docs/4.x/components#page-components)
 
+### `wire:model` now ignores child events by default
+
+In v3, `wire:model` would respond to input/change events that bubbled up from child elements. This caused unexpected behavior when using `wire:model` on container elements (like modals or accordions) that contained form inputs—clearing an input inside would bubble up and potentially close the modal.
+
+In v4, `wire:model` now only listens for events originating directly on the element itself (equivalent to the `.self` modifier behavior).
+
+If you have code that relies on capturing events from child elements, add the `.deep` modifier:
+
+```blade
+<!-- Before (v3) - listened to child events by default -->
+<div wire:model="value">
+    <input type="text">
+</div>
+
+<!-- After (v4) - add .deep to restore old behavior -->
+<div wire:model.deep="value">
+    <input type="text">
+</div>
+```
+
+> [!tip] Most apps won't need changes
+> This change primarily affects non-standard uses of `wire:model` on container elements. Standard form input bindings (inputs, selects, textareas) are unaffected.
+
 ### Use `wire:navigate:scroll`
 
 When using `wire:scroll` to preserve scroll in a scrollable container across `wire:navigate` requests in v3, you will need to instead us `wire:navigate:scroll` in v4:
@@ -141,9 +164,43 @@ When using `wire:scroll` to preserve scroll in a scrollable container across `wi
 @endpersist
 ```
 
+### Component tags must be closed
+
+In v3, Livewire component tags would render even without being properly closed. In v4, with the addition of slot support, component tags must be properly closed—otherwise Livewire interprets subsequent content as slot content and the component won't render:
+
+```blade
+<!-- Before (v3) - unclosed tag -->
+<livewire:component-name>
+
+<!-- After (v4) - Self-closing tag -->
+<livewire:component-name />
+```
+
+[Learn more about rendering components →](/docs/4.x/components#rendering-components)
+
+[Learn more about slots →](/docs/4.x/nesting#slots)
+
 ## Medium-impact changes
 
 These changes may affect certain parts of your application depending on which features you use.
+
+### `wire:transition` now uses View Transitions API
+
+In v3, `wire:transition` was a wrapper around Alpine's `x-transition` directive, supporting modifiers like `.opacity`, `.scale`, `.duration.200ms`, and `.origin.top`.
+
+In v4, `wire:transition` uses the browser's native [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) instead. Basic usage still works—elements will fade in and out smoothly—but all modifiers have been removed.
+
+```blade
+<!-- This still works in v4 -->
+<div wire:transition>...</div>
+
+<!-- These modifiers are no longer supported -->
+<div wire:transition.opacity>...</div> <!-- [tl! remove] -->
+<div wire:transition.scale.origin.top>...</div> <!-- [tl! remove] -->
+<div wire:transition.duration.500ms>...</div> <!-- [tl! remove] -->
+```
+
+[Learn more about wire:transition →](/docs/4.x/wire-transition)
 
 ### Performance improvements
 
@@ -153,6 +210,16 @@ Livewire v4 includes significant performance improvements to the request handlin
 - **Parallel live updates**: `wire:model.live` requests now run in parallel, allowing faster typing and quicker results
 
 These improvements happen automatically—no changes needed to your code.
+
+### Update hooks consolidate array/object changes
+
+When replacing an entire array or object from the frontend (e.g., `$wire.items = ['new', 'values']`), Livewire now sends a single consolidated update instead of granular updates for each index.
+
+**Before:** Setting `$wire.items = ['a', 'b']` on an array of 4 items would fire `updatingItems`/`updatedItems` hooks multiple times—once for each index change plus `__rm__` removals.
+
+**After:** The same operation fires the hooks once with the full new array value, matching v2 behavior.
+
+If your code relies on individual index hooks firing when replacing entire arrays, you may need to adjust. Single-item changes (like `wire:model="items.0"`) still fire granular hooks as expected.
 
 ### Method signature changes
 
