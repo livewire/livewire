@@ -221,11 +221,6 @@ class BrowserTest extends BrowserTestCase
                 'baz' => 'qux',
             ];
 
-            public function showValues()
-            {
-                // This action triggers a server round-trip
-            }
-
             public function render()
             {
                 return <<<'BLADE'
@@ -236,7 +231,7 @@ class BrowserTest extends BrowserTestCase
                         <button
                             dusk="clear-both"
                             type="button"
-                            x-on:click="$wire.set('parent.foo', ''); $wire.set('parent.baz', ''); $wire.showValues()"
+                            x-on:click="$wire.set('parent.foo', ''); $wire.set('parent.baz', ''); $wire.commit()"
                         >
                             Clear Both
                         </button>
