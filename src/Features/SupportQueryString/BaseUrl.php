@@ -90,12 +90,12 @@ class BaseUrl extends LivewireAttribute
     {
         $type = $this->getPropertyType();
 
-        if (! $type) {
+        if (! $type instanceof \ReflectionNamedType) {
             return $value;
         }
 
         // Form objects are already instantiated, so we fill them rather than replace.
-        if (is_array($value) && is_subclass_of($type, Form::class)) {
+        if (is_array($value) && is_subclass_of($type->getName(), Form::class)) {
             return $this->fillFormFromQueryString($this->getValue(), $value);
         }
 
@@ -111,9 +111,7 @@ class BaseUrl extends LivewireAttribute
             return null;
         }
 
-        $type = (new \ReflectionProperty($target, $property))->getType();
-
-        return $type instanceof \ReflectionNamedType ? $type->getName() : null;
+        return (new \ReflectionProperty($target, $property))->getType();
     }
 
     protected function fillFormFromQueryString($form, $values)
@@ -126,7 +124,10 @@ class BaseUrl extends LivewireAttribute
 
         foreach ($values as $key => $value) {
             if (in_array($key, $properties)) {
-                $form->$key = $this->hydrateValue($this->getFormPropertyType($form, $key), $value);
+                $form->$key = $this->hydrateValue(
+                    $this->getFormPropertyType($form, $key),
+                    $value
+                );
             }
         }
 
@@ -139,19 +140,25 @@ class BaseUrl extends LivewireAttribute
             return null;
         }
 
-        $type = (new \ReflectionProperty($form, $property))->getType();
-
-        return $type instanceof \ReflectionNamedType ? $type->getName() : null;
+        return (new \ReflectionProperty($form, $property))->getType();
     }
 
     protected function hydrateValue($type, $value)
     {
-        if (! $type) {
+        if (! $type instanceof \ReflectionNamedType) {
             return $value;
         }
 
+        $typeName = $type->getName();
+        $typeAllowsNull = $type->allowsNull();
+
+        // If URL attribute is nullable, type allows null, and value is empty string, return null
+        if ($this->nullable && $typeAllowsNull && $value === '') {
+            return null;
+        }
+
         $synth = app(HandleComponents::class)->getSynthesizerByType(
-            $type, new ComponentContext($this->getComponent()), null
+            $typeName, new ComponentContext($this->getComponent()), null
         );
 
         if (! $synth) {
@@ -159,9 +166,9 @@ class BaseUrl extends LivewireAttribute
         }
 
         try {
-            return $synth::hydrateFromType($type, $value);
+            return $synth::hydrateFromType($typeName, $value);
         } catch (\Throwable $e) {
-            if ($this->nullable) {
+            if ($this->nullable && $typeAllowsNull) {
                 return null;
             }
 
