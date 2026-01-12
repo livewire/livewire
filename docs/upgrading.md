@@ -164,6 +164,22 @@ When using `wire:scroll` to preserve scroll in a scrollable container across `wi
 @endpersist
 ```
 
+### Component tags must be closed
+
+In v3, Livewire component tags would render even without being properly closed. In v4, with the addition of slot support, component tags must be properly closed—otherwise Livewire interprets subsequent content as slot content and the component won't render:
+
+```blade
+<!-- Before (v3) - unclosed tag -->
+<livewire:component-name>
+
+<!-- After (v4) - Self-closing tag -->
+<livewire:component-name />
+```
+
+[Learn more about rendering components →](/docs/4.x/components#rendering-components)
+
+[Learn more about slots →](/docs/4.x/nesting#slots)
+
 ## Medium-impact changes
 
 These changes may affect certain parts of your application depending on which features you use.
