@@ -670,7 +670,7 @@ class HandleComponents extends Mechanism
         return new $this->synthesizerTypeCache[$type]($context, $path);
     }
 
-    protected function getSynthesizerByType($type, $context, $path)
+    public function getSynthesizerByType($type, $context, $path)
     {
         foreach ($this->propertySynthesizers as $synth) {
             if ($synth::matchByType($type)) {

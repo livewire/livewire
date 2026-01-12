@@ -347,6 +347,158 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_can_hydrate_typed_properties_from_query_string_using_url_attribute()
+    {
+        Livewire::withQueryParams([
+                'page' => '5',
+                'price' => '9.99',
+                'date' => '2024-01-15',
+                'form' => ['count' => '10', 'total' => '19.99', 'created' => '2024-02-20'],
+            ])
+            ->visit([
+                new class extends Component
+                {
+                    #[BaseUrl]
+                    public int $page = 1;
+
+                    #[BaseUrl]
+                    public float $price = 0.0;
+
+                    #[BaseUrl]
+                    public ?\Carbon\Carbon $date = null;
+
+                    #[BaseUrl]
+                    public TypedForm $form;
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                        <div>
+                            <h1 dusk="page">{{ $page }}</h1>
+                            <h1 dusk="page-type">{{ gettype($page) }}</h1>
+                            <h1 dusk="price">{{ $price }}</h1>
+                            <h1 dusk="price-type">{{ gettype($price) }}</h1>
+                            <h1 dusk="date">{{ $date?->format('Y-m-d') }}</h1>
+                            <h1 dusk="date-type">{{ $date ? get_class($date) : 'null' }}</h1>
+                            <h1 dusk="form-count">{{ $form->count }}</h1>
+                            <h1 dusk="form-count-type">{{ gettype($form->count) }}</h1>
+                            <h1 dusk="form-total">{{ $form->total }}</h1>
+                            <h1 dusk="form-total-type">{{ gettype($form->total) }}</h1>
+                            <h1 dusk="form-created">{{ $form->created?->format('Y-m-d') }}</h1>
+                            <h1 dusk="form-created-type">{{ $form->created ? get_class($form->created) : 'null' }}</h1>
+                        </div>
+                        HTML;
+                    }
+                },
+            ])
+            ->assertSeeIn('@page', '5')
+            ->assertSeeIn('@page-type', 'integer')
+            ->assertSeeIn('@price', '9.99')
+            ->assertSeeIn('@price-type', 'double')
+            ->assertSeeIn('@date', '2024-01-15')
+            ->assertSeeIn('@date-type', 'Carbon\Carbon')
+            ->assertSeeIn('@form-count', '10')
+            ->assertSeeIn('@form-count-type', 'integer')
+            ->assertSeeIn('@form-total', '19.99')
+            ->assertSeeIn('@form-total-type', 'double')
+            ->assertSeeIn('@form-created', '2024-02-20')
+            ->assertSeeIn('@form-created-type', 'Carbon\Carbon')
+        ;
+    }
+
+    public function test_can_hydrate_typed_properties_from_query_string_using_legacy_syntax()
+    {
+        Livewire::withQueryParams([
+                'page' => '5',
+                'price' => '9.99',
+                'date' => '2024-01-15',
+                'form' => ['count' => '10', 'total' => '19.99', 'created' => '2024-02-20'],
+            ])
+            ->visit([
+                new class extends Component
+                {
+                    protected $queryString = ['page', 'price', 'date', 'form'];
+
+                    public int $page = 1;
+
+                    public float $price = 0.0;
+
+                    public ?\Carbon\Carbon $date = null;
+
+                    public TypedForm $form;
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                        <div>
+                            <h1 dusk="page">{{ $page }}</h1>
+                            <h1 dusk="page-type">{{ gettype($page) }}</h1>
+                            <h1 dusk="price">{{ $price }}</h1>
+                            <h1 dusk="price-type">{{ gettype($price) }}</h1>
+                            <h1 dusk="date">{{ $date?->format('Y-m-d') }}</h1>
+                            <h1 dusk="date-type">{{ $date ? get_class($date) : 'null' }}</h1>
+                            <h1 dusk="form-count">{{ $form->count }}</h1>
+                            <h1 dusk="form-count-type">{{ gettype($form->count) }}</h1>
+                            <h1 dusk="form-total">{{ $form->total }}</h1>
+                            <h1 dusk="form-total-type">{{ gettype($form->total) }}</h1>
+                            <h1 dusk="form-created">{{ $form->created?->format('Y-m-d') }}</h1>
+                            <h1 dusk="form-created-type">{{ $form->created ? get_class($form->created) : 'null' }}</h1>
+                        </div>
+                        HTML;
+                    }
+                },
+            ])
+            ->assertSeeIn('@page', '5')
+            ->assertSeeIn('@page-type', 'integer')
+            ->assertSeeIn('@price', '9.99')
+            ->assertSeeIn('@price-type', 'double')
+            ->assertSeeIn('@date', '2024-01-15')
+            ->assertSeeIn('@date-type', 'Carbon\Carbon')
+            ->assertSeeIn('@form-count', '10')
+            ->assertSeeIn('@form-count-type', 'integer')
+            ->assertSeeIn('@form-total', '19.99')
+            ->assertSeeIn('@form-total-type', 'double')
+            ->assertSeeIn('@form-created', '2024-02-20')
+            ->assertSeeIn('@form-created-type', 'Carbon\Carbon')
+        ;
+    }
+
+    public function test_can_hydrate_typed_form_object_properties_with_url_attribute()
+    {
+        Livewire::withQueryParams([
+                'page' => '5',
+                'price' => '9.99',
+                'date' => '2024-01-15',
+            ])
+            ->visit([
+                new class extends Component
+                {
+                    public TypedFormWithUrlProperties $form;
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                        <div>
+                            <h1 dusk="page">{{ $form->page }}</h1>
+                            <h1 dusk="page-type">{{ gettype($form->page) }}</h1>
+                            <h1 dusk="price">{{ $form->price }}</h1>
+                            <h1 dusk="price-type">{{ gettype($form->price) }}</h1>
+                            <h1 dusk="date">{{ $form->date?->format('Y-m-d') }}</h1>
+                            <h1 dusk="date-type">{{ $form->date ? get_class($form->date) : 'null' }}</h1>
+                        </div>
+                        HTML;
+                    }
+                },
+            ])
+            ->assertSeeIn('@page', '5')
+            ->assertSeeIn('@page-type', 'integer')
+            ->assertSeeIn('@price', '9.99')
+            ->assertSeeIn('@price-type', 'double')
+            ->assertSeeIn('@date', '2024-01-15')
+            ->assertSeeIn('@date-type', 'Carbon\Carbon')
+        ;
+    }
+
     public function test_can_use_except_in_query_string_property()
     {
         Livewire::visit([
@@ -1187,6 +1339,27 @@ class FormObject extends \Livewire\Form
 
     #[\Livewire\Attributes\Url(as: 'aliased')]
     public $bob = 'lob';
+}
+
+class TypedForm extends \Livewire\Form
+{
+    public int $count = 0;
+
+    public float $total = 0.0;
+
+    public ?\Carbon\Carbon $created = null;
+}
+
+class TypedFormWithUrlProperties extends \Livewire\Form
+{
+    #[BaseUrl]
+    public int $page = 1;
+
+    #[BaseUrl]
+    public float $price = 0.0;
+
+    #[BaseUrl]
+    public ?\Carbon\Carbon $date = null;
 }
 
 enum StringBackedEnumForUrlTesting: string

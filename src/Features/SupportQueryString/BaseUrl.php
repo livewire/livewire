@@ -4,6 +4,8 @@ namespace Livewire\Features\SupportQueryString;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportFormObjects\Form;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use ReflectionClass;
 
 #[\Attribute]
@@ -78,7 +80,93 @@ class BaseUrl extends LivewireAttribute
             $value = $decoded === null ? $initialValue : $decoded;
         }
 
+        // Hydrate through synth if property is typed...
+        $value = $this->hydrateValueThroughSynth($value);
+
         $this->setValue($value, $this->nullable);
+    }
+
+    protected function hydrateValueThroughSynth($value)
+    {
+        $type = $this->getPropertyType();
+
+        if (! $type) {
+            return $value;
+        }
+
+        // Form objects are already instantiated, so we fill them rather than replace.
+        if (is_array($value) && is_subclass_of($type, Form::class)) {
+            return $this->fillFormFromQueryString($this->getValue(), $value);
+        }
+
+        return $this->hydrateValue($type, $value);
+    }
+
+    protected function getPropertyType()
+    {
+        $target = $this->getSubTarget() ?? $this->getComponent();
+        $property = str($this->getSubName() ?? $this->getName())->before('.')->toString();
+
+        if (! property_exists($target, $property)) {
+            return null;
+        }
+
+        $type = (new \ReflectionProperty($target, $property))->getType();
+
+        return $type instanceof \ReflectionNamedType ? $type->getName() : null;
+    }
+
+    protected function fillFormFromQueryString($form, $values)
+    {
+        if (! $form instanceof Form) {
+            return $form;
+        }
+
+        $properties = array_keys($form->all());
+
+        foreach ($values as $key => $value) {
+            if (in_array($key, $properties)) {
+                $form->$key = $this->hydrateValue($this->getFormPropertyType($form, $key), $value);
+            }
+        }
+
+        return $form;
+    }
+
+    protected function getFormPropertyType($form, $property)
+    {
+        if (! property_exists($form, $property)) {
+            return null;
+        }
+
+        $type = (new \ReflectionProperty($form, $property))->getType();
+
+        return $type instanceof \ReflectionNamedType ? $type->getName() : null;
+    }
+
+    protected function hydrateValue($type, $value)
+    {
+        if (! $type) {
+            return $value;
+        }
+
+        $synth = app(HandleComponents::class)->getSynthesizerByType(
+            $type, new ComponentContext($this->getComponent()), null
+        );
+
+        if (! $synth) {
+            return $value;
+        }
+
+        try {
+            return $synth::hydrateFromType($type, $value);
+        } catch (\Throwable $e) {
+            if ($this->nullable) {
+                return null;
+            }
+
+            throw $e;
+        }
     }
 
     protected function recursivelyMergeArraysWithoutAppendingDuplicateValues(&$array1, &$array2)
