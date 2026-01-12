@@ -442,7 +442,13 @@ class HandleComponents extends Mechanism
 
         $property = array_shift($segments);
 
-        $finish = trigger('update', $component, $path, $value);
+        // Wrap value in object so mutations persist through event system
+        $valueRef = (object) ['value' => $value];
+
+        $finish = trigger('update', $component, $path, $valueRef);
+
+        // Unwrap potentially mutated value
+        $value = $valueRef->value;
 
         // Ensure that it's a public property, not on the base class first...
         if (! in_array($property, array_keys(Utils::getPublicPropertiesDefinedOnSubclass($component)))) {

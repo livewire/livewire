@@ -254,6 +254,47 @@ class UnitTest extends \Tests\TestCase
             'updatedBarBaz' => true,
         ], $component->lifecycles);
     }
+
+    public function test_updating_hook_can_mutate_value_with_reference()
+    {
+        $component = Livewire::test(MutableUpdatingHooksComponent::class)
+            ->set('name', 'john')
+            ->set('email', 'JOHN@EXAMPLE.COM')
+            ->set('age', 25);
+
+        // updatingName(&$value) mutates
+        $this->assertEquals('JOHN', $component->name);
+
+        // updating($path, &$value) mutates email
+        $this->assertEquals('john@example.com', $component->email);
+
+        // updatingAge($value) without & does not mutate
+        $this->assertEquals(25, $component->age);
+    }
+}
+
+class MutableUpdatingHooksComponent extends TestComponent
+{
+    public $name = '';
+    public $email = '';
+    public $age = 0;
+
+    public function updating($path, &$value)
+    {
+        if ($path === 'email') {
+            $value = strtolower($value);
+        }
+    }
+
+    public function updatingName(&$value)
+    {
+        $value = strtoupper($value);
+    }
+
+    public function updatingAge($value)
+    {
+        $value = 100; // This should NOT affect the property
+    }
 }
 
 class ForProtectedLifecycleHooks extends TestComponent

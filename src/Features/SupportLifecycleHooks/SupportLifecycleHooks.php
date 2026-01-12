@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportLifecycleHooks;
 use function Livewire\store;
 use function Livewire\wrap;
 use Livewire\ComponentHook;
+use ReflectionMethod;
 
 class SupportLifecycleHooks extends ComponentHook
 {
@@ -59,6 +60,9 @@ class SupportLifecycleHooks extends ComponentHook
         $keyAfterFirstDot = $name->contains('.') ? $name->after('.')->__toString() : null;
         $keyAfterLastDot = $name->contains('.') ? $name->afterLast('.')->__toString() : null;
 
+        $newValueRef = $newValue;
+        $newValue = $newValueRef->value;
+
         $beforeMethod = 'updating'.$propertyName;
         $afterMethod = 'updated'.$propertyName;
 
@@ -70,12 +74,14 @@ class SupportLifecycleHooks extends ComponentHook
             ? 'updated'.$name->replace('.', '_')->studly()
             : false;
 
-        $this->callHook('updating', [$fullPath, $newValue]);
-        $this->callTraitHook('updating', [$fullPath, $newValue]);
+        $this->callHook('updating', [$fullPath, &$newValue]);
+        $this->callTraitHook('updating', [$fullPath, &$newValue]);
 
-        $this->callHook($beforeMethod, [$newValue, $keyAfterFirstDot]);
+        $this->callHook($beforeMethod, [&$newValue, $keyAfterFirstDot]);
 
-        $this->callHook($beforeNestedMethod, [$newValue, $keyAfterLastDot]);
+        $this->callHook($beforeNestedMethod, [&$newValue, $keyAfterLastDot]);
+
+        $newValueRef->value = $newValue;
 
         return function () use ($fullPath, $afterMethod, $afterNestedMethod, $keyAfterFirstDot, $keyAfterLastDot, $newValue) {
             $this->callHook('updated', [$fullPath, $newValue]);
@@ -137,6 +143,8 @@ class SupportLifecycleHooks extends ComponentHook
 
     public function callHook($name, $params = [])
     {
+        if (!$name) return;
+
         // Performance optimization: Cache method existence checks
         $class = get_class($this->component);
         $cacheKey = "{$class}::{$name}";
@@ -146,6 +154,15 @@ class SupportLifecycleHooks extends ComponentHook
         }
 
         if (static::$methodCache[$cacheKey]) {
+            // If method has a reference parameter, use reflection to preserve it
+            $reflection = new ReflectionMethod($this->component, $name);
+
+            foreach ($reflection->getParameters() as $param) {
+                if ($param->isPassedByReference()) {
+                    return $reflection->invokeArgs($this->component, $params);
+                }
+            }
+
             wrap($this->component)->__call($name, $params);
         }
     }
@@ -170,7 +187,22 @@ class SupportLifecycleHooks extends ComponentHook
             }
 
             if (static::$methodCache[$cacheKey]) {
-                wrap($this->component)->$method(...$params);
+                // If method has a reference parameter, use reflection to preserve it
+                $reflection = new ReflectionMethod($this->component, $method);
+
+                $hasRef = false;
+                foreach ($reflection->getParameters() as $param) {
+                    if ($param->isPassedByReference()) {
+                        $hasRef = true;
+                        break;
+                    }
+                }
+
+                if ($hasRef) {
+                    $reflection->invokeArgs($this->component, $params);
+                } else {
+                    wrap($this->component)->$method(...$params);
+                }
             }
         }
     }
