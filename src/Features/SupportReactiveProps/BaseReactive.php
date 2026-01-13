@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportReactiveProps;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use function Livewire\store;
-use function Livewire\trigger;
 
 #[\Attribute]
 class BaseReactive extends LivewireAttribute
@@ -38,19 +37,23 @@ class BaseReactive extends LivewireAttribute
             $updatedHash = crc32(json_encode($updatedValue));
 
             if ($currentHash !== $updatedHash) {
-                // Trigger 'updating' and 'updated' lifecycle hooks (same as wire:model updates)
-                // This allows components to react to reactive prop changes via updated*() methods
-                // Note: trigger('update') expects the full path, which for simple properties is just the property name
-                $finish = trigger('update', $this->component, $propertyName, $updatedValue);
+                // Queue the update to be processed after all hooks are hydrated
+                // This ensures SupportLifecycleHooks is initialized before we trigger updates
+                // Don't set the value yet - it will be set when processing the queue
+                // so that updating* hooks see the old value
+                SupportReactiveProps::queueUpdate(
+                    $this->component->getId(),
+                    $propertyName,
+                    $updatedValue,
+                    function ($value) {
+                        $this->setValue($value);
+                        // Update the hash so dehydrate doesn't think we mutated the prop
+                        $this->originalValueHash = crc32(json_encode($value));
+                    }
+                );
 
-                // Set the value after updating hooks but before updated hooks (same as HandleComponents::updateProperty)
-                // This ensures updating* hooks see the old value, and updated* hooks see the new value
-                $this->setValue($updatedValue);
-
-                // Call the 'updated*' lifecycle hooks
-                $finish();
-            } else {
-                $this->setValue($updatedValue);
+                // Return early - hash will be updated when the queue is processed
+                return;
             }
         }
 
