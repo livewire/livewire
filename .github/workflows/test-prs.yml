@@ -57,7 +57,7 @@ jobs:
         php: [8.4, 8.5]
         laravel: [11.*, 12.*]
 
-    name: 2. Unit - PHP ${{ matrix.php }} - L${{ matrix.laravel }}
+    name: 2. Unit - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
 
     steps:
       - name: Checkout
@@ -104,7 +104,7 @@ jobs:
         laravel: [11.*, 12.*]
         shard: [1, 2, 3]
 
-    name: 3. Browser ${{ matrix.shard }} - PHP ${{ matrix.php }} - L${{ matrix.laravel }}
+    name: 3. Browser ${{ matrix.shard }} - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
 
     steps:
       - name: Checkout
@@ -191,7 +191,7 @@ jobs:
         php: [8.4, 8.5]
         laravel: [11.*, 12.*]
 
-    name: 4. Legacy - PHP ${{ matrix.php }} - L${{ matrix.laravel }}
+    name: 4. Legacy - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
 
     steps:
       - name: Checkout

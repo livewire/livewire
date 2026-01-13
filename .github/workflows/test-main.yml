@@ -67,7 +67,7 @@ jobs:
           - php: 8.1
             laravel: 12.*
 
-    name: PHP:${{ matrix.php }} / Laravel:${{ matrix.laravel }}
+    name: Laravel:${{ matrix.laravel }} / PHP:${{ matrix.php }}
 
     steps:
       - name: Checkout
