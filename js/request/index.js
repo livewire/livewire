@@ -490,11 +490,12 @@ async function sendRequest(request, handlers) {
     try {
         responseJson = JSON.parse(responseBody)
     } catch (e) {
+        console.error(e)
+
         // When a stream is started, the headers are already sent,
         // so if an error occurs, the responseBody won't be JSON,
         // and we can treat it like an error response...
         handlers.error({ response, responseBody })
-
         handlers.finish()
 
         return
