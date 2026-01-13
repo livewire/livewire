@@ -135,21 +135,23 @@ class HandleRequests extends Mechanism
 
         $finish = trigger('response', $responsePayload);
 
-        $response = $finish($responsePayload);
+        $payload = $finish($responsePayload);
 
-        /**
-         * Headers have already been sent by stream
-         * we need to send the output without additional headers
-         **/
+        // When wire:stream is used, headers are sent early by SupportStreaming::ensureStreamResponseStarted().
+        // The streaming content has already been output via echo/flush in SupportStreaming::streamContent().
+        // This final JSON response contains the component snapshot and must be output without attempting
+        // to send additional headers, which would cause "headers already sent" warnings (since Symfony 7.2.7).
         if (headers_sent()) {
-            return new class(json_encode($response)) extends Response {
-                public function sendHeaders(?int $statusCode = null): static
-                {
-                    return $this;
-                }
-            };
+            $response = new StreamedResponse(
+                json_encode($payload),
+                200,
+                ['Content-Type' => 'application/json']
+            );
+
+            // Headers won't be sent due to override, but are documented on the object
+            return $response;
         }
 
-        return $response;
+        return $payload;
     }
 }
