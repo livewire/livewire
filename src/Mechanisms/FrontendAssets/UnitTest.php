@@ -184,4 +184,25 @@ class UnitTest extends \Tests\TestCase
             File::deleteDirectory(public_path('vendor/livewire'));
         }
     }
+
+    public function test_published_assets_apply_version_to_configured_asset_url()
+    {
+        $assets = app(FrontendAssets::class);
+
+        Artisan::call('livewire:publish', ['--assets' => true]);
+
+        config()->set('livewire.asset_url', 'https://cdn.example.com/livewire.js');
+        config()->set('app.debug', false);
+
+        $scripts = $assets->scripts();
+
+        // Should include version hash from manifest
+        $this->assertMatchesRegularExpression(
+            '/https:\/\/cdn\.example\.com\/livewire\.js\?id=[a-zA-Z0-9]+/',
+            $scripts
+        );
+
+        // Should NOT use the default vendor path
+        $this->assertStringNotContainsString('vendor/livewire', $scripts);
+    }
 }

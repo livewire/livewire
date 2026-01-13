@@ -197,7 +197,7 @@ class FrontendAssets extends Mechanism
         // Add the build manifest hash to it...
         $manifest = json_decode(file_get_contents(__DIR__.'/../../../dist/manifest.json'), true);
         $versionHash = $manifest['/livewire.js'];
-        $url = "{$url}?id={$versionHash}";
+        $url = $url . (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . "id={$versionHash}";
 
         $token = app()->has('session.store') ? csrf_token() : '';
 
@@ -263,15 +263,17 @@ class FrontendAssets extends Mechanism
         $versionedFileName = "{$fileName}?id={$version}";
 
         $configuredUrl = config('livewire.asset_url');
-        $versionedConfiguredUrl = $configuredUrl ? "{$configuredUrl}?id={$version}" : null;
+        $versionedConfiguredUrl = $configuredUrl
+            ? $configuredUrl . (parse_url($configuredUrl, PHP_URL_QUERY) ? '&' : '?') . "id={$version}"
+            : null;
 
-        $assertUrl = $versionedConfiguredUrl
+        $assetUrl = $versionedConfiguredUrl
             ?? (app('livewire')->isRunningServerless()
                 ? rtrim(config('app.asset_url'), '/')."/vendor/livewire$versionedFileName"
                 : url("vendor/livewire{$versionedFileName}")
             );
 
-        $url = $assertUrl;
+        $url = $assetUrl;
 
         if ($manifest !== $publishedManifest) {
             $assetWarning = <<<HTML
