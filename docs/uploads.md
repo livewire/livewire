@@ -244,25 +244,16 @@ By default, Livewire uses the default filesystem disk configuration (usually `lo
 
 Consequently, file uploads are always utilizing your application server, even if you choose to store the uploaded files in an S3 bucket later.
 
-If you wish to bypass your application server and instead store Livewire's temporary uploads in an S3 bucket, you can configure that behavior in your application's `config/livewire.php` configuration file. First, set `livewire.temporary_file_upload.disk` to `s3` (or another custom disk that uses the `s3` driver):
+If you wish to bypass your application server and instead store Livewire's temporary uploads in an S3 bucket, set the `LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK` environment variable in your `.env` file to `s3` (or another custom disk that uses the `s3` driver):
 
-```php
-return [
-    // ...
-    'temporary_file_upload' => [
-        'disk' => 's3',
-        // ...
-    ],
-];
+```env
+LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK=s3
 ```
 
 Now, when a user uploads a file, the file will never actually be stored on your server. Instead, it will be uploaded directly to your S3 bucket within the `livewire-tmp/` sub-directory.
 
-> [!info] Publishing Livewire's configuration file
-> Before customizing the file upload disk, you must first publish Livewire's configuration file to your application's `/config` directory by running the following command:
-> ```shell
-> php artisan livewire:config
-> ```
+> [!tip]
+> Alternatively, you can publish Livewire's configuration file with `php artisan livewire:config` for full control over the `temporary_file_upload` config.
 
 ### Configuring automatic file cleanup
 

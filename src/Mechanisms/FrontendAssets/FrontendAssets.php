@@ -110,6 +110,8 @@ class FrontendAssets extends Mechanism
      */
     public static function styles($options = [])
     {
+        if (app(static::class)->hasRenderedStyles) return '';
+
         app(static::class)->hasRenderedStyles = true;
 
         $nonce = static::nonce($options);
@@ -164,6 +166,8 @@ class FrontendAssets extends Mechanism
      */
     public static function scripts($options = [])
     {
+        if (app(static::class)->hasRenderedScripts) return '';
+
         app(static::class)->hasRenderedScripts = true;
 
         $debug = config('app.debug');
@@ -199,7 +203,7 @@ class FrontendAssets extends Mechanism
         // Add the build manifest hash to it...
         $manifest = json_decode(file_get_contents(__DIR__.'/../../../dist/manifest.json'), true);
         $versionHash = $manifest['/livewire.js'];
-        $url = "{$url}?id={$versionHash}";
+        $url = $url . (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . "id={$versionHash}";
 
         $token = app()->has('session.store') ? csrf_token() : '';
 
@@ -255,7 +259,7 @@ class FrontendAssets extends Mechanism
         }
 
         $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
-        $versionedFileName = $publishedManifest['/livewire.js'];
+        $version = $publishedManifest['/livewire.js'];
 
         $isCsp = app('livewire')->isCspSafe();
 
@@ -265,15 +269,20 @@ class FrontendAssets extends Mechanism
             $fileName = $isCsp ? '/livewire.csp.min.js' : '/livewire.min.js';
         }
 
-        $versionedFileName = "{$fileName}?id={$versionedFileName}";
+        $versionedFileName = "{$fileName}?id={$version}";
 
-        $assertUrl = config('livewire.asset_url')
+        $configuredUrl = config('livewire.asset_url');
+        $versionedConfiguredUrl = $configuredUrl
+            ? $configuredUrl . (parse_url($configuredUrl, PHP_URL_QUERY) ? '&' : '?') . "id={$version}"
+            : null;
+
+        $assetUrl = $versionedConfiguredUrl
             ?? (app('livewire')->isRunningServerless()
                 ? rtrim(config('app.asset_url'), '/')."/vendor/livewire$versionedFileName"
                 : url("vendor/livewire{$versionedFileName}")
             );
 
-        $url = $assertUrl;
+        $url = $assetUrl;
 
         if ($manifest !== $publishedManifest) {
             $assetWarning = <<<HTML

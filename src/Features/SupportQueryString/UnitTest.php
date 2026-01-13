@@ -94,4 +94,33 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('noexist', $component->instance()->exists);
         $this->assertEquals('', $component->instance()->noexists);
     }
+
+    function test_large_numbers_are_preserved_from_query_string()
+    {
+        $largeNumber = '74350194073086909398128';
+
+        $component = Livewire::withQueryParams([
+            'tableSearch' => $largeNumber,
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public $tableSearch;
+        });
+
+        $this->assertSame($largeNumber, $component->instance()->tableSearch);
+    }
+
+    function test_large_numbers_in_arrays_are_preserved_from_query_string()
+    {
+        $largeNumber = '74350194073086909398128';
+
+        $component = Livewire::withQueryParams([
+            'filters' => ['id' => $largeNumber, 'status' => 'active'],
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public $filters = [];
+        });
+
+        $this->assertSame($largeNumber, $component->instance()->filters['id']);
+        $this->assertSame('active', $component->instance()->filters['status']);
+    }
 }

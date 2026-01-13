@@ -18,12 +18,14 @@ class HandleRequests extends Mechanism
 
     function boot()
     {
-        // Only set it if another provider hasn't already set it....
-        if (! $this->updateRoute) {
-            app($this::class)->setUpdateRoute(function ($handle) {
-                return Route::post(EndpointResolver::updatePath(), $handle)->middleware('web');
-            });
-        }
+        // Only set it if another provider or routes file haven't already set it....
+        app()->booted(function () {
+            if (! $this->updateRoute) {
+                app($this::class)->setUpdateRoute(function ($handle) {
+                    return Route::post(EndpointResolver::updatePath(), $handle)->middleware('web');
+                });
+            }
+        });
 
         $this->skipRequestPayloadTamperingMiddleware();
     }
