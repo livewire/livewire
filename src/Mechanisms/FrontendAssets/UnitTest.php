@@ -164,10 +164,21 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringStartsWith('<script src="'.$url, FrontendAssets::js(['url' => $url]));
     }
 
-    public function js_prepends_slash_for_non_url()
+    public function test_js_prepends_slash_for_non_url()
     {
         $url = 'livewire/livewire.js';
         $this->assertStringStartsWith('<script src="/'.$url, FrontendAssets::js(['url' => $url]));
+    }
+
+    public function test_js_appends_version_with_correct_query_separator()
+    {
+        // URL without query params should use ?
+        $withoutQuery = FrontendAssets::js(['url' => 'https://cdn.example.com/livewire.js']);
+        $this->assertMatchesRegularExpression('/livewire\.js\?id=/', $withoutQuery);
+
+        // URL with existing query params should use &
+        $withQuery = FrontendAssets::js(['url' => 'https://cdn.example.com/livewire.js?token=abc']);
+        $this->assertMatchesRegularExpression('/\?token=abc&id=/', $withQuery);
     }
 
     public function test_it_returns_published_assets_url_when_running_serverless()
