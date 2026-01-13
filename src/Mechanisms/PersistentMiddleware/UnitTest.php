@@ -46,7 +46,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $existingRoutes = app('router')->getRoutes();
         $runningCollection = new RouteCollection;
         foreach ($existingRoutes as $route) {
-            if(str_contains($route->uri, 'livewire-unit-test-endpoint')) {
+            if (str_contains($route->uri, 'livewire-unit-test-endpoint')) {
                 continue;
             }
             $runningCollection->add($route);
