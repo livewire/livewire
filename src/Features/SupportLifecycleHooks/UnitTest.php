@@ -271,6 +271,18 @@ class UnitTest extends \Tests\TestCase
         // updatingAge($value) without & does not mutate
         $this->assertEquals(25, $component->age);
     }
+
+    public function test_updating_hook_with_reference_supports_dependency_injection()
+    {
+        // Bind a test service to the container
+        app()->bind(StringTransformerService::class, fn() => new StringTransformerService('!!!'));
+
+        $component = Livewire::test(MutableUpdatingWithDIComponent::class)
+            ->set('name', 'john');
+
+        // updatingName(&$value, StringTransformerService $service) mutates using injected service
+        $this->assertEquals('JOHN!!!', $component->name);
+    }
 }
 
 class MutableUpdatingHooksComponent extends TestComponent
@@ -294,6 +306,26 @@ class MutableUpdatingHooksComponent extends TestComponent
     public function updatingAge($value)
     {
         $value = 100; // This should NOT affect the property
+    }
+}
+
+class StringTransformerService
+{
+    public function __construct(public string $suffix) {}
+
+    public function transform(string $value): string
+    {
+        return strtoupper($value) . $this->suffix;
+    }
+}
+
+class MutableUpdatingWithDIComponent extends TestComponent
+{
+    public $name = '';
+
+    public function updatingName(&$value, StringTransformerService $service)
+    {
+        $value = $service->transform($value);
     }
 }
 

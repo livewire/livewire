@@ -6,6 +6,7 @@ use function Livewire\store;
 use function Livewire\wrap;
 use Livewire\ComponentHook;
 use ReflectionMethod;
+use ReflectionNamedType;
 
 class SupportLifecycleHooks extends ComponentHook
 {
@@ -159,12 +160,54 @@ class SupportLifecycleHooks extends ComponentHook
 
             foreach ($reflection->getParameters() as $param) {
                 if ($param->isPassedByReference()) {
-                    return $reflection->invokeArgs($this->component, $params);
+                    return $reflection->invokeArgs($this->component, $this->resolveArgs($reflection, $params));
                 }
             }
 
             wrap($this->component)->__call($name, $params);
         }
+    }
+
+    /**
+     * Build args array with DI support while preserving references.
+     */
+    protected function resolveArgs($reflection, &$params)
+    {
+        $args = [];
+        $paramIndex = 0;
+
+        foreach ($reflection->getParameters() as $i => $reflectionParam) {
+            $type = $reflectionParam->getType();
+            $className = null;
+
+            if ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
+                $className = $type->getName();
+
+                // Skip enums - they use value binding, not DI
+                if (enum_exists($className)) {
+                    $className = null;
+                }
+            }
+
+            // Check if this param should get DI: type-hinted class and value isn't an instance of it
+            $currentValue = $params[$paramIndex] ?? null;
+            $shouldResolveDI = $className && !($currentValue instanceof $className);
+
+            if ($shouldResolveDI) {
+                // Resolve from container (don't increment paramIndex - this param got DI)
+                $args[$i] = app($className);
+            } elseif ($paramIndex < count($params)) {
+                // Use our passed parameter (preserving reference)
+                $args[$i] = &$params[$paramIndex];
+                $paramIndex++;
+            } elseif ($reflectionParam->isDefaultValueAvailable()) {
+                $args[$i] = $reflectionParam->getDefaultValue();
+            } elseif ($reflectionParam->allowsNull()) {
+                $args[$i] = null;
+            }
+        }
+
+        return $args;
     }
 
     function callTraitHook($name, $params = [])
@@ -199,7 +242,7 @@ class SupportLifecycleHooks extends ComponentHook
                 }
 
                 if ($hasRef) {
-                    $reflection->invokeArgs($this->component, $params);
+                    $reflection->invokeArgs($this->component, $this->resolveArgs($reflection, $params));
                 } else {
                     wrap($this->component)->$method(...$params);
                 }
