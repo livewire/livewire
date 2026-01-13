@@ -1,197 +1,101 @@
-import { findComponent, hasComponent } from '@/store'
-import { morphIsland } from '@/morph'
-import { on } from '@/hooks'
+import { closestFragment, extractFragmentMetadataFromHtml, extractInnerHtmlFromFragmentHtml, findFragment } from '@/fragment'
+import { interceptAction, interceptMessage } from '@/request'
+import { morphFragment } from '@/morph'
 
-on('stream', (payload) => {
-    if (payload.type !== 'island') return
+interceptAction(({ action }) => {
+    let origin = action.origin
 
-    let { id, name, content } = payload
+    if (! origin) return
 
-    if (! hasComponent(id)) return
+    let { el, directive } = origin
 
-    let component = findComponent(id)
+    // Check for wire:island with modifiers (e.g., wire:island.append="foo")
+    let islandAttr = Array.from(el.attributes).find(attr => attr.name.startsWith('wire:island'))
 
-    streamIsland(component, name, content)
+    if (islandAttr) {
+        let islandName = islandAttr.value
+
+        // Parse modifiers from attribute name (e.g., "wire:island.append" -> ["append"])
+        let attrParts = islandAttr.name.split('.')
+        let isPrepend = attrParts.includes('prepend')
+        let isAppend = attrParts.includes('append')
+
+        let mode = isPrepend ? 'prepend' : (isAppend ? 'append' : 'morph')
+
+        action.mergeMetadata({
+            island: {
+                name: islandName,
+                mode: mode,
+            }
+        })
+
+        return
+    }
+
+    let fragment = closestIsland(origin.el)
+
+    if (! fragment) return
+
+    action.mergeMetadata({
+        island: {
+            name: fragment.metadata.name,
+            mode: 'morph',
+        }
+    })
 })
 
-export function streamIsland(component, name, content) {
-    renderIsland(component, name, content)
-}
+interceptMessage(({ message, onSuccess, onStream }) => {
+    onStream(({ json }) => {
+        let { type, islandFragment } = json
 
-on('effect', ({ component, effects }) => {
-    let islands = effects.islands || []
+        if (type !== 'island') return
 
-    islands.forEach(island => {
-        let { name, content } = island
+        renderIsland(message.component, islandFragment)
+    })
 
-        // Wrapping this in a double queueMicrotask. The first one puts it after all
-        // other "effect" hooks, and the second one puts it after all reactive
-        // Alpine effects (that are processed via flushJobs in scheduler).
-        queueMicrotask(() => {
-            queueMicrotask(() => {
-                renderIsland(component, name, content)
+    onSuccess(({ payload, onMorph }) => {
+        onMorph(async () => {
+            let fragments = payload.effects.islandFragments || []
+
+            fragments.forEach(async fragmentHtml => {
+                await renderIsland(message.component, fragmentHtml)
             })
         })
     })
 })
 
-export function renderIsland(component, name, content) {
-    let { startNode, endNode } = findIslandComments(component.el, name)
+export function closestIsland(el) {
+    return closestFragment(el, {
+        isMatch: ({ type }) => {
+            return type === 'island'
+        },
+    })
+}
 
-    if (!startNode || !endNode) return
+export async function renderIsland(component, islandHtml) {
+    let metadata = extractFragmentMetadataFromHtml(islandHtml)
 
-    let { content: strippedContent, mode } = stripIslandCommentsAndExtractMode(content, name)
+    let fragment = findFragment(component.el, {
+        isMatch: ({ type, token }) => {
+            return type === metadata.type && token === metadata.token
+        },
+    })
 
-    let parentElement = startNode.parentElement
+    if (! fragment) return
+
+    let incomingMetadata = extractFragmentMetadataFromHtml(islandHtml)
+    let strippedContent = extractInnerHtmlFromFragmentHtml(islandHtml)
+
+    let parentElement = fragment.startMarkerNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
 
-    if (mode === 'append') {
-        let container = document.createElement(parentElementTag)
+    let mode = incomingMetadata.mode || 'morph'
 
-        container.innerHTML = strippedContent
-
-        // Insert each child node before the end node
-        Array.from(container.childNodes).forEach(node => {
-            endNode.parentNode.insertBefore(node, endNode)
-        })
-
+    if (mode === 'morph') {
+        await morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent)
+    } else if (mode === 'append') {
+        fragment.append(parentElementTag, strippedContent)
     } else if (mode === 'prepend') {
-        let container = document.createElement(parentElementTag)
-
-        container.innerHTML = strippedContent
-
-        // Insert each child node after the start node in reverse order
-        // to maintain correct ordering
-        Array.from(container.childNodes)
-            .reverse()
-            .forEach(node => {
-                startNode.parentNode.insertBefore(node, startNode.nextSibling)
-            })
-    } else {
-        morphIsland(component, startNode, endNode, strippedContent)
+        fragment.prepend(parentElementTag, strippedContent)
     }
-}
-
-export function skipIslandContents(el, toEl, skipUntil) {
-    if (isStartMarker(el) && isStartMarker(toEl)) {
-
-        let mode = extractIslandMode(toEl)
-
-        skipUntil(node => isEndMarker(node))
-
-        if (mode === 'skip') {
-            skipUntil(node => isEndMarker(node))
-        } else if (mode === 'prepend') {
-            // Collect all siblings until end marker
-            let sibling = toEl.nextSibling
-            let siblings = []
-            while (sibling && !isEndMarker(sibling)) {
-                siblings.push(sibling)
-                sibling = sibling.nextSibling
-            }
-
-            // Insert collected siblings after the start marker
-            siblings.forEach(node => {
-                el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling)
-            })
-
-            skipUntil(node => isEndMarker(node))
-        } else if (mode === 'append') {
-            // Find end marker of fromEl
-            let endMarker = el.nextSibling
-            while (endMarker && !isEndMarker(endMarker)) {
-                endMarker = endMarker.nextSibling
-            }
-
-            // Collect all siblings until end marker
-            let sibling = toEl.nextSibling
-            let siblings = []
-            while (sibling && !isEndMarker(sibling)) {
-                siblings.push(sibling)
-                sibling = sibling.nextSibling
-            }
-
-            // Insert collected siblings before the end marker
-            siblings.forEach(node => {
-                endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker)
-            })
-
-            skipUntil(node => isEndMarker(node))
-        }
-    }
-}
-
-function isStartMarker(el) {
-    return el.nodeType === 8 && el.textContent.startsWith('[if ISLAND')
-}
-
-function isEndMarker(el) {
-    return el.nodeType === 8 && el.textContent.startsWith('[if ENDISLAND')
-}
-
-function extractIslandMode(el) {
-    let mode = el.textContent.match(/\[if ISLAND:.*:(\w+)\]/)?.[1]
-
-    return mode || 'replace'
-}
-
-function stripIslandCommentsAndExtractMode(content, islandName) {
-    // Extract mode from start comment if present
-    let mode = 'replace'
-    const modeMatch = content.match(new RegExp(`\\[if ISLAND:${islandName}:(\\w+)\\]><\\!\\[endif\\]`))
-    if (modeMatch) {
-        mode = modeMatch[1]
-    }
-
-    // Remove the start and end comment markers
-    let startComment = new RegExp(`<!--\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`)
-    let endComment = new RegExp(`<!--\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`)
-
-    // Strip out the comments from the content
-    let stripped = content
-        .replace(startComment, '')
-        .replace(endComment, '')
-
-    return {
-        content: stripped.trim(),
-        mode
-    }
-}
-
-function findIslandComments(rootEl, islandName) {
-    let startNode = null
-    let endNode = null
-
-    walkElements(rootEl, (el, skip) => {
-        // Skip nested Livewire components
-        if (el.hasAttribute && el.hasAttribute('wire:id') && el !== rootEl) {
-            return skip()
-        }
-
-        // Check all child nodes (including text and comment nodes)
-        Array.from(el.childNodes).forEach(node => {
-            if (node.nodeType === Node.COMMENT_NODE) {
-                if (node.textContent.match(new RegExp(`\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
-                    startNode = node
-                }
-
-                if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
-                    endNode = node
-                }
-            }
-        })
-    })
-
-    return { startNode, endNode }
-}
-
-function walkElements(el, callback) {
-    let skip = false
-    callback(el, () => skip = true)
-
-    if (skip) return
-
-    Array.from(el.children).forEach(child => {
-        walkElements(child, callback)
-    })
 }

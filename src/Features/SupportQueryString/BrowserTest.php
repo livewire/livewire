@@ -43,6 +43,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertQueryStringMissing('tableFilters')
         ->type('@filter_1', 'test')
         ->waitForLivewire()
+        // Wait for the changes to be applied...
+        ->pause(5)
         ->assertScript(
             '(new URLSearchParams(window.location.search)).toString()',
             'tableFilters%5Bfilter_1%5D%5Bvalue%5D=test'
@@ -199,6 +201,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->type('@exclamation', 'foo!')
             ->type('@parentheses', 'foo(bar)')
             ->type('@asterisk', 'foo*')
+            // Wait for the changes to be applied...
+            ->pause(5)
             ->assertScript('return !! window.location.search.match(/exclamation=foo\!/)')
             ->assertScript('return !! window.location.search.match(/parentheses=foo\(bar\)/)')
             ->assertScript('return !! window.location.search.match(/asterisk=foo\*/)')
@@ -1039,33 +1043,39 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    public function test_it_handles_query_string_params_without_values()
+    public function test_it_handles_query_string_params_without_values_and_does_not_throw_a_console_error()
     {
-        $id = 'a'.str()->random(10);
+        $componentClass = new class extends Component
+        {
+            #[Url]
+            public $foo;
+
+            public function setFoo()
+            {
+                $this->foo = 'bar';
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="setFoo" dusk="setButton">Set foo</button>
+                    <span dusk="output">@js($foo)</span>
+                </div>
+                HTML;
+            }
+        };
+
+        $id = 'a'.substr(md5(str()->beforeLast($componentClass::class, '$')), 0, 8);
 
         DuskTestable::createBrowser($id, [
-            $id => new class extends Component
-            {
-                #[Url]
-                public $foo;
-
-                public function setFoo()
-                {
-                    $this->foo = 'bar';
-                }
-
-                public function render()
-                {
-                    return <<<'HTML'
-                    <div>
-                        <button wire:click="setFoo" dusk="setButton">Set foo</button>
-                        <span dusk="output">@js($foo)</span>
-                    </div>
-                    HTML;
-                }
-            }
+            $id => $componentClass
         ])
+        // It's essential for this test that `flag`, in the query string below, is set
+        // but has no value. That is why class and ID are manually set up above...
         ->visit('/livewire-dusk/'.$id.'?flag')
+
+        // Now just test the component still functions without any console errors...
         ->assertQueryStringMissing('foo')
         ->waitForLivewire()->click('@setButton')
         ->assertSeeIn('@output', '\'bar\'')
@@ -1119,6 +1129,54 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             ])
             ->assertScript('return window.location.search', '?foo[bar]=baz&bob%5Blob%5D=law');
+    }
+
+    public function test_it_batches_query_string_initialisation_into_a_single_call_to_the_browser_history_api()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        @foreach(range(1, 100) as $i)
+                            <livewire:child />
+                        @endforeach
+                    </div>
+                    @push('scripts')
+                        <script>
+                            let countOfReplaceStateCalls = 0;
+
+                            let originalReplaceState = window.history.replaceState.bind(window.history);
+
+                            window.history.replaceState = function(state, title, url) {
+                                countOfReplaceStateCalls++;
+                                originalReplaceState(state, title, url);
+                            };
+                        </script>
+                    @endpush
+                    HTML;
+                }
+            },
+            'child' => new class extends Component
+            {
+                #[BaseUrl]
+                public $foo = 'bar';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        Child
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->assertScript('return countOfReplaceStateCalls', 1)
+        ;
     }
 }
 

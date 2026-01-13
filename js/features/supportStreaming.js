@@ -1,116 +1,39 @@
-import { findComponent, hasComponent } from '@/store'
-import { contentIsFromDump } from '@/utils'
-import { directive } from '@/directives'
-import { on, trigger } from '@/hooks'
+import { findRefEl } from '@/features/supportRefs'
+import { interceptMessage } from '@/request'
+import { findComponent } from '@/store'
 
-on('stream', (payload) => {
-    if (payload.type !== 'update') return
+interceptMessage(({ message, onStream }) => {
+    onStream(({ json }) => {
+        let { id, type, name, el, ref, content, mode } = json
 
-    let { id, key, value, mode } = payload
+        // Early return for islands because they are handled by the islands feature...
+        if (type === 'island') return
 
-    if (! hasComponent(id)) return
+        let component = findComponent(id)
 
-    let component = findComponent(id)
+        let targetEl = null
 
-    if (mode === 'append') {
-        component.$wire.set(key, component.$wire.get(key) + value, false)
-    } else {
-        component.$wire.set(key, value, false)
-    }
-})
+        if (type === 'directive') {
+            const replaceEl = component.el.querySelector(`[wire\\:stream\\.replace="${name}"]`)
 
-directive('stream', ({el, directive, cleanup }) => {
-    let { expression, modifiers } = directive
-
-    let off = on('stream', (payload) => {
-        // Default type is "html" becasue that was the original stream feature...
-        payload.type = payload.type || 'html'
-
-        if (payload.type !== 'html') return
-
-        let { name, content, mode } = payload
-
-        if (name !== expression) return
-
-        if (modifiers.includes('replace') || mode === 'replace') {
-            el.innerHTML = content
-        } else {
-            el.insertAdjacentHTML('beforeend', content)
-        }
-    })
-
-    cleanup(off)
-})
-
-on('request', ({ respond }) => {
-    respond(mutableObject => {
-        let response = mutableObject.response
-
-        if (! response.headers.has('X-Livewire-Stream')) return
-
-        mutableObject.response = {
-            ok: true,
-            redirected: false,
-            status: 200,
-
-            async text() {
-                let finalResponse = ''
-
-                try {
-                    finalResponse = await interceptStreamAndReturnFinalResponse(response, streamed => {
-                        trigger('stream', streamed)
-                    })
-                } catch (e) {
-                    this.aborted = true
-                    this.ok = false
-                }
-
-                if (contentIsFromDump(finalResponse)) {
-                    this.ok = false
-                }
-
-                return finalResponse
+            if (replaceEl) {
+                targetEl = replaceEl
+                mode = 'replace'
+            } else {
+                targetEl = component.el.querySelector(`[wire\\:stream="${name}"]`)
             }
+        } else if (type === 'ref') {
+            targetEl = findRefEl(component, ref)
+        } else if (type === 'element') {
+            targetEl = component.el.querySelector(el)
+        }
+
+        if (! targetEl) return // Noop...
+
+        if (mode === 'replace') {
+            targetEl.innerHTML = content
+        } else {
+            targetEl.insertAdjacentHTML('beforeend', content)
         }
     })
 })
-
-async function interceptStreamAndReturnFinalResponse(response, callback) {
-    let reader = response.body.getReader()
-    let remainingResponse = ''
-
-    while (true) {
-        let { done, value: chunk } = await reader.read()
-
-        let decoder = new TextDecoder
-        let output = decoder.decode(chunk)
-
-        let [ streams, remaining ] = extractStreamObjects(remainingResponse + output)
-
-        streams.forEach(stream => {
-            callback(stream)
-        })
-
-        remainingResponse = remaining
-
-        if (done) return remainingResponse
-    }
-}
-
-function extractStreamObjects(raw) {
-    let regex = /({"stream":true.*?"endStream":true})/g
-
-    let matches = raw.match(regex)
-
-    let parsed = []
-
-    if (matches) {
-        for (let i = 0; i < matches.length; i++) {
-            parsed.push(JSON.parse(matches[i]).body)
-        }
-    }
-
-    let remaining = raw.replace(regex, '');
-
-    return [ parsed, remaining ];
-}

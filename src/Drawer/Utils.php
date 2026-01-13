@@ -59,6 +59,12 @@ class Utils extends BaseUtils
             fn ($headers) => response()->file($file, $headers));
     }
 
+    static function pretendResponseIsFileFromString($content, $filemtime, $filename = 'generated', $contentType = 'application/javascript; charset=utf-8')
+    {
+        return static::cachedFileResponse($filename, $contentType, $filemtime,
+            fn ($headers) => response($content, 200, $headers));
+    }
+
     static function pretendPreviewResponseIsPreviewFile($filename)
     {
         $file = FileUploadConfiguration::path($filename);

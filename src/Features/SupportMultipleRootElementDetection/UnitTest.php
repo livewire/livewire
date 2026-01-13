@@ -8,6 +8,13 @@ use Livewire\Component;
 
 class UnitTest extends TestCase
 {
+    public function setUp(): void
+    {
+        \Livewire\LivewireManager::$v4 = false;
+
+        parent::setUp();
+    }
+
     function test_two_or_more_root_elements_throws_an_error()
     {
         config()->set('app.debug', true);

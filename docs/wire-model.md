@@ -46,7 +46,7 @@ class CreatePost extends Component
 Because both inputs use `wire:model`, their values will be synchronized with the server's properties when the "Save" button is pressed.
 
 > [!warning] "Why isn't my component live updating as I type?"
-> If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](/docs/properties#data-binding).
+> If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](/docs/4.x/properties#data-binding).
 
 ## Customizing update timing
 
@@ -97,20 +97,6 @@ For example, if you want to run validation every time a select input is changed,
 ```
 
 Any changes made to the text input will be automatically synchronized with the `$title` property in your Livewire component.
-
-## All available modifiers
-
- Modifier          | Description
--------------------|-------------------------------------------------------------------------
- `.live`           | Send updates as a user types
- `.blur`           | Only send updates on the `blur` event
- `.change`         | Only send updates on the `change` event
- `.lazy`           | An alias for `.change`
- `.debounce.[?]ms` | Debounce the sending of updates by the specified millisecond delay
- `.throttle.[?]ms` | Throttle network request updates by the specified millisecond interval
- `.number`         | Cast the text value of an input to `int` on the server
- `.boolean`        | Cast the text value of an input to `bool` on the server
- `.fill`           | Use the initial value provided by a "value" HTML attribute on page-load
 
 ## Input fields
 
@@ -265,6 +251,55 @@ If you are using a "multiple" select menu, Livewire works as expected. In this e
 </select>
 ```
 
+## Event propagation
+
+By default, `wire:model` only listens for input/change events that originate directly on the element itself, not events that bubble up from child elements. This prevents unexpected behavior when using `wire:model` on container elements like modals or accordions that contain other form inputs.
+
+For example, if you have a modal with `wire:model="showModal"` and an input field inside it, clearing that input won't accidentally close the modal by bubbling up a change event.
+
+### Listening to child events
+
+In rare cases where you want `wire:model` to also respond to events bubbling up from child elements, you can use the `.deep` modifier:
+
+```blade
+<div wire:model.deep="value">
+    <input type="text"> <!-- Changes here will update $value -->
+</div>
+```
+
+> [!warning] Use `.deep` sparingly
+> Most use cases don't require listening to child events. Only use `.deep` when you specifically need to capture events from descendant elements.
+
 ## Going deeper
 
-For a more complete documentation on using `wire:model` in the context of HTML forms, visit the [Livewire forms documentation page](/docs/forms).
+For a more complete documentation on using `wire:model` in the context of HTML forms, visit the [Livewire forms documentation page](/docs/4.x/forms).
+
+## See also
+
+- **[Forms](/docs/4.x/forms)** — Complete guide to building forms with Livewire
+- **[Properties](/docs/4.x/properties)** — Understand data binding and property management
+- **[Validation](/docs/4.x/validation)** — Validate bound properties in real-time
+- **[File Uploads](/docs/4.x/uploads)** — Bind file inputs with wire:model
+
+## Reference
+
+```blade
+wire:model="propertyName"
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.live` | Send updates as a user types |
+| `.blur` | Only send updates on the `blur` event |
+| `.change` | Only send updates on the `change` event |
+| `.lazy` | Alias for `.change` |
+| `.debounce` | Debounces updates by 150ms (use `.debounce.500ms` for custom duration) |
+| `.throttle` | Throttles updates to specified interval (use `.throttle.500ms`) |
+| `.live.debounce` | Combines live updating with custom debounce timing |
+| `.preserve-scroll` | Maintains scroll position during updates (use with `.live`) |
+| `.number` | Casts text value to `int` on the server |
+| `.boolean` | Casts text value to `bool` on the server |
+| `.fill` | Uses initial value from HTML `value` attribute on page load |
+| `.deep` | Also listen for events bubbling up from child elements |

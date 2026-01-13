@@ -14,11 +14,11 @@ use App\Livewire\Dashboard;
 use App\Livewire\ShowPosts;
 use App\Livewire\ShowUsers;
 
-Route::get('/', Dashboard::class);
+Route::livewire('/', 'pages::dashboard');
 
-Route::get('/posts', ShowPosts::class);
+Route::livewire('/posts', 'pages::show-posts');
 
-Route::get('/users', ShowUsers::class);
+Route::livewire('/users', 'pages::show-users');
 ```
 
 By adding `wire:navigate` to each link in a navigation menu on each page, Livewire will prevent the standard handling of the link click and replace it with its own, faster version:
@@ -90,10 +90,10 @@ Here is an example of an `<audio>` player element being persisted across pages u
 
 If the above HTML appears on both pages — the current page, and the next one — the original element will be re-used on the new page. In the case of an audio player, the audio playback won't be interrupted when navigating from one page to another.
 
-Please be aware that the persisted element must be placed outside your Livewire components. A common practice is to position the persisted element in your main layout, such as `resources/views/components/layouts/app.blade.php`.
+Please be aware that the persisted element must be placed outside your Livewire components. A common practice is to position the persisted element in your main layout, such as `resources/views/layouts/app.blade.php`.
 
 ```html
-<!-- resources/views/components/layouts/app.blade.php -->
+<!-- resources/views/layouts/app.blade.php -->
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -101,7 +101,11 @@ Please be aware that the persisted element must be placed outside your Livewire 
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>{{ $title ?? 'Page Title' }}</title>
+        <title>{{ $title ?? config('app.name') }}</title>
+
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        @livewireStyles
     </head>
     <body>
         <main>
@@ -111,6 +115,8 @@ Please be aware that the persisted element must be placed outside your Livewire 
         @persist('player') <!-- [tl! highlight:2] -->
             <audio src="{{ $episode->file }}" controls></audio>
         @endpersist
+
+        @livewireScripts
     </body>
 </html>
 ```
@@ -127,9 +133,40 @@ You might be used to highlighting the currently active page link in a navbar usi
 </nav>
 ```
 
-However, this will not work inside persisted elements as they are re-used between page loads. Instead, you should use Livewire's `wire:current` directive to highlight the currently active link.
+However, this will not work inside persisted elements as they are re-used between page loads. Instead, you have two options for highlighting active links during navigation:
 
-Simply pass any CSS classes you want to apply to the currently active link to `wire:current`:
+#### Using the `data-current` attribute
+
+Livewire automatically adds a `data-current` attribute to any `wire:navigate` link that matches the current page. This allows you to style active links with CSS or Tailwind without any additional directives:
+
+```blade
+<nav>
+    <a href="/dashboard" wire:navigate class="data-current:font-bold data-current:text-zinc-800">Dashboard</a>
+    <a href="/posts" wire:navigate class="data-current:font-bold data-current:text-zinc-800">Posts</a>
+    <a href="/users" wire:navigate class="data-current:font-bold data-current:text-zinc-800">Users</a>
+</nav>
+```
+
+When the `/posts` page is visited, the "Posts" link will automatically receive the `data-current` attribute and be styled accordingly.
+
+You can also use plain CSS to style active links:
+
+```css
+[data-current] {
+    font-weight: bold;
+    color: #18181b;
+}
+```
+
+If you would like to disable this behavior while still using `wire:navigate`, you may add the `wire:current.ignore` directive:
+
+```blade
+<a href="/posts" wire:navigate wire:current.ignore>Posts</a>
+```
+
+#### Using the `wire:current` directive
+
+Alternatively, you can use Livewire's `wire:current` directive to add CSS classes to the currently active link:
 
 ```blade
 <nav>
@@ -141,17 +178,20 @@ Simply pass any CSS classes you want to apply to the currently active link to `w
 
 Now, when the `/posts` page is visited, the "Posts" link will have a stronger font treatment than the other links.
 
-Read more in the [`wire:current` documentation](/docs/wire-current).
+> [!tip] Prefer data-current for simplicity
+> While both approaches work well, using the `data-current` attribute is often simpler and more flexible since it doesn't require an additional directive and works seamlessly with Tailwind's data attribute variants.
+
+Read more in the [`wire:current` documentation](/docs/4.x/wire-current).
 
 ### Preserving scroll position
 
 By default, Livewire will preserve the scroll position of a page when navigating back and forth between pages. However, sometimes you may want to preserve the scroll position of an individual element you are persisting between page loads.
 
-To do this, you must add `wire:scroll` to the element containing a scrollbar like so:
+To do this, you must add `wire:navigate:scroll` to the element containing a scrollbar like so:
 
 ```html
-@persist('scrollbar')
-<div class="overflow-y-scroll" wire:scroll> <!-- [tl! highlight] -->
+@persist('sidebar')
+<div class="overflow-y-scroll" wire:navigate:scroll> <!-- [tl! highlight] -->
     <!-- ... -->
 </div>
 @endpersist
@@ -165,7 +205,7 @@ Each page navigation triggers three lifecycle hooks:
 * `livewire:navigating`
 * `livewire:navigated`
 
-It's important to note that these three hooks events are dispatched on navigations of all types. This includes manual navigation using `Livewire.navigate()`, redirecting with navigation enabled, and back and forward button presses in the browser.
+It's important to note that these hooks events are dispatched on navigations of all types. This includes manual navigation using `Livewire.navigate()`, redirecting with navigation enabled, and back and forward button presses in the browser.
 
 Here's an example of registering listeners for each of these events:
 
@@ -192,11 +232,19 @@ document.addEventListener('livewire:navigate', (event) => {
     context.cached
 })
 
-document.addEventListener('livewire:navigating', () => {
-    // Triggered when new HTML is about to swapped onto the page...
+document.addEventListener('livewire:navigating', (e) => {
+    // Triggered when new HTML is about to be swapped onto the page...
 
     // This is a good place to mutate any HTML before the page
     // is navigated away from...
+
+    // You can register an onSwap callback to run code after the
+    // new HTML is swapped onto the page but before scripts are loaded.
+    // This is a good place to apply critical styles such as dark mode
+    // to prevent flickering...
+    e.detail.onSwap(() => {
+        // ...
+    })
 })
 
 document.addEventListener('livewire:navigated', () => {
@@ -388,3 +436,10 @@ You can customize the color of this bar or disable it all together inside Livewi
     'progress_bar_color' => '#2299dd',
 ],
 ```
+
+## See also
+
+- **[Pages](/docs/4.x/pages)** — Create routable page components
+- **[Redirecting](/docs/4.x/redirecting)** — Navigate programmatically from actions
+- **[@persist](/docs/4.x/directive-persist)** — Persist elements across page navigations
+- **[wire:navigate](/docs/4.x/wire-navigate)** — Add SPA navigation to links
