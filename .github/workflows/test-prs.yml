@@ -13,7 +13,7 @@ env:
 jobs:
   js-tests:
     runs-on: ubuntu-latest
-    name: JavaScript Tests
+    name: 1. JavaScript
 
     steps:
       - name: Checkout
@@ -57,7 +57,7 @@ jobs:
         php: [8.4, 8.5]
         laravel: [11.*, 12.*]
 
-    name: Unit PHP:${{ matrix.php }} / Laravel:${{ matrix.laravel }}
+    name: 2. Unit - PHP ${{ matrix.php }} - L${{ matrix.laravel }}
 
     steps:
       - name: Checkout
@@ -102,9 +102,9 @@ jobs:
       matrix:
         php: [8.4, 8.5]
         laravel: [11.*, 12.*]
-        shard: [0, 1, 2]
+        shard: [1, 2, 3]
 
-    name: Browser PHP:${{ matrix.php }} / Laravel:${{ matrix.laravel }} / Shard:${{ matrix.shard }}
+    name: 3. Browser ${{ matrix.shard }} - PHP ${{ matrix.php }} - L${{ matrix.laravel }}
 
     steps:
       - name: Checkout
@@ -168,7 +168,7 @@ jobs:
 
       - name: Get shard test files
         id: shard
-        run: echo "files=$(php .github/scripts/get-browser-test-shard.php ${{ matrix.shard }} 3)" >> $GITHUB_OUTPUT
+        run: echo "files=$(php .github/scripts/get-browser-test-shard.php $(( ${{ matrix.shard }} - 1 )) 3)" >> $GITHUB_OUTPUT
 
       - name: Run Browser tests (Shard ${{ matrix.shard }})
         if: steps.build-assets.outcome == 'success'
@@ -177,7 +177,7 @@ jobs:
           RUNNING_IN_CI: true
 
       - name: Run Cancel Upload test
-        if: matrix.shard == 0 && steps.build-assets.outcome == 'success'
+        if: matrix.shard == 1 && steps.build-assets.outcome == 'success'
         run: FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
         env:
           RUNNING_IN_CI: true
@@ -191,7 +191,7 @@ jobs:
         php: [8.4, 8.5]
         laravel: [11.*, 12.*]
 
-    name: Legacy PHP:${{ matrix.php }} / Laravel:${{ matrix.laravel }}
+    name: 4. Legacy - PHP ${{ matrix.php }} - L${{ matrix.laravel }}
 
     steps:
       - name: Checkout
