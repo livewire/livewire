@@ -150,7 +150,7 @@ class PersistentMiddleware extends Mechanism
         try {
             $route = app('router')->getRoutes()->match($request);
             $request->setRouteResolver(fn() => $route);
-        }catch (NotFoundHttpException $e){
+        } catch (NotFoundHttpException $e) {
             return null;
         }
 
