@@ -576,7 +576,7 @@ class ScoreSubmitted implements ShouldBroadcast
 }
 ```
 
-When listening for this event in a Livewire component, you should use the custom broadcast name returned by `broadcastAs()` instead of the class name. **Important:** When using a custom broadcast name, you must prefix it with a dot (`.`) to distinguish it from namespaced event class names:
+When listening for this event in a Livewire component, you should use the custom broadcast name returned by `broadcastAs()` instead of the class name. **Important:** When using a custom broadcast name, you must prefix it with a dot (`.`) to distinguish it from namespaced event class names. This is a [Laravel Echo convention](https://laravel.com/docs/broadcasting#broadcast-name):
 
 ```php
 <?php
@@ -598,7 +598,7 @@ class ScoreBoard extends Component
 }
 ```
 
-In the above example, the Livewire component listens for `.score.submitted` (the custom broadcast name prefixed with a dot) rather than `ScoreSubmitted` (the class name). The dot prefix tells Laravel Echo that this is a custom broadcast name, not a namespaced event class.
+In the above example, the Livewire component listens for `.score.submitted` (the custom broadcast name prefixed with a dot) rather than `ScoreSubmitted` (the class name). The dot prefix tells Laravel Echo not to prepend the application's namespace (`App\Events`) to the event name.
 
 You can also use the custom broadcast name with dynamic channel names:
 
