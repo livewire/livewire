@@ -8091,7 +8091,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-        fireEventForOtherLibrariesToHookInto("alpine:navigating");
+        let swapCallbacks = [];
+        fireEventForOtherLibrariesToHookInto("alpine:navigating", {
+          onSwap: (callback) => swapCallbacks.push(callback)
+        });
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
@@ -8112,6 +8115,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               unPackPersistedPopovers(persistedEl);
             });
             !preserveScroll && restoreScrollPositionOrScrollToTop();
+            swapCallbacks.forEach((callback) => callback());
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
                 setTimeout(() => {
@@ -8148,7 +8152,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (prevented)
         return;
       storeScrollInformationInHtmlBeforeNavigatingAway();
-      fireEventForOtherLibrariesToHookInto("alpine:navigating");
+      let swapCallbacks = [];
+      fireEventForOtherLibrariesToHookInto("alpine:navigating", {
+        onSwap: (callback) => swapCallbacks.push(callback)
+      });
       updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
       preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
@@ -8163,6 +8170,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             unPackPersistedPopovers(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();
+          swapCallbacks.forEach((callback) => callback());
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
             nowInitializeAlpineOnTheNewPage(Alpine3);
