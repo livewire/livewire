@@ -6,6 +6,10 @@ use Livewire\Component;
 
 class Finder
 {
+    private const ZAP = "\u{26A1}";
+    private const ZAP_VS15 = "\u{26A1}\u{FE0E}";
+    private const ZAP_VS16 = "\u{26A1}\u{FE0F}";
+
     protected $classLocations = [];
 
     protected $viewLocations = [];
@@ -185,15 +189,15 @@ class Finder
             $leadingPath = $leadingSegments ? str_replace('.', '/', $leadingSegments) . '/' : '';
 
             $paths = [
-                'singleFileWithZap' => $location . '/' . $leadingPath . '⚡' . $trailingPath . '.blade.php',
-                'singleFileWithZapVariation15' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath . '.blade.php',
-                'singleFileWithZapVariation16' => $location . '/' . $leadingPath . '⚡️' . $trailingPath . '.blade.php',
-                'singleFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index.blade.php',
-                'singleFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index.blade.php',
-                'singleFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/⚡️index.blade.php',
-                'singleFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath . '.blade.php',
-                'singleFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath . '.blade.php',
-                'singleFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡️' . $trailingPath . '.blade.php',
+                'singleFileWithZap' => $location . '/' . $leadingPath . self::ZAP . $trailingPath . '.blade.php',
+                'singleFileWithZapVariation15' => $location . '/' . $leadingPath . self::ZAP_VS15 . $trailingPath . '.blade.php',
+                'singleFileWithZapVariation16' => $location . '/' . $leadingPath . self::ZAP_VS16 . $trailingPath . '.blade.php',
+                'singleFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP . 'index.blade.php',
+                'singleFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS15 . 'index.blade.php',
+                'singleFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS16 . 'index.blade.php',
+                'singleFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP . $trailingPath . '.blade.php',
+                'singleFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS15 . $trailingPath . '.blade.php',
+                'singleFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS16 . $trailingPath . '.blade.php',
                 'singleFile' => $location . '/' . $leadingPath . $trailingPath . '.blade.php',
                 'singleFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index.blade.php',
                 'singleFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath . '.blade.php',
@@ -252,15 +256,15 @@ class Finder
 
 
             $dirs = [
-                'multiFileWithZap' => $location . '/' . $leadingPath . '⚡' . $trailingPath,
-                'multiFileWithZapVariation15' => $location . '/' . $leadingPath . '⚡︎' . $trailingPath,
-                'multiFileWithZapVariation16' => $location . '/' . $leadingPath . '⚡️' . $trailingPath,
-                'multiFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index',
-                'multiFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/⚡︎index',
-                'multiFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/⚡️index',
-                'multiFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡' . $trailingPath,
-                'multiFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡︎' . $trailingPath,
-                'multiFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . '⚡️' . $trailingPath,
+                'multiFileWithZap' => $location . '/' . $leadingPath . self::ZAP . $trailingPath,
+                'multiFileWithZapVariation15' => $location . '/' . $leadingPath . self::ZAP_VS15 . $trailingPath,
+                'multiFileWithZapVariation16' => $location . '/' . $leadingPath . self::ZAP_VS16 . $trailingPath,
+                'multiFileAsIndexWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP . 'index',
+                'multiFileAsIndexWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS15 . 'index',
+                'multiFileAsIndexWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS16 . 'index',
+                'multiFileAsSelfNamedWithZap' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP . $trailingPath,
+                'multiFileAsSelfNamedWithZapVariation15' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS15 . $trailingPath,
+                'multiFileAsSelfNamedWithZapVariation16' => $location . '/' . $leadingPath . $trailingPath . '/' . self::ZAP_VS16 . $trailingPath,
                 'multiFile' => $location . '/' . $leadingPath . $trailingPath,
                 'multiFileAsIndex' => $location . '/' . $leadingPath . $trailingPath . '/index',
                 'multiFileAsSelfNamed' => $location . '/' . $leadingPath . $trailingPath . '/' . $trailingPath,
@@ -272,7 +276,7 @@ class Finder
                 $fileBaseName = str_contains($baseName, 'index') ? 'index' : $baseName;
 
                 // Strip out the emoji from folder name to derive the file name...
-                $fileBaseName = preg_replace('/⚡[\x{FE0E}\x{FE0F}]?/u', '', $fileBaseName);
+                $fileBaseName = preg_replace('/' . self::ZAP . '[\x{FE0E}\x{FE0F}]?/u', '', $fileBaseName);
 
                 if (
                     is_dir($dir)
@@ -422,7 +426,7 @@ class Finder
 
         // Determine if emoji should be used (get from config)
         $useEmoji = config('livewire.make_command.emoji', true);
-        $prefix = $useEmoji ? '⚡' : '';
+        $prefix = $useEmoji ? self::ZAP : '';
 
         // Build the file path
         return $location . '/' . $leadingPath . $prefix . $lastSegment . '.blade.php';
@@ -449,7 +453,7 @@ class Finder
 
         // Determine if emoji should be used (get from config)
         $useEmoji = config('livewire.make_command.emoji', true);
-        $prefix = $useEmoji ? '⚡' : '';
+        $prefix = $useEmoji ? self::ZAP : '';
 
         // Build the directory path
         return $location . '/' . $leadingPath . $prefix . $lastSegment;

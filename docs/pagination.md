@@ -331,7 +331,7 @@ To accomplish this, set the `pagination_theme` configuration value in your appli
 > [!info] Publishing Livewire's configuration file
 > Before customizing the pagination theme, you must first publish Livewire's configuration file to your application's `/config` directory by running the following command:
 > ```shell
-> php artisan livewire:publish --config
+> php artisan livewire:config
 > ```
 
 ## Modifying the default pagination views

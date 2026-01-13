@@ -106,7 +106,18 @@ export class MessageBus {
     }
 
     findScopedPendingMessage(action) {
-        return Array.from(this.pendingMessages).find(message => message.component === action.component)
+        if (action.isAsync()) return null
+
+        let actionScope = scopeSymbolFromAction(action)
+
+        return Array.from(this.pendingMessages).find(message => {
+            if (message.component !== action.component) return false
+
+            // Check if any action in the message has the same scope
+            return Array.from(message.actions).some(existingAction =>
+                scopeSymbolFromAction(existingAction) === actionScope
+            )
+        })
     }
 
     activeMessageMatchingScope(action) {

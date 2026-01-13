@@ -3,7 +3,7 @@ export class MessageRequest {
     messages = new Set()
     controller = new AbortController()
     interceptors = []
-    aborted = false
+    cancelled = false
     uri = null
     payload = null
     options = null
@@ -34,10 +34,10 @@ export class MessageRequest {
         })
     }
 
-    abort() {
-        if (this.aborted) return
+    cancel() {
+        if (this.cancelled) return
 
-        this.aborted = true
+        this.cancelled = true
 
         this.controller.abort()
 
@@ -52,56 +52,62 @@ export class MessageRequest {
         return this.getActiveMessages().size === 0
     }
 
-    isAborted() {
-        return this.aborted
+    isCancelled() {
+        return this.cancelled
     }
 
     /**
      * Lifecycle methods
      */
-    onSend({ responsePromise }) {
+    invokeOnSend({ responsePromise }) {
         this.interceptors.forEach(interceptor => interceptor.onSend({ responsePromise }))
 
-        this.messages.forEach(message => message.onSend())
+        this.messages.forEach(message => message.invokeOnSend())
     }
 
-    onAbort() {
-        this.interceptors.forEach(interceptor => interceptor.onAbort())
+    invokeOnCancel() {
+        this.interceptors.forEach(interceptor => interceptor.onCancel())
     }
 
-    onFailure({ error }) {
+    invokeOnFailure({ error }) {
         this.interceptors.forEach(interceptor => interceptor.onFailure({ error }))
+
+        this.messages.forEach(message => message.invokeOnFailure(error))
     }
 
-    onResponse({ response }) {
+    invokeOnResponse({ response }) {
         this.interceptors.forEach(interceptor => interceptor.onResponse({ response }))
     }
 
-    onStream({ response }) {
+    invokeOnStream({ response }) {
         this.interceptors.forEach(interceptor => interceptor.onStream({ response }))
     }
 
-    onParsed({ response, responseBody }) {
-        this.interceptors.forEach(interceptor => interceptor.onParsed({ response, responseBody }))
+    invokeOnParsed({ response, body }) {
+        this.interceptors.forEach(interceptor => interceptor.onParsed({ response, body }))
     }
 
 
-    onRedirect({ url, preventDefault }) {
+    invokeOnRedirect({ url, preventDefault }) {
         this.interceptors.forEach(interceptor => interceptor.onRedirect({ url, preventDefault }))
     }
 
-    onDump({ content, preventDefault }) {
-        this.interceptors.forEach(interceptor => interceptor.onDump({ content, preventDefault }))
+    invokeOnDump({ html, preventDefault }) {
+        this.interceptors.forEach(interceptor => interceptor.onDump({ html, preventDefault }))
     }
 
-    onError({ response, responseBody, preventDefault }) {
-        this.interceptors.forEach(interceptor => interceptor.onError({ response, responseBody, preventDefault }))
+    invokeOnError({ response, body, preventDefault }) {
+        this.interceptors.forEach(interceptor => interceptor.onError({ response, body, preventDefault }))
 
-        this.messages.forEach(message => message.onError({ response, responseBody, preventDefault }))
+        this.messages.forEach(message => message.invokeOnError({ response, body, preventDefault }))
     }
 
-    onSuccess({ response, responseBody, responseJson }) {
-        this.interceptors.forEach(interceptor => interceptor.onSuccess({ response, responseBody, responseJson }))
+    invokeOnSuccess({ response, body, json }) {
+        this.interceptors.forEach(interceptor => interceptor.onSuccess({ response, body, json }))
+    }
+
+    invokeOnFinish() {
+        this.interceptors.forEach(interceptor => interceptor.onFinish())
     }
 }
 

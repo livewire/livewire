@@ -37,6 +37,28 @@ class UnitTest extends TestCase
             ->assertSee('!--[if ENDFRAGMENT:');
     }
 
+    public function test_island_with_raw_block()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    Outside island
+
+                    @island
+                        <div>
+                            @php $foo = 'bar'; @endphp
+                            Inside island: {{ $foo }}
+                        </div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        })
+            ->assertSee('Inside island: bar')
+            ;
+    }
+
     public function test_island_with_parameter_provides_scope()
     {
         Livewire::test(new class extends \Livewire\Component {

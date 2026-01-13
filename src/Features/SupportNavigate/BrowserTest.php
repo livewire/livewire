@@ -39,6 +39,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('parent-component', ParentComponent::class);
             Livewire::component('child-component', ChildComponent::class);
             Livewire::component('script-component', ScriptComponent::class);
+            Livewire::component('page-with-link-to-an-error-page', PageWithLinkToAnErrorPage::class);
             Livewire::component('page-with-redirect-to-external-page', PageWithRedirectToExternalPage::class);
             Livewire::component('page-with-redirect-to-internal-which-has-external-link', PageWithRedirectToInternalWhichHasExternalLinkPage::class);
 
@@ -104,6 +105,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/second-noscript', SecondNoscriptPage::class)->middleware('web');
             Route::get('/no-javascript', fn () => '<div dusk="no-javascript-side">No javascript side triggered.</div>')
                 ->middleware('web')->name('no-javascript');
+            Route::get('/page-with-link-to-an-error-page', PageWithLinkToAnErrorPage::class)->middleware('web');
         };
     }
 
@@ -1191,6 +1193,28 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_navigating_to_an_error_page_force_a_full_page_refresh_when_the_back_button_is_pressed()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/page-with-link-to-an-error-page')
+                ->assertSee('Link to page that does not exist')
+                ->assertDontSee('404')
+                ->assertScript('return window.navigateCount', 0)
+                ->click('@link.to.an.error.page')
+                ->waitForText('404')
+                ->assertSee('404')
+                ->assertDontSee('Link to page that does not exist')
+                ->assertScript('return window.navigateCount', 1)
+                ->back()
+                ->waitForText('Link to page that does not exist')
+                ->assertSee('Link to page that does not exist')
+                ->assertDontSee('404')
+                ->assertScript('return window.navigateCount', 0)
+            ;
+        });
+    }
+
     public function test_an_error_with_fetch_such_as_a_backend_redirect_to_an_external_site_does_not_break_livewire_and_progress_bar_is_removed()
     {
         $this->browse(function (Browser $browser) {
@@ -1220,11 +1244,18 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertAttribute('@link.to.first.no.wire.current', 'data-current', '')
                 ->assertAttributeMissing('@link.to.second.no.wire.current', 'data-current')
 
+                ->assertAttributeMissing('@link.to.first.wire.current.ignore', 'data-current')
+                ->assertAttributeMissing('@link.to.second.wire.current.ignore', 'data-current')
+
                 ->click('@link.to.second.no.wire.current')
                 ->waitForText('On second')
 
                 ->assertAttributeMissing('@link.to.first.no.wire.current', 'data-current')
                 ->assertAttribute('@link.to.second.no.wire.current', 'data-current', '')
+
+                ->assertAttributeMissing('@link.to.first.wire.current.ignore', 'data-current')
+                ->assertAttributeMissing('@link.to.second.wire.current.ignore', 'data-current')
+
                 ;
         });
     }
@@ -1275,6 +1306,9 @@ class FirstPage extends Component
 
             <a href="/first" wire:navigate dusk="link.to.first.no.wire.current">First (no wire:current)</a>
             <a href="/second" wire:navigate dusk="link.to.second.no.wire.current">Second (no wire:current)</a>
+
+            <a href="/first" wire:navigate wire:current.ignore dusk="link.to.first.wire.current.ignore">First (wire:current.ignore)</a>
+            <a href="/second" wire:navigate wire:current.ignore dusk="link.to.second.wire.current.ignore">Second (wire:current.ignore)</a>
 
             @script
             <script>
@@ -1339,6 +1373,9 @@ class SecondPage extends Component
 
             <a href="/first" wire:navigate dusk="link.to.first.no.wire.current">First (no wire:current)</a>
             <a href="/second" wire:navigate dusk="link.to.second.no.wire.current">Second (no wire:current)</a>
+
+            <a href="/first" wire:navigate wire:current.ignore dusk="link.to.first.wire.current.ignore">First (wire:current.ignore)</a>
+            <a href="/second" wire:navigate wire:current.ignore dusk="link.to.second.wire.current.ignore">Second (wire:current.ignore)</a>
 
             @persist('foo')
                 <div x-data="{ count: 1 }">
@@ -1721,5 +1758,30 @@ class SecondNoscriptPage extends Component
     public function render()
     {
         return '<div>On second asset page <a href="/first-noscript" wire:navigate dusk="link.to.first">Go to first page</a></div>';
+    }
+}
+
+class PageWithLinkToAnErrorPage extends Component
+{
+    #[Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-link-to-an-error-page">
+            <a wire:navigate dusk="link.to.an.error.page" href="/page-that-does-not-exist">
+                Link to page that does not exist
+            </a>
+        </div>
+
+        @script
+        <script>
+            window.navigateCount ??= 0
+
+            document.addEventListener('livewire:navigate', (event) => {
+                window.navigateCount++
+            })
+        </script>
+        @endscript
+        HTML;
     }
 }

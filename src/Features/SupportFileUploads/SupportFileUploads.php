@@ -6,7 +6,7 @@ use function Livewire\on;
 use Livewire\ComponentHook;
 use Illuminate\Support\Facades\Route;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
-use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
+use Livewire\Facades\GenerateSignedUploadUrlFacade;
 
 class SupportFileUploads extends ComponentHook
 {

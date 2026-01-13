@@ -5,9 +5,11 @@ import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
-import { fireAction, intercept } from '@/request'
+import { fireAction, interceptComponentAction, interceptComponentMessage, interceptComponentRequest } from '@/request'
 import { getErrorsObject } from '@/features/supportErrors'
 import { findRefEl } from '@/features/supportRefs'
+import { checkDirty } from './directives/wire-dirty'
+import { assetIsPendingFor, runAfterAssetIsLoadedFor } from './features/supportJsModules'
 
 let properties = {}
 let fallback
@@ -33,6 +35,8 @@ let aliases = {
     'call': '$call',
     'hook': '$hook',
     'watch': '$watch',
+    'dirty': '$dirty',
+    'effect': '$effect',
     'commit': '$commit',
     'errors': '$errors',
     'island': '$island',
@@ -40,6 +44,9 @@ let aliases = {
     'entangle': '$entangle',
     'dispatch': '$dispatch',
     'intercept': '$intercept',
+    'interceptAction': '$interceptAction',
+    'interceptMessage': '$interceptMessage',
+    'interceptRequest': '$interceptRequest',
     'dispatchTo': '$dispatchTo',
     'dispatchSelf': '$dispatchSelf',
     'removeUpload': '$removeUpload',
@@ -138,6 +145,30 @@ wireProperty('$js', (component) => {
             component.addJsAction(property, value)
 
             return true
+        },
+        get(target, property) {
+            // Scripts in view-based components are imported dynamically,
+            // which means they run asynchronously. This causes issues with
+            // things like wire:text="$js.foo()" not being available on page load.
+            // To patch this, we return a promise that resolves the $js action
+            // after the script is fully imported and executed...
+            if (assetIsPendingFor(component)) {
+                let resolver = null
+
+                let promise = new Promise((resolve) => {
+                    resolver = resolve
+                })
+
+                return (...params) => {
+                    runAfterAssetIsLoadedFor(component, () => {
+                        resolver(component.getJsAction(property)(...params))
+                    })
+
+                    return promise
+                }
+            }
+
+            return target[property]
         }
     })
 })
@@ -170,25 +201,38 @@ wireProperty('$refs', (component) => {
     })
 })
 
-wireProperty('$intercept', (component) => (method, callback = null) => {
-    if (callback === null && typeof method === 'function') {
-        callback = method
+wireProperty('$dirty', (component) => (property) => {
+    let reactive = Alpine.reactive({ dirty: false })
 
-        return intercept(component, callback)
-    }
-
-    return intercept(component, (options) => {
-        let action = options.message.getActions().find(action => action.method === method)
-
-        if (action) {
-            let el = action?.origin?.el
-
-            callback({
-                ...options,
-                el,
+    interceptComponentMessage(component, ({ onFinish }) => {
+        onFinish(() => {
+            queueMicrotask(() => {
+                reactive.dirty = checkDirty(component, property)
             })
-        }
+        })
     })
+
+    Alpine.effect(() => {
+        reactive.dirty = checkDirty(component, property)
+    })
+
+    return reactive.dirty
+})
+
+wireProperty('$intercept', (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentAction(component, actionNameOrCallback, maybeCallback)
+})
+
+wireProperty('$interceptAction', (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentAction(component, actionNameOrCallback, maybeCallback)
+})
+
+wireProperty('$interceptMessage', (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentMessage(component, actionNameOrCallback, maybeCallback)
+})
+
+wireProperty('$interceptRequest', (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentRequest(component, actionNameOrCallback, maybeCallback)
 })
 
 wireProperty('$errors', (component) => getErrorsObject(component))
@@ -219,6 +263,16 @@ wireProperty('$watch', (component) => (path, callback) => {
     let unwatch = Alpine.watch(getter, callback)
 
     component.addCleanup(unwatch)
+
+    return unwatch
+})
+
+wireProperty('$effect', (component) => (callback) => {
+    let effect = Alpine.effect(callback)
+
+    component.addCleanup(effect)
+
+    return effect
 })
 
 wireProperty('$refresh', (component) => async () => {
@@ -280,7 +334,7 @@ export function overrideMethod(component, method, callback) {
     overriddenMethods.set(component, obj)
 }
 
-wireFallback((component) => (property) => async (...params) => {
+wireFallback((component) => (property) => (...params) => {
     // If this method is passed directly to a Vue or Alpine
     // event listener (@click="someMethod") without using
     // parens, strip out the automatically added event.

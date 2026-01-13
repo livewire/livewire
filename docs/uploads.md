@@ -261,7 +261,7 @@ Now, when a user uploads a file, the file will never actually be stored on your 
 > [!info] Publishing Livewire's configuration file
 > Before customizing the file upload disk, you must first publish Livewire's configuration file to your application's `/config` directory by running the following command:
 > ```shell
-> php artisan livewire:publish --config
+> php artisan livewire:config
 > ```
 
 ### Configuring automatic file cleanup

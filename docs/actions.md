@@ -458,6 +458,9 @@ Using `$wire`, the action may be invoked and its returned value resolved:
 
 In this example, if the `getPostCount()` method returns "10", the `<span>` tag will also contain "10".
 
+> [!tip] Use #[Json] for JavaScript-consumed actions
+> For actions primarily consumed by JavaScript, consider using the [`#[Json]` attribute](/docs/4.x/attribute-json). It returns data via promise resolution/rejection, automatically handles validation errors with promise rejection, and skips re-rendering for better performance.
+
 Alpine knowledge is not required when using Livewire; however, it's an extremely powerful tool and knowing Alpine will augment your Livewire experience and productivity.
 
 ## JavaScript actions

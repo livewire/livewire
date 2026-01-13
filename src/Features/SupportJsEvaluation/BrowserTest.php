@@ -150,6 +150,9 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_define_js_actions_though_dollar_js_magic_in_a_sfc_script()
     {
         Livewire::visit('sfc-component-with-dollar-js-magic')
+            ->waitForLivewireToLoad()
+            // Pause for a moment to allow the script to be loaded...
+            ->pause(100)
             ->click('@test')
             ->assertScript('window.test === "through dollar js"')
         ;
@@ -158,6 +161,9 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_define_js_actions_though_dollar_js_magic_on_a_mfc_script()
     {
         Livewire::visit('mfc-component-with-dollar-js-magic')
+            ->waitForLivewireToLoad()
+            // Pause for a moment to allow the script to be loaded...
+            ->pause(100)
             ->click('@test')
             ->assertScript('window.test === "through dollar js"')
         ;

@@ -236,7 +236,7 @@ class UnitTest extends \Tests\TestCase
         $output = $this->render('<livewire:foo />');
 
         $this->assertStringContainsString('Test', $output);
-        
+
         // When the template is rendered, there should be 1 loop in the stack, which will be a count of 0 so we don't have an offset compared to the loop indexes...
         $this->assertEquals(0, SupportCompiledWireKeys::$currentLoop['count']);
     }
@@ -643,13 +643,101 @@ class UnitTest extends \Tests\TestCase
                 <<<'HTML'
                 <div> @for ($i=0; $i<3; $i++)<span> {{ $someProperty }} </span> @endfor Else</div>
                 HTML
-            ]
+            ],
+            32 => [
+                0,
+                <<<'HTML'
+                <style>
+                    @supports (filter: drop-shadow(0 0 0 #ccc)) {
+                        background-color: blue;
+                    }
+                </style>
+                HTML
+            ],
+            33 => [
+                0,
+                <<<'HTML'
+                <div>
+                    @@if (true)
+                </div>
+                HTML
+            ],
+            34 => [
+                0,
+                <<<'HTML'
+                <div>
+                    <script>
+                        @if (app()->environment('production'))
+                            console.debug('tracking enabled');
+                        @else
+                            console.debug('tracking disabled');
+                        @endif
+                    </script>
+                </div>
+                HTML
+            ],
+            35 => [
+                0,
+                <<<'HTML'
+                <div>
+                    <style>
+                        @if (app()->environment('local'))
+                            body {
+                                background-color: red;
+                            }
+                        @endif
+                    </style>
+                </div>
+                HTML
+            ],
+            36 => [
+                1,
+                <<<'HTML'
+                <div>
+                    <div id="label">
+                        @if (now()->dayName === 'Friday')
+                            Friday
+                        @endif
+                    </div>
+
+                    <script type="text/javascript">
+                        @if (now()->dayName === 'Friday')
+                            document.getElementById('label').style.color = 'red';
+                        @endif
+                    </script>
+                </div>
+                HTML
+            ],
+            37 => [
+                2,
+                <<<'HTML'
+                <div>
+                    <div id="label">
+                        @if (now()->dayName === 'Friday')
+                            Friday
+                        @endif
+                    </div>
+
+                    <script type="text/javascript">
+                        @if (now()->dayName === 'Friday')
+                            document.getElementById('label').style.color = 'red';
+                        @endif
+                    </script>
+
+                    <div id="label">
+                        @if (now()->dayName === 'Friday')
+                            Friday
+                        @endif
+                    </div>
+                </div>
+                HTML
+            ],
         ];
     }
 
     protected function reloadFeatures()
     {
-        // We need to remove these two precompilers so we can test if the 
+        // We need to remove these two precompilers so we can test if the
         // feature is disabled and whether they get registered again...
         $precompilers = \Livewire\invade(app('blade.compiler'))->precompilers;
 
@@ -658,7 +746,7 @@ class UnitTest extends \Tests\TestCase
 
             $closureClass = (new \ReflectionFunction($precompiler))->getClosureScopeClass()->getName();
 
-            return $closureClass !== SupportCompiledWireKeys::class 
+            return $closureClass !== SupportCompiledWireKeys::class
                 && $closureClass !== SupportMorphAwareBladeCompilation::class;
         });
 

@@ -36,7 +36,6 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             $finder = new Finder;
 
             $finder->addLocation(classNamespace: config('livewire.class_namespace'));
-            $finder->addLocation(viewPath: config('livewire.component_path'));
 
             return $finder;
         });
@@ -190,8 +189,10 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportWithMethod\SupportWithMethod::class,
             Features\SupportIsolating\SupportIsolating::class,
             Features\SupportRedirects\SupportRedirects::class,
+            Features\SupportTransitions\SupportTransitions::class,
             Features\SupportStreaming\SupportStreaming::class,
             Features\SupportJsModules\SupportJsModules::class,
+            Features\SupportCssModules\SupportCssModules::class,
             Features\SupportNavigate\SupportNavigate::class,
             Features\SupportEntangle\SupportEntangle::class,
             Features\SupportWireRef\SupportWireRef::class,
@@ -202,6 +203,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportModels\SupportModels::class,
             Features\SupportEvents\SupportEvents::class,
             Features\SupportSlots\SupportSlots::class,
+            Features\SupportJson\SupportJson::class,
 
             // Some features we want to have priority over others...
             Features\SupportLifecycleHooks\SupportLifecycleHooks::class,

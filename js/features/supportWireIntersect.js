@@ -21,12 +21,11 @@ Alpine.interceptInit(el => {
                     let component = el.closest('[wire\\:id]')?.__livewire
 
                     component.addActionContext({
-                        // type: 'user',
                         el,
                         directive,
                     })
 
-                    evaluateActionExpression(component, el, expression)
+                    evaluateActionExpression(el, expression)
                 }
             })
         }

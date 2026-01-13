@@ -35,13 +35,21 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertFalse($assets->hasRenderedStyles);
 
-        $this->assertStringStartsWith('<!-- Livewire Styles -->', $assets->styles());
+        $styles = $assets->styles();
 
-        $this->assertStringNotContainsString('data-livewire-style', $assets->styles());
-
-        $this->assertStringContainsString('nonce="test" data-livewire-style', $assets->styles(['nonce' => 'test']));
+        $this->assertStringStartsWith('<!-- Livewire Styles -->', $styles);
+        $this->assertStringNotContainsString('data-livewire-style', $styles);
 
         $this->assertTrue($assets->hasRenderedStyles);
+
+        $this->assertEmpty($assets->styles());
+    }
+
+    public function test_styles_with_nonce()
+    {
+        $assets = app(FrontendAssets::class);
+
+        $this->assertStringContainsString('nonce="test" data-livewire-style', $assets->styles(['nonce' => 'test']));
     }
 
     public function test_scripts()
@@ -54,6 +62,8 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('<script src="', $scripts);
 
         $this->assertTrue($assets->hasRenderedScripts);
+
+        $this->assertEmpty($assets->scripts());
     }
 
     public function test_use_normal_scripts_url_if_app_debug_is_true()

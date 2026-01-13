@@ -21,9 +21,9 @@
     mod
   ));
 
-  // ../alpine/packages/csp/dist/module.cjs.js
+  // node_modules/@alpinejs/csp/dist/module.cjs.js
   var require_module_cjs = __commonJS({
-    "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
+    "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
       var __create2 = Object.create;
       var __defProp2 = Object.defineProperty;
       var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1775,6 +1775,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       function setEvaluator(newEvaluator) {
         theEvaluatorFunction = newEvaluator;
       }
+      var theRawEvaluatorFunction;
+      function setRawEvaluator(newEvaluator) {
+        theRawEvaluatorFunction = newEvaluator;
+      }
       function normalEvaluator(el, expression) {
         let overriddenMagics = {};
         injectMagics(overriddenMagics, el);
@@ -1785,6 +1789,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       function generateEvaluatorFromFunction(dataStack, func) {
         return (receiver = () => {
         }, { scope: scope2 = {}, params = [], context } = {}) => {
+          if (!shouldAutoEvaluateFunctions) {
+            runIfTypeOfFunction(receiver, func, mergeProxies([scope2, ...dataStack]), params);
+            return;
+          }
           let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
           runIfTypeOfFunction(receiver, result);
         };
@@ -1849,6 +1857,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         } else {
           receiver(value);
         }
+      }
+      function evaluateRaw(...args) {
+        return theRawEvaluatorFunction(...args);
       }
       var prefixAsString = "x-";
       function prefix(subject = "") {
@@ -2093,6 +2104,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return el;
         if (el._x_teleportBack)
           el = el._x_teleportBack;
+        if (el.parentNode instanceof ShadowRoot) {
+          return findClosest(el.parentNode.host, callback);
+        }
         if (!el.parentElement)
           return;
         return findClosest(el.parentElement, callback);
@@ -2105,7 +2119,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         initInterceptors2.push(callback);
       }
       var markerDispenser = 1;
-      function initTree(el, walker = walk2, intercept2 = () => {
+      function initTree(el, walker = walk2, intercept = () => {
       }) {
         if (findClosest(el, (i) => i._x_ignore))
           return;
@@ -2113,7 +2127,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           walker(el, (el2, skip) => {
             if (el2._x_marker)
               return;
-            intercept2(el2, skip);
+            intercept(el2, skip);
             initInterceptors2.forEach((i) => i(el2, skip));
             directives(el2, el2.attributes).forEach((handle) => handle());
             if (!el2._x_ignore)
@@ -2787,7 +2801,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           timeout = setTimeout(later, wait);
         };
       }
-      function throttle2(func, limit) {
+      function throttle3(func, limit) {
         let inThrottle;
         return function() {
           let context = this, args = arguments;
@@ -2928,7 +2942,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         get raw() {
           return raw;
         },
-        version: "3.15.1",
+        version: "3.15.3",
         flushAndStopDeferringMutations,
         dontAutoEvaluateFunctions,
         disableEffectScheduling,
@@ -2949,7 +2963,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         mapAttributes,
         evaluateLater,
         interceptInit,
+        initInterceptors,
+        injectMagics,
         setEvaluator,
+        setRawEvaluator,
         mergeProxies,
         extractProp,
         findClosest,
@@ -2962,9 +2979,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         mutateDom,
         directive: directive2,
         entangle,
-        throttle: throttle2,
+        throttle: throttle3,
         debounce: debounce2,
         evaluate: evaluate2,
+        evaluateRaw,
         initTree,
         nextTick,
         prefixed: prefix,
@@ -2983,6 +3001,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         bind: bind2
       };
       var alpine_default = Alpine24;
+      var safemap = /* @__PURE__ */ new WeakMap();
+      var globals = /* @__PURE__ */ new Set();
+      Object.getOwnPropertyNames(globalThis).forEach((key) => {
+        if (key === "styleMedia")
+          return;
+        globals.add(globalThis[key]);
+      });
       var Token = class {
         constructor(type, value, start22, end) {
           this.type = type;
@@ -3526,38 +3551,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       };
       var Evaluator = class {
-        evaluate({ node, scope: scope2 = {}, context = null, allowGlobal = false, forceBindingRootScopeToFunctions = true }) {
+        evaluate({ node, scope: scope2 = {}, context = null, forceBindingRootScopeToFunctions = true }) {
           switch (node.type) {
             case "Literal":
               return node.value;
             case "Identifier":
               if (node.name in scope2) {
                 const value2 = scope2[node.name];
+                this.checkForDangerousValues(value2);
                 if (typeof value2 === "function") {
                   return value2.bind(scope2);
                 }
                 return value2;
               }
-              if (allowGlobal && typeof globalThis[node.name] !== "undefined") {
-                const value2 = globalThis[node.name];
-                if (typeof value2 === "function") {
-                  return value2.bind(globalThis);
-                }
-                return value2;
-              }
               throw new Error(`Undefined variable: ${node.name}`);
             case "MemberExpression":
-              const object = this.evaluate({ node: node.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              const object = this.evaluate({ node: node.object, scope: scope2, context, forceBindingRootScopeToFunctions });
               if (object == null) {
                 throw new Error("Cannot read property of null or undefined");
               }
-              let memberValue;
+              let property;
               if (node.computed) {
-                const property = this.evaluate({ node: node.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                memberValue = object[property];
+                property = this.evaluate({ node: node.property, scope: scope2, context, forceBindingRootScopeToFunctions });
               } else {
-                memberValue = object[node.property.name];
+                property = node.property.name;
               }
+              this.checkForDangerousKeywords(property);
+              let memberValue = object[property];
+              this.checkForDangerousValues(memberValue);
               if (typeof memberValue === "function") {
                 if (forceBindingRootScopeToFunctions) {
                   return memberValue.bind(scope2);
@@ -3567,28 +3588,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               }
               return memberValue;
             case "CallExpression":
-              const args = node.arguments.map((arg) => this.evaluate({ node: arg, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }));
+              const args = node.arguments.map((arg) => this.evaluate({ node: arg, scope: scope2, context, forceBindingRootScopeToFunctions }));
+              let returnValue;
               if (node.callee.type === "MemberExpression") {
-                const obj = this.evaluate({ node: node.callee.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                let func;
+                const obj = this.evaluate({ node: node.callee.object, scope: scope2, context, forceBindingRootScopeToFunctions });
+                let prop;
                 if (node.callee.computed) {
-                  const prop = this.evaluate({ node: node.callee.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                  func = obj[prop];
+                  prop = this.evaluate({ node: node.callee.property, scope: scope2, context, forceBindingRootScopeToFunctions });
                 } else {
-                  func = obj[node.callee.property.name];
+                  prop = node.callee.property.name;
                 }
+                this.checkForDangerousKeywords(prop);
+                let func = obj[prop];
                 if (typeof func !== "function") {
                   throw new Error("Value is not a function");
                 }
-                return func.apply(obj, args);
+                returnValue = func.apply(obj, args);
               } else {
                 if (node.callee.type === "Identifier") {
                   const name = node.callee.name;
                   let func;
                   if (name in scope2) {
                     func = scope2[name];
-                  } else if (allowGlobal && typeof globalThis[name] !== "undefined") {
-                    func = globalThis[name];
                   } else {
                     throw new Error(`Undefined variable: ${name}`);
                   }
@@ -3596,17 +3617,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                     throw new Error("Value is not a function");
                   }
                   const thisContext = context !== null ? context : scope2;
-                  return func.apply(thisContext, args);
+                  returnValue = func.apply(thisContext, args);
                 } else {
-                  const callee = this.evaluate({ node: node.callee, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                  const callee = this.evaluate({ node: node.callee, scope: scope2, context, forceBindingRootScopeToFunctions });
                   if (typeof callee !== "function") {
                     throw new Error("Value is not a function");
                   }
-                  return callee.apply(context, args);
+                  returnValue = callee.apply(context, args);
                 }
               }
+              this.checkForDangerousValues(returnValue);
+              return returnValue;
             case "UnaryExpression":
-              const argument = this.evaluate({ node: node.argument, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              const argument = this.evaluate({ node: node.argument, scope: scope2, context, forceBindingRootScopeToFunctions });
               switch (node.operator) {
                 case "!":
                   return !argument;
@@ -3631,8 +3654,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 }
                 return node.prefix ? scope2[name] : oldValue;
               } else if (node.argument.type === "MemberExpression") {
-                const obj = this.evaluate({ node: node.argument.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                const prop = node.argument.computed ? this.evaluate({ node: node.argument.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }) : node.argument.property.name;
+                const obj = this.evaluate({ node: node.argument.object, scope: scope2, context, forceBindingRootScopeToFunctions });
+                const prop = node.argument.computed ? this.evaluate({ node: node.argument.property, scope: scope2, context, forceBindingRootScopeToFunctions }) : node.argument.property.name;
                 const oldValue = obj[prop];
                 if (node.operator === "++") {
                   obj[prop] = oldValue + 1;
@@ -3643,8 +3666,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               }
               throw new Error("Invalid update expression target");
             case "BinaryExpression":
-              const left = this.evaluate({ node: node.left, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-              const right = this.evaluate({ node: node.right, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              const left = this.evaluate({ node: node.left, scope: scope2, context, forceBindingRootScopeToFunctions });
+              const right = this.evaluate({ node: node.right, scope: scope2, context, forceBindingRootScopeToFunctions });
               switch (node.operator) {
                 case "+":
                   return left + right;
@@ -3680,37 +3703,62 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                   throw new Error(`Unknown binary operator: ${node.operator}`);
               }
             case "ConditionalExpression":
-              const test = this.evaluate({ node: node.test, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-              return test ? this.evaluate({ node: node.consequent, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }) : this.evaluate({ node: node.alternate, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              const test = this.evaluate({ node: node.test, scope: scope2, context, forceBindingRootScopeToFunctions });
+              return test ? this.evaluate({ node: node.consequent, scope: scope2, context, forceBindingRootScopeToFunctions }) : this.evaluate({ node: node.alternate, scope: scope2, context, forceBindingRootScopeToFunctions });
             case "AssignmentExpression":
-              const value = this.evaluate({ node: node.right, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+              const value = this.evaluate({ node: node.right, scope: scope2, context, forceBindingRootScopeToFunctions });
               if (node.left.type === "Identifier") {
                 scope2[node.left.name] = value;
                 return value;
               } else if (node.left.type === "MemberExpression") {
-                const obj = this.evaluate({ node: node.left.object, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                if (node.left.computed) {
-                  const prop = this.evaluate({ node: node.left.property, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                  obj[prop] = value;
-                } else {
-                  obj[node.left.property.name] = value;
-                }
-                return value;
+                throw new Error("Property assignments are prohibited in the CSP build");
               }
               throw new Error("Invalid assignment target");
             case "ArrayExpression":
-              return node.elements.map((el) => this.evaluate({ node: el, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }));
+              return node.elements.map((el) => this.evaluate({ node: el, scope: scope2, context, forceBindingRootScopeToFunctions }));
             case "ObjectExpression":
               const result = {};
               for (const prop of node.properties) {
-                const key = prop.computed ? this.evaluate({ node: prop.key, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions }) : prop.key.type === "Identifier" ? prop.key.name : this.evaluate({ node: prop.key, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
-                const value2 = this.evaluate({ node: prop.value, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+                const key = prop.computed ? this.evaluate({ node: prop.key, scope: scope2, context, forceBindingRootScopeToFunctions }) : prop.key.type === "Identifier" ? prop.key.name : this.evaluate({ node: prop.key, scope: scope2, context, forceBindingRootScopeToFunctions });
+                const value2 = this.evaluate({ node: prop.value, scope: scope2, context, forceBindingRootScopeToFunctions });
                 result[key] = value2;
               }
               return result;
             default:
               throw new Error(`Unknown node type: ${node.type}`);
           }
+        }
+        checkForDangerousKeywords(keyword) {
+          let blacklist = [
+            "constructor",
+            "prototype",
+            "__proto__",
+            "__defineGetter__",
+            "__defineSetter__",
+            "insertAdjacentHTML"
+          ];
+          if (blacklist.includes(keyword)) {
+            throw new Error(`Accessing "${keyword}" is prohibited in the CSP build`);
+          }
+        }
+        checkForDangerousValues(prop) {
+          if (prop === null) {
+            return;
+          }
+          if (typeof prop !== "object" && typeof prop !== "function") {
+            return;
+          }
+          if (safemap.has(prop)) {
+            return;
+          }
+          if (prop instanceof HTMLIFrameElement || prop instanceof HTMLScriptElement) {
+            throw new Error("Accessing iframes and scripts is prohibited in the CSP build");
+          }
+          if (globals.has(prop)) {
+            throw new Error("Accessing global variables is prohibited in the CSP build");
+          }
+          safemap.set(prop, true);
+          return true;
         }
       };
       function generateRuntimeFunction(expression) {
@@ -3721,12 +3769,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           const ast = parser.parse();
           const evaluator = new Evaluator();
           return function(options = {}) {
-            const { scope: scope2 = {}, context = null, allowGlobal = false, forceBindingRootScopeToFunctions = false } = options;
-            return evaluator.evaluate({ node: ast, scope: scope2, context, allowGlobal, forceBindingRootScopeToFunctions });
+            const { scope: scope2 = {}, context = null, forceBindingRootScopeToFunctions = false } = options;
+            return evaluator.evaluate({ node: ast, scope: scope2, context, forceBindingRootScopeToFunctions });
           };
         } catch (error2) {
           throw new Error(`CSP Parser Error: ${error2.message}`);
         }
+      }
+      function cspRawEvaluator(el, expression, extras = {}) {
+        var _a, _b;
+        let dataStack = generateDataStack(el);
+        let scope2 = mergeProxies([(_a = extras.scope) != null ? _a : {}, ...dataStack]);
+        let params = (_b = extras.params) != null ? _b : [];
+        let evaluate22 = generateRuntimeFunction(expression);
+        let result = evaluate22({
+          scope: scope2,
+          forceBindingRootScopeToFunctions: true
+        });
+        if (typeof result === "function" && shouldAutoEvaluateFunctions) {
+          return result.apply(scope2, params);
+        }
+        return result;
       }
       function cspEvaluator(el, expression) {
         let dataStack = generateDataStack(el);
@@ -3742,13 +3805,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return [overriddenMagics, ...closestDataStack(el)];
       }
       function generateEvaluator(el, expression, dataStack) {
+        if (el instanceof HTMLIFrameElement) {
+          throw new Error("Evaluating expressions on an iframe is prohibited in the CSP build");
+        }
+        if (el instanceof HTMLScriptElement) {
+          throw new Error("Evaluating expressions on a script is prohibited in the CSP build");
+        }
         return (receiver = () => {
         }, { scope: scope2 = {}, params = [] } = {}) => {
           let completeScope = mergeProxies([scope2, ...dataStack]);
           let evaluate22 = generateRuntimeFunction(expression);
           let returnValue = evaluate22({
             scope: completeScope,
-            allowGlobal: false,
             forceBindingRootScopeToFunctions: true
           });
           if (shouldAutoEvaluateFunctions && typeof returnValue === "function") {
@@ -3977,7 +4045,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (modifiers.includes("throttle")) {
           let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
           let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-          handler4 = throttle2(handler4, wait);
+          handler4 = throttle3(handler4, wait);
         }
         if (modifiers.includes("prevent"))
           handler4 = wrapHandler(handler4, (next, e) => {
@@ -4676,7 +4744,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       function warnMissingPluginDirective(name, directiveName, slug) {
         directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
       }
+      directive2("html", (el, { expression }) => {
+        handleError(new Error("Using the x-html directive is prohibited in the CSP build"), el);
+      });
       alpine_default.setEvaluator(cspEvaluator);
+      alpine_default.setRawEvaluator(cspRawEvaluator);
       alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
       var src_default10 = alpine_default;
       var module_default10 = src_default10;
@@ -5033,17 +5105,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function deepClone(obj) {
     return JSON.parse(JSON.stringify(obj));
   }
+  function parsePathSegments(path) {
+    if (path === "")
+      return [];
+    return path.replace(/\[(['"]?)(.+?)\1\]/g, ".$2").replace(/^\./, "").split(".");
+  }
   function dataGet(object, key) {
     if (key === "")
       return object;
-    return key.split(".").reduce((carry, i) => {
+    return parsePathSegments(key).reduce((carry, i) => {
       return carry?.[i];
     }, object);
   }
   function dataSet(object, key, value) {
-    let segments = key.split(".");
+    let segments = parsePathSegments(key);
     if (segments.length === 1) {
-      return object[key] = value;
+      return object[segments[0]] = value;
     }
     let firstSegment = segments.shift();
     let restOfSegments = segments.join(".");
@@ -5113,6 +5190,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return null;
   }
+  function getUriPrefix() {
+    return document.querySelector("[data-uri-prefix]")?.getAttribute("data-uri-prefix") ?? window.livewireScriptConfig["uriPrefix"] ?? null;
+  }
   function getUpdateUri() {
     return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
   }
@@ -5176,8 +5256,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return;
       start2();
       if (e.target.multiple) {
-        let append = ["ui-file-upload"].includes(e.target.tagName.toLowerCase());
-        manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel, append);
+        manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
       } else {
         manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
       }
@@ -5233,7 +5312,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         append: false
       });
     }
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = false) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = true) {
       this.setUpload(name, {
         files: Array.from(files),
         multiple: true,
@@ -5398,7 +5477,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }, errorCallback = () => {
   }, progressCallback = () => {
   }, cancelledCallback = () => {
-  }, append = false) {
+  }, append = true) {
     let uploadManager = getUploadManager(component);
     uploadManager.uploadMultiple(
       name,
@@ -5550,7 +5629,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         compileRequest([message, ...bundledMessages]);
       }
     });
-    interceptAction(({ action, reject, defer }) => {
+    interceptAction(({ action }) => {
       let isRenderless = action?.origin?.directive?.modifiers.includes("renderless");
       if (isRenderless) {
         action.metadata.renderless = true;
@@ -5560,7 +5639,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (message.isAsync() || action.isAsync())
           return;
         if (action.metadata.type === "poll") {
-          return reject();
+          return action.cancel();
         }
         if (Array.from(message.actions).every((action2) => action2.metadata.type === "poll")) {
           return message.cancel();
@@ -5570,11 +5649,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             return;
           }
         }
-        defer();
+        action.defer();
         message.addInterceptor(({ onFinish }) => {
-          onFinish(() => {
-            fireActionInstance(action);
-          });
+          onFinish(() => action.fire());
         });
       }
     });
@@ -5585,7 +5662,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     messages = /* @__PURE__ */ new Set();
     controller = new AbortController();
     interceptors = [];
-    aborted = false;
+    cancelled = false;
     uri = null;
     payload = null;
     options = null;
@@ -5607,10 +5684,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         message.getInterceptors().forEach((interceptor) => interceptor.init());
       });
     }
-    abort() {
-      if (this.aborted)
+    cancel() {
+      if (this.cancelled)
         return;
-      this.aborted = true;
+      this.cancelled = true;
       this.controller.abort();
       this.messages.forEach((message) => {
         if (message.isCancelled())
@@ -5621,40 +5698,44 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     hasAllCancelledMessages() {
       return this.getActiveMessages().size === 0;
     }
-    isAborted() {
-      return this.aborted;
+    isCancelled() {
+      return this.cancelled;
     }
-    onSend({ responsePromise }) {
+    invokeOnSend({ responsePromise }) {
       this.interceptors.forEach((interceptor) => interceptor.onSend({ responsePromise }));
-      this.messages.forEach((message) => message.onSend());
+      this.messages.forEach((message) => message.invokeOnSend());
     }
-    onAbort() {
-      this.interceptors.forEach((interceptor) => interceptor.onAbort());
+    invokeOnCancel() {
+      this.interceptors.forEach((interceptor) => interceptor.onCancel());
     }
-    onFailure({ error: error2 }) {
+    invokeOnFailure({ error: error2 }) {
       this.interceptors.forEach((interceptor) => interceptor.onFailure({ error: error2 }));
+      this.messages.forEach((message) => message.invokeOnFailure(error2));
     }
-    onResponse({ response }) {
+    invokeOnResponse({ response }) {
       this.interceptors.forEach((interceptor) => interceptor.onResponse({ response }));
     }
-    onStream({ response }) {
+    invokeOnStream({ response }) {
       this.interceptors.forEach((interceptor) => interceptor.onStream({ response }));
     }
-    onParsed({ response, responseBody }) {
-      this.interceptors.forEach((interceptor) => interceptor.onParsed({ response, responseBody }));
+    invokeOnParsed({ response, body }) {
+      this.interceptors.forEach((interceptor) => interceptor.onParsed({ response, body }));
     }
-    onRedirect({ url, preventDefault }) {
+    invokeOnRedirect({ url, preventDefault }) {
       this.interceptors.forEach((interceptor) => interceptor.onRedirect({ url, preventDefault }));
     }
-    onDump({ content, preventDefault }) {
-      this.interceptors.forEach((interceptor) => interceptor.onDump({ content, preventDefault }));
+    invokeOnDump({ html, preventDefault }) {
+      this.interceptors.forEach((interceptor) => interceptor.onDump({ html, preventDefault }));
     }
-    onError({ response, responseBody, preventDefault }) {
-      this.interceptors.forEach((interceptor) => interceptor.onError({ response, responseBody, preventDefault }));
-      this.messages.forEach((message) => message.onError({ response, responseBody, preventDefault }));
+    invokeOnError({ response, body, preventDefault }) {
+      this.interceptors.forEach((interceptor) => interceptor.onError({ response, body, preventDefault }));
+      this.messages.forEach((message) => message.invokeOnError({ response, body, preventDefault }));
     }
-    onSuccess({ response, responseBody, responseJson }) {
-      this.interceptors.forEach((interceptor) => interceptor.onSuccess({ response, responseBody, responseJson }));
+    invokeOnSuccess({ response, body, json }) {
+      this.interceptors.forEach((interceptor) => interceptor.onSuccess({ response, body, json }));
+    }
+    invokeOnFinish() {
+      this.interceptors.forEach((interceptor) => interceptor.onFinish());
     }
   };
   var PageRequest = class {
@@ -5690,46 +5771,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     onEffect = () => {
     };
-    onMorph = () => {
+    onMorph = async () => {
     };
     onRender = () => {
     };
-    hasBeenSynchronouslyCancelled = false;
     constructor(message, callback) {
       this.message = message;
       this.callback = callback;
-      let isInsideCallbackSynchronously = true;
       this.callback({
         message: this.message,
-        actions: this.message.actions,
-        component: this.message.component,
+        cancel: () => {
+          let attachedToMessage = this.message.getInterceptors().includes(this);
+          if (!attachedToMessage) {
+            this.onCancel();
+          }
+          this.message.cancel();
+        },
         onSend: (callback2) => this.onSend = callback2,
         onCancel: (callback2) => this.onCancel = callback2,
         onFailure: (callback2) => this.onFailure = callback2,
         onError: (callback2) => this.onError = callback2,
         onStream: (callback2) => this.onStream = callback2,
         onSuccess: (callback2) => this.onSuccess = callback2,
-        onFinish: (callback2) => this.onFinish = callback2,
-        cancel: () => {
-          if (isInsideCallbackSynchronously) {
-            this.hasBeenSynchronouslyCancelled = true;
-          } else {
-            this.message.cancel();
-          }
-        }
+        onFinish: (callback2) => this.onFinish = callback2
       });
-      isInsideCallbackSynchronously = false;
     }
     init() {
-      if (this.hasBeenSynchronouslyCancelled) {
-        this.message.cancel();
-      }
     }
   };
   var RequestInterceptor = class {
     onSend = () => {
     };
-    onAbort = () => {
+    onCancel = () => {
     };
     onFailure = () => {
     };
@@ -5747,15 +5820,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     onSuccess = () => {
     };
-    hasBeenSynchronouslyAborted = false;
+    onFinish = () => {
+    };
     constructor(request, callback) {
       this.request = request;
       this.callback = callback;
-      let isInsideCallbackSynchronously = true;
       this.callback({
         request: this.request,
         onSend: (callback2) => this.onSend = callback2,
-        onAbort: (callback2) => this.onAbort = callback2,
+        onCancel: (callback2) => this.onCancel = callback2,
         onFailure: (callback2) => this.onFailure = callback2,
         onResponse: (callback2) => this.onResponse = callback2,
         onParsed: (callback2) => this.onParsed = callback2,
@@ -5764,20 +5837,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         onRedirect: (callback2) => this.onRedirect = callback2,
         onDump: (callback2) => this.onDump = callback2,
         onSuccess: (callback2) => this.onSuccess = callback2,
-        abort: () => {
-          if (isInsideCallbackSynchronously) {
-            this.hasBeenSynchronouslyAborted = true;
-          } else {
-            this.request.abort();
-          }
-        }
+        onFinish: (callback2) => this.onFinish = callback2
       });
-      isInsideCallbackSynchronously = false;
     }
     init() {
-      if (this.hasBeenSynchronouslyAborted) {
-        this.request.abort();
-      }
     }
   };
   var InterceptorRegistry = class {
@@ -5937,7 +6000,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.activeMessages.delete(message);
     }
     findScopedPendingMessage(action) {
-      return Array.from(this.pendingMessages).find((message) => message.component === action.component);
+      if (action.isAsync())
+        return null;
+      let actionScope = scopeSymbolFromAction(action);
+      return Array.from(this.pendingMessages).find((message) => {
+        if (message.component !== action.component)
+          return false;
+        return Array.from(message.actions).some(
+          (existingAction) => scopeSymbolFromAction(existingAction) === actionScope
+        );
+      });
     }
     activeMessageMatchingScope(action) {
       return Array.from(this.activeMessages).find((message) => this.matchesScope(message, action));
@@ -5988,7 +6060,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         actionsByFingerprint.get(action.fingerprint).addSquashedAction(action);
         return;
       }
+      action.message = this;
       this.actions.add(action);
+    }
+    removeAction(action) {
+      this.actions.delete(action);
+      action.message = null;
+      if (this.actions.size === 0) {
+        this.cancel();
+      }
     }
     getActions() {
       return Array.from(this.actions);
@@ -6021,9 +6101,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (this.cancelled)
         return;
       this.cancelled = true;
-      this.onCancel();
-      if (this.request.hasAllCancelledMessages()) {
-        this.request.abort();
+      this.invokeOnCancel();
+      if (this.request?.hasAllCancelledMessages()) {
+        this.request.cancel();
       }
     }
     isCancelled() {
@@ -6032,34 +6112,48 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     isAsync() {
       return Array.from(this.actions).every((action) => action.isAsync());
     }
-    onSend() {
+    invokeOnSend() {
       this.interceptors.forEach((interceptor) => interceptor.onSend({
         payload: this.payload
       }));
+      Array.from(this.actions).forEach((action, index2) => {
+        let call = this.calls[index2];
+        action.invokeOnSend({ call });
+      });
     }
-    onCancel() {
+    invokeOnCancel() {
       this.interceptors.forEach((interceptor) => interceptor.onCancel());
-      this.rejectActionPromises("Request cancelled");
-      this.onFinish();
+      this.rejectActionPromises({ status: null, body: null, json: null, errors: null });
+      Array.from(this.actions).forEach((action) => action.invokeOnFinish());
+      this.invokeOnFinish();
     }
-    onFailure(error2) {
+    invokeOnFailure(error2) {
       this.interceptors.forEach((interceptor) => interceptor.onFailure({ error: error2 }));
-      this.rejectActionPromises("Request failed");
-      this.onFinish();
+      Array.from(this.actions).forEach((action) => action.invokeOnFailure({ error: error2 }));
+      this.rejectActionPromises({ status: null, body: null, json: null, errors: null });
+      Array.from(this.actions).forEach((action) => action.invokeOnFinish());
+      this.invokeOnFinish();
     }
-    onError({ response, responseBody, preventDefault }) {
+    invokeOnError({ response, body, preventDefault }) {
       this.interceptors.forEach((interceptor) => interceptor.onError({
         response,
-        responseBody,
+        body,
         preventDefault
       }));
-      this.rejectActionPromises("Request failed");
-      this.onFinish();
+      Array.from(this.actions).forEach((action) => action.invokeOnError({ response, body, preventDefault }));
+      let json = null;
+      try {
+        json = JSON.parse(body);
+      } catch (e) {
+      }
+      this.rejectActionPromises({ status: response.status, body, json, errors: null });
+      Array.from(this.actions).forEach((action) => action.invokeOnFinish());
+      this.invokeOnFinish();
     }
-    onStream({ streamedJson }) {
-      this.interceptors.forEach((interceptor) => interceptor.onStream({ streamedJson }));
+    invokeOnStream({ json }) {
+      this.interceptors.forEach((interceptor) => interceptor.onStream({ json }));
     }
-    onSuccess() {
+    invokeOnSuccess() {
       this.interceptors.forEach((interceptor) => {
         interceptor.onSuccess({
           payload: this.responsePayload,
@@ -6070,80 +6164,168 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
       let returns = this.responsePayload.effects["returns"] || [];
-      this.resolveActionPromises(returns);
-      this.onFinish();
+      let returnsMeta = this.responsePayload.effects["returnsMeta"] || {};
+      this.resolveActionPromises(returns, returnsMeta);
+      this.invokeOnFinish();
     }
-    onSync() {
+    invokeOnSync() {
       this.interceptors.forEach((interceptor) => interceptor.onSync());
     }
-    onEffect() {
+    invokeOnEffect() {
       this.interceptors.forEach((interceptor) => interceptor.onEffect());
     }
-    onMorph() {
-      this.interceptors.forEach((interceptor) => interceptor.onMorph());
-    }
-    onRender() {
-      this.interceptors.forEach((interceptor) => interceptor.onRender());
-    }
-    onFinish() {
-      this.interceptors.forEach((interceptor) => interceptor.onFinish());
-    }
-    rejectActionPromises(error2) {
-      Array.from(this.actions).forEach((action) => {
-        action.rejectPromise(error2);
+    async invokeOnMorph() {
+      this.interceptors.forEach(async (interceptor) => {
+        await interceptor.onMorph();
       });
     }
-    resolveActionPromises(returns) {
+    invokeOnRender() {
+      this.interceptors.forEach((interceptor) => interceptor.onRender());
+    }
+    invokeOnFinish() {
+      this.interceptors.forEach((interceptor) => interceptor.onFinish());
+    }
+    rejectActionPromises({ status, body, json, errors }) {
+      Array.from(this.actions).forEach((action) => {
+        action.rejectPromise({ status, body, json, errors });
+      });
+    }
+    resolveActionPromises(returns, returnsMeta) {
       let resolvedActions = /* @__PURE__ */ new Set();
       returns.forEach((value, index2) => {
         let action = Array.from(this.actions)[index2];
         if (!action)
           return;
+        let meta = returnsMeta[index2];
+        if (meta?.errors) {
+          action.rejectPromise({ status: 422, body: null, json: null, errors: meta.errors });
+          action.invokeOnFinish();
+          resolvedActions.add(action);
+          return;
+        }
+        action.invokeOnSuccess(value);
         action.resolvePromise(value);
+        action.invokeOnFinish();
         resolvedActions.add(action);
       });
       Array.from(this.actions).forEach((action) => {
         if (resolvedActions.has(action))
           return;
+        action.invokeOnSuccess(void 0);
         action.resolvePromise();
+        action.invokeOnFinish();
       });
     }
   };
 
   // js/request/action.js
   var Action = class {
-    handleReturn = () => {
-    };
     squashedActions = /* @__PURE__ */ new Set();
-    constructor(component, method, params = [], metadata = {}, origin = null) {
+    onSendCallbacks = [];
+    onCancelCallbacks = [];
+    onSuccessCallbacks = [];
+    onErrorCallbacks = [];
+    onFailureCallbacks = [];
+    onFinishCallbacks = [];
+    message = null;
+    cancelled = false;
+    deferred = false;
+    _fire = null;
+    constructor(component, name, params = [], metadata = {}, origin = null) {
       this.component = component;
-      this.method = method;
+      this.name = name;
       this.params = params;
       this.metadata = metadata;
       this.origin = origin;
       this.promise = new Promise((resolve, reject) => {
         this.promiseResolution = { resolve, reject };
       });
+      this.promise._livewireAction = this;
+    }
+    cancel() {
+      if (this.cancelled)
+        return;
+      this.cancelled = true;
+      this.invokeOnCancel();
+      this.invokeOnFinish();
+      this.rejectPromise({ status: null, body: null, json: null, errors: null });
+      this.squashedActions.forEach((action) => action.cancel());
+      if (this.message) {
+        this.message.removeAction(this);
+      }
+    }
+    isCancelled() {
+      return this.cancelled;
+    }
+    defer() {
+      this.deferred = true;
+    }
+    isDeferred() {
+      return this.deferred;
+    }
+    fire() {
+      if (this._fire) {
+        this._fire(this);
+      }
     }
     get fingerprint() {
       let componentId = this.component.id;
-      let method = this.method;
+      let name = this.name;
       let params = JSON.stringify(this.params);
       let metadata = JSON.stringify(this.metadata);
-      return window.btoa(String.fromCharCode(...new TextEncoder().encode(componentId + method + params + metadata)));
+      return window.btoa(String.fromCharCode(...new TextEncoder().encode(componentId + name + params + metadata)));
     }
     isAsync() {
       let asyncMethods = this.component.snapshot.memo?.async || [];
-      let methodIsMarkedAsync = asyncMethods.includes(this.method);
+      let methodIsMarkedAsync = asyncMethods.includes(this.name);
       let actionIsAsync = this.origin?.directive?.modifiers.includes("async") || !!this.metadata.async;
       return methodIsMarkedAsync || actionIsAsync;
+    }
+    isJson() {
+      let jsonMethods = this.component.snapshot.memo?.json || [];
+      return jsonMethods.includes(this.name);
+    }
+    addInterceptor(callback) {
+      callback({
+        action: this,
+        onSend: (cb) => this.onSendCallbacks.push(cb),
+        onCancel: (cb) => this.onCancelCallbacks.push(cb),
+        onSuccess: (cb) => this.onSuccessCallbacks.push(cb),
+        onError: (cb) => this.onErrorCallbacks.push(cb),
+        onFailure: (cb) => this.onFailureCallbacks.push(cb),
+        onFinish: (cb) => this.onFinishCallbacks.push(cb)
+      });
+    }
+    invokeOnSend({ call }) {
+      this.onSendCallbacks.forEach((cb) => cb({ call }));
+      this.squashedActions.forEach((action) => action.invokeOnSend({ call }));
+    }
+    invokeOnCancel() {
+      this.onCancelCallbacks.forEach((cb) => cb());
+      this.squashedActions.forEach((action) => action.invokeOnCancel());
+    }
+    invokeOnSuccess(result) {
+      this.onSuccessCallbacks.forEach((cb) => cb(result));
+      this.squashedActions.forEach((action) => action.invokeOnSuccess(result));
+    }
+    invokeOnError({ response, body, preventDefault }) {
+      this.onErrorCallbacks.forEach((cb) => cb({ response, body, preventDefault }));
+      this.squashedActions.forEach((action) => action.invokeOnError({ response, body, preventDefault }));
+    }
+    invokeOnFailure({ error: error2 }) {
+      this.onFailureCallbacks.forEach((cb) => cb({ error: error2 }));
+      this.squashedActions.forEach((action) => action.invokeOnFailure({ error: error2 }));
+    }
+    invokeOnFinish() {
+      this.onFinishCallbacks.forEach((cb) => cb());
+      this.squashedActions.forEach((action) => action.invokeOnFinish());
     }
     mergeMetadata(metadata) {
       this.metadata = { ...this.metadata, ...metadata };
     }
     rejectPromise(error2) {
       this.squashedActions.forEach((action) => action.rejectPromise(error2));
-      this.promiseResolution.resolve();
+      this.promiseResolution.reject(error2);
     }
     addSquashedAction(action) {
       this.squashedActions.add(action);
@@ -6154,9 +6336,101 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
+  // js/request/legacy.js
+  function registerLegacyEventSupport(interceptRequest2, interceptMessage2) {
+    interceptRequest2(({
+      request,
+      onFailure,
+      onResponse,
+      onError,
+      onSuccess
+    }) => {
+      let respondCallbacks = [];
+      let succeedCallbacks = [];
+      let failCallbacks = [];
+      trigger("request", {
+        url: request.uri,
+        options: request.options,
+        payload: request.options.body,
+        respond: (i) => respondCallbacks.push(i),
+        succeed: (i) => succeedCallbacks.push(i),
+        fail: (i) => failCallbacks.push(i)
+      });
+      onResponse(({ response }) => {
+        respondCallbacks.forEach((callback) => callback({
+          status: response.status,
+          response
+        }));
+      });
+      onSuccess(({ response, json }) => {
+        succeedCallbacks.forEach((callback) => callback({
+          status: response.status,
+          json
+        }));
+      });
+      onFailure(({ error: error2 }) => {
+        failCallbacks.forEach((callback) => callback({
+          status: 503,
+          content: null,
+          preventDefault: () => {
+          }
+        }));
+      });
+      onError(({ response, body, preventDefault }) => {
+        failCallbacks.forEach((callback) => callback({
+          status: response.status,
+          content: body,
+          preventDefault
+        }));
+      });
+    });
+    interceptMessage2(({
+      message,
+      onCancel,
+      onError,
+      onSuccess,
+      onFinish
+    }) => {
+      let respondCallbacks = [];
+      let succeedCallbacks = [];
+      let failCallbacks = [];
+      trigger("commit", {
+        component: message.component,
+        commit: message.payload,
+        respond: (callback) => {
+          respondCallbacks.push(callback);
+        },
+        succeed: (callback) => {
+          succeedCallbacks.push(callback);
+        },
+        fail: (callback) => {
+          failCallbacks.push(callback);
+        }
+      });
+      onFinish(() => {
+        respondCallbacks.forEach((callback) => callback());
+      });
+      onSuccess(({ payload, onSync, onMorph, onRender }) => {
+        onRender(() => {
+          succeedCallbacks.forEach((callback) => callback({
+            snapshot: payload.snapshot,
+            effects: payload.effects
+          }));
+        });
+      });
+      onError(() => {
+        failCallbacks.forEach((callback) => callback());
+      });
+      onCancel(() => {
+        failCallbacks.forEach((callback) => callback());
+      });
+    });
+  }
+
   // js/request/index.js
   var outstandingActionOrigin = null;
   var outstandingActionMetadata = {};
+  var outstandingActionInterceptors = [];
   var interceptors = new InterceptorRegistry();
   var messageBus = new MessageBus();
   var actionInterceptors = [];
@@ -6167,8 +6441,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function setNextActionMetadata(metadata) {
     outstandingActionMetadata = metadata;
   }
-  function intercept(component, callback) {
-    return interceptors.addInterceptor(component, callback);
+  function setNextActionInterceptor(callback) {
+    outstandingActionInterceptors.push(callback);
   }
   function interceptAction(callback) {
     actionInterceptors.push(callback);
@@ -6176,17 +6450,57 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       actionInterceptors.splice(actionInterceptors.indexOf(callback), 1);
     };
   }
+  function interceptMessage(callback) {
+    return interceptors.addMessageInterceptor(callback);
+  }
+  function interceptRequest(callback) {
+    return interceptors.addRequestInterceptor(callback);
+  }
   function interceptPartition(callback) {
     partitionInterceptors.push(callback);
     return () => {
       partitionInterceptors.splice(partitionInterceptors.indexOf(callback), 1);
     };
   }
-  function interceptMessage(callback) {
-    return interceptors.addMessageInterceptor(callback);
+  function interceptComponentAction(component, actionNameOrCallback, maybeCallback) {
+    let actionName = typeof actionNameOrCallback === "string" ? actionNameOrCallback : null;
+    let callback = actionName ? maybeCallback : actionNameOrCallback;
+    return interceptAction(({ action, ...rest }) => {
+      if (action.component !== component)
+        return;
+      if (actionName && action.name !== actionName)
+        return;
+      callback({ action, ...rest });
+    });
   }
-  function interceptRequest(callback) {
-    return interceptors.addRequestInterceptor(callback);
+  function interceptComponentMessage(component, actionNameOrCallback, maybeCallback) {
+    let actionName = typeof actionNameOrCallback === "string" ? actionNameOrCallback : null;
+    let callback = actionName ? maybeCallback : actionNameOrCallback;
+    return interceptors.addInterceptor(component, ({ message, ...rest }) => {
+      if (actionName) {
+        let hasAction = Array.from(message.actions).some((a) => a.name === actionName);
+        if (!hasAction)
+          return;
+      }
+      callback({ message, ...rest });
+    });
+  }
+  function interceptComponentRequest(component, actionNameOrCallback, maybeCallback) {
+    let actionName = typeof actionNameOrCallback === "string" ? actionNameOrCallback : null;
+    let callback = actionName ? maybeCallback : actionNameOrCallback;
+    return interceptRequest(({ request, ...rest }) => {
+      let matchingMessages = Array.from(request.messages).filter((m) => {
+        if (m.component !== component)
+          return false;
+        if (actionName) {
+          return Array.from(m.actions).some((a) => a.name === actionName);
+        }
+        return true;
+      });
+      if (matchingMessages.length === 0)
+        return;
+      callback({ request, ...rest });
+    });
   }
   interceptMessage(({ message, onFinish }) => {
     messageBus.addActiveMessage(message);
@@ -6196,31 +6510,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     coordinateNetworkInteractions(messageBus);
   });
   function fireAction(component, method, params = [], metadata = {}) {
+    if (component.__isWireProxy)
+      component = component.__instance;
     let action = constructAction(component, method, params, metadata);
-    let prevented = false;
     actionInterceptors.forEach((callback) => {
       callback({
         action,
-        reject: () => {
-          action.rejectPromise();
-          prevented = true;
-        },
-        defer: () => prevented = true
+        onSend: (cb) => action.onSendCallbacks.push(cb),
+        onCancel: (cb) => action.onCancelCallbacks.push(cb),
+        onSuccess: (cb) => action.onSuccessCallbacks.push(cb),
+        onError: (cb) => action.onErrorCallbacks.push(cb),
+        onFailure: (cb) => action.onFailureCallbacks.push(cb),
+        onFinish: (cb) => action.onFinishCallbacks.push(cb)
       });
     });
-    if (prevented)
+    if (action.isCancelled() || action.isDeferred())
       return action.promise;
     return fireActionInstance(action);
   }
   function constructAction(component, method, params, metadata) {
     let origin = outstandingActionOrigin;
+    let pendingInterceptors = outstandingActionInterceptors;
     outstandingActionOrigin = null;
+    outstandingActionInterceptors = [];
     metadata = {
       ...metadata,
       ...outstandingActionMetadata
     };
     outstandingActionMetadata = {};
-    return new Action(component, method, params, metadata, origin);
+    let action = new Action(component, method, params, metadata, origin);
+    action._fire = fireActionInstance;
+    pendingInterceptors.forEach((callback) => action.addInterceptor(callback));
+    return action;
   }
   function fireActionInstance(action) {
     let message = createOrAddToOutstandingMessage(action);
@@ -6264,6 +6585,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let hasFoundRequest = false;
       requests.forEach((request) => {
         if (!hasFoundRequest) {
+          let hasMessageForSameComponent = Array.from(request.messages).some((m) => m.component === message.component);
+          if (hasMessageForSameComponent)
+            return;
           request.addMessage(message);
           hasFoundRequest = true;
         }
@@ -6279,7 +6603,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn();
         message.updates = message.component.getUpdates();
         message.calls = Array.from(message.actions).map((i) => ({
-          method: i.method,
+          method: i.name,
           params: i.params,
           metadata: i.metadata
         }));
@@ -6322,43 +6646,46 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     requests.forEach((request) => {
       request.initInterceptors(interceptors);
       if (request.hasAllCancelledMessages()) {
-        request.abort();
+        request.cancel();
       }
       sendRequest(request, {
         send: ({ responsePromise }) => {
-          request.onSend({ responsePromise });
+          request.invokeOnSend({ responsePromise });
         },
         failure: ({ error: error2 }) => {
-          request.onFailure({ error: error2 });
+          request.invokeOnFailure({ error: error2 });
+        },
+        finish: () => {
+          request.invokeOnFinish();
         },
         response: ({ response }) => {
-          request.onResponse({ response });
+          request.invokeOnResponse({ response });
         },
         stream: async ({ response }) => {
-          request.onStream({ response });
+          request.invokeOnStream({ response });
           let finalResponse = "";
           try {
-            finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamedJson) => {
-              let componentId = streamedJson.id;
+            finalResponse = await interceptStreamAndReturnFinalResponse(response, (json) => {
+              let componentId = json.id;
               request.messages.forEach((message) => {
                 if (message.component.id === componentId) {
-                  message.onStream({ streamedJson });
+                  message.invokeOnStream({ json });
                 }
               });
-              trigger("stream", streamedJson);
+              trigger("stream", json);
             });
           } catch (e) {
-            request.abort();
+            request.cancel();
             throw e;
           }
           return finalResponse;
         },
         parsed: ({ response, responseBody }) => {
-          request.onParsed({ response, responseBody });
+          request.invokeOnParsed({ response, body: responseBody });
         },
         error: ({ response, responseBody }) => {
           let preventDefault = false;
-          request.onError({ response, responseBody, preventDefault: () => preventDefault = true });
+          request.invokeOnError({ response, body: responseBody, preventDefault: () => preventDefault = true });
           if (preventDefault)
             return;
           if (response.status === 419) {
@@ -6372,20 +6699,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         },
         redirect: (url) => {
           let preventDefault = false;
-          request.onRedirect({ url, preventDefault: () => preventDefault = true });
+          request.invokeOnRedirect({ url, preventDefault: () => preventDefault = true });
           if (preventDefault)
             return;
           window.location.href = url;
         },
-        dump: (content) => {
+        dump: (html) => {
           let preventDefault = false;
-          request.onDump({ content, preventDefault: () => preventDefault = true });
+          request.invokeOnDump({ html, preventDefault: () => preventDefault = true });
           if (preventDefault)
             return;
-          showHtmlModal(content);
+          showHtmlModal(html);
         },
         success: async ({ response, responseBody, responseJson }) => {
-          request.onSuccess({ response, responseBody, responseJson });
+          request.invokeOnSuccess({ response, body: responseBody, json: responseJson });
           await triggerAsync("payload.intercept", responseJson);
           let messageResponsePayloads = responseJson.components;
           request.messages.forEach((message) => {
@@ -6396,25 +6723,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               let snapshot = JSON.parse(snapshotEncoded);
               if (snapshot.memo.id === message.component.id) {
                 message.responsePayload = { snapshot, effects };
-                message.onSuccess();
+                message.invokeOnSuccess();
                 if (message.isCancelled())
                   return;
                 message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates);
-                message.onSync();
+                message.invokeOnSync();
                 if (message.isCancelled())
                   return;
                 message.component.processEffects(effects, request);
-                message.onEffect();
+                message.invokeOnEffect();
                 if (message.isCancelled())
                   return;
                 queueMicrotask(() => {
                   if (message.isCancelled())
                     return;
-                  message.onMorph();
-                  setTimeout(() => {
-                    if (message.isCancelled())
-                      return;
-                    message.onRender();
+                  message.invokeOnMorph().finally(() => {
+                    setTimeout(() => {
+                      if (message.isCancelled())
+                        return;
+                      message.invokeOnRender();
+                    });
                   });
                 });
               }
@@ -6427,17 +6755,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   async function sendRequest(request, handlers) {
     let response;
     try {
-      if (request.isAborted())
+      if (request.isCancelled())
         return;
       let responsePromise = fetch(request.uri, request.options);
-      if (request.isAborted())
+      if (request.isCancelled())
         return;
       handlers.send({ responsePromise });
       response = await responsePromise;
     } catch (e) {
-      if (request.isAborted())
+      if (request.isCancelled())
         return;
       handlers.failure({ error: e });
+      handlers.finish();
       return;
     }
     handlers.response({ response });
@@ -6447,11 +6776,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } else {
       responseBody = await response.text();
     }
-    if (request.isAborted())
+    if (request.isCancelled())
       return;
     handlers.parsed({ response, responseBody });
     if (!response.ok) {
       handlers.error({ response, responseBody });
+      handlers.finish();
       return;
     }
     if (response.redirected) {
@@ -6464,6 +6794,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     let responseJson = JSON.parse(responseBody);
     handlers.success({ response, responseBody, responseJson });
+    handlers.finish();
   }
   async function interceptStreamAndReturnFinalResponse(response, callback) {
     let reader = response.body.getReader();
@@ -6510,7 +6841,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       response = await fetch(uri, options);
       let destination = getDestination(uri, response);
       let html = await response.text();
-      callback(html, destination);
+      let status = response.status;
+      callback(html, destination, status);
     } catch (error2) {
       errorCallback(error2);
       throw error2;
@@ -6527,93 +6859,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function createUrlObjectFromString(urlString) {
     return urlString !== null && new URL(urlString, document.baseURI);
   }
-  interceptRequest(({
-    request,
-    onFailure,
-    onResponse,
-    onError,
-    onSuccess
-  }) => {
-    let respondCallbacks = [];
-    let succeedCallbacks = [];
-    let failCallbacks = [];
-    trigger("request", {
-      url: request.uri,
-      options: request.options,
-      payload: request.options.body,
-      respond: (i) => respondCallbacks.push(i),
-      succeed: (i) => succeedCallbacks.push(i),
-      fail: (i) => failCallbacks.push(i)
-    });
-    onResponse(({ response }) => {
-      respondCallbacks.forEach((callback) => callback({
-        status: response.status,
-        response
-      }));
-    });
-    onSuccess(({ response, responseJson }) => {
-      succeedCallbacks.forEach((callback) => callback({
-        status: response.status,
-        json: responseJson
-      }));
-    });
-    onFailure(({ error: error2 }) => {
-      failCallbacks.forEach((callback) => callback({
-        status: 503,
-        content: null,
-        preventDefault: () => {
-        }
-      }));
-    });
-    onError(({ response, responseBody, preventDefault }) => {
-      failCallbacks.forEach((callback) => callback({
-        status: response.status,
-        content: responseBody,
-        preventDefault
-      }));
-    });
-  });
-  interceptMessage(({
-    message,
-    onCancel,
-    onError,
-    onSuccess,
-    onFinish
-  }) => {
-    let respondCallbacks = [];
-    let succeedCallbacks = [];
-    let failCallbacks = [];
-    trigger("commit", {
-      component: message.component,
-      commit: message.payload,
-      respond: (callback) => {
-        respondCallbacks.push(callback);
-      },
-      succeed: (callback) => {
-        succeedCallbacks.push(callback);
-      },
-      fail: (callback) => {
-        failCallbacks.push(callback);
-      }
-    });
-    onFinish(() => {
-      respondCallbacks.forEach((callback) => callback());
-    });
-    onSuccess(({ payload, onSync, onMorph, onRender }) => {
-      onRender(() => {
-        succeedCallbacks.forEach((callback) => callback({
-          snapshot: payload.snapshot,
-          effects: payload.effects
-        }));
-      });
-    });
-    onError(() => {
-      failCallbacks.forEach((callback) => callback());
-    });
-    onCancel(() => {
-      failCallbacks.forEach((callback) => callback());
-    });
-  });
+  registerLegacyEventSupport(interceptRequest, interceptMessage);
 
   // js/features/supportErrors.js
   function getErrorsObject(component) {
@@ -6689,6 +6935,290 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return refEl;
   }
 
+  // js/directives.js
+  var customDirectiveNames = /* @__PURE__ */ new Set();
+  function matchesForLivewireDirective(attributeName) {
+    return attributeName.match(new RegExp("wire:"));
+  }
+  function extractDirective(el, name) {
+    let [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
+    return new Directive(value, modifiers, name, el);
+  }
+  function directive(name, callback) {
+    if (customDirectiveNames.has(name))
+      return;
+    customDirectiveNames.add(name);
+    on("directive.init", ({ el, component, directive: directive2, cleanup }) => {
+      if (directive2.value === name) {
+        callback({
+          el,
+          directive: directive2,
+          component,
+          $wire: component.$wire,
+          cleanup
+        });
+      }
+    });
+  }
+  function globalDirective(name, callback) {
+    if (customDirectiveNames.has(name))
+      return;
+    customDirectiveNames.add(name);
+    on("directive.global.init", ({ el, directive: directive2, cleanup }) => {
+      if (directive2.value === name) {
+        callback({ el, directive: directive2, cleanup });
+      }
+    });
+  }
+  function getDirectives(el) {
+    return new DirectiveManager(el);
+  }
+  function customDirectiveHasBeenRegistered(name) {
+    return customDirectiveNames.has(name);
+  }
+  var DirectiveManager = class {
+    constructor(el) {
+      this.el = el;
+      this.directives = this.extractTypeModifiersAndValue();
+    }
+    all() {
+      return this.directives;
+    }
+    has(value) {
+      return this.directives.map((directive2) => directive2.value).includes(value);
+    }
+    missing(value) {
+      return !this.has(value);
+    }
+    get(value) {
+      return this.directives.find((directive2) => directive2.value === value);
+    }
+    extractTypeModifiersAndValue() {
+      return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(this.el, name)));
+    }
+  };
+  var Directive = class {
+    constructor(value, modifiers, rawName, el) {
+      this.rawName = this.raw = rawName;
+      this.el = el;
+      this.eventContext;
+      this.wire;
+      this.value = value;
+      this.modifiers = modifiers;
+      this.expression = this.el.getAttribute(this.rawName);
+    }
+    get method() {
+      const methods = this.parseOutMethodsAndParams(this.expression);
+      return methods[0].method;
+    }
+    get methods() {
+      return this.parseOutMethodsAndParams(this.expression);
+    }
+    get params() {
+      const methods = this.parseOutMethodsAndParams(this.expression);
+      return methods[0].params;
+    }
+    parseOutMethodsAndParams(rawMethod) {
+      let methods = [];
+      let parsedMethods = this.splitAndParseMethods(rawMethod);
+      for (let { method, paramString } of parsedMethods) {
+        let params = [];
+        if (paramString.length > 0) {
+          let argumentsToArray = function() {
+            for (var l = arguments.length, p = new Array(l), k = 0; k < l; k++) {
+              p[k] = arguments[k];
+            }
+            return [].concat(p);
+          };
+          try {
+            params = Alpine.evaluate(
+              document,
+              "argumentsToArray(" + paramString + ")",
+              {
+                scope: { argumentsToArray }
+              }
+            );
+          } catch (error2) {
+            console.warn("Failed to parse parameters:", paramString, error2);
+            params = [];
+          }
+        }
+        methods.push({ method, params });
+      }
+      return methods;
+    }
+    splitAndParseMethods(methodExpression) {
+      let methods = [];
+      let current = "";
+      let parenCount = 0;
+      let inString = false;
+      let stringChar = null;
+      let trimmedExpression = methodExpression.trim();
+      for (let i = 0; i < trimmedExpression.length; i++) {
+        let char = trimmedExpression[i];
+        if (!inString) {
+          if (char === '"' || char === "'") {
+            inString = true;
+            stringChar = char;
+            current += char;
+          } else if (char === "(") {
+            parenCount++;
+            current += char;
+          } else if (char === ")") {
+            parenCount--;
+            current += char;
+          } else if (char === "," && parenCount === 0) {
+            methods.push(this.parseMethodCall(current.trim()));
+            current = "";
+          } else {
+            current += char;
+          }
+        } else {
+          if (char === stringChar && trimmedExpression[i - 1] !== "\\") {
+            inString = false;
+            stringChar = null;
+          }
+          current += char;
+        }
+      }
+      if (current.trim().length > 0) {
+        methods.push(this.parseMethodCall(current.trim()));
+      }
+      return methods;
+    }
+    parseMethodCall(methodString) {
+      let methodMatch = methodString.match(/^([^(]+)\(/);
+      if (!methodMatch) {
+        return {
+          method: methodString.trim(),
+          paramString: ""
+        };
+      }
+      let method = methodMatch[1].trim();
+      let paramStart = methodMatch[0].length - 1;
+      let lastParenIndex = methodString.lastIndexOf(")");
+      if (lastParenIndex === -1) {
+        throw new Error(`Missing closing parenthesis for method "${method}"`);
+      }
+      let paramString = methodString.slice(paramStart + 1, lastParenIndex).trim();
+      return {
+        method,
+        paramString
+      };
+    }
+  };
+
+  // js/directives/shared.js
+  function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = null) {
+    isTruthy = directive2.modifiers.includes("remove") ? !isTruthy : isTruthy;
+    if (directive2.modifiers.includes("class")) {
+      let classes = directive2.expression.split(" ").filter(String);
+      if (isTruthy) {
+        el.classList.add(...classes);
+      } else {
+        el.classList.remove(...classes);
+      }
+    } else if (directive2.modifiers.includes("attr")) {
+      if (isTruthy) {
+        el.setAttribute(directive2.expression, true);
+      } else {
+        el.removeAttribute(directive2.expression);
+      }
+    } else {
+      let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
+      let display = ["inline", "list-item", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive2.modifiers.includes(i))[0] || "inline-block";
+      display = directive2.modifiers.includes("remove") && !isTruthy ? cache : display;
+      el.style.display = isTruthy ? display : "none";
+    }
+  }
+
+  // js/directives/wire-dirty.js
+  var refreshDirtyStatesByComponent = new WeakBag();
+  on("commit", ({ component, respond }) => {
+    respond(() => {
+      setTimeout(() => {
+        refreshDirtyStatesByComponent.each(component, (i) => i(false));
+      });
+    });
+  });
+  directive("dirty", ({ el, directive: directive2, component }) => {
+    let targets = dirtyTargets(el);
+    let oldIsDirty = false;
+    let initialDisplay = el.style.display;
+    let refreshDirtyState = (isDirty) => {
+      toggleBooleanStateDirective(el, directive2, isDirty, initialDisplay);
+      oldIsDirty = isDirty;
+    };
+    refreshDirtyStatesByComponent.add(component, refreshDirtyState);
+    Alpine.effect(() => {
+      let isDirty = false;
+      isDirty = checkDirty(component, targets.length === 0 ? void 0 : targets);
+      if (oldIsDirty !== isDirty) {
+        refreshDirtyState(isDirty);
+      }
+      oldIsDirty = isDirty;
+    });
+  });
+  function checkDirty(component, targets) {
+    let isDirty = false;
+    if (targets === void 0) {
+      isDirty = JSON.stringify(component.canonical) !== JSON.stringify(component.reactive);
+    } else if (Array.isArray(targets)) {
+      for (let i = 0; i < targets.length; i++) {
+        if (isDirty)
+          break;
+        let target = targets[i];
+        isDirty = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target));
+      }
+    } else {
+      isDirty = JSON.stringify(dataGet(component.canonical, targets)) !== JSON.stringify(dataGet(component.reactive, targets));
+    }
+    return isDirty;
+  }
+  function dirtyTargets(el) {
+    let directives = getDirectives(el);
+    let targets = [];
+    if (directives.has("model")) {
+      targets.push(directives.get("model").expression);
+    }
+    if (directives.has("target")) {
+      targets = targets.concat(
+        directives.get("target").expression.split(",").map((s) => s.trim())
+      );
+    }
+    return targets;
+  }
+
+  // js/features/supportJsModules.js
+  var pendingComponentAssets = /* @__PURE__ */ new WeakMap();
+  on("effect", ({ component, effects }) => {
+    let scriptModuleHash = effects.scriptModule;
+    if (scriptModuleHash) {
+      let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+      let path = `${getUriPrefix()}/js/${encodedName}.js?v=${scriptModuleHash}`;
+      pendingComponentAssets.set(component, Alpine.reactive({
+        loading: true,
+        afterLoaded: []
+      }));
+      import(path).then((module) => {
+        module.run.call(component.$wire, component.$wire, component.$wire.js);
+        pendingComponentAssets.get(component).loading = false;
+        pendingComponentAssets.get(component).afterLoaded.forEach((callback) => callback());
+        pendingComponentAssets.delete(component);
+      });
+    }
+  });
+  function assetIsPendingFor(component) {
+    return pendingComponentAssets.has(component) && pendingComponentAssets.get(component).loading;
+  }
+  function runAfterAssetIsLoadedFor(component, callback) {
+    if (assetIsPendingFor(component)) {
+      pendingComponentAssets.get(component).afterLoaded.push(() => callback());
+    } else {
+      callback();
+    }
+  }
+
   // js/$wire.js
   var properties = {};
   var fallback;
@@ -6709,6 +7239,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "call": "$call",
     "hook": "$hook",
     "watch": "$watch",
+    "dirty": "$dirty",
+    "effect": "$effect",
     "commit": "$commit",
     "errors": "$errors",
     "island": "$island",
@@ -6716,6 +7248,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "entangle": "$entangle",
     "dispatch": "$dispatch",
     "intercept": "$intercept",
+    "interceptAction": "$interceptAction",
+    "interceptMessage": "$interceptMessage",
+    "interceptRequest": "$interceptRequest",
     "dispatchTo": "$dispatchTo",
     "dispatchSelf": "$dispatchSelf",
     "removeUpload": "$removeUpload",
@@ -6789,6 +7324,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       set(target, property, value) {
         component.addJsAction(property, value);
         return true;
+      },
+      get(target, property) {
+        if (assetIsPendingFor(component)) {
+          let resolver = null;
+          let promise = new Promise((resolve) => {
+            resolver = resolve;
+          });
+          return (...params) => {
+            runAfterAssetIsLoadedFor(component, () => {
+              resolver(component.getJsAction(property)(...params));
+            });
+            return promise;
+          };
+        }
+        return target[property];
       }
     });
   });
@@ -6811,21 +7361,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
   });
-  wireProperty("$intercept", (component) => (method, callback = null) => {
-    if (callback === null && typeof method === "function") {
-      callback = method;
-      return intercept(component, callback);
-    }
-    return intercept(component, (options) => {
-      let action = options.message.getActions().find((action2) => action2.method === method);
-      if (action) {
-        let el = action?.origin?.el;
-        callback({
-          ...options,
-          el
+  wireProperty("$dirty", (component) => (property) => {
+    let reactive = import_alpinejs2.default.reactive({ dirty: false });
+    interceptComponentMessage(component, ({ onFinish }) => {
+      onFinish(() => {
+        queueMicrotask(() => {
+          reactive.dirty = checkDirty(component, property);
         });
-      }
+      });
     });
+    import_alpinejs2.default.effect(() => {
+      reactive.dirty = checkDirty(component, property);
+    });
+    return reactive.dirty;
+  });
+  wireProperty("$intercept", (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentAction(component, actionNameOrCallback, maybeCallback);
+  });
+  wireProperty("$interceptAction", (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentAction(component, actionNameOrCallback, maybeCallback);
+  });
+  wireProperty("$interceptMessage", (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentMessage(component, actionNameOrCallback, maybeCallback);
+  });
+  wireProperty("$interceptRequest", (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentRequest(component, actionNameOrCallback, maybeCallback);
   });
   wireProperty("$errors", (component) => getErrorsObject(component));
   wireProperty("$call", (component) => async (method, ...params) => {
@@ -6848,6 +7408,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     let unwatch = import_alpinejs2.default.watch(getter, callback);
     component.addCleanup(unwatch);
+  });
+  wireProperty("$effect", (component) => (callback) => {
+    let effect = import_alpinejs2.default.effect(callback);
+    component.addCleanup(effect);
+    return effect;
   });
   wireProperty("$refresh", (component) => async () => {
     return fireAction(component, "$refresh");
@@ -6890,7 +7455,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     obj[method] = callback;
     overriddenMethods.set(component, obj);
   }
-  wireFallback((component) => (property) => async (...params) => {
+  wireFallback((component) => (property) => (...params) => {
     if (params.length === 1 && params[0] instanceof Event) {
       params = [];
     }
@@ -7376,180 +7941,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     target.dispatchEvent(e);
   }
 
-  // js/directives.js
-  var customDirectiveNames = /* @__PURE__ */ new Set();
-  function matchesForLivewireDirective(attributeName) {
-    return attributeName.match(new RegExp("wire:"));
-  }
-  function extractDirective(el, name) {
-    let [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
-    return new Directive(value, modifiers, name, el);
-  }
-  function directive(name, callback) {
-    if (customDirectiveNames.has(name))
-      return;
-    customDirectiveNames.add(name);
-    on("directive.init", ({ el, component, directive: directive2, cleanup }) => {
-      if (directive2.value === name) {
-        callback({
-          el,
-          directive: directive2,
-          component,
-          $wire: component.$wire,
-          cleanup
-        });
-      }
-    });
-  }
-  function globalDirective(name, callback) {
-    if (customDirectiveNames.has(name))
-      return;
-    customDirectiveNames.add(name);
-    on("directive.global.init", ({ el, directive: directive2, cleanup }) => {
-      if (directive2.value === name) {
-        callback({ el, directive: directive2, cleanup });
-      }
-    });
-  }
-  function getDirectives(el) {
-    return new DirectiveManager(el);
-  }
-  function customDirectiveHasBeenRegistered(name) {
-    return customDirectiveNames.has(name);
-  }
-  var DirectiveManager = class {
-    constructor(el) {
-      this.el = el;
-      this.directives = this.extractTypeModifiersAndValue();
-    }
-    all() {
-      return this.directives;
-    }
-    has(value) {
-      return this.directives.map((directive2) => directive2.value).includes(value);
-    }
-    missing(value) {
-      return !this.has(value);
-    }
-    get(value) {
-      return this.directives.find((directive2) => directive2.value === value);
-    }
-    extractTypeModifiersAndValue() {
-      return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(this.el, name)));
-    }
-  };
-  var Directive = class {
-    constructor(value, modifiers, rawName, el) {
-      this.rawName = this.raw = rawName;
-      this.el = el;
-      this.eventContext;
-      this.wire;
-      this.value = value;
-      this.modifiers = modifiers;
-      this.expression = this.el.getAttribute(this.rawName);
-    }
-    get method() {
-      const methods = this.parseOutMethodsAndParams(this.expression);
-      return methods[0].method;
-    }
-    get methods() {
-      return this.parseOutMethodsAndParams(this.expression);
-    }
-    get params() {
-      const methods = this.parseOutMethodsAndParams(this.expression);
-      return methods[0].params;
-    }
-    parseOutMethodsAndParams(rawMethod) {
-      let methods = [];
-      let parsedMethods = this.splitAndParseMethods(rawMethod);
-      for (let { method, paramString } of parsedMethods) {
-        let params = [];
-        if (paramString.length > 0) {
-          let argumentsToArray = function() {
-            for (var l = arguments.length, p = new Array(l), k = 0; k < l; k++) {
-              p[k] = arguments[k];
-            }
-            return [].concat(p);
-          };
-          try {
-            params = Alpine.evaluate(
-              document,
-              "argumentsToArray(" + paramString + ")",
-              {
-                scope: { argumentsToArray }
-              }
-            );
-          } catch (error2) {
-            console.warn("Failed to parse parameters:", paramString, error2);
-            params = [];
-          }
-        }
-        methods.push({ method, params });
-      }
-      return methods;
-    }
-    splitAndParseMethods(methodExpression) {
-      let methods = [];
-      let current = "";
-      let parenCount = 0;
-      let inString = false;
-      let stringChar = null;
-      let trimmedExpression = methodExpression.trim();
-      for (let i = 0; i < trimmedExpression.length; i++) {
-        let char = trimmedExpression[i];
-        if (!inString) {
-          if (char === '"' || char === "'") {
-            inString = true;
-            stringChar = char;
-            current += char;
-          } else if (char === "(") {
-            parenCount++;
-            current += char;
-          } else if (char === ")") {
-            parenCount--;
-            current += char;
-          } else if (char === "," && parenCount === 0) {
-            methods.push(this.parseMethodCall(current.trim()));
-            current = "";
-          } else {
-            current += char;
-          }
-        } else {
-          if (char === stringChar && trimmedExpression[i - 1] !== "\\") {
-            inString = false;
-            stringChar = null;
-          }
-          current += char;
-        }
-      }
-      if (current.trim().length > 0) {
-        methods.push(this.parseMethodCall(current.trim()));
-      }
-      return methods;
-    }
-    parseMethodCall(methodString) {
-      let methodMatch = methodString.match(/^([^(]+)\(/);
-      if (!methodMatch) {
-        return {
-          method: methodString.trim(),
-          paramString: ""
-        };
-      }
-      let method = methodMatch[1].trim();
-      let paramStart = methodMatch[0].length - 1;
-      let lastParenIndex = methodString.lastIndexOf(")");
-      if (lastParenIndex === -1) {
-        throw new Error(`Missing closing parenthesis for method "${method}"`);
-      }
-      let paramString = methodString.slice(paramStart + 1, lastParenIndex).trim();
-      return {
-        method,
-        paramString
-      };
-    }
-  };
-
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default(Alpine24) {
     Alpine24.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -7643,7 +8035,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default = src_default;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -8600,7 +8992,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default3(Alpine24) {
     let persist = () => {
       let alias;
@@ -8662,7 +9054,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default4(Alpine24) {
     Alpine24.directive("intersect", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
       let evaluate2 = evaluateLater(expression);
@@ -8717,7 +9109,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/sort/dist/module.esm.js
+  // node_modules/@alpinejs/sort/dist/module.esm.js
   function ownKeys2(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -11067,7 +11459,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // ../alpine/packages/resize/dist/module.esm.js
+  // node_modules/@alpinejs/resize/dist/module.esm.js
   function src_default6(Alpine24) {
     Alpine24.directive("resize", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
       let evaluator = evaluateLater(expression);
@@ -11112,7 +11504,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -12349,6 +12741,84 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default7 = src_default7;
 
+  // js/plugins/history/utils.js
+  function unwrap(object) {
+    if (object === void 0)
+      return void 0;
+    return JSON.parse(JSON.stringify(object));
+  }
+  function batch(callback) {
+    let batch2 = {
+      queued: false,
+      updates: {},
+      add(updates) {
+        Object.assign(batch2.updates, updates);
+        if (batch2.queued)
+          return;
+        batch2.queued = true;
+        queueMicrotask(batch2.flush);
+      },
+      flush() {
+        if (Object.keys(batch2.updates).length) {
+          callback(batch2.updates);
+        }
+        batch2.queued = false;
+        batch2.updates = {};
+      }
+    };
+    return batch2;
+  }
+
+  // js/plugins/history/coordinator.js
+  var HistoryCoordinator = class {
+    constructor() {
+      this.url = null;
+      this.errorHandlers = {};
+      this.batch = batch((updates) => {
+        let url = this.getUrl();
+        this.writeToHistory("replaceState", url, (state) => {
+          state.alpine = { ...state.alpine, ...unwrap(updates) };
+          return state;
+        });
+        this.url = null;
+      });
+    }
+    addErrorHandler(key, callback) {
+      this.errorHandlers[key] = callback;
+    }
+    getUrl() {
+      return this.url ?? new URL(window.location.href);
+    }
+    replaceState(url, updates) {
+      this.url = url;
+      this.batch.add(updates);
+    }
+    pushState(url, updates) {
+      this.batch.flush();
+      this.writeToHistory("pushState", url, (state) => {
+        state = { alpine: { ...state.alpine, ...unwrap(updates) } };
+        return state;
+      });
+    }
+    writeToHistory(method, url, callback) {
+      let state = window.history.state || {};
+      if (!state.alpine)
+        state.alpine = {};
+      state = callback(state);
+      try {
+        window.history[method](state, "", url.toString());
+      } catch (error2) {
+        Object.values(this.errorHandlers).forEach(
+          (handler) => typeof handler === "function" && handler(error2, url)
+        );
+        this.errorHandlers = {};
+        console.error(error2);
+      }
+    }
+  };
+  var historyCoordinator = new HistoryCoordinator();
+  var coordinator_default = historyCoordinator;
+
   // js/plugins/navigate/history.js
   var Snapshot = class {
     constructor(url, html) {
@@ -12392,8 +12862,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
   };
+  var currentPageStatus = null;
+  function storeCurrentPageStatus(status) {
+    currentPageStatus = status;
+  }
   function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
-    let url = new URL(window.location.href, document.baseURI);
+    let url = coordinator_default.getUrl();
     replaceUrl(url, document.documentElement.outerHTML);
   }
   function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key, url) {
@@ -12406,6 +12880,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     window.addEventListener("popstate", (e) => {
       let state = e.state || {};
       let alpine = state.alpine || {};
+      if (currentPageStatus && (currentPageStatus < 200 || currentPageStatus >= 300)) {
+        return window.location.href = alpine.url;
+      }
       if (Object.keys(state).length === 0)
         return;
       if (!alpine.snapshotIdx)
@@ -12430,23 +12907,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function updateUrl(method, url, html) {
     let key = url.toString() + "-" + Math.random();
     method === "pushState" ? snapshotCache.push(key, new Snapshot(url, html)) : snapshotCache.replace(key = snapshotCache.currentKey ?? key, new Snapshot(url, html));
-    let state = history.state || {};
-    if (!state.alpine)
-      state.alpine = {};
-    state.alpine.snapshotIdx = key;
-    state.alpine.url = url.toString();
-    try {
-      history[method](state, JSON.stringify(document.title), url);
-      snapshotCache.currentKey = key;
-      snapshotCache.currentUrl = url;
-    } catch (error2) {
+    coordinator_default.addErrorHandler("navigate", (error2) => {
       if (error2 instanceof DOMException && error2.name === "SecurityError") {
         console.error(
           "Livewire: You can't use wire:navigate with a link to a different root domain: " + url
         );
       }
-      console.error(error2);
-    }
+    });
+    coordinator_default[method](url, { snapshotIdx: key, url: url.toString() });
+    snapshotCache.currentKey = key;
+    snapshotCache.currentUrl = url;
   }
 
   // js/plugins/navigate/links.js
@@ -12509,7 +12979,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/plugins/navigate/fetch.js
   function fetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination);
-    performFetch(uri, (html, finalDestination) => {
+    performFetch(uri, (html, finalDestination, status) => {
+      storeCurrentPageStatus(status);
       callback(html, finalDestination);
     }, errorCallback);
   }
@@ -12525,7 +12996,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (prefetches[uri])
       return;
     prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
-    performFetch(uri, (html, routedUri) => {
+    performFetch(uri, (html, routedUri, status) => {
+      storeCurrentPageStatus(status);
       callback(html, routedUri);
     }, () => {
       delete prefetches[uri];
@@ -12586,7 +13058,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function storeScrollInformationInHtmlBeforeNavigatingAway() {
     document.body.setAttribute("data-scroll-x", document.body.scrollLeft);
     document.body.setAttribute("data-scroll-y", document.body.scrollTop);
-    document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach((el) => {
+    document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:navigate\\:scroll]"]).forEach((el) => {
       el.setAttribute("data-scroll-x", el.scrollLeft);
       el.setAttribute("data-scroll-y", el.scrollTop);
     });
@@ -12608,7 +13080,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     queueMicrotask(() => {
       queueMicrotask(() => {
         scroll(document.body);
-        document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach(scroll);
+        document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:navigate\\:scroll]"]).forEach(scroll);
       });
     });
   }
@@ -13154,7 +13626,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/plugins/history/index.js
-  function history2(Alpine24) {
+  function history(Alpine24) {
     Alpine24.magic("queryString", (el, { interceptor }) => {
       let alias;
       let alwaysShow = false;
@@ -13193,7 +13665,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function track(name, initialSeedValue, alwaysShow = false, except = null) {
     let { has, get, set, remove } = queryStringUtils();
-    let url = new URL(window.location.href);
+    let url = coordinator_default.getUrl();
     let isInitiallyPresentInUrl = has(url, name);
     let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue;
     let initialValueMemo = JSON.stringify(initialValue);
@@ -13207,7 +13679,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let update = (strategy, newValue) => {
       if (lock)
         return;
-      let url2 = new URL(window.location.href);
+      let url2 = coordinator_default.getUrl();
       if (!alwaysShow && !isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
         url2 = remove(url2, name);
       } else if (newValue === void 0) {
@@ -13249,31 +13721,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
   function replace(url, key, object) {
-    let state = window.history.state || {};
-    if (!state.alpine)
-      state.alpine = {};
-    state.alpine[key] = unwrap(object);
-    try {
-      window.history.replaceState(state, "", url.toString());
-    } catch (e) {
-      console.error(e);
-    }
+    coordinator_default.replaceState(url, { [key]: object });
   }
   function push(url, key, object) {
-    let state = window.history.state || {};
-    if (!state.alpine)
-      state.alpine = {};
-    state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };
-    try {
-      window.history.pushState(state, "", url.toString());
-    } catch (e) {
-      console.error(e);
-    }
-  }
-  function unwrap(object) {
-    if (object === void 0)
-      return void 0;
-    return JSON.parse(JSON.stringify(object));
+    coordinator_default.pushState(url, { [key]: object });
   }
   function queryStringUtils() {
     return {
@@ -13365,7 +13816,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -13746,7 +14197,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default9(Alpine24) {
     Alpine24.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
       let templateFn = () => expression;
@@ -13929,7 +14380,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     dispatch(document, "livewire:init");
     dispatch(document, "livewire:initializing");
     import_alpinejs5.default.plugin(module_default8);
-    import_alpinejs5.default.plugin(history2);
+    import_alpinejs5.default.plugin(history);
     import_alpinejs5.default.plugin(module_default4);
     import_alpinejs5.default.plugin(module_default5);
     import_alpinejs5.default.plugin(module_default6);
@@ -14041,37 +14492,49 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/evaluator.js
   var import_alpinejs6 = __toESM(require_module_cjs());
-  function evaluateExpression(component, el, expression, options = {}) {
-    options = {
-      ...{
-        scope: {
-          $wire: component.$wire
-        },
-        context: component.$wire,
-        ...options.scope,
-        ...options.context
-      },
-      ...options
-    };
-    return import_alpinejs6.default.evaluate(el, expression, options);
-  }
-  function evaluateActionExpression(component, el, expression, options = {}) {
-    let negated = false;
-    if (expression.startsWith("!")) {
-      negated = true;
-      expression = expression.slice(1).trim();
+  function evaluateExpression(el, expression, options = {}) {
+    if (!expression || expression.trim() === "")
+      return;
+    let result = import_alpinejs6.default.evaluateRaw(el, expression, options);
+    if (result instanceof Promise) {
+      result.catch(() => {
+      });
     }
-    let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`;
-    return import_alpinejs6.default.evaluate(el, contextualExpression, options);
+    return result;
   }
-  function evaluateActionExpressionWithoutComponentScope(el, expression, options = {}) {
-    let negated = false;
-    if (expression.startsWith("!")) {
-      negated = true;
-      expression = expression.slice(1).trim();
+  function evaluateActionExpression(el, expression, options = {}) {
+    if (!expression || expression.trim() === "")
+      return;
+    let contextualExpression = contextualizeExpression(expression);
+    try {
+      let result = import_alpinejs6.default.evaluateRaw(el, contextualExpression, options);
+      if (result instanceof Promise && result._livewireAction) {
+        result.catch(() => {
+        });
+      }
+      return result;
+    } catch (error2) {
+      console.warn(`Livewire Expression Error: ${error2.message}
+
+${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
+      console.error(error2);
     }
-    let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`;
-    return import_alpinejs6.default.evaluate(el, contextualExpression, options);
+  }
+  function contextualizeExpression(expression) {
+    let SKIP = ["JSON", "true", "false", "null", "undefined", "this", "$wire", "$event"];
+    let strings = [];
+    let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (m) => {
+      strings.push(m);
+      return `___${strings.length - 1}___`;
+    });
+    result = result.replace(/(?<![.\w$])(\$?[a-zA-Z_]\w*)/g, (m, ident, offset2) => {
+      if (SKIP.includes(ident) || /^___\d+___$/.test(ident))
+        return ident;
+      if (result[offset2 + m.length] === ":")
+        return ident;
+      return "$wire." + ident;
+    });
+    return result.replace(/___(\d+)___/g, (m, i) => strings[i]);
   }
 
   // js/features/supportScriptsAndAssets.js
@@ -14103,7 +14566,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
           let scriptContent = extractScriptTagContent(content);
           import_alpinejs7.default.dontAutoEvaluateFunctions(() => {
-            evaluateExpression(component, component.el, scriptContent, {
+            evaluateExpression(component.el, scriptContent, {
+              context: component.$wire,
               scope: {
                 "$wire": component.$wire,
                 "$js": component.$wire.js
@@ -14191,21 +14655,65 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (js) {
       Object.entries(js).forEach(([method, body]) => {
         overrideMethod(component, method, () => {
-          evaluateExpression(component, component.el, body);
+          evaluateExpression(component.el, body);
         });
       });
     }
     if (xjs) {
       xjs.forEach(({ expression, params }) => {
         params = Object.values(params);
-        evaluateExpression(component, component.el, expression, { scope: component.jsActions, params });
+        evaluateExpression(component.el, expression, { scope: component.jsActions, params });
       });
     }
   });
 
   // js/morph.js
   var import_alpinejs9 = __toESM(require_module_cjs());
-  function morph2(component, el, html) {
+
+  // js/directives/wire-transition.js
+  globalDirective("transition", ({ el, directive: directive2, cleanup }) => {
+    let transitionName = directive2.expression || "match-element";
+    el.style.viewTransitionName = transitionName;
+  });
+  async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
+    if (options.skip)
+      return callback();
+    if (!fromEl.querySelector("[wire\\:transition]") && !toEl.querySelector("[wire\\:transition]"))
+      return callback();
+    let style = document.createElement("style");
+    style.textContent = `
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+                animation: none !important;
+            }
+        }
+
+        ::view-transition-old(root) {
+            animation: none !important;
+            opacity: 0 !important;
+        }
+
+        ::view-transition-new(root) {
+            animation: none !important;
+            opacity: 1 !important;
+        }
+    `;
+    document.head.appendChild(style);
+    let transitionConfig = {
+      update: () => callback()
+    };
+    if (options.type) {
+      transitionConfig.types = [options.type];
+    }
+    let transition = document.startViewTransition(transitionConfig);
+    transition.finished.finally(() => {
+      style.remove();
+    });
+    await transition.updateCallbackDone;
+  }
+
+  // js/morph.js
+  async function morph2(component, el, html) {
     let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
     let customElement = customElements.get(wrapperTag);
     wrapperTag = customElement ? customElement.name : wrapperTag;
@@ -14237,10 +14745,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         child.replaceWith(existingComponent.cloneNode(true));
       }
     });
-    import_alpinejs9.default.morph(el, to, getMorphConfig(component));
+    let transitionOptions = component.effects.transition || {};
+    await transitionDomMutation(el, to, () => {
+      import_alpinejs9.default.morph(el, to, getMorphConfig(component));
+    }, transitionOptions);
     trigger("morphed", { el, component });
   }
-  function morphFragment(component, startNode, endNode, toHTML) {
+  async function morphFragment(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement;
     let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
     let toContainer = document.createElement(fromContainerTag);
@@ -14259,7 +14770,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       parentProviderWrapper.__livewire = parentComponent;
     }
     trigger("island.morph", { startNode, endNode, component });
-    import_alpinejs9.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+    let transitionOptions = component.effects.transition || {};
+    await transitionDomMutation(fromContainer, toContainer, () => {
+      import_alpinejs9.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+    }, transitionOptions);
     trigger("island.morphed", { startNode, endNode, component });
   }
   function getMorphConfig(component) {
@@ -14339,11 +14853,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/supportMorphDom.js
   interceptMessage(({ message, onSuccess }) => {
     onSuccess(({ payload, onMorph }) => {
-      onMorph(() => {
+      onMorph(async () => {
         let html = payload.effects.html;
         if (!html)
           return;
-        morph2(message.component, message.component.el, html);
+        await morph2(message.component, message.component.el, html);
       });
     });
   });
@@ -14586,8 +15100,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportStreaming.js
   interceptMessage(({ message, onStream }) => {
-    onStream(({ streamedJson }) => {
-      let { id, type, name, el, ref, content, mode: mode2 } = streamedJson;
+    onStream(({ json }) => {
+      let { id, type, name, el, ref, content, mode } = json;
       if (type === "island")
         return;
       let component = findComponent(id);
@@ -14596,7 +15110,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         replaceEl = component.el.querySelector(`[wire\\:stream.replace="${name}"]`);
         if (replaceEl) {
           targetEl = replaceEl;
-          mode2 = "replace";
+          mode = "replace";
         } else {
           targetEl = component.el.querySelector(`[wire\\:stream="${name}"]`);
         }
@@ -14607,7 +15121,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       if (!targetEl)
         return;
-      if (mode2 === "replace") {
+      if (mode === "replace") {
         targetEl.innerHTML = content;
       } else {
         targetEl.insertAdjacentHTML("beforeend", content);
@@ -14650,7 +15164,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!effects["redirect"])
       return;
     let preventDefault = false;
-    request.onRedirect({ url: effects["redirect"], preventDefault: () => preventDefault = true });
+    request.invokeOnRedirect({ url: effects["redirect"], preventDefault: () => preventDefault = true });
     if (preventDefault)
       return;
     let url = effects["redirect"];
@@ -14665,16 +15179,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!origin)
       return;
     let { el, directive: directive2 } = origin;
-    let islandAttributeName = el.getAttribute("wire:island");
-    let islandName = islandAttributeName;
-    let isPrepend = directive2?.modifiers.includes("prepend");
-    let isAppend = directive2?.modifiers.includes("append");
-    if (islandName) {
-      let mode2 = isPrepend ? "prepend" : isAppend ? "append" : "morph";
+    let islandAttr = Array.from(el.attributes).find((attr) => attr.name.startsWith("wire:island"));
+    if (islandAttr) {
+      let islandName = islandAttr.value;
+      let attrParts = islandAttr.name.split(".");
+      let isPrepend = attrParts.includes("prepend");
+      let isAppend = attrParts.includes("append");
+      let mode = isPrepend ? "prepend" : isAppend ? "append" : "morph";
       action.mergeMetadata({
         island: {
           name: islandName,
-          mode: mode2
+          mode
         }
       });
       return;
@@ -14690,17 +15205,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   interceptMessage(({ message, onSuccess, onStream }) => {
-    onStream(({ streamedJson }) => {
-      let { type, islandFragment } = streamedJson;
+    onStream(({ json }) => {
+      let { type, islandFragment } = json;
       if (type !== "island")
         return;
       renderIsland(message.component, islandFragment);
     });
     onSuccess(({ payload, onMorph }) => {
-      onMorph(() => {
+      onMorph(async () => {
         let fragments = payload.effects.islandFragments || [];
-        fragments.forEach((fragmentHtml) => {
-          renderIsland(message.component, fragmentHtml);
+        fragments.forEach(async (fragmentHtml) => {
+          await renderIsland(message.component, fragmentHtml);
         });
       });
     });
@@ -14712,7 +15227,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
   }
-  function renderIsland(component, islandHtml) {
+  async function renderIsland(component, islandHtml) {
     let metadata = extractFragmentMetadataFromHtml(islandHtml);
     let fragment = findFragment(component.el, {
       isMatch: ({ type, token }) => {
@@ -14725,9 +15240,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let strippedContent = extractInnerHtmlFromFragmentHtml(islandHtml);
     let parentElement = fragment.startMarkerNode.parentElement;
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-    mode = incomingMetadata.mode || "morph";
+    let mode = incomingMetadata.mode || "morph";
     if (mode === "morph") {
-      morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
+      await morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
     } else if (mode === "append") {
       fragment.append(parentElementTag, strippedContent);
     } else if (mode === "prepend") {
@@ -14738,15 +15253,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/supportSlots.js
   interceptMessage(({ message, onSuccess, onStream }) => {
     onSuccess(({ payload, onMorph }) => {
-      onMorph(() => {
+      onMorph(async () => {
         let fragments = payload.effects.slotFragments || [];
-        fragments.forEach((fragmentHtml) => {
-          renderSlot(message.component, fragmentHtml);
+        fragments.forEach(async (fragmentHtml) => {
+          await renderSlot(message.component, fragmentHtml);
         });
       });
     });
   });
-  function renderSlot(component, fragmentHtml) {
+  async function renderSlot(component, fragmentHtml) {
     let metadata = extractFragmentMetadataFromHtml(fragmentHtml);
     let targetComponent = findComponent(metadata.id);
     let fragment = findFragment(targetComponent.el, {
@@ -14757,14 +15272,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!fragment)
       return;
     let strippedContent = extractInnerHtmlFromFragmentHtml(fragmentHtml);
-    morphFragment(targetComponent, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
+    await morphFragment(targetComponent, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
   }
 
   // js/features/supportDataLoading.js
-  interceptMessage(({ actions, onSend, onFinish }) => {
+  interceptMessage(({ message, onSend, onFinish }) => {
     let undos = [];
     onSend(() => {
-      actions.forEach((action) => {
+      message.actions.forEach((action) => {
         let origin = action.origin;
         if (!origin)
           return;
@@ -14791,8 +15306,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let expression = directive2.expression;
     let options = {
       exact: directive2.modifiers.includes("exact"),
-      strict: directive2.modifiers.includes("strict")
+      strict: directive2.modifiers.includes("strict"),
+      ignore: directive2.modifiers.includes("ignore")
     };
+    if (options.ignore)
+      return;
     if (expression.startsWith("#"))
       return;
     if (!el.hasAttribute("href"))
@@ -14875,13 +15393,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function updateNavigateLinks() {
     let currentUrl = new URL(window.location.href);
+    let options = {
+      exact: true
+    };
     document.querySelectorAll(wireNavigateSelector).forEach((el) => {
+      if (Array.from(el.attributes).some((attr) => attr.name.startsWith("wire:current")))
+        return;
       let href = el.getAttribute("href");
       if (!href || href.startsWith("#"))
         return;
       try {
         let hrefUrl = new URL(href, window.location.href);
-        if (pathMatches(hrefUrl, currentUrl)) {
+        if (pathMatches(hrefUrl, currentUrl, options)) {
           el.setAttribute("data-current", "");
         } else {
           el.removeAttribute("data-current");
@@ -14892,9 +15415,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportPreserveScroll.js
-  interceptMessage(({ actions, onSuccess }) => {
+  interceptMessage(({ message, onSuccess }) => {
     onSuccess(({ onSync, onMorph, onRender }) => {
-      actions.forEach((action) => {
+      message.actions.forEach((action) => {
         let origin = action.origin;
         if (!origin || !origin.directive)
           return;
@@ -14907,7 +15430,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           oldHeight = document.body.scrollHeight;
           oldScroll = window.scrollY;
         });
-        onMorph(() => {
+        onMorph(async () => {
           let heightDiff = document.body.scrollHeight - oldHeight;
           window.scrollTo(0, oldScroll + heightDiff);
           oldHeight = null;
@@ -14934,7 +15457,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               el,
               directive: directive2
             });
-            evaluateActionExpression(component, el, expression);
+            evaluateActionExpression(el, expression);
           }
         });
       }
@@ -14975,66 +15498,45 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         import_alpinejs15.default.bind(el, {
           [attribute]() {
             setNextActionOrigin({ el, directive: directive2 });
-            return evaluateActionExpressionWithoutComponentScope(el, expression, { scope: {
+            evaluateActionExpression(el, expression, { scope: {
               $item: this.$item,
               $position: this.$position
-            } });
+            }, params: [this.$item, this.$position] });
           }
         });
       }
     }
   });
 
-  // js/features/supportJsModules.js
+  // js/features/supportCssModules.js
+  var loadedStyles = /* @__PURE__ */ new Set();
   on("effect", ({ component, effects }) => {
-    let scriptModuleHash = effects.scriptModule;
-    if (scriptModuleHash) {
+    if (effects.styleModule) {
       let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
-      let path = `/livewire/js/${encodedName}.js?v=${scriptModuleHash}`;
-      import(path).then((module) => {
-        module.run.call(component.$wire, component.$wire, component.$wire.js);
-      });
-    }
-  });
-
-  // js/directives/wire-transition.js
-  var import_alpinejs16 = __toESM(require_module_cjs());
-  on("morph.added", ({ el }) => {
-    el.__addedByMorph = true;
-  });
-  directive("transition", ({ el, directive: directive2, component, cleanup }) => {
-    for (let i = 0; i < el.attributes.length; i++) {
-      if (el.attributes[i].name.startsWith("wire:show")) {
-        import_alpinejs16.default.bind(el, {
-          [directive2.rawName.replace("wire:transition", "x-transition")]: directive2.expression
-        });
-        return;
+      let path = `${getUriPrefix()}/css/${encodedName}.css?v=${effects.styleModule}`;
+      if (!loadedStyles.has(path)) {
+        loadedStyles.add(path);
+        injectStylesheet(path);
       }
     }
-    let visibility = import_alpinejs16.default.reactive({ state: el.__addedByMorph ? false : true });
-    import_alpinejs16.default.bind(el, {
-      [directive2.rawName.replace("wire:", "x-")]: "",
-      "x-show"() {
-        return visibility.state;
+    if (effects.globalStyleModule) {
+      let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
+      let path = `${getUriPrefix()}/css/${encodedName}.global.css?v=${effects.globalStyleModule}`;
+      if (!loadedStyles.has(path)) {
+        loadedStyles.add(path);
+        injectStylesheet(path);
       }
-    });
-    el.__addedByMorph && setTimeout(() => visibility.state = true);
-    let cleanups2 = [];
-    cleanups2.push(on("morph.removing", ({ el: el2, skip }) => {
-      skip();
-      el2.addEventListener("transitionend", () => {
-        el2.remove();
-      });
-      visibility.state = false;
-      cleanups2.push(on("morph", ({ component: morphComponent }) => {
-        if (morphComponent !== component)
-          return;
-        el2.remove();
-        cleanups2.forEach((i) => i());
-      }));
-    }));
-    cleanup(() => cleanups2.forEach((i) => i()));
+    }
   });
+  function injectStylesheet(href) {
+    let link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    let nonce2 = getNonce();
+    if (nonce2)
+      link.nonce = nonce2;
+    document.head.appendChild(link);
+  }
 
   // js/debounce.js
   var callbacksByComponent = new WeakBag();
@@ -15048,7 +15550,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire-wildcard.js
-  var import_alpinejs17 = __toESM(require_module_cjs());
+  var import_alpinejs16 = __toESM(require_module_cjs());
   on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
     if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty", "sort"].includes(directive2.value))
       return;
@@ -15070,7 +15572,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (directive2.modifiers.includes("append")) {
       attribute = attribute.replace(".append", "");
     }
-    let cleanupBinding = import_alpinejs17.default.bind(el, {
+    let cleanupBinding = import_alpinejs16.default.bind(el, {
       [attribute](e) {
         directive2.eventContext = e;
         directive2.wire = component.$wire;
@@ -15082,7 +15584,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             } else {
               setNextActionOrigin({ el, directive: directive2 });
             }
-            evaluateActionExpression(component, el, directive2.expression, { scope: { $event: e } });
+            let livewireOptions = e.detail?.livewire;
+            if (livewireOptions?.interceptAction) {
+              setNextActionInterceptor(livewireOptions.interceptAction);
+            }
+            let expression = directive2.expression;
+            if (livewireOptions?.defaultParams !== void 0 && !expression.includes("(")) {
+              let params = Array.isArray(livewireOptions.defaultParams) ? livewireOptions.defaultParams : [livewireOptions.defaultParams];
+              expression = `${expression}(${params.map((p) => JSON.stringify(p)).join(", ")})`;
+            }
+            evaluateActionExpression(el, expression, { scope: { $event: e } });
           });
         };
         if (el.__livewire_confirm) {
@@ -15127,30 +15638,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
   });
-
-  // js/directives/shared.js
-  function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = null) {
-    isTruthy = directive2.modifiers.includes("remove") ? !isTruthy : isTruthy;
-    if (directive2.modifiers.includes("class")) {
-      let classes = directive2.expression.split(" ").filter(String);
-      if (isTruthy) {
-        el.classList.add(...classes);
-      } else {
-        el.classList.remove(...classes);
-      }
-    } else if (directive2.modifiers.includes("attr")) {
-      if (isTruthy) {
-        el.setAttribute(directive2.expression, true);
-      } else {
-        el.removeAttribute(directive2.expression);
-      }
-    } else {
-      let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
-      let display = ["inline", "list-item", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive2.modifiers.includes(i))[0] || "inline-block";
-      display = directive2.modifiers.includes("remove") && !isTruthy ? cache : display;
-      el.style.display = isTruthy ? display : "none";
-    }
-  }
 
   // js/directives/wire-offline.js
   var offlineHandlers = /* @__PURE__ */ new Set();
@@ -15343,65 +15830,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/wire-cloak.js
-  var import_alpinejs18 = __toESM(require_module_cjs());
-  import_alpinejs18.default.interceptInit((el) => {
+  var import_alpinejs17 = __toESM(require_module_cjs());
+  import_alpinejs17.default.interceptInit((el) => {
     if (el.hasAttribute("wire:cloak")) {
-      import_alpinejs18.default.mutateDom(() => el.removeAttribute("wire:cloak"));
+      import_alpinejs17.default.mutateDom(() => el.removeAttribute("wire:cloak"));
     }
   });
-
-  // js/directives/wire-dirty.js
-  var refreshDirtyStatesByComponent = new WeakBag();
-  on("commit", ({ component, respond }) => {
-    respond(() => {
-      setTimeout(() => {
-        refreshDirtyStatesByComponent.each(component, (i) => i(false));
-      });
-    });
-  });
-  directive("dirty", ({ el, directive: directive2, component }) => {
-    let targets = dirtyTargets(el);
-    let oldIsDirty = false;
-    let initialDisplay = el.style.display;
-    let refreshDirtyState = (isDirty) => {
-      toggleBooleanStateDirective(el, directive2, isDirty, initialDisplay);
-      oldIsDirty = isDirty;
-    };
-    refreshDirtyStatesByComponent.add(component, refreshDirtyState);
-    Alpine.effect(() => {
-      let isDirty = false;
-      if (targets.length === 0) {
-        isDirty = JSON.stringify(component.canonical) !== JSON.stringify(component.reactive);
-      } else {
-        for (let i = 0; i < targets.length; i++) {
-          if (isDirty)
-            break;
-          let target = targets[i];
-          isDirty = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target));
-        }
-      }
-      if (oldIsDirty !== isDirty) {
-        refreshDirtyState(isDirty);
-      }
-      oldIsDirty = isDirty;
-    });
-  });
-  function dirtyTargets(el) {
-    let directives = getDirectives(el);
-    let targets = [];
-    if (directives.has("model")) {
-      targets.push(directives.get("model").expression);
-    }
-    if (directives.has("target")) {
-      targets = targets.concat(
-        directives.get("target").expression.split(",").map((s) => s.trim())
-      );
-    }
-    return targets;
-  }
 
   // js/directives/wire-model.js
-  var import_alpinejs19 = __toESM(require_module_cjs());
+  var import_alpinejs18 = __toESM(require_module_cjs());
   directive("model", ({ el, directive: directive2, component, cleanup }) => {
     component = findComponentByEl(el);
     let { expression, modifiers } = directive2;
@@ -15414,10 +15851,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (el.type && el.type.toLowerCase() === "file") {
       return handleFileUpload(el, expression, component, cleanup);
     }
+    if (!modifiers.includes("self") && !modifiers.includes("deep")) {
+      modifiers.push("self");
+    }
     let isLive = modifiers.includes("live");
     let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
     let onBlur = modifiers.includes("blur");
     let isDebounced = modifiers.includes("debounce");
+    let isThrottled = modifiers.includes("throttle");
     let update = () => {
       setNextActionOrigin({ el, directive: directive2 });
       if (isLive || isDebounced) {
@@ -15425,8 +15866,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
     };
-    let debouncedUpdate = isRealtimeInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
-    import_alpinejs19.default.bind(el, {
+    let debouncedUpdate = update;
+    if (isLive && isRealtimeInput(el) || isDebounced) {
+      debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(modifiers, "debounce") || 150);
+    }
+    if (isThrottled) {
+      debouncedUpdate = throttle2(debouncedUpdate, parseModifierDuration(modifiers, "throttle") || 150);
+    }
+    import_alpinejs18.default.bind(el, {
       ["@change"]() {
         isLazy && update();
       },
@@ -15451,21 +15898,32 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       "lazy",
       "defer"
     ].includes(i));
+    if (modifiers.includes("debounce")) {
+      let index2 = modifiers.indexOf("debounce");
+      let hasDuration = parseModifierDuration(modifiers, "debounce") !== void 0;
+      modifiers.splice(index2, hasDuration ? 2 : 1);
+    }
+    if (modifiers.includes("throttle")) {
+      let index2 = modifiers.indexOf("throttle");
+      let hasDuration = parseModifierDuration(modifiers, "throttle") !== void 0;
+      modifiers.splice(index2, hasDuration ? 2 : 1);
+    }
     if (modifiers.length === 0)
       return "";
     return "." + modifiers.join(".");
   }
   function isRealtimeInput(el) {
-    return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type) || el.tagName.toUpperCase() === "UI-SLIDER";
+    return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type) || el.tagName.toUpperCase() === "UI-SLIDER" || el.tagName.toUpperCase() === "UI-COMPOSER";
   }
   function componentIsMissingProperty(component, property) {
     if (property.startsWith("$parent")) {
       let parent = findComponentByEl(component.el.parentElement, false);
       if (!parent)
         return true;
-      return componentIsMissingProperty(parent, property.split("$parent.")[1]);
+      return componentIsMissingProperty(parent, property.slice(7).replace(/^\./, ""));
     }
-    let baseProperty = property.split(".")[0];
+    let match = property.match(/^\[['"]?([^\]'"]+)['"]?\]/) || property.match(/^([^.\[]+)/);
+    let baseProperty = match[1];
     return !Object.keys(component.canonical).includes(baseProperty);
   }
   function debounce(func, wait) {
@@ -15480,12 +15938,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       timeout = setTimeout(later, wait);
     };
   }
+  function throttle2(func, limit) {
+    let inThrottle;
+    return function() {
+      let context = this, args = arguments;
+      if (!inThrottle) {
+        func.apply(context, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  }
+  function parseModifierDuration(modifiers, key) {
+    let index2 = modifiers.indexOf(key);
+    if (index2 === -1)
+      return void 0;
+    let nextModifier = modifiers[modifiers.indexOf(key) + 1] || "invalid-wait";
+    let duration = nextModifier.split("ms")[0];
+    return !isNaN(duration) ? duration : void 0;
+  }
 
   // js/directives/wire-init.js
   directive("init", ({ component, el, directive: directive2 }) => {
     let fullMethod = directive2.expression ? directive2.expression : "$refresh";
     setNextActionOrigin({ el, directive: directive2 });
-    evaluateActionExpression(component, el, fullMethod);
+    evaluateActionExpression(el, fullMethod);
   });
 
   // js/directives/wire-poll.js
@@ -15505,7 +15982,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setNextActionOrigin({ el, directive: directive2, targetEl: null });
     setNextActionMetadata({ type: "poll" });
     let fullMethod = directive2.expression ? directive2.expression : "$refresh";
-    evaluateActionExpression(component, el, fullMethod);
+    evaluateActionExpression(el, fullMethod);
   }
   function poll(callback, interval = 2e3) {
     let pauseConditions = [];
@@ -15594,16 +16071,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire-show.js
-  var import_alpinejs20 = __toESM(require_module_cjs());
-  import_alpinejs20.default.interceptInit((el) => {
+  var import_alpinejs19 = __toESM(require_module_cjs());
+  import_alpinejs19.default.interceptInit((el) => {
     for (let i = 0; i < el.attributes.length; i++) {
       if (el.attributes[i].name.startsWith("wire:show")) {
         let { name, value } = el.attributes[i];
         let modifierString = name.split("wire:show")[1];
         let expression = value.trim();
-        import_alpinejs20.default.bind(el, {
+        import_alpinejs19.default.bind(el, {
           ["x-show" + modifierString]() {
-            return evaluateActionExpressionWithoutComponentScope(el, expression);
+            return evaluateActionExpression(el, expression);
           }
         });
       }
@@ -15611,16 +16088,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/wire-text.js
-  var import_alpinejs21 = __toESM(require_module_cjs());
-  import_alpinejs21.default.interceptInit((el) => {
+  var import_alpinejs20 = __toESM(require_module_cjs());
+  import_alpinejs20.default.interceptInit((el) => {
     for (let i = 0; i < el.attributes.length; i++) {
       if (el.attributes[i].name.startsWith("wire:text")) {
         let { name, value } = el.attributes[i];
         let modifierString = name.split("wire:text")[1];
         let expression = value.trim();
-        import_alpinejs21.default.bind(el, {
+        import_alpinejs20.default.bind(el, {
           ["x-text" + modifierString]() {
-            return evaluateActionExpressionWithoutComponentScope(el, expression);
+            return evaluateActionExpression(el, expression);
+          }
+        });
+      }
+    }
+  });
+
+  // js/directives/wire-bind.js
+  var import_alpinejs21 = __toESM(require_module_cjs());
+  import_alpinejs21.default.interceptInit((el) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:bind:")) {
+        let { name, value } = el.attributes[i];
+        let remainder = name.split("wire:bind")[1];
+        let expression = value.trim();
+        import_alpinejs21.default.bind(el, {
+          ["x-bind" + remainder]() {
+            return evaluateActionExpression(el, expression);
           }
         });
       }
@@ -15631,6 +16125,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var Livewire2 = {
     directive,
     dispatchTo,
+    interceptAction: (callback) => interceptAction(callback),
     interceptMessage: (callback) => interceptMessage(callback),
     interceptRequest: (callback) => interceptRequest(callback),
     fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),

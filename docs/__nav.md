@@ -15,6 +15,7 @@ Essentials:
     Testing: { uri: /docs/4.x/testing, file: /testing.md }
 Features:
     Alpine: { uri: /docs/4.x/alpine, file: /alpine.md }
+    Styles: { uri: /docs/4.x/styles, file: /styles.md }
     Navigate: { uri: /docs/4.x/navigate, file: /navigate.md }
     Islands: { uri: /docs/4.x/islands, file: /islands.md }
     Lazy Loading: { uri: /docs/4.x/lazy, file: /lazy.md }
@@ -28,6 +29,7 @@ Features:
     File Downloads: { uri: /docs/4.x/downloads, file: /downloads.md }
     Teleport: { uri: /docs/4.x/teleport, file: /teleport.md }
 HTML Directives:
+    wire:bind: { uri: /docs/4.x/wire-bind, file: /wire-bind.md }
     wire:click: { uri: /docs/4.x/wire-click, file: /wire-click.md }
     wire:submit: { uri: /docs/4.x/wire-submit, file: /wire-submit.md }
     wire:model: { uri: /docs/4.x/wire-model, file: /wire-model.md }
@@ -55,6 +57,7 @@ PHP Attributes:
     Defer: { uri: /docs/4.x/attribute-defer, file: /attribute-defer.md }
     Isolate: { uri: /docs/4.x/attribute-isolate, file: /attribute-isolate.md }
     Js: { uri: /docs/4.x/attribute-js, file: /attribute-js.md }
+    Json: { uri: /docs/4.x/attribute-json, file: /attribute-json.md }
     Layout: { uri: /docs/4.x/attribute-layout, file: /attribute-layout.md }
     Lazy: { uri: /docs/4.x/attribute-lazy, file: /attribute-lazy.md }
     Locked: { uri: /docs/4.x/attribute-locked, file: /attribute-locked.md }
@@ -64,6 +67,7 @@ PHP Attributes:
     Renderless: { uri: /docs/4.x/attribute-renderless, file: /attribute-renderless.md }
     Session: { uri: /docs/4.x/attribute-session, file: /attribute-session.md }
     Title: { uri: /docs/4.x/attribute-title, file: /attribute-title.md }
+    Transition: { uri: /docs/4.x/attribute-transition, file: /attribute-transition.md }
     Url: { uri: /docs/4.x/attribute-url, file: /attribute-url.md }
     Validate: { uri: /docs/4.x/attribute-validate, file: /attribute-validate.md }
 Blade Directives:

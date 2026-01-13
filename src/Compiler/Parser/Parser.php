@@ -52,8 +52,17 @@ class Parser
 
     protected function ensureAnonymousClassHasReturn(string $contents): string
     {
-        if (preg_match('/^(?!.*\breturn\s+).*\bnew\s+class\s+extends\s+Component/m', $contents)) {
-            return preg_replace('/^(\s*)(new\s+class\s+extends\s+Component)/m', '$1return $2', $contents, 1);
+        // Find the position of the first "new"...
+        if (preg_match('/\bnew\b/', $contents, $newMatch, PREG_OFFSET_CAPTURE)) {
+            $newPosition = $newMatch[0][1];
+
+            // Check if "return new" exists and find where "new" starts in that match...
+            $hasReturnNew = preg_match('/\breturn\s+(new\b)/', $contents, $returnNewMatch, PREG_OFFSET_CAPTURE);
+
+            // If "return new" does not exist or "new" is not at the same position as "return new", add "return"...
+            if (!$hasReturnNew || $returnNewMatch[1][1] !== $newPosition) {
+                $contents = substr_replace($contents, 'return ', $newPosition, 0);
+            }
         }
 
         return $contents;
@@ -135,6 +144,50 @@ PHP
     public function scriptModuleSrc()
     {
         return '{$scriptFileName}';
+    }
+}
+PHP
+            , $position, 1);
+        }
+
+        return $contents;
+    }
+
+    protected function injectStyleMethod(string $contents, string $styleFileName): string
+    {
+        $pattern = '/}(\s*);/';
+        preg_match_all($pattern, $contents, $matches, PREG_OFFSET_CAPTURE);
+        $lastMatch = end($matches[0]);
+
+        if ($lastMatch) {
+            $position = $lastMatch[1];
+            return substr_replace($contents, <<<PHP
+
+    public function styleModuleSrc()
+    {
+        return '{$styleFileName}';
+    }
+}
+PHP
+            , $position, 1);
+        }
+
+        return $contents;
+    }
+
+    protected function injectGlobalStyleMethod(string $contents, string $globalStyleFileName): string
+    {
+        $pattern = '/}(\s*);/';
+        preg_match_all($pattern, $contents, $matches, PREG_OFFSET_CAPTURE);
+        $lastMatch = end($matches[0]);
+
+        if ($lastMatch) {
+            $position = $lastMatch[1];
+            return substr_replace($contents, <<<PHP
+
+    public function globalStyleModuleSrc()
+    {
+        return '{$globalStyleFileName}';
     }
 }
 PHP
