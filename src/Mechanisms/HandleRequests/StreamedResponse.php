@@ -4,7 +4,6 @@ namespace Livewire\Mechanisms\HandleRequests;
 
 use Illuminate\Http\Response;
 
-
 class StreamedResponse extends Response
 {
     /**
