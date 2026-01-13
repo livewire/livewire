@@ -110,16 +110,36 @@ class HandleRequests extends Mechanism
         $response = $finish($responsePayload);
 
         /**
-         * Headers have already been sent by stream
-         * we need to send the output without additional headers
-         **/
+         * When wire:stream is used, headers are sent early by SupportStreaming::ensureStreamResponseStarted().
+         * The streaming content has already been output via echo/flush in SupportStreaming::streamContent().
+         * This final JSON response contains the component snapshot and must be output without attempting
+         * to send additional headers, which would cause "headers already sent" warnings (since Symfony 7.2.7).
+         *
+         * We detect if headers have already been sent and return a StreamedResponse that prevents
+         * any further header modification attempts while still outputting the response body.
+         *
+         * @see StreamedResponse
+         * @see \Livewire\Features\SupportStreaming\SupportStreaming::ensureStreamResponseStarted()
+         * @see https://github.com/symfony/symfony/issues/60603
+         * @see https://github.com/livewire/livewire/issues/9357
+         */
         if (headers_sent()) {
-            return new class(json_encode($response)) extends Response {
-                public function sendHeaders(?int $statusCode = null): static
-                {
-                    return $this;
-                }
-            };
+            // Encode the response to JSON, with error handling
+            $jsonResponse = json_encode($response);
+
+            if ($jsonResponse === false) {
+                throw new \RuntimeException(
+                    'Failed to encode Livewire response to JSON: ' . json_last_error_msg()
+                );
+            }
+
+            // Return a response that won't attempt to send headers
+            // Headers are still set on the object for consistency, even though they won't be sent
+            return new StreamedResponse(
+                $jsonResponse,
+                200,
+                ['Content-Type' => 'application/json']
+            );
         }
 
         return $response;
