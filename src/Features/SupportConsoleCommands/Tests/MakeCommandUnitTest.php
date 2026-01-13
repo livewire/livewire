@@ -580,4 +580,168 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $testContent = File::get($this->livewireTestsPath('Admin/DashboardTest.php'));
         $this->assertStringContainsString('admin.dashboard', $testContent);
     }
+
+    public function test_converting_sfc_with_style_tag_to_mfc_creates_css_file()
+    {
+        // Create SFC
+        Artisan::call('make:livewire', ['name' => 'styled-component']);
+        $sfcPath = $this->livewireComponentsPath('⚡styled-component.blade.php');
+
+        // Add style tag to SFC
+        $content = File::get($sfcPath);
+        $content .= "\n\n<style>\n    .my-class {\n        color: red;\n    }\n</style>";
+        File::put($sfcPath, $content);
+
+        // Convert to MFC
+        Artisan::call('livewire:convert', ['name' => 'styled-component', '--mfc' => true]);
+
+        // Check that CSS file was created
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡styled-component/styled-component.css')));
+
+        $cssContent = File::get($this->livewireComponentsPath('⚡styled-component/styled-component.css'));
+        $this->assertStringContainsString('.my-class', $cssContent);
+        $this->assertStringContainsString('color: red;', $cssContent);
+    }
+
+    public function test_converting_sfc_with_global_style_tag_to_mfc_creates_global_css_file()
+    {
+        // Create SFC
+        Artisan::call('make:livewire', ['name' => 'global-styled']);
+        $sfcPath = $this->livewireComponentsPath('⚡global-styled.blade.php');
+
+        // Add global style tag to SFC
+        $content = File::get($sfcPath);
+        $content .= "\n\n<style global>\n    body {\n        background: blue;\n    }\n</style>";
+        File::put($sfcPath, $content);
+
+        // Convert to MFC
+        Artisan::call('livewire:convert', ['name' => 'global-styled', '--mfc' => true]);
+
+        // Check that global CSS file was created
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡global-styled/global-styled.global.css')));
+
+        $cssContent = File::get($this->livewireComponentsPath('⚡global-styled/global-styled.global.css'));
+        $this->assertStringContainsString('body', $cssContent);
+        $this->assertStringContainsString('background: blue;', $cssContent);
+    }
+
+    public function test_converting_sfc_with_both_style_tags_to_mfc_creates_both_css_files()
+    {
+        // Create SFC
+        Artisan::call('make:livewire', ['name' => 'both-styles']);
+        $sfcPath = $this->livewireComponentsPath('⚡both-styles.blade.php');
+
+        // Add both style tags to SFC
+        $content = File::get($sfcPath);
+        $content .= "\n\n<style>\n    .component {\n        padding: 1rem;\n    }\n</style>";
+        $content .= "\n\n<style global>\n    * {\n        margin: 0;\n    }\n</style>";
+        File::put($sfcPath, $content);
+
+        // Convert to MFC
+        Artisan::call('livewire:convert', ['name' => 'both-styles', '--mfc' => true]);
+
+        // Check that both CSS files were created
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡both-styles/both-styles.css')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡both-styles/both-styles.global.css')));
+
+        $cssContent = File::get($this->livewireComponentsPath('⚡both-styles/both-styles.css'));
+        $this->assertStringContainsString('.component', $cssContent);
+
+        $globalCssContent = File::get($this->livewireComponentsPath('⚡both-styles/both-styles.global.css'));
+        $this->assertStringContainsString('margin: 0;', $globalCssContent);
+    }
+
+    public function test_converting_mfc_with_css_file_to_sfc_creates_style_tag()
+    {
+        // Create MFC
+        Artisan::call('make:livewire', ['name' => 'mfc-styled', '--mfc' => true]);
+        $mfcDir = $this->livewireComponentsPath('⚡mfc-styled');
+
+        // Create CSS file
+        File::put($mfcDir . '/mfc-styled.css', ".test {\n    font-size: 16px;\n}");
+
+        // Convert to SFC
+        Artisan::call('livewire:convert', ['name' => 'mfc-styled', '--sfc' => true]);
+
+        // Check that style tag was added
+        $sfcContent = File::get($this->livewireComponentsPath('⚡mfc-styled.blade.php'));
+        $this->assertStringContainsString('<style>', $sfcContent);
+        $this->assertStringContainsString('.test', $sfcContent);
+        $this->assertStringContainsString('font-size: 16px;', $sfcContent);
+        $this->assertStringContainsString('</style>', $sfcContent);
+    }
+
+    public function test_converting_mfc_with_global_css_file_to_sfc_creates_global_style_tag()
+    {
+        // Create MFC
+        Artisan::call('make:livewire', ['name' => 'mfc-global', '--mfc' => true]);
+        $mfcDir = $this->livewireComponentsPath('⚡mfc-global');
+
+        // Create global CSS file
+        File::put($mfcDir . '/mfc-global.global.css', "html {\n    box-sizing: border-box;\n}");
+
+        // Convert to SFC
+        Artisan::call('livewire:convert', ['name' => 'mfc-global', '--sfc' => true]);
+
+        // Check that global style tag was added
+        $sfcContent = File::get($this->livewireComponentsPath('⚡mfc-global.blade.php'));
+        $this->assertStringContainsString('<style global>', $sfcContent);
+        $this->assertStringContainsString('html', $sfcContent);
+        $this->assertStringContainsString('box-sizing: border-box;', $sfcContent);
+        $this->assertStringContainsString('</style>', $sfcContent);
+    }
+
+    public function test_converting_mfc_with_both_css_files_to_sfc_creates_both_style_tags()
+    {
+        // Create MFC
+        Artisan::call('make:livewire', ['name' => 'mfc-both', '--mfc' => true]);
+        $mfcDir = $this->livewireComponentsPath('⚡mfc-both');
+
+        // Create both CSS files
+        File::put($mfcDir . '/mfc-both.css', ".local {\n    display: flex;\n}");
+        File::put($mfcDir . '/mfc-both.global.css', "body {\n    font-family: sans-serif;\n}");
+
+        // Convert to SFC
+        Artisan::call('livewire:convert', ['name' => 'mfc-both', '--sfc' => true]);
+
+        // Check that both style tags were added
+        $sfcContent = File::get($this->livewireComponentsPath('⚡mfc-both.blade.php'));
+
+        $this->assertStringContainsString('<style>', $sfcContent);
+        $this->assertStringContainsString('.local', $sfcContent);
+        $this->assertStringContainsString('display: flex;', $sfcContent);
+
+        $this->assertStringContainsString('<style global>', $sfcContent);
+        $this->assertStringContainsString('body', $sfcContent);
+        $this->assertStringContainsString('font-family: sans-serif;', $sfcContent);
+    }
+
+    public function test_round_trip_conversion_preserves_styles()
+    {
+        // Create SFC with styles
+        Artisan::call('make:livewire', ['name' => 'round-trip']);
+        $sfcPath = $this->livewireComponentsPath('⚡round-trip.blade.php');
+
+        $originalContent = File::get($sfcPath);
+        $originalContent .= "\n\n<style>\n    .original {\n        width: 100%;\n    }\n</style>";
+        $originalContent .= "\n\n<style global>\n    .global-original {\n        height: 100%;\n    }\n</style>";
+        File::put($sfcPath, $originalContent);
+
+        // Convert to MFC
+        Artisan::call('livewire:convert', ['name' => 'round-trip', '--mfc' => true]);
+
+        // Verify MFC has CSS files
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡round-trip/round-trip.css')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡round-trip/round-trip.global.css')));
+
+        // Convert back to SFC
+        Artisan::call('livewire:convert', ['name' => 'round-trip', '--sfc' => true]);
+
+        // Check that styles were preserved
+        $finalContent = File::get($this->livewireComponentsPath('⚡round-trip.blade.php'));
+        $this->assertStringContainsString('.original', $finalContent);
+        $this->assertStringContainsString('width: 100%', $finalContent);
+        $this->assertStringContainsString('.global-original', $finalContent);
+        $this->assertStringContainsString('height: 100%', $finalContent);
+    }
 }

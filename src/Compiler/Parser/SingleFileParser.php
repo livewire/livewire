@@ -297,6 +297,77 @@ class SingleFileParser extends Parser
         return null;
     }
 
+    public function generateStyleContentsForMultiFile(): ?string
+    {
+        if ($this->stylePortion === null) return null;
+
+        $styleContents = '';
+
+        $pattern = '/<style\b[^>]*>(.*?)<\/style>/s';
+
+        if (preg_match($pattern, $this->stylePortion, $matches)) {
+            $styleContents = $matches[1];
+        }
+
+        return $this->cleanupCssIndentation($styleContents);
+    }
+
+    public function generateGlobalStyleContentsForMultiFile(): ?string
+    {
+        if ($this->globalStylePortion === null) return null;
+
+        $styleContents = '';
+
+        $pattern = '/<style\b[^>]*>(.*?)<\/style>/s';
+
+        if (preg_match($pattern, $this->globalStylePortion, $matches)) {
+            $styleContents = $matches[1];
+        }
+
+        return $this->cleanupCssIndentation($styleContents);
+    }
+
+    protected function cleanupCssIndentation(string $source): string
+    {
+        $lines = explode("\n", $source);
+
+        if (empty($lines)) {
+            return $source;
+        }
+
+        // Find the minimum indentation level (excluding empty lines)
+        $minIndentation = null;
+        foreach ($lines as $line) {
+            if (trim($line) === '') {
+                continue; // Skip empty lines
+            }
+
+            // Count leading whitespace
+            $indentation = strlen($line) - strlen(ltrim($line));
+
+            if ($minIndentation === null || $indentation < $minIndentation) {
+                $minIndentation = $indentation;
+            }
+        }
+
+        // If no indentation found, return as-is
+        if ($minIndentation === null || $minIndentation === 0) {
+            return $source;
+        }
+
+        // Remove the minimum indentation from all lines
+        $cleanedLines = [];
+        foreach ($lines as $line) {
+            if (trim($line) === '') {
+                $cleanedLines[] = $line; // Keep empty lines as-is
+            } else {
+                $cleanedLines[] = substr($line, $minIndentation);
+            }
+        }
+
+        return implode("\n", $cleanedLines);
+    }
+
     protected function cleanupJavaScriptIndentation(string $source): string
     {
         $lines = explode("\n", $source);
