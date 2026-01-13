@@ -543,6 +543,73 @@ public function notifyNewOrder($event)
 }
 ```
 
+### Customizing broadcast event names with `broadcastAs()`
+
+By default, Laravel broadcasts events using the event class name. However, you can customize the broadcast event name by implementing the `broadcastAs()` method in your event class.
+
+For example, if you have a `ScoreSubmitted` event but want to broadcast it as `score.submitted`:
+
+```php
+<?php
+
+namespace App\Events;
+
+use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+
+class ScoreSubmitted implements ShouldBroadcast
+{
+    use Dispatchable, InteractsWithSockets, SerializesModels;
+
+    public function broadcastOn()
+    {
+        return new Channel('scores');
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'score.submitted';
+    }
+}
+```
+
+When listening for this event in a Livewire component, you should use the custom broadcast name returned by `broadcastAs()` instead of the class name. **Important:** When using a custom broadcast name, you must prefix it with a dot (`.`) to distinguish it from namespaced event class names:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Attributes\On;
+use Livewire\Component;
+
+class ScoreBoard extends Component
+{
+    public $scores = [];
+
+    #[On('echo:scores,.score.submitted')]
+    public function handleScoreSubmitted($event)
+    {
+        $this->scores[] = $event['score'];
+    }
+}
+```
+
+In the above example, the Livewire component listens for `.score.submitted` (the custom broadcast name prefixed with a dot) rather than `ScoreSubmitted` (the class name). The dot prefix tells Laravel Echo that this is a custom broadcast name, not a namespaced event class.
+
+You can also use the custom broadcast name with dynamic channel names:
+
+```php
+#[On('echo:scores.{game.id},.score.submitted')]
+public function handleScoreSubmitted($event)
+{
+    $this->scores[] = $event['score'];
+}
+```
+
 ### Private & presence channels
 
 You may also listen to events broadcast to private and presence channels:

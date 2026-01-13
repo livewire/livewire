@@ -76,7 +76,12 @@ export default function (Alpine) {
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-            fireEventForOtherLibrariesToHookInto('alpine:navigating')
+            // Fire the navigating event, allowing listeners to register onSwap callbacks
+            let swapCallbacks = []
+
+            fireEventForOtherLibrariesToHookInto('alpine:navigating', {
+                onSwap: (callback) => swapCallbacks.push(callback)
+            })
 
             restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway()
 
@@ -105,6 +110,9 @@ export default function (Alpine) {
                     })
 
                     !preserveScroll && restoreScrollPositionOrScrollToTop()
+
+                    // Invoke any callbacks registered via onSwap during the navigating event
+                    swapCallbacks.forEach(callback => callback())
 
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {
@@ -150,11 +158,16 @@ export default function (Alpine) {
             // the back button is hit, and not AFTER:
             storeScrollInformationInHtmlBeforeNavigatingAway()
 
-            // This ensures the current HTML has the latest snapshot
-            fireEventForOtherLibrariesToHookInto('alpine:navigating')
+            // Fire the navigating event, allowing listeners to register onSwap callbacks
+            let swapCallbacks = []
 
-            // Only update the snapshot and not the history state as the history state
-            // has already changed to the new page due to the popstate event
+            fireEventForOtherLibrariesToHookInto('alpine:navigating', {
+                onSwap: (callback) => swapCallbacks.push(callback)
+            })
+
+            // Update the snapshot (not the history state, as the history state has
+            // already changed to the new page due to the popstate event).
+            // This ensures the current HTML has the latest snapshot.
             updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey)
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
@@ -174,6 +187,9 @@ export default function (Alpine) {
                     })
 
                     restoreScrollPositionOrScrollToTop()
+
+                    // Invoke any callbacks registered via onSwap during the navigating event
+                    swapCallbacks.forEach(callback => callback())
 
                     andAfterAllThis(() => {
                         autofocus && autofocusElementsWithTheAutofocusAttribute()

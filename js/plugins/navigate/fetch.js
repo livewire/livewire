@@ -1,10 +1,13 @@
 import { trigger } from "@/hooks"
 import { createUrlObjectFromString, getUriStringFromUrlObject } from "./links"
+import { storeCurrentPageStatus } from "./history"
 
 export function fetchHtml(destination, callback) {
     let uri = getUriStringFromUrlObject(destination)
 
-    performFetch(uri, (html, finalDestination) => {
+    performFetch(uri, (html, finalDestination, status) => {
+        storeCurrentPageStatus(status)
+
         callback(html, finalDestination)
     })
 }
@@ -22,6 +25,7 @@ export function performFetch(uri, callback) {
     })
 
     let finalDestination
+    let status
 
     fetch(uri, options).then(response => {
         let destination = createUrlObjectFromString(uri)
@@ -35,8 +39,10 @@ export function performFetch(uri, callback) {
             finalDestination.hash = destination.hash
         }
 
+        status = response.status
+
         return response.text()
     }).then(html => {
-        callback(html, finalDestination)
+        callback(html, finalDestination, status)
     });
 }

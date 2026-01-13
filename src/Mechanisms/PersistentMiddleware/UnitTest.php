@@ -2,7 +2,9 @@
 
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
+use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Facade;
+use Livewire\Component as BaseComponent;
 use Livewire\Livewire;
 
 class UnitTest extends \LegacyTests\Unit\TestCase
@@ -32,5 +34,49 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ...$base,
             'MyMiddleware',
         ], Livewire::getPersistentMiddleware());
+    }
+
+    public function test_it_resolves_empty_middleware_list_for_non_matching_routes()
+    {
+        $component = Livewire::test(EmptyComponent::class);
+        $snapshot = json_encode($component->snapshot);
+
+        // Remove the livewire testing route
+        // This should cause the persistent middleware to fail resolving the route
+        $existingRoutes = app('router')->getRoutes();
+        $runningCollection = new RouteCollection;
+        foreach ($existingRoutes as $route) {
+            if (str_contains($route->uri, 'livewire-unit-test-endpoint')) {
+                continue;
+            }
+            $runningCollection->add($route);
+        }
+        app('router')->setRoutes($runningCollection);
+
+        // Hit update endpoint, including PersistentMiddleware
+        $response = $this->post('/livewire/update', [
+            'components' => [
+                [
+                    'calls' => [],
+                    'updates' => [],
+                    'snapshot' => $snapshot
+                ]
+            ]
+        ]);
+        $response->assertStatus(200);
+        $response->assertJsonPath('components.0.snapshot', $snapshot);
+    }
+
+}
+
+class EmptyComponent extends BaseComponent
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+
+        </div>
+        HTML;
     }
 }

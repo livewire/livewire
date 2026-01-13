@@ -1735,6 +1735,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function setEvaluator(newEvaluator) {
       theEvaluatorFunction = newEvaluator;
     }
+    var theRawEvaluatorFunction;
+    function setRawEvaluator(newEvaluator) {
+      theRawEvaluatorFunction = newEvaluator;
+    }
     function normalEvaluator(el, expression) {
       let overriddenMagics = {};
       injectMagics(overriddenMagics, el);
@@ -1745,6 +1749,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function generateEvaluatorFromFunction(dataStack, func) {
       return (receiver = () => {
       }, { scope: scope2 = {}, params = [], context } = {}) => {
+        if (!shouldAutoEvaluateFunctions) {
+          runIfTypeOfFunction(receiver, func, mergeProxies([scope2, ...dataStack]), params);
+          return;
+        }
         let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
         runIfTypeOfFunction(receiver, result);
       };
@@ -1805,6 +1813,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         value.then((i) => receiver(i));
       } else {
         receiver(value);
+      }
+    }
+    function evaluateRaw(...args) {
+      return theRawEvaluatorFunction(...args);
+    }
+    function normalRawEvaluator(el, expression, extras = {}) {
+      var _a, _b;
+      let overriddenMagics = {};
+      injectMagics(overriddenMagics, el);
+      let dataStack = [overriddenMagics, ...closestDataStack(el)];
+      let scope2 = mergeProxies([(_a = extras.scope) != null ? _a : {}, ...dataStack]);
+      let params = (_b = extras.params) != null ? _b : [];
+      if (expression.includes("await")) {
+        let AsyncFunction = Object.getPrototypeOf(async function() {
+        }).constructor;
+        let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression.trim()) || /^(let|const)\s/.test(expression.trim()) ? `(async()=>{ ${expression} })()` : expression;
+        let func = new AsyncFunction(["scope"], `with (scope) { let __result = ${rightSideSafeExpression}; return __result }`);
+        let result = func.call(extras.context, scope2);
+        return result;
+      } else {
+        let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression.trim()) || /^(let|const)\s/.test(expression.trim()) ? `(()=>{ ${expression} })()` : expression;
+        let func = new Function(["scope"], `with (scope) { let __result = ${rightSideSafeExpression}; return __result }`);
+        let result = func.call(extras.context, scope2);
+        if (typeof result === "function" && shouldAutoEvaluateFunctions) {
+          return result.apply(scope2, params);
+        }
+        return result;
       }
     }
     var prefixAsString = "x-";
@@ -2048,6 +2083,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return el;
       if (el._x_teleportBack)
         el = el._x_teleportBack;
+      if (el.parentNode instanceof ShadowRoot) {
+        return findClosest(el.parentNode.host, callback);
+      }
       if (!el.parentElement)
         return;
       return findClosest(el.parentElement, callback);
@@ -2883,7 +2921,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.15.2",
+      version: "3.15.3",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -2904,7 +2942,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       mapAttributes,
       evaluateLater,
       interceptInit,
+      initInterceptors,
+      injectMagics,
       setEvaluator,
+      setRawEvaluator,
       mergeProxies,
       extractProp,
       findClosest,
@@ -2920,6 +2961,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       throttle,
       debounce: debounce2,
       evaluate,
+      evaluateRaw,
       initTree,
       nextTick,
       prefixed: prefix,
@@ -3833,6 +3875,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     alpine_default.setEvaluator(normalEvaluator);
+    alpine_default.setRawEvaluator(normalRawEvaluator);
     alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
     var src_default2 = alpine_default;
     var module_default2 = src_default2;
@@ -8819,6 +8862,10 @@ var snapshotCache = {
     }
   }
 };
+var currentPageStatus = null;
+function storeCurrentPageStatus(status) {
+  currentPageStatus = status;
+}
 function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
   let url = new URL(window.location.href, document.baseURI);
   replaceUrl(url, document.documentElement.outerHTML);
@@ -8833,6 +8880,9 @@ function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
   window.addEventListener("popstate", (e) => {
     let state = e.state || {};
     let alpine = state.alpine || {};
+    if (currentPageStatus && (currentPageStatus < 200 || currentPageStatus >= 300)) {
+      return window.location.href = alpine.url;
+    }
     if (Object.keys(state).length === 0)
       return;
     if (!alpine.snapshotIdx)
@@ -8934,7 +8984,8 @@ function getUriStringFromUrlObject(urlObject) {
 // js/plugins/navigate/fetch.js
 function fetchHtml(destination, callback) {
   let uri = getUriStringFromUrlObject(destination);
-  performFetch(uri, (html, finalDestination) => {
+  performFetch(uri, (html, finalDestination, status) => {
+    storeCurrentPageStatus(status);
     callback(html, finalDestination);
   });
 }
@@ -8949,15 +9000,17 @@ function performFetch(uri, callback) {
     options
   });
   let finalDestination;
+  let status;
   fetch(uri, options).then((response) => {
     let destination = createUrlObjectFromString(uri);
     finalDestination = createUrlObjectFromString(response.url);
     if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
       finalDestination.hash = destination.hash;
     }
+    status = response.status;
     return response.text();
   }).then((html) => {
-    callback(html, finalDestination);
+    callback(html, finalDestination, status);
   });
 }
 
@@ -8969,7 +9022,8 @@ function prefetchHtml(destination, callback) {
   if (prefetches[uri])
     return;
   prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
-  performFetch(uri, (html, routedUri) => {
+  performFetch(uri, (html, routedUri, status) => {
+    storeCurrentPageStatus(status);
     callback(html, routedUri);
   });
 }
@@ -9449,7 +9503,10 @@ function navigate_default(Alpine23) {
   function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
     showProgressBar && showAndStartProgressBar();
     fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-      fireEventForOtherLibrariesToHookInto("alpine:navigating");
+      let swapCallbacks = [];
+      fireEventForOtherLibrariesToHookInto("alpine:navigating", {
+        onSwap: (callback) => swapCallbacks.push(callback)
+      });
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
       updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
@@ -9470,6 +9527,7 @@ function navigate_default(Alpine23) {
             unPackPersistedPopovers(persistedEl);
           });
           !preserveScroll && restoreScrollPositionOrScrollToTop();
+          swapCallbacks.forEach((callback) => callback());
           afterNewScriptsAreDoneLoading(() => {
             andAfterAllThis(() => {
               setTimeout(() => {
@@ -9506,7 +9564,10 @@ function navigate_default(Alpine23) {
     if (prevented)
       return;
     storeScrollInformationInHtmlBeforeNavigatingAway();
-    fireEventForOtherLibrariesToHookInto("alpine:navigating");
+    let swapCallbacks = [];
+    fireEventForOtherLibrariesToHookInto("alpine:navigating", {
+      onSwap: (callback) => swapCallbacks.push(callback)
+    });
     updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
     preventAlpineFromPickingUpDomChanges(Alpine23, (andAfterAllThis) => {
       enablePersist && storePersistantElementsForLater((persistedEl) => {
@@ -9521,6 +9582,7 @@ function navigate_default(Alpine23) {
           unPackPersistedPopovers(persistedEl);
         });
         restoreScrollPositionOrScrollToTop();
+        swapCallbacks.forEach((callback) => callback());
         andAfterAllThis(() => {
           autofocus && autofocusElementsWithTheAutofocusAttribute();
           nowInitializeAlpineOnTheNewPage(Alpine23);
@@ -10660,8 +10722,11 @@ globalDirective("current", ({ el, directive: directive2, cleanup }) => {
   let expression = directive2.expression;
   let options = {
     exact: directive2.modifiers.includes("exact"),
-    strict: directive2.modifiers.includes("strict")
+    strict: directive2.modifiers.includes("strict"),
+    ignore: directive2.modifiers.includes("ignore")
   };
+  if (options.ignore)
+    return;
   if (expression.startsWith("#"))
     return;
   if (!el.hasAttribute("href"))

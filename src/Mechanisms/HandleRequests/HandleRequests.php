@@ -15,12 +15,14 @@ class HandleRequests extends Mechanism
 
     function boot()
     {
-        // Only set it if another provider hasn't already set it....
-        if (! $this->updateRoute) {
-            app($this::class)->setUpdateRoute(function ($handle) {
-                return Route::post('/livewire/update', $handle)->middleware('web');
-            });
-        }
+        // Only set it if another provider or routes file haven't already set it....
+        app()->booted(function () {
+            if (! $this->updateRoute) {
+                app($this::class)->setUpdateRoute(function ($handle) {
+                    return Route::post('/livewire/update', $handle)->middleware('web');
+                });
+            }
+        });
 
         $this->skipRequestPayloadTamperingMiddleware();
     }
@@ -79,7 +81,7 @@ class HandleRequests extends Mechanism
     function handleUpdate()
     {
         $requestPayload = request(key: 'components', default: []);
-        
+
         $finish = trigger('request', $requestPayload);
 
         $requestPayload = $finish($requestPayload);
