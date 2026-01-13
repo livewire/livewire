@@ -9685,7 +9685,7 @@ function track(name, initialSeedValue, alwaysShow = false, except = null) {
   let isInitiallyPresentInUrl = has(url, name);
   let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue;
   let initialValueMemo = JSON.stringify(initialValue);
-  let exceptValueMemo = [false, null, void 0].includes(except) ? initialSeedValue : JSON.stringify(except);
+  let exceptValueMemo = JSON.stringify(except);
   let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
   let hasReturnedToExceptValue = (newValue) => JSON.stringify(newValue) === exceptValueMemo;
   if (alwaysShow)
