@@ -1,11 +1,15 @@
 import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
 import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
-import { closestComponent } from '@/store'
-import { requestCommit, requestCall } from '@/request'
+import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
+import { fireAction, interceptComponentAction, interceptComponentMessage, interceptComponentRequest } from '@/request'
+import { getErrorsObject } from '@/features/supportErrors'
+import { findRefEl } from '@/features/supportRefs'
+import { checkDirty } from './directives/wire-dirty'
+import { assetIsPendingFor, runAfterAssetIsLoadedFor } from './features/supportJsModules'
 
 let properties = {}
 let fallback
@@ -27,14 +31,22 @@ let aliases = {
     'js': '$js',
     'get': '$get',
     'set': '$set',
-    'ref': '$ref',
+    'refs': '$refs',
     'call': '$call',
     'hook': '$hook',
     'watch': '$watch',
+    'dirty': '$dirty',
+    'effect': '$effect',
     'commit': '$commit',
+    'errors': '$errors',
+    'island': '$island',
     'upload': '$upload',
     'entangle': '$entangle',
     'dispatch': '$dispatch',
+    'intercept': '$intercept',
+    'interceptAction': '$interceptAction',
+    'interceptMessage': '$interceptMessage',
+    'interceptRequest': '$interceptRequest',
     'dispatchTo': '$dispatchTo',
     'dispatchSelf': '$dispatchSelf',
     'removeUpload': '$removeUpload',
@@ -43,6 +55,8 @@ let aliases = {
 }
 
 export function generateWireObject(component, state) {
+    let isScoped = false
+
     return new Proxy({}, {
         get(target, property) {
             if (property === '__instance') return component
@@ -86,7 +100,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
     // we would want the entangle effect freed if the element was removed from the DOM...
     return new Proxy({}, {
         get(target, property) {
-            if (! component) component = closestComponent(el)
+            if (! component) component = findComponentByEl(el)
 
             if (['$entangle', 'entangle'].includes(property)) {
                 return generateEntangleFunction(component, cleanup)
@@ -96,7 +110,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
         },
 
         set(target, property, value) {
-            if (! component) component = closestComponent(el)
+            if (! component) component = findComponentByEl(el)
 
             component.$wire[property] = value
 
@@ -126,7 +140,37 @@ wireProperty('$js', (component) => {
         fn[name] = component.getJsAction(name)
     })
 
-    return fn
+    return new Proxy(fn, {
+        set(target, property, value) {
+            component.addJsAction(property, value)
+
+            return true
+        },
+        get(target, property) {
+            // Scripts in view-based components are imported dynamically,
+            // which means they run asynchronously. This causes issues with
+            // things like wire:text="$js.foo()" not being available on page load.
+            // To patch this, we return a promise that resolves the $js action
+            // after the script is fully imported and executed...
+            if (assetIsPendingFor(component)) {
+                let resolver = null
+
+                let promise = new Promise((resolve) => {
+                    resolver = resolve
+                })
+
+                return (...params) => {
+                    runAfterAssetIsLoadedFor(component, () => {
+                        resolver(component.getJsAction(property)(...params))
+                    })
+
+                    return promise
+                }
+            }
+
+            return target[property]
+        }
+    })
 })
 
 wireProperty('$set', (component) => async (property, value, live = true) => {
@@ -137,26 +181,70 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     if (live) {
         component.queueUpdate(property, value)
 
-        return await requestCommit(component)
+        return fireAction(component, '$set')
     }
 
     return Promise.resolve()
 })
 
-wireProperty('$ref', (component) => (name) => {
-    let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`)
+wireProperty('$refs', (component) => {
+    let fn = (name) => findRefEl(component, name)
 
-    if (! refEl) throw `Ref "${name}" not found`
+    return new Proxy(fn, {
+        get(target, property) {
+            if (property in target) {
+                return target[property]
+            }
 
-    return refEl.__livewire?.$wire
+            return fn(property)
+        }
+    })
 })
+
+wireProperty('$dirty', (component) => (property) => {
+    let reactive = Alpine.reactive({ dirty: false })
+
+    interceptComponentMessage(component, ({ onFinish }) => {
+        onFinish(() => {
+            queueMicrotask(() => {
+                reactive.dirty = checkDirty(component, property)
+            })
+        })
+    })
+
+    Alpine.effect(() => {
+        reactive.dirty = checkDirty(component, property)
+    })
+
+    return reactive.dirty
+})
+
+wireProperty('$intercept', (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentAction(component, actionNameOrCallback, maybeCallback)
+})
+
+wireProperty('$interceptAction', (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentAction(component, actionNameOrCallback, maybeCallback)
+})
+
+wireProperty('$interceptMessage', (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentMessage(component, actionNameOrCallback, maybeCallback)
+})
+
+wireProperty('$interceptRequest', (component) => (actionNameOrCallback, maybeCallback) => {
+    return interceptComponentRequest(component, actionNameOrCallback, maybeCallback)
+})
+
+wireProperty('$errors', (component) => getErrorsObject(component))
 
 wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
 })
 
-wireProperty('$partial', (component) => async (name) => {
-    return await component.$wire.call('__partial', name)
+wireProperty('$island', (component) => async (name, options = {}) => {
+    return fireAction(component, '$refresh', [], {
+        island: { name, ...options },
+    })
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {
@@ -175,10 +263,25 @@ wireProperty('$watch', (component) => (path, callback) => {
     let unwatch = Alpine.watch(getter, callback)
 
     component.addCleanup(unwatch)
+
+    return unwatch
 })
 
-wireProperty('$refresh', (component) => component.$wire.$commit)
-wireProperty('$commit', (component) => async () => await requestCommit(component))
+wireProperty('$effect', (component) => (callback) => {
+    let effect = Alpine.effect(callback)
+
+    component.addCleanup(effect)
+
+    return effect
+})
+
+wireProperty('$refresh', (component) => async () => {
+    return fireAction(component, '$refresh')
+})
+
+wireProperty('$commit', (component) => async () => {
+    return fireAction(component, '$commit')
+})
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
@@ -231,7 +334,7 @@ export function overrideMethod(component, method, callback) {
     overriddenMethods.set(component, obj)
 }
 
-wireFallback((component) => (property) => async (...params) => {
+wireFallback((component) => (property) => (...params) => {
     // If this method is passed directly to a Vue or Alpine
     // event listener (@click="someMethod") without using
     // parens, strip out the automatically added event.
@@ -247,5 +350,5 @@ wireFallback((component) => (property) => async (...params) => {
         }
     }
 
-    return await requestCall(component, property, params)
+    return fireAction(component, property, params)
 })

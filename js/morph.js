@@ -1,14 +1,20 @@
 import { trigger } from "@/hooks"
-import { closestComponent } from "@/store"
+import { findComponentByEl } from "@/store"
 import Alpine from 'alpinejs'
-import { skipSlotContents } from "./features/supportSlots"
-import { skipPartialContents } from "./features/supportPartials"
+import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFragmentMarker } from "./fragment"
+import { transitionDomMutation } from "./directives/wire-transition"
 
-export function morph(component, el, html) {
+export async function morph(component, el, html) {
     let wrapperTag = el.parentElement
         // If the root element is a "tr", we need the wrapper to be a "table"...
         ? el.parentElement.tagName.toLowerCase()
         : 'div'
+
+    let customElement = customElements.get(wrapperTag)
+
+    // If the wrapper tag is a custom element, we can't instantiate it using the hyphenated
+    // tag name, so we need to get the name off the custom element instead...
+    wrapperTag = customElement ? customElement.name : wrapperTag
 
     let wrapper = document.createElement(wrapperTag)
 
@@ -16,7 +22,7 @@ export function morph(component, el, html) {
     let parentComponent
 
     try {
-        parentComponent = closestComponent(el.parentElement)
+        parentComponent = findComponentByEl(el.parentElement)
     } catch (e) {}
 
     parentComponent && (wrapper.__livewire = parentComponent)
@@ -58,12 +64,16 @@ export function morph(component, el, html) {
         }
     })
 
-    Alpine.morph(el, to, getMorphConfig(component))
+    let transitionOptions = component.effects.transition || {}
+
+    await transitionDomMutation(el, to, () => {
+        Alpine.morph(el, to, getMorphConfig(component))
+    }, transitionOptions)
 
     trigger('morphed', { el, component })
 }
 
-export function morphPartial(component, startNode, endNode, toHTML) {
+export async function morphFragment(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement
     let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
 
@@ -78,7 +88,7 @@ export function morphPartial(component, startNode, endNode, toHTML) {
     let parentComponent
 
     try {
-        parentComponent = parentElement ? closestComponent(parentElement) : null
+        parentComponent = parentElement ? findComponentByEl(parentElement) : null
     } catch (e) {}
 
     if (parentComponent) {
@@ -87,18 +97,36 @@ export function morphPartial(component, startNode, endNode, toHTML) {
         parentProviderWrapper.__livewire = parentComponent
     }
 
-    trigger('partial.morph', { startNode, endNode, component })
+    trigger('island.morph', { startNode, endNode, component })
 
-    Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
+    let transitionOptions = component.effects.transition || {}
 
-    trigger('partial.morphed', { startNode, endNode, component })
+    await transitionDomMutation(fromContainer, toContainer, () => {
+        Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
+    }, transitionOptions)
+
+    trigger('island.morphed', { startNode, endNode, component })
 }
 
 function getMorphConfig(component) {
     return {
         updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
-            skipSlotContents(el, toEl, skipUntil)
-            skipPartialContents(el, toEl, skipUntil)
+            // Skip fragments...
+            if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
+                let metadata = extractFragmentMetadataFromMarkerNode(toEl)
+
+                if (metadata.mode !== 'morph') {
+                    skipUntil(node => {
+                        if (isEndFragmentMarker(node)) {
+                            let endMarkerMetadata = extractFragmentMetadataFromMarkerNode(node)
+
+                            return endMarkerMetadata.token === metadata.token
+                        }
+
+                        return false
+                    })
+                }
+            }
 
             if (isntElement(el)) return
 
@@ -147,7 +175,7 @@ function getMorphConfig(component) {
         added: (el) => {
             if (isntElement(el)) return
 
-            const closestComponentId = closestComponent(el).id
+            const findComponentByElId = findComponentByEl(el).id
 
             trigger('morph.added', { el })
         },
@@ -155,11 +183,11 @@ function getMorphConfig(component) {
         key: (el) => {
             if (isntElement(el)) return
 
-            return el.hasAttribute(`wire:key`)
-                ? el.getAttribute(`wire:key`)
-                : // If no "key", then first check for "wire:id", then "id"
-                el.hasAttribute(`wire:id`)
-                    ? el.getAttribute(`wire:id`)
+            return el.hasAttribute(`wire:id`)
+                ? el.getAttribute(`wire:id`)
+                : // If no component "id", then first check for "wire:key", then "id"
+                el.hasAttribute(`wire:key`)
+                    ? el.getAttribute(`wire:key`)
                     : el.id
         },
 

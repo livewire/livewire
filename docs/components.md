@@ -1,21 +1,470 @@
-Components are the building blocks of your Livewire application. They combine state and behavior to create reusable pieces of UI for your front end. Here, we'll cover the basics of creating and rendering components.
+Livewire components are essentially PHP classes with properties and methods that can be called directly from a Blade template. This powerful combination allows you to create full-stack interactive interfaces with a fraction of the effort and complexity of modern JavaScript alternatives.
+
+This guide covers everything you need to know about creating, rendering, and organizing Livewire components. You'll learn about the different component formats available (single-file, multi-file, and class-based), how to pass data between components, and how to use components as full pages.
 
 ## Creating components
 
-A Livewire component is simply a PHP class that extends `Livewire\Component`. You can create component files by hand or use the following Artisan command:
+You can create a component using the `make:livewire` Artisan command:
 
 ```shell
-php artisan make:livewire CreatePost
+php artisan make:livewire post.create
 ```
 
-If you prefer kebab-cased names, you can use them as well:
+This creates a single-file component at:
+
+`resources/views/components/post/⚡create.blade.php`
+```blade
+<?php
+
+use Livewire\Component;
+
+new class extends Component {
+    public $title = '';
+
+    public function save()
+    {
+        // Save logic here...
+    }
+};
+?>
+
+<div>
+    <input wire:model="title" type="text">
+    <button wire:click="save">Save Post</button>
+</div>
+```
+
+> [!info] Why the ⚡ emoji?
+> You might be wondering about the lightning bolt in the filename. This small touch serves a practical purpose: it makes Livewire components instantly recognizable in your editor's file tree and search results. Since it's a Unicode character, it works seamlessly across all platforms — Windows, macOS, Linux, Git, and your production servers.
+>
+> The emoji is completely optional and if you find it outside your comfort zone you can disable it entirely in your `config/livewire.php` file:
+>
+> ```php
+> 'make_command' => [
+>     'emoji' => false,
+> ],
+> ```
+
+### Creating page components
+
+When creating components that will be used as full pages, use the `pages::` namespace to organize them in a dedicated directory:
 
 ```shell
-php artisan make:livewire create-post
+php artisan make:livewire pages::post.create
 ```
 
-After running this command, Livewire will create two new files in your application. The first will be the component's class: `app/Livewire/CreatePost.php`
+This creates the component at `resources/views/pages/post/⚡create.blade.php`. This organization makes it clear which components are pages versus reusable UI components.
 
+Learn more about using components as pages in the [Page components section](#page-components) below. You can also register your own custom namespaces—see the [Component namespaces documentation](/docs/4.x/pages#component-namespaces).
+
+### Multi-file components
+
+As your component or project grows, you might find the single-file approach limiting. Livewire offers a multi-file alternative that splits your component into separate files for better organization and IDE support.
+
+To create a multi-file component, pass the `--mfc` flag:
+
+```shell
+php artisan make:livewire post.create --mfc
+```
+
+This creates a directory with all related files together:
+
+```
+resources/views/components/post/⚡create/
+├── create.php          # PHP class
+├── create.blade.php    # Blade template
+├── create.js           # JavaScript (optional)
+├── create.css          # Scoped styles (optional)
+├── create.global.css   # Global styles (optional)
+└── create.test.php     # Pest test (optional, with --test flag)
+```
+
+### Converting between formats
+
+Livewire provides the `livewire:convert` command to seamlessly convert components between single-file and multi-file formats.
+
+**Auto-detect and convert:**
+
+```shell
+php artisan livewire:convert post.create
+# Single-file → Multi-file (or vice versa)
+```
+
+**Explicitly convert to multi-file:**
+
+```shell
+php artisan livewire:convert post.create --mfc
+```
+
+This will parse your single-file component, create a directory structure, split the files, and delete the original.
+
+**Explicitly convert to single-file:**
+
+```shell
+php artisan livewire:convert post.create --sfc
+```
+
+This combines all files back into a single file and deletes the directory.
+
+> [!warning] Test files are deleted when converting to single-file
+> If your multi-file component has a test file, you'll be prompted to confirm before conversion since test files cannot be preserved in the single-file format.
+
+### When to use each format
+
+**Single-file components (default):**
+- Best for most components
+- Keeps related code together
+- Easy to understand at a glance
+- Perfect for small to medium components
+
+**Multi-file components:**
+- Better for large, complex components
+- Improved IDE support and navigation
+- Clearer separation when components have significant JavaScript
+
+**Class-based components:**
+- Familiar to developers from Livewire v2/v3
+- Traditional Laravel separation of concerns
+- Better for teams with established conventions
+- See [Class-based components](#class-based-components) below
+
+## Rendering components
+
+You can include a Livewire component within any Blade template using the `<livewire:component-name />` syntax:
+
+```blade
+<livewire:component-name />
+```
+
+If the component is located in a sub-directory, you can indicate this using the dot (`.`) character:
+
+`resources/views/components/post/⚡create.blade.php`
+```blade
+<livewire:post.create />
+```
+
+For namespaced components—like `pages::`—use the namespace prefix:
+
+```blade
+<livewire:pages::post.create />
+```
+
+### Passing props
+
+To pass data into a Livewire component, you can use prop attributes on the component tag:
+
+```blade
+<livewire:post.create title="Initial Title" />
+```
+
+For dynamic values or variables, prefix the attribute with a colon:
+
+```blade
+<livewire:post.create :title="$initialTitle" />
+```
+
+Data passed into components is received through the `mount()` method:
+
+```php
+<?php
+
+use Livewire\Component;
+
+new class extends Component {
+    public $title;
+
+    public function mount($title = null)
+    {
+        $this->title = $title;
+    }
+
+    // ...
+};
+```
+
+You can think of the `mount()` method as a class constructor. It runs when the component initializes, but not on subsequent requests within a page's session. You can learn more about `mount()` and other helpful lifecycle hooks within the [lifecycle documentation](/docs/4.x/lifecycle-hooks).
+
+To reduce boilerplate code, you can omit the `mount()` method and Livewire will automatically set any properties with names matching the passed values:
+
+```php
+<?php
+
+use Livewire\Component;
+
+new class extends Component {
+    public $title; // Automatically set from prop
+
+    // ...
+};
+```
+
+> [!warning] These properties are not reactive by default
+> The `$title` property will not update automatically if the outer `:title="$initialValue"` changes after the initial page load. This is a common point of confusion when using Livewire, especially for developers who have used JavaScript frameworks like Vue or React and assume these parameters behave like "reactive props" in those frameworks. But, don't worry, Livewire allows you to opt-in to [making your props reactive](/docs/4.x/nesting#reactive-props).
+
+### Passing route parameters as props
+
+When using components as pages, you can pass route parameters directly to your component. The route parameters are automatically passed to the `mount()` method:
+
+```php
+Route::livewire('/posts/{id}', 'pages::post.show');
+```
+
+```php
+<?php // resources/views/pages/post/⚡show.blade.php
+
+use Livewire\Component;
+
+new class extends Component {
+    public $postId;
+
+    public function mount($id)
+    {
+        $this->postId = $id;
+    }
+};
+```
+
+Livewire also supports Laravel's route model binding:
+
+```php
+Route::livewire('/posts/{post}', 'pages::post.show');
+```
+
+```php
+<?php // resources/views/pages/post/⚡show.blade.php
+
+use App\Models\Post;
+use Livewire\Component;
+
+new class extends Component {
+    public Post $post; // Automatically bound from route
+
+    // No mount() needed - Livewire handles it automatically
+};
+```
+
+## Page components
+
+Components can be routed to directly as full pages using `Route::livewire()`. This is one of Livewire's most powerful features, allowing you to build entire pages without traditional controllers.
+
+```php
+Route::livewire('/posts/create', 'pages::post.create');
+```
+
+When a user visits `/posts/create`, Livewire will render the `pages::post.create` component inside your application's layout file.
+
+Page components work just like regular components, but they're rendered as full pages with access to:
+- Custom layouts
+- Page titles
+- Route parameters and model binding
+- Named slots for layouts
+
+For complete information about page components, including layouts, titles, and advanced routing, see the [Pages documentation](/docs/4.x/pages).
+
+## Accessing data in views
+
+Livewire provides several ways to pass data to your component's Blade view. Each approach has different performance and security characteristics.
+
+### Component properties
+
+The simplest approach is using public properties, which are automatically available in your Blade template:
+
+```php
+<?php
+
+use Livewire\Component;
+
+new class extends Component {
+    public $title = 'My Post';
+};
+```
+
+```blade
+<div>
+    <h1>{{ $title }}</h1>
+</div>
+```
+
+Protected properties must be accessed with `$this->`:
+
+```php
+public $title = 'My Post';           // Available as {{ $title }}
+protected $apiKey = 'secret-key';    // Available as {{ $this->apiKey }}
+```
+
+> [!info] Protected properties are not sent to the client
+> Unlike public properties, protected properties are never sent to the frontend and cannot be manipulated by users. This makes them safe for sensitive data. However, they are not persisted between requests, which limits their usefulness in most Livewire scenarios. They're best used for static values defined in the property declaration that you don't want exposed client-side.
+
+For complete information about properties, including persistence behavior and advanced features, see the [properties documentation](/docs/4.x/properties).
+
+### Computed properties
+
+Computed properties are methods that act like memoized properties. They're perfect for expensive operations like database queries:
+
+```php
+use Livewire\Attributes\Computed;
+
+#[Computed]
+public function posts()
+{
+    return Post::with('author')->latest()->get();
+}
+```
+
+```blade
+<div>
+    @foreach ($this->posts as $post)
+        <article wire:key="{{ $post->id }}">{{ $post->title }}</article>
+    @endforeach
+</div>
+```
+
+Notice the `$this->` prefix - this tells Livewire to call the method and cache the result for the current request only (not between requests). For more details, see the [computed properties section](/docs/4.x/properties#computed-properties) in the properties documentation.
+
+### Passing data from render()
+
+Similar to a controller, you can pass data directly to the view using the `render()` method:
+
+```php
+public function render()
+{
+    return $this->view([
+        'author' => Auth::user(),
+        'currentTime' => now(),
+    ]);
+}
+```
+
+Keep in mind that `render()` runs on every component update, so avoid expensive operations here unless you need fresh data on every update.
+
+## Organizing components
+
+While Livewire automatically discovers components in the default `resources/views/components/` directory, you can customize where Livewire looks for components and organize them using namespaces.
+
+### Component namespaces
+
+Component namespaces allow you to organize components into dedicated directories with a clean reference syntax.
+
+By default, Livewire provides two namespaces:
+- `pages::` — Points to `resources/views/pages/`
+- `layouts::` — Points to `resources/views/layouts/`
+
+You can define additional namespaces in your `config/livewire.php` file:
+
+```php
+'component_namespaces' => [
+    'layouts' => resource_path('views/layouts'),
+    'pages' => resource_path('views/pages'),
+    'admin' => resource_path('views/admin'),    // Custom namespace
+    'widgets' => resource_path('views/widgets'), // Another custom namespace
+],
+```
+
+Then use them when creating, rendering, and routing:
+
+```shell
+php artisan make:livewire admin::users-table
+```
+
+```blade
+<livewire:admin::users-table />
+```
+
+```php
+Route::livewire('/admin/users', 'admin::users-table');
+```
+
+### Additional component locations
+
+If you want Livewire to discover components in additional directories beyond the defaults, you can configure them in your `config/livewire.php` file:
+
+```php
+'component_locations' => [
+    resource_path('views/components'),
+    resource_path('views/admin/components'),
+    resource_path('views/widgets'),
+],
+```
+
+Now Livewire will automatically discover components in all these directories.
+
+### Programmatic registration
+
+For more dynamic scenarios (like package development or runtime configuration), you can register components, locations, and namespaces programmatically in a service provider:
+
+**Register an individual component:**
+
+```php
+use Livewire\Livewire;
+
+// In a service provider's boot() method (e.g., App\Providers\AppServiceProvider)
+Livewire::addComponent(
+    name: 'custom-button',
+    viewPath: resource_path('views/ui/button.blade.php')
+);
+```
+
+**Register a component directory:**
+
+```php
+Livewire::addLocation(
+    viewPath: resource_path('views/admin/components')
+);
+```
+
+**Register a namespace:**
+
+```php
+Livewire::addNamespace(
+    namespace: 'ui',
+    viewPath: resource_path('views/ui')
+);
+```
+
+This approach is useful when you need to register components conditionally or when building Laravel packages that provide Livewire components.
+
+#### Registering class-based components
+
+For class-based components, use the same methods but with the `class` parameter instead of `path`:
+
+```php
+use Livewire\Livewire;
+
+// In a service provider's boot() method (e.g., App\Providers\AppServiceProvider)
+
+// Register an individual class-based component
+Livewire::addComponent(
+    name: 'todos',
+    class: \App\Livewire\Todos::class
+);
+
+// Register a location for class-based components
+Livewire::addLocation(
+    classNamespace: 'App\\Admin\\Livewire'
+);
+
+// Create a namespace for class-based components
+Livewire::addNamespace(
+    namespace: 'admin',
+    classNamespace: 'App\\Admin\\Livewire',
+    classPath: app_path('Admin/Livewire'),
+    classViewPath: resource_path('views/admin/livewire')
+);
+```
+
+## Class-based components
+
+For teams migrating from Livewire v3 or those who prefer a more traditional Laravel structure, Livewire fully supports class-based components. This approach separates the PHP class and Blade view into different files in their conventional locations.
+
+### Creating class-based components
+
+```shell
+php artisan make:livewire CreatePost --class
+```
+
+This creates two separate files:
+
+`app/Livewire/CreatePost.php`
 ```php
 <?php
 
@@ -32,776 +481,95 @@ class CreatePost extends Component
 }
 ```
 
-The second will be the component's Blade view: `resources/views/livewire/create-post.blade.php`
-
+`resources/views/livewire/create-post.blade.php`
 ```blade
 <div>
 	{{-- ... --}}
 </div>
 ```
 
-You may use namespace syntax or dot-notation to create your components in sub-directories. For example, the following commands will create a `CreatePost` component in the `Posts` sub-directory:
+### When to use class-based components
 
-```shell
-php artisan make:livewire Posts\\CreatePost
-php artisan make:livewire posts.create-post
-```
+**Use class-based components when:**
+- Migrating from Livewire v2/v3
+- Your team prefers a more traditional file structure
+- You have established conventions around class-based architecture
 
-### Inline components
+**Use single-file or multi-file components when:**
+- Starting a new Livewire v4 project
+- You want better component colocation
+- You want to use the latest Livewire conventions
 
-If your component is fairly small, you may want to create an _inline_ component. Inline components are single-file Livewire components whose view template is contained directly in the `render()` method rather than a separate file:
+### Configuring default component type
 
-```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Component;
-
-class CreatePost extends Component
-{
-	public function render()
-	{
-		return <<<'HTML' // [tl! highlight:4]
-		<div>
-		    {{-- Your Blade template goes here... --}}
-		</div>
-		HTML;
-	}
-}
-```
-
-You can create inline components by adding the `--inline` flag to the `make:livewire` command:
-
-```shell
-php artisan make:livewire CreatePost --inline
-```
-
-### Omitting the render method
-
-To reduce boilerplate in your components, you can omit the `render()` method entirely and Livewire will use its own underlying `render()` method, which returns a view with the conventional name corresponding to your component:
+If you want class-based components by default, configure it in `config/livewire.php`:
 
 ```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Component;
-
-class CreatePost extends Component
-{
-    //
-}
+'make_command' => [
+    'type' => 'class',
+],
 ```
 
-If the component above is rendered on a page, Livewire will automatically determine it should be rendered using the `livewire.create-post` template.
+## Customizing component stubs
 
-### Customizing component stubs
-
-You can customize the files (or _stubs_) Livewire uses to generate new components by running the following command:
+You can customize the files (or _stubs_) Livewire uses to generate new components by running:
 
 ```shell
 php artisan livewire:stubs
 ```
 
-This will create seven new files in your application:
+This creates stub files in your application that you can modify:
 
-* `stubs/livewire.stub` — used for generating new components
-* `stubs/livewire.attribute.stub` — used for generating attribute classes
-* `stubs/livewire.form.stub` — used for generating form classes
-* `stubs/livewire.inline.stub` — used for generating _inline_ components
-* `stubs/livewire.pest-test.stub` — used for generating Pest test files
-* `stubs/livewire.test.stub` — used for generating PHPUnit test files
-* `stubs/livewire.view.stub` — used for generating component views
+**Single-file component stubs:**
+* `stubs/livewire-sfc.stub` — Single-file components
 
-Even though these files live in your application, you can still use the `make:livewire` Artisan command and Livewire will automatically use your custom stubs when generating files.
+**Multi-file component stubs:**
+* `stubs/livewire-mfc-class.stub` — PHP class for multi-file components
+* `stubs/livewire-mfc-view.stub` — Blade view for multi-file components
+* `stubs/livewire-mfc-js.stub` — JavaScript for multi-file components
+* `stubs/livewire-mfc-test.stub` — Pest test for multi-file components
 
-## Setting properties
+**Class-based component stubs:**
+* `stubs/livewire.stub` — PHP class for class-based components
+* `stubs/livewire.view.stub` — Blade view for class-based components
 
-Livewire components have properties that store data and can be easily accessed within the component's class and Blade view. This section discusses the basics of adding a property to a component and using it in your application.
+**Additional stubs:**
+* `stubs/livewire.attribute.stub` — Attribute classes
+* `stubs/livewire.form.stub` — Form classes
 
-To add a property to a Livewire component, declare a public property in your component class. For example, let's create a `$title` property in the `CreatePost` component:
+Once published, Livewire will automatically use your custom stubs when generating new components.
 
-```php
-<?php
+## Troubleshooting
 
-namespace App\Livewire;
+### Component not found
 
-use Livewire\Component;
+**Symptom:** Error message like "Component [post.create] not found" or "Unable to find component"
 
-class CreatePost extends Component
-{
-    public $title = 'Post title...';
+**Solutions:**
+- Verify the component file exists at the expected path
+- Check that the component name in your view matches the file structure (dots for subdirectories)
+- For namespaced components, ensure the namespace is defined in `config/livewire.php` or manually registered in a service provider
+- Try clearing your view cache: `php artisan view:clear`
 
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
-```
+### Component shows blank or doesn't render
 
-### Accessing properties in the view
+**Common causes:**
+- Missing root element in your Blade template (Livewire requires exactly one root element)
+- Syntax errors in the PHP section of your component
+- Check your Laravel logs for detailed error messages
 
-Component properties are automatically made available to the component's Blade view. You can reference it using standard Blade syntax. Here we'll display the value of the `$title` property:
+### Class name conflicts
 
-```blade
-<div>
-    <h1>Title: "{{ $title }}"</h1>
-</div>
-```
+**Symptom:** Errors about duplicate class names when using single-file components
 
-The rendered output of this component would be:
+**Solution:** This can happen if you have multiple single-file components with the same name in different directories. Either:
+- Rename one of the components to be unique
+- Namespace one of the directories for more clear separation
 
-```blade
-<div>
-    <h1>Title: "Post title..."</h1>
-</div>
-```
+## See also
 
-### Sharing additional data with the view
-
-In addition to accessing properties from the view, you can explicitly pass data to the view from the `render()` method, like you might typically do from a controller. This can be useful when you want to pass additional data without first storing it as a property—because properties have [specific performance and security implications](/docs/properties#security-concerns).
-
-To pass data to the view in the `render()` method, you can use the `with()` method on the view instance. For example, let's say you want to pass the post author's name to the view. In this case, the post's author is the currently authenticated user:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use Illuminate\Support\Facades\Auth;
-use Livewire\Component;
-
-class CreatePost extends Component
-{
-    public $title;
-
-    public function render()
-    {
-        return view('livewire.create-post')->with([
-	        'author' => Auth::user()->name,
-	    ]);
-    }
-}
-```
-
-Now you may access the `$author` property from the component's Blade view:
-
-```blade
-<div>
-	<h1>Title: {{ $title }}</h1>
-
-	<span>Author: {{ $author }}</span>
-</div>
-```
-
-### Adding `wire:key` to `@foreach` loops
-
-When looping through data in a Livewire template using `@foreach`, you must add a unique `wire:key` attribute to the root element rendered by the loop.
-
-Without a `wire:key` attribute present within a Blade loop, Livewire won't be able to properly match old elements to their new positions when the loop changes. This can cause many hard to diagnose issues in your application.
-
-For example, if you are looping through an array of posts, you may set the `wire:key` attribute to the post's ID:
-
-```blade
-<div>
-    @foreach ($posts as $post)
-        <div wire:key="{{ $post->id }}"> <!-- [tl! highlight] -->
-            <!-- ... -->
-        </div>
-    @endforeach
-</div>
-```
-
-If you are looping through an array that is rendering Livewire components you may set the key as a component attribute `:key` or pass the key as a third argument when using the `@livewire` directive.
-
-```blade
-<div>
-    @foreach ($posts as $post)
-        <livewire:post-item :$post :key="$post->id">
-
-        @livewire(PostItem::class, ['post' => $post], key($post->id))
-    @endforeach
-</div>
-```
-
-### Binding inputs to properties
-
-One of Livewire's most powerful features is "data binding": the ability to automatically keep properties in-sync with form inputs on the page.
-
-Let's bind the `$title` property from the `CreatePost` component to a text input using the `wire:model` directive:
-
-```blade
-<form>
-    <label for="title">Title:</label>
-
-    <input type="text" id="title" wire:model="title"> <!-- [tl! highlight] -->
-</form>
-```
-
-Any changes made to the text input will be automatically synchronized with the `$title` property in your Livewire component.
-
-> [!warning] "Why isn't my component live updating as I type?"
-> If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](/docs/properties#data-binding).
-
-
-Livewire properties are extremely powerful and are an important concept to understand. For more information, check out the [Livewire properties documentation](/docs/properties).
-
-## Calling actions
-
-Actions are methods within your Livewire component that handle user interactions or perform specific tasks. They're often useful for responding to button clicks or form submissions on a page.
-
-To learn more about actions, let's add a `save` action to the `CreatePost` component:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Component;
-use App\Models\Post;
-
-class CreatePost extends Component
-{
-    public $title;
-
-    public function save() // [tl! highlight:8]
-    {
-		Post::create([
-			'title' => $this->title
-		]);
-
-		return redirect()->to('/posts')
-			 ->with('status', 'Post created!');
-    }
-
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
-```
-
-Next, let's call the `save` action from the component's Blade view by adding the `wire:submit` directive to the `<form>` element:
-
-```blade
-<form wire:submit="save"> <!-- [tl! highlight] -->
-    <label for="title">Title:</label>
-
-    <input type="text" id="title" wire:model="title">
-
-	<button type="submit">Save</button>
-</form>
-```
-
-When the "Save" button is clicked, the `save()` method in your Livewire component will be executed and your component will re-render.
-
-To keep learning about Livewire actions, visit the [actions documentation](/docs/actions).
-
-## Rendering components
-
-There are two ways to render a Livewire component on a page:
-
-1. Include it within an existing Blade view
-2. Assign it directly to a route as a full-page component
-
-Let's cover the first way to render your component, as it's simpler than the second.
-
-You can include a Livewire component in your Blade templates using the `<livewire:component-name />` syntax:
-
-```blade
-<livewire:create-post />
-```
-
-If the component class is nested deeper within the `app/Livewire/` directory, you may use the `.` character to indicate directory nesting. For example, if we assume a component is located at `app/Livewire/EditorPosts/CreatePost.php`, we may render it like so:
-
-```blade
-<livewire:editor-posts.create-post />
-```
-
-> [!warning] You must use kebab-case
-> As you can see in the snippets above, you must use the _kebab-cased_ version of the component name. Using the _StudlyCase_ version of the name (`<livewire:CreatePost />`) is invalid and won't be recognized by Livewire.
-
-
-### Passing data into components
-
-To pass outside data into a Livewire component, you can use attributes on the component tag. This is useful when you want to initialize a component with specific data.
-
-To pass an initial value to the `$title` property of the `CreatePost` component, you can use the following syntax:
-
-```blade
-<livewire:create-post title="Initial Title" />
-```
-
-If you need to pass dynamic values or variables to a component, you can write PHP expressions in component attributes by prefixing the attribute with a colon:
-
-```blade
-<livewire:create-post :title="$initialTitle" />
-```
-
-Data passed into components is received through the `mount()` lifecycle hook as method parameters. In this case, to assign the `$title` parameter to a property, you would write a `mount()` method like the following:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Component;
-
-class CreatePost extends Component
-{
-    public $title;
-
-    public function mount($title = null)
-    {
-        $this->title = $title;
-    }
-
-    // ...
-}
-```
-
-In this example, the `$title` property will be initialized with the value "Initial Title".
-
-You can think of the `mount()` method as a class constructor. It runs on the initial load of the component, but not on subsequent requests within a page. You can learn more about `mount()` and other helpful lifecycle hooks within the [lifecycle documentation](/docs/lifecycle-hooks).
-
-To reduce boilerplate code in your components, you can alternatively omit the `mount()` method and Livewire will automatically set any properties on your component with names matching the passed in values:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Component;
-
-class CreatePost extends Component
-{
-    public $title; // [tl! highlight]
-
-    // ...
-}
-```
-
-This is effectively the same as assigning `$title` inside a `mount()` method.
-
-> [!warning] These properties are not reactive by default
-> The `$title` property will not update automatically if the outer `:title="$initialValue"` changes after the initial page load. This is a common point of confusion when using Livewire, especially for developers who have used JavaScript frameworks like Vue or React and assume these "parameters" behave like "reactive props" in those frameworks. But, don't worry, Livewire allows you to opt-in to [making your props reactive](/docs/nesting#reactive-props).
-
-
-## Full-page components
-
-Livewire allows you to assign components directly to a route in your Laravel application. These are called "full-page components". You can use them to build standalone pages with logic and views, fully encapsulated within a Livewire component.
-
-To create a full-page component, define a route in your `routes/web.php` file and use the `Route::get()` method to map the component directly to a specific URL. For example, let's imagine you want to render the `CreatePost` component at the dedicated route: `/posts/create`.
-
-You can accomplish this by adding the following line to your `routes/web.php` file:
-
-```php
-use App\Livewire\CreatePost;
-
-Route::get('/posts/create', CreatePost::class);
-```
-
-Now, when you visit the `/posts/create` path in your browser, the `CreatePost` component will be rendered as a full-page component.
-
-### Layout files
-
-Remember that full-page components will use your application's layout, typically defined in the `resources/views/components/layouts/app.blade.php` file.
-
-You may create this file if it doesn't already exist by running the following command:
-
-```shell
-php artisan livewire:layout
-```
-
-This command will generate a file called `resources/views/components/layouts/app.blade.php`.
-
-Ensure you have created a Blade file at this location and included a `{{ $slot }}` placeholder:
-
-```blade
-<!-- resources/views/components/layouts/app.blade.php -->
-
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-        <title>{{ $title ?? 'Page Title' }}</title>
-    </head>
-    <body>
-        {{ $slot }}
-    </body>
-</html>
-```
-
-#### Global layout configuration
-
-To use a custom layout across all your components, you can set the `layout` key in `config/livewire.php` to the path of your custom layout, relative to `resources/views`. For example:
-
-```php
-'layout' => 'layouts.app',
-```
-
-With the above configuration, Livewire will render full-page components inside the layout file: `resources/views/layouts/app.blade.php`.
-
-#### Per-component layout configuration
-
-To use a different layout for a specific component, you can place Livewire's `#[Layout]` attribute above the component's `render()` method, passing it the relative view path of your custom layout:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Attributes\Layout;
-use Livewire\Component;
-
-class CreatePost extends Component
-{
-	// ...
-
-	#[Layout('layouts.app')] // [tl! highlight]
-	public function render()
-	{
-	    return view('livewire.create-post');
-	}
-}
-```
-
-Or if you prefer, you can use this attribute above the class declaration:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Attributes\Layout;
-use Livewire\Component;
-
-#[Layout('layouts.app')] // [tl! highlight]
-class CreatePost extends Component
-{
-	// ...
-}
-```
-
-PHP attributes only support literal values. If you need to pass a dynamic value, or prefer this alternative syntax, you can use the fluent `->layout()` method in the component's `render()` method:
-
-```php
-public function render()
-{
-    return view('livewire.create-post')
-	     ->layout('layouts.app'); // [tl! highlight]
-}
-```
-
-Alternatively, Livewire supports using traditional Blade layout files with `@extends`.
-
-Given the following layout file:
-
-```blade
-<body>
-    @yield('content')
-</body>
-```
-
-You can configure Livewire to reference it using `->extends()` instead of `->layout()`:
-
-```php
-public function render()
-{
-    return view('livewire.show-posts')
-        ->extends('layouts.app'); // [tl! highlight]
-}
-```
-
-If you need to configure the `@section` for the component to use, you can configure that as well with the `->section()` method:
-
-```php
-public function render()
-{
-    return view('livewire.show-posts')
-        ->extends('layouts.app')
-        ->section('body'); // [tl! highlight]
-}
-```
-
-### Setting the page title
-
-Assigning unique page titles to each page in your application is helpful for both users and search engines.
-
-To set a custom page title for a full-page component, first, make sure your layout file includes a dynamic title:
-
-```blade
-<head>
-    <title>{{ $title ?? 'Page Title' }}</title>
-</head>
-```
-
-Next, above your Livewire component's `render()` method, add the `#[Title]` attribute and pass it your page title:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Attributes\Title;
-use Livewire\Component;
-
-class CreatePost extends Component
-{
-	// ...
-
-	#[Title('Create Post')] // [tl! highlight]
-	public function render()
-	{
-	    return view('livewire.create-post');
-	}
-}
-```
-
-This will set the page title for the `CreatePost` Livewire component. In this example, the page title will be "Create Post" when the component is rendered.
-
-If you prefer, you can use this attribute above the class declaration:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Attributes\Title;
-use Livewire\Component;
-
-#[Title('Create Post')] // [tl! highlight]
-class CreatePost extends Component
-{
-	// ...
-}
-```
-
-If you need to pass a dynamic title, such as a title that uses a component property, you can use the `->title()` fluent method in the component's `render()` method:
-
-```php
-public function render()
-{
-    return view('livewire.create-post')
-	     ->title('Create Post'); // [tl! highlight]
-}
-```
-
-### Setting additional layout file slots
-
-If your [layout file](#layout-files) has any named slots in addition to `$slot`, you can set their content in your Blade view by defining `<x-slot>`s outside your root element. For example, if you want to be able to set the page language for each component individually, you can add a dynamic `$lang` slot into the opening HTML tag in your layout file:
-
-```blade
-<!-- resources/views/components/layouts/app.blade.php -->
-
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', $lang ?? app()->getLocale()) }}"> <!-- [tl! highlight] -->
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-        <title>{{ $title ?? 'Page Title' }}</title>
-    </head>
-    <body>
-        {{ $slot }}
-    </body>
-</html>
-```
-
-Then, in your component view, define an `<x-slot>` element outside the root element:
-
-```blade
-<x-slot:lang>fr</x-slot> // This component is in French <!-- [tl! highlight] -->
-
-<div>
-    // French content goes here...
-</div>
-```
-
-
-### Accessing route parameters
-
-When working with full-page components, you may need to access route parameters within your Livewire component.
-
-To demonstrate, first, define a route with a parameter in your `routes/web.php` file:
-
-```php
-use App\Livewire\ShowPost;
-
-Route::get('/posts/{id}', ShowPost::class);
-```
-
-Here, we've defined a route with an `id` parameter which represents a post's ID.
-
-Next, update your Livewire component to accept the route parameter in the `mount()` method:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use App\Models\Post;
-use Livewire\Component;
-
-class ShowPost extends Component
-{
-    public Post $post;
-
-    public function mount($id) // [tl! highlight]
-    {
-        $this->post = Post::findOrFail($id);
-    }
-
-    public function render()
-    {
-        return view('livewire.show-post');
-    }
-}
-```
-
-In this example, because the parameter name `$id` matches the route parameter `{id}`, if the `/posts/1` URL is visited, Livewire will pass the value of "1" as `$id`.
-
-### Using route model binding
-
-Laravel's route model binding allows you to automatically resolve Eloquent models from route parameters.
-
-After defining a route with a model parameter in your `routes/web.php` file:
-
-```php
-use App\Livewire\ShowPost;
-
-Route::get('/posts/{post}', ShowPost::class);
-```
-
-You can now accept the route model parameter through the `mount()` method of your component:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use App\Models\Post;
-use Livewire\Component;
-
-class ShowPost extends Component
-{
-    public Post $post;
-
-    public function mount(Post $post) // [tl! highlight]
-    {
-        $this->post = $post;
-    }
-
-    public function render()
-    {
-        return view('livewire.show-post');
-    }
-}
-```
-
-Livewire knows to use "route model binding" because the `Post` type-hint is prepended to the `$post` parameter in `mount()`.
-
-Like before, you can reduce boilerplate by omitting the `mount()` method:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Component;
-use App\Models\Post;
-
-class ShowPost extends Component
-{
-    public Post $post; // [tl! highlight]
-
-    public function render()
-    {
-        return view('livewire.show-post');
-    }
-}
-```
-
-The `$post` property will automatically be assigned to the model bound via the route's `{post}` parameter.
-
-### Modifying the response
-
-In some scenarios, you might want to modify the response and set a custom response header. You can hook into the response object by calling the `response()` method on the view and use a closure to modify the response object:
-
-```php
-<?php
-
-namespace App\Livewire;
-
-use Livewire\Component;
-use Illuminate\Http\Response;
-
-class ShowPost extends Component
-{
-    public function render()
-    {
-        return view('livewire.show-post')
-            ->response(function(Response $response) {
-                $response->header('X-Custom-Header', true);
-            });
-    }
-}
-```
-
-## Using JavaScript
-
-There are many instances where the built-in Livewire and Alpine utilities aren't enough to accomplish your goals inside your Livewire components.
-
-Fortunately, Livewire provides many useful extension points and utilities to interact with bespoke JavaScript. You can learn from the exhaustive reference on [the JavaScript documentation page](/docs/javascript). But for now, here are a few useful ways to use your own JavaScript inside your Livewire components.
-
-### Executing scripts
-
-Livewire provides a helpful `@script` directive that, when wrapping a `<script>` element, will execute the given JavaScript when your component is initialized on the page.
-
-Here is an example of a simple `@script` that uses JavaScript's `setInterval()` to refresh your component every two seconds:
-
-```blade
-@script
-<script>
-    setInterval(() => {
-        $wire.$refresh()
-    }, 2000)
-</script>
-@endscript
-```
-
-You'll notice we are using an object called `$wire` inside the `<script>` to control the component. Livewire automatically makes this object available inside any `@script`s. If you're unfamiliar with `$wire`, you can learn more about `$wire` in the following documentation:
-* [Accessing properties from JavaScript](/docs/properties#accessing-properties-from-javascript)
-* [Calling Livewire actions from JS/Alpine](/docs/actions#calling-actions-from-alpine)
-* [The `$wire` object reference](/docs/javascript#the-wire-object)
-
-### Loading assets
-
-In addition to one-off `@script`s, Livewire provides a helpful `@assets` utility to easily load any script/style dependencies on the page.
-
-It also ensures that the provided assets are loaded only once per browser page, unlike `@script`, which executes every time a new instance of that Livewire component is initialized.
-
-Here is an example of using `@assets` to load a date picker library called [Pikaday](https://github.com/Pikaday/Pikaday) and initialize it inside your component using `@script`:
-
-```blade
-<div>
-    <input type="text" data-picker>
-</div>
-
-@assets
-<script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js" defer></script>
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
-@endassets
-
-@script
-<script>
-    new Pikaday({ field: $wire.$el.querySelector('[data-picker]') });
-</script>
-@endscript
-```
-
-> [!info] Using `@verbatim@script@endverbatim` and `@verbatim@assets@endverbatim` inside Blade components
-> If you are using [Blade components](https://laravel.com/docs/blade#components) to extract parts of your markup, you can use `@verbatim@script@endverbatim` and `@verbatim@assets@endverbatim` inside them as well; even if there are multiple Blade components inside the same Livewire component. However, `@verbatim@script@endverbatim` and `@verbatim@assets@endverbatim` are currently only supported in the context of a Livewire component, meaning if you use the given Blade component outside of Livewire entirely, those scripts and assets won't be loaded on the page.
+- **[Properties](/docs/4.x/properties)** — Manage component state and data
+- **[Actions](/docs/4.x/actions)** — Handle user interactions with methods
+- **[Pages](/docs/4.x/pages)** — Use components as full pages with routing
+- **[Nesting](/docs/4.x/nesting)** — Compose components together and pass data between them
+- **[Lifecycle Hooks](/docs/4.x/lifecycle-hooks)** — Execute code at specific points in a component's lifecycle

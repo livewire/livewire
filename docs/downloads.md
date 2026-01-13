@@ -7,18 +7,15 @@ However, behind the scenes, file downloads are handled differently than in a sta
 
 Triggering a file download in Livewire is as simple as returning a standard Laravel download response.
 
-Below is an example of a `ShowInvoice` component that contains a "Download" button to download the invoice PDF:
+Below is an example of a `show-invoice` component that contains a "Download" button to download the invoice PDF:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡show-invoice.blade.php
 
 use Livewire\Component;
 use App\Models\Invoice;
 
-class ShowInvoice extends Component
-{
+new class extends Component {
     public Invoice $invoice;
 
     public function mount(Invoice $invoice)
@@ -32,12 +29,7 @@ class ShowInvoice extends Component
             $this->invoice->file_path, 'invoice.pdf'
         );
     }
-
-    public function render()
-    {
-        return view('livewire.show-invoice');
-    }
-}
+};
 ```
 
 ```blade

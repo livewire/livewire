@@ -2,23 +2,24 @@
 
 namespace Livewire;
 
-use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
-use Livewire\Features\SupportPageComponents\HandlesPageComponents;
-use Livewire\Features\SupportReleaseTokens\HandlesReleaseTokens;
-use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
-use Livewire\Features\SupportFormObjects\HandlesFormObjects;
 use Livewire\Features\SupportValidation\HandlesValidation;
-use Livewire\Features\SupportAttributes\HandlesAttributes;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Features\SupportTransitions\HandlesTransitions;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
+use Livewire\Features\SupportSlots\HandlesSlots;
+use Livewire\Features\SupportReleaseTokens\HandlesReleaseTokens;
 use Livewire\Features\SupportRedirects\HandlesRedirects;
+use Livewire\Features\SupportPageComponents\HandlesPageComponents;
+use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
+use Livewire\Features\SupportIslands\HandlesIslands;
+use Livewire\Features\SupportFormObjects\HandlesFormObjects;
 use Livewire\Features\SupportEvents\HandlesEvents;
+use Livewire\Features\SupportHtmlAttributeForwarding\HandlesHtmlAttributeForwarding;
+use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
+use Livewire\Features\SupportAttributes\HandlesAttributes;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Concerns\InteractsWithProperties;
-use Livewire\V4\Partials\HandlesPartials;
 use Illuminate\Support\Traits\Macroable;
-use Livewire\V4\Slots\HandlesSlots;
-use Livewire\V4\HtmlAttributes\HandlesHtmlAttributes;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use BadMethodCallException;
 
 abstract class Component
@@ -28,8 +29,9 @@ abstract class Component
     use AuthorizesRequests;
     use InteractsWithProperties;
     use HandlesEvents;
-    use HandlesPartials;
+    use HandlesIslands;
     use HandlesRedirects;
+    use HandlesTransitions;
     use HandlesStreaming;
     use HandlesAttributes;
     use HandlesValidation;
@@ -39,7 +41,7 @@ abstract class Component
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;
     use HandlesSlots;
-    use HandlesHtmlAttributes;
+    use HandlesHtmlAttributeForwarding;
 
     protected $__id;
     protected $__name;
@@ -69,9 +71,23 @@ abstract class Component
         return $this->__name;
     }
 
+    function renderless()
+    {
+        $this->skipRender();
+    }
+
     function skipRender($html = null)
     {
+        if (store($this)->has('forceRender')) {
+            return;
+        }
+
         store($this)->set('skipRender', $html ?: true);
+    }
+
+    function forceRender()
+    {
+        store($this)->set('forceRender', true);
     }
 
     function skipMount()
@@ -82,6 +98,16 @@ abstract class Component
     function skipHydrate()
     {
         store($this)->set('skipHydrate', true);
+    }
+
+    function hasProvidedView()
+    {
+        return method_exists($this, 'view');
+    }
+
+    function getProvidedView()
+    {
+        return $this->view();
     }
 
     function __isset($property)

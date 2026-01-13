@@ -1,4 +1,3 @@
-
 /**
  * Features where order matters:
  */
@@ -12,16 +11,20 @@ import './supportDispatches';
  * Features where order does NOT matter:
  */
 import './supportDisablingFormsDuringRequest';
-import './supportPropsAndModelables';
 import './supportFileDownloads';
-import './supportLazyLoading';
 import './supportFileUploads';
 import './supportQueryString';
 import './supportLaravelEcho';
-import './supportIsolating';
 import './supportStreaming';
 import './supportRedirects';
-import './supportPartials';
+import './supportIslands';
 import './supportNavigate';
 import './supportEntangle';
 import './supportSlots';
+import './supportDataLoading';
+import './supportDataCurrent';
+import './supportPreserveScroll';
+import './supportWireIntersect';
+import './supportWireSort';
+import './supportJsModules'
+import './supportCssModules';

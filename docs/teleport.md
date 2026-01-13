@@ -26,7 +26,7 @@ Below is an example of using `@teleport` to render a modal dialog's contents at 
 ```
 
 > [!info]
-> The `@teleport` selector can be any string you would normally pass into something like `document.querySelector()`.
+> The `@@teleport` selector can be any string you would normally pass into something like `document.querySelector()`.
 >
 > You can learn more about `document.querySelector()` by consulting its [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector).
 
@@ -46,4 +46,4 @@ Now, when the above Livewire template is rendered on the page, the _contents_ po
 > Livewire only supports teleporting HTML outside your components. For example, teleporting a modal to the `<body>` tag is fine, but teleporting it to another element within your component will not work.
 
 > [!warning] Teleporting only works with a single root element
-> Make sure you only include a single root element inside your `@teleport` statement.
+> Make sure you only include a single root element inside your `@@teleport` statement.

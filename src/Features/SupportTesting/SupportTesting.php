@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportTesting;
 
 use Illuminate\Validation\ValidationException;
-use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\ComponentHook;
 use Livewire\Component;
 
@@ -47,7 +46,7 @@ class SupportTesting extends ComponentHook
         // Usage: $this->assertSeeLivewire('counter');
         \Illuminate\Testing\TestResponse::macro('assertSeeLivewire', function ($component) {
             if (is_subclass_of($component, Component::class)) {
-                $component = app(ComponentRegistry::class)->getName($component);
+                $component = app('livewire.factory')->resolveComponentName($component);
             }
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
@@ -63,7 +62,7 @@ class SupportTesting extends ComponentHook
         // Usage: $this->assertDontSeeLivewire('counter');
         \Illuminate\Testing\TestResponse::macro('assertDontSeeLivewire', function ($component) {
             if (is_subclass_of($component, Component::class)) {
-                $component = app(ComponentRegistry::class)->getName($component);
+                $component = app('livewire.factory')->resolveComponentName($component);
             }
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
@@ -79,7 +78,7 @@ class SupportTesting extends ComponentHook
         if (class_exists(\Illuminate\Testing\TestView::class)) {
             \Illuminate\Testing\TestView::macro('assertSeeLivewire', function ($component) {
                 if (is_subclass_of($component, Component::class)) {
-                    $component = app(ComponentRegistry::class)->getName($component);
+                    $component = app('livewire.factory')->resolveComponentName($component);
                 }
                 $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
@@ -94,7 +93,7 @@ class SupportTesting extends ComponentHook
 
             \Illuminate\Testing\TestView::macro('assertDontSeeLivewire', function ($component) {
                 if (is_subclass_of($component, Component::class)) {
-                    $component = app(ComponentRegistry::class)->getName($component);
+                    $component = app('livewire.factory')->resolveComponentName($component);
                 }
                 $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 

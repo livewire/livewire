@@ -5,6 +5,9 @@ namespace Livewire\Mechanisms\HandleRequests;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+use Livewire\Exceptions\PayloadTooLargeException;
+use Livewire\Exceptions\TooManyComponentsException;
 
 use Livewire\Mechanisms\Mechanism;
 
@@ -16,14 +19,21 @@ class HandleRequests extends Mechanism
 
     function boot()
     {
-        // Only set it if another provider hasn't already set it....
-        if (! $this->updateRoute) {
-            app($this::class)->setUpdateRoute(function ($handle) {
-                return Route::post('/livewire/update', $handle)->middleware('web');
-            });
-        }
+        // Only set it if another provider or routes file haven't already set it....
+        app()->booted(function () {
+            if (! $this->updateRoute) {
+                app($this::class)->setUpdateRoute(function ($handle) {
+                    return Route::post(EndpointResolver::updatePath(), $handle)->middleware('web');
+                });
+            }
+        });
 
         $this->skipRequestPayloadTamperingMiddleware();
+    }
+
+    function getUriPrefix()
+    {
+        return EndpointResolver::prefix();
     }
 
     function getUpdateUri()
@@ -79,8 +89,26 @@ class HandleRequests extends Mechanism
 
     function handleUpdate()
     {
+        // Check payload size limit...
+        $maxSize = config('livewire.payload.max_size');
+
+        if ($maxSize !== null) {
+            $contentLength = request()->header('Content-Length', 0);
+
+            if ($contentLength > $maxSize) {
+                throw new PayloadTooLargeException($contentLength, $maxSize);
+            }
+        }
+
         $requestPayload = request(key: 'components', default: []);
-        
+
+        // Check max components limit...
+        $maxComponents = config('livewire.payload.max_components');
+
+        if ($maxComponents !== null && count($requestPayload) > $maxComponents) {
+            throw new TooManyComponentsException(count($requestPayload), $maxComponents);
+        }
+
         $finish = trigger('request', $requestPayload);
 
         $requestPayload = $finish($requestPayload);

@@ -15,7 +15,10 @@ globalDirective('current', ({ el, directive, cleanup }) => {
     let options = {
         exact: directive.modifiers.includes('exact'),
         strict: directive.modifiers.includes('strict'),
+        ignore: directive.modifiers.includes('ignore'),
     }
+
+    if (options.ignore) return
 
     // Fragment hrefs aren't supported as of yet...
     if (expression.startsWith('#')) return
@@ -46,7 +49,7 @@ globalDirective('current', ({ el, directive, cleanup }) => {
     cleanup(() => onPageChanges.delete(el))
 })
 
-function pathMatches(hrefUrl, actualUrl, options) {
+export function pathMatches(hrefUrl, actualUrl, options = {}) {
     // If the domains/hostnames don't match, we are not going to match...
     if (hrefUrl.hostname !== actualUrl.hostname) return false
 

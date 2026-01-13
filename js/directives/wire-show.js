@@ -1,3 +1,4 @@
+import { evaluateActionExpression } from '../evaluator'
 import Alpine from 'alpinejs'
 
 Alpine.interceptInit(el => {
@@ -7,13 +8,11 @@ Alpine.interceptInit(el => {
 
             let modifierString = name.split('wire:show')[1]
 
-            let expression = value.startsWith('!')
-                ? '!$wire.' + value.slice(1).trim()
-                : '$wire.' + value.trim()
+            let expression = value.trim()
 
             Alpine.bind(el, {
                 ['x-show' + modifierString]() {
-                    return Alpine.evaluate(el, expression)
+                    return evaluateActionExpression(el, expression)
                 }
             })
         }

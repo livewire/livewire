@@ -1,4 +1,6 @@
 import { isObjecty } from "@/utils"
+import historyCoordinator from "./coordinator"
+import { unwrap } from "./utils"
 
 export default function history(Alpine) {
     Alpine.magic('queryString', (el, { interceptor }) =>  {
@@ -41,11 +43,11 @@ export default function history(Alpine) {
 export function track(name, initialSeedValue, alwaysShow = false, except = null) {
     let { has, get, set, remove } = queryStringUtils()
 
-    let url = new URL(window.location.href)
+    let url = historyCoordinator.getUrl()
     let isInitiallyPresentInUrl = has(url, name)
     let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue
     let initialValueMemo = JSON.stringify(initialValue)
-    let exceptValueMemo = [false, null, undefined].includes(except) ? initialSeedValue : JSON.stringify(except)
+    let exceptValueMemo = JSON.stringify(except)
 
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo
     let hasReturnedToExceptValue = (newValue) =>  JSON.stringify(newValue) === exceptValueMemo
@@ -59,7 +61,7 @@ export function track(name, initialSeedValue, alwaysShow = false, except = null)
     let update = (strategy, newValue) => {
         if (lock) return
 
-        let url = new URL(window.location.href)
+        let url = historyCoordinator.getUrl()
 
         // This block of code is what needs to be changed for this failing test to pass:
         if (! alwaysShow && ! isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
@@ -137,37 +139,11 @@ export function track(name, initialSeedValue, alwaysShow = false, except = null)
 }
 
 function replace(url, key, object) {
-    let state = window.history.state || {}
-
-    if (! state.alpine) state.alpine = {}
-
-    state.alpine[key] = unwrap(object)
-
-    try {
-        window.history.replaceState(state, '', url.toString())
-    } catch (e) {
-        console.error(e)
-    }
+    historyCoordinator.replaceState(url, { [key]: object })
 }
 
 function push(url, key, object) {
-    let state = window.history.state || {}
-
-    if (! state.alpine) state.alpine = {}
-
-    state = { alpine: {...state.alpine, ...{[key]: unwrap(object)}} }
-
-    try {
-        window.history.pushState(state, '', url.toString())
-    } catch (e) {
-        console.error(e)
-    }
-}
-
-function unwrap(object) {
-    if (object === undefined) return undefined
-
-    return JSON.parse(JSON.stringify(object))
+    historyCoordinator.pushState(url, { [key]: object })
 }
 
 function queryStringUtils() {
