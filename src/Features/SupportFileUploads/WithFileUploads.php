@@ -31,6 +31,17 @@ trait WithFileUploads
             $this->cleanupOldUploads();
         }
 
+        // Verify and extract paths from signed references.
+        $tmpPath = collect($tmpPath)->map(function ($signedPath) {
+            $path = TemporaryUploadedFile::extractPathFromSignedPath($signedPath);
+
+            if ($path === false) {
+                abort(403, 'Invalid upload reference.');
+            }
+
+            return $path;
+        })->toArray();
+
         if ($isMultiple) {
             $file = collect($tmpPath)->map(function ($i) {
                 return TemporaryUploadedFile::createFromLivewire($i);
