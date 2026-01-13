@@ -1,10 +1,10 @@
 import { interceptMessage } from '@/request'
 
-interceptMessage(({ actions, onSend, onFinish }) => {
+interceptMessage(({ message, onSend, onFinish }) => {
     let undos = []
 
     onSend(() => {
-        actions.forEach(action => {
+        message.actions.forEach(action => {
             let origin = action.origin
 
             if (! origin) return

@@ -5,17 +5,17 @@ import { morphFragment } from '@/morph'
 
 interceptMessage(({ message, onSuccess, onStream }) => {
     onSuccess(({ payload, onMorph }) => {
-        onMorph(() => {
+        onMorph(async () => {
             let fragments = payload.effects.slotFragments || []
 
-            fragments.forEach(fragmentHtml => {
-                renderSlot(message.component, fragmentHtml)
+            fragments.forEach(async fragmentHtml => {
+                await renderSlot(message.component, fragmentHtml)
             })
         })
     })
 })
 
-export function renderSlot(component, fragmentHtml) {
+export async function renderSlot(component, fragmentHtml) {
     let metadata = extractFragmentMetadataFromHtml(fragmentHtml)
 
     let targetComponent = findComponent(metadata.id)
@@ -30,5 +30,5 @@ export function renderSlot(component, fragmentHtml) {
 
     let strippedContent = extractInnerHtmlFromFragmentHtml(fragmentHtml)
 
-    morphFragment(targetComponent, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent)
+    await morphFragment(targetComponent, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent)
 }

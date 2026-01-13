@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\FrontendAssets;
 
+use Illuminate\Support\Facades\Vite;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
@@ -109,9 +110,12 @@ class FrontendAssets extends Mechanism
      */
     public static function styles($options = [])
     {
+        if (app(static::class)->hasRenderedStyles) return '';
+
         app(static::class)->hasRenderedStyles = true;
 
-        $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\" data-livewire-style" : '';
+        $nonce = static::nonce($options);
+        $nonce = $nonce ? "{$nonce} data-livewire-style" : '';
 
         $progressBarColor = config('livewire.navigate.progress_bar_color', '#2299dd');
 
@@ -162,6 +166,8 @@ class FrontendAssets extends Mechanism
      */
     public static function scripts($options = [])
     {
+        if (app(static::class)->hasRenderedScripts) return '';
+
         app(static::class)->hasRenderedScripts = true;
 
         $debug = config('app.debug');
@@ -203,11 +209,13 @@ class FrontendAssets extends Mechanism
 
         $assetWarning = null;
 
-        $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
+        $nonce = static::nonce($options);
 
         [$url, $assetWarning] = static::usePublishedAssetsIfAvailable($url, $manifest, $nonce);
 
         $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
+
+        $uriPrefix = app('livewire')->getUriPrefix();
 
         $updateUri = app('livewire')->getUpdateUri();
 
@@ -216,7 +224,7 @@ class FrontendAssets extends Mechanism
         );
 
         return <<<HTML
-        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
+        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-uri-prefix="{$uriPrefix}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 
@@ -224,19 +232,20 @@ class FrontendAssets extends Mechanism
     {
         app(static::class)->hasRenderedScripts = true;
 
-        $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
+        $nonce = static::nonce($options);
 
         $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
 
         $attributes = json_encode([
             'csrf' => app()->has('session.store') ? csrf_token() : '',
             'uri' => app('livewire')->getUpdateUri(),
+            'uriPrefix' => app('livewire')->getUriPrefix(),
             'progressBar' => $progressBar,
             'nonce' => isset($options['nonce']) ? $options['nonce'] : '',
         ]);
 
         return <<<HTML
-        <script{$nonce} data-navigate-once="true">window.livewireScriptConfig = {$attributes};</script>
+        <script {$nonce} data-navigate-once="true">window.livewireScriptConfig = {$attributes};</script>
         HTML;
     }
 
@@ -284,5 +293,12 @@ class FrontendAssets extends Mechanism
     protected static function minify($subject)
     {
         return preg_replace('~(\v|\t|\s{2,})~m', '', $subject);
+    }
+
+    protected static function nonce($options = [])
+    {
+        $nonce = $options['nonce'] ?? Vite::cspNonce();
+
+        return $nonce ? "nonce=\"{$nonce}\"" : '';
     }
 }

@@ -42,7 +42,18 @@ export default class Message {
             return
         }
 
+        action.message = this
         this.actions.add(action)
+    }
+
+    removeAction(action) {
+        this.actions.delete(action)
+        action.message = null
+
+        // If no actions remain, cancel the message
+        if (this.actions.size === 0) {
+            this.cancel()
+        }
     }
 
     getActions() {
@@ -86,10 +97,10 @@ export default class Message {
 
         this.cancelled = true
 
-        this.onCancel()
+        this.invokeOnCancel()
 
-        if (this.request.hasAllCancelledMessages()) {
-            this.request.abort()
+        if (this.request?.hasAllCancelledMessages()) {
+            this.request.cancel()
         }
     }
 
@@ -105,45 +116,70 @@ export default class Message {
      * Lifecycle methods...
      */
 
-    onSend() {
+    invokeOnSend() {
         this.interceptors.forEach(interceptor => interceptor.onSend({
             payload: this.payload
         }))
+
+        // Invoke action-level onSend callbacks
+        Array.from(this.actions).forEach((action, index) => {
+            let call = this.calls[index]
+            action.invokeOnSend({ call })
+        })
     }
 
-    onCancel() {
+    invokeOnCancel() {
         this.interceptors.forEach(interceptor => interceptor.onCancel())
 
-        this.rejectActionPromises('Request cancelled')
+        this.rejectActionPromises({ status: null, body: null, json: null, errors: null })
 
-        this.onFinish()
+        // Invoke action-level onFinish callbacks
+        Array.from(this.actions).forEach(action => action.invokeOnFinish())
+
+        this.invokeOnFinish()
     }
 
-    onFailure(error) {
+    invokeOnFailure(error) {
         this.interceptors.forEach(interceptor => interceptor.onFailure({ error }))
 
-        this.rejectActionPromises('Request failed')
+        // Invoke action-level onFailure callbacks
+        Array.from(this.actions).forEach(action => action.invokeOnFailure({ error }))
 
-        this.onFinish()
+        this.rejectActionPromises({ status: null, body: null, json: null, errors: null })
+
+        // Invoke action-level onFinish callbacks
+        Array.from(this.actions).forEach(action => action.invokeOnFinish())
+
+        this.invokeOnFinish()
     }
 
-    onError({ response, responseBody, preventDefault }) {
+    invokeOnError({ response, body, preventDefault }) {
         this.interceptors.forEach(interceptor => interceptor.onError({
             response,
-            responseBody,
+            body,
             preventDefault
         }))
 
-        this.rejectActionPromises('Request failed')
+        // Invoke action-level onError callbacks
+        Array.from(this.actions).forEach(action => action.invokeOnError({ response, body, preventDefault }))
 
-        this.onFinish()
+        // Try to parse body as JSON for the rejection payload
+        let json = null
+        try { json = JSON.parse(body) } catch (e) {}
+
+        this.rejectActionPromises({ status: response.status, body, json, errors: null })
+
+        // Invoke action-level onFinish callbacks
+        Array.from(this.actions).forEach(action => action.invokeOnFinish())
+
+        this.invokeOnFinish()
     }
 
-    onStream({ streamedJson }) {
-        this.interceptors.forEach(interceptor => interceptor.onStream({ streamedJson }))
+    invokeOnStream({ json }) {
+        this.interceptors.forEach(interceptor => interceptor.onStream({ json }))
     }
 
-    onSuccess() {
+    invokeOnSuccess() {
         this.interceptors.forEach(interceptor => {
             interceptor.onSuccess({
                 payload: this.responsePayload,
@@ -156,39 +192,42 @@ export default class Message {
 
         // Process any returned values...
         let returns = this.responsePayload.effects['returns'] || []
+        let returnsMeta = this.responsePayload.effects['returnsMeta'] || {}
 
-        this.resolveActionPromises(returns)
+        this.resolveActionPromises(returns, returnsMeta)
 
-        this.onFinish()
+        this.invokeOnFinish()
     }
 
-    onSync() {
+    invokeOnSync() {
         this.interceptors.forEach(interceptor => interceptor.onSync())
     }
 
-    onEffect() {
+    invokeOnEffect() {
         this.interceptors.forEach(interceptor => interceptor.onEffect())
     }
 
-    onMorph() {
-        this.interceptors.forEach(interceptor => interceptor.onMorph())
-    }
-
-    onRender() {
-        this.interceptors.forEach(interceptor => interceptor.onRender())
-    }
-
-    onFinish() {
-        this.interceptors.forEach(interceptor => interceptor.onFinish())
-    }
-
-    rejectActionPromises(error) {
-        Array.from(this.actions).forEach(action => {
-            action.rejectPromise(error)
+    async invokeOnMorph() {
+        this.interceptors.forEach(async interceptor => {
+            await interceptor.onMorph()
         })
     }
 
-    resolveActionPromises(returns) {
+    invokeOnRender() {
+        this.interceptors.forEach(interceptor => interceptor.onRender())
+    }
+
+    invokeOnFinish() {
+        this.interceptors.forEach(interceptor => interceptor.onFinish())
+    }
+
+    rejectActionPromises({ status, body, json, errors }) {
+        Array.from(this.actions).forEach(action => {
+            action.rejectPromise({ status, body, json, errors })
+        })
+    }
+
+    resolveActionPromises(returns, returnsMeta) {
         let resolvedActions = new Set()
 
         returns.forEach((value, index) => {
@@ -196,7 +235,22 @@ export default class Message {
 
             if (! action) return;
 
+            // Check for validation errors in returnsMeta
+            let meta = returnsMeta[index]
+            if (meta?.errors) {
+                action.rejectPromise({ status: 422, body: null, json: null, errors: meta.errors })
+                action.invokeOnFinish()
+                resolvedActions.add(action)
+                return
+            }
+
+            // Invoke action-level onSuccess callback with the return value
+            action.invokeOnSuccess(value)
+
             action.resolvePromise(value)
+
+            // Invoke action-level onFinish callback
+            action.invokeOnFinish()
 
             resolvedActions.add(action)
         })
@@ -204,7 +258,13 @@ export default class Message {
         Array.from(this.actions).forEach(action => {
             if (resolvedActions.has(action)) return
 
+            // Invoke action-level onSuccess callback (undefined return)
+            action.invokeOnSuccess(undefined)
+
             action.resolvePromise()
+
+            // Invoke action-level onFinish callback
+            action.invokeOnFinish()
         })
     }
 }

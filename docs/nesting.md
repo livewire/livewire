@@ -372,7 +372,7 @@ Below is an example of passing both a default slot and a named `actions` slot to
 </div>
 ```
 
-You can access named slots in the child component by passing the slot name to the `$slot` variable:
+You can access named slots in the child component by passing the slot name to the `$slots` variable:
 
 ```blade
 <div>
@@ -380,7 +380,7 @@ You can access named slots in the child component by passing the slot name to th
     <p>{{ $comment->body }}</p>
 
     <div class="actions">
-        {{ $slot('actions') }}
+        {{ $slots['actions'] }}
     </div>
 
     <div class="metadata">
@@ -391,16 +391,16 @@ You can access named slots in the child component by passing the slot name to th
 
 ### Checking if a slot was provided
 
-You can check if a slot was provided by the parent using the `has()` method on the `$slot` variable. This is helpful when you want to conditionally render content based on whether or not a slot is present:
+You can check if a slot was provided by the parent using the `has()` method on the `$slots` variable. This is helpful when you want to conditionally render content based on whether or not a slot is present:
 
 ```blade
 <div>
     <p>{{ $comment->author }}</p>
     <p>{{ $comment->body }}</p>
 
-    @if ($slot->has('actions'))
+    @if ($slots->has('actions'))
         <div class="actions">
-            {{ $slot('actions') }}
+            {{ $slots['actions'] }}
         </div>
     @endif
 

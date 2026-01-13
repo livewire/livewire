@@ -73,24 +73,20 @@ trait HandlesIslands
             }
         }
 
-        if ($lazy && $this->islandIsMounting()) {
+        if (($lazy || $defer) && $this->islandIsMounting()) {
             $renderedContent = $this->renderIslandView($name, $token, [
                 '__placeholder' => '',
             ]);
 
-            $renderedContent = '<div wire:intersect="__lazyLoadIsland">' . $renderedContent . '</div>';
-        } elseif ($defer && $this->islandIsMounting()) {
-            $renderedContent = $this->renderIslandView($name, $token, [
-                '__placeholder' => '',
-            ]);
+            $directive = $lazy ? 'wire:intersect.once' : 'wire:init';
 
-            $renderedContent = '<div wire:init="__lazyLoadIsland">' . $renderedContent . '</div>';
+            $renderedContent = $this->injectLazyDirective($renderedContent, $name, $directive);
         } else {
             // Don't pass directive's $with - it's extracted in the compiled island
             $renderedContent = $this->renderIslandView($name, $token, []);
         }
 
-        return $this->wrapWithFragmentMarkers($renderedContent,[
+        return $this->wrapWithFragmentMarkers($renderedContent, [
             'type' => 'island',
             'name' => $name,
             'token' => $token,
@@ -229,6 +225,28 @@ trait HandlesIslands
             'name' => $name,
             'token' => $token,
         ];
+    }
+
+    protected function injectLazyDirective($content, $islandName, $directive)
+    {
+        $attributes = $directive.'="__lazyLoadIsland"';
+
+        // Fast regex to find first HTML element opening tag (not comments or closing tags)
+        // Matches: <tagname followed by whitespace, >, or />
+        if (preg_match('/<([a-zA-Z][a-zA-Z0-9-]*)(\s|>|\/>)/', $content, $matches, PREG_OFFSET_CAPTURE)) {
+            $fullMatch = $matches[0][0];
+            $position = $matches[0][1];
+            $tagName = $matches[1][0];
+            $afterTag = $matches[2][0];
+
+            // Insert attributes after the tag name
+            $insertion = '<'.$tagName.' '.$attributes.$afterTag;
+
+            return substr($content, 0, $position) . $insertion . substr($content, $position + strlen($fullMatch));
+        }
+
+        // No element found (text-only content), wrap it
+        return '<span '.$attributes.'>'.$content.'</span>';
     }
 
     protected function mountIfNeedsMounting($mount)

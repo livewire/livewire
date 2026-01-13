@@ -25,7 +25,7 @@ function triggerComponentRequest(el, directive, component) {
 
     let fullMethod = directive.expression ? directive.expression : '$refresh'
 
-    evaluateActionExpression(component, el, fullMethod)
+    evaluateActionExpression(el, fullMethod)
 }
 
 export function poll(callback, interval = 2000) {

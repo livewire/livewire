@@ -20,7 +20,7 @@ function updateNavigateLinks() {
     document.querySelectorAll(wireNavigateSelector).forEach(el => {
         // If the element has `wire:current` then the user might want to specify strict or 
         // exact matching, so we will just return early so we don't override that...
-        if (el.hasAttribute('wire:current')) return
+        if (Array.from(el.attributes).some(attr => attr.name.startsWith('wire:current'))) return
 
         // Fragment hrefs aren't supported...
         let href = el.getAttribute('href')

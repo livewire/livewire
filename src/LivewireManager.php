@@ -160,6 +160,11 @@ class LivewireManager
         return app(HandleRequests::class)->setUpdateRoute($callback);
     }
 
+    function getUriPrefix()
+    {
+        return app(HandleRequests::class)->getUriPrefix();
+    }
+
     function getUpdateUri()
     {
         return app(HandleRequests::class)->getUpdateUri();
@@ -221,6 +226,14 @@ class LivewireManager
         return $this;
     }
 
+    /**
+     * @template TComponent of \Livewire\Component
+     *
+     * @param class-string<TComponent>|TComponent|string|array<array-key, \Livewire\Component> $name
+     * @param array $params
+     *
+     * @return Testable<TComponent>
+     */
     function test($name, $params = [])
     {
         return Testable::create(

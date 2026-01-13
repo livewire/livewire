@@ -9,6 +9,8 @@ class MultiFileParser extends Parser
     public function __construct(
         public string $path,
         public ?string $scriptPortion,
+        public ?string $stylePortion,
+        public ?string $globalStylePortion,
         public string $classPortion,
         public string $viewPortion,
         public ?string $placeholderPortion,
@@ -24,6 +26,8 @@ class MultiFileParser extends Parser
         $classPath = $path . '/' . $name . '.php';
         $viewPath = $path . '/' . $name . '.blade.php';
         $scriptPath = $path . '/' . $name . '.js';
+        $stylePath = $path . '/' . $name . '.css';
+        $globalStylePath = $path . '/' . $name . '.global.css';
 
         if (! file_exists($classPath)) {
             throw new \Exception('Class file not found: ' . $classPath);
@@ -34,6 +38,8 @@ class MultiFileParser extends Parser
         }
 
         $scriptPortion = file_exists($scriptPath) ? file_get_contents($scriptPath) : null;
+        $stylePortion = file_exists($stylePath) ? file_get_contents($stylePath) : null;
+        $globalStylePortion = file_exists($globalStylePath) ? file_get_contents($globalStylePath) : null;
         $classPortion = file_get_contents($classPath);
         $viewPortion = $compiler->prepareViewForCompilation(file_get_contents($viewPath), $viewPath);
 
@@ -42,13 +48,15 @@ class MultiFileParser extends Parser
         return new self(
             $path,
             $scriptPortion,
+            $stylePortion,
+            $globalStylePortion,
             $classPortion,
             $viewPortion,
             $placeholderPortion,
         );
     }
 
-    public function generateClassContents(?string $viewFileName = null, ?string $placeholderFileName = null, ?string $scriptFileName = null): string
+    public function generateClassContents(?string $viewFileName = null, ?string $placeholderFileName = null, ?string $scriptFileName = null, ?string $styleFileName = null, ?string $globalStyleFileName = null): string
     {
         $classContents = trim($this->classPortion);
 
@@ -66,6 +74,14 @@ class MultiFileParser extends Parser
 
         if ($scriptFileName) {
             $classContents = $this->injectScriptMethod($classContents, $scriptFileName);
+        }
+
+        if ($styleFileName) {
+            $classContents = $this->injectStyleMethod($classContents, $styleFileName);
+        }
+
+        if ($globalStyleFileName) {
+            $classContents = $this->injectGlobalStyleMethod($classContents, $globalStyleFileName);
         }
 
         return $classContents;
@@ -90,6 +106,24 @@ class MultiFileParser extends Parser
             {$scriptContents}
         }
         JS;
+    }
+
+    public function generateStyleContents(): ?string
+    {
+        if ($this->stylePortion === null || trim($this->stylePortion) === '') {
+            return null;
+        }
+
+        return trim($this->stylePortion);
+    }
+
+    public function generateGlobalStyleContents(): ?string
+    {
+        if ($this->globalStylePortion === null || trim($this->globalStylePortion) === '') {
+            return null;
+        }
+
+        return trim($this->globalStylePortion);
     }
 
     /**

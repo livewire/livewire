@@ -107,8 +107,8 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                     @script
                     <script>
-                        this.intercept(({ actions, cancel }) => {
-                            setTimeout(() => cancel(), 50)
+                        this.interceptMessage(({ message }) => {
+                            setTimeout(() => message.cancel(), 50)
                         })
                     </script>
                     @endscript

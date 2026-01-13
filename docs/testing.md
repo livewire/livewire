@@ -32,8 +32,8 @@ First, update your `tests/Pest.php` file to include the `resources/views` direct
 
 ```php
 pest()->extend(Tests\TestCase::class)
-    ->in('Feature')
-    ->in('../resources/views/**');
+    // ...
+    ->in('Feature', '../resources/views');
 ```
 
 This tells Pest to use your `TestCase` base class for tests found in both the `tests/Feature` directory and anywhere within `resources/views`.

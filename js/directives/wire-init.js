@@ -7,5 +7,5 @@ directive('init', ({ component, el, directive }) => {
 
     setNextActionOrigin({ el, directive })
 
-    evaluateActionExpression(component, el, fullMethod)
+    evaluateActionExpression(el, fullMethod)
 })

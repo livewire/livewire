@@ -1,5 +1,5 @@
 import { setNextActionOrigin } from '@/request'
-import { evaluateActionExpressionWithoutComponentScope } from '../evaluator'
+import { evaluateActionExpression } from '../evaluator'
 import Alpine from 'alpinejs'
 import { extractDirective } from '@/directives'
 
@@ -51,10 +51,10 @@ Alpine.interceptInit(el => {
                 [attribute]() {
                     setNextActionOrigin({ el, directive })
 
-                    return evaluateActionExpressionWithoutComponentScope(el, expression, { scope: {
+                    evaluateActionExpression(el, expression, { scope: {
                         $item: this.$item,
                         $position: this.$position,
-                    } })
+                    }, params: [this.$item, this.$position] })
                 }
             })
         }

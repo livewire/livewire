@@ -1,51 +1,57 @@
 import Alpine from 'alpinejs'
 
-export function evaluateExpression(component, el, expression, options = {}) {
+export function evaluateExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 
-    options = {
-        ...{
-            scope: {
-                $wire: component.$wire,
-            },
-            context: component.$wire,
-            ...options.scope,
-            ...options.context,
-        },
-        ...options,
+    let result = Alpine.evaluateRaw(el, expression, options)
+
+    if (result instanceof Promise) {
+        result.catch(() => {})
     }
 
-    return Alpine.evaluate(el, expression, options)
+    return result
 }
 
-export function evaluateActionExpression(component, el, expression, options = {}) {
+export function evaluateActionExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 
-    let negated = false
+    let contextualExpression = contextualizeExpression(expression)
 
-    if (expression.startsWith('!')) {
-        negated = true
+    try {
+        let result = Alpine.evaluateRaw(el, contextualExpression, options)
 
-        expression = expression.slice(1).trim()
+        // Silently catch Livewire request failures. These are handled by
+        // Livewire at the request level...
+        if (result instanceof Promise && result._livewireAction) {
+            result.catch(() => {})
+        }
+
+        return result
+    } catch (error) {
+        console.warn(`Livewire Expression Error: ${error.message}\n\n${ expression ? 'Expression: \"' + expression + '\"\n\n' : '' }`, el)
+
+        console.error(error)
     }
-
-    let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`
-
-    return Alpine.evaluate(el, contextualExpression, options)
 }
 
-export function evaluateActionExpressionWithoutComponentScope(el, expression, options = {}) {
-    if (! expression || expression.trim() === '') return
+export function contextualizeExpression(expression) {
+    let SKIP = ['JSON', 'true', 'false', 'null', 'undefined', 'this', '$wire', '$event']
+    let strings = []
 
-    let negated = false
+    // 1. Yank out string literals so we don't touch them
+    let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (m) => {
+        strings.push(m)
+        return `___${strings.length - 1}___`
+    })
 
-    if (expression.startsWith('!')) {
-        negated = true
+    // 2. Prefix identifiers not after a dot (skip placeholders from step 1)
+    //    Also skip object keys (identifiers immediately followed by colon)
+    result = result.replace(/(?<![.\w$])(\$?[a-zA-Z_]\w*)/g, (m, ident, offset) => {
+        if (SKIP.includes(ident) || /^___\d+___$/.test(ident)) return ident
+        if (result[offset + m.length] === ':') return ident
+        return '$wire.' + ident
+    })
 
-        expression = expression.slice(1).trim()
-    }
-
-    let contextualExpression = negated ? `! $wire.${expression}` : `$wire.${expression}`
-
-    return Alpine.evaluate(el, contextualExpression, options)
+    // 3. Restore strings
+    return result.replace(/___(\d+)___/g, (m, i) => strings[i])
 }

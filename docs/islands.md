@@ -195,15 +195,15 @@ new class extends Component {
         @endforeach
     @endisland
 
-    <button type="button" wire:click.append="loadMore" wire:island="feed">
+    <button type="button" wire:click="loadMore" wire:island.append="feed">
         Load more
     </button>
 </div>
 ```
 
 Available modes:
-- `.append` - Add to the end
-- `.prepend` - Add to the beginning
+- `wire:island.append` - Add to the end
+- `wire:island.prepend` - Add to the beginning
 
 ## Nested islands
 
