@@ -249,35 +249,6 @@ class TemporaryUploadedFile extends UploadedFile
         return new static($filePath, FileUploadConfiguration::disk());
     }
 
-    /**
-     * Generate a short token for a given path using the app key and session ID.
-     * This ensures tokens are unique per session and cannot be forged without the app key.
-     */
-    protected static function generateToken(string $path): string
-    {
-        return substr(hash_hmac('sha256', $path, app('encrypter')->getKey() . session()->getId()), 0, 8);
-    }
-
-    public static function signPath(string $path): string
-    {
-        return static::generateToken($path) . ':' . $path;
-    }
-
-    public static function extractPathFromSignedPath(string $signedPath): string|false
-    {
-        if (! str_contains($signedPath, ':')) {
-            return false;
-        }
-
-        [$token, $path] = explode(':', $signedPath, 2);
-
-        if (! hash_equals(static::generateToken($path), $token)) {
-            return false;
-        }
-
-        return $path;
-    }
-
     public static function canUnserialize($subject)
     {
         if (is_string($subject)) {

@@ -45,11 +45,7 @@ class FileUploadController implements HasMiddleware
             return FileUploadConfiguration::storeTemporaryFile($file, $disk);
         });
 
-        // Strip out the temporary upload directory from the paths and sign them.
-        return $fileHashPaths->map(function ($path) {
-            $stripped = str_replace(FileUploadConfiguration::path('/'), '', $path);
-
-            return TemporaryUploadedFile::signPath($stripped);
-        });
+        // Strip out the temporary upload directory from the paths.
+        return $fileHashPaths->map(function ($path) { return str_replace(FileUploadConfiguration::path('/'), '', $path); });
     }
 }
