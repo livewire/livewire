@@ -81,7 +81,7 @@ class HandleRequests extends Mechanism
     function handleUpdate()
     {
         $requestPayload = request(key: 'components', default: []);
-        
+
         $finish = trigger('request', $requestPayload);
 
         $requestPayload = $finish($requestPayload);
