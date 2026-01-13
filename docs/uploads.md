@@ -264,6 +264,9 @@ Now, when a user uploads a file, the file will never actually be stored on your 
 > php artisan livewire:config
 > ```
 
+> [!info] Multiple file uploads to S3
+> When uploading multiple files directly to S3, Livewire uploads files sequentially (one at a time) rather than in parallel. This provides more predictable progress tracking and better error handling. Progress is aggregated across all files, giving you an accurate overall percentage.
+
 ### Configuring automatic file cleanup
 
 Livewire's temporary upload directory will fill up with files quickly; therefore, it's essential to configure S3 to clean up files older than 24 hours.

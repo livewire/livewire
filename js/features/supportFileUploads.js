@@ -94,10 +94,10 @@ class UploadManager {
             this.handleSignedUrl(name, url)
         })
 
-        this.component.$wire.$on('upload:generatedSignedUrlForS3', ({ name, payload }) => {
+        this.component.$wire.$on('upload:generatedSignedUrlForS3', ({ name, payloads }) => {
             setUploadLoading(this.component, name)
 
-            this.handleS3PreSignedUrl(name, payload)
+            this.handleS3PreSignedUrls(name, payloads)
         })
 
         this.component.$wire.$on('upload:finished', ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames))
@@ -172,6 +172,74 @@ class UploadManager {
         this.makeRequest(name, formData, 'put', url, headers, response => {
             return [payload.path]
         })
+    }
+
+    /**
+     * Handle multiple S3 pre-signed URLs by uploading files sequentially
+     *
+     * Files are uploaded one at a time to S3 to provide better progress tracking
+     * and more predictable error handling. Progress is aggregated across all files.
+     *
+     * @param {string} name - The property name for this upload
+     * @param {Array} payloads - Array of pre-signed URL payloads, one per file
+     */
+    handleS3PreSignedUrls(name, payloads) {
+        let uploadObject = this.uploadBag.first(name)
+        let files = uploadObject.files
+        let paths = []
+        let currentIndex = 0
+
+        let uploadNext = () => {
+            if (currentIndex >= files.length) {
+                this.component.$wire.call('_finishUpload', name, paths, uploadObject.multiple, uploadObject.append)
+                return
+            }
+
+            let file = files[currentIndex]
+            let payload = payloads[currentIndex]
+            let headers = payload.headers
+            if ('Host' in headers) delete headers.Host
+            let url = payload.url
+
+            let request = new XMLHttpRequest()
+            request.open('put', url)
+
+            Object.entries(headers).forEach(([key, value]) => {
+                request.setRequestHeader(key, value)
+            })
+
+            request.upload.addEventListener('progress', e => {
+                let totalProgress = currentIndex / files.length
+                let currentFileProgress = (e.loaded / e.total) / files.length
+                let overallProgress = Math.floor((totalProgress + currentFileProgress) * 100)
+
+                e.detail = {}
+                e.detail.progress = overallProgress
+
+                uploadObject.progressCallback(e)
+            })
+
+            request.addEventListener('load', () => {
+                if ((request.status+'')[0] === '2') {
+                    paths.push(payload.path)
+                    currentIndex++
+                    uploadNext()
+                    return
+                }
+
+                let errors = null
+                if (request.status === 422) {
+                    errors = request.response
+                }
+
+                this.component.$wire.call('_uploadErrored', name, errors, uploadObject.multiple)
+            })
+
+            uploadObject.request = request
+            request.send(file)
+        }
+
+        uploadNext()
     }
 
     makeRequest(name, formData, method, url, headers, retrievePaths) {

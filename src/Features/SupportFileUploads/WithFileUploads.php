@@ -2,9 +2,10 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-use Illuminate\Validation\ValidationException;
 use Illuminate\Http\UploadedFile;
 use Livewire\Attributes\Renderless;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 
 trait WithFileUploads
@@ -13,11 +14,32 @@ trait WithFileUploads
     function _startUpload($name, $fileInfo, $isMultiple)
     {
         if (FileUploadConfiguration::isUsingS3()) {
-            throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
+            $files = collect($fileInfo)
+                ->map(function ($info) {
+                    return UploadedFile::fake()->create($info['name'], $info['size'] / 1024, $info['type']);
+                })
+                ->toArray();
 
-            $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
+            $validator = Validator::make(['files' => $files], ['files.*' => FileUploadConfiguration::rules()]);
 
-            $this->dispatch('upload:generatedSignedUrlForS3', name: $name, payload: GenerateSignedUploadUrlFacade::forS3($file))->self();
+            if ($validator->fails()) {
+                $errors = $validator->errors()->messages();
+                $remappedErrors = [];
+
+                foreach ($errors as $key => $messages) {
+                    $remappedKey = str_replace('files', $name, $key);
+                    $remappedErrors[$remappedKey] = $messages;
+                }
+
+                throw ValidationException::withMessages($remappedErrors);
+            }
+
+            $payloads = [];
+            foreach ($files as $file) {
+                $payloads[] = GenerateSignedUploadUrlFacade::forS3($file);
+            }
+
+            $this->dispatch('upload:generatedSignedUrlForS3', name: $name, payloads: $payloads)->self();
 
             return;
         }

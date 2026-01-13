@@ -272,4 +272,61 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertInputValue('@upload', null)
         ;
     }
+
+    public function test_can_upload_multiple_files_to_s3()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photos = [];
+
+            function mount()
+            {
+                Storage::disk('tmp-for-tests')->deleteDirectory('photos');
+            }
+
+            function save()
+            {
+                foreach ($this->photos as $index => $photo) {
+                    $photo->storeAs('photos', 'photo' . ($index + 1) . '.png');
+                }
+            }
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photos" dusk="upload" multiple>
+
+                <div wire:loading wire:target="photos">uploading...</div>
+
+                <div>
+                    @if (count($photos) > 0)
+                        <span dusk="count">{{ count($photos) }} files uploaded</span>
+                    @endif
+                </div>
+
+                <button wire:click="save" dusk="save">Save</button>
+            </div>
+            HTML; }
+        })
+        ->assertMissing('@count')
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        ->attach('@upload', __DIR__ . '/browser_test_image2.png')
+        ->waitFor('@count')
+        ->assertSeeIn('@count', '2 files uploaded')
+        ->tap(function () {
+            Storage::disk('tmp-for-tests')->assertMissing('photos/photo1.png');
+            Storage::disk('tmp-for-tests')->assertMissing('photos/photo2.png');
+        })
+        ->waitForLivewire()
+        ->click('@save')
+        ->tap(function () {
+            Storage::disk('tmp-for-tests')->assertExists('photos/photo1.png');
+            Storage::disk('tmp-for-tests')->assertExists('photos/photo2.png');
+        })
+        ;
+    }
 }

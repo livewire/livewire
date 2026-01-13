@@ -27,14 +27,62 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
     }
 
-    public function test_s3_driver_only_supports_single_file_uploads()
+    public function test_s3_driver_supports_multiple_file_uploads()
     {
         config()->set('livewire.temporary_file_upload.disk', 's3');
 
-        $this->expectException(S3DoesntSupportMultipleFileUploads::class);
+        Storage::fake('avatars');
+
+        $file1 = UploadedFile::fake()->image('avatar1.jpg');
+        $file2 = UploadedFile::fake()->image('avatar2.jpg');
 
         Livewire::test(FileUploadComponent::class)
-            ->set('photos', [UploadedFile::fake()->image('avatar.jpg')]);
+            ->set('photos', [$file1, $file2])
+            ->call('uploadMultiple', 'uploaded-avatar');
+
+        Storage::disk('avatars')->assertExists('uploaded-avatar1.png');
+        Storage::disk('avatars')->assertExists('uploaded-avatar2.png');
+    }
+
+    public function test_s3_upload_enforces_global_validation_rules()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg')->size(13000);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->assertHasErrors('photo');
+    }
+
+    public function test_s3_multiple_upload_enforces_global_validation_rules()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
+        Storage::fake('avatars');
+
+        $file1 = UploadedFile::fake()->image('avatar1.jpg')->size(100);
+        $file2 = UploadedFile::fake()->image('avatar2.jpg')->size(13000);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photos', [$file1, $file2])
+            ->assertHasErrors('photos.1');
+    }
+
+    public function test_s3_upload_respects_configured_validation_rules()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+        config()->set('livewire.temporary_file_upload.rules', 'file|max:50');
+
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg')->size(100);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->assertHasErrors('photo');
     }
 
     public function test_can_set_a_file_as_a_property_and_store_it()
