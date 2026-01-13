@@ -102,7 +102,7 @@ jobs:
       matrix:
         php: [8.4, 8.5]
         laravel: [11.*, 12.*]
-        shard: [0, 1, 2, 3]
+        shard: [0, 1, 2]
 
     name: Browser PHP:${{ matrix.php }} / Laravel:${{ matrix.laravel }} / Shard:${{ matrix.shard }}
 
@@ -168,7 +168,7 @@ jobs:
 
       - name: Get shard test files
         id: shard
-        run: echo "files=$(php .github/scripts/get-browser-test-shard.php ${{ matrix.shard }} 4)" >> $GITHUB_OUTPUT
+        run: echo "files=$(php .github/scripts/get-browser-test-shard.php ${{ matrix.shard }} 3)" >> $GITHUB_OUTPUT
 
       - name: Run Browser tests (Shard ${{ matrix.shard }})
         if: steps.build-assets.outcome == 'success'
