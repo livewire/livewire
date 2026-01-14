@@ -6,7 +6,7 @@ let loadedStyles = new Set()
 on('effect', ({ component, effects }) => {
     // Handle scoped styles
     if (effects.styleModule) {
-        let encodedName = component.name.replace('.', '--').replace('::', '---').replace(':', '----')
+        let encodedName = component.name.replace(/\./g, '--').replace(/::/g, '---').replace(/:/g, '----')
         let path = `${getUriPrefix()}/css/${encodedName}.css?v=${effects.styleModule}`
 
         if (!loadedStyles.has(path)) {
@@ -17,7 +17,7 @@ on('effect', ({ component, effects }) => {
 
     // Handle global styles
     if (effects.globalStyleModule) {
-        let encodedName = component.name.replace('.', '--').replace('::', '---').replace(':', '----')
+        let encodedName = component.name.replace(/\./g, '--').replace(/::/g, '---').replace(/:/g, '----')
         let path = `${getUriPrefix()}/css/${encodedName}.global.css?v=${effects.globalStyleModule}`
 
         if (!loadedStyles.has(path)) {
