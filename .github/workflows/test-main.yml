@@ -14,7 +14,7 @@ env:
 jobs:
   js-tests:
     runs-on: ubuntu-latest
-    name: JavaScript Tests
+    name: 1. JavaScript
 
     steps:
       - name: Checkout
@@ -50,7 +50,7 @@ jobs:
       - name: Run JavaScript tests
         run: npm run test:run
 
-  build:
+  unit-tests:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -67,7 +67,63 @@ jobs:
           - php: 8.1
             laravel: 12.*
 
-    name: Laravel:${{ matrix.laravel }} / PHP:${{ matrix.php }}
+    name: 2. Unit - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP, with composer and extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, iconv, intl, zip, pdo_sqlite
+          tools: composer:v2
+          coverage: none
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: dependencies-laravel-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
+          restore-keys: dependencies-laravel-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-
+
+      - name: Install Composer dependencies
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
+          composer update --prefer-stable --no-interaction
+
+      - name: Setup dusk/chrome
+        run: vendor/bin/dusk-updater detect --no-interaction
+
+      - name: Run Unit tests
+        run: vendor/bin/phpunit --testsuite Unit
+        env:
+          RUNNING_IN_CI: true
+
+  browser-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [8.1, 8.2, 8.3, 8.4, 8.5]
+        laravel: [10.*, 11.*, 12.*]
+        shard: [1, 2, 3]
+        exclude:
+          - php: 8.5
+            laravel: 10.*
+          - php: 8.4
+            laravel: 10.*
+          - php: 8.1
+            laravel: 11.*
+          - php: 8.1
+            laravel: 12.*
+
+    name: 3. Browser ${{ matrix.shard }} - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
 
     steps:
       - name: Checkout
@@ -129,27 +185,104 @@ jobs:
         if: steps.build-assets.outcome == 'success'
         run: vendor/bin/dusk-updater detect --no-interaction
 
-      - name: Run Unit tests
-        if: steps.build-assets.outcome == 'success'
-        run: vendor/bin/phpunit --testsuite Unit
-        env:
-          RUNNING_IN_CI: true
+      - name: Get shard test files
+        id: shard
+        run: echo "files=$(php .github/scripts/get-browser-test-shard.php $(( ${{ matrix.shard }} - 1 )) 3)" >> $GITHUB_OUTPUT
 
-      - name: Run Browser tests
-        if: (success() || failure()) && steps.build-assets.outcome == 'success'
-        run: vendor/bin/phpunit --testsuite Browser
+      - name: Run Browser tests (Shard ${{ matrix.shard }})
+        if: steps.build-assets.outcome == 'success'
+        run: vendor/bin/phpunit ${{ steps.shard.outputs.files }}
         env:
           RUNNING_IN_CI: true
 
       - name: Run Cancel Upload test
-        if: (success() || failure()) && steps.build-assets.outcome == 'success'
+        if: matrix.shard == 1 && steps.build-assets.outcome == 'success'
         run: FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
         env:
           RUNNING_IN_CI: true
           FORCE_RUN: 1
 
+  legacy-browser-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [8.1, 8.2, 8.3, 8.4, 8.5]
+        laravel: [10.*, 11.*, 12.*]
+        exclude:
+          - php: 8.5
+            laravel: 10.*
+          - php: 8.4
+            laravel: 10.*
+          - php: 8.1
+            laravel: 11.*
+          - php: 8.1
+            laravel: 12.*
+
+    name: 4. Legacy - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP, with composer and extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, iconv, intl, zip, pdo_sqlite
+          tools: composer:v2
+          coverage: none
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: dependencies-laravel-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
+          restore-keys: dependencies-laravel-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-
+
+      - name: Install Composer dependencies
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
+          composer update --prefer-stable --no-interaction
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Clone Alpine ${{ env.ALPINE_BRANCH }} branch
+        run: git clone --depth=1 --branch=${{ env.ALPINE_BRANCH }} https://github.com/alpinejs/alpine.git /tmp/alpine
+
+      - name: Build Alpine assets
+        run: |
+          cd /tmp/alpine
+          npm ci
+          npm run build
+
+      - name: Link Alpine packages to Livewire
+        run: npm link /tmp/alpine/packages/alpinejs /tmp/alpine/packages/anchor /tmp/alpine/packages/collapse /tmp/alpine/packages/focus /tmp/alpine/packages/intersect /tmp/alpine/packages/mask /tmp/alpine/packages/morph /tmp/alpine/packages/persist /tmp/alpine/packages/resize /tmp/alpine/packages/csp /tmp/alpine/packages/sort
+
+      - name: Check Alpine packages are linked
+        run: npm list
+
+      - name: Build Livewire assets
+        id: build-assets
+        run: npm run build
+
+      - name: Setup dusk/chrome
+        if: steps.build-assets.outcome == 'success'
+        run: vendor/bin/dusk-updater detect --no-interaction
+
       - name: Run Legacy Browser tests
-        if: (success() || failure()) && steps.build-assets.outcome == 'success'
+        if: steps.build-assets.outcome == 'success'
         run: vendor/bin/phpunit --testsuite LegacyBrowser
         env:
           RUNNING_IN_CI: true
