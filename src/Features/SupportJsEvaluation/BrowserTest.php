@@ -279,4 +279,42 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertScript('window.test === "through backend js method with params: foo, bar"')
         ;
     }
+
+    public function test_can_call_a_defined_js_from_another_method_using_the_js_attribute()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function increment()
+                {
+                    $this->count++;
+                    $this->incrementUpdateMessage();
+                }
+
+                #[\Livewire\Attributes\Js]
+                public function incrementUpdateMessage()
+                {
+                    return "alert('Count updated') ";
+                }
+
+                public function render()
+                {
+                    return <<<'BLADE'
+                        <div>
+                            <h2>Counter : {{ $count }}</h2>
+                            <button wire:click="increment" dusk="increment">Increment</button>
+                        </div>
+                    BLADE;
+                }
+            }
+        )
+            ->waitForLivewire()
+            ->click('@increment')
+            ->pause(1000)
+            ->assertDialogOpened('Count updated')
+            ->acceptDialog()
+            ->waitForText('Counter : 1')
+        ;
+    }
 }
