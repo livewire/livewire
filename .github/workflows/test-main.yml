@@ -26,22 +26,40 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
+      - name: Get Alpine commit hash
+        id: alpine-hash
+        run: echo "hash=$(git ls-remote https://github.com/alpinejs/alpine.git refs/heads/${{ env.ALPINE_BRANCH }} | cut -f1)" >> $GITHUB_OUTPUT
+
+      - name: Cache built assets
+        id: cache-assets
+        uses: actions/cache@v4
+        with:
+          path: |
+            dist/
+            /tmp/alpine/packages/
+          key: built-assets-${{ github.sha }}-alpine-${{ steps.alpine-hash.outputs.hash }}
+
       - name: Install dependencies
+        if: steps.cache-assets.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Clone Alpine ${{ env.ALPINE_BRANCH }} branch
+        if: steps.cache-assets.outputs.cache-hit != 'true'
         run: git clone --depth=1 --branch=${{ env.ALPINE_BRANCH }} https://github.com/alpinejs/alpine.git /tmp/alpine
 
       - name: Build Alpine assets
+        if: steps.cache-assets.outputs.cache-hit != 'true'
         run: |
           cd /tmp/alpine
           npm ci
           npm run build
 
       - name: Link Alpine packages to Livewire
+        if: steps.cache-assets.outputs.cache-hit != 'true'
         run: npm link /tmp/alpine/packages/alpinejs /tmp/alpine/packages/anchor /tmp/alpine/packages/collapse /tmp/alpine/packages/focus /tmp/alpine/packages/intersect /tmp/alpine/packages/mask /tmp/alpine/packages/morph /tmp/alpine/packages/persist /tmp/alpine/packages/resize /tmp/alpine/packages/csp /tmp/alpine/packages/sort
 
       - name: Build Livewire assets
+        if: steps.cache-assets.outputs.cache-hit != 'true'
         run: npm run build
 
       - name: Upload built assets
@@ -95,6 +113,7 @@ jobs:
         run: npm run test:run
 
   unit-tests:
+    needs: build-assets
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
