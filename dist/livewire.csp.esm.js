@@ -9569,8 +9569,8 @@ function getNonce() {
   }
   return null;
 }
-function getUriPrefix() {
-  return document.querySelector("[data-uri-prefix]")?.getAttribute("data-uri-prefix") ?? window.livewireScriptConfig["uriPrefix"] ?? null;
+function getModuleUrl() {
+  return document.querySelector("[data-module-url]")?.getAttribute("data-module-url") ?? window.livewireScriptConfig["moduleUrl"] ?? null;
 }
 function getUpdateUri() {
   return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
@@ -11581,8 +11581,8 @@ var pendingComponentAssets = /* @__PURE__ */ new WeakMap();
 on("effect", ({ component, effects }) => {
   let scriptModuleHash = effects.scriptModule;
   if (scriptModuleHash) {
-    let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
-    let path = `${getUriPrefix()}/js/${encodedName}.js?v=${scriptModuleHash}`;
+    let encodedName = component.name.replace(/\./g, "--").replace(/::/g, "---").replace(/:/g, "----");
+    let path = `${getModuleUrl()}/js/${encodedName}.js?v=${scriptModuleHash}`;
     pendingComponentAssets.set(component, Alpine.reactive({
       loading: true,
       afterLoaded: []
@@ -13793,6 +13793,9 @@ async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
     return callback();
   if (!fromEl.querySelector("[wire\\:transition]") && !toEl.querySelector("[wire\\:transition]"))
     return callback();
+  if (typeof document.startViewTransition !== "function") {
+    return callback();
+  }
   let style = document.createElement("style");
   style.textContent = `
         @media (prefers-reduced-motion: reduce) {
@@ -13818,11 +13821,19 @@ async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
   if (options.type) {
     transitionConfig.types = [options.type];
   }
-  let transition = document.startViewTransition(transitionConfig);
-  transition.finished.finally(() => {
-    style.remove();
-  });
-  await transition.updateCallbackDone;
+  try {
+    let transition = document.startViewTransition(transitionConfig);
+    transition.finished.finally(() => {
+      style.remove();
+    });
+    await transition.updateCallbackDone;
+  } catch (e) {
+    let transition = document.startViewTransition(() => callback());
+    transition.finished.finally(() => {
+      style.remove();
+    });
+    await transition.updateCallbackDone;
+  }
 }
 
 // js/morph.js
@@ -14625,16 +14636,16 @@ import_alpinejs15.default.interceptInit((el) => {
 var loadedStyles = /* @__PURE__ */ new Set();
 on("effect", ({ component, effects }) => {
   if (effects.styleModule) {
-    let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
-    let path = `${getUriPrefix()}/css/${encodedName}.css?v=${effects.styleModule}`;
+    let encodedName = component.name.replace(/\./g, "--").replace(/::/g, "---").replace(/:/g, "----");
+    let path = `${getModuleUrl()}/css/${encodedName}.css?v=${effects.styleModule}`;
     if (!loadedStyles.has(path)) {
       loadedStyles.add(path);
       injectStylesheet(path);
     }
   }
   if (effects.globalStyleModule) {
-    let encodedName = component.name.replace(".", "--").replace("::", "---").replace(":", "----");
-    let path = `${getUriPrefix()}/css/${encodedName}.global.css?v=${effects.globalStyleModule}`;
+    let encodedName = component.name.replace(/\./g, "--").replace(/::/g, "---").replace(/:/g, "----");
+    let path = `${getModuleUrl()}/css/${encodedName}.global.css?v=${effects.globalStyleModule}`;
     if (!loadedStyles.has(path)) {
       loadedStyles.add(path);
       injectStylesheet(path);
