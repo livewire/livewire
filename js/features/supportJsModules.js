@@ -1,5 +1,5 @@
 import { on } from '@/hooks'
-import { getUriPrefix } from '@/utils'
+import { getModuleUrl } from '@/utils'
 
 let pendingComponentAssets = new WeakMap()
 
@@ -8,7 +8,7 @@ on('effect', ({ component, effects }) => {
 
     if (scriptModuleHash) {
         let encodedName = component.name.replace(/\./g, '--').replace(/::/g, '---').replace(/:/g, '----')
-        let path = `${getUriPrefix()}/js/${encodedName}.js?v=${scriptModuleHash}`
+        let path = `${getModuleUrl()}/js/${encodedName}.js?v=${scriptModuleHash}`
 
         pendingComponentAssets.set(component, Alpine.reactive({
             loading: true,

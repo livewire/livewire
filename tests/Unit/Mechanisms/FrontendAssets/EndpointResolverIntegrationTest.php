@@ -25,9 +25,10 @@ class EndpointResolverIntegrationTest extends TestCase
 
         $html = FrontendAssets::scripts();
 
-        // Extract src from script tag
+        // Extract src from script tag (now a full URL, so parse the path)
         preg_match('/src="([^"?]+)/', $html, $matches);
-        $srcPath = $matches[1] ?? '';
+        $srcUrl = $matches[1] ?? '';
+        $srcPath = parse_url($srcUrl, PHP_URL_PATH);
 
         $this->assertEquals($routeUri, $srcPath);
     }
