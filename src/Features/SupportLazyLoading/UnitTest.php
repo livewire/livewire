@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportLazyLoading;
 
 use Illuminate\Support\Facades\Route;
+use Livewire\Attributes\Defer;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Lazy;
 use Livewire\Component;
@@ -43,10 +44,50 @@ class UnitTest extends \Tests\TestCase
         ->assertDontSee('Loading...')
         ->assertSee('Hello world!');
     }
+
+    public function test_can_disable_lazy_loading_with_lazy_false_parameter()
+    {
+        Livewire::test(BasicLazyComponent::class, ['lazy' => false])
+            ->assertDontSee('Loading...')
+            ->assertSee('Hello world!');
+    }
+
+    public function test_can_disable_deferred_loading_with_defer_false_parameter()
+    {
+        Livewire::test(BasicDeferComponent::class, ['defer' => false])
+            ->assertDontSee('Loading...')
+            ->assertSee('Hello world!');
+    }
+
+    public function test_lazy_false_does_not_affect_defer_attribute()
+    {
+        Livewire::test(BasicDeferComponent::class, ['lazy' => false])
+            ->assertSee('Loading...')
+            ->assertDontSee('Hello world!');
+    }
+
+    public function test_defer_false_does_not_affect_lazy_attribute()
+    {
+        Livewire::test(BasicLazyComponent::class, ['defer' => false])
+            ->assertSee('Loading...')
+            ->assertDontSee('Hello world!');
+    }
 }
 
 #[Lazy]
 class BasicLazyComponent extends Component {
+    public function placeholder() {
+        return '<div>Loading...</div>';
+    }
+
+    public function render()
+    {
+        return '<div>Hello world!</div>';
+    }
+}
+
+#[Defer]
+class BasicDeferComponent extends Component {
     public function placeholder() {
         return '<div>Loading...</div>';
     }
