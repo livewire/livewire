@@ -7,7 +7,7 @@ on('effect', ({ component, effects }) => {
     let scriptModuleHash = effects.scriptModule
 
     if (scriptModuleHash) {
-        let encodedName = component.name.replace('.', '--').replace('::', '---').replace(':', '----')
+        let encodedName = component.name.replace(/\./g, '--').replace(/::/g, '---').replace(/:/g, '----')
         let path = `${getUriPrefix()}/js/${encodedName}.js?v=${scriptModuleHash}`
 
         pendingComponentAssets.set(component, Alpine.reactive({
