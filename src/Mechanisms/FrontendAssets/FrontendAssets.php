@@ -185,7 +185,7 @@ class FrontendAssets extends Mechanism
     public static function js($options)
     {
         // Use the default endpoint...
-        $url = app(static::class)->javaScriptRoute->uri;
+        $url = url(app(static::class)->javaScriptRoute->uri);
 
         // Use the configured one...
         $url = config('livewire.asset_url') ?: $url;
@@ -215,16 +215,16 @@ class FrontendAssets extends Mechanism
 
         $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
 
-        $uriPrefix = app('livewire')->getUriPrefix();
+        $moduleUrl = url(app('livewire')->getUriPrefix());
 
-        $updateUri = app('livewire')->getUpdateUri();
+        $updateUri = url(app('livewire')->getUpdateUri());
 
         $extraAttributes = Utils::stringifyHtmlAttributes(
             app(static::class)->scriptTagAttributes,
         );
 
         return <<<HTML
-        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-uri-prefix="{$uriPrefix}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
+        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-module-url="{$moduleUrl}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 
@@ -238,8 +238,8 @@ class FrontendAssets extends Mechanism
 
         $attributes = json_encode([
             'csrf' => app()->has('session.store') ? csrf_token() : '',
-            'uri' => app('livewire')->getUpdateUri(),
-            'uriPrefix' => app('livewire')->getUriPrefix(),
+            'uri' => url(app('livewire')->getUpdateUri()),
+            'moduleUrl' => url(app('livewire')->getUriPrefix()),
             'progressBar' => $progressBar,
             'nonce' => isset($options['nonce']) ? $options['nonce'] : '',
         ]);
