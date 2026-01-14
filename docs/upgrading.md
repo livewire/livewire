@@ -1,5 +1,3 @@
-# Upgrading from v3 to v4
-
 Livewire v4 introduces several improvements and optimizations while maintaining backward compatibility wherever possible. This guide will help you upgrade from Livewire v3 to v4.
 
 > [!warning] Livewire v4 is currently in beta
@@ -7,6 +5,8 @@ Livewire v4 introduces several improvements and optimizations while maintaining 
 
 > [!tip] Smooth upgrade path
 > Most applications can upgrade to v4 with minimal changes. The breaking changes are primarily configuration updates and method signature changes that only affect advanced usage.
+>
+> Want to save time? You can use [Laravel Shift](https://laravelshift.com) to help automate your application upgrades.
 
 ## Installation
 
