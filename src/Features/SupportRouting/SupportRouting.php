@@ -14,12 +14,8 @@ class SupportRouting extends ComponentHook
                 app('livewire')->addComponent($component);
             }
 
-            return Route::get($uri, function () use ($component) {
-                return app()->call([
-                    app('livewire')->new($component),
-                    '__invoke',
-                ]);
-            });
+            return Route::get($uri, LivewirePageController::class)
+                ->defaults('_livewire_component', $component);
         });
     }
 }
