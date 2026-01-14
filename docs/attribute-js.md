@@ -1,4 +1,4 @@
-The `#[Js]` attribute designates methods that return JavaScript code to be executed on the client-side, providing a way to trigger client-side behavior from server-side actions.
+The `#[Js]` attribute designates methods that return JavaScript code to be executed on the client-side. Methods marked with `#[Js]` can be called directly from your templates without making a server request.
 
 ## Basic usage
 
@@ -9,31 +9,37 @@ Apply the `#[Js]` attribute to methods that return JavaScript expressions:
 
 use Livewire\Attributes\Js;
 use Livewire\Component;
-use App\Models\Post;
 
 new class extends Component {
     public $title = '';
-
-    public function save()
-    {
-        Post::create(['title' => $this->title]);
-
-        return $this->showSuccessMessage(); // [tl! highlight]
-    }
+    public $content = '';
 
     #[Js] // [tl! highlight:start]
-    public function showSuccessMessage()
+    public function resetForm()
     {
-        return "alert('Post saved successfully!')";
+        return <<<'JS'
+            $wire.title = ''
+            $wire.content = ''
+        JS;
     } // [tl! highlight:end]
 };
 ```
 
-When the `save()` action completes, the JavaScript expression `alert('Post saved successfully!')` will execute on the client.
+```blade
+<form wire:submit="save">
+    <input wire:model="title" placeholder="Title">
+    <textarea wire:model="content" placeholder="Content"></textarea>
 
-## Alternative: Using js() method
+    <button type="submit">Save</button>
+    <button type="button" @click="$wire.resetForm()">Reset</button> <!-- [tl! highlight] -->
+</form>
+```
 
-Instead of the `#[Js]` attribute, you can use the `js()` method for one-off JavaScript expressions:
+When `$wire.resetForm()` is called, the JavaScript executes directly in the browser — no server round-trip occurs.
+
+## Executing JavaScript after server actions
+
+If you need to execute JavaScript **after a server action completes**, use the `js()` method instead:
 
 ```php
 <?php // resources/views/components/post/⚡create.blade.php
@@ -53,7 +59,7 @@ new class extends Component {
 };
 ```
 
-The `js()` method is more concise for simple expressions, while `#[Js]` methods are better for reusable or complex JavaScript logic.
+The `js()` method queues JavaScript to be executed when the server response arrives.
 
 ## Accessing $wire
 
@@ -66,7 +72,6 @@ public function resetForm()
     return <<<'JS'
         $wire.title = ''
         $wire.content = ''
-        alert('Form has been reset')
     JS;
 }
 ```
@@ -75,7 +80,7 @@ public function resetForm()
 
 Use `#[Js]` when you need to:
 
-* Show client-side alerts or notifications after server actions
+* Reset or clear form fields without server overhead
 * Trigger JavaScript animations or transitions
 * Update client-side state without re-rendering
 * Execute reusable JavaScript logic from multiple places
@@ -85,8 +90,10 @@ Use `#[Js]` when you need to:
 
 There's an important distinction:
 
-* **JavaScript actions** (`$js.methodName`) run entirely on the client without making a server request
-* **`#[Js]` methods** run on the server first, then execute the returned JavaScript on the client
+* **`#[Js]` methods** are defined in PHP and return JavaScript code. They are called via `$wire.methodName()` without making a server request.
+* **JavaScript actions** (`$js.methodName`) are defined entirely in JavaScript using `@script` blocks.
+
+Both approaches execute JavaScript on the client without a server round-trip. The difference is where the JavaScript code is defined.
 
 ```php
 <?php // resources/views/components/⚡example.blade.php
@@ -97,7 +104,7 @@ use Livewire\Component;
 new class extends Component {
     public $count = 0;
 
-    // Server-side method that returns JavaScript
+    // JavaScript defined in PHP
     #[Js]
     public function showCount()
     {
@@ -108,15 +115,18 @@ new class extends Component {
 
 ```blade
 <div>
-    <button wire:click="showCount">Show Count</button>
+    <button @click="$wire.showCount()">Show Count (from PHP)</button>
+    <button @click="$js.incrementLocal()">Increment Local (from JS)</button>
 </div>
 
+@script
 <script>
-    // Pure client-side JavaScript action
-    this.$js.incrementLocal = () => {
+    // JavaScript defined in JavaScript
+    $js('incrementLocal', () => {
         console.log('No server request made')
-    }
+    })
 </script>
+@endscript
 ```
 
 ## Learn more
