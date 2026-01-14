@@ -67,13 +67,17 @@ class SupportLazyLoading extends ComponentHook
         $lazyAttribute = $reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)[0] ?? null;
         $deferAttribute = $reflectionClass->getAttributes(\Livewire\Attributes\Defer::class)[0] ?? null;
 
-        if ($lazyAttribute) $shouldBeLazy = true;
-        if ($deferAttribute) $shouldBeLazy = true;
-        if ($deferAttribute) $isDeferred = true;
+        // Apply attributes only if the corresponding param is not explicitly false...
+        $lazyDisabled = isset($params['lazy']) && $params['lazy'] === false;
+        $deferDisabled = isset($params['defer']) && $params['defer'] === false;
+
+        if ($lazyAttribute && ! $lazyDisabled) $shouldBeLazy = true;
+        if ($deferAttribute && ! $deferDisabled) $shouldBeLazy = true;
+        if ($deferAttribute && ! $deferDisabled) $isDeferred = true;
 
         // If Livewire::withoutLazyLoading()...
         if (static::$disableWhileTesting) return;
-        // If `:lazy="false"` or no lazy loading is included at all...
+        // If no lazy loading is included at all...
         if (! $shouldBeLazy) return;
 
         if ($lazyAttribute) {
