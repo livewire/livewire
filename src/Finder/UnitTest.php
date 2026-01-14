@@ -549,4 +549,23 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertNull($path);
     }
+
+    public function test_can_resolve_single_segment_class_name()
+    {
+        $finder = new Finder();
+
+        $finder->addComponent(class: SingleSegmentComponent::class);
+
+        $name = $finder->normalizeName(SingleSegmentComponent::class);
+
+        $this->assertEquals('lw' . crc32(SingleSegmentComponent::class), $name);
+    }
+}
+
+class SingleSegmentComponent extends Component
+{
+    public function render()
+    {
+        return '<div>Single segment component</div>';
+    }
 }
