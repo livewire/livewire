@@ -2017,6 +2017,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     var alpineAttributeRegex = () => new RegExp(`^${prefixAsString}([^:^.]+)\\b`);
     function toParsedDirectives(transformedAttributeMap, originalAttributeOverride) {
       return ({ name, value }) => {
+        if (name === value)
+          value = "";
         let typeMatch = name.match(alpineAttributeRegex());
         let valueMatch = name.match(/:([a-zA-Z0-9\-_:]+)/);
         let modifiers = name.match(/\.[^.\]]+(?=[^\]]*$)/g) || [];
@@ -2971,7 +2973,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.15.3",
+      version: "3.15.4",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -6171,7 +6173,7 @@ var require_module_cjs5 = __commonJS({
       }
     }
     function src_default2(Alpine24) {
-      Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate, evaluateLater, cleanup }) => {
+      Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate, cleanup }) => {
         if (value === "config") {
           return;
         }
@@ -6192,7 +6194,7 @@ var require_module_cjs5 = __commonJS({
           useHandles: !!el.querySelector("[x-sort\\:handle],[wire\\:sort\\:handle]"),
           group: getGroupName(el, modifiers)
         };
-        let handleSort = generateSortHandler(expression, evaluateLater);
+        let handleSort = generateSortHandler(expression, evaluate);
         let config = getConfigurationOverrides(el, modifiers, evaluate);
         let sortable = initSortable(el, config, preferences, (key, position) => {
           handleSort(key, position);
@@ -6200,25 +6202,19 @@ var require_module_cjs5 = __commonJS({
         cleanup(() => sortable.destroy());
       });
     }
-    function generateSortHandler(expression, evaluateLater) {
+    function generateSortHandler(expression, evaluate) {
       if ([void 0, null, ""].includes(expression))
         return () => {
         };
-      let handle = evaluateLater(expression);
       return (key, position) => {
-        Alpine.dontAutoEvaluateFunctions(() => {
-          handle(
-            (received) => {
-              if (typeof received === "function")
-                received(key, position);
-            },
-            { scope: {
-              $key: key,
-              $item: key,
-              $position: position
-            } }
-          );
-        });
+        evaluate(expression, { scope: {
+          $key: key,
+          $item: key,
+          $position: position
+        }, params: [
+          key,
+          position
+        ] });
       };
     }
     function getConfigurationOverrides(el, modifiers, evaluate) {
@@ -10370,7 +10366,15 @@ async function sendRequest(request, handlers) {
     [dump, responseBody] = splitDumpFromContent(responseBody);
     handlers.dump(dump);
   }
-  let responseJson = JSON.parse(responseBody);
+  let responseJson = null;
+  try {
+    responseJson = JSON.parse(responseBody);
+  } catch (e) {
+    console.error(e);
+    handlers.error({ response, responseBody });
+    handlers.finish();
+    return;
+  }
   handlers.success({ response, responseBody, responseJson });
   handlers.finish();
 }

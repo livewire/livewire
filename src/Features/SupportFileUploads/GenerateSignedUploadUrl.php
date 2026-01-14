@@ -55,7 +55,7 @@ class GenerateSignedUploadUrl
         }
 
         return [
-            'path' => $fileHashName,
+            'path' => TemporaryUploadedFile::signPath($fileHashName),
             'url' => (string) $uri,
             'headers' => $this->headers($signedRequest, $fileType),
         ];

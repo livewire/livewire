@@ -115,12 +115,16 @@ class ConvertCommand extends Command
         $viewPath = $directory . '/' . $componentName . '.blade.php';
         $testPath = $directory . '/' . $componentName . '.test.php';
         $jsPath = $directory . '/' . $componentName . '.js';
+        $cssPath = $directory . '/' . $componentName . '.css';
+        $globalCssPath = $directory . '/' . $componentName . '.global.css';
 
         $parser = SingleFileParser::parse(app('livewire.compiler'), $sfcPath);
 
         $this->ensureDirectoryExists($directory);
 
         $scriptContents = $parser->generateScriptContentsForMultiFile();
+        $styleContents = $parser->generateStyleContentsForMultiFile();
+        $globalStyleContents = $parser->generateGlobalStyleContentsForMultiFile();
         $classContents = $parser->generateClassContentsForMultiFile();
         $viewContents = $parser->generateViewContentsForMultiFile();
 
@@ -143,6 +147,14 @@ class ConvertCommand extends Command
 
         if ($scriptContents !== null) {
             $this->files->put($jsPath, $scriptContents);
+        }
+
+        if ($styleContents !== null) {
+            $this->files->put($cssPath, $styleContents);
+        }
+
+        if ($globalStyleContents !== null) {
+            $this->files->put($globalCssPath, $globalStyleContents);
         }
 
         $this->files->delete($sfcPath);

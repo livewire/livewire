@@ -1,5 +1,5 @@
-> [!warning] Get comfortable with Livewire first
-> Before using Volt, we recommend getting familiar with standard, class-based Livewire usage. This will allow you to quickly transfer your knowledge of Livewire into writing components using Volt's functional API.
+> [!warning] Volt is optional in Livewire v4
+> Livewire v4 includes single-file components out of the box, and most applications won’t need Volt. Volt exists for developers who prefer a functional, closure-based syntax over class-based components.
 
 Volt is an elegantly crafted functional API for Livewire that supports single-file components, allowing a component's PHP logic and Blade templates to coexist in the same file. Behind the scenes, the functional API is compiled to Livewire class components and linked with the template present in the same file.
 

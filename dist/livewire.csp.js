@@ -1988,6 +1988,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       var alpineAttributeRegex = () => new RegExp(`^${prefixAsString}([^:^.]+)\\b`);
       function toParsedDirectives(transformedAttributeMap, originalAttributeOverride) {
         return ({ name, value }) => {
+          if (name === value)
+            value = "";
           let typeMatch = name.match(alpineAttributeRegex());
           let valueMatch = name.match(/:([a-zA-Z0-9\-_:]+)/);
           let modifiers = name.match(/\.[^.\]]+(?=[^\]]*$)/g) || [];
@@ -2942,7 +2944,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         get raw() {
           return raw;
         },
-        version: "3.15.3",
+        version: "3.15.4",
         flushAndStopDeferringMutations,
         dontAutoEvaluateFunctions,
         disableEffectScheduling,
@@ -6868,7 +6870,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       [dump, responseBody] = splitDumpFromContent(responseBody);
       handlers.dump(dump);
     }
-    let responseJson = JSON.parse(responseBody);
+    let responseJson = null;
+    try {
+      responseJson = JSON.parse(responseBody);
+    } catch (e) {
+      console.error(e);
+      handlers.error({ response, responseBody });
+      handlers.finish();
+      return;
+    }
     handlers.success({ response, responseBody, responseJson });
     handlers.finish();
   }
@@ -11400,7 +11410,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
   function src_default5(Alpine24) {
-    Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate: evaluate2, evaluateLater, cleanup }) => {
+    Alpine24.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate: evaluate2, cleanup }) => {
       if (value === "config") {
         return;
       }
@@ -11421,7 +11431,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         useHandles: !!el.querySelector("[x-sort\\:handle],[wire\\:sort\\:handle]"),
         group: getGroupName(el, modifiers)
       };
-      let handleSort = generateSortHandler(expression, evaluateLater);
+      let handleSort = generateSortHandler(expression, evaluate2);
       let config = getConfigurationOverrides(el, modifiers, evaluate2);
       let sortable = initSortable(el, config, preferences, (key, position) => {
         handleSort(key, position);
@@ -11429,25 +11439,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanup(() => sortable.destroy());
     });
   }
-  function generateSortHandler(expression, evaluateLater) {
+  function generateSortHandler(expression, evaluate2) {
     if ([void 0, null, ""].includes(expression))
       return () => {
       };
-    let handle = evaluateLater(expression);
     return (key, position) => {
-      Alpine.dontAutoEvaluateFunctions(() => {
-        handle(
-          (received) => {
-            if (typeof received === "function")
-              received(key, position);
-          },
-          { scope: {
-            $key: key,
-            $item: key,
-            $position: position
-          } }
-        );
-      });
+      evaluate2(expression, { scope: {
+        $key: key,
+        $item: key,
+        $position: position
+      }, params: [
+        key,
+        position
+      ] });
     };
   }
   function getConfigurationOverrides(el, modifiers, evaluate2) {

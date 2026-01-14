@@ -162,10 +162,43 @@ class MultiFileParser extends Parser
             $sfcContents .= "\n\n<script>\n" . $indentedScript . "\n</script>";
         }
 
+        // Add style section if present
+        if ($this->stylePortion !== null && trim($this->stylePortion) !== '') {
+            $indentedStyle = $this->addCssIndentation(trim($this->stylePortion));
+            $sfcContents .= "\n\n<style>\n" . $indentedStyle . "\n</style>";
+        }
+
+        // Add global style section if present
+        if ($this->globalStylePortion !== null && trim($this->globalStylePortion) !== '') {
+            $indentedGlobalStyle = $this->addCssIndentation(trim($this->globalStylePortion));
+            $sfcContents .= "\n\n<style global>\n" . $indentedGlobalStyle . "\n</style>";
+        }
+
         return $sfcContents;
     }
 
     protected function addJavaScriptIndentation(string $source): string
+    {
+        $lines = explode("\n", $source);
+
+        if (empty($lines)) {
+            return $source;
+        }
+
+        // Add 4 spaces to each non-empty line
+        $indentedLines = [];
+        foreach ($lines as $line) {
+            if (trim($line) === '') {
+                $indentedLines[] = $line; // Keep empty lines as-is
+            } else {
+                $indentedLines[] = '    ' . $line;
+            }
+        }
+
+        return implode("\n", $indentedLines);
+    }
+
+    protected function addCssIndentation(string $source): string
     {
         $lines = explode("\n", $source);
 
