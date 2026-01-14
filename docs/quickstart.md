@@ -12,13 +12,10 @@ Before we start, make sure you have the following installed:
 
 ## Install Livewire
 
-> [!warning] Livewire v4 is currently in beta
-> Livewire v4 is still in active development and not yet stable. It's recommended to test thoroughly in a development environment before upgrading production applications. Breaking changes may occur between beta releases.
-
 From the root directory of your Laravel app, run the following [Composer](https://getcomposer.org/) command:
 
 ```shell
-composer require livewire/livewire:^4.0@beta
+composer require livewire/livewire
 ```
 
 ## Create a layout
