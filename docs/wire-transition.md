@@ -191,7 +191,7 @@ Livewire automatically respects the user's `prefers-reduced-motion` setting. Whe
 View Transitions are supported in Chrome 111+, Edge 111+, and Safari 18+. In browsers that don't support View Transitions, elements will appear and disappear without animation—the functionality still works, just without the visual transition.
 
 > [!warning] Firefox has limited support
-> Firefox 128+ supports basic view transitions, but does not support transition types (`forward`/`backward`). If you use transition types, Firefox will fall back to the default crossfade animation.
+> Firefox 144+ supports basic view transitions, but does not support transition types (`forward`/`backward`).
 
 [View browser support on caniuse.com →](https://caniuse.com/view-transitions)
 

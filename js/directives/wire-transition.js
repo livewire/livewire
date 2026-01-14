@@ -59,7 +59,7 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
 
         await transition.updateCallbackDone
     } catch (e) {
-        // Firefox 128+ supports View Transitions but only with a callback, not a config object (no transition types support)
+        // Firefox 144+ supports View Transitions but only with a callback, not a config object (no transition types support)
         let transition = document.startViewTransition(() => callback())
 
         transition.finished.finally(() => {
