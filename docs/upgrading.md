@@ -150,7 +150,7 @@ If you have code that relies on capturing events from child elements, add the `.
 
 ### Use `wire:navigate:scroll`
 
-When using `wire:scroll` to preserve scroll in a scrollable container across `wire:navigate` requests in v3, you will need to instead us `wire:navigate:scroll` in v4:
+When using `wire:scroll` to preserve scroll in a scrollable container across `wire:navigate` requests in v3, you will need to instead use `wire:navigate:scroll` in v4:
 
 ```
 @persist('sidebar')
