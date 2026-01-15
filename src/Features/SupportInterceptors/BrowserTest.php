@@ -700,8 +700,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             }
         ])
         ->waitForLivewireToLoad()
-        ->click('@btn')
         ->waitForLivewire()
+        ->click('@btn')
         ->pause(100)
         ->assertSeeIn('@result', 'onSuccess,onSync,onEffect,onMorph,onFinish,onRender,')
         ;
