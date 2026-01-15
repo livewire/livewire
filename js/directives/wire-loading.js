@@ -71,7 +71,7 @@ function applyDelay(directive) {
 }
 
 function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLoading, endLoading ]) {
-    return interceptMessage(({ message, onSend, onFinish }) => {
+    return interceptMessage(({ message, onSend, onSuccess }) => {
         if (component !== message.component) return
 
         let island = closestIsland(el)
@@ -96,8 +96,10 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
             matches && startLoading()
         })
 
-        onFinish(() => {
-            matches && endLoading()
+        onSuccess(({ onEffect }) => {
+            onEffect(() => {
+                matches && endLoading()
+            })
         })
     })
 }
