@@ -8,7 +8,11 @@ class LivewirePageController
     {
         $component = request()->route()->defaults['_livewire_component'];
 
-        $instance = is_object($component)
+        if ($component instanceof \Closure) {
+            $component = $component();
+        }
+
+        $instance = is_object($component) && !($component instanceof \Closure)
             ? $component
             : app('livewire')->new($component);
 

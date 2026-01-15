@@ -10,7 +10,7 @@ class SupportRouting extends ComponentHook
     public static function provide()
     {
         Route::macro('livewire', function ($uri, $component) {
-            if (is_object($component)) {
+            if (is_object($component) && !($component instanceof \Closure)) {
                 app('livewire')->addComponent($component);
             }
 

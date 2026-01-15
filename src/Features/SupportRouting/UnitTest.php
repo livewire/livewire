@@ -185,6 +185,43 @@ class UnitTest extends TestCase
             ->get('/posts/1')
             ->assertForbidden();
     }
+
+    public function test_can_use_closure_to_dynamically_select_component()
+    {
+        Route::livewire('/dashboard', function () {
+            return ComponentForRouting::class;
+        });
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/dashboard')
+            ->assertSee('Component for routing');
+    }
+
+    public function test_can_use_closure_with_condition_logic_to_select_component()
+    {
+        Route::livewire('/role-based', function () {
+            return rand(0, 1) === 1 ? ComponentForRouting::class : ComponentForRoutingWithParams::class;
+        });
+
+        $response = $this->get('/role-based');
+
+        $this->assertContains($response->getContent(), ['Component for routing', '<div>']);
+    }
+
+    public function test_can_use_closure_with_string_component_name()
+    {
+        Livewire::component('component-for-routing', ComponentForRouting::class);
+
+        Route::livewire('/dashboard', function () {
+            return 'component-for-routing';
+        });
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/dashboard')
+            ->assertSee('Component for routing');
+    }
 }
 
 class ComponentForRouting extends Component
