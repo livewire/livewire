@@ -71,7 +71,7 @@ function applyDelay(directive) {
 }
 
 function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLoading, endLoading ]) {
-    return interceptMessage(({ message, onSend, onSuccess }) => {
+    return interceptMessage(({ message, onSend, onSuccess, onFinish }) => {
         if (component !== message.component) return
 
         let island = closestIsland(el)
@@ -87,6 +87,7 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
         }
 
         let matches = true
+        let cleared = false
 
         onSend(({ payload }) => {
             if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
@@ -96,10 +97,22 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
             matches && startLoading()
         })
 
+        // Clear loading before morph on success
         onSuccess(({ onEffect }) => {
             onEffect(() => {
-                matches && endLoading()
+                if (matches && ! cleared) {
+                    endLoading()
+                    cleared = true
+                }
             })
+        })
+
+        // Clear loading on cancel/error/failure (onFinish fires immediately on these paths)
+        onFinish(() => {
+            if (matches && ! cleared) {
+                endLoading()
+                cleared = true
+            }
         })
     })
 }
