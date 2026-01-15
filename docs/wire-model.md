@@ -295,9 +295,8 @@ wire:model="propertyName"
 | `.blur` | Only send updates on the `blur` event |
 | `.change` | Only send updates on the `change` event |
 | `.lazy` | Alias for `.change` |
-| `.debounce` | Debounces updates by 150ms (use `.debounce.500ms` for custom duration) |
-| `.throttle` | Throttles updates to specified interval (use `.throttle.500ms`) |
-| `.live.debounce` | Combines live updating with custom debounce timing |
+| `.live.debounce` | Debounces live updates by 150ms (use `.live.debounce.500ms` for a custom duration) |
+| `.live.throttle` | Throttles updates to specified interval (use `.live.throttle.500ms` for a custom duration) |
 | `.preserve-scroll` | Maintains scroll position during updates (use with `.live`) |
 | `.number` | Casts text value to `int` on the server |
 | `.boolean` | Casts text value to `bool` on the server |
