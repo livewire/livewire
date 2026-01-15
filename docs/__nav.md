@@ -85,6 +85,4 @@ Advanced:
     JavaScript: { uri: /docs/4.x/javascript, file: /javascript.md }
     Synthesizers: { uri: /docs/4.x/synthesizers, file: /synthesizers.md }
     Contribution Guide: { uri: /docs/4.x/contribution-guide, file: /contribution-guide.md }
-Packages:
-    Volt: { uri: /docs/4.x/volt, file: /volt.md }
 ---
