@@ -550,4 +550,160 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertScript('window.errorLogs[2]', 'onFinish')
         ;
     }
+
+    public function test_action_promises_resolve_after_dom_morph()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = 'initial';
+
+                public function changeFoo() {
+                    $this->foo = 'changed';
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="changeFoo" dusk="change-foo">Change Foo</button>
+                        <div dusk="foo">{{ $foo }}</div>
+                        <div wire:ignore dusk="result"></div>
+                    </div>
+                    @script
+                    <script>
+                        document.querySelector('[dusk="change-foo"]').addEventListener('click', () => {
+                            $wire.changeFoo().then(() => {
+                                document.querySelector('[dusk="result"]').textContent = document.querySelector('[dusk="foo"]').textContent
+                            })
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@foo', 'initial')
+        ->click('@change-foo')
+        ->waitForTextIn('@foo', 'changed')
+        ->assertSeeIn('@result', 'changed')
+        ;
+    }
+
+    public function test_action_on_finish_fires_after_dom_morph()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function increment() {
+                    $this->count++;
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="increment" dusk="btn">{{ $count }}</button>
+                        <div wire:ignore dusk="result"></div>
+                    </div>
+                    @script
+                    <script>
+                        this.intercept('increment', ({ onFinish }) => {
+                            onFinish(() => {
+                                let count = $wire.$el.querySelector('[dusk="btn"]').textContent
+                                document.querySelector('[dusk="result"]').textContent = count
+                            })
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@btn', '0')
+        ->click('@btn')
+        ->waitForTextIn('@btn', '1')
+        ->assertSeeIn('@result', '1')
+        ;
+    }
+
+    public function test_message_on_finish_fires_after_dom_morph()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $text = 'initial';
+
+                public function update() {
+                    $this->text = 'updated';
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="update" dusk="btn">Click</button>
+                        <span dusk="text">{{ $text }}</span>
+                        <div wire:ignore dusk="result"></div>
+                    </div>
+                    @script
+                    <script>
+                        this.interceptMessage(({ onFinish }) => {
+                            onFinish(() => {
+                                let text = $wire.$el.querySelector('[dusk="text"]').textContent
+                                document.querySelector('[dusk="result"]').textContent = text
+                            })
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@text', 'initial')
+        ->click('@btn')
+        ->waitForTextIn('@text', 'updated')
+        ->assertSeeIn('@result', 'updated')
+        ;
+    }
+
+    public function test_hook_execution_order_is_correct()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function action() {}
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="action" dusk="btn">Click</button>
+                        <div wire:ignore dusk="result"></div>
+                    </div>
+                    @script
+                    <script>
+                        let result = document.querySelector('[dusk="result"]')
+
+                        this.interceptMessage(({ onSuccess, onFinish }) => {
+                            onSuccess(({ onSync, onEffect, onMorph, onRender }) => {
+                                result.textContent += 'onSuccess,'
+                                onSync(() => result.textContent += 'onSync,')
+                                onEffect(() => result.textContent += 'onEffect,')
+                                onMorph(() => result.textContent += 'onMorph,')
+                                onRender(() => result.textContent += 'onRender,')
+                            })
+
+                            onFinish(() => result.textContent += 'onFinish,')
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        ])
+        ->waitForLivewireToLoad()
+        ->click('@btn')
+        ->waitForLivewire()
+        ->pause(100)
+        ->assertSeeIn('@result', 'onSuccess,onSync,onEffect,onMorph,onFinish,onRender,')
+        ;
+    }
 }

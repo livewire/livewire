@@ -179,7 +179,7 @@ $wire.intercept(({ action, onSend, onCancel, onSuccess, onError, onFailure, onFi
     })
 
     onFinish(() => {
-        // Always runs (success, error, failure, or cancel)
+        // Runs after DOM morph completes (or on error/cancel)
     })
 })
 ```
@@ -219,9 +219,24 @@ $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onError,
         // json: Parsed stream chunk
     })
 
-    onFinish(() => {})
+    onFinish(() => {
+        // Runs after DOM morph completes (or on error/cancel)
+    })
 })
 ```
+
+#### Timing
+
+Hook execution order for successful requests:
+
+1. `onSuccess` - Immediately after server response
+2. `onSync` - After state merged
+3. `onEffect` - After effects processed
+4. `onMorph` - After DOM morphed
+5. `onFinish` - After morph completes
+6. `onRender` - In `requestAnimationFrame` (post-paint)
+
+Action promises (`.then()`) resolve at the same time as `onFinish` (after morph).
 
 ### Request interceptors
 

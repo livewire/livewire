@@ -409,7 +409,16 @@ function sendMessages() {
                                 if (message.isCancelled()) return
 
                                 message.invokeOnMorph().finally(() => {
-                                    setTimeout(() => {
+                                    // Resolve promises & finish AFTER morph completes
+                                    if (! message.isCancelled()) {
+                                        message.resolveActionPromises(
+                                            message.pendingReturns,
+                                            message.pendingReturnsMeta
+                                        )
+                                        message.invokeOnFinish()
+                                    }
+
+                                    requestAnimationFrame(() => {
                                         if (message.isCancelled()) return
 
                                         message.invokeOnRender()

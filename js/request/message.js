@@ -7,6 +7,8 @@ export default class Message {
     calls = null
     payload = null
     responsePayload = null
+    pendingReturns = []
+    pendingReturnsMeta = {}
     interceptors = []
     cancelled = false
     request = null
@@ -190,13 +192,9 @@ export default class Message {
             })
         })
 
-        // Process any returned values...
-        let returns = this.responsePayload.effects['returns'] || []
-        let returnsMeta = this.responsePayload.effects['returnsMeta'] || {}
-
-        this.resolveActionPromises(returns, returnsMeta)
-
-        this.invokeOnFinish()
+        // Store returns for later resolution (after morph)
+        this.pendingReturns = this.responsePayload.effects['returns'] || []
+        this.pendingReturnsMeta = this.responsePayload.effects['returnsMeta'] || {}
     }
 
     invokeOnSync() {
@@ -208,9 +206,9 @@ export default class Message {
     }
 
     async invokeOnMorph() {
-        this.interceptors.forEach(async interceptor => {
-            await interceptor.onMorph()
-        })
+        await Promise.all(
+            this.interceptors.map(interceptor => interceptor.onMorph())
+        )
     }
 
     invokeOnRender() {
