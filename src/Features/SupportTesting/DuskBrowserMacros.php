@@ -171,8 +171,11 @@ class DuskBrowserMacros
                     window.duskIsWaitingForLivewireRequest{$id} = true
 
                     let handle = () => {
-                        queueMicrotask(() => {
-                            delete window.duskIsWaitingForLivewireRequest{$id}
+                        // Wait an extra frame to ensure onRender callbacks have fired
+                        requestAnimationFrame(() => {
+                            queueMicrotask(() => {
+                                delete window.duskIsWaitingForLivewireRequest{$id}
+                            })
                         })
                     }
 
@@ -220,8 +223,11 @@ class DuskBrowserMacros
                     window.duskIsWaitingForLivewireRequest{$id} = true
 
                     let handle = () => {
-                        queueMicrotask(() => {
-                            delete window.duskIsWaitingForLivewireRequest{$id}
+                        // Wait an extra frame to ensure onRender callbacks have fired
+                        requestAnimationFrame(() => {
+                            queueMicrotask(() => {
+                                delete window.duskIsWaitingForLivewireRequest{$id}
+                            })
                         })
                     }
 
