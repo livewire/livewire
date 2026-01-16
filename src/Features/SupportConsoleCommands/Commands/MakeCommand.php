@@ -247,11 +247,11 @@ class MakeCommand extends Command
         $this->files->put($classPath, $classContent);
         $this->files->put($viewPath, $viewContent);
 
-        if ($this->option('test')) {
+        if ($this->option('test') || in_array('test', config('livewire.make_command.defaults', []), true)) {
             $this->files->put($testPath, $testContent);
         }
 
-        if ($this->option('js')) {
+        if ($this->option('js') || in_array('js', config('livewire.make_command.defaults', []), true)) {
             $this->files->put($jsPath, $jsContent);
         }
 
