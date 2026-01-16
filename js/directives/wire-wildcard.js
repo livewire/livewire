@@ -68,7 +68,7 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
                         let params = Array.isArray(livewireOptions.defaultParams)
                             ? livewireOptions.defaultParams
                             : [livewireOptions.defaultParams]
-                        expression = `${expression}(${params.map(p => JSON.stringify(p)).join(', ')})`
+                        expression = expression + '(' + params.map((p) => JSON.stringify(p)).join(", ") + ')'
                     }
 
                     evaluateActionExpression(el, expression, { scope: { $event: e } })
