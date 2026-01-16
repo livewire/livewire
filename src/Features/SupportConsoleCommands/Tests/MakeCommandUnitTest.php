@@ -65,6 +65,19 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.js')));
     }
 
+    public function test_multi_file_component_with_javascript_when_js_is_in_make_command_defaults()
+    {
+        $this->app['config']->set('livewire.make_command.defaults', ['js']);
+        
+        Artisan::call('make:livewire', ['name' => 'foo', '--mfc' => true]);
+
+        $this->assertTrue(File::isDirectory($this->livewireComponentsPath('⚡foo')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.blade.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡foo/foo.test.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.js')));
+    }
+
     public function test_class_based_component_is_created_with_class_flag()
     {
         Artisan::call('make:livewire', ['name' => 'foo', '--class' => true]);
@@ -389,6 +402,20 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertStringContainsString('foo', $testContent);
     }
 
+    public function test_single_file_component_with_test_in_make_command_defaults_creates_test_file()
+    {
+        $this->app['config']->set('livewire.make_command.defaults', ['test']);
+        
+        Artisan::call('make:livewire', ['name' => 'foo']);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo.test.php')));
+
+        $testContent = File::get($this->livewireComponentsPath('⚡foo.test.php'));
+        $this->assertStringContainsString("it('renders successfully'", $testContent);
+        $this->assertStringContainsString('foo', $testContent);
+    }
+
     public function test_single_file_component_with_test_flag_without_emoji()
     {
         $this->app['config']->set('livewire.make_command.emoji', false);
@@ -400,9 +427,31 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($this->livewireComponentsPath('⚡bar.test.php')));
     }
 
+    public function test_single_file_component_with_test_in_make_command_defaults_without_emoji()
+    {
+        $this->app['config']->set('livewire.make_command.emoji', false);
+        $this->app['config']->set('livewire.make_command.defaults', ['test']);
+
+        Artisan::call('make:livewire', ['name' => 'bar']);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('bar.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('bar.test.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡bar.test.php')));
+    }
+
     public function test_nested_single_file_component_with_test_flag()
     {
         Artisan::call('make:livewire', ['name' => 'admin.users', '--test' => true]);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('admin/⚡users.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('admin/⚡users.test.php')));
+    }
+
+    public function test_nested_single_file_component_with_test_in_make_command_defaults()
+    {
+        $this->app['config']->set('livewire.make_command.defaults', ['test']);
+        
+        Artisan::call('make:livewire', ['name' => 'admin.users']);
 
         $this->assertTrue(File::exists($this->livewireComponentsPath('admin/⚡users.blade.php')));
         $this->assertTrue(File::exists($this->livewireComponentsPath('admin/⚡users.test.php')));
