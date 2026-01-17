@@ -75,7 +75,18 @@ export default class Action {
         let metadata = JSON.stringify(this.metadata)
 
         // btoa only supports Latin-1 characters, not UTF-8, so we need to encode the string first...
-        return window.btoa(String.fromCharCode(...new TextEncoder().encode(componentId + name + params + metadata)))
+        let bytes = new TextEncoder().encode(componentId + name + params + metadata)
+
+        // Process in chunks to avoid "Maximum call stack size exceeded" with large payloads
+        // (e.g., 300KB+ base64 images). The spread operator in String.fromCharCode(...array)
+        // fails when array length exceeds JS engine's argument limit (~125k elements).
+        let binary = ''
+        let chunkSize = 8192
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+            binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
+        }
+
+        return window.btoa(binary)
     }
 
     isAsync() {
