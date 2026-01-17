@@ -7,6 +7,7 @@ use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\ClassMorphViolationException;
 
 class EloquentCollectionSynth extends Synth {
     use SerializesAndRestoresModelIdentifiers, IsLazy;
@@ -39,7 +40,16 @@ class EloquentCollectionSynth extends Synth {
          *
          * If no alias is found, this just returns the class name
          */
-        $modelAlias = $modelClass ? (new $modelClass)->getMorphClass() : null;
+        if ($modelClass) {
+            try {
+                $modelAlias = (new $modelClass)->getMorphClass();
+            } catch (ClassMorphViolationException $e) {
+                // If the model is not using morph classes, this exception is thrown
+                $modelAlias = $modelClass;
+            }
+        } else {
+            $modelAlias = null;
+        }
 
         $meta = [];
 
