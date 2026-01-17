@@ -211,6 +211,26 @@ class UnitTest extends \Tests\TestCase
         Relation::requireMorphMap(false);
     }
 
+    public function test_it_does_not_trigger_ClassMorphViolationException_for_collections_when_morph_map_is_enforced()
+    {
+        // reset morph
+        Relation::morphMap([], false);
+        Relation::requireMorphMap();
+
+        $component = Livewire::test(new class extends TestComponent {
+            public Collection $articles;
+
+            public function mount()
+            {
+                $this->articles = Article::all();
+            }
+        });
+
+        $this->assertEquals(Article::class, $component->snapshot['data']['articles'][1]['modelClass']);
+
+        Relation::requireMorphMap(false);
+    }
+
     public function test_model_synth_rejects_non_model_classes()
     {
         $this->expectException(\Exception::class);
