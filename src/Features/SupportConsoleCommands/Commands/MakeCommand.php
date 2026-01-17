@@ -185,8 +185,8 @@ class MakeCommand extends Command
 
         $this->files->put($path, $content);
 
-        // Create test file if --test flag is present
-        if ($this->option('test') || in_array('test', config('livewire.make_command.defaults', []), true)) {
+        // Create test file if --test flag is present or configured in make_command.with.test
+        if ($this->option('test') || config('livewire.make_command.with.test')) {
             $testPath = $this->getSingleFileComponentTestPath($path);
             $testContent = $this->buildSingleFileComponentTest($name);
             $this->files->put($testPath, $testContent);
@@ -247,11 +247,11 @@ class MakeCommand extends Command
         $this->files->put($classPath, $classContent);
         $this->files->put($viewPath, $viewContent);
 
-        if ($this->option('test') || in_array('test', config('livewire.make_command.defaults', []), true)) {
+        if ($this->option('test') || config('livewire.make_command.with.test')) {
             $this->files->put($testPath, $testContent);
         }
 
-        if ($this->option('js') || in_array('js', config('livewire.make_command.defaults', []), true)) {
+        if ($this->option('js') || config('livewire.make_command.with.js')) {
             $this->files->put($jsPath, $jsContent);
         }
 
