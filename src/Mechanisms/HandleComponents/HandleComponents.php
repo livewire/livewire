@@ -175,6 +175,10 @@ class HandleComponents extends Mechanism
 
     public function update($snapshot, $updates, $calls)
     {
+        if (! is_array($snapshot) || ! isset($snapshot['data'], $snapshot['memo'])) {
+            throw new \InvalidArgumentException('Invalid Livewire snapshot');
+        }
+
         $data = $snapshot['data'];
         $memo = $snapshot['memo'];
 
