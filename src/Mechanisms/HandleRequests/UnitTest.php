@@ -33,4 +33,27 @@ class UnitTest extends TestCase
         $this->assertCount(1, $livewireUpdateRoutes);
         $this->assertEquals(ltrim(EndpointResolver::updatePath(), '/'), $livewireUpdateRoutes->first()->uri());
     }
+
+    public function test_duplicate_route_is_not_registered_when_livewire_update_route_already_exists(): void
+    {
+        // Verify that only one livewire.update route exists initially
+        $livewireUpdateRoutes = collect(Route::getRoutes()->getRoutes())->filter(function ($route) {
+            return str($route->getName())->endsWith('livewire.update');
+        });
+        $this->assertCount(1, $livewireUpdateRoutes);
+
+        // Simulate what happens during cached routes scenario: create a new HandleRequests
+        // instance (which has $updateRoute = null) and call boot() again
+        $newHandleRequests = new HandleRequests();
+        $newHandleRequests->boot();
+
+        // Manually trigger the booted callback since we're already past the boot phase
+        app()->booted(function () {});
+
+        // Verify that still only one livewire.update route exists (no duplicate)
+        $livewireUpdateRoutes = collect(Route::getRoutes()->getRoutes())->filter(function ($route) {
+            return str($route->getName())->endsWith('livewire.update');
+        });
+        $this->assertCount(1, $livewireUpdateRoutes);
+    }
 }
