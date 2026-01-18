@@ -32,6 +32,21 @@ class HandleComponents extends Mechanism
     public static $renderStack = [];
     public static $componentStack = [];
 
+    public function boot()
+    {
+        \Livewire\on('flush-state', function () {
+            // Clear component stacks to prevent memory leaks in long-running processes (e.g., Octane)
+            static::$renderStack = [];
+            static::$componentStack = [];
+
+            // Clear synthesizer type cache to prevent unbounded growth
+            $this->synthesizerTypeCache = [];
+
+            // Clear reflection cache in BaseUtils to prevent unbounded growth
+            Utils::flushReflectionCache();
+        });
+    }
+
     public function registerPropertySynthesizer($synth)
     {
         foreach ((array) $synth as $class) {
@@ -60,32 +75,34 @@ class HandleComponents extends Mechanism
 
         $this->pushOntoComponentStack($component);
 
-        $context = new ComponentContext($component, mounting: true);
+        try {
+            $context = new ComponentContext($component, mounting: true);
 
-        if (config('app.debug')) $start = microtime(true);
-        $finish = trigger('mount', $component, $componentParams, $key, $parent, $htmlAttributes);
-        if (config('app.debug')) trigger('profile', 'mount', $component->getId(), [$start, microtime(true)]);
+            if (config('app.debug')) $start = microtime(true);
+            $finish = trigger('mount', $component, $componentParams, $key, $parent, $htmlAttributes);
+            if (config('app.debug')) trigger('profile', 'mount', $component->getId(), [$start, microtime(true)]);
 
-        if (config('app.debug')) $start = microtime(true);
-        $html = $this->render($component, '<div></div>');
-        if (config('app.debug')) trigger('profile', 'render', $component->getId(), [$start, microtime(true)]);
+            if (config('app.debug')) $start = microtime(true);
+            $html = $this->render($component, '<div></div>');
+            if (config('app.debug')) trigger('profile', 'render', $component->getId(), [$start, microtime(true)]);
 
-        if (config('app.debug')) $start = microtime(true);
-        trigger('dehydrate', $component, $context);
+            if (config('app.debug')) $start = microtime(true);
+            trigger('dehydrate', $component, $context);
 
-        $snapshot = $this->snapshot($component, $context);
-        if (config('app.debug')) trigger('profile', 'dehydrate', $component->getId(), [$start, microtime(true)]);
+            $snapshot = $this->snapshot($component, $context);
+            if (config('app.debug')) trigger('profile', 'dehydrate', $component->getId(), [$start, microtime(true)]);
 
-        trigger('destroy', $component, $context);
+            trigger('destroy', $component, $context);
 
-        $html = Utils::insertAttributesIntoHtmlRoot($html, [
-            'wire:snapshot' => $snapshot,
-            'wire:effects' => $context->effects,
-        ]);
+            $html = Utils::insertAttributesIntoHtmlRoot($html, [
+                'wire:snapshot' => $snapshot,
+                'wire:effects' => $context->effects,
+            ]);
 
-        $this->popOffComponentStack();
-
-        return $finish($html, $snapshot);
+            return $finish($html, $snapshot);
+        } finally {
+            $this->popOffComponentStack();
+        }
     }
 
     protected function separateParamsAndAttributes($component, $params)
@@ -187,30 +204,32 @@ class HandleComponents extends Mechanism
 
         $this->pushOntoComponentStack($component);
 
-        trigger('hydrate', $component, $memo, $context);
+        try {
+            trigger('hydrate', $component, $memo, $context);
 
-        $this->updateProperties($component, $updates, $data, $context);
-        if (config('app.debug')) trigger('profile', 'hydrate', $component->getId(), [$start, microtime(true)]);
+            $this->updateProperties($component, $updates, $data, $context);
+            if (config('app.debug')) trigger('profile', 'hydrate', $component->getId(), [$start, microtime(true)]);
 
-        $this->callMethods($component, $calls, $context);
+            $this->callMethods($component, $calls, $context);
 
-        if (config('app.debug')) $start = microtime(true);
-        if ($html = $this->render($component)) {
-            $context->addEffect('html', $html);
-            if (config('app.debug')) trigger('profile', 'render', $component->getId(), [$start, microtime(true)]);
+            if (config('app.debug')) $start = microtime(true);
+            if ($html = $this->render($component)) {
+                $context->addEffect('html', $html);
+                if (config('app.debug')) trigger('profile', 'render', $component->getId(), [$start, microtime(true)]);
+            }
+
+            if (config('app.debug')) $start = microtime(true);
+            trigger('dehydrate', $component, $context);
+
+            $snapshot = $this->snapshot($component, $context);
+            if (config('app.debug')) trigger('profile', 'dehydrate', $component->getId(), [$start, microtime(true)]);
+
+            trigger('destroy', $component, $context);
+
+            return [ $snapshot, $context->effects ];
+        } finally {
+            $this->popOffComponentStack();
         }
-
-        if (config('app.debug')) $start = microtime(true);
-        trigger('dehydrate', $component, $context);
-
-        $snapshot = $this->snapshot($component, $context);
-        if (config('app.debug')) trigger('profile', 'dehydrate', $component->getId(), [$start, microtime(true)]);
-
-        trigger('destroy', $component, $context);
-
-        $this->popOffComponentStack();
-
-        return [ $snapshot, $context->effects ];
     }
 
     public function fromSnapshot($snapshot)

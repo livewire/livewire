@@ -6,6 +6,14 @@ class BaseUtils
 {
     protected static $reflectionCache = [];
 
+    /**
+     * Flush the reflection cache to prevent memory leaks in long-running processes (e.g., Octane).
+     */
+    public static function flushReflectionCache()
+    {
+        static::$reflectionCache = [];
+    }
+
     static function isSyntheticTuple($payload) {
         return is_array($payload)
             && count($payload) === 2

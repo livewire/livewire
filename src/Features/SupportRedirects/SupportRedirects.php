@@ -24,6 +24,9 @@ class SupportRedirects extends ComponentHook
 
         on('flush-state', function () {
             static::$atLeastOneMountedComponentHasRedirected = false;
+            // Clear redirector cache stack to prevent memory leaks in long-running processes (e.g., Octane)
+            // This also handles any imbalance if exceptions occurred between boot and dehydrate
+            static::$redirectorCacheStack = [];
         });
     }
 
