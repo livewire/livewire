@@ -120,7 +120,7 @@ Livewire.start()
 
 **When you need this:** If your application uses route prefixes for localization (like `/en/`, `/fr/`) or multi-tenancy (like `/tenant-1/`, `/tenant-2/`), you may need to customize Livewire's update endpoint to match your routing structure.
 
-By default, Livewire sends component updates to `/livewire/update`. To customize this, register your own route in a service provider (typically `App\Providers\AppServiceProvider`):
+By default, Livewire sends component updates to a hash-based endpoint like `/livewire-{hash}/update`, where `{hash}` is derived from your application's `APP_KEY`. To customize this, register your own route in a service provider (typically `App\Providers\AppServiceProvider`):
 
 ```php
 use Livewire\Livewire;
@@ -149,7 +149,9 @@ Livewire::setUpdateRoute(function ($handle) {
 
 **When you need this:** If your application uses route prefixes for localization or multi-tenancy, you may need to customize where Livewire serves its JavaScript from to match your routing structure.
 
-By default, Livewire serves its JavaScript from `/livewire/livewire.js`. To customize this, register your own route in a service provider:
+By default, Livewire serves its JavaScript from a hash-based endpoint like `/livewire-{hash}/livewire.js`, where `{hash}` is derived from your application's `APP_KEY`. This unique-per-installation path makes it harder to target Livewire applications with automated scanners.
+
+To customize this, register your own route in a service provider:
 
 ```php
 use Livewire\Livewire;
@@ -164,6 +166,9 @@ class AppServiceProvider extends ServiceProvider
     }
 }
 ```
+
+> [!note] Setting a custom route uses a static path
+> When you customize the script route, it will use the exact path you specify instead of the hash-based default.
 
 ## Publishing Livewire's assets to public directory
 
@@ -216,14 +221,17 @@ Call this in a route or controller where you want to ensure assets are injected.
 
 ## Livewire JavaScript not loading (404 error)
 
-**Symptom:** Visiting `/livewire/livewire.js` returns a 404 error, or Livewire features don't work.
+**Symptom:** Livewire's JavaScript file returns a 404 error, or Livewire features don't work.
+
+Livewire serves its JavaScript from a hash-based endpoint like `/livewire-{hash}/livewire.js`, where `{hash}` is derived from your application's `APP_KEY`. This unique path varies per installation.
 
 **Common causes:**
 
 **Nginx configuration blocking the route:**
-If you're using Nginx with a custom configuration, it may be blocking Laravel's route for `/livewire/livewire.js`. You can either:
-- Configure Nginx to allow this route (see [this guide](https://benjamincrozat.com/livewire-js-404-not-found))
+If you're using Nginx with a custom configuration, it may be blocking Laravel's dynamic Livewire routes. You can either:
+- Configure Nginx to pass requests matching `/livewire-*/` to Laravel (e.g., `location ~ ^/livewire-[a-f0-9]+/ { try_files $uri $uri/ /index.php?$query_string; }`)
 - [Manually bundle Livewire](#manually-bundling-livewire-and-alpine) to avoid serving through Laravel
+- [Publish Livewire's assets](#publishing-livewires-assets-to-public-directory) to serve them directly from your web server
 
 **Route caching:**
 If you've run `php artisan route:cache`, Laravel may not recognize Livewire's routes. Clear the cache:
