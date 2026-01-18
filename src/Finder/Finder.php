@@ -408,13 +408,18 @@ class Finder
             && file_exists($dir . '/' . $fileBaseName . '.blade.php');
     }
 
-    public function resolveSingleFileComponentPathForCreation(string $name): string
+    public function resolveSingleFileComponentPathForCreation(string $name): ?string
     {
         [$namespace, $componentName] = $this->parseNamespaceAndName($name);
 
         // Get the appropriate location
-        if ($namespace !== null && isset($this->viewNamespaces[$namespace])) {
-            $location = $this->viewNamespaces[$namespace];
+        if ($namespace !== null) {
+            if (isset($this->viewNamespaces[$namespace])) {
+                $location = $this->viewNamespaces[$namespace];
+            } else {
+                // Namespace specified but not registered
+                return null;
+            }
         } else {
             // Use the first configured component location or fallback
             $location = $this->viewLocations[0] ?? resource_path('views/components');
@@ -435,13 +440,18 @@ class Finder
         return $location . '/' . $leadingPath . $prefix . $lastSegment . '.blade.php';
     }
 
-    public function resolveMultiFileComponentPathForCreation(string $name): string
+    public function resolveMultiFileComponentPathForCreation(string $name): ?string
     {
         [$namespace, $componentName] = $this->parseNamespaceAndName($name);
 
         // Get the appropriate location
-        if ($namespace !== null && isset($this->viewNamespaces[$namespace])) {
-            $location = $this->viewNamespaces[$namespace];
+        if ($namespace !== null) {
+            if (isset($this->viewNamespaces[$namespace])) {
+                $location = $this->viewNamespaces[$namespace];
+            } else {
+                // Namespace specified but not registered
+                return null;
+            }
         } else {
             // Use the first configured component location or fallback
             $location = $this->viewLocations[0] ?? resource_path('views/components');
