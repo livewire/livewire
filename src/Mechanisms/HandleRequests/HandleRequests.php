@@ -17,7 +17,11 @@ class HandleRequests extends Mechanism
     {
         // Only set it if another provider or routes file haven't already set it....
         app()->booted(function () {
-            if (! $this->updateRoute) {
+            // Check both instance state and router to handle cached routes scenario.
+            // When routes are cached and loaded, $this->updateRoute will be null but
+            // the route already exists in the router. This prevents duplicate registration
+            // which Laravel v12.29.0+ treats as an error.
+            if (! $this->updateRoute && ! $this->updateRouteExists()) {
                 app($this::class)->setUpdateRoute(function ($handle) {
                     return Route::post('/livewire/update', $handle)->middleware('web');
                 });
@@ -25,6 +29,20 @@ class HandleRequests extends Mechanism
         });
 
         $this->skipRequestPayloadTamperingMiddleware();
+    }
+
+    protected function updateRouteExists()
+    {
+        // Check if a route with name ending in 'livewire.update' already exists.
+        // Custom routes can have prefixes (e.g., 'tenant.livewire.update') so we
+        // need to check for routes ending with 'livewire.update', not just exact matches.
+        foreach (Route::getRoutes()->getRoutes() as $route) {
+            if (str($route->getName())->endsWith('livewire.update')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     function getUpdateUri()
