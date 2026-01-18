@@ -143,6 +143,15 @@ class MakeCommand extends Command
     {
         $path = $this->finder->resolveSingleFileComponentPathForCreation($name);
 
+        if ($path === null) {
+            [$namespace] = $this->finder->parseNamespaceAndName($name);
+            $this->components->error(sprintf(
+                "Namespace [%s] is not registered. Register it in config/livewire.php under 'component_namespaces' or use Livewire::addNamespace() in a service provider.",
+                $namespace
+            ));
+            return 1;
+        }
+
         // Check if we're converting from a multi-file component
         $mfcPath = $this->finder->resolveMultiFileComponentPath($name);
         if ($mfcPath && $this->files->exists($mfcPath) && $this->files->isDirectory($mfcPath)) {
@@ -200,6 +209,15 @@ class MakeCommand extends Command
     protected function createMultiFileComponent(string $name): int
     {
         $directory = $this->finder->resolveMultiFileComponentPathForCreation($name);
+
+        if ($directory === null) {
+            [$namespace] = $this->finder->parseNamespaceAndName($name);
+            $this->components->error(sprintf(
+                "Namespace [%s] is not registered. Register it in config/livewire.php under 'component_namespaces' or use Livewire::addNamespace() in a service provider.",
+                $namespace
+            ));
+            return 1;
+        }
 
         // Get the component name without emoji for file names inside the directory
         $componentName = basename($directory);
@@ -456,7 +474,7 @@ class MakeCommand extends Command
 
         // Check for single-file component
         $sfcPath = $finder->resolveSingleFileComponentPathForCreation($name);
-        if ($this->files->exists($sfcPath)) {
+        if ($sfcPath !== null && $this->files->exists($sfcPath)) {
             return true;
         }
 
@@ -498,7 +516,7 @@ class MakeCommand extends Command
 
         // Check for single-file component
         $sfcPath = $finder->resolveSingleFileComponentPathForCreation($name);
-        if ($this->files->exists($sfcPath)) {
+        if ($sfcPath !== null && $this->files->exists($sfcPath)) {
             $testPath = $this->getSingleFileComponentTestPath($sfcPath);
 
             if ($this->files->exists($testPath)) {

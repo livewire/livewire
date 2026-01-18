@@ -819,4 +819,40 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertStringContainsString('.global-original', $finalContent);
         $this->assertStringContainsString('height: 100%', $finalContent);
     }
+
+    public function test_unregistered_namespace_shows_error_for_sfc()
+    {
+        // Try to create a component with an unregistered namespace
+        $exitCode = Artisan::call('make:livewire', ['name' => 'unregistered::foo']);
+
+        $this->assertEquals(1, $exitCode);
+        $this->assertStringContainsString('Namespace [unregistered] is not registered', Artisan::output());
+
+        // Ensure no component was created in the fallback location
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡foo.blade.php')));
+    }
+
+    public function test_unregistered_namespace_shows_error_for_mfc()
+    {
+        // Try to create a multi-file component with an unregistered namespace
+        $exitCode = Artisan::call('make:livewire', ['name' => 'unknown::bar', '--mfc' => true]);
+
+        $this->assertEquals(1, $exitCode);
+        $this->assertStringContainsString('Namespace [unknown] is not registered', Artisan::output());
+
+        // Ensure no component was created in the fallback location
+        $this->assertFalse(File::isDirectory($this->livewireComponentsPath('⚡bar')));
+    }
+
+    public function test_unregistered_namespace_shows_error_for_nested_component()
+    {
+        // Try to create a nested component with an unregistered namespace
+        $exitCode = Artisan::call('make:livewire', ['name' => 'custom::admin.users']);
+
+        $this->assertEquals(1, $exitCode);
+        $this->assertStringContainsString('Namespace [custom] is not registered', Artisan::output());
+
+        // Ensure no component was created in the fallback location
+        $this->assertFalse(File::exists($this->livewireComponentsPath('admin/⚡users.blade.php')));
+    }
 }

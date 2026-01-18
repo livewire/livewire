@@ -550,6 +550,56 @@ class UnitTest extends \Tests\TestCase
         $this->assertNull($path);
     }
 
+    public function test_returns_null_for_unregistered_namespace_sfc_creation()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', viewPath: __DIR__ . '/Fixtures');
+
+        // Try to resolve a path for creation with an unregistered namespace
+        $path = $finder->resolveSingleFileComponentPathForCreation('unknown::some-component');
+
+        $this->assertNull($path);
+    }
+
+    public function test_returns_null_for_unregistered_namespace_mfc_creation()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', viewPath: __DIR__ . '/Fixtures');
+
+        // Try to resolve a path for creation with an unregistered namespace
+        $path = $finder->resolveMultiFileComponentPathForCreation('unknown::some-component');
+
+        $this->assertNull($path);
+    }
+
+    public function test_resolves_path_for_registered_namespace_sfc_creation()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', viewPath: __DIR__ . '/Fixtures');
+
+        $path = $finder->resolveSingleFileComponentPathForCreation('admin::new-component');
+
+        $this->assertNotNull($path);
+        $this->assertStringContainsString('Fixtures', $path);
+        $this->assertStringContainsString('new-component', $path);
+    }
+
+    public function test_resolves_path_for_registered_namespace_mfc_creation()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', viewPath: __DIR__ . '/Fixtures');
+
+        $path = $finder->resolveMultiFileComponentPathForCreation('admin::new-component');
+
+        $this->assertNotNull($path);
+        $this->assertStringContainsString('Fixtures', $path);
+        $this->assertStringContainsString('new-component', $path);
+    }
+
     public function test_can_resolve_single_segment_class_name()
     {
         $finder = new Finder();
