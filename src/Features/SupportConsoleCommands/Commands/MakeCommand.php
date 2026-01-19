@@ -2,18 +2,18 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
-use function Laravel\Prompts\text;
-use function Laravel\Prompts\confirm;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Attribute\AsCommand;
-use Livewire\Finder\Finder;
-use Livewire\Compiler\Parser\SingleFileParser;
-use Livewire\Compiler\Compiler;
 use Illuminate\Support\Str;
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Filesystem\Filesystem;
+use Livewire\Finder\Finder;
 use Illuminate\Console\Command;
+use Livewire\Compiler\Compiler;
+use function Laravel\Prompts\text;
+use Illuminate\Foundation\Inspiring;
+use function Laravel\Prompts\confirm;
+use Illuminate\Filesystem\Filesystem;
+use Livewire\Compiler\Parser\SingleFileParser;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Input\InputArgument;
 
 #[AsCommand(name: 'make:livewire')]
 class MakeCommand extends Command
@@ -226,10 +226,10 @@ class MakeCommand extends Command
         }
 
         // Define file paths
-        $classPath = $directory . '/' . $componentName . '.php';
-        $viewPath = $directory . '/' . $componentName . '.blade.php';
-        $testPath = $directory . '/' . $componentName . '.test.php';
-        $jsPath = $directory . '/' . $componentName . '.js';
+        $classPath = $directory.'/'.$componentName.'.php';
+        $viewPath = $directory.'/'.$componentName.'.blade.php';
+        $testPath = $directory.'/'.$componentName.'.test.php';
+        $jsPath = $directory.'/'.$componentName.'.js';
 
         // Check if we're upgrading from a single-file component
         $sfcPath = $this->finder->resolveSingleFileComponentPathForCreation($name);
@@ -302,21 +302,23 @@ class MakeCommand extends Command
             $namespace = $classNamespaceDetails['classNamespace'];
             $viewPath = $classNamespaceDetails['classViewPath'];
         } else {
-            $namespace = 'App\\Livewire';
+            $namespace = config('livewire.class_namespace', 'App\\Livewire');
             $viewPath = config('livewire.view_path', resource_path('views/livewire'));
         }
 
         if (! empty($namespaceSegments)) {
-            $namespace .= '\\' . collect($namespaceSegments)
-                ->map(fn($segment) => Str::studly($segment))
+            $namespace .= '\\'.collect($namespaceSegments)
+                ->map(fn ($segment) => Str::studly($segment))
                 ->implode('\\');
         }
 
         // Get the configured view path and extract the view namespace from it
         $viewNamespace = $this->extractViewNamespace($viewPath);
 
-        $viewName = $viewNamespace . '.' . collect($segments)
-            ->map(fn($segment) => Str::kebab($segment))
+        $viewName = collect($segments)
+            ->map(fn ($segment) => Str::kebab($segment))
+            ->prepend($viewNamespace)
+            ->filter()
             ->implode('.');
 
         $stub = str_replace('[namespace]', $namespace, $stub);
@@ -363,7 +365,7 @@ class MakeCommand extends Command
         $stub = $this->files->get($this->getStubPath('livewire-mfc-test.stub'));
 
         $componentName = collect(explode('.', $name))
-            ->map(fn($segment) => Str::kebab($segment))
+            ->map(fn ($segment) => Str::kebab($segment))
             ->implode('.');
 
         $stub = str_replace('[component-name]', $componentName, $stub);
@@ -388,7 +390,7 @@ class MakeCommand extends Command
         $stub = $this->files->get($this->getStubPath('livewire-mfc-test.stub'));
 
         $componentName = collect(explode('.', $name))
-            ->map(fn($segment) => Str::kebab($segment))
+            ->map(fn ($segment) => Str::kebab($segment))
             ->implode('.');
 
         $stub = str_replace('[component-name]', $componentName, $stub);
@@ -400,19 +402,19 @@ class MakeCommand extends Command
     {
         $segments = explode('.', $name);
 
-        $className = Str::studly(end($segments)) . 'Test';
+        $className = Str::studly(end($segments)).'Test';
 
         $namespaceSegments = array_slice($segments, 0, -1);
 
         $path = base_path('tests/Feature/Livewire');
 
         if (! empty($namespaceSegments)) {
-            $path .= '/' . collect($namespaceSegments)
-                ->map(fn($segment) => Str::studly($segment))
+            $path .= '/'.collect($namespaceSegments)
+                ->map(fn ($segment) => Str::studly($segment))
                 ->implode('/');
         }
 
-        return $path . '/' . $className . '.php';
+        return $path.'/'.$className.'.php';
     }
 
     protected function buildClassBasedComponentTest(string $name): string
@@ -421,7 +423,7 @@ class MakeCommand extends Command
         $stub = $this->files->get($this->getStubPath('livewire-mfc-test.stub'));
 
         $componentName = collect(explode('.', $name))
-            ->map(fn($segment) => Str::kebab($segment))
+            ->map(fn ($segment) => Str::kebab($segment))
             ->implode('.');
 
         $stub = str_replace('[component-name]', $componentName, $stub);
@@ -431,13 +433,13 @@ class MakeCommand extends Command
 
     protected function getStubPath(string $stub): string
     {
-        $customPath = $this->laravel->basePath('stubs/' . $stub);
+        $customPath = $this->laravel->basePath('stubs/'.$stub);
 
         if ($this->files->exists($customPath)) {
             return $customPath;
         }
 
-        return __DIR__ . '/' . $stub;
+        return __DIR__.'/'.$stub;
     }
 
     protected function ensureDirectoryExists(string $path): void
@@ -454,9 +456,13 @@ class MakeCommand extends Command
         // e.g., resource_path('views/not-livewire') => 'not-livewire'
         $viewsPath = resource_path('views');
 
+        if ($viewPath === $viewsPath) {
+            return '';
+        }
+
         // Remove the base views path to get the relative path
-        $relativePath = str_replace($viewsPath . DIRECTORY_SEPARATOR, '', $viewPath);
-        $relativePath = str_replace($viewsPath . '/', '', $relativePath);
+        $relativePath = str_replace($viewsPath.DIRECTORY_SEPARATOR, '', $viewPath);
+        $relativePath = str_replace($viewsPath.'/', '', $relativePath);
 
         // Convert directory separators to dots for the namespace
         return str_replace(['/', '\\'], '.', $relativePath);
@@ -499,7 +505,7 @@ class MakeCommand extends Command
                 $componentName = str_replace(['⚡', '⚡︎', '⚡️'], '', $componentName);
             }
 
-            $testPath = $mfcPath . '/' . $componentName . '.test.php';
+            $testPath = $mfcPath.'/'.$componentName.'.test.php';
 
             if ($this->files->exists($testPath)) {
                 $this->components->error('Test file already exists.');
