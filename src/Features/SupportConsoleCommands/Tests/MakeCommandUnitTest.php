@@ -855,4 +855,47 @@ class MakeCommandUnitTest extends \Tests\TestCase
         // Ensure no component was created in the fallback location
         $this->assertFalse(File::exists($this->livewireComponentsPath('admin/⚡users.blade.php')));
     }
+
+    public function test_class_based_component_uses_class_namespace_from_config()
+    {
+        $this->app['config']->set('livewire.class_namespace', 'App\\Components');
+        $this->app[Kernel::class]->call('make:livewire', ['name' => 'foo', '--class' => true]);
+
+        // File is still created in default path, but namespace in content uses config
+        $classContent = File::get($this->livewireClassesPath('Foo.php'));
+
+        $this->assertStringContainsString('namespace App\Components;', $classContent);
+    }
+
+    public function test_class_based_component_with_views_as_root_path_has_correct_view_name()
+    {
+        // Set view_path to root views folder (not a subdirectory like views/livewire)
+        $this->app['config']->set('livewire.view_path', resource_path('views'));
+        $this->app[Kernel::class]->call('make:livewire', ['name' => 'foo', '--class' => true]);
+
+        $classContent = File::get($this->livewireClassesPath('Foo.php'));
+
+        // Should be view('foo') not view('.foo') or an absolute path
+        $this->assertStringContainsString("view('foo')", $classContent);
+        $this->assertStringNotContainsString("view('.foo')", $classContent);
+
+        // Ensure view is created in root views folder
+        $this->assertTrue(File::exists(resource_path('views/foo.blade.php')));
+    }
+
+    public function test_class_based_nested_component_with_views_as_root_path_has_correct_view_name()
+    {
+        // Set view_path to root views folder
+        $this->app['config']->set('livewire.view_path', resource_path('views'));
+        $this->app[Kernel::class]->call('make:livewire', ['name' => 'admin.dashboard', '--class' => true]);
+
+        $classContent = File::get($this->livewireClassesPath('Admin/Dashboard.php'));
+
+        // Should be view('admin.dashboard') not view('.admin.dashboard')
+        $this->assertStringContainsString("view('admin.dashboard')", $classContent);
+        $this->assertStringNotContainsString("view('.admin.dashboard')", $classContent);
+
+        // Ensure view is created in correct location
+        $this->assertTrue(File::exists(resource_path('views/admin/dashboard.blade.php')));
+    }
 }
