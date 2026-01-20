@@ -442,6 +442,42 @@ use Livewire\Component;
 new class extends Component { ... }
 ```
 
+### Update route definitions
+
+Replace `Volt::route()` with `Route::livewire()` in your routes files:
+
+```php
+// Before (Volt)
+use Livewire\Volt\Volt;
+
+Volt::route('/dashboard', 'dashboard');
+
+// After (Livewire v4)
+use Illuminate\Support\Facades\Route;
+
+Route::livewire('/dashboard', 'dashboard');
+```
+
+### Update test files
+
+Replace all instances of `Livewire\Volt\Volt` with `Livewire\Livewire` and change `Volt::test()` to `Livewire::test()`:
+
+```php
+// Before (Volt)
+use Livewire\Volt\Volt;
+
+Volt::test('counter')
+    ->call('increment')
+    ->assertSee('1');
+
+// After (Livewire v4)
+use Livewire\Livewire;
+
+Livewire::test('counter')
+    ->call('increment')
+    ->assertSee('1');
+```
+
 ### Remove Volt service provider
 
 Delete the Volt service provider file:
