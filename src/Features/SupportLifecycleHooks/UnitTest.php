@@ -57,6 +57,33 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('memo', 'boottraitboottraitinitializehydratebootedtraitbooted');
     }
 
+    public function test_trait_mount_hooks_receive_parameters_not_declared_in_component_mount()
+    {
+        // This test ensures that trait mount hooks can receive parameters
+        // even if the component's mount() method doesn't declare them.
+        // This is important for route-model binding scenarios where
+        // a trait's mountMyTrait(Post $post) should receive the Post
+        // without the component's mount() needing to also declare it.
+        $component = Livewire::test(ComponentWithTraitMountParameter::class, [
+            'foo' => 'value-for-foo',
+            'bar' => 'value-for-bar',
+        ]);
+
+        $this->assertSame('value-for-foo', $component->foo);
+        $this->assertSame('value-for-bar', $component->bar);
+    }
+
+    public function test_trait_mount_hooks_receive_parameters_when_component_has_no_mount()
+    {
+        // This test ensures that trait mount hooks receive parameters
+        // even when the component has no mount() method at all.
+        $component = Livewire::test(ComponentWithoutMountButTraitMountParameter::class, [
+            'traitParam' => 'trait-value',
+        ]);
+
+        $this->assertSame('trait-value', $component->traitParam);
+    }
+
     public function test_boot_method_supports_dependency_injection()
     {
         Livewire::test(ComponentWithBootMethodDI::class)
@@ -616,4 +643,45 @@ class ForLifecycleHooks extends TestComponent
     {
         $this->lifecycles['rendered']++;
     }
+}
+
+trait TraitWithMountParameter
+{
+    public $bar;
+
+    public function mountTraitWithMountParameter($bar)
+    {
+        $this->bar = $bar;
+    }
+}
+
+class ComponentWithTraitMountParameter extends TestComponent
+{
+    use TraitWithMountParameter;
+
+    public $foo;
+
+    // Note: mount() only declares $foo, not $bar
+    // $bar should still be passed to the trait's mountTraitWithMountParameter($bar)
+    public function mount($foo)
+    {
+        $this->foo = $foo;
+    }
+}
+
+trait TraitWithMountParameterNoComponentMount
+{
+    public $traitParam;
+
+    public function mountTraitWithMountParameterNoComponentMount($traitParam)
+    {
+        $this->traitParam = $traitParam;
+    }
+}
+
+class ComponentWithoutMountButTraitMountParameter extends TestComponent
+{
+    use TraitWithMountParameterNoComponentMount;
+
+    // No mount() method - trait should still receive its parameter
 }
