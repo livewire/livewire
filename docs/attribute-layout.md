@@ -36,7 +36,7 @@ This component will render using the `resources/views/layouts/dashboard.blade.ph
 By default, Livewire uses the layout specified in your `config/livewire.php` file:
 
 ```php
-'layout' => 'layouts::app',
+'component_layout' => 'layouts::app',
 ```
 
 The `#[Layout]` attribute overrides this default for specific components.
