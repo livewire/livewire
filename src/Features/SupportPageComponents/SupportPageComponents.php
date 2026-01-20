@@ -244,7 +244,7 @@ class SupportPageComponents extends ComponentHook
 
             // Case 2: Route::livewire macro usage (via LivewirePageController)
             if (str($uses)->contains(LivewirePageController::class)) {
-                $component = $route->defaults['_livewire_component'] ?? null;
+                $component = $action['livewire_component'] ?? null;
 
                 if (! $component) return false;
 
