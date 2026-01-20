@@ -466,12 +466,12 @@ Replace all instances of `Livewire\Volt\Volt` with `Livewire\Livewire` and chang
 // Before (Volt)
 use Livewire\Volt\Volt;
 
-Volt::test('counter')...
+Volt::test('counter')
 
 // After (Livewire v4)
 use Livewire\Livewire;
 
-Livewire::test('counter')...
+Livewire::test('counter')
 ```
 
 ### Remove Volt service provider
