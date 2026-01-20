@@ -302,7 +302,7 @@ class MakeCommand extends Command
             $namespace = $classNamespaceDetails['classNamespace'];
             $viewPath = $classNamespaceDetails['classViewPath'];
         } else {
-            $namespace = 'App\\Livewire';
+            $namespace = config('livewire.class_namespace', 'App\\Livewire');
             $viewPath = config('livewire.view_path', resource_path('views/livewire'));
         }
 
@@ -315,8 +315,10 @@ class MakeCommand extends Command
         // Get the configured view path and extract the view namespace from it
         $viewNamespace = $this->extractViewNamespace($viewPath);
 
-        $viewName = $viewNamespace . '.' . collect($segments)
+        $viewName = collect($segments)
             ->map(fn($segment) => Str::kebab($segment))
+            ->prepend($viewNamespace)
+            ->filter()
             ->implode('.');
 
         $stub = str_replace('[namespace]', $namespace, $stub);
@@ -453,6 +455,10 @@ class MakeCommand extends Command
         // e.g., resource_path('views/livewire') => 'livewire'
         // e.g., resource_path('views/not-livewire') => 'not-livewire'
         $viewsPath = resource_path('views');
+
+        if ($viewPath === $viewsPath) {
+            return '';
+        }
 
         // Remove the base views path to get the relative path
         $relativePath = str_replace($viewsPath . DIRECTORY_SEPARATOR, '', $viewPath);
