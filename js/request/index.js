@@ -276,9 +276,13 @@ function sendMessages() {
             }
         })
 
+        let cachedOptions = null
+
         Object.defineProperty(request, 'options', {
             get() {
-                return {
+                if (cachedOptions) return cachedOptions
+
+                cachedOptions = {
                     method: 'POST',
                     body: JSON.stringify(request.payload),
                     headers: {
@@ -287,6 +291,8 @@ function sendMessages() {
                     },
                     signal: request.controller.signal,
                 }
+
+                return cachedOptions
             }
         })
     })
