@@ -7,6 +7,13 @@ use Livewire\Livewire;
 
 class BrowserTest extends BrowserTestCase
 {
+    public static function tweakApplicationHook()
+    {
+        return function () {
+            app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');
+        };
+    }
+
     public function test_island_directive()
     {
         Livewire::visit([new class extends \Livewire\Component {
@@ -750,6 +757,25 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@increment')
             // Now the island should show the updated count (including the renderless increment)...
             ->assertSeeIn('@island-count', 'Count: 3')
+            ;
+    }
+
+    public function test_more_than_ten_islands_using_single_file_component()
+    {
+        Livewire::visit('twelve-islands')
+            ->assertSee('island test 1')
+            ->assertSee('island test 2')
+            ->assertSee('island test 3')
+            ->assertSee('island test 4')
+            ->assertSee('island test 5')
+            ->assertSee('island test 6')
+            ->assertSee('island test 7')
+            ->assertSee('island test 8')
+            ->assertSee('island test 9')
+            ->assertSee('island test 10')
+            ->assertSee('island test 11')
+            ->assertDontSee('STARTISLAND')
+            ->assertDontSee('ENDISLAND')
             ;
     }
 }
