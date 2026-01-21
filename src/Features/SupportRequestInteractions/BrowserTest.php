@@ -1153,6 +1153,40 @@ class BrowserTest extends \Tests\BrowserTestCase
             ;
     }
 
+    public function test_headers_added_via_request_hook_are_sent_with_requests()
+    {
+        Livewire::visit(new class extends Component {
+            public $customHeader = 'none';
+
+            function captureHeader()
+            {
+                $this->customHeader = request()->header('X-Custom-Test-Header', 'missing');
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <span dusk="header">{{ $customHeader }}</span>
+
+                    <button wire:click="captureHeader" dusk="button">Capture</button>
+
+                    <script>
+                        document.addEventListener('livewire:init', () => {
+                            Livewire.hook('request', ({ options }) => {
+                                options.headers['X-Custom-Test-Header'] = 'test-header-value'
+                            })
+                        })
+                    </script>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@header', 'none')
+        ->waitForLivewire()->click('@button')
+        ->assertSeeIn('@header', 'test-header-value');
+    }
+
     public function test_a_island_level_poll_directive_action_does_not_cancel_another_island_level_user_directive_action_for_the_same_component()
     {
         Livewire::visit(
