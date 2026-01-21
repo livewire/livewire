@@ -55,4 +55,19 @@ class UnitTest extends TestCase
         });
         $this->assertCount(1, $livewireUpdateRoutes);
     }
+
+    public function test_get_update_uri_works_when_update_route_property_is_null(): void
+    {
+        // Simulate the cached routes scenario where routes are loaded from cache
+        // and HandleRequests::$updateRoute was never set because setUpdateRoute()
+        // was not called (the route already existed in the router).
+        $handleRequests = new HandleRequests();
+        $handleRequests->register();
+        $handleRequests->boot();
+
+        // This should work even though $updateRoute is null by finding the route from the router
+        $uri = $handleRequests->getUpdateUri();
+
+        $this->assertEquals('/livewire/update', $uri);
+    }
 }
