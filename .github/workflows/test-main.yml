@@ -67,33 +67,6 @@ jobs:
           path: dist/
           retention-days: 1
 
-  js-tests:
-    needs: build-assets
-    runs-on: ubuntu-latest
-    name: 1. JavaScript
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Download built assets
-        uses: actions/download-artifact@v4
-        with:
-          name: livewire-assets
-          path: dist/
-
-      - name: Run JavaScript tests
-        run: npm run test:run
-
   unit-tests:
     needs: build-assets
     runs-on: ubuntu-latest
@@ -112,7 +85,7 @@ jobs:
           - php: 8.1
             laravel: 12.*
 
-    name: 2. Unit - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
+    name: 1. Unit - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
 
     steps:
       - name: Checkout
@@ -169,7 +142,7 @@ jobs:
           - php: 8.1
             laravel: 12.*
 
-    name: 3. Browser ${{ matrix.shard }} - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
+    name: 2. Browser ${{ matrix.shard }} - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
 
     steps:
       - name: Checkout
@@ -242,7 +215,7 @@ jobs:
           - php: 8.1
             laravel: 12.*
 
-    name: 4. Legacy - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
+    name: 3. Legacy - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
 
     steps:
       - name: Checkout
