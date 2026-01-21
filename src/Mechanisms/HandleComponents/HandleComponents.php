@@ -148,18 +148,31 @@ class HandleComponents extends Mechanism
 
     protected function getMountMethodParameters($component)
     {
-        if (! method_exists($component, 'mount')) {
-            return [];
-        }
-
-        $reflection = new \ReflectionMethod($component, 'mount');
         $parameters = [];
 
-        foreach ($reflection->getParameters() as $parameter) {
-            $parameters[] = $parameter->getName();
+        // Get parameters from the component's own mount() method...
+        if (method_exists($component, 'mount')) {
+            $reflection = new \ReflectionMethod($component, 'mount');
+
+            foreach ($reflection->getParameters() as $parameter) {
+                $parameters[] = $parameter->getName();
+            }
         }
 
-        return $parameters;
+        // Get parameters from trait mount hooks (e.g., mountMyTrait)...
+        foreach (class_uses_recursive($component) as $trait) {
+            $method = 'mount' . class_basename($trait);
+
+            if (method_exists($component, $method)) {
+                $reflection = new \ReflectionMethod($component, $method);
+
+                foreach ($reflection->getParameters() as $parameter) {
+                    $parameters[] = $parameter->getName();
+                }
+            }
+        }
+
+        return array_unique($parameters);
     }
 
     protected function shortCircuitMount($name, $params, $key, $parent, $slots, $htmlAttributes)
