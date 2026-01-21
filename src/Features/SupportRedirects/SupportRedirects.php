@@ -88,7 +88,7 @@ class SupportRedirects extends ComponentHook
 
             // Check if this route uses LivewirePageController (indicates Route::livewire() was used)
             if (str_contains($uses, LivewirePageController::class)) {
-                $routeComponent = $route->defaults['_livewire_component'] ?? null;
+                $routeComponent = $route->action['livewire_component'] ?? null;
 
                 if (! $routeComponent) continue;
 
