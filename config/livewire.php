@@ -118,6 +118,23 @@ return [
     'view_path' => resource_path('views/livewire'),
 
     /*
+    |--------------------------------------------------------------------------
+    | Cache Path
+    |--------------------------------------------------------------------------
+    |
+    | This value is used to specify where Livewire stores compiled component
+    | views and other cached artifacts generated during the rendering process.
+    | These files are managed internally by Livewire and should not be edited
+    | manually.
+    |
+    | Changing this path may be useful if you want to customize storage layout
+    | or isolate Livewire cache from other framework caches.
+    |
+    */
+
+    'cache_path' => storage_path('framework/views/livewire'),
+
+    /*
     |---------------------------------------------------------------------------
     | Temporary File Uploads
     |---------------------------------------------------------------------------
