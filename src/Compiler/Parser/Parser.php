@@ -11,7 +11,9 @@ class Parser
         $replacements = [];
 
         $contents = preg_replace_callback($islandsPattern, function($matches) use (&$replacements) {
-            $key = 'ISLANDREPLACEMENT:' . count($replacements);
+            // Use brackets around the number to prevent substring matching issues
+            // e.g. "ISLANDREPLACEMENT:[1]" won't match as part of "ISLANDREPLACEMENT:[10]"
+            $key = 'ISLANDREPLACEMENT:[' . count($replacements) . ']';
 
             $replacements[$key] = $matches[0];
 
