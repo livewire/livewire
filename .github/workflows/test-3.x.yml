@@ -1,4 +1,4 @@
-name: Test Main
+name: Test 3.x
 
 on:
   push:
