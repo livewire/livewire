@@ -47,7 +47,7 @@ class SupportIslands extends ComponentHook
         }
 
         // if metadata contains an island, then we should render it...
-        return function (...$params) use ($island, $componentContext, $mount) {
+        return function (...$params) use ($island, $componentContext, $mount, $metadata) {
             ['name' => $name, 'mode' => $mode] = $island;
 
             $islands = $this->component->getIslands();
@@ -55,6 +55,11 @@ class SupportIslands extends ComponentHook
             $islands = array_filter($islands, fn ($island) => $island['name'] === $name);
 
             if (empty($islands)) return;
+
+            // Support `Wire:click.renderless`...
+            if ($metadata['renderless'] ?? false) {
+                return;
+            }
 
             // If #[Renderless] attribute was used, don't render the island...
             if ($this->storeGet('skipIslandsRender', false)) return;
