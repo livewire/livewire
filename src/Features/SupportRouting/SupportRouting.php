@@ -15,8 +15,9 @@ class SupportRouting extends ComponentHook
                 app('livewire')->addComponent($component);
             }
 
-            return Route::get($uri, LivewirePageController::class)
-                ->defaults('_livewire_component', $component);
+            return tap(Route::get($uri, LivewirePageController::class), function ($route) use ($component) {
+                $route->action['livewire_component'] = $component;
+            });
         });
     }
 }
