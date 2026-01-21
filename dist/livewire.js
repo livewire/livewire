@@ -5333,6 +5333,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             confirm(
               "This page has expired.\nWould you like to refresh the page?"
             ) && window.location.reload();
+            return;
           }
           if (response.aborted)
             return;
