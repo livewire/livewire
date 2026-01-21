@@ -531,8 +531,8 @@ When a user clicks the heart button, the following sequence occurs:
 
 This provides instant visual feedback while ensuring the bookmark state is properly persisted.
 
-> [!warning] Class-based components need @script wrapper
-> The examples above use bare `<script>` tags, which work for single-file and multi-file components. If you're using class-based components, you must wrap your script tags with the `@script` directive:
+> [!warning] Class-based components need @@script wrapper
+> The examples above use bare `<script>` tags, which work for single-file and multi-file components. If you're using class-based components, you must wrap your script tags with the `@@script` directive:
 > ```blade
 > @@script
 > <script>
