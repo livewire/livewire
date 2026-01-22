@@ -15,7 +15,7 @@ on('effect', ({ component, effects }) => {
             afterLoaded: [],
         }))
 
-        import(path).then(module => {
+        import(/* @vite-ignore */ path).then(module => {
             module.run.call(component.$wire, component.$wire, component.$wire.js);
 
             pendingComponentAssets.get(component).loading = false
