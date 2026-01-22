@@ -2,13 +2,15 @@
 
 namespace Livewire\Factory;
 
-use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Compiler\Compiler;
-use Livewire\Finder\Finder;
 use Livewire\Component;
+use Livewire\Exceptions\ComponentNotFoundException;
+use Livewire\Finder\Finder;
 
 class Factory
 {
+    protected static $persistentMissingComponentResolvers = [];
+
     protected $missingComponentResolvers = [];
 
     protected $resolvedComponentCache = [];
@@ -16,7 +18,10 @@ class Factory
     public function __construct(
         protected Finder $finder,
         protected Compiler $compiler,
-    ) {}
+    ) {
+        // Restore persistent missing component resolvers (important for Octane)
+        $this->missingComponentResolvers = static::$persistentMissingComponentResolvers;
+    }
 
     public function create($name, $id = null): Component
     {
@@ -34,6 +39,7 @@ class Factory
     public function resolveMissingComponent($resolver): void
     {
         $this->missingComponentResolvers[] = $resolver;
+        static::$persistentMissingComponentResolvers[] = $resolver;
     }
 
     public function resolveComponentNameAndClass($name): array
@@ -49,10 +55,10 @@ class Factory
         if ($name) {
             $class = $this->finder->resolveClassComponentClassName($name);
 
-            if (! $class) {
+            if (!$class) {
                 $path = $this->finder->resolveMultiFileComponentPath($name);
 
-                if (! $path) {
+                if (!$path) {
                     $path = $this->finder->resolveSingleFileComponentPath($name);
                 }
 
@@ -62,17 +68,17 @@ class Factory
             }
         }
 
-        if (! $class || ! class_exists($class) || ! is_subclass_of($class, Component::class)) {
+        if (!$class || !class_exists($class) || !is_subclass_of($class, Component::class)) {
             foreach ($this->missingComponentResolvers as $resolver) {
                 if ($class = $resolver($name)) {
-                    $this->finder->addComponent($name, $class);
+                    $this->finder->addComponent($name, null, $class);
 
                     break;
                 }
             }
         }
 
-        if (! $class || ! class_exists($class) || ! is_subclass_of($class, Component::class)) {
+        if (!$class || !class_exists($class) || !is_subclass_of($class, Component::class)) {
             throw new ComponentNotFoundException(
                 "Unable to find component: [{$name}]"
             );
