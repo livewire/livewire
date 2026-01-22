@@ -12,6 +12,8 @@ use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class PersistentMiddleware extends Mechanism
 {
+    public static $currentComponentName = null;
+
     protected static $persistentMiddleware = [
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
@@ -40,6 +42,7 @@ class PersistentMiddleware extends Mechanism
             if (! app(HandleRequests::class)->isLivewireRoute()) return;
 
             $this->extractPathAndMethodFromSnapshot($snapshot);
+            $this->extractNameFromSnapshot($snapshot);
 
             $this->applyPersistentMiddleware();
         });
@@ -48,6 +51,7 @@ class PersistentMiddleware extends Mechanism
             // Only flush these at the end of a full request, so that child components have access to this data.
             $this->path = null;
             $this->method = null;
+            static::$currentComponentName = null;
         });
     }
 
@@ -85,6 +89,13 @@ class PersistentMiddleware extends Mechanism
         // Store these locally, so dynamically added child components can use this data.
         $this->path = $snapshot['memo']['path'];
         $this->method = $snapshot['memo']['method'];
+    }
+
+    protected function extractNameFromSnapshot($snapshot)
+    {
+        // Store the current component name so route binding resolution can check
+        // if it should skip resolution for child components.
+        static::$currentComponentName = $snapshot['memo']['name'] ?? null;
     }
 
     protected function applyPersistentMiddleware()
