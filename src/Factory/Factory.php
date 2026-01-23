@@ -70,7 +70,7 @@ class Factory
         if (! $class || ! class_exists($class) || ! is_subclass_of($class, Component::class)) {
             foreach ($this->missingComponentResolvers as $resolver) {
                 if ($class = $resolver($name)) {
-                    $this->finder->addComponent($name, $class);
+                    $this->finder->addComponent(name: $name, class: $class);
 
                     break;
                 }

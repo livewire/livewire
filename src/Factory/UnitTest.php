@@ -187,4 +187,23 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('simple-component', $factory->resolveComponentName(SimpleComponent::class));
         $this->assertEquals('simple-component', $factory->resolveComponentName($component));
     }
+
+    public function test_resolved_missing_component_is_cached_in_finder()
+    {
+        $finder = new Finder();
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $factory = new Factory($finder, $compiler);
+
+        $factory->resolveMissingComponent(function ($name) {
+            if ($name === 'custom.component') {
+                return SimpleComponent::class;
+            }
+
+            return null;
+        });
+
+        $factory->create('custom.component');
+
+        $this->assertEquals(SimpleComponent::class, $finder->resolveClassComponentClassName('custom.component'));
+    }
 }
