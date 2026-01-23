@@ -11081,6 +11081,7 @@ function sendMessages() {
           confirm(
             "This page has expired.\nWould you like to refresh the page?"
           ) && window.location.reload();
+          return;
         }
         if (response.aborted)
           return;
@@ -11604,7 +11605,10 @@ on("effect", ({ component, effects }) => {
       loading: true,
       afterLoaded: []
     }));
-    import(path).then((module) => {
+    import(
+      /* @vite-ignore */
+      path
+    ).then((module) => {
       module.run.call(component.$wire, component.$wire, component.$wire.js);
       pendingComponentAssets.get(component).loading = false;
       pendingComponentAssets.get(component).afterLoaded.forEach((callback) => callback());

@@ -5333,6 +5333,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             confirm(
               "This page has expired.\nWould you like to refresh the page?"
             ) && window.location.reload();
+            return;
           }
           if (response.aborted)
             return;
@@ -5856,7 +5857,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         loading: true,
         afterLoaded: []
       }));
-      import(path).then((module) => {
+      import(
+        /* @vite-ignore */
+        path
+      ).then((module) => {
         module.run.call(component.$wire, component.$wire, component.$wire.js);
         pendingComponentAssets.get(component).loading = false;
         pendingComponentAssets.get(component).afterLoaded.forEach((callback) => callback());
