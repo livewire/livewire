@@ -6,7 +6,6 @@ use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Compiler\Compiler;
 use Livewire\Finder\Finder;
 use Livewire\Component;
-use function Livewire\on;
 
 class Factory
 {
@@ -17,11 +16,7 @@ class Factory
     public function __construct(
         protected Finder $finder,
         protected Compiler $compiler,
-    ) {
-        on('flush-state', function () {
-            $this->resolvedComponentCache = [];
-        });
-    }
+    ) {}
 
     public function create($name, $id = null): Component
     {
