@@ -69,6 +69,6 @@ class UnitTest extends TestCase
         // This should work even though $updateRoute is null by finding the route from the router
         $uri = $handleRequests->getUpdateUri();
 
-        $this->assertEquals('/livewire/update', $uri);
+        $this->assertEquals(EndpointResolver::updatePath(), $uri);
     }
 }
