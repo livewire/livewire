@@ -37,16 +37,7 @@ class HandleRequests extends Mechanism
 
     protected function updateRouteExists()
     {
-        // Check if a route with name ending in 'livewire.update' already exists.
-        // Custom routes can have prefixes (e.g., 'tenant.livewire.update') so we
-        // need to check for routes ending with 'livewire.update', not just exact matches.
-        foreach (Route::getRoutes()->getRoutes() as $route) {
-            if (str($route->getName())->endsWith('livewire.update')) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->findUpdateRoute() !== null;
     }
 
     function getUriPrefix()
@@ -56,9 +47,28 @@ class HandleRequests extends Mechanism
 
     function getUpdateUri()
     {
+        // When routes are cached, $this->updateRoute may be null because
+        // setUpdateRoute() was never called (the route already existed).
+        // In this case, find the route from the router.
+        $route = $this->updateRoute ?? $this->findUpdateRoute();
+
         return (string) str(
-            route($this->updateRoute->getName(), [], false)
+            route($route->getName(), [], false)
         )->start('/');
+    }
+
+    protected function findUpdateRoute()
+    {
+        // Find the route with name ending in 'livewire.update'.
+        // Custom routes can have prefixes (e.g., 'tenant.livewire.update')
+        // so we check for routes ending with 'livewire.update', not just exact matches.
+        foreach (Route::getRoutes()->getRoutes() as $route) {
+            if (str($route->getName())->endsWith('livewire.update')) {
+                return $route;
+            }
+        }
+
+        return null;
     }
 
     function skipRequestPayloadTamperingMiddleware()
