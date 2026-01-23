@@ -48,7 +48,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             );
         });
 
-        $this->app->scoped('livewire.factory', function ($app) {
+        $this->app->singleton('livewire.factory', function ($app) {
             return new Factory(
                 $app['livewire.finder'],
                 $app['livewire.compiler']
