@@ -33,13 +33,15 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Backwards compatibility: .lazy without .live implies .change.live
     let hasLazyWithoutLive = modifiers.includes('lazy') && ! isLive
-    if (hasLazyWithoutLive) isLive = true
+    let shouldSendNetwork = isLive || hasLazyWithoutLive
 
     let ephemeralModifiers = isLive && ! hasLazyWithoutLive ? modifiers.slice(0, liveIndex) : modifiers.slice()
     let networkModifiers = isLive && ! hasLazyWithoutLive ? modifiers.slice(liveIndex + 1) : []
 
     // For .lazy backwards compat, trigger network on change
-    if (hasLazyWithoutLive) networkModifiers.push('change')
+    if (hasLazyWithoutLive) {
+        networkModifiers.push('change')
+    }
 
     // Add self/deep modifier for event propagation control
     if (
@@ -79,7 +81,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let debouncedUpdate = update
 
     // Apply debounce/throttle from network modifiers
-    if ((isLive && ! hasNetworkTriggers && isRealtimeInput(el)) || isDebounced) {
+    if ((shouldSendNetwork && ! hasNetworkTriggers && isRealtimeInput(el)) || isDebounced) {
         debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(networkModifiers, 'debounce') || 150)
     }
 
@@ -90,16 +92,16 @@ directive('model', ({ el, directive, component, cleanup }) => {
     // Build the bindings object
     let bindings = {}
 
-    // Network event listeners (for modifiers after .live)
-    if (isLive && networkOnBlur) {
+    // Network event listeners (for modifiers after .live, or .lazy backwards compat)
+    if (shouldSendNetwork && networkOnBlur) {
         bindings['@blur'] = () => update()
     }
 
-    if (isLive && networkOnChange) {
+    if (shouldSendNetwork && networkOnChange) {
         bindings['@change'] = () => update()
     }
 
-    if (isLive && networkOnEnter) {
+    if (shouldSendNetwork && networkOnEnter) {
         bindings['@keydown.enter'] = () => update()
     }
 
@@ -115,7 +117,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
                 dataSet(component.$wire, expression, value)
 
                 // If .live is present and no specific network triggers, fire on every ephemeral sync
-                if (isLive && ! hasNetworkTriggers) {
+                if (shouldSendNetwork && ! hasNetworkTriggers) {
                     debouncedUpdate()
                 }
             },
