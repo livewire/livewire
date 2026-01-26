@@ -310,7 +310,7 @@ class BrowserTest extends BrowserTestCase
             {
                 return <<<'BLADE'
                     <div>
-                        <input dusk="input" type="text" wire:model.change="title" />
+                        <input dusk="input" type="text" wire:model.change.live="title" />
                         <span dusk="ephemeral" x-text="$wire.title"></span>
                         <span dusk="server">{{ $title }}</span>
                         <button dusk="blur-target">Blur Target</button>
