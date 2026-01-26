@@ -68,7 +68,7 @@ To send property updates to the server as a user types into an input-field, you 
 
 By default, when using `wire:model.live`, Livewire adds a 150 millisecond debounce to server updates. This means if a user is continually typing, Livewire will wait until the user stops typing for 150 milliseconds before sending a request.
 
-You can customize this timing by appending `.debounce.Xms` to the input. Here is an example of changing the debounce to 250 milliseconds:
+You can customize this timing by appending `.debounce.Xms` after `.live`. Here is an example of changing the debounce to 250 milliseconds:
 
 ```html
 <input type="text" wire:model.live.debounce.250ms="title">
@@ -76,27 +76,39 @@ You can customize this timing by appending `.debounce.Xms` to the input. Here is
 
 ### Updating on "blur" event
 
-By appending the `.blur` modifier, Livewire will only send network requests with property updates when a user clicks away from an input, or presses the tab key to move to the next input.
-
-Adding `.blur` is helpful for scenarios where you want to update the server more frequently, but not as a user types. For example, real-time validation is a common instance where `.blur` is helpful.
+The `.blur` modifier delays syncing until the user clicks away from the input:
 
 ```html
 <input type="text" wire:model.blur="title">
 ```
 
-### Updating on "change" event
-
-There are times when the behavior of `.blur` isn't exactly what you want and instead `.change` is.
-
-For example, if you want to run validation every time a select input is changed, by adding `.change`, Livewire will send a network request and validate the property as soon as a user selects a new option. As opposed to `.blur` which will only update the server after the user tabs away from the select input.
+To also send a network request on blur, add `.live`:
 
 ```html
-<select wire:model.change="title">
-    <!-- ... -->
-</select>
+<input type="text" wire:model.blur.live="title">
 ```
 
-Any changes made to the text input will be automatically synchronized with the `$title` property in your Livewire component.
+### Updating on "change" event
+
+The `.change` modifier triggers on the change event, which is useful for select elements:
+
+```html
+<select wire:model.change="state">...</select>
+
+<!-- With network request -->
+<select wire:model.change.live="state">...</select>
+```
+
+### Updating on "enter" key
+
+The `.enter` modifier syncs when the user presses the Enter key:
+
+```html
+<input type="text" wire:model.enter="search">
+
+<!-- With network request -->
+<input type="text" wire:model.enter.live="search">
+```
 
 ## Input fields
 
@@ -291,14 +303,15 @@ wire:model="propertyName"
 
 | Modifier | Description |
 |----------|-------------|
-| `.live` | Send updates as a user types |
-| `.blur` | Only send updates on the `blur` event |
-| `.change` | Only send updates on the `change` event |
+| `.live` | Send updates to the server |
+| `.blur` | Only update on blur |
+| `.change` | Only update on change |
+| `.enter` | Only update on enter key |
 | `.lazy` | Alias for `.change` |
-| `.live.debounce` | Debounces live updates by 150ms (use `.live.debounce.500ms` for a custom duration) |
-| `.live.throttle` | Throttles updates to specified interval (use `.live.throttle.500ms` for a custom duration) |
-| `.preserve-scroll` | Maintains scroll position during updates (use with `.live`) |
-| `.number` | Casts text value to `int` on the server |
-| `.boolean` | Casts text value to `bool` on the server |
-| `.fill` | Uses initial value from HTML `value` attribute on page load |
-| `.deep` | Also listen for events bubbling up from child elements |
+| `.debounce.Xms` | Debounce updates (use with `.live`) |
+| `.throttle.Xms` | Throttle updates (use with `.live`) |
+| `.number` | Cast value to `int` on the server |
+| `.boolean` | Cast value to `bool` on the server |
+| `.fill` | Use initial value from HTML `value` attribute |
+| `.deep` | Also listen to events from child elements |
+| `.preserve-scroll` | Maintain scroll position during updates |

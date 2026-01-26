@@ -246,4 +246,299 @@ class BrowserTest extends BrowserTestCase
             ->assertDontSeeIn('@baz', 'qux')
         ;
     }
+
+    public function test_wire_model_ephemeral_syncs_immediately_no_network()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+        ;
+    }
+
+    public function test_wire_model_blur_delays_ephemeral_sync_no_network()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.blur="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->click('@blur-target')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+        ;
+    }
+
+    public function test_wire_model_change_delays_ephemeral_sync_no_network()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.change="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->click('@blur-target')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+        ;
+    }
+
+    public function test_wire_model_enter_delays_ephemeral_sync_no_network()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.enter="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->click('@blur-target')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->click('@input')
+            ->keys('@input', '{enter}')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+        ;
+    }
+
+    public function test_wire_model_blur_enter_delays_ephemeral_sync_until_blur_or_enter()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.blur.enter="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->type('@input', 'by-enter')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->keys('@input', '{enter}')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'by-enter')
+            ->assertSeeNothingIn('@server')
+            ->clear('@input')
+            ->type('@input', 'by-blur')
+            ->pause(50)
+            ->click('@blur-target')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'by-blur')
+            ->assertSeeNothingIn('@server')
+        ;
+    }
+
+    public function test_wire_model_live_ephemeral_immediate_network_debounced()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->waitForTextIn('@server', 'hello')
+        ;
+    }
+
+    public function test_wire_model_live_blur_ephemeral_immediate_network_on_blur()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live.blur="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+            ->waitForLivewire()->click('@blur-target')
+            ->assertSeeIn('@server', 'hello')
+        ;
+    }
+
+    public function test_wire_model_blur_live_ephemeral_on_blur_network_on_blur()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.blur.live="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->waitForLivewire()->click('@blur-target')
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeIn('@server', 'hello')
+        ;
+    }
+
+    public function test_wire_model_blur_live_debounce_ephemeral_on_blur_network_debounced()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.blur.live.debounce.300ms="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->click('@blur-target')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+            ->waitForTextIn('@server', 'hello')
+        ;
+    }
+
+    public function test_wire_model_live_enter_ephemeral_immediate_network_on_enter()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live.enter="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+            ->click('@blur-target')
+            ->pause(200)
+            ->assertSeeNothingIn('@server')
+            ->click('@input')
+            ->waitForLivewire()->keys('@input', '{enter}')
+            ->assertSeeIn('@server', 'hello')
+        ;
+    }
 }

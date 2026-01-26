@@ -181,6 +181,49 @@ In v3, Livewire component tags would render even without being properly closed. 
 
 These changes may affect certain parts of your application depending on which features you use.
 
+### `wire:model` modifiers now control ephemeral sync timing
+
+In v3, modifiers like `.blur` and `.change` only controlled when network requests were sent—the input's value was always synced to the component's ephemeral (client-side) state immediately as the user typed.
+
+In v4, these modifiers now control when the client-side state syncs. This gives you full control over both layers:
+
+- Modifiers **before** `.live` control client-side (x-model) sync timing
+- Modifiers **after** `.live` control network request timing
+
+```blade
+<!-- Before (v3) - .blur delayed network, but ephemeral synced immediately -->
+<input wire:model.blur="title">
+
+<!-- After (v4) - .blur delays ephemeral sync, and NO network (no .live) -->
+<input wire:model.blur="title">
+
+<!-- To get v3 behavior (ephemeral immediate, network on blur): -->
+<input wire:model.live.blur="title">
+```
+
+Common migrations:
+
+| v3 Syntax | v4 Equivalent (same behavior) |
+|-----------|------------------------------|
+| `wire:model.blur` | `wire:model.live.blur` |
+| `wire:model.change` | `wire:model.live.change` |
+| `wire:model.lazy` | `wire:model.live.change` |
+
+New capabilities in v4:
+
+```blade
+<!-- Ephemeral syncs on blur only, no network -->
+<input wire:model.blur="title">
+
+<!-- Ephemeral syncs on blur OR enter, then network fires -->
+<input wire:model.blur.enter.live="title">
+
+<!-- Ephemeral on blur, network debounced 500ms after -->
+<input wire:model.blur.live.debounce.500ms="title">
+```
+
+[Learn more about wire:model modifiers →](/docs/4.x/wire-model#modifier-layering)
+
 ### `wire:transition` now uses View Transitions API
 
 In v3, `wire:transition` was a wrapper around Alpine's `x-transition` directive, supporting modifiers like `.opacity`, `.scale`, `.duration.200ms`, and `.origin.top`.
