@@ -40,6 +40,8 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // For .lazy backwards compat, trigger network on change
     if (hasLazyWithoutLive) {
+        // Remove 'lazy' from ephemeralModifiers for .lazy backwards compat
+        ephemeralModifiers = ephemeralModifiers.filter(m => m !== 'lazy')
         networkModifiers.push('change')
     }
 
