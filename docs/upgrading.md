@@ -181,50 +181,41 @@ In v3, Livewire component tags would render even without being properly closed. 
 
 These changes may affect certain parts of your application depending on which features you use.
 
-### `wire:model` modifiers now control ephemeral sync timing
+### `wire:model` modifiers now control client-side sync timing
 
-In v3, modifiers like `.blur` and `.change` only controlled when network requests were sent—the input's value was always synced to the component's ephemeral (client-side) state immediately as the user typed.
+In v3, modifiers like `.blur` and `.change` only controlled when network requests were sent. The input's value was always synced to client-side state (`$wire.property`) immediately as the user typed.
 
-In v4, these modifiers now control when the client-side state syncs. This gives you full control over both layers:
+In v4, these modifiers now control when client-side state syncs too. This unlocks new UI patterns—like inputs that don't update until the user finishes typing and hits Enter or tabs away.
 
-- Modifiers **before** `.live` control client-side (x-model) sync timing
-- Modifiers **after** `.live` control network request timing
+**Migration:** If you're using `.blur` or `.change` and want the old behavior, add `.live` before the modifier:
 
 ```blade
-<!-- Before (v3) - .blur delayed network, but ephemeral synced immediately -->
+<!-- v3 -->
 <input wire:model.blur="title">
 
-<!-- After (v4) - .blur delays ephemeral sync, and NO network (no .live) -->
-<input wire:model.blur="title">
-
-<!-- To get v3 behavior (ephemeral immediate, network on blur): -->
+<!-- v4 equivalent -->
 <input wire:model.live.blur="title">
 ```
 
-Common migrations:
-
-| v3 Syntax | v4 Equivalent (same behavior) |
-|-----------|------------------------------|
+| v3 Syntax | v4 Equivalent |
+|-----------|---------------|
 | `wire:model.blur` | `wire:model.live.blur` |
 | `wire:model.change` | `wire:model.live.change` |
 
 > [!info] `.lazy` is backwards compatible
 > `wire:model.lazy` continues to work as it did in v3—no migration needed.
 
-New capabilities in v4:
+**New in v4:** You can now delay client-side updates without sending network requests:
 
 ```blade
-<!-- Ephemeral syncs on blur only, no network -->
-<input wire:model.blur="title">
+<!-- Only update $wire.width when user tabs away -->
+<input wire:model.blur="width">
 
-<!-- Ephemeral syncs on blur OR enter, then network fires -->
-<input wire:model.blur.enter.live="title">
-
-<!-- Ephemeral on blur, network debounced 500ms after -->
-<input wire:model.blur.live.debounce.500ms="title">
+<!-- Update on Enter key or blur -->
+<input wire:model.blur.enter="search">
 ```
 
-[Learn more about wire:model modifiers →](/docs/4.x/wire-model#modifier-layering)
+[Learn more about wire:model →](/docs/4.x/wire-model)
 
 ### `wire:transition` now uses View Transitions API
 
