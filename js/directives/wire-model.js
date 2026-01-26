@@ -34,7 +34,10 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let networkModifiers = isLive ? modifiers.slice(liveIndex + 1) : []
 
     // Add self/deep modifier for event propagation control
-    if (! ephemeralModifiers.includes('self') && ! ephemeralModifiers.includes('deep')) {
+    if (
+        ! (ephemeralModifiers.includes('self') || networkModifiers.includes('self'))
+        && ! (ephemeralModifiers.includes('deep') || networkModifiers.includes('deep'))
+    ) {
         ephemeralModifiers.push('self')
     }
 
