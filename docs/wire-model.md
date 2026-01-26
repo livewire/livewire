@@ -307,7 +307,7 @@ wire:model="propertyName"
 | `.blur` | Only update on blur |
 | `.change` | Only update on change |
 | `.enter` | Only update on enter key |
-| `.lazy` | Alias for `.change` |
+| `.lazy` | Update on change and send network request (v3 compatible) |
 | `.debounce.Xms` | Debounce updates (use with `.live`) |
 | `.throttle.Xms` | Throttle updates (use with `.live`) |
 | `.number` | Cast value to `int` on the server |

@@ -207,7 +207,9 @@ Common migrations:
 |-----------|------------------------------|
 | `wire:model.blur` | `wire:model.live.blur` |
 | `wire:model.change` | `wire:model.live.change` |
-| `wire:model.lazy` | `wire:model.live.change` |
+
+> [!info] `.lazy` is backwards compatible
+> `wire:model.lazy` continues to work as it did in v3—no migration needed.
 
 New capabilities in v4:
 

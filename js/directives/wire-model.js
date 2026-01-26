@@ -26,12 +26,20 @@ directive('model', ({ el, directive, component, cleanup }) => {
     }
 
     // Split modifiers at .live boundary
-    // Modifiers BEFORE .live control ephemeral (x-model) sync timing
+    // Modifiers BEFORE .live control client-side (x-model) sync timing
     // Modifiers AFTER .live control network request timing
     let liveIndex = modifiers.indexOf('live')
     let isLive = liveIndex !== -1
-    let ephemeralModifiers = isLive ? modifiers.slice(0, liveIndex) : modifiers.slice()
-    let networkModifiers = isLive ? modifiers.slice(liveIndex + 1) : []
+
+    // Backwards compatibility: .lazy without .live implies .change.live
+    let hasLazyWithoutLive = modifiers.includes('lazy') && ! isLive
+    if (hasLazyWithoutLive) isLive = true
+
+    let ephemeralModifiers = isLive && ! hasLazyWithoutLive ? modifiers.slice(0, liveIndex) : modifiers.slice()
+    let networkModifiers = isLive && ! hasLazyWithoutLive ? modifiers.slice(liveIndex + 1) : []
+
+    // For .lazy backwards compat, trigger network on change
+    if (hasLazyWithoutLive) networkModifiers.push('change')
 
     // Add self/deep modifier for event propagation control
     if (
