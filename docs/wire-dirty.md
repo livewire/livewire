@@ -41,13 +41,13 @@ By adding the `.remove` modifier to `wire:dirty`, you can instead show an elemen
 
 ## Targeting property updates
 
-Imagine you are using `wire:model.blur` to update a property on the server immediately after a user leaves an input field. In this scenario, you can provide a "dirty" indication for only that property by adding `wire:target` to the element that contains the `wire:dirty` directive.
+Imagine you are using `wire:model.live.blur` to update a property on the server immediately after a user leaves an input field. In this scenario, you can provide a "dirty" indication for only that property by adding `wire:target` to the element that contains the `wire:dirty` directive.
 
 Here is an example of only showing a dirty indication when the title property has been changed:
 
 ```blade
 <form wire:submit="update">
-    <input wire:model.blur="title">
+    <input wire:model.live.blur="title">
 
     <div wire:dirty wire:target="title">Unsaved title...</div> <!-- [tl! highlight] -->
 
@@ -62,7 +62,7 @@ Often, instead of toggling entire elements, you may want to toggle individual CS
 Below is an example where a user types into an input field and the border becomes yellow, indicating an "unsaved" state. Then, when the user tabs away from the field, the border is removed, indicating that the state has been saved on the server:
 
 ```blade
-<input wire:model.blur="title" wire:dirty.class="border-yellow-500">
+<input wire:model.live.blur="title" wire:dirty.class="border-yellow-500">
 ```
 
 ## Using the `$dirty` expression
