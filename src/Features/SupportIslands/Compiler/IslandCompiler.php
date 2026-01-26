@@ -45,7 +45,20 @@ class IslandCompiler
             throw new \Exception('Start @island directive found without a matching @endisland directive');
         }
 
-        $result = $compiler->compileStatementsMadePublic($this->mutableContents);
+        // Strip Blade comments so @island directives inside them are ignored...
+        $comments = [];
+        $contents = preg_replace_callback('/\{\{--(.*?)--\}\}/s', function ($match) use (&$comments) {
+            $placeholder = '[BLADE_COMMENT:' . count($comments) . ']';
+            $comments[] = $match[0];
+            return $placeholder;
+        }, $this->mutableContents);
+
+        $result = $compiler->compileStatementsMadePublic($contents);
+
+        // Restore Blade comments...
+        $result = preg_replace_callback('/\[BLADE_COMMENT:(\d+)\]/', function ($match) use ($comments) {
+            return $comments[(int) $match[1]];
+        }, $result);
 
         for ($i=$maxNestingLevel; $i >= $currentNestingLevel; $i--) {
             $result = preg_replace_callback('/(\[STARTISLAND:([0-9]+):' . $i . '\])\((.*?)\)(.*?)(\[ENDISLAND:' . $i . '\])/s', function ($matches) use ($i) {
