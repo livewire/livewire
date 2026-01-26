@@ -2505,7 +2505,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.15.4",
+    version: "3.15.5",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -3512,7 +3512,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
     let keyModifiers = modifiers.filter((i) => {
-      return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
+      return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll", "blur", "change", "lazy"].includes(i);
     });
     if (keyModifiers.includes("debounce")) {
       let debounceIndex = keyModifiers.indexOf("debounce");
@@ -3609,11 +3609,36 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           el.setAttribute("name", expression);
       });
     }
-    let event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
-    let removeListener = isCloning ? () => {
-    } : on(el, event, modifiers, (e) => {
-      setValue(getInputValue(el, modifiers, e, getValue()));
-    });
+    let hasChangeModifier = modifiers.includes("change") || modifiers.includes("lazy");
+    let hasBlurModifier = modifiers.includes("blur");
+    let hasEnterModifier = modifiers.includes("enter");
+    let hasExplicitEventModifiers = hasChangeModifier || hasBlurModifier || hasEnterModifier;
+    let removeListener;
+    if (isCloning) {
+      removeListener = () => {
+      };
+    } else if (hasExplicitEventModifiers) {
+      let listeners2 = [];
+      let syncValue = (e) => setValue(getInputValue(el, modifiers, e, getValue()));
+      if (hasChangeModifier) {
+        listeners2.push(on(el, "change", modifiers, syncValue));
+      }
+      if (hasBlurModifier) {
+        listeners2.push(on(el, "blur", modifiers, syncValue));
+      }
+      if (hasEnterModifier) {
+        listeners2.push(on(el, "keydown", modifiers, (e) => {
+          if (e.key === "Enter")
+            syncValue(e);
+        }));
+      }
+      removeListener = () => listeners2.forEach((remove) => remove());
+    } else {
+      let event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) ? "change" : "input";
+      removeListener = on(el, event, modifiers, (e) => {
+        setValue(getInputValue(el, modifiers, e, getValue()));
+      });
+    }
     if (modifiers.includes("fill")) {
       if ([void 0, null, ""].includes(getValue()) || isCheckbox(el) && Array.isArray(getValue()) || el.tagName.toLowerCase() === "select" && el.multiple) {
         setValue(
@@ -14514,14 +14539,29 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (el.type && el.type.toLowerCase() === "file") {
       return handleFileUpload(el, expression, component, cleanup2);
     }
-    if (!modifiers.includes("self") && !modifiers.includes("deep")) {
-      modifiers.push("self");
+    let liveIndex = modifiers.indexOf("live");
+    let isLive = liveIndex !== -1;
+    let hasLazyWithoutLive = modifiers.includes("lazy") && !isLive;
+    let shouldSendNetwork = isLive || hasLazyWithoutLive;
+    let ephemeralModifiers = isLive && !hasLazyWithoutLive ? modifiers.slice(0, liveIndex) : modifiers.slice();
+    let networkModifiers = isLive && !hasLazyWithoutLive ? modifiers.slice(liveIndex + 1) : [];
+    if (hasLazyWithoutLive) {
+      ephemeralModifiers = ephemeralModifiers.filter((m) => m !== "lazy");
+      networkModifiers.push("change");
     }
-    let isLive = modifiers.includes("live");
-    let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
-    let onBlur = modifiers.includes("blur");
-    let isDebounced = modifiers.includes("debounce");
-    let isThrottled = modifiers.includes("throttle");
+    if (!(ephemeralModifiers.includes("self") || networkModifiers.includes("self")) && !(ephemeralModifiers.includes("deep") || networkModifiers.includes("deep"))) {
+      ephemeralModifiers.push("self");
+    }
+    let ephemeralOnBlur = ephemeralModifiers.includes("blur");
+    let ephemeralOnChange = ephemeralModifiers.includes("change") || ephemeralModifiers.includes("lazy");
+    let ephemeralOnEnter = ephemeralModifiers.includes("enter");
+    let hasEphemeralTriggers = ephemeralOnBlur || ephemeralOnChange || ephemeralOnEnter;
+    let networkOnBlur = networkModifiers.includes("blur");
+    let networkOnChange = networkModifiers.includes("change") || networkModifiers.includes("lazy");
+    let networkOnEnter = networkModifiers.includes("enter");
+    let hasNetworkTriggers = networkOnBlur || networkOnChange || networkOnEnter;
+    let isDebounced = networkModifiers.includes("debounce");
+    let isThrottled = networkModifiers.includes("throttle");
     let update = () => {
       setNextActionOrigin({ el, directive: directive3 });
       if (isLive || isDebounced) {
@@ -14530,36 +14570,42 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       expression.startsWith("$parent") ? component.$wire.$parent.$commit() : component.$wire.$commit();
     };
     let debouncedUpdate = update;
-    if (isLive && isRealtimeInput(el) || isDebounced) {
-      debouncedUpdate = debounce2(debouncedUpdate, parseModifierDuration(modifiers, "debounce") || 150);
+    if (shouldSendNetwork && !hasNetworkTriggers && isRealtimeInput(el) || isDebounced) {
+      debouncedUpdate = debounce2(debouncedUpdate, parseModifierDuration(networkModifiers, "debounce") || 150);
     }
     if (isThrottled) {
-      debouncedUpdate = throttle3(debouncedUpdate, parseModifierDuration(modifiers, "throttle") || 150);
+      debouncedUpdate = throttle3(debouncedUpdate, parseModifierDuration(networkModifiers, "throttle") || 150);
     }
-    module_default.bind(el, {
-      ["@change"]() {
-        isLazy && update();
-      },
-      ["@blur"]() {
-        onBlur && update();
-      },
-      ["x-model" + getModifierTail(modifiers)]() {
-        return {
-          get() {
-            return dataGet(component.$wire, expression);
-          },
-          set(value) {
-            dataSet(component.$wire, expression, value);
-            isLive && !isLazy && !onBlur && debouncedUpdate();
+    let bindings = {};
+    if (shouldSendNetwork && networkOnBlur) {
+      bindings["@blur"] = () => update();
+    }
+    if (shouldSendNetwork && networkOnChange) {
+      bindings["@change"] = () => update();
+    }
+    if (shouldSendNetwork && networkOnEnter) {
+      bindings["@keydown.enter"] = () => update();
+    }
+    let xModelTail = getModifierTail(ephemeralModifiers);
+    bindings["x-model" + xModelTail] = () => {
+      return {
+        get() {
+          return dataGet(component.$wire, expression);
+        },
+        set(value) {
+          dataSet(component.$wire, expression, value);
+          if (shouldSendNetwork && !hasNetworkTriggers) {
+            debouncedUpdate();
           }
-        };
-      }
-    });
+        }
+      };
+    };
+    module_default.bind(el, bindings);
   });
   function getModifierTail(modifiers) {
     modifiers = modifiers.filter((i) => ![
-      "lazy",
-      "defer"
+      "defer",
+      "live"
     ].includes(i));
     if (modifiers.includes("debounce")) {
       let index2 = modifiers.indexOf("debounce");
