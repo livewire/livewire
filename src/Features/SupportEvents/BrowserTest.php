@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportEvents;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Renderless;
+use Livewire\Features\SupportWireModelingNestedComponents\BaseModelable;
 use Tests\BrowserTestCase;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -341,5 +342,71 @@ class BrowserTest extends BrowserTestCase
             ->click('@button')
             ->pause(100)
             ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_dispatched_event_with_multiple_listeners_and_modelable_children_does_not_throw_duplicate_message_error()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $received = false;
+
+                #[On('test-event')]
+                public function handleEvent()
+                {
+                    $this->received = true;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <span dusk="parent-status">Parent: {{ $received ? 'yes' : 'no' }}</span>
+                        <livewire:child />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $value = '';
+                public $received = false;
+
+                #[On('test-event')]
+                public function handleEvent()
+                {
+                    $this->received = true;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <span dusk="child-status">Child: {{ $received ? 'yes' : 'no' }}</span>
+                        <button wire:click="$dispatch('test-event')" dusk="dispatch">Dispatch</button>
+                        <livewire:modelable-child wire:model="value" />
+                    </div>
+                    HTML;
+                }
+            },
+            'modelable-child' => new class extends Component {
+                #[BaseModelable]
+                public $input = '';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" wire:model="input" dusk="input" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertSeeIn('@parent-status', 'Parent: no')
+            ->assertSeeIn('@child-status', 'Child: no')
+            ->click('@dispatch')
+            ->pause(500)
+            ->assertConsoleLogHasNoErrors()
+            ->waitForTextIn('@parent-status', 'Parent: yes')
+            ->waitForTextIn('@child-status', 'Child: yes');
     }
 }

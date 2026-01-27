@@ -190,10 +190,29 @@ function sendMessages() {
             callback({
                 message,
                 compileRequest: (messages) => {
-                    if (Array.from(requests).some(request => Array.from(request.messages).some(message => messages.includes(message)))) {
-                        throw new Error('A request already contains one of the messages in this array')
+                    // When multiple components in a hierarchy listen to the same event and one
+                    // has a modelable child, the partition interceptor may try to bundle the
+                    // same child message into multiple requests. For example: Parent and Child
+                    // both listen to 'foo', and Child has a modelable grandchild. Parent's
+                    // interceptor bundles [Parent, Grandchild] into Request 1. Then Child's
+                    // interceptor tries to bundle [Child, Grandchild], but Grandchild is already
+                    // in Request 1. Rather than throwing an error, we merge Child into Request 1
+                    // so all related components are sent together, maintaining data consistency.
+                    let existingRequest = Array.from(requests).find(request =>
+                        messages.some(message => request.messages.has(message))
+                    )
+
+                    if (existingRequest) {
+                        // Add any new messages to the existing request
+                        messages.forEach(message => {
+                            if (!existingRequest.messages.has(message)) {
+                                existingRequest.addMessage(message)
+                            }
+                        })
+                        return existingRequest
                     }
 
+                    // No overlap, create a new request
                     let request = new MessageRequest()
 
                     messages.forEach(message => request.addMessage(message))
