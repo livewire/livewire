@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Mechanisms\HandleComponents;
+namespace Livewire\Mechanisms\HandleComponents;
 
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Mechanisms\HandleComponents\Checksum;
@@ -8,7 +8,7 @@ use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Tests\TestCase;
 
-class ChecksumRateLimitTest extends TestCase
+class ChecksumRateLimitUnitTest extends TestCase
 {
     public function setUp(): void
     {
