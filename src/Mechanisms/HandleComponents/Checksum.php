@@ -39,8 +39,6 @@ class Checksum {
             return;
         }
 
-        $request->attributes->set('livewire_rate_limit_checked', true);
-
         $key = static::rateLimitKey();
 
         if (RateLimiter::tooManyAttempts($key, static::$maxFailures)) {
@@ -51,6 +49,8 @@ class Checksum {
                 'Too many invalid Livewire requests. Please try again later.'
             );
         }
+
+        $request->attributes->set('livewire_rate_limit_checked', true);
     }
 
     protected static function recordFailure()
