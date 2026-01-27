@@ -77,11 +77,11 @@ Persisted elements should typically be placed outside Livewire components, commo
 
 ## Preserving scroll position
 
-For scrollable persisted elements, add `wire:scroll` to maintain scroll position:
+For scrollable persisted elements, add `wire:navigate:scroll` to maintain scroll position:
 
 ```blade
 @persist('scrollable-list')
-    <div class="overflow-y-scroll" wire:scroll>
+    <div class="overflow-y-scroll" wire:navigate:scroll>
         <!-- Scrollable content... -->
     </div>
 @endpersist
