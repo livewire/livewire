@@ -51,6 +51,9 @@ class ChecksumRateLimitUnitTest extends TestCase
         ];
 
         for ($i = 0; $i < 5; $i++) {
+            // Clear the flag to simulate a new request
+            request()->attributes->remove('livewire_rate_limit_checked');
+
             try {
                 Checksum::verify($snapshot);
             } catch (CorruptComponentPayloadException $e) {
@@ -69,8 +72,11 @@ class ChecksumRateLimitUnitTest extends TestCase
             'checksum' => 'invalid-checksum',
         ];
 
-        // Hit the rate limit (10 failures)
+        // Hit the rate limit (10 failures across 10 "requests")
         for ($i = 0; $i < 10; $i++) {
+            // Clear the flag to simulate a new request
+            request()->attributes->remove('livewire_rate_limit_checked');
+
             try {
                 Checksum::verify($snapshot);
             } catch (CorruptComponentPayloadException $e) {
@@ -79,6 +85,8 @@ class ChecksumRateLimitUnitTest extends TestCase
         }
 
         // Next attempt should throw TooManyRequestsHttpException
+        request()->attributes->remove('livewire_rate_limit_checked');
+
         $this->expectException(TooManyRequestsHttpException::class);
         $this->expectExceptionMessage('Too many invalid Livewire requests');
 
@@ -112,6 +120,9 @@ class ChecksumRateLimitUnitTest extends TestCase
         ];
 
         for ($i = 0; $i < 10; $i++) {
+            // Clear the flag to simulate a new request
+            request()->attributes->remove('livewire_rate_limit_checked');
+
             try {
                 Checksum::verify($invalidSnapshot);
             } catch (CorruptComponentPayloadException $e) {
@@ -120,6 +131,8 @@ class ChecksumRateLimitUnitTest extends TestCase
         }
 
         // Now try with a valid checksum - should still be blocked
+        request()->attributes->remove('livewire_rate_limit_checked');
+
         $validSnapshot = [
             'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
             'data' => ['foo' => 'bar'],
@@ -129,6 +142,44 @@ class ChecksumRateLimitUnitTest extends TestCase
         $this->expectException(TooManyRequestsHttpException::class);
 
         Checksum::verify($validSnapshot);
+    }
+
+    public function test_rate_limit_is_only_checked_once_per_request()
+    {
+        RateLimiter::spy();
+
+        $component = Livewire::test(ChecksumRateLimitTestComponent::class);
+        $snapshot = $component->snapshot;
+
+        // Verify the same snapshot multiple times within the same "request"
+        // (simulating multiple components being verified)
+        Checksum::verify($snapshot);
+        Checksum::verify($snapshot);
+        Checksum::verify($snapshot);
+
+        // tooManyAttempts should only be called once, not three times
+        RateLimiter::shouldHaveReceived('tooManyAttempts')->once();
+    }
+
+    public function test_rate_limit_is_checked_again_on_new_request()
+    {
+        RateLimiter::spy();
+
+        $component = Livewire::test(ChecksumRateLimitTestComponent::class);
+        $snapshot = $component->snapshot;
+
+        // First "request" - verify multiple components
+        Checksum::verify($snapshot);
+        Checksum::verify($snapshot);
+
+        // Simulate a new request by clearing the flag
+        request()->attributes->remove('livewire_rate_limit_checked');
+
+        // Second "request" - verify again
+        Checksum::verify($snapshot);
+
+        // tooManyAttempts should be called twice (once per request)
+        RateLimiter::shouldHaveReceived('tooManyAttempts')->twice();
     }
 }
 

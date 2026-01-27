@@ -32,6 +32,15 @@ class Checksum {
 
     protected static function enforceRateLimit()
     {
+        $request = request();
+
+        // Only check the rate limit once per request (not once per component)
+        if ($request->attributes->get('livewire_rate_limit_checked')) {
+            return;
+        }
+
+        $request->attributes->set('livewire_rate_limit_checked', true);
+
         $key = static::rateLimitKey();
 
         if (RateLimiter::tooManyAttempts($key, static::$maxFailures)) {
