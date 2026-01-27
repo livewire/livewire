@@ -1,11 +1,11 @@
 <?php
 
-namespace Tests\Unit\Mechanisms\HandleRequests;
+namespace Livewire\Mechanisms\HandleRequests;
 
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\TestCase;
 
-class EndpointResolverTest extends TestCase
+class EndpointResolverUnitTest extends TestCase
 {
     public function test_generates_unique_prefix_from_app_key()
     {

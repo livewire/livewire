@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Mechanisms\HandleRequests;
+namespace Livewire\Mechanisms\HandleRequests;
 
 use Livewire\Component;
 use Livewire\Livewire;
@@ -9,7 +9,7 @@ use Livewire\Exceptions\TooManyComponentsException;
 use Livewire\Exceptions\TooManyCallsException;
 use Tests\TestCase;
 
-class PayloadGuardsTest extends TestCase
+class PayloadGuardsUnitTest extends TestCase
 {
     public function test_rejects_payload_exceeding_max_size()
     {

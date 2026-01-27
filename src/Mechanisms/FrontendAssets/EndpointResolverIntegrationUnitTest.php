@@ -1,12 +1,12 @@
 <?php
 
-namespace Tests\Unit\Mechanisms\FrontendAssets;
+namespace Livewire\Mechanisms\FrontendAssets;
 
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\TestCase;
 
-class EndpointResolverIntegrationTest extends TestCase
+class EndpointResolverIntegrationUnitTest extends TestCase
 {
     public function test_script_route_uses_endpoint_resolver_path()
     {

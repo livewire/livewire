@@ -1,13 +1,13 @@
 <?php
 
-namespace Tests\Unit\Mechanisms\HandleComponents;
+namespace Livewire\Mechanisms\HandleComponents;
 
 use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\Exceptions\MaxNestingDepthExceededException;
 use Tests\TestCase;
 
-class NestingDepthTest extends TestCase
+class NestingDepthUnitTest extends TestCase
 {
     public function test_rejects_property_paths_exceeding_max_depth()
     {

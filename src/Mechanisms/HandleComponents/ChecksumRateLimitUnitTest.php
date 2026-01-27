@@ -1,14 +1,17 @@
 <?php
 
-namespace Tests\Unit\Mechanisms\HandleComponents;
+namespace Livewire\Mechanisms\HandleComponents;
 
 use Illuminate\Support\Facades\RateLimiter;
+use Livewire\Component;
+use Livewire\Features\SupportReleaseTokens\ReleaseToken;
+use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\Checksum;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Tests\TestCase;
 
-class ChecksumRateLimitTest extends TestCase
+class ChecksumRateLimitUnitTest extends TestCase
 {
     public function setUp(): void
     {
@@ -16,12 +19,15 @@ class ChecksumRateLimitTest extends TestCase
 
         // Clear any existing rate limits before each test
         RateLimiter::clear('livewire-checksum-failures:127.0.0.1');
+
+        // Register a test component for use in snapshots
+        Livewire::component('test-component', ChecksumRateLimitTestComponent::class);
     }
 
     public function test_checksum_failure_is_recorded()
     {
         $snapshot = [
-            'memo' => ['name' => 'test-component'],
+            'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
             'data' => ['foo' => 'bar'],
             'checksum' => 'invalid-checksum',
         ];
@@ -39,7 +45,7 @@ class ChecksumRateLimitTest extends TestCase
     public function test_multiple_failures_are_tracked()
     {
         $snapshot = [
-            'memo' => ['name' => 'test-component'],
+            'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
             'data' => ['foo' => 'bar'],
             'checksum' => 'invalid-checksum',
         ];
@@ -58,7 +64,7 @@ class ChecksumRateLimitTest extends TestCase
     public function test_blocks_after_max_failures()
     {
         $snapshot = [
-            'memo' => ['name' => 'test-component'],
+            'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
             'data' => ['foo' => 'bar'],
             'checksum' => 'invalid-checksum',
         ];
@@ -82,7 +88,7 @@ class ChecksumRateLimitTest extends TestCase
     public function test_valid_checksum_does_not_record_failure()
     {
         $snapshot = [
-            'memo' => ['name' => 'test-component'],
+            'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
             'data' => ['foo' => 'bar'],
         ];
 
@@ -100,7 +106,7 @@ class ChecksumRateLimitTest extends TestCase
     {
         // First, exceed the rate limit with invalid requests
         $invalidSnapshot = [
-            'memo' => ['name' => 'test-component'],
+            'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
             'data' => ['foo' => 'bar'],
             'checksum' => 'invalid-checksum',
         ];
@@ -115,7 +121,7 @@ class ChecksumRateLimitTest extends TestCase
 
         // Now try with a valid checksum - should still be blocked
         $validSnapshot = [
-            'memo' => ['name' => 'test-component'],
+            'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
             'data' => ['foo' => 'bar'],
         ];
         $validSnapshot['checksum'] = Checksum::generate($validSnapshot);
@@ -123,5 +129,13 @@ class ChecksumRateLimitTest extends TestCase
         $this->expectException(TooManyRequestsHttpException::class);
 
         Checksum::verify($validSnapshot);
+    }
+}
+
+class ChecksumRateLimitTestComponent extends Component
+{
+    public function render()
+    {
+        return '<div></div>';
     }
 }
