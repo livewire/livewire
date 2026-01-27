@@ -235,4 +235,44 @@ class UnitTest extends TestCase
             ->assertSee('data: not set')
             ->call('refreshWithData');
     }
+
+    public function test_commented_out_island_directives_do_not_affect_content()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    {{-- @island(defer: true) --}}
+                        This content should be visible
+                    {{-- @endisland --}}
+                </div>
+                HTML;
+            }
+        })
+            ->assertSee('This content should be visible')
+            ->assertDontSee('@island')
+            ->assertDontSee('@endisland');
+    }
+
+    public function test_commented_out_island_with_livewire_component_inside()
+    {
+        Livewire::component('inner-component', new class extends \Livewire\Component {
+            public function render() {
+                return '<span>Inner component rendered</span>';
+            }
+        });
+
+        Livewire::test(new class extends \Livewire\Component {
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    {{-- @island(defer: true) --}}
+                        <livewire:inner-component />
+                    {{-- @endisland --}}
+                </div>
+                HTML;
+            }
+        })
+            ->assertSee('Inner component rendered');
+    }
 }
