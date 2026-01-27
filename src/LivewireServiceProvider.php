@@ -82,6 +82,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Mechanisms\ClearCachedFiles::class,
             Mechanisms\RenderComponent::class,
             Mechanisms\DataStore::class,
+            Mechanisms\FlushState\FlushState::class,
         ];
     }
 
