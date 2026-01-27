@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
+use Livewire\Attributes\Modelable;
+use Livewire\Attributes\Reactive;
 use Livewire\Component as BaseComponent;
 use Livewire\Livewire;
 use Sushi\Sushi;
@@ -76,6 +78,14 @@ class BrowserTest extends BrowserTestCase
 
             Route::get('/with-authorization/{post}/inline-auth', Component::class)
                 ->middleware(['web', 'auth', 'can:update,post']);
+
+            // Register components for route-bound child component test
+            Livewire::component('page-with-child', PageComponentWithChild::class);
+            Livewire::component('child-with-modelable', ChildComponentWithModelable::class);
+
+            Route::get('/page-with-child/{post}', PageComponentWithChild::class)
+                ->middleware('web');
+
         };
     }
     public function test_that_persistent_middleware_is_applied_to_subsequent_livewire_requests()
@@ -277,6 +287,32 @@ JS;
             })
             ->waitForText('response-ready: ')
             ->assertDontSee('Protected Content')
+        ;
+    }
+
+    public function test_child_component_does_not_404_after_parent_deletes_route_bound_model()
+    {
+        // This test relies on "app('router')->subsituteImplicitBindingsUsing()"...
+        if (app()->version() < '10.37.1') {
+            $this->markTestSkipped();
+        }
+
+        Post::truncate();
+        Post::insert([
+            ['id' => 1, 'title' => 'First', 'user_id' => 1],
+            ['id' => 2, 'title' => 'Second', 'user_id' => 2],
+        ]);
+
+        Livewire::visit(Component::class)
+            ->visit('/page-with-child/1')
+            ->assertSee('test')
+
+            // Delete the route-bound model - without the fix, this would
+            // 404 because PersistentMiddleware tries to resolve the route binding
+            // for the deleted model when processing the child's snapshot
+            ->waitForLivewire()->click('@delete')
+            ->assertSee('test2')
+            ->assertDontSee('404')
         ;
     }
 }
@@ -506,3 +542,43 @@ class IsBanned
         return $next($request);
     }
 }
+
+class PageComponentWithChild extends BaseComponent
+{
+    public Post $post;
+
+    public $test = 'test';
+
+    public function delete()
+    {
+        $this->post->delete();
+        $this->test = 'test2';
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <livewire:child-with-modelable :$test />
+
+            <button wire:click="delete" dusk="delete">Delete</button>
+        </div>
+        HTML;
+    }
+}
+
+class ChildComponentWithModelable extends BaseComponent
+{
+    #[Reactive]
+    public $test;
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ $test }}
+        </div>
+        HTML;
+    }
+}
+
