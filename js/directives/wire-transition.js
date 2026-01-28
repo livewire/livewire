@@ -1,59 +1,71 @@
-import { directive } from "@/directives"
-import { on } from '@/hooks'
-import Alpine from 'alpinejs'
+import { globalDirective } from "@/directives"
 
-on('morph.added', ({ el }) => {
-    el.__addedByMorph = true
+globalDirective('transition', ({ el, directive, cleanup }) => {
+    let transitionName = directive.expression || 'match-element'
+
+    el.style.viewTransitionName = transitionName
 })
 
-directive('transition', ({ el, directive, component, cleanup }) => {
-    // Support using wire:transition with wire:show as well...
-    for (let i = 0; i < el.attributes.length; i++) {
-        if (el.attributes[i].name.startsWith('wire:show')) {
-            Alpine.bind(el, {
-                [directive.rawName.replace('wire:transition', 'x-transition')]: directive.expression,
-            })
+export async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
+    // Skip transitions entirely if requested...
+    if (options.skip) return callback()
 
-            return
-        }
+    // Only transition if there is a [wire:transition] element within either the from or to elements...
+    if (! fromEl.querySelector('[wire\\:transition]') && ! toEl.querySelector('[wire\\:transition]')) return callback()
+
+    // Check if View Transitions API is supported...
+    if (typeof document.startViewTransition !== 'function') {
+        return callback()
     }
 
-    let visibility = Alpine.reactive({ state: el.__addedByMorph ? false : true })
+    // Disable root transitions for the page...
+    let style = document.createElement('style')
 
-    // We're going to control the element's transition with Alpine transitions...
-    Alpine.bind(el, {
-        [directive.rawName.replace('wire:', 'x-')]: '',
-        'x-show'() { return visibility.state },
-    })
+    style.textContent = `
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+                animation: none !important;
+            }
+        }
 
-    // If it's not the initial page load, transition the element in...
-    el.__addedByMorph && setTimeout(() => visibility.state = true)
+        ::view-transition-old(root) {
+            animation: none !important;
+            opacity: 0 !important;
+        }
 
-    let cleanups = []
+        ::view-transition-new(root) {
+            animation: none !important;
+            opacity: 1 !important;
+        }
+    `
 
-    cleanups.push(on('morph.removing', ({ el, skip }) => {
-        // Here we interupt morphdom from removing an element...
-        skip()
+    document.head.appendChild(style)
 
-        // When the transition ends...
-        el.addEventListener('transitionend', () => {
-            // We can actually remove the element and all the listeners along with it...
-            el.remove()
+    let transitionConfig = {
+        update: () => callback(),
+    }
+
+    // Add transition types if provided...
+    if (options.type) {
+        transitionConfig.types = [options.type]
+    }
+
+    try {
+        let transition = document.startViewTransition(transitionConfig)
+
+        transition.finished.finally(() => {
+            style.remove()
         })
 
-        // Now we can trigger a transition:
-        visibility.state = false
+        await transition.updateCallbackDone
+    } catch (e) {
+        // Firefox 144+ supports View Transitions but only with a callback, not a config object (no transition types support)
+        let transition = document.startViewTransition(() => callback())
 
-        cleanups.push(on('morph', ({ component: morphComponent }) => {
-            if (morphComponent !== component) return
+        transition.finished.finally(() => {
+            style.remove()
+        })
 
-            // While this element is transitioning out, a new morph is about to occur.
-            // Let's expidite this one and clean it up so it doesn't interfere...
-            el.remove()
-
-            cleanups.forEach(i => i())
-        }))
-    }))
-
-    cleanup(() => cleanups.forEach(i => i()))
-})
+        await transition.updateCallbackDone
+    }
+}

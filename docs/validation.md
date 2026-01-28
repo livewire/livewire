@@ -267,7 +267,7 @@ public function save()
 }
 ```
 
-Form objects are a useful abstraction for most larger datasets and a variety of additional features that make them even more powerful. For more information, check out the comprehensive [form object documentation](/docs/forms#extracting-a-form-object).
+Form objects are a useful abstraction for most larger datasets and a variety of additional features that make them even more powerful. For more information, check out the comprehensive [form object documentation](/docs/4.x/forms#extracting-a-form-object).
 
 ## Real-time validation
 
@@ -275,13 +275,13 @@ Real-time validation is the term used for when you validate a user's input as th
 
 By using `#[Validate]` attributes directly on Livewire properties, any time a network request is sent to update a property's value on the server, the provided validation rules will be applied.
 
-This means to provide a real-time validation experience for your users on a specific input, no extra backend work is required. The only thing that is required is using `wire:model.live` or `wire:model.blur` to instruct Livewire to trigger network requests as the fields are filled out.
+This means to provide a real-time validation experience for your users on a specific input, no extra backend work is required. The only thing that is required is using `wire:model.live` or `wire:model.live.blur` to instruct Livewire to trigger network requests as the fields are filled out.
 
-In the below example, `wire:model.blur` has been added to the text input. Now, when a user types in the field and then tabs or clicks away from the field, a network request will be triggered with the updated value and the validation rules will run:
+In the below example, `wire:model.live.blur` has been added to the text input. Now, when a user types in the field and then tabs or clicks away from the field, a network request will be triggered with the updated value and the validation rules will run:
 
 ```blade
 <form wire:submit="save">
-    <input type="text" wire:model.blur="title">
+    <input type="text" wire:model.live.blur="title">
 
     <!-- -->
 </form>
@@ -644,10 +644,44 @@ public function test_cant_create_post_without_title_and_content()
 }
 ```
 
-For more information on other testing utilities provided by Livewire, check out the [testing documentation](/docs/testing).
+For more information on other testing utilities provided by Livewire, check out the [testing documentation](/docs/4.x/testing).
+
+## Accessing errors in JavaScript
+
+Livewire provides a `$errors` magic property for client-side access to validation errors:
+
+```blade
+<form wire:submit="save">
+    <input type="email" wire:model="email">
+
+    <div wire:show="$errors.has('email')">
+        <span wire:text="$errors.first('email')"></span>
+    </div>
+
+    <button type="submit">Save</button>
+</form>
+```
+
+### Available methods
+
+- `$errors.has('field')` - Check if a field has errors
+- `$errors.first('field')` - Get the first error message for a field
+- `$errors.get('field')` - Get all error messages for a field
+- `$errors.all()` - Get all errors for all fields
+- `$errors.clear()` - Clear all errors
+- `$errors.clear('field')` - Clear errors for a specific field
+
+When using Alpine.js, access `$errors` through `$wire.$errors`.
 
 ## Deprecated `[#Rule]` attribute
 
 When Livewire v3 first launched, it used the term "Rule" instead of "Validate" for it's validation attributes (`#[Rule]`).
 
 Because of naming conflicts with Laravel rule objects, this has since been changed to `#[Validate]`. Both are supported in Livewire v3, however it is recommended that you change all occurrences of `#[Rule]` with `#[Validate]` to stay current.
+
+## See also
+
+- **[Forms](/docs/4.x/forms)** — Validate form inputs with real-time feedback
+- **[Properties](/docs/4.x/properties)** — Validate property values before persisting
+- **[Validate Attribute](/docs/4.x/attribute-validate)** — Use #[Validate] for property validation
+- **[Actions](/docs/4.x/actions)** — Validate data in action methods

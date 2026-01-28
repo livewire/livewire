@@ -34,6 +34,11 @@ class WireableSynth extends Synth
     }
 
     function hydrate($value, $meta, $hydrateChild) {
+        // Verify class implements Wireable even though checksum protects this...
+        if (! isset($meta['class']) || ! is_a($meta['class'], Wireable::class, true)) {
+            throw new \Exception('Livewire: Invalid wireable class.');
+        }
+
         foreach ($value as $key => $child) {
             $value[$key] = $hydrateChild($key, $child);
         }

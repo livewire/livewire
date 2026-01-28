@@ -1,4 +1,4 @@
-import { dispatch, dispatchSelf, dispatchTo } from '@/events'
+import { dispatch, dispatchEl, dispatchRef, dispatchSelf, dispatchTo } from '@/events'
 import { on } from '@/hooks'
 
 on('effect', ({ component, effects }) => {
@@ -17,11 +17,11 @@ on('effect', ({ component, effects }) => {
 })
 
 function dispatchEvents(component, dispatches) {
-    dispatches.forEach(({ name, params = {}, self = false, to }) => {
+    dispatches.forEach(({ name, params = {}, self = false, component: componentName, ref, el }) => {
         if (self) dispatchSelf(component, name, params)
-        else if (to) dispatchTo(to, name, params)
+        else if (componentName) dispatchTo(componentName, name, params)
+        else if (ref) dispatchRef(component, ref, name, params)
+        else if (el) dispatchEl(component, el, name, params)
         else dispatch(component, name, params)
     })
 }
-
-

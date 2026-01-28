@@ -29,6 +29,17 @@ class SupportValidation extends ComponentHook
         };
     }
 
+    function renderIsland($name, $view, $data)
+    {
+        $errors = (new ViewErrorBag)->put('default', $this->component->getErrorBag());
+
+        $revert = Utils::shareWithViews('errors', $errors);
+
+        return function () use ($revert) {
+            $revert();
+        };
+    }
+
     function dehydrate($context)
     {
         $errors = $this->component->getErrorBag()->toArray();

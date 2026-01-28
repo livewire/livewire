@@ -8,18 +8,36 @@ class SupportStreaming extends ComponentHook
 {
     protected static $response;
 
-    public function stream($name, $content, $replace = false)
+    public function stream($content, $replace = false, $name = null, $el = null, $ref = null)
     {
         static::ensureStreamResponseStarted();
 
-        static::streamContent(['name' => $name, 'content' => $content, 'replace' => $replace]);
+        $hasName = $name !== null;
+        $hasEl = $el !== null;
+        $hasRef = $ref !== null;
+
+        $type = match (true) {
+            $hasName => 'directive',
+            $hasEl => 'element',
+            $hasRef => 'ref',
+        };
+
+        static::streamContent([
+            'id' => $this->component->getId(),
+            'type' => $type,
+            'content' => $content,
+            'mode' => $replace ? 'replace' : 'default',
+            'name' => $name,
+            'el' => $el,
+            'ref' => $ref,
+        ]);
     }
 
     public static function ensureStreamResponseStarted()
     {
         if (static::$response) return;
 
-        static::$response = response()->stream(null , 200, [
+        static::$response = response()->stream(fn () => null , 200, [
             'Cache-Control' => 'no-cache',
             'Content-Type' => 'text/event-stream',
             'X-Accel-Buffering' => 'no',

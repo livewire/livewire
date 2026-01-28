@@ -84,6 +84,7 @@ export class Directive {
         this.rawName = this.raw = rawName
         this.el = el
         this.eventContext
+        this.wire
 
         this.value = value
         this.modifiers = modifiers
@@ -93,17 +94,17 @@ export class Directive {
     get method() {
         const  methods  = this.parseOutMethodsAndParams(this.expression)
 
-        return methods[0].method;
+        return methods[0].method
     }
 
     get methods() {
-        return this.parseOutMethodsAndParams(this.expression);
+        return this.parseOutMethodsAndParams(this.expression)
     }
 
     get params() {
         const  methods  = this.parseOutMethodsAndParams(this.expression)
 
-        return methods[0].params;
+        return methods[0].params
     }
 
     parseOutMethodsAndParams(rawMethod) {
@@ -141,7 +142,7 @@ export class Directive {
             methods.push({ method, params })
         }
 
-        return methods;
+        return methods
     }
 
     splitAndParseMethods(methodExpression) {

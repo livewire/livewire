@@ -18,11 +18,11 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
     {
         on('flush-state', function () {
             static::$shouldInjectConditionalMarkers = config('livewire.inject_morph_markers', true);
-            static::$shouldInjectLoopMarkers = config('livewire.smart_wire_keys', false);
+            static::$shouldInjectLoopMarkers = config('livewire.smart_wire_keys', true);
         });
 
         static::$shouldInjectConditionalMarkers = config('livewire.inject_morph_markers', true);
-        static::$shouldInjectLoopMarkers = config('livewire.smart_wire_keys', false);
+        static::$shouldInjectLoopMarkers = config('livewire.smart_wire_keys', true);
 
         if (! static::$shouldInjectConditionalMarkers && ! static::$shouldInjectLoopMarkers) {
             return;
@@ -311,7 +311,8 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         $loopDirectives = [
             'foreach',
             'forelse',
-            'for',
+            // temp disabling because of "missing $loop" error
+            // 'for',
             'while',
         ];
 
@@ -326,7 +327,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
             'endforeach',
             // This `endforelse` should NOT be included here, but it is left here for documentation purposes. The close of a `@forelse` loop is handled by the `@empty` directive...
             // 'endforelse',
-            'endfor',
+            // 'endfor',
             'endwhile',
         ];
 

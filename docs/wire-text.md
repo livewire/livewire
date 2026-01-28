@@ -42,3 +42,11 @@ class ShowPost extends Component
 When the button is clicked, `$wire.likes++` immediately updates the displayed count through `wire:text`, while `wire:click="like"` persists the change to the database in the background.
 
 This pattern makes `wire:text` perfect for building optimistic UIs in Livewire.
+
+## Reference
+
+```blade
+wire:text="expression"
+```
+
+This directive has no modifiers.

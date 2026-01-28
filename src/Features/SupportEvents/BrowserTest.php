@@ -87,8 +87,10 @@ class BrowserTest extends BrowserTestCase
         })
             ->assertSeeIn('@button', 'Text')
             ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@button', 'Param Set Text')
             ->assertSeeIn('@button', 'Param Set Text')
             ->waitForLivewire()->click('@bar-button')
+            ->waitForTextIn('@button', 'Bar set text')
             ->assertSeeIn('@button', 'Bar set text');
     }
 
@@ -320,6 +322,24 @@ class BrowserTest extends BrowserTestCase
         ])
             ->waitForLivewireToLoad()
             ->waitForLivewire()->click('@change')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_empty_wire_expression_does_not_throw_errors()
+    {
+        Livewire::visit(new class extends Component {
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click dusk="button">Click me</button>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->click('@button')
+            ->pause(100)
             ->assertConsoleLogHasNoErrors();
     }
 }

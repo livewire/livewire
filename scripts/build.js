@@ -1,13 +1,33 @@
 let fs = require('fs')
 let brotliSize = require('brotli-size')
 let crypto = require('crypto')
+let path = require('path')
+
+// Plugin to replace 'alpinejs' with '@alpinejs/csp' for CSP builds
+const alpineCSPPlugin = {
+    name: 'alpine-csp',
+    setup(build) {
+        build.onResolve({ filter: /^alpinejs$/ }, args => {
+            return { path: require.resolve('@alpinejs/csp') }
+        })
+    }
+}
 
 build({
     entryPoints: [`js/index.js`],
     outfile: `dist/livewire.js`,
     bundle: true,
     platform: 'browser',
-    define: { CDN: true },
+    define: { CDN: true, IS_CSP_BUILD: false },
+})
+
+build({
+    entryPoints: [`js/index.js`],
+    outfile: `dist/livewire.csp.js`,
+    bundle: true,
+    platform: 'browser',
+    define: { CDN: true, IS_CSP_BUILD: true },
+    plugins: [alpineCSPPlugin]
 })
 
 build({
@@ -17,8 +37,20 @@ build({
     sourcemap: 'linked',
     bundle: true,
     platform: 'node',
-    define: { CDN: true },
+    define: { CDN: true, IS_CSP_BUILD: false },
 })
+
+build({
+    format: 'esm',
+    entryPoints: [`js/index.js`],
+    outfile: `dist/livewire.csp.esm.js`,
+    sourcemap: 'linked',
+    bundle: true,
+    platform: 'node',
+    define: { CDN: true, IS_CSP_BUILD: true },
+    plugins: [alpineCSPPlugin]
+})
+
 
 let hash = crypto.randomBytes(4).toString('hex');
 
@@ -34,9 +66,23 @@ build({
     bundle: true,
     minify: true,
     platform: 'browser',
-    define: { CDN: true },
+    define: { CDN: true, IS_CSP_BUILD: false },
 }).then(() => {
     outputSize(`dist/livewire.min.js`)
+})
+
+// Build a minified version.
+build({
+    entryPoints: [`js/index.js`],
+    outfile: `dist/livewire.csp.min.js`,
+    sourcemap: 'linked',
+    bundle: true,
+    minify: true,
+    platform: 'browser',
+    define: { CDN: true, IS_CSP_BUILD: true },
+    plugins: [alpineCSPPlugin]
+}).then(() => {
+    outputSize(`dist/livewire.csp.min.js`)
 })
 
 function build(options) {
@@ -48,6 +94,33 @@ function build(options) {
     return require('esbuild').build({
         watch: process.argv.includes('--watch'),
         // external: ['alpinejs'],
+        plugins: [
+            ...(options.plugins || []),
+            {
+                name: 'path-resolver',
+                setup(build) {
+                    // Resolve @/ alias to js/ directory
+                    build.onResolve({ filter: /^@\// }, args => {
+                        const relativePath = args.path.slice(2) // Remove '@/'
+                        const fullPath = path.resolve(__dirname, '../js', relativePath)
+
+                        // Try different extensions if it's not found
+                        const fs = require('fs')
+                        const extensions = ['.js', '/index.js', '']
+
+                        for (const ext of extensions) {
+                            const testPath = fullPath + ext
+                            if (fs.existsSync(testPath)) {
+                                return { path: testPath }
+                            }
+                        }
+
+                        // Default to the original path
+                        return { path: fullPath }
+                    })
+                }
+            }
+        ],
         ...options,
     }).catch(() => process.exit(1))
 }
@@ -55,7 +128,7 @@ function build(options) {
 function outputSize(file) {
     let size = bytesToSize(brotliSize.sync(fs.readFileSync(file)))
 
-    console.log("\x1b[32m", `Bundle size: ${size}`)
+    console.log("\x1b[32m", `Bundle size [${file}]: ${size}`)
 }
 
 function bytesToSize(bytes) {

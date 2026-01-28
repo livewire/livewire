@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Tests\TestCase;
 
@@ -30,7 +31,7 @@ class UnitTest extends TestCase
         });
 
         $this->assertCount(1, $livewireUpdateRoutes);
-        $this->assertEquals('livewire/update', $livewireUpdateRoutes->first()->uri());
+        $this->assertEquals(ltrim(EndpointResolver::updatePath(), '/'), $livewireUpdateRoutes->first()->uri());
     }
 
     public function test_duplicate_route_is_not_registered_when_livewire_update_route_already_exists(): void
@@ -46,10 +47,8 @@ class UnitTest extends TestCase
         $newHandleRequests = new HandleRequests();
         $newHandleRequests->boot();
 
-        // Manually trigger the booted callback since we're already past the boot phase
-        app()->booted(function () {});
-
         // Verify that still only one livewire.update route exists (no duplicate)
+        // The updateRouteExists() check in boot() prevents duplicate registration
         $livewireUpdateRoutes = collect(Route::getRoutes()->getRoutes())->filter(function ($route) {
             return str($route->getName())->endsWith('livewire.update');
         });
@@ -68,6 +67,6 @@ class UnitTest extends TestCase
         // This should work even though $updateRoute is null by finding the route from the router
         $uri = $handleRequests->getUpdateUri();
 
-        $this->assertEquals('/livewire/update', $uri);
+        $this->assertEquals(EndpointResolver::updatePath(), $uri);
     }
 }

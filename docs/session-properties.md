@@ -3,38 +3,32 @@ Livewire makes it easy to persist property values across page refreshes/changes 
 
 By adding `#[Session]` to a property in your component, Livewire will store that property's value in the session every time it changes. This way, when a page is refreshed, Livewire will fetch the latest value from the session and use it in your component.
 
-The `#[Session]` attribute is analogous to the [`#[Url]`](/docs/url) attribute. They are both useful in similar scenarios. The primary difference being `#[Session]` persists values without modifying the URL's query string, which is sometimes desired; sometimes not.
+The `#[Session]` attribute is analogous to the [`#[Url]`](/docs/4.x/url) attribute. They are both useful in similar scenarios. The primary difference being `#[Session]` persists values without modifying the URL's query string, which is sometimes desired; sometimes not.
 
 ## Basic usage
 
-Here's a `ShowPosts` component that allows users to filter visible posts by a string stored in a `$search` property:
+Here's a `show-posts` component that allows users to filter visible posts by a string stored in a `$search` property:
 
 ```php
-<?php
+<?php // resources/views/components/⚡show-posts.blade.php
 
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Session;
 use Livewire\Component;
 use App\Models\Post;
 
-class ShowPosts extends Component
-{
+new class extends Component {
     #[Session] // [tl! highlight]
     public $search;
 
-    protected function posts()
+    #[Computed]
+    public function posts()
     {
         return $this->search === ''
             ? Post::all()
             : Post::where('title', 'like', '%'.$this->search.'%');
     }
-
-    public function render()
-    {
-        return view('livewire.show-posts', [
-            'posts' => $this->posts(),
-        ]);
-    }
-}
+};
 ```
 
 Because the `#[Session]` attribute has been added to the `$search` property, after a user enters a search value, they can refresh the page and the search value will be persisted. Every time `$search` is updated, its new value will be stored in the user's session and used across page loads.

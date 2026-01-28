@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportNestingComponents;
 
 use Livewire\Component;
+use function Livewire\store;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -103,6 +104,95 @@ class UnitTest extends \Tests\TestCase
         $component->runAction('skip');
 
         $this->assertContains($children, $component->snapshot['memo']);
+    }
+
+    public function test_child_tag_name_with_xss_payload_throws_exception()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid Livewire child tag name');
+
+        // Create a mock parent component
+        $parent = new ChildComponentForNestingStub();
+
+        // Set malicious children data directly in the store
+        store($parent)->set('previousChildren', [
+            'child-key' => ['div onclick=alert(1)', 'valid-id']
+        ]);
+
+        // This should throw an exception due to invalid tag name
+        SupportNestingComponents::getPreviouslyRenderedChild($parent, 'child-key');
+    }
+
+    public function test_child_tag_name_with_spaces_throws_exception()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid Livewire child tag name');
+
+        $parent = new ChildComponentForNestingStub();
+
+        store($parent)->set('previousChildren', [
+            'child-key' => ['div class=injected', 'valid-id']
+        ]);
+
+        SupportNestingComponents::getPreviouslyRenderedChild($parent, 'child-key');
+    }
+
+    public function test_child_tag_name_starting_with_number_throws_exception()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid Livewire child tag name');
+
+        $parent = new ChildComponentForNestingStub();
+
+        store($parent)->set('previousChildren', [
+            'child-key' => ['1div', 'valid-id']
+        ]);
+
+        SupportNestingComponents::getPreviouslyRenderedChild($parent, 'child-key');
+    }
+
+    public function test_child_id_with_invalid_characters_throws_exception()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid Livewire child component ID format');
+
+        $parent = new ChildComponentForNestingStub();
+
+        store($parent)->set('previousChildren', [
+            'child-key' => ['div', 'id<script>alert(1)</script>']
+        ]);
+
+        SupportNestingComponents::getPreviouslyRenderedChild($parent, 'child-key');
+    }
+
+    public function test_valid_custom_element_tag_names_are_allowed()
+    {
+        $parent = new ChildComponentForNestingStub();
+
+        store($parent)->set('previousChildren', [
+            'child-key' => ['my-custom-element', 'valid-id-123']
+        ]);
+
+        // Should not throw an exception
+        $result = SupportNestingComponents::getPreviouslyRenderedChild($parent, 'child-key');
+
+        $this->assertEquals(['my-custom-element', 'valid-id-123'], $result);
+    }
+
+    public function test_valid_standard_html_tags_are_allowed()
+    {
+        $parent = new ChildComponentForNestingStub();
+
+        $validTags = ['div', 'span', 'section', 'article', 'h1', 'p', 'ul', 'li'];
+
+        foreach ($validTags as $tag) {
+            store($parent)->set('previousChildren', [
+                'child-key' => [$tag, 'valid-id']
+            ]);
+
+            $result = SupportNestingComponents::getPreviouslyRenderedChild($parent, 'child-key');
+            $this->assertEquals([$tag, 'valid-id'], $result);
+        }
     }
 }
 

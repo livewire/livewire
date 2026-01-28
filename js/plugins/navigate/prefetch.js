@@ -8,7 +8,7 @@ let prefetches = {}
 // Default prefetch cache duration is 30 seconds...
 let cacheDuration = 30000
 
-export function prefetchHtml(destination, callback) {
+export function prefetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination)
 
     if (prefetches[uri]) return
@@ -19,6 +19,11 @@ export function prefetchHtml(destination, callback) {
         storeCurrentPageStatus(status)
 
         callback(html, routedUri)
+    }, () => {
+        // If the fetch failed, remove the prefetch so it gets attempted again...
+        delete prefetches[uri]
+
+        errorCallback()
     })
 }
 

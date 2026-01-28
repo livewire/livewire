@@ -1,33 +1,30 @@
-Polling is a technique used in web applications to "poll" the server (send regular requests) for updates. It's a simple way to keep a page up-to-date without the need for a more sophisticated technology like [WebSockets](/docs/events#real-time-events-using-laravel-echo).
+Polling is a technique used in web applications to "poll" the server (send regular requests) for updates. It's a simple way to keep a page up-to-date without the need for a more sophisticated technology like [WebSockets](/docs/4.x/events#real-time-events-using-laravel-echo).
 
 ## Basic usage
 
 Using polling inside Livewire is as simple as adding `wire:poll` to an element.
 
-Below is an example of a `SubscriberCount` component that shows a user's subscriber count:
+Below is an example of a `subscriber-count` component that shows a user's subscriber count:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/⚡subscriber-count.blade.php
 
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-class SubscriberCount extends Component
-{
-    public function render()
+new class extends Component {
+    #[Computed]
+    public function count()
     {
-        return view('livewire.subscriber-count', [
-            'count' => Auth::user()->subscribers->count(),
-        ]);
+        return Auth::user()->subscribers->count();
     }
-}
+};
 ```
 
 ```blade
 <div wire:poll>
-    Subscribers: {{ $count }}
+    Subscribers: {{ $this->count }}
 </div>
 ```
 
@@ -37,7 +34,7 @@ You can also specify an action to fire on the polling interval by passing a valu
 
 ```blade
 <div wire:poll="refreshSubscribers">
-    Subscribers: {{ $count }}
+    Subscribers: {{ $this->count }}
 </div>
 ```
 

@@ -13,12 +13,11 @@ use Livewire\Livewire;
 use Closure;
 use Tests\TestComponent;
 
-// TODO - Change this to \Tests\TestCase
 class UnitTest extends \LegacyTests\Unit\TestCase
 {
     function test_can_assert_see_livewire_on_standard_blade_view()
     {
-        Artisan::call('make:livewire', ['name' => 'foo']);
+        Artisan::call('make:livewire', ['name' => 'foo', '--class' => true]);
 
         $fakeClass = new class {
             function getContent()
@@ -62,7 +61,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
     function test_can_assert_see_livewire_on_standard_blade_view_using_class_name()
     {
-        Artisan::call('make:livewire', ['name' => 'foo']);
+        Artisan::call('make:livewire', ['name' => 'foo', '--class' => true]);
 
         $fakeClass = new class {
             function getContent()
@@ -82,7 +81,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     {
         $this->expectException(ExpectationFailedException::class);
 
-        Artisan::call('make:livewire', ['name' => 'foo']);
+        Artisan::call('make:livewire', ['name' => 'foo', '--class' => true]);
 
         $fakeClass = new class {
             function getContent()
@@ -100,7 +99,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     {
         $this->expectException(ExpectationFailedException::class);
 
-        Artisan::call('make:livewire', ['name' => 'foo']);
+        Artisan::call('make:livewire', ['name' => 'foo', '--class' => true]);
 
         $fakeClass = new class {
             function getContent()
@@ -132,7 +131,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     {
         $this->expectException(ExpectationFailedException::class);
 
-        Artisan::call('make:livewire', ['name' => 'foo']);
+        Artisan::call('make:livewire', ['name' => 'foo', '--class' => true]);
 
         $fakeClass = new class {
             function getContent()
@@ -152,7 +151,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     {
         $this->expectException(ExpectationFailedException::class);
 
-        Artisan::call('make:livewire', ['name' => 'foo']);
+        Artisan::call('make:livewire', ['name' => 'foo', '--class' => true]);
 
         $fakeClass = new class {
             function getContent()
@@ -170,7 +169,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
     function test_can_assert_dont_see_livewire_on_standard_blade_view_using_class_name()
     {
-        Artisan::call('make:livewire', ['name' => 'foo']);
+        Artisan::call('make:livewire', ['name' => 'foo', '--class' => true]);
 
         $fakeClass = new class {
             function getContent()
@@ -186,7 +185,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
     function test_can_assert_see_livewire_on_test_view()
     {
-        Artisan::call('make:livewire', ['name' => 'foo']);
+        Artisan::call('make:livewire', ['name' => 'foo', '--class' => true]);
 
         $testView = new TestView(view('render-component', [
             'component' => 'foo',
@@ -197,7 +196,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
     function test_can_assert_see_livewire_on_test_view_refering_by_subfolder_without_dot_index()
     {
-        Artisan::call('make:livewire', ['name' => 'bar.index']);
+        Artisan::call('make:livewire', ['name' => 'bar.index', '--class' => true]);
 
         $testView = new TestView(view('render-component', [
             'component' => 'bar',
@@ -208,7 +207,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
     function test_can_assert_dont_see_livewire_on_test_view()
     {
-        Artisan::call('make:livewire', ['name' => 'foo']);
+        Artisan::call('make:livewire', ['name' => 'foo', '--class' => true]);
 
         $testView = new TestView(view('null-view'));
 

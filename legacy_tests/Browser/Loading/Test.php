@@ -15,7 +15,7 @@ class Test extends TestCase
                 ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@button');
 
-                    $browser->pause(1);
+                    $browser->pause(50);
                     $browser->assertVisible('@show');
                     $browser->assertNotVisible('@hide');
 

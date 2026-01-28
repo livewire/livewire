@@ -26,7 +26,7 @@ class Test extends BrowserTestCase
 
                         <span dusk="output">{{ $count }}</span>
 
-                        @if ($enabled) <div wire:poll.500ms></div> @endif
+                        @if ($enabled) <div wire:poll.500ms dusk="poll-element"></div> @endif
                     </div>
                 HTML;
             }
@@ -39,10 +39,13 @@ class Test extends BrowserTestCase
             ->assertSeeIn('@output', '1')
             ->waitForLivewire()->click('@enable')
             ->assertSeeIn('@output', '2')
+            ->assertAttributeMissing('@poll-element', 'data-loading') // Poll should not add data-loading
             ->waitForLivewire(function () {}) // Wait for the next Livewire roundtrip
             ->assertSeeIn('@output', '3')
+            ->assertAttributeMissing('@poll-element', 'data-loading') // Still no data-loading
             ->waitForLivewire(function () {})
             ->assertSeeIn('@output', '4')
+            ->assertAttributeMissing('@poll-element', 'data-loading') // Still no data-loading
 
             /**
              * Disable polling by removing wire:poll from an element.

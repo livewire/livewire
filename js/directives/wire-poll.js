@@ -1,11 +1,12 @@
 import { directive, getDirectives } from "@/directives"
-import Alpine from 'alpinejs'
+import { setNextActionMetadata, setNextActionOrigin } from '@/request'
+import { evaluateActionExpression } from '../evaluator'
 
-directive('poll', ({ el, directive }) => {
+directive('poll', ({ el, directive, component }) => {
     let interval = extractDurationFrom(directive.modifiers, 2000)
 
     let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-        triggerComponentRequest(el, directive)
+        triggerComponentRequest(el, directive, component)
     }, interval)
 
     start()
@@ -17,13 +18,17 @@ directive('poll', ({ el, directive }) => {
     stopWhen(() => theElementIsDisconnected(el))
 })
 
-function triggerComponentRequest(el, directive) {
-    Alpine.evaluate(el,
-        directive.expression ? '$wire.' + directive.expression : '$wire.$commit()'
-    )
+function triggerComponentRequest(el, directive, component) {
+    // Set targetEl to null to prevent data-loading on poll actions
+    setNextActionOrigin({ el, directive, targetEl: null })
+    setNextActionMetadata({ type: 'poll' })
+
+    let fullMethod = directive.expression ? directive.expression : '$refresh'
+
+    evaluateActionExpression(el, fullMethod)
 }
 
-function poll(callback, interval = 2000) {
+export function poll(callback, interval = 2000) {
     let pauseConditions = []
     let throttleConditions = []
     let stopConditions = []
@@ -79,7 +84,7 @@ let isOffline = false
 window.addEventListener('offline', () => isOffline = true)
 window.addEventListener('online', () => isOffline = false)
 
-function livewireIsOffline() {
+export function livewireIsOffline() {
     return isOffline
 }
 
@@ -114,11 +119,11 @@ function theElementIsNotInTheViewport(el) {
     )
 }
 
-function theElementIsDisconnected(el) {
+export function theElementIsDisconnected(el) {
     return el.isConnected === false
 }
 
-function extractDurationFrom(modifiers, defaultDuration) {
+export function extractDurationFrom(modifiers, defaultDuration) {
     let durationInMilliSeconds
     let durationInMilliSecondsString = modifiers.find(mod => mod.match(/([0-9]+)ms/))
     let durationInSecondsString = modifiers.find(mod => mod.match(/([0-9]+)s/))

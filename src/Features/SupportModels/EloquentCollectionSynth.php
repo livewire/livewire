@@ -2,13 +2,15 @@
 
 namespace Livewire\Features\SupportModels;
 
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\ClassMorphViolationException;
 
 class EloquentCollectionSynth extends Synth {
-    use SerializesAndRestoresModelIdentifiers;
+    use SerializesAndRestoresModelIdentifiers, IsLazy;
 
     public static $key = 'elcln';
 
@@ -19,6 +21,15 @@ class EloquentCollectionSynth extends Synth {
 
     function dehydrate(EloquentCollection $target, $dehydrateChild)
     {
+        if ($this->isLazy($target)) {
+            $meta = $this->getLazyMeta($target);
+
+            return [
+                null,
+                $meta,
+            ];
+        }
+
         $class = $target::class;
         $modelClass = $target->getQueueableClass();
 
@@ -29,7 +40,16 @@ class EloquentCollectionSynth extends Synth {
          *
          * If no alias is found, this just returns the class name
          */
-        $modelAlias = $modelClass ? (new $modelClass)->getMorphClass() : null;
+        if ($modelClass) {
+            try {
+                $modelAlias = (new $modelClass)->getMorphClass();
+            } catch (ClassMorphViolationException $e) {
+                // If the model is not using morph classes, this exception is thrown
+                $modelAlias = $modelClass;
+            }
+        } else {
+            $modelAlias = null;
+        }
 
         $meta = [];
 
@@ -64,18 +84,20 @@ class EloquentCollectionSynth extends Synth {
             return new $class();
         }
 
-        // We are using Laravel's method here for restoring the collection, which ensures
-        // that all models in the collection are restored in one query, preventing n+1
-        // issues and also only restores models that exist.
-        $collection = (new $modelClass)->newQueryForRestoration($keys)->useWritePdo()->get();
+        return $this->makeLazyProxy($class, $meta, function () use ($modelClass, $keys, $meta) {
+            // We are using Laravel's method here for restoring the collection, which ensures
+            // that all models in the collection are restored in one query, preventing n+1
+            // issues and also only restores models that exist.
+            $collection = (new $modelClass)->newQueryForRestoration($keys)->useWritePdo()->get();
 
-        $collection = $collection->keyBy->getKey();
+            $collection = $collection->keyBy->getKey();
 
-        return new $meta['class'](
-            collect($meta['keys'])->map(function ($id) use ($collection) {
-                return $collection[$id] ?? null;
-            })->filter()
-        );
+            return new $meta['class'](
+                collect($meta['keys'])->map(function ($id) use ($collection) {
+                    return $collection[$id] ?? null;
+                })->filter()
+            );
+        });
     }
 
     function get(&$target, $key) {

@@ -170,7 +170,7 @@ class ShowPost extends Component
 This component is now secured because there is no way for a malicious user to change the `$post` property to a different Eloquent model.
 
 ### Locking the property
-Another way to prevent properties from being set to unwanted values is to use [locked properties](https://livewire.laravel.com/docs/locked). Locking properties is done by applying the `#[Locked]` attribute. Now if users attempt to tamper with this value an error will be thrown.
+Another way to prevent properties from being set to unwanted values is to use [the `#[Locked]` attribute](/docs/4.x/attribute-locked). Locking properties is done by applying the `#[Locked]` attribute. Now if users attempt to tamper with this value an error will be thrown.
 
 Note that properties with the Locked attribute can still be changed in the back-end, so care still needs to taken that untrusted user input is not passed to the property in your own Livewire functions.
 
@@ -245,7 +245,7 @@ Further reading:
 When a Livewire component is loaded on a page containing route-level [Authorization Middleware](https://laravel.com/docs/authorization#via-middleware), like so:
 
 ```php
-Route::get('/post/{post}', App\Livewire\UpdatePost::class)
+Route::livewire('/post/{post}', App\Livewire\UpdatePost::class)
     ->middleware('can:update,post'); // [tl! highlight]
 ```
 
@@ -256,7 +256,7 @@ Persistent middleware protects you from scenarios where the authorization rules 
 Here's a more in-depth example of such a scenario:
 
 ```php
-Route::get('/post/{post}', App\Livewire\UpdatePost::class)
+Route::livewire('/post/{post}', App\Livewire\UpdatePost::class)
     ->middleware('can:update,post'); // [tl! highlight]
 ```
 

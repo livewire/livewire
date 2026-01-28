@@ -6,6 +6,13 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
+    public static function tweakApplicationHook()
+    {
+        return function () {
+            app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');
+        };
+    }
+
     public function test_can_toggle_a_purely_js_property_with_a_purely_js_function()
     {
         Livewire::visit(
@@ -92,7 +99,31 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_can_define_js_actions_though_dollar_js_magic_on_a_component()
+    public function test_can_define_js_actions_though_dollar_wire_on_a_component_using_direct_propert_assignment()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="$js.test" dusk="test">Test</button>
+                </div>
+
+                @script
+                <script>
+                    $wire.$js.test = () => {
+                        window.test = 'through dollar wire'
+                    }
+                </script>
+                @endscript
+                HTML; }
+            }
+        )
+        ->click('@test')
+        ->assertScript('window.test === "through dollar wire"')
+        ;
+    }
+
+    public function test_can_define_js_actions_though_dollar_js_magic_in_a_script()
     {
         Livewire::visit(
             new class extends \Livewire\Component {
@@ -116,6 +147,28 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_can_define_js_actions_though_dollar_js_magic_in_a_sfc_script()
+    {
+        Livewire::visit('sfc-component-with-dollar-js-magic')
+            ->waitForLivewireToLoad()
+            // Pause for a moment to allow the script to be loaded...
+            ->pause(100)
+            ->click('@test')
+            ->assertScript('window.test === "through dollar js"')
+        ;
+    }
+
+    public function test_can_define_js_actions_though_dollar_js_magic_on_a_mfc_script()
+    {
+        Livewire::visit('mfc-component-with-dollar-js-magic')
+            ->waitForLivewireToLoad()
+            // Pause for a moment to allow the script to be loaded...
+            ->pause(100)
+            ->click('@test')
+            ->assertScript('window.test === "through dollar js"')
+        ;
+    }
+
     public function test_can_call_a_defined_js_action_from_wire_click_without_params()
     {
         Livewire::visit(
@@ -128,7 +181,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                         @script
                         <script>
-                            $js('test', () => {
+                            this.$js('test', () => {
                                 window.test = 'through wire:click'
                             })
                         </script>
@@ -154,10 +207,10 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                         @script
                         <script>
-                            $js('test', (param1, param2) => {
+                            this.$js.test = (param1, param2) => {
                                 console.log('test', param1, param2);
                                 window.test = `through wire:click with params: ${param1}, ${param2}`
-                            })
+                            }
                         </script>
                         @endscript
                     HTML;
@@ -184,7 +237,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                         @script
                         <script>
-                            $js('test', () => {
+                            this.$js('test', () => {
                                 window.test = 'through backend js method'
                             })
                         </script>
@@ -213,7 +266,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                         @script
                         <script>
-                            $js('test', (param1, param2) => {
+                            this.$js('test', (param1, param2) => {
                                 window.test = `through backend js method with params: ${param1}, ${param2}`
                             })
                         </script>

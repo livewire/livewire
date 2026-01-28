@@ -46,7 +46,7 @@ class CreatePost extends Component
 Because both inputs use `wire:model`, their values will be synchronized with the server's properties when the "Save" button is pressed.
 
 > [!warning] "Why isn't my component live updating as I type?"
-> If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](/docs/properties#data-binding).
+> If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](/docs/4.x/properties#data-binding).
 
 ## Customizing update timing
 
@@ -68,7 +68,7 @@ To send property updates to the server as a user types into an input-field, you 
 
 By default, when using `wire:model.live`, Livewire adds a 150 millisecond debounce to server updates. This means if a user is continually typing, Livewire will wait until the user stops typing for 150 milliseconds before sending a request.
 
-You can customize this timing by appending `.debounce.Xms` to the input. Here is an example of changing the debounce to 250 milliseconds:
+You can customize this timing by appending `.debounce.Xms` after `.live`. Here is an example of changing the debounce to 250 milliseconds:
 
 ```html
 <input type="text" wire:model.live.debounce.250ms="title">
@@ -76,41 +76,39 @@ You can customize this timing by appending `.debounce.Xms` to the input. Here is
 
 ### Updating on "blur" event
 
-By appending the `.blur` modifier, Livewire will only send network requests with property updates when a user clicks away from an input, or presses the tab key to move to the next input.
-
-Adding `.blur` is helpful for scenarios where you want to update the server more frequently, but not as a user types. For example, real-time validation is a common instance where `.blur` is helpful.
+The `.blur` modifier delays syncing until the user clicks away from the input:
 
 ```html
 <input type="text" wire:model.blur="title">
 ```
 
-### Updating on "change" event
-
-There are times when the behavior of `.blur` isn't exactly what you want and instead `.change` is.
-
-For example, if you want to run validation every time a select input is changed, by adding `.change`, Livewire will send a network request and validate the property as soon as a user selects a new option. As opposed to `.blur` which will only update the server after the user tabs away from the select input.
+To also send a network request on blur, add `.live`:
 
 ```html
-<select wire:model.change="title">
-    <!-- ... -->
-</select>
+<input type="text" wire:model.blur.live="title">
 ```
 
-Any changes made to the text input will be automatically synchronized with the `$title` property in your Livewire component.
+### Updating on "change" event
 
-## All available modifiers
+The `.change` modifier triggers on the change event, which is useful for select elements:
 
- Modifier          | Description
--------------------|-------------------------------------------------------------------------
- `.live`           | Send updates as a user types
- `.blur`           | Only send updates on the `blur` event
- `.change`         | Only send updates on the the `change` event
- `.lazy`           | An alias for `.change`
- `.debounce.[?]ms` | Debounce the sending of updates by the specified millisecond delay
- `.throttle.[?]ms` | Throttle network request updates by the specified millisecond interval
- `.number`         | Cast the text value of an input to `int` on the server
- `.boolean`        | Cast the text value of an input to `bool` on the server
- `.fill`           | Use the initial value provided by a "value" HTML attribute on page-load
+```html
+<select wire:model.change="state">...</select>
+
+<!-- With network request -->
+<select wire:model.change.live="state">...</select>
+```
+
+### Updating on "enter" key
+
+The `.enter` modifier syncs when the user presses the Enter key:
+
+```html
+<input type="text" wire:model.enter="search">
+
+<!-- With network request -->
+<input type="text" wire:model.enter.live="search">
+```
 
 ## Input fields
 
@@ -265,6 +263,55 @@ If you are using a "multiple" select menu, Livewire works as expected. In this e
 </select>
 ```
 
+## Event propagation
+
+By default, `wire:model` only listens for input/change events that originate directly on the element itself, not events that bubble up from child elements. This prevents unexpected behavior when using `wire:model` on container elements like modals or accordions that contain other form inputs.
+
+For example, if you have a modal with `wire:model="showModal"` and an input field inside it, clearing that input won't accidentally close the modal by bubbling up a change event.
+
+### Listening to child events
+
+In rare cases where you want `wire:model` to also respond to events bubbling up from child elements, you can use the `.deep` modifier:
+
+```blade
+<div wire:model.deep="value">
+    <input type="text"> <!-- Changes here will update $value -->
+</div>
+```
+
+> [!warning] Use `.deep` sparingly
+> Most use cases don't require listening to child events. Only use `.deep` when you specifically need to capture events from descendant elements.
+
 ## Going deeper
 
-For a more complete documentation on using `wire:model` in the context of HTML forms, visit the [Livewire forms documentation page](/docs/forms).
+For a more complete documentation on using `wire:model` in the context of HTML forms, visit the [Livewire forms documentation page](/docs/4.x/forms).
+
+## See also
+
+- **[Forms](/docs/4.x/forms)** — Complete guide to building forms with Livewire
+- **[Properties](/docs/4.x/properties)** — Understand data binding and property management
+- **[Validation](/docs/4.x/validation)** — Validate bound properties in real-time
+- **[File Uploads](/docs/4.x/uploads)** — Bind file inputs with wire:model
+
+## Reference
+
+```blade
+wire:model="propertyName"
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.live` | Send updates to the server |
+| `.blur` | Only update on blur |
+| `.change` | Only update on change |
+| `.enter` | Only update on enter key |
+| `.lazy` | Update on change and send network request (v3 compatible) |
+| `.debounce.Xms` | Debounce updates (use with `.live`) |
+| `.throttle.Xms` | Throttle updates (use with `.live`) |
+| `.number` | Cast value to `int` on the server |
+| `.boolean` | Cast value to `bool` on the server |
+| `.fill` | Use initial value from HTML `value` attribute |
+| `.deep` | Also listen to events from child elements |
+| `.preserve-scroll` | Maintain scroll position during updates |

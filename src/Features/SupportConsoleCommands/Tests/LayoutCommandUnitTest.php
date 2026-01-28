@@ -16,6 +16,6 @@ class LayoutCommandUnitTest extends \Tests\TestCase
 
     protected function livewireLayoutsPath($path = '')
     {
-        return resource_path('views').'/components/layouts'.($path ? '/'.$path : '');
+        return resource_path('views').'/layouts'.($path ? '/'.$path : '');
     }
 }

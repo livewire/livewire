@@ -2,10 +2,19 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use Illuminate\Support\Facades\RateLimiter;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+
 use function Livewire\trigger;
 
 class Checksum {
+    protected static $maxFailures = 10;
+    protected static $decaySeconds = 600; // 10 minutes
+
     static function verify($snapshot) {
+        // Check if this IP is already blocked due to too many failures
+        static::enforceRateLimit();
+
         $checksum = $snapshot['checksum'];
 
         unset($snapshot['checksum']);
@@ -15,8 +24,43 @@ class Checksum {
         if ($checksum !== $comparitor = self::generate($snapshot)) {
             trigger('checksum.fail', $checksum, $comparitor, $snapshot);
 
+            static::recordFailure();
+
             throw new CorruptComponentPayloadException;
         }
+    }
+
+    protected static function enforceRateLimit()
+    {
+        $request = request();
+
+        // Only check the rate limit once per request (not once per component)
+        if ($request->attributes->get('livewire_rate_limit_checked')) {
+            return;
+        }
+
+        $key = static::rateLimitKey();
+
+        if (RateLimiter::tooManyAttempts($key, static::$maxFailures)) {
+            $seconds = RateLimiter::availableIn($key);
+
+            throw new TooManyRequestsHttpException(
+                $seconds,
+                'Too many invalid Livewire requests. Please try again later.'
+            );
+        }
+
+        $request->attributes->set('livewire_rate_limit_checked', true);
+    }
+
+    protected static function recordFailure()
+    {
+        RateLimiter::hit(static::rateLimitKey(), static::$decaySeconds);
+    }
+
+    protected static function rateLimitKey(): string
+    {
+        return 'livewire-checksum-failures:' . request()->ip();
     }
 
     static function generate($snapshot) {

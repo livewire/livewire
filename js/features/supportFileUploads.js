@@ -37,10 +37,7 @@ export function handleFileUpload(el, property, component, cleanup) {
         start()
 
         if (e.target.multiple) {
-            // To ensure we don't have breaking changes, we will only append if the file input is a Flux ui-file-upload...
-            let append = ['ui-file-upload'].includes(e.target.tagName.toLowerCase())
-
-            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel, append)
+            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel)
         } else {
             manager.upload(property, e.target.files[0], finish, error, progress, cancel)
         }
@@ -120,7 +117,7 @@ class UploadManager {
         })
     }
 
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = false) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = true) {
         this.setUpload(name, {
             files: Array.from(files),
             multiple: true,
@@ -343,7 +340,7 @@ export function uploadMultiple(
     errorCallback = () => { },
     progressCallback = () => { },
     cancelledCallback = () => { },
-    append = false,
+    append = true,
 ) {
     let uploadManager = getUploadManager(component)
 

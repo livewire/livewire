@@ -60,13 +60,13 @@ class Test extends TestCase
                 ->click('@bop.input') // Fucus.
                 ->assertSeeIn('@output', 'baz')
                 ->waitForLivewire()->click('@bop.button')
-                ->assertSeeIn('@output', 'bazbopbop')
+                ->assertSeeIn('@output', 'bazbop')
 
                 /**
                  * Two keydowns
                  */
                 ->waitForLivewire()->keys('@bob', '{enter}')
-                ->assertSeeIn('@output', 'bazbopbopbobbob')
+                ->assertSeeIn('@output', 'bazbopbob')
 
                 /**
                  * If listening for "enter", other keys don't trigger the action.

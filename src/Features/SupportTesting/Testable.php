@@ -9,7 +9,11 @@ use Livewire\Features\SupportEvents\TestsEvents;
 use Illuminate\Support\Traits\Macroable;
 use BackedEnum;
 
-/** @mixin \Illuminate\Testing\TestResponse */
+/**
+ * @template TComponent of \Livewire\Component
+ *
+ * @mixin \Illuminate\Testing\TestResponse
+ */
 
 class Testable
 {
@@ -27,13 +31,13 @@ class Testable
     ) {}
 
     /**
-     * @param string $name
+     * @param class-string<TComponent>|TComponent|string|array<array-key, \Livewire\Component> $name
      * @param array $params
      * @param array $fromQueryString
      * @param array $cookies
      * @param array $headers
      *
-     * @return static
+     * @return static<TComponent>
      */
     static function create($name, $params = [], $fromQueryString = [], $cookies = [], $headers = [])
     {
@@ -60,16 +64,18 @@ class Testable
      */
     static function normalizeAndRegisterComponentName($name)
     {
-        if (is_array($otherComponents = $name)) {
-            $name = array_shift($otherComponents);
+        if (is_array($components = $name)) {
+            $firstComponent = array_values($components)[0];
 
-            foreach ($otherComponents as $key => $value) {
+            foreach ($components as $key => $value) {
                 if (is_numeric($key)) {
-                    app('livewire')->isDiscoverable($name) || app('livewire')->component($value);
+                    app('livewire')->exists($value) || app('livewire')->component($value);
                 } else {
                     app('livewire')->component($key, $value);
                 }
             }
+
+            return app('livewire.factory')->resolveComponentName($firstComponent);
         } elseif (is_object($name)) {
             $anonymousClassComponent = $name;
 
@@ -300,23 +306,7 @@ class Testable
             return $this;
         }
 
-        // We are going to encode the original file size, mimeType and hashName in the filename
-        // so when we create a new TemporaryUploadedFile instance we can fake the
-        // same file size, mimeType and hashName set for the original file upload.
-        $newFileHashes = collect($files)->zip($fileHashes)->mapSpread(function ($file, $fileHash) {
-            // MimeTypes contain slashes, so we replace them with underscores to ensure the filename is valid.
-            $escapedMimeType = (string) str($file->getMimeType())->replace('/', '_');
-
-            return (string) str($fileHash)->replaceFirst('.', "-hash={$file->hashName()}-mimeType={$escapedMimeType}-size={$file->getSize()}.");
-        })->toArray();
-
-        collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
-            $storage->move('/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($fileHash), '/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($newFileHash));
-        });
-
-        // Now we finish the upload with a final call to the Livewire component
-        // with the temporarily uploaded file path.
-        $this->call('_finishUpload', $name, $newFileHashes, $isMultiple);
+        $this->call('_finishUpload', $name, $fileHashes, $isMultiple);
 
         return $this;
     }
@@ -334,6 +324,9 @@ class Testable
         return $this->lastState->getSnapshotData();
     }
 
+    /**
+     * @return TComponent
+     */
     function instance()
     {
         return $this->lastState->getComponent();
@@ -385,6 +378,27 @@ class Testable
         if ($property === 'target') return $this->lastState->getComponent();
 
         return $this->instance()->$property;
+    }
+
+    /**
+     * @param string $property
+     * @param mixed $value
+     */
+    function __set($property, $value)
+    {
+        if ($property === 'snapshot') {
+            $this->lastState = new ComponentState(
+                $this->lastState->getComponent(),
+                $this->lastState->getResponse(),
+                $this->lastState->getView(),
+                $this->lastState->getHtml(),
+                $value,
+                $this->lastState->getEffects(),
+            );
+            return;
+        }
+
+        $this->setProperty($property, $value);
     }
 
     /**

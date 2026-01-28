@@ -272,4 +272,82 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertInputValue('@upload', null)
         ;
     }
+
+    public function test_finish_upload_rejects_forged_unsigned_paths()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+            public $result = 'pending';
+
+            function mount()
+            {
+                Storage::disk('tmp-for-tests')->deleteDirectory('photos');
+            }
+
+            function render() { return <<<'HTML'
+                <div>
+                    <input type="file" wire:model="photo" dusk="upload">
+
+                    <button
+                        dusk="forge"
+                        x-on:click="
+                            $wire.call('_finishUpload', 'photo', ['forged-unsigned-path.jpg'], false)
+                                .then(() => $wire.set('result', 'success'))
+                                .catch(() => $wire.set('result', 'rejected'))
+                        "
+                    >Forge Upload</button>
+
+                    <span dusk="result">{{ $result }}</span>
+                </div>
+                HTML; }
+        })
+        ->assertSeeIn('@result', 'pending')
+        ->click('@forge')
+        ->pause(500)
+        ->assertSeeIn('@result', 'rejected')
+        ;
+    }
+
+    public function test_finish_upload_rejects_paths_with_invalid_signature()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+            public $result = 'pending';
+
+            function mount()
+            {
+                Storage::disk('tmp-for-tests')->deleteDirectory('photos');
+            }
+
+            function render() { return <<<'HTML'
+                <div>
+                    <input type="file" wire:model="photo" dusk="upload">
+
+                    <button
+                        dusk="forge"
+                        x-on:click="
+                            $wire.call('_finishUpload', 'photo', ['invalidsignature:somefile.jpg'], false)
+                                .then(() => $wire.set('result', 'success'))
+                                .catch(() => $wire.set('result', 'rejected'))
+                        "
+                    >Forge Upload</button>
+
+                    <span dusk="result">{{ $result }}</span>
+                </div>
+                HTML; }
+        })
+        ->assertSeeIn('@result', 'pending')
+        ->click('@forge')
+        ->pause(500)
+        ->assertSeeIn('@result', 'rejected')
+        ;
+    }
 }

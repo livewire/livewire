@@ -31,7 +31,7 @@ body:
       description: Which version of Laravel are you using? Please provide the full version, e.g. v11.34.2.
       placeholder: v11.34.2
     validations:
-      required: true      
+      required: true
 
   - type: dropdown
     id: php-version
@@ -76,14 +76,6 @@ body:
         \```php
         // Your code here
         \```
-
-  - type: input
-    id: example-repository
-    attributes:
-      label: Wirebox URL
-      description: Please provide the URL of a public [Wirebox](https://wirebox.app) that only contains the code that reproduces the bug. **Make sure your Wirebox is set to public**.
-    validations:
-      required: true
 
   - type: textarea
     attributes:

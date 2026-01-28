@@ -4,6 +4,7 @@ namespace LegacyTests\Unit;
 
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Livewire\LivewireServiceProvider;
+use Livewire\Livewire;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
@@ -25,6 +26,8 @@ class TestCase extends BaseTestCase
     public function makeACleanSlate()
     {
         Artisan::call('view:clear');
+
+        app()->forgetInstance('livewire.factory');
 
         File::deleteDirectory($this->livewireViewsPath());
         File::deleteDirectory($this->livewireClassesPath());

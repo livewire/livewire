@@ -8,8 +8,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 {
     public function test_can_transition_blade_conditional_dom_segments()
     {
-        $opacity = 'parseFloat(getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity, 10)';
-        $isBlock = 'getComputedStyle(document.querySelector(\'[dusk="target"]\')).display === "block"';
+        $animationsRunning = 'document.getAnimations().some(a => a.playState === "running")';
 
         Livewire::visit(
             new class extends \Livewire\Component {
@@ -24,8 +23,26 @@ class BrowserTest extends \Tests\BrowserTestCase
                 <div>
                     <button wire:click="toggle" dusk="toggle">Toggle</button>
 
+                    <style>
+                        ::view-transition-old(transition) {
+                            animation: 500ms ease-out fade-out;
+                        }
+
+                        ::view-transition-new(transition) {
+                            animation: 500ms ease-in fade-in;
+                        }
+
+                        @keyframes fade-out {
+                            to { opacity: 0; }
+                        }
+
+                        @keyframes fade-in {
+                            from { opacity: 0; }
+                        }
+                    </style>
+
                     @if ($show)
-                    <div dusk="target" wire:transition.duration.2000ms>
+                    <div dusk="target" wire:transition="transition">
                         Transition Me!
                     </div>
                     @endif
@@ -33,17 +50,15 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML; }
         })
         ->assertDontSee('@target')
+
         ->waitForLivewire()->click('@toggle')
-        ->waitFor('@target')
-        ->waitUntil($isBlock)
-        ->waitUntil("$opacity > 0 && $opacity < 1") // In progress.
-        ->waitUntil("$opacity === 1") // Now it's done.
-        ->assertScript($opacity, 1) // Assert that it's done.
-        ->waitForLivewire()->click('@toggle')
+        ->waitUntil($animationsRunning) // In progress.
+        ->waitUntil("!$animationsRunning") // Now it's done.
         ->assertPresent('@target')
-        ->assertScript($isBlock, true) // That should not have changed yet.
-        ->waitUntil("$opacity > 0 && $opacity < 1") // In progress.
-        ->waitUntilMissing('@target')
+
+        ->waitForLivewire()->click('@toggle')
+        ->waitUntil($animationsRunning) // In progress.
+        ->waitUntil("!$animationsRunning") // Now it's done.
         ->assertMissing('@target')
         ;
     }

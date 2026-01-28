@@ -2,8 +2,12 @@
 
 namespace Livewire\Mechanisms\HandleRequests;
 
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+use Livewire\Exceptions\PayloadTooLargeException;
+use Livewire\Exceptions\TooManyComponentsException;
 
 use Livewire\Mechanisms\Mechanism;
 
@@ -15,18 +19,13 @@ class HandleRequests extends Mechanism
 
     function boot()
     {
-        // Only set it if another provider or routes file haven't already set it....
-        app()->booted(function () {
-            // Check both instance state and router to handle cached routes scenario.
-            // When routes are cached and loaded, $this->updateRoute will be null but
-            // the route already exists in the router. This prevents duplicate registration
-            // which Laravel v12.29.0+ treats as an error.
-            if (! $this->updateRoute && ! $this->updateRouteExists()) {
-                app($this::class)->setUpdateRoute(function ($handle) {
-                    return Route::post('/livewire/update', $handle)->middleware('web');
-                });
-            }
-        });
+        // Register the default route immediately (before routes files load)
+        // so it's positioned before any catch-all routes.
+        if (! $this->updateRoute && ! $this->updateRouteExists()) {
+            Route::post(EndpointResolver::updatePath(), [self::class, 'handleUpdate'])
+                ->middleware('web')
+                ->name('default.livewire.update');
+        }
 
         $this->skipRequestPayloadTamperingMiddleware();
     }
@@ -34,6 +33,11 @@ class HandleRequests extends Mechanism
     protected function updateRouteExists()
     {
         return $this->findUpdateRoute() !== null;
+    }
+
+    function getUriPrefix()
+    {
+        return EndpointResolver::prefix();
     }
 
     function getUpdateUri()
@@ -53,13 +57,23 @@ class HandleRequests extends Mechanism
         // Find the route with name ending in 'livewire.update'.
         // Custom routes can have prefixes (e.g., 'tenant.livewire.update')
         // so we check for routes ending with 'livewire.update', not just exact matches.
+        // Prioritise custom routes over the default route.
+        $defaultRoute = null;
+
         foreach (Route::getRoutes()->getRoutes() as $route) {
             if (str($route->getName())->endsWith('livewire.update')) {
+                // If it's the default route, save it but keep looking for a custom one
+                if ($route->getName() === 'default.livewire.update') {
+                    $defaultRoute = $route;
+                    continue;
+                }
+
+                // Found a custom route, return it immediately
                 return $route;
             }
         }
 
-        return null;
+        return $defaultRoute;
     }
 
     function skipRequestPayloadTamperingMiddleware()
@@ -108,7 +122,25 @@ class HandleRequests extends Mechanism
 
     function handleUpdate()
     {
+        // Check payload size limit...
+        $maxSize = config('livewire.payload.max_size');
+
+        if ($maxSize !== null) {
+            $contentLength = request()->header('Content-Length', 0);
+
+            if ($contentLength > $maxSize) {
+                throw new PayloadTooLargeException($contentLength, $maxSize);
+            }
+        }
+
         $requestPayload = request(key: 'components', default: []);
+
+        // Check max components limit...
+        $maxComponents = config('livewire.payload.max_components');
+
+        if ($maxComponents !== null && count($requestPayload) > $maxComponents) {
+            throw new TooManyComponentsException(count($requestPayload), $maxComponents);
+        }
 
         $finish = trigger('request', $requestPayload);
 
@@ -136,6 +168,23 @@ class HandleRequests extends Mechanism
 
         $finish = trigger('response', $responsePayload);
 
-        return $finish($responsePayload);
+        $payload = $finish($responsePayload);
+
+        // When wire:stream is used, headers are sent early by SupportStreaming::ensureStreamResponseStarted().
+        // The streaming content has already been output via echo/flush in SupportStreaming::streamContent().
+        // This final JSON response contains the component snapshot and must be output without attempting
+        // to send additional headers, which would cause "headers already sent" warnings (since Symfony 7.2.7).
+        if (headers_sent()) {
+            $response = new StreamedResponse(
+                json_encode($payload),
+                200,
+                ['Content-Type' => 'application/json']
+            );
+
+            // Headers won't be sent due to override, but are documented on the object
+            return $response;
+        }
+
+        return $payload;
     }
 }

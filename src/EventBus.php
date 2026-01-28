@@ -1,65 +1,92 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Livewire;
 
 class EventBus
 {
-    protected $listeners = [];
-    protected $listenersAfter = [];
-    protected $listenersBefore = [];
+    protected array $listeners = [];
+    protected array $listenersAfter = [];
+    protected array $listenersBefore = [];
 
-    function boot()
+    public function boot(): void
     {
         app()->singleton($this::class);
     }
 
-    function on($name, $callback) {
-        if (! isset($this->listeners[$name])) $this->listeners[$name] = [];
-
+    public function on(string $name, callable $callback): callable
+    {
         $this->listeners[$name][] = $callback;
 
         return fn() => $this->off($name, $callback);
     }
 
-    function before($name, $callback) {
-        if (! isset($this->listenersBefore[$name])) $this->listenersBefore[$name] = [];
-
+    public function before(string $name, callable $callback): callable
+    {
         $this->listenersBefore[$name][] = $callback;
 
         return fn() => $this->off($name, $callback);
     }
 
-    function after($name, $callback) {
-        if (! isset($this->listenersAfter[$name])) $this->listenersAfter[$name] = [];
-
+    public function after(string $name, callable $callback): callable
+    {
         $this->listenersAfter[$name][] = $callback;
 
         return fn() => $this->off($name, $callback);
     }
 
-    function off($name, $callback) {
-        $index = array_search($callback, $this->listeners[$name] ?? []);
-        $indexAfter = array_search($callback, $this->listenersAfter[$name] ?? []);
-        $indexBefore = array_search($callback, $this->listenersBefore[$name] ?? []);
+    public function off(string $name, callable $callback): void
+    {
+        if (isset($this->listeners[$name])) {
+            $index = array_search($callback, $this->listeners[$name], true);
 
-        if ($index !== false) unset($this->listeners[$name][$index]);
-        elseif ($indexAfter !== false) unset($this->listenersAfter[$name][$indexAfter]);
-        elseif ($indexBefore !== false) unset($this->listenersBefore[$name][$indexBefore]);
+            if ($index !== false) {
+                unset($this->listeners[$name][$index]);
+                return;
+            }
+        }
+
+        if (isset($this->listenersAfter[$name])) {
+            $index = array_search($callback, $this->listenersAfter[$name], true);
+
+            if ($index !== false) {
+                unset($this->listenersAfter[$name][$index]);
+                return;
+            }
+        }
+
+        if (isset($this->listenersBefore[$name])) {
+            $index = array_search($callback, $this->listenersBefore[$name], true);
+
+            if ($index !== false) {
+                unset($this->listenersBefore[$name][$index]);
+            }
+        }
     }
 
-    function trigger($name, ...$params) {
+    public function trigger(string $name, ...$params): callable
+    {
         $middlewares = [];
 
-        $listeners = array_merge(
-            ($this->listenersBefore[$name] ?? []),
-            ($this->listeners[$name] ?? []),
-            ($this->listenersAfter[$name] ?? []),
-        );
+        $listeners = [];
+
+        if (isset($this->listenersBefore[$name])) {
+            $listeners = $this->listenersBefore[$name];
+        }
+
+        if (isset($this->listeners[$name])) {
+            $listeners = array_merge($listeners, $this->listeners[$name]);
+        }
+
+        if (isset($this->listenersAfter[$name])) {
+            $listeners = array_merge($listeners, $this->listenersAfter[$name]);
+        }
 
         foreach ($listeners as $callback) {
             $result = $callback(...$params);
 
-            if ($result) {
+            if ($result !== null) {
                 $middlewares[] = $result;
             }
         }
@@ -68,11 +95,10 @@ class EventBus
             foreach ($middlewares as $finisher) {
                 if ($finisher === null) continue;
 
-                $finisher = is_array($finisher) ? last($finisher) : $finisher;
+                $finisher = is_array($finisher) ? end($finisher) : $finisher;
 
                 $result = $finisher($forward, ...$extras);
 
-                // Only overwrite previous "forward" if something is returned from the callback.
                 $forward = $result ?? $forward;
             }
 

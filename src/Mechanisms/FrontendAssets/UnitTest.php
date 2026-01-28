@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\FrontendAssets;
 
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 
 use Livewire\Livewire;
@@ -11,19 +12,44 @@ use function Livewire\trigger;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        \Livewire\LivewireManager::$v4 = false;
+
+        parent::setUp();
+    }
+
+    public function tearDown(): void
+    {
+        // Clean up any published assets after each test
+        if (file_exists(public_path('vendor/livewire'))) {
+            File::deleteDirectory(public_path('vendor/livewire'));
+        }
+
+        parent::tearDown();
+    }
+
     public function test_styles()
     {
         $assets = app(FrontendAssets::class);
 
         $this->assertFalse($assets->hasRenderedStyles);
 
-        $this->assertStringStartsWith('<!-- Livewire Styles -->', $assets->styles());
+        $styles = $assets->styles();
 
-        $this->assertStringNotContainsString('data-livewire-style', $assets->styles());
-
-        $this->assertStringContainsString('nonce="test" data-livewire-style', $assets->styles(['nonce' => 'test']));
+        $this->assertStringStartsWith('<!-- Livewire Styles -->', $styles);
+        $this->assertStringNotContainsString('data-livewire-style', $styles);
 
         $this->assertTrue($assets->hasRenderedStyles);
+
+        $this->assertEmpty($assets->styles());
+    }
+
+    public function test_styles_with_nonce()
+    {
+        $assets = app(FrontendAssets::class);
+
+        $this->assertStringContainsString('nonce="test" data-livewire-style', $assets->styles(['nonce' => 'test']));
     }
 
     public function test_scripts()
@@ -32,9 +58,12 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertFalse($assets->hasRenderedScripts);
 
-        $this->assertStringStartsWith('<script src="', $assets->scripts());
+        $scripts = $assets->scripts();
+        $this->assertStringContainsString('<script src="', $scripts);
 
         $this->assertTrue($assets->hasRenderedScripts);
+
+        $this->assertEmpty($assets->scripts());
     }
 
     public function test_use_normal_scripts_url_if_app_debug_is_true()
@@ -135,10 +164,21 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringStartsWith('<script src="'.$url, FrontendAssets::js(['url' => $url]));
     }
 
-    public function js_prepends_slash_for_non_url()
+    public function test_js_prepends_slash_for_non_url()
     {
         $url = 'livewire/livewire.js';
         $this->assertStringStartsWith('<script src="/'.$url, FrontendAssets::js(['url' => $url]));
+    }
+
+    public function test_js_appends_version_with_correct_query_separator()
+    {
+        // URL without query params should use ?
+        $withoutQuery = FrontendAssets::js(['url' => 'https://cdn.example.com/livewire.js']);
+        $this->assertMatchesRegularExpression('/livewire\.js\?id=/', $withoutQuery);
+
+        // URL with existing query params should use &
+        $withQuery = FrontendAssets::js(['url' => 'https://cdn.example.com/livewire.js?token=abc']);
+        $this->assertMatchesRegularExpression('/\?token=abc&id=/', $withQuery);
     }
 
     public function test_it_returns_published_assets_url_when_running_serverless()
@@ -147,6 +187,7 @@ class UnitTest extends \Tests\TestCase
 
         Artisan::call('livewire:publish', ['--assets' => true]);
 
+        config()->set('app.debug', false);
         config()->set('app.asset_url', 'https://example.com/');
 
         $manager = $this->partialMock(LivewireManager::class, function ($mock) {
@@ -159,8 +200,30 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertStringStartsWith('<script src="https://example.com/vendor/livewire/livewire.min.js', $assets->scripts());
 
-        if (file_exists(public_path('vendor/livewire/manifest.json'))) {
-            unlink(public_path('vendor/livewire/manifest.json'));
+        // Clean up published assets
+        if (file_exists(public_path('vendor/livewire'))) {
+            File::deleteDirectory(public_path('vendor/livewire'));
         }
+    }
+
+    public function test_published_assets_apply_version_to_configured_asset_url()
+    {
+        $assets = app(FrontendAssets::class);
+
+        Artisan::call('livewire:publish', ['--assets' => true]);
+
+        config()->set('livewire.asset_url', 'https://cdn.example.com/livewire.js');
+        config()->set('app.debug', false);
+
+        $scripts = $assets->scripts();
+
+        // Should include version hash from manifest
+        $this->assertMatchesRegularExpression(
+            '/https:\/\/cdn\.example\.com\/livewire\.js\?id=[a-zA-Z0-9]+/',
+            $scripts
+        );
+
+        // Should NOT use the default vendor path
+        $this->assertStringNotContainsString('vendor/livewire', $scripts);
     }
 }

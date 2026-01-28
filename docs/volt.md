@@ -1,5 +1,5 @@
-> [!warning] Get comfortable with Livewire first
-> Before using Volt, we recommend getting familiar with standard, class-based Livewire usage. This will allow you to quickly transfer your knowledge of Livewire into writing components using Volt's functional API.
+> [!warning] Volt is optional in Livewire v4
+> Livewire v4 includes single-file components out of the box, and most applications won’t need Volt. Volt exists for developers who prefer a functional, closure-based syntax over class-based components.
 
 Volt is an elegantly crafted functional API for Livewire that supports single-file components, allowing a component's PHP logic and Blade templates to coexist in the same file. Behind the scenes, the functional API is compiled to Livewire class components and linked with the template present in the same file.
 
@@ -112,8 +112,7 @@ use Livewire\Volt\Component;
 new
 #[Layout('layouts.guest')]
 #[Title('Login')]
-class extends Component
-{
+class extends Component {
     public string $name = '';
 
     // ...
@@ -193,7 +192,7 @@ use function Livewire\Volt\{state};
 state(['count' => fn ($users) => count($users)]);
 ```
 
-The `mount` function may be used to define the "mount" [lifecycle hook](/docs/lifecycle-hooks) of the Livewire component. The parameters provided to the component will be injected into this method. Any other parameters required by the mount hook will be resolved by Laravel's service container:
+The `mount` function may be used to define the "mount" [lifecycle hook](/docs/4.x/lifecycle-hooks) of the Livewire component. The parameters provided to the component will be injected into this method. Any other parameters required by the mount hook will be resolved by Laravel's service container:
 
 ```php
 use App\Services\UserCounter;
@@ -314,7 +313,7 @@ state(['id'])->locked();
 
 ### Reactive properties
 
-When working with nested components, you may find yourself in a situation where you need to pass a property from a parent component to a child component, and have the child component [automatically update](/docs/nesting#reactive-props) when the parent component updates the property.
+When working with nested components, you may find yourself in a situation where you need to pass a property from a parent component to a child component, and have the child component [automatically update](/docs/4.x/nesting#reactive-props) when the parent component updates the property.
 
 To achieve this using Volt, you may chain the `reactive` method on the state you wish to be reactive:
 
@@ -324,7 +323,7 @@ state(['todos'])->reactive();
 
 ### Modelable properties
 
-In cases where you don't want to make use of reactive properties, Livewire provides a [modelable feature](/docs/nesting#binding-to-child-data-using-wiremodel) where you may share state between parent component and child component using `wire:model` directly on a child component.
+In cases where you don't want to make use of reactive properties, Livewire provides a [modelable feature](/docs/4.x/nesting#binding-to-child-data-using-wiremodel) where you may share state between parent component and child component using `wire:model` directly on a child component.
 
 To achieve this using Volt, simply chain the `modelable` method on the state you wish to be modelable:
 
@@ -334,7 +333,7 @@ state(['form'])->modelable();
 
 ### Computed properties
 
-Livewire also allows you to define [computed properties](/docs/computed-properties), which can be useful for lazily fetching information needed by your component. Computed property results are "memoized", or cached in memory, for an individual Livewire request lifecycle.
+Livewire also allows you to define [computed properties](/docs/4.x/computed-properties), which can be useful for lazily fetching information needed by your component. Computed property results are "memoized", or cached in memory, for an individual Livewire request lifecycle.
 
 To define a computed property, you may use the `computed` function. The name of the variable will determine the name of the computed property:
 
@@ -373,7 +372,7 @@ $count = computed(function () {
 
 ## Actions
 
-Livewire [actions](/docs/actions) provide a convenient way to listen to page interactions and invoke a corresponding method on your component, resulting in the re-rendering of the component. Often, actions are invoked in response to the user clicking a button.
+Livewire [actions](/docs/4.x/actions) provide a convenient way to listen to page interactions and invoke a corresponding method on your component, resulting in the re-rendering of the component. Often, actions are invoked in response to the user clicking a button.
 
 To define a Livewire action using Volt, you simply need to define a closure. The name of the variable containing the closure will determine the name of the action:
 
@@ -425,7 +424,7 @@ $delete = function (PostRepository $posts) {
 
 ### Renderless actions
 
-In some cases, your component might declare an action that does not perform any operations that would cause the component's rendered Blade template to change. If that's the case, you can [skip the rendering phase](/docs/actions#skipping-re-renders) of Livewire's lifecycle by encapsulating the action within the `action` function and chaining the `renderless` method onto its definition:
+In some cases, your component might declare an action that does not perform any operations that would cause the component's rendered Blade template to change. If that's the case, you can [skip the rendering phase](/docs/4.x/actions#skipping-re-renders) of Livewire's lifecycle by encapsulating the action within the `action` function and chaining the `renderless` method onto its definition:
 
 ```php
 use function Livewire\Volt\{action};
@@ -435,7 +434,7 @@ $incrementViewCount = action(fn () => $this->viewCount++)->renderless();
 
 ### Protected helpers
 
-By default, all Volt actions are "public" and may be invoked by the client. If you wish to create a function that is [only accessible from within your actions](/docs/actions#keep-dangerous-methods-protected-or-private), you may use the `protect` function:
+By default, all Volt actions are "public" and may be invoked by the client. If you wish to create a function that is [only accessible from within your actions](/docs/4.x/actions#keep-dangerous-methods-protected-or-private), you may use the `protect` function:
 
 ```php
 use App\Repositories\PostRepository;
@@ -458,7 +457,7 @@ $ensurePostCanBeDeleted = protect(function () {
 
 ## Forms
 
-Livewire's [forms](/docs/forms) provide a convenient way to deal with form validation and submission within a single class. To use a Livewire form within a Volt component, you may utilize the `form` function:
+Livewire's [forms](/docs/4.x/forms) provide a convenient way to deal with form validation and submission within a single class. To use a Livewire form within a Volt component, you may utilize the `form` function:
 
 ```php
 <?php
@@ -500,7 +499,7 @@ $save = function () {
 
 ## Listeners
 
-Livewire's global [event system](/docs/events) enables communication between components. If two Livewire components exist on a page, they can communicate by utilizing events and listeners. When using Volt, listeners can be defined using the `on` function:
+Livewire's global [event system](/docs/4.x/events) enables communication between components. If two Livewire components exist on a page, they can communicate by utilizing events and listeners. When using Volt, listeners can be defined using the `on` function:
 
 ```php
 use function Livewire\Volt\{on};
@@ -530,7 +529,7 @@ on(['event-{post.id}' => function () {
 
 ## Lifecycle hooks
 
-Livewire has a variety of [lifecycle hooks](/docs/lifecycle-hooks) that may be used to execute code at various points in a component's lifecycle. Using Volt's convenient API, you can define these lifecycle hooks using their corresponding functions:
+Livewire has a variety of [lifecycle hooks](/docs/4.x/lifecycle-hooks) that may be used to execute code at various points in a component's lifecycle. Using Volt's convenient API, you can define these lifecycle hooks using their corresponding functions:
 
 ```php
 use function Livewire\Volt\{boot, booted, ...};
@@ -548,7 +547,7 @@ updated(['count' => fn () => /* ... */]);
 
 ## Lazy loading placeholders
 
-When rendering Livewire components, you may pass the `lazy` parameter to a Livewire component to [defer its loading](/docs/lazy) until the initial page is fully loaded. By default, Livewire inserts `<div></div>` tags into the DOM where the component will be loaded.
+When rendering Livewire components, you may pass the `lazy` parameter to a Livewire component to [defer its loading](/docs/4.x/lazy) until the initial page is fully loaded. By default, Livewire inserts `<div></div>` tags into the DOM where the component will be loaded.
 
 If you would like to customize the HTML that is displayed within the component's placeholder while the initial page is loaded, you may use the `placeholder` function:
 
@@ -560,7 +559,7 @@ placeholder('<div>Loading...</div>');
 
 ## Validation
 
-Livewire offers easy access to Laravel's powerful [validation features](/docs/validation). Using Volt's API, you may define your component's validation rules using the `rules` function. Like traditional Livewire components, these rules will be applied to your component data when you invoke the `validate` method:
+Livewire offers easy access to Laravel's powerful [validation features](/docs/4.x/validation). Using Volt's API, you may define your component's validation rules using the `rules` function. Like traditional Livewire components, these rules will be applied to your component data when you invoke the `validate` method:
 
 ```php
 <?php
@@ -609,7 +608,7 @@ rules(['name' => 'required|min:6', 'email' => 'required|email'])
 
 ## File uploads
 
-When using Volt, [uploading and storing files](/docs/uploads) is much easier thanks to Livewire. To include the `Livewire\WithFileUploads` trait on your functional Volt component, you may use the `usesFileUploads` function:
+When using Volt, [uploading and storing files](/docs/4.x/uploads) is much easier thanks to Livewire. To include the `Livewire\WithFileUploads` trait on your functional Volt component, you may use the `usesFileUploads` function:
 
 ```php
 use function Livewire\Volt\{state, usesFileUploads};
@@ -629,7 +628,7 @@ $save = function () {
 
 ## URL query parameters
 
-Sometimes it's useful to [update the browser's URL query parameters](/docs/url) when your component state changes. In these cases, you can use the `url` method to instruct Livewire to sync the URL query parameters with a piece of component state:
+Sometimes it's useful to [update the browser's URL query parameters](/docs/4.x/url) when your component state changes. In these cases, you can use the `url` method to instruct Livewire to sync the URL query parameters with a piece of component state:
 
 ```php
 <?php
@@ -671,7 +670,7 @@ state(['page' => 1])->url(as: 'p', history: true, keep: true);
 
 ## Pagination
 
-Livewire and Volt also have complete support for [pagination](/docs/pagination). To include Livewire's `Livewire\WithPagination` trait on your functional Volt component, you may use the `usesPagination` function:
+Livewire and Volt also have complete support for [pagination](/docs/4.x/pagination). To include Livewire's `Livewire\WithPagination` trait on your functional Volt component, you may use the `usesPagination` function:
 
 ```php
 <?php
@@ -805,7 +804,7 @@ it('increments the counter', function () {
 });
 ```
 
-When testing a Volt component, you may utilize all of the methods provided by the standard [Livewire testing API](/docs/testing).
+When testing a Volt component, you may utilize all of the methods provided by the standard [Livewire testing API](/docs/4.x/testing).
 
 If your Volt component is nested, you may use "dot" notation to specify the component that you wish to test:
 

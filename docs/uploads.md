@@ -5,16 +5,13 @@ First, add the `WithFileUploads` trait to your component. Once this trait has be
 Here's an example of a simple component that handles uploading a photo:
 
 ```php
-<?php
+<?php // resources/views/components/⚡upload-photo.blade.php
 
-namespace App\Livewire;
-
-use Livewire\Component;
-use Livewire\WithFileUploads;
 use Livewire\Attributes\Validate;
+use Livewire\WithFileUploads;
+use Livewire\Component;
 
-class UploadPhoto extends Component
-{
+new class extends Component {
     use WithFileUploads;
 
     #[Validate('image|max:1024')] // 1MB Max
@@ -24,7 +21,7 @@ class UploadPhoto extends Component
     {
         $this->photo->store(path: 'photos');
     }
-}
+};
 ```
 
 ```blade
@@ -90,12 +87,13 @@ Livewire automatically handles multiple file uploads by detecting the `multiple`
 For example, below is a component with an array property named `$photos`. By adding `multiple` to the form's file input, Livewire will automatically append new files to this array:
 
 ```php
-use Livewire\Component;
-use Livewire\WithFileUploads;
-use Livewire\Attributes\Validate;
+<?php // resources/views/components/⚡upload-photos.blade.php
 
-class UploadPhotos extends Component
-{
+use Livewire\Attributes\Validate;
+use Livewire\WithFileUploads;
+use Livewire\Component;
+
+new class extends Component {
     use WithFileUploads;
 
     #[Validate(['photos.*' => 'image|max:1024'])]
@@ -107,7 +105,7 @@ class UploadPhotos extends Component
             $photo->store(path: 'photos');
         }
     }
-}
+};
 ```
 
 ```blade
@@ -141,19 +139,20 @@ Livewire makes this trivial by using the `->temporaryUrl()` method on uploaded f
 Let's explore an example of a file upload with an image preview:
 
 ```php
-use Livewire\Component;
-use Livewire\WithFileUploads;
-use Livewire\Attributes\Validate;
+<?php // resources/views/components/⚡upload-photo.blade.php
 
-class UploadPhoto extends Component
-{
+use Livewire\Attributes\Validate;
+use Livewire\WithFileUploads;
+use Livewire\Component;
+
+new class extends Component {
     use WithFileUploads;
 
     #[Validate('image|max:1024')]
     public $photo;
 
     // ...
-}
+};
 ```
 
 ```blade
@@ -213,14 +212,15 @@ class UploadPhotoTest extends TestCase
 }
 ```
 
-Below is an example of the `UploadPhoto` component required to make the previous test pass:
+Below is an example of the `upload-photo` component required to make the previous test pass:
 
 ```php
-use Livewire\Component;
-use Livewire\WithFileUploads;
+<?php // resources/views/components/⚡upload-photo.blade.php
 
-class UploadPhoto extends Component
-{
+use Livewire\WithFileUploads;
+use Livewire\Component;
+
+new class extends Component {
     use WithFileUploads;
 
     public $photo;
@@ -231,7 +231,7 @@ class UploadPhoto extends Component
     }
 
     // ...
-}
+};
 ```
 
 For more information on testing file uploads, please consult [Laravel's file upload testing documentation](https://laravel.com/docs/http-tests#testing-file-uploads).
@@ -244,25 +244,16 @@ By default, Livewire uses the default filesystem disk configuration (usually `lo
 
 Consequently, file uploads are always utilizing your application server, even if you choose to store the uploaded files in an S3 bucket later.
 
-If you wish to bypass your application server and instead store Livewire's temporary uploads in an S3 bucket, you can configure that behavior in your application's `config/livewire.php` configuration file. First, set `livewire.temporary_file_upload.disk` to `s3` (or another custom disk that uses the `s3` driver):
+If you wish to bypass your application server and instead store Livewire's temporary uploads in an S3 bucket, set the `LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK` environment variable in your `.env` file to `s3` (or another custom disk that uses the `s3` driver):
 
-```php
-return [
-    // ...
-    'temporary_file_upload' => [
-        'disk' => 's3',
-        // ...
-    ],
-];
+```env
+LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK=s3
 ```
 
 Now, when a user uploads a file, the file will never actually be stored on your server. Instead, it will be uploaded directly to your S3 bucket within the `livewire-tmp/` sub-directory.
 
-> [!info] Publishing Livewire's configuration file
-> Before customizing the file upload disk, you must first publish Livewire's configuration file to your application's `/config` directory by running the following command:
-> ```shell
-> php artisan livewire:publish --config
-> ```
+> [!tip]
+> Alternatively, you can publish Livewire's configuration file with `php artisan livewire:config` for full control over the `temporary_file_upload` config.
 
 ### Configuring automatic file cleanup
 
@@ -283,7 +274,7 @@ Now, any temporary files older than 24 hours will be cleaned up by S3 automatica
 
 Although `wire:model` for file uploads works differently than other `wire:model` input types under the hood, the interface for showing loading indicators remains the same.
 
-You can display a loading indicator scoped to the file upload like so:
+You can display a loading indicator scoped to the file upload using `wire:loading`:
 
 ```blade
 <input type="file" wire:model="photo">
@@ -291,9 +282,19 @@ You can display a loading indicator scoped to the file upload like so:
 <div wire:loading wire:target="photo">Uploading...</div>
 ```
 
+Or more simply using Livewire's automatic `data-loading` attribute:
+
+```blade
+<div>
+    <input type="file" wire:model="photo">
+
+    <div class="not-data-loading:hidden">Uploading...</div>
+</div>
+```
+
 Now, while the file is uploading, the "Uploading..." message will be shown and then hidden when the upload is finished.
 
-For more information on loading states, check out our comprehensive [loading state documentation](/docs/wire-loading).
+[Learn more about loading states →](/docs/4.x/loading-states)
 
 ## Progress indicators
 
@@ -367,7 +368,6 @@ For these scenarios, Livewire exposes dedicated JavaScript functions.
 These functions exist on a JavaScript component object, which can be accessed using Livewire's convenient `$wire` object from within your Livewire component's template:
 
 ```blade
-@script
 <script>
     let file = $wire.el.querySelector('input[type="file"]').files[0]
 
@@ -392,7 +392,6 @@ These functions exist on a JavaScript component object, which can be accessed us
     // Cancel an upload...
     $wire.cancelUpload('photos')
 </script>
-@endscript
 ```
 
 ## Configuration
@@ -433,3 +432,10 @@ Temporary files are uploaded to the specified disk's `livewire-tmp/` directory. 
     'directory' => 'tmp',
 ],
 ```
+
+## See also
+
+- **[Forms](/docs/4.x/forms)** — Handle file uploads in forms
+- **[Validation](/docs/4.x/validation)** — Validate uploaded files
+- **[Loading States](/docs/4.x/loading-states)** — Show upload progress indicators
+- **[wire:model](/docs/4.x/wire-model)** — Bind file inputs to properties

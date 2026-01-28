@@ -198,6 +198,55 @@ class UnitTest extends \Tests\TestCase
             ])
         ;
     }
+
+    public function test_it_leaves_camel_case_params_when_matching_component_properties()
+    {
+        Livewire::test(
+            new class extends \Tests\TestComponent {
+                public $fooBar;
+            },
+            ['fooBar' => 'baz']
+            )
+        ->assertSet('fooBar', 'baz');
+    }
+
+    public function test_it_leaves_snake_case_params_when_matching_component_properties()
+    {
+        Livewire::test(
+            new class extends \Tests\TestComponent {
+                public $foo_bar;
+            },
+            ['foo_bar' => 'baz']
+        )
+        ->assertSet('foo_bar', 'baz');
+    }
+
+    public function test_it_converts_kebab_case_params_to_camel_case_when_matching_component_properties()
+    {
+        Livewire::test(
+            new class extends \Tests\TestComponent {
+                public $fooBar;
+
+                public function render()
+                {
+                    return '<div>fooBar: {{ $fooBar }}</div>';
+                }
+            },
+            ['foo-bar' => 'baz']
+        )
+        ->assertSet('fooBar', 'baz');
+    }
+
+    public function test_kebab_case_params_are_left_as_kebab_if_it_does_not_match_component_property_and_is_stored_in_html_attributes()
+    {
+        Livewire::test(
+            new class extends \Tests\TestComponent { },
+            ['data-foo' => 'bar']
+        )
+        ->tap(function ($component) {
+            $this->assertEquals(['data-foo' => 'bar'], $component->instance()->getHtmlAttributes());
+        });
+    }
 }
 
 class BasicComponent extends TestComponent

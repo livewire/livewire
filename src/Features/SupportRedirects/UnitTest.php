@@ -70,6 +70,21 @@ class UnitTest extends \Tests\TestCase
         ->assertRedirect('/test');
     }
 
+    public function test_can_redirect_to_component_registered_with_route_livewire_macro()
+    {
+        Route::livewire('/dashboard', TriggersRedirectStub::class);
+
+        Livewire::test(new class extends TestComponent {
+            function triggerRedirect()
+            {
+                $this->redirect(TriggersRedirectStub::class, navigate: true);
+            }
+        })
+        ->call('triggerRedirect')
+        ->assertRedirect(TriggersRedirectStub::class)
+        ->assertRedirect('/dashboard');
+    }
+
     public function test_redirect_helper()
     {
         $component = Livewire::test(TriggersRedirectStub::class);

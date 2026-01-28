@@ -4,18 +4,15 @@ Let's dive in.
 
 ## Submitting a form
 
-Let's start by looking at a very simple form in a `CreatePost` component. This form will have two simple text inputs and a submit button, as well as some code on the backend to manage the form's state and submission:
+Let's start by looking at a very simple form in a `post.create` component. This form will have two simple text inputs and a submit button, as well as some code on the backend to manage the form's state and submission:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡create.blade.php
 
 use Livewire\Component;
 use App\Models\Post;
 
-class CreatePost extends Component
-{
+new class extends Component {
     public $title = '';
 
     public $content = '';
@@ -30,15 +27,9 @@ class CreatePost extends Component
 
         return $this->redirect('/posts');
     }
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
-```
-
-```blade
 <form wire:submit="save">
     <input type="text" wire:model="title">
 
@@ -52,7 +43,7 @@ As you can see, we are "binding" the public `$title` and `$content` properties i
 
 In addition to binding `$title` and `$content`, we are using `wire:submit` to capture the `submit` event when the "Save" button is clicked and invoking the `save()` action. This action will persist the form input to the database.
 
-After the new post is created in the database, we redirect the user to the `ShowPosts` component page and show them a "flash" message that the new post was created.
+After the new post is created in the database, we redirect the user to the posts page and show them a "flash" message that the new post was created.
 
 ### Adding validation
 
@@ -62,19 +53,16 @@ Livewire makes validating your forms as simple as adding `#[Validate]` attribute
 
 Once a property has a `#[Validate]` attribute attached to it, the validation rule will be applied to the property's value any time it's updated server-side.
 
-Let's add some basic validation rules to the `$title` and `$content` properties in our `CreatePost` component:
+Let's add some basic validation rules to the `$title` and `$content` properties in our `post.create` component:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡create.blade.php
 
 use Livewire\Attributes\Validate; // [tl! highlight]
 use Livewire\Component;
 use App\Models\Post;
 
-class CreatePost extends Component
-{
+new class extends Component {
     #[Validate('required')] // [tl! highlight]
     public $title = '';
 
@@ -91,12 +79,7 @@ class CreatePost extends Component
 
         return $this->redirect('/posts');
     }
-
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
+};
 ```
 
 We'll also modify our Blade template to show any validation errors on the page.
@@ -119,7 +102,7 @@ We'll also modify our Blade template to show any validation errors on the page.
 
 Now, if the user tries to submit the form without filling in any of the fields, they will see validation messages telling them which fields are required before saving the post.
 
-Livewire has a lot more validation features to offer. For more information, visit our [dedicated documentation page on Validation](/docs/validation).
+Livewire has a lot more validation features to offer. For more information, visit our [dedicated documentation page on Validation](/docs/4.x/validation).
 
 ### Extracting a form object
 
@@ -135,7 +118,7 @@ php artisan livewire:form PostForm
 
 The above command will create a file called `app/Livewire/Forms/PostForm.php`.
 
-Let's rewrite the `CreatePost` component to use a `PostForm` class:
+Let's rewrite the `post.create` component to use a `PostForm` class:
 
 ```php
 <?php
@@ -156,16 +139,13 @@ class PostForm extends Form
 ```
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡create.blade.php
 
 use App\Livewire\Forms\PostForm;
 use Livewire\Component;
 use App\Models\Post;
 
-class CreatePost extends Component
-{
+new class extends Component {
     public PostForm $form; // [tl! highlight]
 
     public function save()
@@ -178,12 +158,7 @@ class CreatePost extends Component
 
         return $this->redirect('/posts');
     }
-
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
+};
 ```
 
 ```blade
@@ -233,8 +208,12 @@ class PostForm extends Form
 Now you can call `$this->form->store()` from the component:
 
 ```php
-class CreatePost extends Component
-{
+<?php // resources/views/components/post/⚡create.blade.php
+
+use App\Livewire\Forms\PostForm;
+use Livewire\Component;
+
+new class extends Component {
     public PostForm $form;
 
     public function save()
@@ -245,24 +224,21 @@ class CreatePost extends Component
     }
 
     // ...
-}
+};
 ```
 
 If you want to use this form object for both a create and update form, you can easily adapt it to handle both use cases.
 
-Here's what it would look like to use this same form object for an `UpdatePost` component and fill it with initial data:
+Here's what it would look like to use this same form object for a `post.edit` component and fill it with initial data:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡edit.blade.php
 
 use App\Livewire\Forms\PostForm;
 use Livewire\Component;
 use App\Models\Post;
 
-class UpdatePost extends Component
-{
+new class extends Component {
     public PostForm $form;
 
     public function mount(Post $post)
@@ -276,12 +252,7 @@ class UpdatePost extends Component
 
         return $this->redirect('/posts');
     }
-
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
+};
 ```
 
 ```php
@@ -514,7 +485,7 @@ class PostForm extends Form
 }
 ```
 
-Now if the `$title` property is updated before the form is submitted—like when using [`wire:model.blur`](/docs/wire-model#updating-on-blur-event)—the validation for `$title` will be run.
+Now if the `$title` property is updated before the form is submitted—like when using [`wire:model.live.blur`](/docs/4.x/wire-model#updating-on-blur-event)—the validation for `$title` will be run.
 
 ### Showing a loading indicator
 
@@ -534,15 +505,24 @@ Here's an example of adding a small loading spinner to the "Save" button via `wi
 </button>
 ```
 
-Now, when a user presses "Save", a small, inline spinner will show up.
+Alternatively, you can use Tailwind and Livewire's automatic `data-loading` attribute for cleaner markup:
 
-Livewire's `wire:loading` feature has a lot more to offer. Visit the [Loading documentation to learn more.](/docs/wire-loading)
+```blade
+<button type="submit">
+    <span class="in-data-loading:hidden">Save</span>
+    <span class="not-in-data-loading:hidden">
+        <svg>...</svg> <!-- SVG loading spinner -->
+    </span>
+</button>
+```
+
+[Learn more about loading states →](/docs/4.x/loading-states)
 
 ## Live-updating fields
 
-By default, Livewire only sends a network request when the form is submitted (or any other [action](/docs/actions) is called), not while the form is being filled out.
+By default, Livewire only sends a network request when the form is submitted (or any other [action](/docs/4.x/actions) is called), not while the form is being filled out.
 
-Take the `CreatePost` component, for example. If you want to make sure the "title" input field is synchronized with the `$title` property on the backend as the user types, you may add the `.live` modifier to `wire:model` like so:
+Take the `post.create` component, for example. If you want to make sure the "title" input field is synchronized with the `$title` property on the backend as the user types, you may add the `.live` modifier to `wire:model` like so:
 
 ```blade
 <input type="text" wire:model.live="title">
@@ -557,7 +537,7 @@ For most cases, `wire:model.live` is fine for real-time form field updating; how
 If instead of sending network requests as a user types, you want to instead only send the request when a user "tabs" out of the text input (also referred to as "blurring" an input), you can use the `.blur` modifier instead:
 
 ```blade
-<input type="text" wire:model.blur="title" >
+<input type="text" wire:model.live.blur="title" >
 ```
 
 Now the component class on the server won't be updated until the user presses tab or clicks away from the text input.
@@ -569,7 +549,7 @@ Sometimes, you may want to show validation errors as the user fills out the form
 Livewire handles this sort of thing automatically. By using `.live` or `.blur` on `wire:model`, Livewire will send network requests as the user fills out the form. Each of those network requests will run the appropriate validation rules before updating each property. If validation fails, the property won't be updated on the server and a validation message will be shown to the user:
 
 ```blade
-<input type="text" wire:model.blur="title">
+<input type="text" wire:model.live.blur="title">
 
 <div>
     @error('title') <span class="error">{{ $message }}</span> @enderror
@@ -583,23 +563,20 @@ public $title = '';
 
 Now, if the user only types three characters into the "title" input, then clicks on the next input in the form, a validation message will be shown to them indicating there is a five character minimum for that field.
 
-For more information, check out the [validation documentation page](/docs/validation).
+For more information, check out the [validation documentation page](/docs/4.x/validation).
 
 ## Real-time form saving
 
 If you want to automatically save a form as the user fills it out rather than wait until the user clicks "submit", you can do so using Livewire's `updated()` hook:
 
 ```php
-<?php
-
-namespace App\Livewire;
+<?php // resources/views/components/post/⚡edit.blade.php
 
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use App\Models\Post;
 
-class UpdatePost extends Component
-{
+new class extends Component {
     public Post $post;
 
     #[Validate('required')]
@@ -621,22 +598,16 @@ class UpdatePost extends Component
             $name => $value,
         ]);
     }
+};
+?>
 
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
-```
-
-```blade
 <form wire:submit>
-    <input type="text" wire:model.blur="title">
+    <input type="text" wire:model.live.blur="title">
     <div>
         @error('title') <span class="error">{{ $message }}</span> @enderror
     </div>
 
-    <input type="text" wire:model.blur="content">
+    <input type="text" wire:model.live.blur="content">
     <div>
         @error('content') <span class="error">{{ $message }}</span> @enderror
     </div>
@@ -649,18 +620,18 @@ We can use this hook to update only that specific field in the database.
 
 Additionally, because we have the `#[Validate]` attributes attached to those properties, the validation rules will be run before the property is updated and the `updated()` hook is called.
 
-To learn more about the "updated" lifecycle hook and other hooks, [visit the lifecycle hooks documentation](/docs/lifecycle-hooks).
+To learn more about the "updated" lifecycle hook and other hooks, [visit the lifecycle hooks documentation](/docs/4.x/lifecycle-hooks).
 
 ## Showing dirty indicators
 
 In the real-time saving scenario discussed above, it may be helpful to indicate to users when a field hasn't been persisted to the database yet.
 
-For example, if a user visits an `UpdatePost` page and starts modifying the title of the post in a text input, it may be unclear to them when the title is actually being updated in the database, especially if there is no "Save" button at the bottom of the form.
+For example, if a user visits a `post.edit` page and starts modifying the title of the post in a text input, it may be unclear to them when the title is actually being updated in the database, especially if there is no "Save" button at the bottom of the form.
 
 Livewire provides the `wire:dirty` directive to allow you to toggle elements or modify classes when an input's value diverges from the server-side component:
 
 ```blade
-<input type="text" wire:model.blur="title" wire:dirty.class="border-yellow">
+<input type="text" wire:model.live.blur="title" wire:dirty.class="border-yellow">
 ```
 
 In the above example, when a user types into the input field, a yellow border will appear around the field. When the user tabs away, the network request is sent and the border will disappear; signaling to them that the input has been persisted and is no longer "dirty".
@@ -699,11 +670,11 @@ In the above example, as a user is typing continuously in the "title" field, a n
 
 ## Extracting input fields to Blade components
 
-Even in a small component such as the `CreatePost` example we've been discussing, we end up duplicating lots of form field boilerplate like validation messages and labels.
+Even in a small component such as the `post.create` example we've been discussing, we end up duplicating lots of form field boilerplate like validation messages and labels.
 
 It can be helpful to extract repetitive UI elements such as these into dedicated [Blade components](https://laravel.com/docs/blade#components) to be shared across your application.
 
-For example, below is the original Blade template from the `CreatePost` component. We will be extracting the following two text inputs into dedicated Blade components:
+For example, below is the original Blade template from the `post.create` component. We will be extracting the following two text inputs into dedicated Blade components:
 
 ```blade
 <form wire:submit="save">
@@ -829,3 +800,11 @@ Because `x-modelable` works for both `wire:model` and `x-model`, you can also us
 ```
 
 Creating custom input elements in your application is extremely powerful but requires a deeper understanding of the utilities Livewire and Alpine provide and how they interact with each other.
+
+## See also
+
+- **[Validation](/docs/4.x/validation)** — Validate form inputs with real-time feedback
+- **[wire:model](/docs/4.x/wire-model)** — Bind form inputs to component properties
+- **[File Uploads](/docs/4.x/uploads)** — Handle file uploads in forms
+- **[Actions](/docs/4.x/actions)** — Process form submissions with actions
+- **[Loading States](/docs/4.x/loading-states)** — Show loading indicators during form submission

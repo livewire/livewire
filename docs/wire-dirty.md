@@ -41,13 +41,13 @@ By adding the `.remove` modifier to `wire:dirty`, you can instead show an elemen
 
 ## Targeting property updates
 
-Imagine you are using `wire:model.blur` to update a property on the server immediately after a user leaves an input field. In this scenario, you can provide a "dirty" indication for only that property by adding `wire:target` to the element that contains the `wire:dirty` directive.
+Imagine you are using `wire:model.live.blur` to update a property on the server immediately after a user leaves an input field. In this scenario, you can provide a "dirty" indication for only that property by adding `wire:target` to the element that contains the `wire:dirty` directive.
 
 Here is an example of only showing a dirty indication when the title property has been changed:
 
 ```blade
 <form wire:submit="update">
-    <input wire:model.blur="title">
+    <input wire:model.live.blur="title">
 
     <div wire:dirty wire:target="title">Unsaved title...</div> <!-- [tl! highlight] -->
 
@@ -62,6 +62,74 @@ Often, instead of toggling entire elements, you may want to toggle individual CS
 Below is an example where a user types into an input field and the border becomes yellow, indicating an "unsaved" state. Then, when the user tabs away from the field, the border is removed, indicating that the state has been saved on the server:
 
 ```blade
-<input wire:model.blur="title" wire:dirty.class="border-yellow-500">
+<input wire:model.live.blur="title" wire:dirty.class="border-yellow-500">
 ```
 
+## Using the `$dirty` expression
+
+In addition to the `wire:dirty` directive, you can check dirty state programmatically using the `$dirty` expression in Livewire directives or `$wire.$dirty()` in Alpine.
+
+### Check if entire component is dirty
+
+To check if any property on the component has unsaved changes:
+
+```blade
+<div wire:show="$dirty">You have unsaved changes</div>
+```
+
+### Check if a specific property is dirty
+
+To check if a specific property has been modified:
+
+```blade
+<div wire:show="$dirty('title')">Title has been modified</div>
+```
+
+You can also check nested properties:
+
+```blade
+<div wire:show="$dirty('user.name')">Name has been modified</div>
+```
+
+### Conditional logic based on dirty state
+
+You can use `$wire.$dirty()` in Alpine to conditionally run logic:
+
+```blade
+<button x-on:click="$wire.$dirty('title') && $wire.save()">
+    Save Title
+</button>
+```
+
+Or apply conditional classes with Alpine:
+
+```blade
+<input
+    wire:model="email"
+    :class="$wire.$dirty('email') && 'border-yellow-500'"
+>
+```
+
+## Reference
+
+```blade
+wire:dirty
+wire:target="property"
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.remove` | Show element by default, hide when dirty |
+| `.class="class-name"` | Add a CSS class when dirty |
+
+### `$dirty` expression
+
+| Expression | Description |
+|------------|-------------|
+| `$dirty` | Returns `true` if any property has unsaved changes |
+| `$dirty('property')` | Returns `true` if the specified property has unsaved changes |
+| `$dirty(['title', 'description'])` | Returns `true` if any of the specified properties have unsaved changes |
+
+Can be used in Livewire directives like `wire:show="$dirty"` or in Alpine as `$wire.$dirty()`.

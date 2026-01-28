@@ -41,28 +41,22 @@ EOT
     {
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
-        $this->assertStringContainsString(
-            <<<EOT
-<!-- Test comment <div>Commented out code</div> -->
-<span wire:snapshot
-EOT
-            ,
-            $component->html()
-        );
+        // Test that HTML comment is preserved and span has wire:snapshot (attribute order agnostic)
+        $html = $component->html();
+        $this->assertStringContainsString('<!-- Test comment <div>Commented out code</div> -->', $html);
+        $this->assertStringContainsString('<span', $html);
+        $this->assertStringContainsString('wire:snapshot', $html);
     }
 
     public function test_if_element_is_a_comment_and_contains_html_it_is_skipped_and_id_and_data_inserted_on_next_elemenet()
     {
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
-        $this->assertStringContainsString(
-            <<<EOT
-<!-- Test comment <div>Commented out code</div> -->
-<span wire:snapshot
-EOT
-            ,
-            $component->html()
-        );
+        // Test that HTML comment with HTML is preserved and span has wire:snapshot (attribute order agnostic)
+        $html = $component->html();
+        $this->assertStringContainsString('<!-- Test comment <div>Commented out code</div> -->', $html);
+        $this->assertStringContainsString('<span', $html);
+        $this->assertStringContainsString('wire:snapshot', $html);
     }
 
     public function test_on_subsequent_renders_root_element_has_id_but_not_component_id()

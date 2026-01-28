@@ -1,10 +1,11 @@
-import { closestComponent, destroyComponent, initComponent, hasComponent } from './store'
+import { findComponentByEl, destroyComponent, initComponent, hasComponent } from './store'
 import { matchesForLivewireDirective, extractDirective } from './directives'
 import { trigger } from './hooks'
 import collapse from '@alpinejs/collapse'
 import focus from '@alpinejs/focus'
 import persist from '@alpinejs/persist'
 import intersect from '@alpinejs/intersect'
+import sort from '@alpinejs/sort'
 import resize from '@alpinejs/resize'
 import anchor from '@alpinejs/anchor'
 import navigate from './plugins/navigate'
@@ -23,6 +24,7 @@ export function start() {
     Alpine.plugin(morph)
     Alpine.plugin(history)
     Alpine.plugin(intersect)
+    Alpine.plugin(sort)
     Alpine.plugin(resize)
     Alpine.plugin(collapse)
     Alpine.plugin(anchor)
@@ -38,7 +40,7 @@ export function start() {
         // This prevents Livewire from causing general slowness for other Alpine elements on the page...
         if (! Array.from(attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return
 
-        let component = closestComponent(el, false)
+        let component = findComponentByEl(el, false)
 
         if (! component) return
 
@@ -77,7 +79,7 @@ export function start() {
                 } })
             })
 
-            let component = closestComponent(el, false)
+            let component = findComponentByEl(el, false)
 
             if (component) {
                 trigger('element.init', { el, component })
@@ -98,7 +100,7 @@ export function start() {
             let directives = Array.from(el.getAttributeNames())
                 .filter(name => matchesForLivewireDirective(name))
                 .map(name => extractDirective(el, name))
-            
+
             directives.forEach(directive => {
                 trigger('directive.global.init', { el, directive, cleanup: (callback) => {
                     Alpine.onAttributeRemoved(el, directive.raw, callback)

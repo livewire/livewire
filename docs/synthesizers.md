@@ -6,7 +6,7 @@ Natively, PHP serializes most primitive values into JSON easily. However, in ord
 Therefore, Livewire provides a point of extension called "Synthesizers" that allow users to support any custom property types they wish.
 
 > [!tip] Make sure you understand hydration first
-> Before using Synthesizers, it's helpful to fully understand Livewire's hydration system. You can learn more by reading the [hydration documentation](/docs/hydration).
+> Before using Synthesizers, it's helpful to fully understand Livewire's hydration system. You can learn more by reading the [hydration documentation](/docs/4.x/hydration).
 
 ## Understanding Synthesizers
 
@@ -41,7 +41,7 @@ class CreatePost extends Component
 }
 ```
 
-The dehydrated JSON representing this component's state now contains a [metadata tuple](/docs/hydration#deeply-nested-tuples) instead of a plain empty string:
+The dehydrated JSON representing this component's state now contains a [metadata tuple](/docs/4.x/hydration#deeply-nested-tuples) instead of a plain empty string:
 
 ```js
 state: { title: ['', { s: 'str' }] },
@@ -83,7 +83,7 @@ First is the `$key` property:
 public static $key = 'str';
 ```
 
-Every synth must contain a static `$key` property that Livewire uses to convert a [metadata tuple](/docs/hydration#deeply-nested-tuples) like `['', { s: 'str' }]` back into a stringable. As you may notice, each metadata tuple has an `s` key referencing this key.
+Every synth must contain a static `$key` property that Livewire uses to convert a [metadata tuple](/docs/4.x/hydration#deeply-nested-tuples) like `['', { s: 'str' }]` back into a stringable. As you may notice, each metadata tuple has an `s` key referencing this key.
 
 Inversely, when Livewire is dehydrating a property, it will use the synth's static `match()` function to identify if this particular Synthesizer is a good candidate to dehydrate the current property (`$target` being the current value of the property):
 
@@ -94,7 +94,7 @@ public static function match($target)
 }
 ```
 
-If `match()` returns true, the `dehydrate()` method will be used to take the property's PHP value as input and return the JSONable [metadata](/docs/hydration#deeply-nested-tuples) tuple:
+If `match()` returns true, the `dehydrate()` method will be used to take the property's PHP value as input and return the JSONable [metadata](/docs/4.x/hydration#deeply-nested-tuples) tuple:
 
 ```php
 public function dehydrate($target)
