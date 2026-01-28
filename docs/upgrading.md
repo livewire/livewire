@@ -22,6 +22,18 @@ php artisan optimize:clear
 > [!info] View all changes on GitHub
 > For a complete overview of all code changes between v3 and v4, you can review the full diff on GitHub: [Compare 3.x to main →](https://github.com/livewire/livewire/compare/3.x...main)
 
+## Upgrading to v4.1 from v4.0
+
+### `wire:model` modifier behavior change
+
+Modifiers like `.blur` and `.change` now control when client-side state syncs, not just network timing. If you're using these modifiers and want the previous behavior, add `.live` before them (e.g., `wire:model.live.blur`).
+
+[See full details below →](#wiremodel-modifiers-now-control-client-side-sync-timing)
+
+---
+
+The following changes apply when upgrading from v3 to v4.
+
 ## High-impact changes
 
 These changes are most likely to affect your application and should be reviewed carefully.
