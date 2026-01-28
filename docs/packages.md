@@ -59,3 +59,7 @@ public function render()
 ```blade
 <livewire:mypackage::counter />
 ```
+
+## File naming
+
+The ⚡ emoji prefix used in Livewire component filenames can cause issues with Composer when publishing packages. For package development, avoid using the bolt emoji in your component filenames—use `counter.blade.php` instead of `⚡counter.blade.php`.
