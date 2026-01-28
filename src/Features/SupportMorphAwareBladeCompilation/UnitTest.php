@@ -706,6 +706,53 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
+            // GitHub discussion #9642: @foreach with > comparison in Blade echo (no HTML inside)
+            // The bug occurs when > appears before any < in the text after the directive
+            38 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @foreach($items as $item)
+                        {{ $item > 5 ? 'big' : 'small' }}
+                    @endforeach
+                </div>
+                HTML
+            ],
+            // GitHub discussion #9776: Multiple sequential @foreach loops with > in expressions
+            39 => [
+                2,
+                <<<'HTML'
+                <div>
+                    @foreach($items as $item)
+                        {{ $item > 10 ? 'many' : 'few' }}
+                    @endforeach
+
+                    @foreach($other as $thing)
+                        {{ $thing > 0 ? 'positive' : 'zero' }}
+                    @endforeach
+                </div>
+                HTML
+            ],
+            // @if with > comparison where no HTML follows before loop end
+            40 => [
+                2,
+                <<<'HTML'
+                <div>
+                    @foreach($items as $item)
+                        @if($item > 5)
+                            {{ $item }}
+                        @endif
+                    @endforeach
+                </div>
+                HTML
+            ],
+            // @if with > inside HTML tag attribute should NOT get markers
+            41 => [
+                0,
+                <<<'HTML'
+                <div @if($count > 5) class="many" @endif></div>
+                HTML
+            ],
         ];
     }
 
