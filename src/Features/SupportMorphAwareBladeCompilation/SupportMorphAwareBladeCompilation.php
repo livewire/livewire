@@ -92,6 +92,9 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         $ignoredTags = ['script', 'style'];
         $excludedRanges = static::findIgnoredTagRanges($template, $ignoredTags);
 
+        // Find all ranges where we're inside an HTML tag (between < and >)...
+        $htmlTagRanges = static::findHtmlTagRanges($template);
+
         for ($i = count($matches[0]) - 1; $i >= 0; $i--) {
             $match = [
                 $matches[0][$i][0],
@@ -143,18 +146,18 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
             // Now we can check to see if the current Blade directive is a conditional,
             // and if so, prefix/suffix it with HTML comment morph markers...
             if (preg_match($openingDirectivesPattern, $match[0])) {
-                $template = static::prefixOpeningDirective($match[0], $template, $matchPosition);
+                $template = static::prefixOpeningDirective($match[0], $template, $matchPosition, $htmlTagRanges);
             } elseif (preg_match($closingDirectivesPattern, $match[0])) {
-                $template = static::suffixClosingDirective($match[0], $template, $matchPosition);
+                $template = static::suffixClosingDirective($match[0], $template, $matchPosition, $htmlTagRanges);
             } elseif (preg_match($loopEmptyDirectivePattern, $match[0])) {
-                $template = static::suffixLoopEmptyDirective($match[0], $template, $matchPosition);
+                $template = static::suffixLoopEmptyDirective($match[0], $template, $matchPosition, $htmlTagRanges);
             }
         }
 
         return $template;
     }
 
-    protected static function prefixOpeningDirective($found, $template, $position)
+    protected static function prefixOpeningDirective($found, $template, $position, $htmlTagRanges = [])
     {
         $foundEscaped = preg_quote($found, '/');
 
@@ -201,10 +204,10 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $pattern .= "/mUi";
 
-        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix);
+        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix, $htmlTagRanges);
     }
 
-    protected static function suffixClosingDirective($found, $template, $position)
+    protected static function suffixClosingDirective($found, $template, $position, $htmlTagRanges = [])
     {
         // Opening directives can contain a space before the parens, but that causes issues with closing
         // directives. So we will just remove the trailing space if it exists...
@@ -255,7 +258,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $pattern .= "{$foundEscaped}(?!\w)(?!{$suffixEscaped})/mUi";
 
-        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix);
+        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix, $htmlTagRanges);
     }
 
     /*
@@ -263,7 +266,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
      * it is the `@empty` directive that actually closes the loop, not the `@endelseif` directive. So we need to ensure we
      * target the `@empty` directive but not confuse it with the `@empty()` conditional directive...
      */
-    protected static function suffixLoopEmptyDirective($found, $template, $position)
+    protected static function suffixLoopEmptyDirective($found, $template, $position, $htmlTagRanges = [])
     {
         // Opening directives can contain a space before the parens, but that causes issues with closing
         // directives. So we will just remove the trailing space if it exists...
@@ -303,7 +306,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!\s*\()(?!{$suffixEscaped})/mUi";
 
-        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix);
+        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix, $htmlTagRanges);
     }
 
     protected static function isLoop($found)
@@ -440,14 +443,144 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         return false;
     }
 
-    protected static function replaceMatchIfNotInsideAHtmlTag(string $template, int $position, string $pattern, string $found, string $prefix, string $suffix): string
+    /**
+     * Find all ranges in the template where we're inside an HTML tag.
+     *
+     * This does a single forward pass through the template, tracking when we enter
+     * and exit HTML tags. It correctly handles:
+     * - PHP tags - not treated as HTML tags
+     * - HTML comments (<!-- -->) - not treated as HTML tags
+     * - Quoted attribute values - '>' inside quotes doesn't close the tag
+     * - Blade expressions in parentheses/braces - '>' inside doesn't close the tag
+     * - Comparison operators like '< ' that aren't tag openers
+     *
+     * Returns an array of [start, end] ranges where start is the position after
+     * the tag name (where attributes begin) and end is the position of '>'.
+     */
+    protected static function findHtmlTagRanges(string $template): array
+    {
+        $ranges = [];
+        $length = strlen($template);
+        $i = 0;
+
+        while ($i < $length) {
+            // Look for '<' that could start an HTML tag...
+            if ($template[$i] !== '<') {
+                $i++;
+                continue;
+            }
+
+            // Check what follows the '<'...
+            $remaining = $length - $i;
+
+            // Skip PHP open tags (short and standard)...
+            if ($remaining > 1 && $template[$i + 1] === '?') {
+                // Find the closing PHP tag...
+                $closePos = strpos($template, '?' . '>', $i + 2);
+                $i = $closePos !== false ? $closePos + 2 : $length;
+                continue;
+            }
+
+            // Skip HTML comments (<!--)...
+            if ($remaining > 3 && substr($template, $i, 4) === '<!--') {
+                // Find the closing -->...
+                $closePos = strpos($template, '-->', $i + 4);
+                $i = $closePos !== false ? $closePos + 3 : $length;
+                continue;
+            }
+
+            // Check if this looks like a valid HTML tag opener...
+            // Valid: <tagname, </tagname, <!DOCTYPE
+            // Invalid: < in "1 < 5", << operators, etc.
+            if ($remaining > 1) {
+                $nextChar = $template[$i + 1];
+                $isValidTagStart = ctype_alpha($nextChar)
+                    || $nextChar === '/'
+                    || ($nextChar === '!' && $remaining > 2 && ctype_alpha($template[$i + 2]));
+
+                if (! $isValidTagStart) {
+                    $i++;
+                    continue;
+                }
+            } else {
+                $i++;
+                continue;
+            }
+
+            // Found a valid HTML tag opener, now find where it closes...
+            // The range starts after the tag name (where attributes/directives could appear)
+            $tagStart = $i;
+
+            // Skip past the tag name to find where attributes begin...
+            $j = $i + 1;
+            if ($template[$j] === '/') {
+                $j++; // Skip the '/' in closing tags
+            }
+            if ($template[$j] === '!') {
+                $j++; // Skip the '!' in <!DOCTYPE
+            }
+
+            // Skip the tag name...
+            while ($j < $length && (ctype_alnum($template[$j]) || $template[$j] === ':' || $template[$j] === '-')) {
+                $j++;
+            }
+
+            $rangeStart = $j; // Attributes/directives could start here
+
+            // Now find the closing '>' while tracking quotes and brackets...
+            $inSingleQuote = false;
+            $inDoubleQuote = false;
+            $parenDepth = 0;
+            $braceDepth = 0;
+            $foundClose = false;
+
+            while ($j < $length) {
+                $char = $template[$j];
+
+                // Track quote state...
+                if (! $inDoubleQuote && $char === "'" && ($j === 0 || $template[$j - 1] !== '\\')) {
+                    $inSingleQuote = ! $inSingleQuote;
+                } elseif (! $inSingleQuote && $char === '"' && ($j === 0 || $template[$j - 1] !== '\\')) {
+                    $inDoubleQuote = ! $inDoubleQuote;
+                } elseif (! $inSingleQuote && ! $inDoubleQuote) {
+                    // Track nesting when not in quotes...
+                    if ($char === '(') {
+                        $parenDepth++;
+                    } elseif ($char === ')') {
+                        $parenDepth = max(0, $parenDepth - 1);
+                    } elseif ($char === '{') {
+                        $braceDepth++;
+                    } elseif ($char === '}') {
+                        $braceDepth = max(0, $braceDepth - 1);
+                    } elseif ($char === '>' && $parenDepth === 0 && $braceDepth === 0) {
+                        // Found the closing '>'
+                        $ranges[] = [$rangeStart, $j];
+                        $foundClose = true;
+                        $i = $j + 1;
+                        break;
+                    }
+                }
+
+                $j++;
+            }
+
+            // If we didn't find a closing '>', move past the tag start...
+            if (! $foundClose) {
+                $i = $tagStart + 1;
+            }
+        }
+
+        return $ranges;
+    }
+
+    protected static function replaceMatchIfNotInsideAHtmlTag(string $template, int $position, string $pattern, string $found, string $prefix, string $suffix, array $htmlTagRanges = []): string
     {
         // Clamp the match position to the template bounds...
         $templateLength = strlen($template);
         $position = max(0, min($templateLength, (int) $position));
 
-        // Check if we're inside an HTML tag by looking backwards...
-        if (static::isInsideHtmlTag($template, $position)) {
+        // Check if we're inside an HTML tag using pre-computed ranges...
+        if (static::isInExcludedRange($position, $htmlTagRanges)) {
             return $template;
         }
 
@@ -462,96 +595,5 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         $after = substr($after, strlen($afterMatch[0][0]));
 
         return $before.$prefix.$found.$suffix.$after;
-    }
-
-    /**
-     * Check if the given position in the template is inside an unclosed HTML tag.
-     *
-     * This looks backwards from the position to find the most recent '<' that could
-     * start an HTML tag, then checks if there's a closing '>' between that '<' and
-     * the position. It correctly handles '>' characters inside quoted strings and
-     * Blade expressions (parentheses/braces).
-     */
-    protected static function isInsideHtmlTag(string $template, int $position): bool
-    {
-        $before = substr($template, 0, $position);
-
-        // Search backwards through '<' occurrences to find an HTML tag opener...
-        $searchFrom = strlen($before);
-
-        while ($searchFrom > 0) {
-            // Find last '<' before $searchFrom...
-            $bracketPos = strrpos(substr($before, 0, $searchFrom), '<');
-
-            if ($bracketPos === false) {
-                return false;
-            }
-
-            $segment = substr($before, $bracketPos);
-
-            // Skip PHP tags (<?php, <?=, <?) and HTML comments (<!--)...
-            if (preg_match('/^<(\?|!--)/', $segment)) {
-                $searchFrom = $bracketPos;
-                continue;
-            }
-
-            // Skip if this '<' doesn't start a valid HTML tag...
-            // Valid: <tagname, </tagname, <!DOCTYPE
-            // Invalid: < in "1 < 5", << operators, etc.
-            if (! preg_match('/^<(\/?[a-zA-Z]|![a-zA-Z])/', $segment)) {
-                $searchFrom = $bracketPos;
-                continue;
-            }
-
-            // Found a potential HTML tag opener, check if it's closed...
-            return ! static::hasClosingBracketInSegment($segment);
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if the segment contains a '>' that closes an HTML tag.
-     *
-     * This ignores '>' characters that appear inside:
-     * - Single or double quoted strings (attribute values)
-     * - Parentheses (Blade directive expressions like @if($x > 0))
-     * - Braces (Blade echo like {{ $x > 0 }})
-     */
-    protected static function hasClosingBracketInSegment(string $segment): bool
-    {
-        $length = strlen($segment);
-        $inSingleQuote = false;
-        $inDoubleQuote = false;
-        $parenDepth = 0;
-        $braceDepth = 0;
-
-        for ($i = 1; $i < $length; $i++) {
-            $char = $segment[$i];
-            $prevChar = $segment[$i - 1];
-
-            // Track quote state (but not if escaped)...
-            if (! $inDoubleQuote && $char === "'" && $prevChar !== '\\') {
-                $inSingleQuote = ! $inSingleQuote;
-            } elseif (! $inSingleQuote && $char === '"' && $prevChar !== '\\') {
-                $inDoubleQuote = ! $inDoubleQuote;
-            } elseif (! $inSingleQuote && ! $inDoubleQuote) {
-                // Track nesting depth when not inside quotes...
-                if ($char === '(') {
-                    $parenDepth++;
-                } elseif ($char === ')') {
-                    $parenDepth = max(0, $parenDepth - 1);
-                } elseif ($char === '{') {
-                    $braceDepth++;
-                } elseif ($char === '}') {
-                    $braceDepth = max(0, $braceDepth - 1);
-                } elseif ($char === '>' && $parenDepth === 0 && $braceDepth === 0) {
-                    // Found a top-level '>' that closes the tag...
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 }
