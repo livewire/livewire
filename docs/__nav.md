@@ -84,5 +84,6 @@ Advanced:
     CSP: { uri: /docs/4.x/csp, file: /csp.md }
     JavaScript: { uri: /docs/4.x/javascript, file: /javascript.md }
     Synthesizers: { uri: /docs/4.x/synthesizers, file: /synthesizers.md }
+    Package Development: { uri: /docs/4.x/packages, file: /packages.md }
     Contribution Guide: { uri: /docs/4.x/contribution-guide, file: /contribution-guide.md }
 ---
