@@ -46,10 +46,8 @@ class UnitTest extends TestCase
         $newHandleRequests = new HandleRequests();
         $newHandleRequests->boot();
 
-        // Manually trigger the booted callback since we're already past the boot phase
-        app()->booted(function () {});
-
         // Verify that still only one livewire.update route exists (no duplicate)
+        // The updateRouteExists() check in boot() prevents duplicate registration
         $livewireUpdateRoutes = collect(Route::getRoutes()->getRoutes())->filter(function ($route) {
             return str($route->getName())->endsWith('livewire.update');
         });

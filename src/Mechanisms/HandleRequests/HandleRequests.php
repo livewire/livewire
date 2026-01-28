@@ -15,18 +15,13 @@ class HandleRequests extends Mechanism
 
     function boot()
     {
-        // Only set it if another provider or routes file haven't already set it....
-        app()->booted(function () {
-            // Check both instance state and router to handle cached routes scenario.
-            // When routes are cached and loaded, $this->updateRoute will be null but
-            // the route already exists in the router. This prevents duplicate registration
-            // which Laravel v12.29.0+ treats as an error.
-            if (! $this->updateRoute && ! $this->updateRouteExists()) {
-                app($this::class)->setUpdateRoute(function ($handle) {
-                    return Route::post('/livewire/update', $handle)->middleware('web');
-                });
-            }
-        });
+        // Register the default route immediately (before routes files load)
+        // so it's positioned before any catch-all routes.
+        if (! $this->updateRoute && ! $this->updateRouteExists()) {
+            Route::post('/livewire/update', [self::class, 'handleUpdate'])
+                ->middleware('web')
+                ->name('default.livewire.update');
+        }
 
         $this->skipRequestPayloadTamperingMiddleware();
     }
@@ -53,13 +48,23 @@ class HandleRequests extends Mechanism
         // Find the route with name ending in 'livewire.update'.
         // Custom routes can have prefixes (e.g., 'tenant.livewire.update')
         // so we check for routes ending with 'livewire.update', not just exact matches.
+        // Prioritise custom routes over the default route.
+        $defaultRoute = null;
+
         foreach (Route::getRoutes()->getRoutes() as $route) {
             if (str($route->getName())->endsWith('livewire.update')) {
+                // If it's the default route, save it but keep looking for a custom one
+                if ($route->getName() === 'default.livewire.update') {
+                    $defaultRoute = $route;
+                    continue;
+                }
+
+                // Found a custom route, return it immediately
                 return $route;
             }
         }
 
-        return null;
+        return $defaultRoute;
     }
 
     function skipRequestPayloadTamperingMiddleware()
