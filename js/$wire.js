@@ -67,6 +67,12 @@ export function generateWireObject(component, state) {
                 return getProperty(component, property)
             } else if (property in state) {
                 return state[property]
+            } else if (property === 'toJSON') {
+                // Tools like Laravel Boost call JSON.stringify() on objects
+                // (e.g. for browser console logging). Without this, the Proxy
+                // fallback would send "toJSON" as a server-side method call,
+                // throwing a MethodNotFoundException.
+                return () => component.toJSON()
             } else if (! ['then'].includes(property)) {
                 return getFallback(component)(property)
             }
