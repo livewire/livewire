@@ -5,7 +5,7 @@ import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
-import { fireAction, interceptComponentAction, interceptComponentMessage, interceptComponentRequest } from '@/request'
+import { fireAction, setNextActionMetadata, interceptComponentAction, interceptComponentMessage, interceptComponentRequest } from '@/request'
 import { getErrorsObject } from '@/features/supportErrors'
 import { findRefEl } from '@/features/supportRefs'
 import { checkDirty } from './directives/wire-dirty'
@@ -241,10 +241,10 @@ wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
 })
 
-wireProperty('$island', (component) => async (name, options = {}) => {
-    return fireAction(component, '$refresh', [], {
-        island: { name, ...options },
-    })
+wireProperty('$island', (component) => (name, options = {}) => {
+    setNextActionMetadata({ island: { name, ...options } })
+
+    return component.$wire
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {

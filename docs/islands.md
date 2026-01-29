@@ -293,6 +293,68 @@ You can use `wire:poll` within an island to refresh just that island on an inter
 
 The polling is scoped to the island — only the island will refresh every 3 seconds, not the entire component.
 
+## Triggering islands from JavaScript
+
+You can trigger island updates from Alpine or JavaScript using `$wire.$island()`. This returns a `$wire`-like object where any method you call will only re-render the named island:
+
+```blade
+<?php // resources/views/components/⚡activity-feed.blade.php
+
+use Livewire\Attributes\Computed;
+use Livewire\Component;
+use App\Models\Activity;
+
+new class extends Component {
+    public $page = 1;
+
+    public function loadMore()
+    {
+        $this->page++;
+    }
+
+    #[Computed]
+    public function activities()
+    {
+        return Activity::latest()
+            ->forPage($this->page, 10)
+            ->get();
+    }
+};
+?>
+
+<div>
+    @island(name: 'feed')
+        @foreach ($this->activities as $activity)
+            <x-activity-item wire:key="{{ $activity->id }}" :activity="$activity" />
+        @endforeach
+    @endisland
+
+    <button type="button" x-on:click="$wire.$island('feed').loadMore()">
+        Load more
+    </button>
+</div>
+```
+
+This is equivalent to using `wire:click="loadMore" wire:island="feed"`, but gives you the flexibility of Alpine expressions and JavaScript logic.
+
+### Append and prepend from JavaScript
+
+To use append or prepend mode, pass a `mode` option:
+
+```blade
+<button type="button" x-on:click="$wire.$island('feed', { mode: 'append' }).loadMore()">
+    Load more
+</button>
+```
+
+### Refreshing an island from JavaScript
+
+To refresh an island without calling a specific method, use `$refresh()`:
+
+```js
+$wire.$island('revenue').$refresh()
+```
+
 ## Considerations
 
 While islands provide powerful isolation, keep in mind:
