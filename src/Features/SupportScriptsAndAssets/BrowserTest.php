@@ -372,4 +372,27 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertDontSeeIn('@output', 'evaluated')
         ;
     }
+
+    public function test_scripts_with_comments_before_let_declarations_work()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public function render() { return <<<'HTML'
+            <div>
+                <div dusk="output"></div>
+            </div>
+
+            @script
+                <script>
+                    // This comment before let used to cause a syntax error
+                    let message = 'success'
+
+                    document.querySelector('[dusk="output"]').textContent = message
+                </script>
+            @endscript
+            HTML; }
+        })
+            ->waitForText('success')
+            ->assertSeeIn('@output', 'success')
+        ;
+    }
 }
