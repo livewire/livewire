@@ -791,8 +791,9 @@ let $wire = {
     // Usage: Alpine.$watch('count', (value, old) => { ... })
     $watch(name, callback) { ... },
 
-    // Return a $wire-like object scoped to an island...
-    // Any method called on it will only re-render the named island.
+    // Scope the next action to a named island...
+    // Returns $wire so you can chain any method call.
+    // The chained action will only re-render the named island.
     // Usage: $wire.$island('revenue').$refresh()
     // Usage: $wire.$island('feed', { mode: 'append' }).loadMore()
     $island(name, options = {}) { ... },

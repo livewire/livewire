@@ -295,51 +295,17 @@ The polling is scoped to the island — only the island will refresh every 3 sec
 
 ## Triggering islands from JavaScript
 
-You can trigger island updates from Alpine or JavaScript using `$wire.$island()`. This returns a `$wire`-like object where any method you call will only re-render the named island:
+The `wire:island` directive only works alongside Livewire action directives like `wire:click`. To scope an action to an island from Alpine or JavaScript, use `$wire.$island()`:
 
 ```blade
-<?php // resources/views/components/⚡activity-feed.blade.php
-
-use Livewire\Attributes\Computed;
-use Livewire\Component;
-use App\Models\Activity;
-
-new class extends Component {
-    public $page = 1;
-
-    public function loadMore()
-    {
-        $this->page++;
-    }
-
-    #[Computed]
-    public function activities()
-    {
-        return Activity::latest()
-            ->forPage($this->page, 10)
-            ->get();
-    }
-};
-?>
-
-<div>
-    @island(name: 'feed')
-        @foreach ($this->activities as $activity)
-            <x-activity-item wire:key="{{ $activity->id }}" :activity="$activity" />
-        @endforeach
-    @endisland
-
-    <button type="button" x-on:click="$wire.$island('feed').loadMore()">
-        Load more
-    </button>
-</div>
+<button type="button" x-on:click="$wire.$island('feed').loadMore()">
+    Load more
+</button>
 ```
 
-This is equivalent to using `wire:click="loadMore" wire:island="feed"`, but gives you the flexibility of Alpine expressions and JavaScript logic.
+This is equivalent to `wire:click="loadMore" wire:island="feed"`, but gives you the flexibility of Alpine expressions and JavaScript logic.
 
-### Append and prepend from JavaScript
-
-To use append or prepend mode, pass a `mode` option:
+Append and prepend modes are supported via an options parameter:
 
 ```blade
 <button type="button" x-on:click="$wire.$island('feed', { mode: 'append' }).loadMore()">
@@ -347,12 +313,12 @@ To use append or prepend mode, pass a `mode` option:
 </button>
 ```
 
-### Refreshing an island from JavaScript
+Any `$wire` method works with `$island()`, including `$refresh()`, `$set()`, and `$toggle()`:
 
-To refresh an island without calling a specific method, use `$refresh()`:
-
-```js
-$wire.$island('revenue').$refresh()
+```blade
+<button type="button" x-on:click="$wire.$island('revenue').$refresh()">
+    Refresh revenue
+</button>
 ```
 
 ## Considerations
