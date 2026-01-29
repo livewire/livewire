@@ -52,9 +52,25 @@ on('effect', ({ component, effects }) => {
             let module = preloadedModules.get(path)
 
             module.run.call(component.$wire, component.$wire, component.$wire.js)
-
-            preloadedModules.delete(path)
         } else {
+            let el = component.el
+
+            // Temporarily hide x-data from Alpine so it doesn't evaluate
+            // before the module has loaded and registered Alpine.data()...
+            let xData = el.getAttribute('x-data')
+
+            if (xData) {
+                el.removeAttribute('x-data')
+                el._deferredXData = xData
+            }
+
+            // Prevent Alpine from setting a marker on this element
+            // so we can re-initialise it after the module loads...
+            el._x_ignore = true
+
+            // Signal the interceptor to skip walking children...
+            el.__deferAlpine = true
+
             pendingComponentAssets.set(component, Alpine.reactive({
                 loading: true,
                 afterLoaded: [],
@@ -67,7 +83,16 @@ on('effect', ({ component, effects }) => {
                 pendingComponentAssets.get(component).afterLoaded.forEach(callback => callback())
                 pendingComponentAssets.delete(component)
 
-                Alpine.initTree(component.el)
+                // Restore x-data and allow Alpine to process the element...
+                if (el._deferredXData !== undefined) {
+                    el.setAttribute('x-data', el._deferredXData)
+                    delete el._deferredXData
+                }
+
+                delete el._x_ignore
+                delete el.__deferAlpine
+
+                Alpine.initTree(el)
             });
         }
     }

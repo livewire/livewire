@@ -57,7 +57,7 @@ export async function start() {
     })
 
     Alpine.interceptInit(
-        Alpine.skipDuringClone(el => {
+        Alpine.skipDuringClone((el, skip) => {
             // if there are no "wire:" directives we don't need to process this element any further.
             // This prevents Livewire from causing general slowness for other Alpine elements on the page...
             if (! Array.from(el.attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return
@@ -68,6 +68,12 @@ export async function start() {
                 Alpine.onAttributeRemoved(el, 'wire:id', () => {
                     destroyComponent(component.id)
                 })
+
+                // If the component has a script module that hasn't been pre-loaded,
+                // skip walking children until the module loads and Alpine.data() is registered...
+                if (el.__deferAlpine) {
+                    skip()
+                }
             }
 
             let directives = Array.from(el.getAttributeNames())
