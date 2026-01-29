@@ -293,6 +293,34 @@ You can use `wire:poll` within an island to refresh just that island on an inter
 
 The polling is scoped to the island — only the island will refresh every 3 seconds, not the entire component.
 
+## Triggering islands from JavaScript
+
+The `wire:island` directive only works alongside Livewire action directives like `wire:click`. To scope an action to an island from Alpine or JavaScript, use `$wire.$island()`:
+
+```blade
+<button type="button" x-on:click="$wire.$island('feed').loadMore()">
+    Load more
+</button>
+```
+
+This is equivalent to `wire:click="loadMore" wire:island="feed"`, but gives you the flexibility of Alpine expressions and JavaScript logic.
+
+Append and prepend modes are supported via an options parameter:
+
+```blade
+<button type="button" x-on:click="$wire.$island('feed', { mode: 'append' }).loadMore()">
+    Load more
+</button>
+```
+
+Any `$wire` method works with `$island()`, including `$refresh()`, `$set()`, and `$toggle()`:
+
+```blade
+<button type="button" x-on:click="$wire.$island('revenue').$refresh()">
+    Refresh revenue
+</button>
+```
+
 ## Considerations
 
 While islands provide powerful isolation, keep in mind:
