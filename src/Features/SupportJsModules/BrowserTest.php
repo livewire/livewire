@@ -25,4 +25,15 @@ class BrowserTest extends \Tests\BrowserTestCase
             // If the JS loaded correctly, it will have set the text to 'js-loaded'
             ->assertSeeIn('@target', 'js-loaded');
     }
+
+    public function test_alpine_data_works_in_single_file_component_script()
+    {
+        // This tests that Alpine.data() registrations inside SFC <script> tags
+        // work correctly. The script module is pre-loaded before Alpine starts,
+        // so Alpine.data() is registered before x-data attributes are evaluated.
+        // Regression test for: https://github.com/livewire/livewire/discussions/9591
+        Livewire::visit('testns::alpine-data.index')
+            ->waitForLivewireToLoad()
+            ->assertSeeIn('@target', 'alpine-data-loaded');
+    }
 }

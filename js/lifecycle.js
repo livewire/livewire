@@ -14,8 +14,9 @@ import morph from '@alpinejs/morph'
 import mask from '@alpinejs/mask'
 import Alpine from 'alpinejs'
 import { dispatch } from './utils'
+import { preloadExistingModules } from './features/supportJsModules'
 
-export function start() {
+export async function start() {
     setTimeout(() => ensureLivewireScriptIsntMisplaced())
 
     dispatch(document, 'livewire:init')
@@ -108,6 +109,8 @@ export function start() {
             })
         })
     )
+
+    await preloadExistingModules()
 
     Alpine.start()
 
