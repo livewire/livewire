@@ -301,6 +301,19 @@ export class Component {
         return this.jsActions
     }
 
+    // Called by JSON.stringify() on both $wire (via the Proxy) and the
+    // Component instance directly. Without this, stringifying a Component
+    // throws a circular reference error (el <-> component). Tools like
+    // Laravel Boost trigger this when logging objects to the browser console.
+    toJSON() {
+        return {
+            id: this.id,
+            name: this.name,
+            key: this.key,
+            data: Object.fromEntries(Object.entries(this.ephemeral)),
+        }
+    }
+
     addCleanup(cleanup) {
         this.cleanups.push(cleanup)
     }
