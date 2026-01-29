@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportJsModules;
 
+use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -34,6 +35,32 @@ class BrowserTest extends \Tests\BrowserTestCase
         // Regression test for: https://github.com/livewire/livewire/discussions/9591
         Livewire::visit('testns::alpine-data.index')
             ->waitForLivewireToLoad()
-            ->assertSeeIn('@target', 'alpine-data-loaded');
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_works_in_dynamically_added_component()
+    {
+        Livewire::visit([new class extends Component {
+            public $show = false;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="$toggle('show')" dusk="toggle">Toggle</button>
+
+                    @if ($show)
+                        <livewire:testns::alpine-data.index />
+                    @endif
+                </div>
+                HTML;
+            }
+        }])
+            ->assertDontSee('alpine-data-loaded')
+            ->waitForLivewire()->click('@toggle')
+            ->pause(500)
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
     }
 }
