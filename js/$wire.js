@@ -242,7 +242,7 @@ wireProperty('$call', (component) => async (method, ...params) => {
 })
 
 wireProperty('$island', (component) => (name, options = {}) => {
-    setNextActionMetadata({ island: { name, ...options } })
+    setNextActionMetadata({ island: { name, mode: 'morph', ...options } })
 
     return component.$wire
 })
