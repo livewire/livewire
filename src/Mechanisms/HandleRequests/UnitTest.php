@@ -54,6 +54,21 @@ class UnitTest extends TestCase
         $this->assertCount(1, $livewireUpdateRoutes);
     }
 
+    public function test_catch_all_route_does_not_intercept_livewire_update_requests(): void
+    {
+        // Register a catch-all route (simulating what happens in routes files)
+        Route::any('{all?}', function () {
+            return 'catch-all';
+        })->where('all', '.*');
+
+        // Livewire's update route should still be matched
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->post('/livewire/update', ['components' => []]);
+
+        $response->assertOk();
+        $this->assertArrayHasKey('components', $response->json());
+    }
+
     public function test_get_update_uri_works_when_update_route_property_is_null(): void
     {
         // Simulate the cached routes scenario where routes are loaded from cache
