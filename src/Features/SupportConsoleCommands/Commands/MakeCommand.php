@@ -230,6 +230,7 @@ class MakeCommand extends Command
         $viewPath = $directory . '/' . $componentName . '.blade.php';
         $testPath = $directory . '/' . $componentName . '.test.php';
         $jsPath = $directory . '/' . $componentName . '.js';
+        $cssPath = $directory . '/' . $componentName . '.css';
 
         // Check if we're upgrading from a single-file component
         $sfcPath = $this->finder->resolveSingleFileComponentPathForCreation($name);
@@ -271,6 +272,11 @@ class MakeCommand extends Command
 
         if ($this->option('js') || config('livewire.make_command.with.js')) {
             $this->files->put($jsPath, $jsContent);
+        }
+
+        if ($this->option('css') || config('livewire.make_command.with.css')) {
+            $cssContent = $this->buildMultiFileComponentCss();
+            $this->files->put($cssPath, $cssContent);
         }
 
         $this->components->info(sprintf('Livewire component [%s] created successfully.', $directory));
@@ -376,6 +382,11 @@ class MakeCommand extends Command
     protected function buildMultiFileComponentJs(): string
     {
         return $this->files->get($this->getStubPath('livewire-mfc-js.stub'));
+    }
+
+    protected function buildMultiFileComponentCss(): string
+    {
+        return $this->files->get($this->getStubPath('livewire-mfc-css.stub'));
     }
 
     protected function getSingleFileComponentTestPath(string $sfcPath): string
@@ -580,6 +591,7 @@ class MakeCommand extends Command
             ['test', null, InputOption::VALUE_NONE, 'Create a test file'],
             ['emoji', null, InputOption::VALUE_REQUIRED, 'Use emoji in file/directory names (true or false)'],
             ['js', null, InputOption::VALUE_NONE, 'Create a JavaScript file for multi-file components'],
+            ['css', null, InputOption::VALUE_NONE, 'Create CSS files for multi-file components'],
         ];
     }
 }
