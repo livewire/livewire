@@ -856,8 +856,16 @@
   var flushing = false;
   var queue = [];
   var lastFlushedIndex = -1;
+  var transactionActive = false;
   function scheduler(callback) {
     queueJob(callback);
+  }
+  function startTransaction() {
+    transactionActive = true;
+  }
+  function commitTransaction() {
+    transactionActive = false;
+    queueFlush();
   }
   function queueJob(job) {
     if (!queue.includes(job))
@@ -871,6 +879,8 @@
   }
   function queueFlush() {
     if (!flushing && !flushPending) {
+      if (transactionActive)
+        return;
       flushPending = true;
       queueMicrotask(flushJobs);
     }
@@ -952,6 +962,15 @@
       firstTime = false;
     });
     return () => release(effectReference);
+  }
+  async function transaction(callback) {
+    startTransaction();
+    try {
+      await callback();
+      await Promise.resolve();
+    } finally {
+      commitTransaction();
+    }
   }
   var onAttributeAddeds = [];
   var onElRemoveds = [];
@@ -2505,7 +2524,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.15.5",
+    get transaction() {
+      return transaction;
+    },
+    version: "3.15.6",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -5227,8 +5249,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         callback({
           message,
           compileRequest: (messages2) => {
-            if (Array.from(requests).some((request2) => Array.from(request2.messages).some((message2) => messages2.includes(message2)))) {
-              throw new Error("A request already contains one of the messages in this array");
+            let existingRequest = Array.from(requests).find(
+              (request2) => messages2.some((message2) => request2.messages.has(message2))
+            );
+            if (existingRequest) {
+              messages2.forEach((message2) => {
+                if (!existingRequest.messages.has(message2)) {
+                  existingRequest.addMessage(message2);
+                }
+              });
+              return existingRequest;
             }
             let request = new MessageRequest();
             messages2.forEach((message2) => request.addMessage(message2));
@@ -5393,30 +5423,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 message.invokeOnSuccess();
                 if (message.isCancelled())
                   return;
-                message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates);
-                message.invokeOnSync();
-                if (message.isCancelled())
-                  return;
-                message.component.processEffects(effects, request);
-                message.invokeOnEffect();
-                if (message.isCancelled())
-                  return;
-                queueMicrotask(() => {
+                Alpine.transaction(async () => {
+                  message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates);
+                  message.invokeOnSync();
                   if (message.isCancelled())
                     return;
-                  message.invokeOnMorph().finally(() => {
-                    if (!message.isCancelled()) {
-                      message.resolveActionPromises(
-                        message.pendingReturns,
-                        message.pendingReturnsMeta
-                      );
-                      message.invokeOnFinish();
-                    }
-                    requestAnimationFrame(() => {
-                      if (message.isCancelled())
-                        return;
-                      message.invokeOnRender();
-                    });
+                  message.component.processEffects(effects, request);
+                  message.invokeOnEffect();
+                  if (message.isCancelled())
+                    return;
+                  await message.invokeOnMorph();
+                }).then(() => {
+                  if (!message.isCancelled()) {
+                    message.resolveActionPromises(
+                      message.pendingReturns,
+                      message.pendingReturnsMeta
+                    );
+                    message.invokeOnFinish();
+                  }
+                  requestAnimationFrame(() => {
+                    if (message.isCancelled())
+                      return;
+                    message.invokeOnRender();
                   });
                 });
               }
@@ -5938,6 +5966,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "interceptRequest": "$interceptRequest",
     "dispatchTo": "$dispatchTo",
     "dispatchSelf": "$dispatchSelf",
+    "dispatchEl": "$dispatchEl",
+    "dispatchRef": "$dispatchRef",
     "removeUpload": "$removeUpload",
     "cancelUpload": "$cancelUpload",
     "uploadMultiple": "$uploadMultiple"
@@ -5954,6 +5984,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return getProperty(component, property);
         } else if (property in state) {
           return state[property];
+        } else if (property === "toJSON") {
+          return () => component.toJSON();
         } else if (!["then"].includes(property)) {
           return getFallback(component)(property);
         }
@@ -6076,10 +6108,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
   });
-  wireProperty("$island", (component) => async (name, options = {}) => {
-    return fireAction(component, "$refresh", [], {
-      island: { name, ...options }
-    });
+  wireProperty("$island", (component) => (name, options = {}) => {
+    setNextActionMetadata({ island: { name, mode: "morph", ...options } });
+    return component.$wire;
   });
   wireProperty("$entangle", (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live);
@@ -6120,6 +6151,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$dispatch", (component) => (...params) => dispatch3(component, ...params));
   wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
   wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
+  wireProperty("$dispatchEl", (component) => (...params) => dispatchEl(component, ...params));
+  wireProperty("$dispatchRef", (component) => (...params) => dispatchRef(component, ...params));
   wireProperty("$upload", (component) => (...params) => upload(component, ...params));
   wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
   wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
@@ -6340,6 +6373,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     getJsActions() {
       return this.jsActions;
+    }
+    toJSON() {
+      return {
+        id: this.id,
+        name: this.name,
+        key: this.key,
+        data: Object.fromEntries(Object.entries(this.ephemeral))
+      };
     }
     addCleanup(cleanup2) {
       this.cleanups.push(cleanup2);
@@ -13243,6 +13284,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       Object.entries(scripts).forEach(([key, content]) => {
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
           let scriptContent = extractScriptTagContent(content);
+          scriptContent = scriptContent.includes("await") ? `(async()=>{ ${scriptContent} })()` : `(()=>{ ${scriptContent} })()`;
           module_default.dontAutoEvaluateFunctions(() => {
             evaluateExpression(component.el, scriptContent, {
               context: component.$wire,
@@ -14549,8 +14591,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       ephemeralModifiers = ephemeralModifiers.filter((m) => m !== "lazy");
       networkModifiers.push("change");
     }
-    if (!(ephemeralModifiers.includes("self") || networkModifiers.includes("self")) && !(ephemeralModifiers.includes("deep") || networkModifiers.includes("deep"))) {
-      ephemeralModifiers.push("self");
+    if (!(ephemeralModifiers.includes("deep") || networkModifiers.includes("deep"))) {
+      if (!ephemeralModifiers.includes("self")) {
+        ephemeralModifiers.push("self");
+      }
     }
     let ephemeralOnBlur = ephemeralModifiers.includes("blur");
     let ephemeralOnChange = ephemeralModifiers.includes("change") || ephemeralModifiers.includes("lazy");
