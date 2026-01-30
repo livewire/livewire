@@ -34,6 +34,24 @@ class FormObjectSynth extends Synth {
             throw new \Exception('Livewire: Invalid form object class.');
         }
 
+        // If the form object already exists on the component (e.g. during a
+        // consolidated property update where the entire form is sent as one
+        // update), reuse it. Creating a new instance would discard the booted
+        // #[Validate] attribute state that was set up during hydration.
+        $existing = data_get($this->context->component, $this->path);
+
+        if ($existing instanceof Form && $existing instanceof $meta['class']) {
+            foreach ($data as $key => $child) {
+                if ($child === null && Utils::propertyIsTypedAndUninitialized($existing, $key)) {
+                    continue;
+                }
+
+                $existing->$key = $hydrateChild($key, $child);
+            }
+
+            return $existing;
+        }
+
         $form = new $meta['class']($this->context->component, $this->path);
 
         $callBootMethod = static::bootFormObject($this->context->component, $form, $this->path);
