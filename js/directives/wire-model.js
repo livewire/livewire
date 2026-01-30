@@ -3,7 +3,6 @@ import { handleFileUpload } from '@/features/supportFileUploads'
 import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import { setNextActionMetadata, setNextActionOrigin } from '@/request'
-import { registerBlurElement } from '@/blur'
 import Alpine from 'alpinejs'
 
 directive('model', ({ el, directive, component, cleanup }) => {
@@ -59,10 +58,6 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let ephemeralOnChange = ephemeralModifiers.includes('change') || ephemeralModifiers.includes('lazy')
     let ephemeralOnEnter = ephemeralModifiers.includes('enter')
     let hasEphemeralTriggers = ephemeralOnBlur || ephemeralOnChange || ephemeralOnEnter
-
-    if (ephemeralOnBlur) {
-        registerBlurElement(component, el)
-    }
 
     // Extract network trigger modifiers
     let networkOnBlur = networkModifiers.includes('blur')
