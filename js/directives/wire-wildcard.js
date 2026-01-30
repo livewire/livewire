@@ -1,4 +1,5 @@
 import { callAndClearComponentDebounces } from '@/debounce'
+import { syncBlurElements } from '@/blur'
 import { customDirectiveHasBeenRegistered } from '@/directives'
 import { on } from '@/hooks'
 import { setNextActionOrigin, setNextActionInterceptor } from '@/request'
@@ -42,7 +43,7 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
             directive.wire = component.$wire
 
             let execute = () => {
-                callAndClearComponentDebounces(component, () => {
+                callAndClearPendingModelUpdates(component, () => {
                     // For wire:submit, apply data-loading to the submit button, not the form
                     if (directive.value === 'submit') {
                         let submitButton = e.submitter || el.querySelector('button[type="submit"], input[type="submit"]')
@@ -90,3 +91,8 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
 
     cleanup(cleanupBinding)
 })
+
+function callAndClearPendingModelUpdates(component, callback) {
+    syncBlurElements(component)
+    callAndClearComponentDebounces(component, callback)
+}
