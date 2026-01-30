@@ -421,35 +421,35 @@ function sendMessages() {
                             message.invokeOnSuccess()
                             if (message.isCancelled()) return
 
-                            message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
+                            // Use Alpine.transaction to batch data updates and DOM morphing
+                            // This prevents effects from firing before the morph cleanup runs
+                            Alpine.transaction(async () => {
+                                message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
 
-                            message.invokeOnSync()
-                            if (message.isCancelled()) return
-
-                            // Trigger any side effects from the payload like "morph" and "dispatch event"...
-                            message.component.processEffects(effects, request)
-
-                            message.invokeOnEffect()
-                            if (message.isCancelled()) return
-
-                            queueMicrotask(() => {
+                                message.invokeOnSync()
                                 if (message.isCancelled()) return
 
-                                message.invokeOnMorph().finally(() => {
-                                    // Resolve promises & finish AFTER morph completes
-                                    if (! message.isCancelled()) {
-                                        message.resolveActionPromises(
-                                            message.pendingReturns,
-                                            message.pendingReturnsMeta
-                                        )
-                                        message.invokeOnFinish()
-                                    }
+                                // Trigger any side effects from the payload like "morph" and "dispatch event"...
+                                message.component.processEffects(effects, request)
 
-                                    requestAnimationFrame(() => {
-                                        if (message.isCancelled()) return
+                                message.invokeOnEffect()
+                                if (message.isCancelled()) return
 
-                                        message.invokeOnRender()
-                                    })
+                                await message.invokeOnMorph()
+                            }).then(() => {
+                                // Resolve promises & finish AFTER morph completes
+                                if (! message.isCancelled()) {
+                                    message.resolveActionPromises(
+                                        message.pendingReturns,
+                                        message.pendingReturnsMeta
+                                    )
+                                    message.invokeOnFinish()
+                                }
+
+                                requestAnimationFrame(() => {
+                                    if (message.isCancelled()) return
+
+                                    message.invokeOnRender()
                                 })
                             })
                         }
