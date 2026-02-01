@@ -138,6 +138,6 @@ class UnitTest extends \Tests\TestCase
         ])->test(new class extends TestComponent {
             #[BaseUrl(strict: false)]
             public string $test = '';
-        })->assertStatus(200)->assertHasError('test');
+        })->assertStatus(200)->assertHasErrors('test');
     }
 }
