@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportQueryString;
 
+use Illuminate\Support\Facades\Validator;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportFormObjects\Form;
 use ReflectionClass;
@@ -9,17 +10,20 @@ use ReflectionClass;
 #[\Attribute]
 class BaseUrl extends LivewireAttribute
 {
+    protected $type = null;
     public function __construct(
         public $as = null,
         public $history = false,
         public $keep = false,
         public $except = null,
         public $nullable = null,
+        public $strict  = true
     ) {}
 
     public function mount()
     {
         $this->nullable = $this->determineNullability();
+        $this->type = $this->determineType();
 
         $this->setPropertyFromQueryString();
     }
@@ -47,7 +51,10 @@ class BaseUrl extends LivewireAttribute
 
         return false;
     }
-
+    protected function determineType(){
+        $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
+        return $reflectionClass->getProperty($this->getSubName())->getType();
+    }
     public function setPropertyFromQueryString()
     {
         if ($this->as === null && $this->isOnFormObjectProperty()) {
@@ -78,6 +85,14 @@ class BaseUrl extends LivewireAttribute
             $value = $decoded === null ? $initialValue : $decoded;
         }
 
+        // Check if the value is compatible with the property type strictly
+        if ($this->strict && $this->type !== gettype($value)) {
+            abort(400);
+        }
+        // Validate the type compatibility non-strictly
+        if (!$this->strict){
+            Validator::make([$this->getSubName()=>$value],[$this->getSubName()=>(string)$this->type])->validate();
+        }
         $this->setValue($value, $this->nullable);
     }
 

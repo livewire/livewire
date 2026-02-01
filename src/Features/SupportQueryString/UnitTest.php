@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportQueryString;
 
+use HttpException;
 use Livewire\Livewire;
 use Tests\TestComponent;
 
@@ -122,5 +123,21 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame($largeNumber, $component->instance()->filters['id']);
         $this->assertSame('active', $component->instance()->filters['status']);
+    }
+
+    function test_it_can_check_value_type(){
+        Livewire::withQueryParams([
+            'test'=>['fake']
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string $test = '';
+        })->assertStatus(400);
+
+        Livewire::withQueryParams([
+            'test'=>['fake']
+        ])->test(new class extends TestComponent {
+            #[BaseUrl(strict: false)]
+            public string $test = '';
+        })->assertStatus(200)->assertHasError('test');
     }
 }
