@@ -1,5 +1,11 @@
 import { getCsrfToken } from '@/utils';
 
+let uploadInterceptors = []
+
+export function interceptUpload(callback) {
+    uploadInterceptors.push(callback)
+}
+
 let uploadManagers = new WeakMap
 
 function getUploadManager(component) {
@@ -157,6 +163,11 @@ class UploadManager {
 
         if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken
 
+
+        let payload = { url, headers }
+        uploadInterceptors.forEach(callback => callback(payload))
+        url = payload.url
+        headers = payload.headers
         this.makeRequest(name, formData, 'post', url, headers, response => {
             return response.paths
         })

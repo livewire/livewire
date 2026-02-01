@@ -12,6 +12,7 @@ use Livewire\Features\SupportTesting\Testable;
 use Livewire\Features\SupportTesting\DuskTestable;
 use Livewire\Features\SupportLazyLoading\SupportLazyLoading;
 use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
+use Livewire\Features\SupportFileUploads\SupportFileUploads;
 
 class LivewireManager
 {
@@ -158,6 +159,16 @@ class LivewireManager
     function setUpdateRoute($callback)
     {
         return app(HandleRequests::class)->setUpdateRoute($callback);
+    }
+
+    function setUploadRoute($callback)
+    {
+        return SupportFileUploads::setUploadRoute($callback);
+    }
+
+    function setPreviewRoute($callback)
+    {
+        return SupportFileUploads::setPreviewRoute($callback);
     }
 
     function getUriPrefix()
