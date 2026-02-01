@@ -93,9 +93,7 @@ class BaseUrl extends LivewireAttribute
         if (!$this->strict){
             $validator = Validator::make([$this->getSubName()=>$value],[$this->getSubName()=>(string)$this->type]);
             if ($validator->fails()) {
-                session()->flash('errors', new \Illuminate\Support\MessageBag([
-                    $this->getSubName() => ['The value type must be '.$this->type]
-                ]) );
+                $this->component->addError($this->getSubName(),'The value type is not compatible.');
                 return;
             }
         }
