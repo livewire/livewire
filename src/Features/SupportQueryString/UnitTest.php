@@ -123,4 +123,42 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame($largeNumber, $component->instance()->filters['id']);
         $this->assertSame('active', $component->instance()->filters['status']);
     }
+
+    function test_scientific_notation_strings_are_preserved_from_query_string()
+    {
+        $component = Livewire::withQueryParams([
+            'filter' => '123456e7890',
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string $filter = '';
+        });
+
+        $this->assertSame('123456e7890', $component->instance()->filter);
+    }
+
+    function test_negative_scientific_notation_strings_are_preserved_from_query_string()
+    {
+        $component = Livewire::withQueryParams([
+            'filter' => '-123456e7890',
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string $filter = '';
+        });
+
+        $this->assertSame('-123456e7890', $component->instance()->filter);
+    }
+
+    function test_small_scientific_notation_values_still_decode_correctly()
+    {
+        $component = Livewire::withQueryParams([
+            'value' => '1e2',
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public $value;
+        });
+
+        // Small scientific notation values are valid JSON numbers
+        // and should decode normally (1e2 = 100.0)...
+        $this->assertSame(100.0, $component->instance()->value);
+    }
 }
