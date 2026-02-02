@@ -47,14 +47,27 @@ class UnitTest extends TestCase
         $newHandleRequests = new HandleRequests();
         $newHandleRequests->boot();
 
-        // Manually trigger the booted callback since we're already past the boot phase
-        app()->booted(function () {});
-
         // Verify that still only one livewire.update route exists (no duplicate)
+        // The updateRouteExists() check in boot() prevents duplicate registration
         $livewireUpdateRoutes = collect(Route::getRoutes()->getRoutes())->filter(function ($route) {
             return str($route->getName())->endsWith('livewire.update');
         });
         $this->assertCount(1, $livewireUpdateRoutes);
+    }
+
+    public function test_catch_all_route_does_not_intercept_livewire_update_requests(): void
+    {
+        // Register a catch-all route (simulating what happens in routes files)
+        Route::any('{all?}', function () {
+            return 'catch-all';
+        })->where('all', '.*');
+
+        // Livewire's update route should still be matched
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->post(EndpointResolver::updatePath(), ['components' => []]);
+
+        $response->assertOk();
+        $this->assertArrayHasKey('components', $response->json());
     }
 
     public function test_get_update_uri_works_when_update_route_property_is_null(): void
