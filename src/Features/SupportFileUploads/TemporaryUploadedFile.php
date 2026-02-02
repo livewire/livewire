@@ -235,7 +235,9 @@ class TemporaryUploadedFile extends UploadedFile
         if (is_null($this->metaFileData)) {
             $this->metaFileData = [];
 
-            if ($contents = $this->storage->get($this->path.'.json')) {
+            // S3 uploads don't have a meta file — the original filename is
+            // embedded in the file path instead, so skip the lookup entirely.
+            if (! FileUploadConfiguration::isUsingS3() && $contents = $this->storage->get($this->path.'.json')) {
                 $contents = json_decode($contents, true);
 
                 $this->metaFileData = $contents;
