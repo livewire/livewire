@@ -1,4 +1,4 @@
-import { dataSet, deepClone, diff, diffAndConsolidate, extractData} from '@/utils'
+import { dataSet, deepClone, diffAndConsolidate, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
@@ -79,7 +79,7 @@ export class Component {
 
         let newCanonical = extractData(deepClone(snapshot.data))
 
-        let dirty = diff(updatedOldCanonical, newCanonical)
+        let dirty = diffAndConsolidate(updatedOldCanonical, newCanonical)
 
         this.snapshotEncoded = snapshotEncoded
 
@@ -88,8 +88,6 @@ export class Component {
         this.effects = effects
 
         this.canonical = extractData(deepClone(snapshot.data))
-
-        let newData = extractData(deepClone(snapshot.data))
 
         Object.entries(dirty).forEach(([key, value]) => {
             dataSet(this.reactive, key, value)
