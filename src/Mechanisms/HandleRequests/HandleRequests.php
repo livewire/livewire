@@ -18,9 +18,11 @@ class HandleRequests extends Mechanism
         // Register the default route immediately (before routes files load)
         // so it's positioned before any catch-all routes.
         if (! $this->updateRoute && ! $this->updateRouteExists()) {
-            Route::post('/livewire/update', [self::class, 'handleUpdate'])
-                ->middleware('web')
-                ->name('default.livewire.update');
+            app($this::class)->setUpdateRoute(function ($handle) {
+                return Route::post('/livewire/update', $handle)
+                    ->middleware('web')
+                    ->name('default.livewire.update');
+            });
         }
 
         $this->skipRequestPayloadTamperingMiddleware();
