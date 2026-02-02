@@ -125,13 +125,15 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame('active', $component->instance()->filters['status']);
     }
 
-    function test_it_can_check_value_type(){
+    function test_return_400_error_on_invalid_type_input(){
         Livewire::withQueryParams([
             'test'=>['fake']
         ])->test(new class extends TestComponent {
             #[BaseUrl]
             public string $test = '';
         })->assertStatus(400);
+    }
+    function test_return_error_on_invalid_type_input(){
 
         Livewire::withQueryParams([
             'test'=>['fake']
@@ -139,5 +141,15 @@ class UnitTest extends \Tests\TestCase
             #[BaseUrl(strict: false)]
             public string $test = '';
         })->assertStatus(200)->assertHasErrors('test');
+
     }
+    function test_return_no_error_on_nullable_typed_property(){
+        Livewire::withQueryParams([
+            'test'=>null
+        ])->test(new class extends TestComponent {
+            #[BaseUrl(strict:false)]
+            public ?string $test = null;
+        })->assertStatus(200)->assertHasNoErrors();
+    }
+
 }

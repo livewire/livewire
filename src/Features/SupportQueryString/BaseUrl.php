@@ -95,7 +95,11 @@ class BaseUrl extends LivewireAttribute
             }
             // Validate the type compatibility non-strictly
             if (!$this->strict){
-                $validator = Validator::make([$this->getSubName()=>$value],[$this->getSubName()=>(string)$this->type]);
+                $rule = $this->type->getName();
+                if ($this->nullable){
+                    $rule .= '|nullable';
+                }
+                $validator = Validator::make([$this->getSubName()=>$value],[$this->getSubName()=>$rule]);
                 if ($validator->fails()) {
                     $this->component->addError($this->getSubName(),'The value type is not compatible.');
                     return;
