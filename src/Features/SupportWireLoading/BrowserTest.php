@@ -794,7 +794,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // Wait for the island request to start...
             ->pause(10)
             ->assertMissing('@component-loading')
-            ->assertMissing('@component-loading-targeted')
+            ->assertVisible('@component-loading-targeted')
             ->assertMissing('@component-loading-targeted-other')
             ->assertVisible('@island-loading')
             ->assertVisible('@island-loading-targeted')
@@ -1024,6 +1024,98 @@ class BrowserTest extends \Tests\BrowserTestCase
             // The request is scheduled to be cancelled after 200ms, so we pause for a bit longer than that...
             ->pause(300)
             ->assertMissing('@component-loading')
+            ->assertMissing('@island-loading')
+            ;
+    }
+
+    public function test_wire_loading_with_target_outside_island_shows_for_island_scoped_request()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $search = '';
+
+                public function updatedSearch() {
+                    usleep(500 * 1000); // 500ms
+
+                    $this->renderIsland('posts');
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <div wire:loading.block wire:target="search" dusk="outside-loading">Loading...</div>
+                        <input type="text" wire:model.live="search" wire:island="posts" dusk="search-input" />
+
+                        <div>
+                            @island(name: 'posts', always: true)
+                                <div wire:loading.block wire:target="search" dusk="island-loading">Island loading...</div>
+                                <div>Results for: {{ $this->search }}</div>
+                            @endisland
+                        </div>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('@outside-loading')
+            ->assertMissing('@island-loading')
+
+            ->type('@search-input', 'a')
+            // Wait for the debounce (150ms) and the Livewire request to start...
+            ->pause(300)
+            ->assertVisible('@outside-loading')
+            ->assertVisible('@island-loading')
+
+            // Wait for the Livewire request to finish...
+            ->waitUntilMissingText('Loading...')
+
+            ->assertMissing('@outside-loading')
+            ->assertMissing('@island-loading')
+            ;
+    }
+
+    public function test_wire_loading_with_target_inside_island_does_not_show_for_component_scoped_request()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $search = '';
+
+                public function updatedSearch() {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <div wire:loading.block wire:target="search" dusk="outside-loading">Loading...</div>
+                        <input type="text" wire:model.live="search" dusk="search-input" />
+
+                        <div>
+                            @island(name: 'posts', always: true)
+                                <div wire:loading.block wire:target="search" dusk="island-loading">Island loading...</div>
+                                <div>Results for: {{ $this->search }}</div>
+                            @endisland
+                        </div>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('@outside-loading')
+            ->assertMissing('@island-loading')
+
+            ->type('@search-input', 'a')
+            // Wait for the debounce (150ms) and the Livewire request to start...
+            ->pause(300)
+            ->assertVisible('@outside-loading')
+            ->assertMissing('@island-loading')
+
+            // Wait for the Livewire request to finish...
+            ->waitUntilMissingText('Loading...')
+
+            ->assertMissing('@outside-loading')
             ->assertMissing('@island-loading')
             ;
     }

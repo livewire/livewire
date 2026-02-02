@@ -81,8 +81,10 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
             return
         }
 
-        // If no island is found, see if the message has an action for the component and return if not...
-        if (! island && ! message.hasActionForComponent()) {
+        // If no island is found and no explicit targets are set, only show loading
+        // for component-scoped requests. When targets are set, allow loading to
+        // respond to any request (including island-scoped) that matches the target...
+        if (! island && targets.length === 0 && ! message.hasActionForComponent()) {
             return
         }
 
