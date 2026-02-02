@@ -1418,13 +1418,14 @@ var require_module_cjs = __commonJS({
         let value = getter();
         JSON.stringify(value);
         if (!firstTime) {
-          queueMicrotask(() => {
-            callback(value, oldValue);
-            oldValue = value;
-          });
-        } else {
-          oldValue = value;
+          if (typeof value === "object" || value !== oldValue) {
+            let previousValue = oldValue;
+            queueMicrotask(() => {
+              callback(value, previousValue);
+            });
+          }
         }
+        oldValue = value;
         firstTime = false;
       });
       return () => release(effectReference);
@@ -2965,7 +2966,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get transaction() {
         return transaction;
       },
-      version: "3.15.6",
+      version: "3.15.8",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -4104,6 +4105,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         handler4 = wrapHandler(handler4, (next, e) => {
           e.target === el && next(e);
         });
+      if (event === "submit") {
+        handler4 = wrapHandler(handler4, (next, e) => {
+          if (e.target._x_pendingModelUpdates) {
+            e.target._x_pendingModelUpdates.forEach((fn) => fn());
+          }
+          next(e);
+        });
+      }
       if (isKeyEvent(event) || isClickEvent(event)) {
         handler4 = wrapHandler(handler4, (next, e) => {
           if (isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers)) {
@@ -4254,6 +4263,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         if (hasBlurModifier) {
           listeners2.push(on3(el, "blur", modifiers, syncValue));
+          if (el.form) {
+            let syncCallback = () => syncValue({ target: el });
+            if (!el.form._x_pendingModelUpdates)
+              el.form._x_pendingModelUpdates = [];
+            el.form._x_pendingModelUpdates.push(syncCallback);
+            cleanup(() => el.form._x_pendingModelUpdates.splice(el.form._x_pendingModelUpdates.indexOf(syncCallback), 1));
+          }
         }
         if (hasEnterModifier) {
           listeners2.push(on3(el, "keydown", modifiers, (e) => {
@@ -9482,6 +9498,22 @@ function dataSet(object, key, value) {
   }
   dataSet(object[firstSegment], restOfSegments, value);
 }
+function dataDelete(object, key) {
+  let segments = parsePathSegments(key);
+  if (segments.length === 1) {
+    if (Array.isArray(object)) {
+      object.splice(segments[0], 1);
+    } else {
+      delete object[segments[0]];
+    }
+    return;
+  }
+  let firstSegment = segments.shift();
+  let restOfSegments = segments.join(".");
+  if (object[firstSegment] !== void 0) {
+    dataDelete(object[firstSegment], restOfSegments);
+  }
+}
 function diff(left, right, diffs = {}, path = "") {
   if (left === right)
     return diffs;
@@ -11985,9 +12017,24 @@ var Component = class {
     this.effects = effects;
     this.canonical = extractData(deepClone(snapshot.data));
     let newData = extractData(deepClone(snapshot.data));
+    let changes = [];
+    let removals = [];
     Object.entries(dirty).forEach(([key, value]) => {
-      let rootKey = key.split(".")[0];
-      this.reactive[rootKey] = newData[rootKey];
+      if (value === "__rm__") {
+        removals.push(key);
+      } else {
+        changes.push(key);
+      }
+    });
+    changes.forEach((key) => {
+      dataSet(this.reactive, key, dataGet(newData, key));
+    });
+    removals.sort((a, b) => {
+      let aNum = parseInt(a.split(".").pop()) || 0;
+      let bNum = parseInt(b.split(".").pop()) || 0;
+      return bNum - aNum;
+    }).forEach((key) => {
+      dataDelete(this.reactive, key);
     });
     return dirty;
   }
