@@ -14973,12 +14973,14 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [startLoa
   return interceptMessage(({ message, onSend, onSuccess, onFinish }) => {
     if (component !== message.component)
       return;
-    let island = closestIsland(el);
-    if (island && !message.hasActionForIsland(island)) {
-      return;
-    }
-    if (!island && !message.hasActionForComponent()) {
-      return;
+    if (targets.length === 0) {
+      let island = closestIsland(el);
+      if (island && !message.hasActionForIsland(island)) {
+        return;
+      }
+      if (!island && !message.hasActionForComponent()) {
+        return;
+      }
     }
     let matches = true;
     let cleared = false;
