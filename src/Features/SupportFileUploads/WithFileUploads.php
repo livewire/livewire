@@ -90,7 +90,13 @@ trait WithFileUploads
             ? str_ireplace('files', $name, $errorsInJson)
             : str_ireplace('files.0', $name, $errorsInJson);
 
-        $errors = json_decode($errorsInJson, true)['errors'];
+        $decoded = json_decode($errorsInJson, true);
+
+        if (!isset($decoded['errors'])) {
+            return $this->_uploadErrored($name, null, $isMultiple);
+        }
+
+        $errors = $decoded['errors'];
 
         throw (ValidationException::withMessages($errors));
     }

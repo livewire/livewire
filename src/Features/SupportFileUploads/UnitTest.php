@@ -300,6 +300,20 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('The upload failed to upload.', $test->errors()->get('file')[0]);
     }
 
+    public function test_file_upload_error_with_malformed_json_falls_back_to_default_message()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->create('upload.xls', 100);
+
+        $test = Livewire::test(FileUploadComponent::class)
+            ->set('file', $file)
+            ->call('uploadErrorWithMalformedJson', 'file')
+            ->assertHasErrors(['file']);
+
+        $this->assertEquals('The file failed to upload.', $test->errors()->get('file')[0]);
+    }
+
     public function test_image_dimensions_can_be_validated()
     {
         Storage::fake('avatars');
@@ -971,6 +985,13 @@ class FileUploadComponent extends TestComponent
     public function uploadError($name)
     {
         $this->_uploadErrored($name, null, false);
+    }
+
+    public function uploadErrorWithMalformedJson($name)
+    {
+        // Simulate malformed JSON without 'errors' key
+        $malformedJson = '{"message":"Something went wrong"}';
+        $this->_uploadErrored($name, $malformedJson, false);
     }
 }
 
