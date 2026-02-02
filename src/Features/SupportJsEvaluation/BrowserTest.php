@@ -251,6 +251,40 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_can_pass_alpine_scoped_objects_to_js_actions_from_wire_click()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $items = [
+                    ['id' => 1, 'name' => 'first'],
+                    ['id' => 2, 'name' => 'second'],
+                ];
+
+                public function render() {
+                    return <<<'HTML'
+                        <div>
+                            <template x-for="item in $wire.items" :key="item.id">
+                                <button wire:click="$js.select(item)" dusk="select" x-text="item.name"></button>
+                            </template>
+                        </div>
+
+                        @script
+                        <script>
+                            this.$js.select = (item) => {
+                                window.selectedItem = JSON.stringify(item)
+                            }
+                        </script>
+                        @endscript
+                    HTML;
+                }
+            }
+        )
+        ->waitForText('first')
+        ->click('@select')
+        ->assertScript('JSON.parse(window.selectedItem).name === "first"')
+        ;
+    }
+
     public function test_can_call_a_defined_js_action_from_the_backend_using_the_js_method_with_params()
     {
         Livewire::visit(
