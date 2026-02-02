@@ -8848,6 +8848,10 @@ function walkBackwards(el, callback) {
 }
 
 // js/features/supportFileUploads.js
+var uploadInterceptors = [];
+function interceptUpload(callback) {
+  uploadInterceptors.push(callback);
+}
 var uploadManagers = /* @__PURE__ */ new WeakMap();
 function getUploadManager(component) {
   if (!uploadManagers.has(component)) {
@@ -8966,6 +8970,10 @@ var UploadManager = class {
     let csrfToken = getCsrfToken();
     if (csrfToken)
       headers["X-CSRF-TOKEN"] = csrfToken;
+    let payload = { url, headers };
+    uploadInterceptors.forEach((callback) => callback(payload));
+    url = payload.url;
+    headers = payload.headers;
     this.makeRequest(name, formData, "post", url, headers, (response) => {
       return response.paths;
     });
@@ -14570,6 +14578,7 @@ var Livewire2 = {
   interceptAction: (callback) => interceptAction(callback),
   interceptMessage: (callback) => interceptMessage(callback),
   interceptRequest: (callback) => interceptRequest(callback),
+  interceptUpload: (callback) => interceptUpload(callback),
   fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),
   start,
   first,
