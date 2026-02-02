@@ -122,6 +122,29 @@ export function dataSet(object, key, value) {
 }
 
 /**
+ * Delete a property from an object with support for dot-notation and bracket-notation.
+ */
+export function dataDelete(object, key) {
+    let segments = parsePathSegments(key)
+
+    if (segments.length === 1) {
+        if (Array.isArray(object)) {
+            object.splice(segments[0], 1)
+        } else {
+            delete object[segments[0]]
+        }
+        return
+    }
+
+    let firstSegment = segments.shift()
+    let restOfSegments = segments.join('.')
+
+    if (object[firstSegment] !== undefined) {
+        dataDelete(object[firstSegment], restOfSegments)
+    }
+}
+
+/**
  * Create a flat, dot-notated diff of two objects.
  * @deprecated Use diffAndConsolidate instead for smarter update consolidation
  */
