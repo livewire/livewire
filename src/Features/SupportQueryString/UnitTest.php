@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportQueryString;
 
+use HttpException;
 use Livewire\Livewire;
 use Tests\TestComponent;
 
@@ -122,5 +123,59 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame($largeNumber, $component->instance()->filters['id']);
         $this->assertSame('active', $component->instance()->filters['status']);
+    }
+
+    function test_return_400_error_on_invalid_type_input(){
+        Livewire::withQueryParams([
+            'test'=>['fake']
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string $test = '';
+        })->assertStatus(400);
+    }
+    function test_return_error_on_invalid_type_input(){
+
+        Livewire::withQueryParams([
+            'test'=>['fake']
+        ])->test(new class extends TestComponent {
+            #[BaseUrl(strict: false)]
+            public string $test = '';
+        })->assertStatus(200)->assertHasErrors('test');
+
+    }
+    function test_return_no_error_on_nullable_typed_property(){
+        Livewire::withQueryParams([
+            'test'=>null
+        ])->test(new class extends TestComponent {
+            #[BaseUrl(strict:false)]
+            public ?string $test = null;
+        })->assertStatus(200)->assertHasNoErrors();
+    }
+    function test_it_can_handle_union_typed_property()
+    {
+        Livewire::withQueryParams([
+            'test'=>'fake'
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string|int $test = '';
+        })->assertStatus(200)->assertHasNoErrors();
+        Livewire::withQueryParams([
+            'test'=>['fake']
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string|int $test = '';
+        })->assertStatus(400);
+        Livewire::withQueryParams([
+            'test'=>'fake'
+        ])->test(new class extends TestComponent {
+            #[BaseUrl(strict: false)]
+            public string|int $test = '';
+        })->assertStatus(200)->assertHasNoErrors();
+        Livewire::withQueryParams([
+            'test'=>['fake']
+        ])->test(new class extends TestComponent {
+            #[BaseUrl(strict: false)]
+            public string|int $test = '';
+        })->assertStatus(200)->assertHasErrors();
     }
 }

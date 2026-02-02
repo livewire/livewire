@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportQueryString;
 
+use Illuminate\Support\Facades\Validator;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportFormObjects\Form;
 use ReflectionClass;
@@ -9,24 +10,30 @@ use ReflectionClass;
 #[\Attribute]
 class BaseUrl extends LivewireAttribute
 {
+    protected $type = null;
+
     public function __construct(
         public $as = null,
         public $history = false,
         public $keep = false,
         public $except = null,
         public $nullable = null,
-    ) {}
+        public $strict = true
+    )
+    {
+    }
 
     public function mount()
     {
         $this->nullable = $this->determineNullability();
+        $this->type = $this->determineType();
 
         $this->setPropertyFromQueryString();
     }
 
     public function dehydrate($context)
     {
-        if (! $context->mounting) return;
+        if (!$context->mounting) return;
 
         $this->pushQueryStringEffect($context);
     }
@@ -46,6 +53,15 @@ class BaseUrl extends LivewireAttribute
         }
 
         return false;
+    }
+
+    protected function determineType()
+    {
+        $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
+        if ($this->getSubName() && $reflectionClass->hasProperty($this->getSubName())) {
+            return $reflectionClass->getProperty($this->getSubName())?->getType();
+        }
+        return null;
     }
 
     public function setPropertyFromQueryString()
@@ -78,6 +94,33 @@ class BaseUrl extends LivewireAttribute
             $value = $decoded === null ? $initialValue : $decoded;
         }
 
+        // Check if the value is compatible with the property type strictly
+        if ($this->type) {
+            $value_type = gettype($value);
+            if ($value_type === 'array') {
+                $allowed = true;
+                if ($this->type instanceof \ReflectionNamedType && $this->type->getName() !== 'array') {
+                    $allowed = false;
+                }
+                if ($this->type instanceof \ReflectionUnionType) {
+                    $allowed = false;
+                    foreach ($this->type->getTypes() as $type) {
+                        if ($type instanceof \ReflectionNamedType && $type->getName() === 'array') {
+                            $allowed = true;
+                            break;
+                        }
+                    }
+                }
+                if (!$allowed) {
+                    if ($this->strict) {
+                        abort(400);
+                    } else {
+                        $this->component->addError($this->getSubName(), 'The value type is not compatible.');
+                        return;
+                    }
+                }
+            }
+        }
         $this->setValue($value, $this->nullable);
     }
 
@@ -122,7 +165,7 @@ class BaseUrl extends LivewireAttribute
 
     public function getFromUrlQueryString($name, $default = null)
     {
-        if (! app('livewire')->isLivewireRequest()) {
+        if (!app('livewire')->isLivewireRequest()) {
             $value = request()->query($this->urlName(), $default);
 
             // If the property is present in the querystring without a value, then Laravel returns
