@@ -151,5 +151,31 @@ class UnitTest extends \Tests\TestCase
             public ?string $test = null;
         })->assertStatus(200)->assertHasNoErrors();
     }
-
+    function test_it_can_handle_union_typed_property()
+    {
+        Livewire::withQueryParams([
+            'test'=>'fake'
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string|int $test = '';
+        })->assertStatus(200)->assertHasNoErrors();
+        Livewire::withQueryParams([
+            'test'=>['fake']
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string|int $test = '';
+        })->assertStatus(400);
+        Livewire::withQueryParams([
+            'test'=>'fake'
+        ])->test(new class extends TestComponent {
+            #[BaseUrl(strict: false)]
+            public string|int $test = '';
+        })->assertStatus(200)->assertHasNoErrors();
+        Livewire::withQueryParams([
+            'test'=>['fake']
+        ])->test(new class extends TestComponent {
+            #[BaseUrl(strict: false)]
+            public string|int $test = '';
+        })->assertStatus(200)->assertHasErrors();
+    }
 }
