@@ -738,7 +738,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertVisible('@component-loading-targeted')
             ->assertMissing('@component-loading-targeted-other')
             ->assertMissing('@island-loading')
-            ->assertMissing('@island-loading-targeted')
+            ->assertVisible('@island-loading-targeted')
             ->assertMissing('@island-loading-targeted-other')
 
             // Wait for the component request to finish...
@@ -1075,7 +1075,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ;
     }
 
-    public function test_wire_loading_with_target_inside_island_does_not_show_for_component_scoped_request()
+    public function test_wire_loading_with_target_inside_island_shows_for_component_scoped_request()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
@@ -1110,7 +1110,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             // Wait for the debounce (150ms) and the Livewire request to start...
             ->pause(300)
             ->assertVisible('@outside-loading')
-            ->assertMissing('@island-loading')
+            ->assertVisible('@island-loading')
 
             // Wait for the Livewire request to finish...
             ->waitUntilMissingText('Loading...')
