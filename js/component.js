@@ -89,7 +89,19 @@ export class Component {
 
         this.canonical = extractData(deepClone(snapshot.data))
 
+        let newData = extractData(deepClone(snapshot.data))
+
         Object.entries(dirty).forEach(([key, value]) => {
+            let rootKey = key.split('.')[0]
+
+            // If the root-level type changed (e.g., empty array → object),
+            // we can't use dataSet on the existing reactive value, so
+            // replace the entire root key with the new data instead...
+            if (key !== rootKey && Array.isArray(this.reactive[rootKey]) !== Array.isArray(newData[rootKey])) {
+                this.reactive[rootKey] = newData[rootKey]
+                return
+            }
+
             dataSet(this.reactive, key, value)
         })
         // Object.entries(this.ephemeral).forEach(([key, value]) => {
