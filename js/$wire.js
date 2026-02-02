@@ -114,23 +114,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
                 return generateEntangleFunction(component, cleanup)
             }
 
-            let result = component.$wire[property]
-
-            // If the property isn't a known $wire property, state, or alias,
-            // it will resolve to the method fallback (a function that fires a
-            // server action). Before returning this fallback, check if the
-            // property exists in Alpine's scope chain (e.g. an x-for variable).
-            // This allows wire:click="$js.select(user)" to correctly pass
-            // Alpine-scoped variables instead of treating them as server methods...
-            if (result?.__livewire_method_fallback) {
-                let scope = Alpine.mergeProxies(Alpine.closestDataStack(el))
-
-                if (property in scope) {
-                    return scope[property]
-                }
-            }
-
-            return result
+            return component.$wire[property]
         },
 
         set(target, property, value) {
@@ -360,27 +344,21 @@ export function overrideMethod(component, method, callback) {
     overriddenMethods.set(component, obj)
 }
 
-wireFallback((component) => (property) => {
-    let fn = (...params) => {
-        // If this method is passed directly to a Vue or Alpine
-        // event listener (@click="someMethod") without using
-        // parens, strip out the automatically added event.
-        if (params.length === 1 && params[0] instanceof Event) {
-            params = []
-        }
-
-        if (overriddenMethods.has(component)) {
-            let overrides = overriddenMethods.get(component)
-
-            if (typeof overrides[property] === 'function') {
-                return overrides[property](params)
-            }
-        }
-
-        return fireAction(component, property, params)
+wireFallback((component) => (property) => (...params) => {
+    // If this method is passed directly to a Vue or Alpine
+    // event listener (@click="someMethod") without using
+    // parens, strip out the automatically added event.
+    if (params.length === 1 && params[0] instanceof Event) {
+        params = []
     }
 
-    fn.__livewire_method_fallback = true
+    if (overriddenMethods.has(component)) {
+        let overrides = overriddenMethods.get(component)
 
-    return fn
+        if (typeof overrides[property] === 'function') {
+            return overrides[property](params)
+        }
+    }
+
+    return fireAction(component, property, params)
 })

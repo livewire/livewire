@@ -15,7 +15,7 @@ export function evaluateExpression(el, expression, options = {}) {
 export function evaluateActionExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 
-    let contextualExpression = contextualizeExpression(expression)
+    let contextualExpression = contextualizeExpression(expression, el)
 
     try {
         let result = Alpine.evaluateRaw(el, contextualExpression, options)
@@ -34,9 +34,13 @@ export function evaluateActionExpression(el, expression, options = {}) {
     }
 }
 
-export function contextualizeExpression(expression) {
+export function contextualizeExpression(expression, el) {
     let SKIP = ['JSON', 'true', 'false', 'null', 'undefined', 'this', '$wire', '$event']
     let strings = []
+
+    // Build a set of identifiers that exist in Alpine's scope chain
+    // (e.g. x-for variables) so we don't prefix them with $wire...
+    let alpineScope = el ? Alpine.mergeProxies(Alpine.closestDataStack(el)) : null
 
     // 1. Yank out string literals so we don't touch them
     let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (m) => {
@@ -49,6 +53,7 @@ export function contextualizeExpression(expression) {
     result = result.replace(/(?<![.\w$])(\$?[a-zA-Z_]\w*)/g, (m, ident, offset) => {
         if (SKIP.includes(ident) || /^___\d+___$/.test(ident)) return ident
         if (result[offset + m.length] === ':') return ident
+        if (alpineScope && ident in alpineScope) return ident
         return '$wire.' + ident
     })
 
