@@ -53,7 +53,10 @@ class BaseUrl extends LivewireAttribute
     }
     protected function determineType(){
         $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
-        return $reflectionClass->getProperty($this->getSubName())->getType();
+        if ($this->getSubName() && $reflectionClass->hasProperty($this->getSubName())) {
+            return $reflectionClass->getProperty($this->getSubName())?->getType();
+        }
+        return null;
     }
     public function setPropertyFromQueryString()
     {
@@ -86,15 +89,17 @@ class BaseUrl extends LivewireAttribute
         }
 
         // Check if the value is compatible with the property type strictly
-        if ($this->strict && $this->type !== gettype($value)) {
-            abort(400);
-        }
-        // Validate the type compatibility non-strictly
-        if (!$this->strict){
-            $validator = Validator::make([$this->getSubName()=>$value],[$this->getSubName()=>(string)$this->type]);
-            if ($validator->fails()) {
-                $this->component->addError($this->getSubName(),'The value type is not compatible.');
-                return;
+        if ($this->type){
+            if ($this->strict && $this->type !== gettype($value)) {
+                abort(400);
+            }
+            // Validate the type compatibility non-strictly
+            if (!$this->strict){
+                $validator = Validator::make([$this->getSubName()=>$value],[$this->getSubName()=>(string)$this->type]);
+                if ($validator->fails()) {
+                    $this->component->addError($this->getSubName(),'The value type is not compatible.');
+                    return;
+                }
             }
         }
         $this->setValue($value, $this->nullable);
