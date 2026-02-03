@@ -285,6 +285,44 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_alpine_scope_outside_component_does_not_override_wire_properties()
+    {
+        Livewire::visit([
+            'layout' => new class extends \Livewire\Component {
+                public function render() {
+                    return <<<'HTML'
+                        <div x-data="{ item: 'from-alpine-outside' }">
+                            <livewire:child />
+                        </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends \Livewire\Component {
+                public $item = 'from-livewire';
+
+                public function render() {
+                    return <<<'HTML'
+                        <div>
+                            <button wire:click="$js.select(item)" dusk="select">Select</button>
+                        </div>
+
+                        @script
+                        <script>
+                            this.$js.select = (item) => {
+                                window.selectedItem = item
+                            }
+                        </script>
+                        @endscript
+                    HTML;
+                }
+            },
+        ])
+        ->waitForLivewireToLoad()
+        ->click('@select')
+        ->assertScript('window.selectedItem === "from-livewire"')
+        ;
+    }
+
     public function test_can_call_a_defined_js_action_from_the_backend_using_the_js_method_with_params()
     {
         Livewire::visit(

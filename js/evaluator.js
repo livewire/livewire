@@ -38,9 +38,10 @@ export function contextualizeExpression(expression, el) {
     let SKIP = ['JSON', 'true', 'false', 'null', 'undefined', 'this', '$wire', '$event']
     let strings = []
 
-    // Build a set of identifiers that exist in Alpine's scope chain
-    // (e.g. x-for variables) so we don't prefix them with $wire...
-    let alpineScope = el ? Alpine.mergeProxies(Alpine.closestDataStack(el)) : null
+    // Collect Alpine scopes within this component (stop at the component root)...
+    let alpineScope = el ? Alpine.mergeProxies(Alpine.closestDataStack(el, node => {
+        return node.hasAttribute && node.hasAttribute('wire:id')
+    })) : null
 
     // 1. Yank out string literals so we don't touch them
     let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (m) => {
