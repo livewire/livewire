@@ -499,7 +499,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
             // Skip if this '<' doesn't start a valid HTML tag...
             // Valid: <tagname, </tagname, <!DOCTYPE
             // Invalid: < in "1 < 5", << operators, etc.
-            if (! preg_match('/^<(\/?[a-zA-Z]|![a-zA-Z])/', $segment)) {
+            if (! preg_match('/^<(\/?[a-zA-Z]|![a-zA-Z]|\/?(\{\{|\{!!))/', $segment)) {
                 $searchFrom = $bracketPos;
                 continue;
             }

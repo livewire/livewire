@@ -779,6 +779,32 @@ class UnitTest extends \Tests\TestCase
                 <div @if($count > 5) class="many" @endif></div>
                 HTML
             ],
+            // GitHub issue #9900: dynamic Blade tag names with {{ }}
+            42 => [
+                0,
+                <<<'HTML'
+                <{{ $tagName }}
+                    @if ($condition)
+                        class="test-class"
+                    @endif
+                >
+                    Content
+                </{{ $tagName }}>
+                HTML
+            ],
+            // GitHub issue #9900: dynamic Blade tag names with {!! !!}
+            43 => [
+                0,
+                <<<'HTML'
+                <{!! $tagName !!}
+                    @if ($condition)
+                        class="test-class"
+                    @endif
+                >
+                    Content
+                </{!! $tagName !!}>
+                HTML
+            ],
         ];
     }
 
@@ -928,6 +954,28 @@ class UnitTest extends \Tests\TestCase
                 '<div data-value="it\'s < than" |@if(true)>',
             ],
 
+            // Dynamic Blade tag names
+            'dynamic tag with {{ }}' => [
+                true,
+                '<{{ $tagName }} class="foo" |@if(true)>',
+            ],
+            'dynamic closing tag with {{ }}' => [
+                true,
+                '</{{ $tagName }} |@if(true)>',
+            ],
+            'dynamic tag with {!! !!}' => [
+                true,
+                '<{!! $tagName !!} class="foo" |@if(true)>',
+            ],
+            'dynamic closing tag with {!! !!}' => [
+                true,
+                '</{!! $tagName !!} |@if(true)>',
+            ],
+            'multiline dynamic tag' => [
+                true,
+                "<{{ \$tagName }}\n    class=\"foo\"\n    |@if(true)\n>",
+            ],
+
             // =============================================
             // Outside HTML tags (should return false)
             // =============================================
@@ -1049,6 +1097,16 @@ class UnitTest extends \Tests\TestCase
             'after tag with < in parenthesised expression then closed' => [
                 false,
                 '<div @class([$x < 10 ? "a" : "b"])> |@if(true)',
+            ],
+
+            // Dynamic Blade tags that are properly closed
+            'after closed dynamic {{ }} tag' => [
+                false,
+                '<{{ $tagName }} class="foo"> |@if(true)',
+            ],
+            'after closed dynamic {!! !!} tag' => [
+                false,
+                '<{!! $tagName !!} class="foo"> |@if(true)',
             ],
 
             // PHP tags and HTML comments
