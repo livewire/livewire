@@ -893,6 +893,128 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_island_poll_does_not_trigger_named_view_transition_outside_island()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $step = 1;
+
+            public function nextStep()
+            {
+                $this->step = 2;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <style>
+                        ::view-transition-old(step) {
+                            animation: 300ms ease-out fade-out;
+                        }
+
+                        ::view-transition-new(step) {
+                            animation: 300ms ease-in fade-in;
+                        }
+
+                        @keyframes fade-out {
+                            to { opacity: 0; }
+                        }
+
+                        @keyframes fade-in {
+                            from { opacity: 0; }
+                        }
+                    </style>
+
+                    <div wire:transition="step" wire:key="step-{{ $step }}">
+                        <div dusk="step-display">Step {{ $step }}</div>
+                    </div>
+
+                    @island
+                        <div wire:poll.1s dusk="island-poll">Poll island</div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@step-display', 'Step 1')
+            // Intercept document.startViewTransition to track if it gets called...
+            ->tap(fn ($b) => $b->script("
+                window.__viewTransitionCount = 0;
+                let orig = document.startViewTransition.bind(document);
+                document.startViewTransition = function() {
+                    window.__viewTransitionCount++;
+                    return orig.apply(document, arguments);
+                };
+            "))
+            // Wait for at least one poll cycle to complete...
+            ->pause(1500)
+            // Assert no view transitions were triggered by the island poll...
+            ->assertScript('window.__viewTransitionCount', 0)
+            // The step content should still be visible and unchanged...
+            ->assertSeeIn('@step-display', 'Step 1')
+        ;
+    }
+
+    public function test_named_view_transition_inside_island_still_works()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $step = 1;
+
+            public function nextStep()
+            {
+                $this->step = 2;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <style>
+                        ::view-transition-old(step) {
+                            animation: 300ms ease-out fade-out;
+                        }
+
+                        ::view-transition-new(step) {
+                            animation: 300ms ease-in fade-in;
+                        }
+
+                        @keyframes fade-out {
+                            to { opacity: 0; }
+                        }
+
+                        @keyframes fade-in {
+                            from { opacity: 0; }
+                        }
+                    </style>
+
+                    @island
+                        <div wire:transition="step" wire:key="step-{{ $step }}">
+                            <div dusk="step-display">Step {{ $step }}</div>
+                        </div>
+
+                        <button wire:click="nextStep" dusk="next-step">Next</button>
+                    @endisland
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@step-display', 'Step 1')
+            // Intercept document.startViewTransition to track if it gets called...
+            ->tap(fn ($b) => $b->script("
+                window.__viewTransitionCount = 0;
+                let orig = document.startViewTransition.bind(document);
+                document.startViewTransition = function() {
+                    window.__viewTransitionCount++;
+                    return orig.apply(document, arguments);
+                };
+            "))
+            // Click the button to trigger a transition inside the island...
+            ->waitForLivewire()->click('@next-step')
+            // Assert a view transition was triggered...
+            ->assertScript('window.__viewTransitionCount', 1)
+            // The step content should have updated...
+            ->assertSeeIn('@step-display', 'Step 2')
+        ;
+    }
+
     public function test_more_than_ten_islands_using_single_file_component()
     {
         Livewire::visit('twelve-islands')
