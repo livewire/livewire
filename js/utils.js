@@ -124,7 +124,7 @@ export function dataSet(object, key, value) {
     // (e.g., arr[1000] = true creates 1000 null entries in a JS array).
     // We only convert when the key would create gaps (key > length), not when appending.
     if (isArray(object[firstSegment]) && isNumeric(nextSegment) && parseInt(nextSegment) > object[firstSegment].length) {
-        object[firstSegment] = Object.assign({}, object[firstSegment])
+        object[firstSegment] = { ...object[firstSegment] }
     }
 
     dataSet(object[firstSegment], restOfSegments, value)
