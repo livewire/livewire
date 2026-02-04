@@ -884,6 +884,36 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals($file->getClientOriginalName(), $temporaryFile->getClientOriginalName());
     }
+
+    public function test_store_without_disk_uses_default_filesystem_disk_not_temporary_upload_disk()
+    {
+        Storage::fake('tmp-for-tests');
+        Storage::fake('default-disk');
+
+        config()->set('filesystems.default', 'default-disk');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        Livewire::test(FileUploadToDefaultDiskComponent::class)
+            ->set('photo', $file)
+            ->call('save');
+
+        // File should be on the default filesystem disk, not the temporary upload disk
+        Storage::disk('default-disk')->assertExists('images/avatar.jpg');
+        Storage::disk('tmp-for-tests')->assertMissing('images/avatar.jpg');
+    }
+}
+
+class FileUploadToDefaultDiskComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    public $photo;
+
+    public function save()
+    {
+        $this->photo->storeAs('images', 'avatar.jpg');
+    }
 }
 
 class DummyMiddleware
