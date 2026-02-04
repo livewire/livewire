@@ -41,28 +41,14 @@ class FormObjectSynth extends Synth {
         $existing = data_get($this->context->component, $this->path);
 
         if ($existing instanceof Form && $existing instanceof $meta['class']) {
-            foreach ($data as $key => $child) {
-                if ($child === null && Utils::propertyIsTypedAndUninitialized($existing, $key)) {
-                    continue;
-                }
-
-                $existing->$key = $hydrateChild($key, $child);
-            }
-
-            return $existing;
+            return $this->hydrateFormProperties($existing, $data, $hydrateChild);
         }
 
         $form = new $meta['class']($this->context->component, $this->path);
 
         $callBootMethod = static::bootFormObject($this->context->component, $form, $this->path);
 
-        foreach ($data as $key => $child) {
-            if ($child === null && Utils::propertyIsTypedAndUninitialized($form, $key)) {
-                continue;
-            }
-
-            $form->$key = $hydrateChild($key, $child);
-        }
+        $this->hydrateFormProperties($form, $data, $hydrateChild);
 
         $callBootMethod();
 
@@ -87,5 +73,18 @@ class FormObjectSynth extends Synth {
         return function () use ($form) {
             wrap($form)->boot();
         };
+    }
+
+    protected function hydrateFormProperties($form, $data, $hydrateChild)
+    {
+        foreach ($data as $key => $child) {
+            if ($child === null && Utils::propertyIsTypedAndUninitialized($form, $key)) {
+                continue;
+            }
+
+            $form->$key = $hydrateChild($key, $child);
+        }
+
+        return $form;
     }
 }
