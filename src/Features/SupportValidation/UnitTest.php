@@ -94,6 +94,49 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['foo' => 'required']);
     }
 
+    public function test_validate_attribute_with_inline_wildcard_rules_triggers_realtime_validation()
+    {
+        // Inline wildcard rules in the attribute should trigger during real-time validation
+        // This is the documented approach from docs/validation.md and docs/uploads.md
+        Livewire::test(new class extends TestComponent {
+            #[Validate([
+                'items' => ['array'],
+                'items.*' => ['required', 'min:3'],
+            ])]
+            public array $items = [];
+
+            function save() { $this->validate(); }
+        })
+            ->set('items.0', 'ab') // Too short, should trigger 'min:3' error
+            ->assertHasErrors(['items.0' => 'min'])
+            ->set('items.0', 'abc') // Valid, should clear error
+            ->assertHasNoErrors();
+    }
+
+    public function test_validate_attribute_with_wildcard_rules_in_rules_method_triggers_realtime_validation()
+    {
+        // Wildcard rules in rules() method should trigger during real-time validation
+        // when using bare #[Validate] attribute
+        Livewire::test(new class extends TestComponent {
+            #[Validate]
+            public array $items = [];
+
+            public function rules()
+            {
+                return [
+                    'items' => ['array'],
+                    'items.*' => ['required', 'min:3'],
+                ];
+            }
+
+            function save() { $this->validate(); }
+        })
+            ->set('items.0', 'ab') // Too short, should trigger 'min:3' error
+            ->assertHasErrors(['items.0' => 'min'])
+            ->set('items.0', 'abc') // Valid, should clear error
+            ->assertHasNoErrors();
+    }
+
     public function test_realtime_validation_can_be_opted_out_of()
     {
         Livewire::test(new class extends TestComponent {
