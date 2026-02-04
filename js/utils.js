@@ -119,11 +119,11 @@ export function dataSet(object, key, value) {
         object[firstSegment] = {}
     }
 
-    // If we're about to set a numeric key on an empty array, convert to object.
+    // If we're about to set a numeric key on an array, convert to object.
     // This prevents JavaScript from filling intermediate indices with nulls
     // (e.g., arr[1000] = true creates 1000 null entries in a JS array).
-    if (isArray(object[firstSegment]) && object[firstSegment].length === 0 && isNumeric(nextSegment)) {
-        object[firstSegment] = {}
+    if (isArray(object[firstSegment]) && isNumeric(nextSegment)) {
+        object[firstSegment] = Object.assign({}, object[firstSegment])
     }
 
     dataSet(object[firstSegment], restOfSegments, value)

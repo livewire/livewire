@@ -739,4 +739,27 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@output', '["first","updated"]')
         ;
     }
+
+    function test_wire_model_with_large_numeric_key_on_non_empty_array_preserves_data()
+    {
+        Livewire::visit(new class extends Component {
+            public array $data = ['a', 'b'];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="checkbox" type="checkbox" wire:model.live="data.1000">
+
+                        <span dusk="output">{{ json_encode($data) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '["a","b"]')
+            ->waitForLivewire()->check('@checkbox')
+            // Should preserve existing data and add the new key without creating massive array
+            ->assertSeeIn('@output', '{"0":"a","1":"b","1000":true}')
+        ;
+    }
 }
