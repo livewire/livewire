@@ -119,10 +119,11 @@ export function dataSet(object, key, value) {
         object[firstSegment] = {}
     }
 
-    // If we're about to set a numeric key on an array, convert to object.
+    // If we're about to set a numeric key that would create null gaps, convert to object.
     // This prevents JavaScript from filling intermediate indices with nulls
     // (e.g., arr[1000] = true creates 1000 null entries in a JS array).
-    if (isArray(object[firstSegment]) && isNumeric(nextSegment)) {
+    // We only convert when the key would create gaps (key > length), not when appending.
+    if (isArray(object[firstSegment]) && isNumeric(nextSegment) && parseInt(nextSegment) > object[firstSegment].length) {
         object[firstSegment] = Object.assign({}, object[firstSegment])
     }
 
