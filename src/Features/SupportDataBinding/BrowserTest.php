@@ -670,4 +670,73 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@server', 'hello')
         ;
     }
+
+    function test_wire_model_with_large_numeric_key_does_not_create_massive_array()
+    {
+        Livewire::visit(new class extends Component {
+            public array $data = [];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="checkbox" type="checkbox" wire:model.live="data.1000">
+
+                        <span dusk="output">{{ json_encode($data) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '[]')
+            ->waitForLivewire()->check('@checkbox')
+            // Should be {"1000":true} not an array with 1000 null values
+            ->assertSeeIn('@output', '{"1000":true}')
+        ;
+    }
+
+    function test_wire_model_with_nested_numeric_key_does_not_create_massive_array()
+    {
+        Livewire::visit(new class extends Component {
+            public array $items = [];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live="items.500.name">
+
+                        <span dusk="output">{{ json_encode($items) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '[]')
+            ->waitForLivewire()->type('@input', 'test')
+            // Should be {"500":{"name":"test"}} not an array with 500 null values
+            ->assertSeeIn('@output', '{"500":{"name":"test"}}')
+        ;
+    }
+
+    function test_wire_model_with_sequential_array_still_works()
+    {
+        Livewire::visit(new class extends Component {
+            public array $items = ['first', 'second'];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live="items.1">
+
+                        <span dusk="output">{{ json_encode($items) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '["first","second"]')
+            ->waitForLivewire()->type('@input', 'updated')
+            // Sequential array should remain an array
+            ->assertSeeIn('@output', '["first","updated"]')
+        ;
+    }
 }

@@ -113,12 +113,24 @@ export function dataSet(object, key, value) {
 
     let firstSegment = segments.shift()
     let restOfSegments = segments.join('.')
+    let nextSegment = segments[0]
 
     if (object[firstSegment] === undefined) {
         object[firstSegment] = {}
     }
 
+    // If we're about to set a numeric key on an empty array, convert to object.
+    // This prevents JavaScript from filling intermediate indices with nulls
+    // (e.g., arr[1000] = true creates 1000 null entries in a JS array).
+    if (isArray(object[firstSegment]) && object[firstSegment].length === 0 && isNumeric(nextSegment)) {
+        object[firstSegment] = {}
+    }
+
     dataSet(object[firstSegment], restOfSegments, value)
+}
+
+function isNumeric(subject) {
+    return ! isNaN(parseInt(subject))
 }
 
 /**
