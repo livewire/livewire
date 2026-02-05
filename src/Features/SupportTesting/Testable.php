@@ -366,11 +366,13 @@ class Testable
     }
 
     /**
-     * @return void
+     * @return $this
      */
     function dumpErrors()
     {
         dump($this->getData(), $this->errors());
+        
+        return $this;
     }
 
     /**
