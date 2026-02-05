@@ -194,7 +194,8 @@ class UnitTest extends \Tests\TestCase
 
         $name = $finder->normalizeName(SelfNamedComponent::class);
 
-        $this->assertEquals('self-named-component', $name);
+        // Self-named class components keep their full name (matching v3 behavior)...
+        $this->assertEquals('self-named-component.self-named-component', $name);
 
         $class = $finder->resolveClassComponentClassName($name);
 
@@ -624,7 +625,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('Self-named view component rendered');
     }
 
-    public function test_index_class_component_resolves_view_from_index_path()
+    public function test_index_class_component_resolves_view_from_collapsed_path()
     {
         config()->set('livewire.view_path', __DIR__ . '/Fixtures/views');
 

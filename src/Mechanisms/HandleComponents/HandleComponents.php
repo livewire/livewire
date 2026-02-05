@@ -411,25 +411,7 @@ class HandleComponents extends Mechanism
         } elseif ($component->hasProvidedView()) {
             $viewOrString = $component->getProvidedView();
         } else {
-            $filePath = $viewPath . '/' . $fileName . '.blade.php';
-
-            // If the view file doesn't exist, try self-named and index paths as fallbacks.
-            // This handles the case where a self-named class component (e.g. Filters/Filters.php)
-            // has its name collapsed to "filters" but its view still lives at "filters/filters.blade.php"...
-            if (! file_exists($filePath)) {
-                $lastSegment = basename($fileName);
-
-                $selfNamedFilePath = $viewPath . '/' . $fileName . '/' . $lastSegment . '.blade.php';
-                $indexFilePath = $viewPath . '/' . $fileName . '/index.blade.php';
-
-                if (file_exists($selfNamedFilePath)) {
-                    $filePath = $selfNamedFilePath;
-                } elseif (file_exists($indexFilePath)) {
-                    $filePath = $indexFilePath;
-                }
-            }
-
-            $viewOrString = View::file($filePath);
+            $viewOrString = View::file($viewPath . '/' . $fileName . '.blade.php');
         }
 
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
