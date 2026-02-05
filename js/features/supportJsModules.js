@@ -1,8 +1,6 @@
 import { on } from '@/hooks'
+import { interceptMessage } from '@/request/index'
 import { getModuleUrl } from '@/utils'
-import Alpine from 'alpinejs'
-
-let pendingComponentAssets = new WeakMap()
 
 let preloadedModules = new Map()
 
@@ -28,8 +26,7 @@ export async function preloadExistingModules() {
 
         let snapshot = JSON.parse(snapshotAttr)
         let name = snapshot.memo.name
-        let encodedName = name.replace(/\./g, '--').replace(/::/g, '---').replace(/:/g, '----')
-        let path = `${moduleUrl}/js/${encodedName}.js?v=${effects.scriptModule}`
+        let path = buildModulePath(name, effects.scriptModule)
 
         promises.push(
             import(/* @vite-ignore */ path).then(module => {
@@ -41,71 +38,94 @@ export async function preloadExistingModules() {
     await Promise.all(promises)
 }
 
+function buildModulePath(name, hash) {
+    let encodedName = name.replace(/\./g, '--').replace(/::/g, '---').replace(/:/g, '----')
+    return `${getModuleUrl()}/js/${encodedName}.js?v=${hash}`
+}
+
+// Intercept messages to pre-load script modules before morph
+interceptMessage(({ message, onSuccess }) => {
+    onSuccess(({ payload, onEffect }) => {
+        let modulesToLoad = []
+
+        // Own module (for lazy-loaded components - scenario 2)
+        if (payload.effects.scriptModule) {
+            modulesToLoad.push({
+                name: message.component.name,
+                hash: payload.effects.scriptModule,
+                isOwn: true
+            })
+        }
+
+        // Child modules (for dynamically added children - scenario 3)
+        if (payload.effects.childScriptModules) {
+            payload.effects.childScriptModules.forEach(([name, hash]) => {
+                modulesToLoad.push({ name, hash, isOwn: false })
+            })
+        }
+
+        if (modulesToLoad.length === 0) return
+
+        // Start loading modules that aren't cached
+        let loadPromises = []
+
+        modulesToLoad.forEach(({ name, hash }) => {
+            let path = buildModulePath(name, hash)
+
+            if (! preloadedModules.has(path)) {
+                loadPromises.push(
+                    import(/* @vite-ignore */ path).then(module => {
+                        preloadedModules.set(path, module)
+                        return { path, module }
+                    })
+                )
+            }
+        })
+
+        // Set up onEffect to wait for modules and run own module if needed
+        onEffect(async () => {
+            // Wait for all modules to load
+            await Promise.all(loadPromises)
+
+            // Run the component's own module if it has one
+            let ownModule = modulesToLoad.find(m => m.isOwn)
+
+            if (ownModule) {
+                let path = buildModulePath(ownModule.name, ownModule.hash)
+                let module = preloadedModules.get(path)
+
+                module.run.call(message.component.$wire, message.component.$wire, message.component.$wire.js)
+            }
+        })
+    })
+})
+
+// Handle initial page load modules (scenario 1) - run synchronously since they're pre-loaded
 on('effect', ({ component, effects }) => {
     let scriptModuleHash = effects.scriptModule
 
-    if (scriptModuleHash) {
-        let encodedName = component.name.replace(/\./g, '--').replace(/::/g, '---').replace(/:/g, '----')
-        let path = `${getModuleUrl()}/js/${encodedName}.js?v=${scriptModuleHash}`
+    if (! scriptModuleHash) return
 
-        if (preloadedModules.has(path)) {
-            let module = preloadedModules.get(path)
+    let path = buildModulePath(component.name, scriptModuleHash)
 
-            module.run.call(component.$wire, component.$wire, component.$wire.js)
-        } else {
-            let el = component.el
+    // Only run if already pre-loaded (from initial page load)
+    // Dynamic modules are handled by interceptMessage above
+    if (preloadedModules.has(path)) {
+        let module = preloadedModules.get(path)
 
-            // Temporarily hide x-data from Alpine so it doesn't evaluate
-            // before the module has loaded and registered Alpine.data()...
-            let xData = el.getAttribute('x-data')
-
-            if (xData) {
-                el.removeAttribute('x-data')
-                el._deferredXData = xData
-            }
-
-            // Prevent Alpine from setting a marker on this element
-            // so we can re-initialise it after the module loads...
-            el._x_ignore = true
-
-            // Signal the interceptor to skip walking children...
-            el.__deferAlpine = true
-
-            pendingComponentAssets.set(component, Alpine.reactive({
-                loading: true,
-                afterLoaded: [],
-            }))
-
-            import(/* @vite-ignore */ path).then(module => {
-                module.run.call(component.$wire, component.$wire, component.$wire.js)
-
-                pendingComponentAssets.get(component).loading = false
-                pendingComponentAssets.get(component).afterLoaded.forEach(callback => callback())
-                pendingComponentAssets.delete(component)
-
-                // Restore x-data and allow Alpine to process the element...
-                if (el._deferredXData !== undefined) {
-                    el.setAttribute('x-data', el._deferredXData)
-                    delete el._deferredXData
-                }
-
-                delete el._x_ignore
-                delete el.__deferAlpine
-
-                Alpine.initTree(el)
-            });
-        }
+        module.run.call(component.$wire, component.$wire, component.$wire.js)
     }
 })
 
+// Backwards compatibility - no longer needed
+export function hasPendingModule(el) {
+    return false
+}
+
 export function assetIsPendingFor(component) {
-    return pendingComponentAssets.has(component) && pendingComponentAssets.get(component).loading
+    return false
 }
 
 export function runAfterAssetIsLoadedFor(component, callback) {
-    if (assetIsPendingFor(component)) {
-        pendingComponentAssets.get(component).afterLoaded.push(() => callback())
-    } else {
-        callback()
-    }
+    callback()
 }

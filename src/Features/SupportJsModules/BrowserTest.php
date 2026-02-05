@@ -59,7 +59,14 @@ class BrowserTest extends \Tests\BrowserTestCase
         }])
             ->assertDontSee('alpine-data-loaded')
             ->waitForLivewire()->click('@toggle')
-            ->pause(500)
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_works_in_lazy_loaded_component()
+    {
+        Livewire::visit('testns::lazy-with-alpine-data')
+            ->waitFor('@target')
             ->assertSeeIn('@target', 'alpine-data-loaded')
             ->assertConsoleLogHasNoErrors();
     }

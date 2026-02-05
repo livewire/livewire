@@ -68,12 +68,6 @@ export async function start() {
                 Alpine.onAttributeRemoved(el, 'wire:id', () => {
                     destroyComponent(component.id)
                 })
-
-                // If the component has a script module that hasn't been pre-loaded,
-                // skip walking children until the module loads and Alpine.data() is registered...
-                if (el.__deferAlpine) {
-                    skip()
-                }
             }
 
             let directives = Array.from(el.getAttributeNames())
