@@ -1005,12 +1005,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertHasClass('@link.five', 'active')
                 ->assertClassMissing('@link.six', 'active')
 
-                // Assert a navigate request was triggered as the remaining pages should no longer be in the cache
-                ->waitForNavigateRequest()->back()
+                // Page four is still in the cache (we navigated to 13 pages, cache holds 10,
+                // so pages 1-3 were evicted but page 4 is still cached)
+                ->waitForNoNavigateRequest()->back()
                 ->assertSeeIn('@title', 'four')
                 ->assertHasClass('@link.four', 'active')
                 ->assertClassMissing('@link.five', 'active')
 
+                // Assert a navigate request was triggered as the remaining pages should no longer be in the cache
                 ->waitForNavigateRequest()->back()
                 ->assertSeeIn('@title', 'three')
                 ->assertHasClass('@link.three', 'active')
@@ -1026,6 +1028,39 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertHasClass('@link.one', 'active')
                 ->assertClassMissing('@link.two', 'active')
 
+            ;
+        });
+    }
+
+    public function test_back_and_forward_buttons_work_after_page_refresh()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                // 1. Visit /navbar/one
+                ->visit('/navbar/one')
+                ->assertSeeIn('@title', 'one')
+
+                // 2. Navigate to /navbar/two
+                ->waitForNavigateRequest()->click('@link.two')
+                ->assertSeeIn('@title', 'two')
+
+                // 3. Refresh the page (clears in-memory snapshot cache)
+                ->waitForLivewire()->refresh()
+                ->assertSeeIn('@title', 'two')
+
+                // 4. Back → works (cache miss, fetches from server)
+                ->waitForNavigateRequest()->back()
+                ->assertSeeIn('@title', 'one')
+
+                // 5. Forward → works
+                ->forward()
+                ->waitForTextIn('@title', 'two')
+                ->assertSeeIn('@title', 'two')
+
+                // 6. Back again — this is the step that breaks without the fix
+                ->back()
+                ->waitForTextIn('@title', 'one')
+                ->assertSeeIn('@title', 'one')
             ;
         });
     }
