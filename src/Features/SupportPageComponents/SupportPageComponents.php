@@ -207,19 +207,6 @@ class SupportPageComponents extends ComponentHook
             app('router')->substituteImplicitBindingsUsing(function ($container, $route, $default) {
                 // If the current route is a Livewire page component...
                 if ($componentClass = static::routeActionIsAPageComponent($route)) {
-                    // If we're processing a child component (not the page component),
-                    // skip binding resolution - child components don't need route bindings
-                    // and the models are already hydrated from the snapshot.
-                    $currentComponentName = \Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware::$currentComponentName;
-
-                    if ($currentComponentName) {
-                        $currentComponentClass = app('livewire.factory')->resolveComponentClass($currentComponentName);
-
-                        if ($currentComponentClass !== $componentClass) {
-                            return;
-                        }
-                    }
-
                     // Resolve and set all page component parameters to the current route...
                     (new \Livewire\Drawer\ImplicitRouteBinding($container))
                         ->resolveAllParameters($route, new $componentClass);

@@ -80,12 +80,16 @@ class BrowserTest extends BrowserTestCase
                 ->middleware(['web', 'auth', 'can:update,post']);
 
             // Register components for route-bound child component test
-            Livewire::component('page-with-child', PageComponentWithChild::class);
+            Livewire::component('page-with-reactive-child', PageComponentWithReactiveChild::class);
+            Livewire::component('child-with-reactive', ChildComponentWithReactive::class);
+            Livewire::component('page-with-modelable-child', PageComponentWithModelableChild::class);
             Livewire::component('child-with-modelable', ChildComponentWithModelable::class);
 
-            Route::get('/page-with-child/{post}', PageComponentWithChild::class)
+            Route::get('/page-with-reactive-child/{post}', PageComponentWithReactiveChild::class)
                 ->middleware('web');
 
+            Route::get('/page-with-modelable-child/{post}', PageComponentWithModelableChild::class)
+                ->middleware('web');
         };
     }
     public function test_that_persistent_middleware_is_applied_to_subsequent_livewire_requests()
@@ -304,7 +308,33 @@ JS;
         ]);
 
         Livewire::visit(Component::class)
-            ->visit('/page-with-child/1')
+            ->visit('/page-with-reactive-child/1')
+            ->assertSee('test')
+
+            // Delete the route-bound model - without the fix, this would
+            // 404 because PersistentMiddleware tries to resolve the route binding
+            // for the deleted model when processing the child's snapshot
+            ->waitForLivewire()->click('@delete')
+            ->assertSee('test2')
+            ->assertDontSee('404')
+        ;
+    }
+
+    public function test_modelable_child_component_does_not_404_after_parent_deletes_route_bound_model()
+    {
+        // This test relies on "app('router')->subsituteImplicitBindingsUsing()"...
+        if (app()->version() < '10.37.1') {
+            $this->markTestSkipped();
+        }
+
+        Post::truncate();
+        Post::insert([
+            ['id' => 1, 'title' => 'First', 'user_id' => 1],
+            ['id' => 2, 'title' => 'Second', 'user_id' => 2],
+        ]);
+
+        Livewire::visit(Component::class)
+            ->visit('/page-with-modelable-child/1')
             ->assertSee('test')
 
             // Delete the route-bound model - without the fix, this would
@@ -543,7 +573,7 @@ class IsBanned
     }
 }
 
-class PageComponentWithChild extends BaseComponent
+class PageComponentWithReactiveChild extends BaseComponent
 {
     public Post $post;
 
@@ -559,7 +589,7 @@ class PageComponentWithChild extends BaseComponent
     {
         return <<<'HTML'
         <div>
-            <livewire:child-with-modelable :$test />
+            <livewire:child-with-reactive :$test />
 
             <button wire:click="delete" dusk="delete">Delete</button>
         </div>
@@ -567,7 +597,7 @@ class PageComponentWithChild extends BaseComponent
     }
 }
 
-class ChildComponentWithModelable extends BaseComponent
+class ChildComponentWithReactive extends BaseComponent
 {
     #[Reactive]
     public $test;
@@ -582,3 +612,41 @@ class ChildComponentWithModelable extends BaseComponent
     }
 }
 
+class PageComponentWithModelableChild extends BaseComponent
+{
+    public Post $post;
+
+    public $test = 'test';
+
+    public function delete()
+    {
+        $this->post->delete();
+        $this->test = 'test2';
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <livewire:child-with-modelable wire:model="test" />
+
+            <button wire:click="delete" dusk="delete">Delete</button>
+        </div>
+        HTML;
+    }
+}
+
+class ChildComponentWithModelable extends BaseComponent
+{
+    #[Modelable]
+    public $value;
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ $value }}
+        </div>
+        HTML;
+    }
+}

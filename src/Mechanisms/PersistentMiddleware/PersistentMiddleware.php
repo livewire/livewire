@@ -12,8 +12,6 @@ use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class PersistentMiddleware extends Mechanism
 {
-    public static $currentComponentName = null;
-
     protected static $persistentMiddleware = [
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
@@ -27,6 +25,7 @@ class PersistentMiddleware extends Mechanism
 
     protected $path;
     protected $method;
+    protected $cachedRoutes = [];
 
     function boot()
     {
@@ -42,7 +41,6 @@ class PersistentMiddleware extends Mechanism
             if (! app(HandleRequests::class)->isLivewireRoute()) return;
 
             $this->extractPathAndMethodFromSnapshot($snapshot);
-            $this->extractNameFromSnapshot($snapshot);
 
             $this->applyPersistentMiddleware();
         });
@@ -51,7 +49,7 @@ class PersistentMiddleware extends Mechanism
             // Only flush these at the end of a full request, so that child components have access to this data.
             $this->path = null;
             $this->method = null;
-            static::$currentComponentName = null;
+            $this->cachedRoutes = [];
         });
     }
 
@@ -89,13 +87,6 @@ class PersistentMiddleware extends Mechanism
         // Store these locally, so dynamically added child components can use this data.
         $this->path = $snapshot['memo']['path'];
         $this->method = $snapshot['memo']['method'];
-    }
-
-    protected function extractNameFromSnapshot($snapshot)
-    {
-        // Store the current component name so route binding resolution can check
-        // if it should skip resolution for child components.
-        static::$currentComponentName = $snapshot['memo']['name'] ?? null;
     }
 
     protected function applyPersistentMiddleware()
@@ -158,12 +149,27 @@ class PersistentMiddleware extends Mechanism
 
     protected function getRouteFromRequest($request)
     {
+        $path = $request->path();
+
+        // Reuse cached route if available for this path. This ensures that route
+        // bindings resolved during the first component's middleware run are
+        // available for subsequent child components on the same path, preventing
+        // re-resolution of deleted models (which would 404).
+        if (isset($this->cachedRoutes[$path])) {
+            $route = $this->cachedRoutes[$path];
+            $request->setRouteResolver(fn() => $route);
+
+            return $route;
+        }
+
         try {
             $route = app('router')->getRoutes()->match($request);
             $request->setRouteResolver(fn() => $route);
         } catch (NotFoundHttpException $e){
             return null;
         }
+
+        $this->cachedRoutes[$path] = $route;
 
         return $route;
     }
