@@ -79,7 +79,6 @@ class BrowserTest extends BrowserTestCase
             Route::get('/with-authorization/{post}/inline-auth', Component::class)
                 ->middleware(['web', 'auth', 'can:update,post']);
 
-            // Register components for route-bound child component test
             Livewire::component('page-with-reactive-child', PageComponentWithReactiveChild::class);
             Livewire::component('child-with-reactive', ChildComponentWithReactive::class);
             Livewire::component('page-with-modelable-child', PageComponentWithModelableChild::class);
