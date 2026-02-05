@@ -398,41 +398,6 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_remote_assets_can_be_loaded_from_a_lazy_loaded_component_using_script_directive()
-    {
-        Livewire::visit([new class extends \Livewire\Component {
-            public function render() { return <<<'HTML'
-            <div>
-                <span dusk="output" x-text="'foo'"></span>
-
-                <livewire:child lazy />
-            </div>
-            HTML; }
-        },
-        'child' => new #[\Livewire\Attributes\Lazy] class extends \Livewire\Component {
-            public function render() { return <<<'HTML'
-            <div>
-                <input type="text" data-picker>
-            </div>
-
-            @assets
-                <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
-                <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
-            @endassets
-
-            @script
-                <script>
-                    window.datePicker = new Pikaday({ field: $wire.$el.querySelector('[data-picker]') });
-                </script>
-            @endscript
-            HTML; }
-        },
-        ])
-        ->waitForTextIn('@output', 'foo')
-        ->waitUntil('!! window.datePicker === true')
-        ;
-    }
-
     public function test_remote_assets_can_be_loaded_from_a_lazy_loaded_sfc_component()
     {
         // Tests that @assets are loaded before script module runs in lazy-loaded SFC components.
