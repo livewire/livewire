@@ -25,6 +25,7 @@ class PersistentMiddleware extends Mechanism
 
     protected $path;
     protected $method;
+    protected $cachedRoutes = [];
 
     function boot()
     {
@@ -48,6 +49,7 @@ class PersistentMiddleware extends Mechanism
             // Only flush these at the end of a full request, so that child components have access to this data.
             $this->path = null;
             $this->method = null;
+            $this->cachedRoutes = [];
         });
     }
 
@@ -147,12 +149,27 @@ class PersistentMiddleware extends Mechanism
 
     protected function getRouteFromRequest($request)
     {
+        $cacheKey = $request->method() . '|' . $request->path();
+
+        // Reuse cached route if available for this method and path. This ensures
+        // that route bindings resolved during the first component's middleware
+        // run are available for subsequent child components on the same route,
+        // preventing re-resolution of deleted models (which would 404).
+        if (isset($this->cachedRoutes[$cacheKey])) {
+            $route = $this->cachedRoutes[$cacheKey];
+            $request->setRouteResolver(fn() => $route);
+
+            return $route;
+        }
+
         try {
             $route = app('router')->getRoutes()->match($request);
             $request->setRouteResolver(fn() => $route);
         } catch (NotFoundHttpException $e){
             return null;
         }
+
+        $this->cachedRoutes[$cacheKey] = $route;
 
         return $route;
     }
