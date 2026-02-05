@@ -121,9 +121,16 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
                 && str($match[0])->endsWith(')')
                 && ! static::hasEvenNumberOfParentheses($match[0])
             ) {
-                if (($after = str($template)->after($match[0])->toString()) === $template) {
+                // Use position-based approach to find the text after the current match,
+                // rather than searching for the match string (which could find an earlier
+                // occurrence if the same pattern appears multiple times in the template)...
+                $afterPosition = $matchPosition + strlen($match[0]);
+
+                if ($afterPosition >= strlen($template)) {
                     break;
                 }
+
+                $after = substr($template, $afterPosition);
 
                 $rest = str($after)->before(')');
 
