@@ -244,6 +244,31 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['photo' => 'max']);
     }
 
+    public function test_an_uploaded_file_can_be_validated_when_default_disk_uses_s3_driver()
+    {
+        // Regression test: when the app's default filesystem uses an S3 driver,
+        // metaFileData() was incorrectly skipping the .json lookup during tests.
+        // This caused getSize() to return the actual file size instead of the
+        // fake size, breaking validation.
+        config()->set('filesystems.disks.s3', [
+            'driver' => 's3',
+            'key' => 'test',
+            'secret' => 'test',
+            'region' => 'us-east-1',
+            'bucket' => 'test',
+        ]);
+        config()->set('filesystems.default', 's3');
+
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg')->size(200); // 200KB, over the 100KB limit
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('validateUpload') // validates 'photo' => 'file|max:100'
+            ->assertHasErrors(['photo' => 'max']);
+    }
+
     public function test_multiple_uploaded_files_can_be_validated()
     {
         Storage::fake('avatars');
