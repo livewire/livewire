@@ -366,6 +366,22 @@ class Testable
     }
 
     /**
+     * @return void
+     */
+    function dumpErrors()
+    {
+        dump($this->getData(), $this->errors());
+    }
+
+    /**
+     * @return void
+     */
+    function ddErrors()
+    {
+        dd($this->getData(), $this->errors());
+    }
+
+    /**
      * @return $this
      */
     function tap($callback)
