@@ -176,7 +176,7 @@ class TemporaryUploadedFile extends UploadedFile
     {
         $options = $this->parseOptions($options);
 
-        $disk = Arr::pull($options, 'disk') ?: $this->disk;
+        $disk = Arr::pull($options, 'disk') ?: config('filesystems.default');
 
         $newPath = trim($path.'/'.$name, '/');
 
