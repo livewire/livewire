@@ -322,4 +322,66 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@change')
             ->assertConsoleLogHasNoErrors();
     }
+
+    public function test_dispatching_browser_event_after_morphing_element_with_changed_wire_key_does_not_throw_error()
+    {
+        Livewire::visit([
+            new class () extends Component {
+                public ?string $mountedAction = 'delete';
+
+                public function callAction(): void
+                {
+                    $this->mountedAction = null;
+
+                    $this->dispatch('close-modal', id: 'action-modal');
+                }
+
+                public function unmountAction(): void
+                {
+                    //
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div
+                            x-data="{
+                                isOpen: true,
+                                close() {
+                                    this.isOpen = false
+                                    this.$refs.modalContainer.dispatchEvent(
+                                        new CustomEvent('modal-closed', { detail: { id: 'action-modal' } })
+                                    )
+                                },
+                            }"
+                            x-on:close-modal.window="if ($event.detail.id === 'action-modal') close()"
+                        >
+                            <div x-show="isOpen">
+                                <div
+                                    x-ref="modalContainer"
+                                    x-on:modal-closed.stop="$wire.unmountAction()"
+                                    @if($mountedAction)
+                                        wire:key="modal.{{ $mountedAction }}"
+                                    @endif
+                                >
+                                    <button dusk="confirm" wire:click="callAction">Confirm</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- This needs to be here... --}}
+                        <div x-data="{ show: false }" x-cloak>
+                            <div x-show="show"></div>
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->waitForLivewire()->click('@confirm')
+            ->pause(500)
+            ->assertConsoleLogHasNoErrors();
+    }
 }
