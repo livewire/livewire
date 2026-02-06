@@ -79,6 +79,67 @@ new class extends Component {
 
 When an item is dragged to a different group, only the handler of the destination group will receive the sort event. Your handler will need to detect that the item belongs to a different parent, re-associate it with the new parent model, and update the sort positions for both the old and new parent's items.
 
+NOTE: In order to determine the attributes of the target group (the group the card has been dragged _to_), you will need a Livewire Component for the parent group(s). 
+
+For example, if you were creating a kanban board, each column would be a Livewire component. You would then define a `sortItem()` method on that 'column' component, not the parent component.
+
+```php
+<?php
+
+use Livewire\Component;
+use App\Models\TodoItem;
+use App\Models\Column;
+
+new class extends Component {    // This is the column component
+    public Column $column;
+
+    public function sortItem($item, $position)
+    {
+        $item = ToDoItem::query()->findOrFail($item);
+        
+        $item->update([
+            'column_id' => $this->columnId,
+            'position' => $position,
+        ]);
+        
+        // Reorder both columns
+        collect([$this->columnId, $item->column_id])
+            ->unique()
+            ->each(fn($columnId) => $this->reorderColumn($columnId));
+    }
+
+    private function reorderColumn($columnId)
+    {
+        $items = TodoItem::where('column_id', $columnId)
+            ->orderBy('position')
+            ->get();
+            
+        $items->each(fn($item, $index) => $item->update(['position' => $index]));
+    }
+};
+?>
+<ul wire:sort="sortItem" wire:sort:group="todos">
+    {{ $slot }}    // this is the card loop passed in parent view/component
+</ul>
+
+```
+
+```blade
+// This is the parent component (the board in our example
+<div>
+    @foreach ($user->todoLists as $list => $todo)
+        <livewire:kanban.column :column="$list">
+            @foreach ($todo->items as $item)
+                <li wire:sort:item="{{ $item->id }}">
+                    {{ $item->title }}
+                </li>
+            @endforeach
+        </livewire:kanban.column>
+    @endforeach
+</div>
+```
+
+
 ## Sort handles
 
 By default, users can drag an item by clicking and dragging anywhere on the sortable element. However, you can restrict dragging to a specific handle by using `wire:sort:handle`.
