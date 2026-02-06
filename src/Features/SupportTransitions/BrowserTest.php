@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportTransitions;
 
+use Livewire\Attributes\Transition;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -99,6 +100,124 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertVisible('@message-2')
         ->assertVisible('@message-3')
         ->assertVisible('@message-4')
+        ;
+    }
+
+    public function test_can_transition_dynamic_component_swap()
+    {
+        $animationsRunning = 'document.getAnimations().some(a => a.playState === "running")';
+
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $current = 'first-child';
+
+                #[Transition(type: 'forward')]
+                public function showSecond()
+                {
+                    $this->current = 'second-child';
+                }
+
+                #[Transition(type: 'backward')]
+                public function showFirst()
+                {
+                    $this->current = 'first-child';
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <style>
+                        html:active-view-transition-type(forward) {
+                            &::view-transition-old(content) {
+                                animation: 500ms ease-out fade-out;
+                            }
+                            &::view-transition-new(content) {
+                                animation: 500ms ease-in fade-in;
+                            }
+                        }
+
+                        html:active-view-transition-type(backward) {
+                            &::view-transition-old(content) {
+                                animation: 500ms ease-out fade-out;
+                            }
+                            &::view-transition-new(content) {
+                                animation: 500ms ease-in fade-in;
+                            }
+                        }
+
+                        @keyframes fade-out {
+                            to { opacity: 0; }
+                        }
+
+                        @keyframes fade-in {
+                            from { opacity: 0; }
+                        }
+                    </style>
+
+                    <livewire:is :component="$current" :wire:key="$current" />
+                </div>
+                HTML; }
+            },
+            'first-child' => new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                <div wire:transition="content">
+                    <p dusk="first-text">First Child</p>
+                    <button wire:click="$parent.showSecond" dusk="show-second">Show Second</button>
+                </div>
+                HTML; }
+            },
+            'second-child' => new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                <div wire:transition="content">
+                    <p dusk="second-text">Second Child</p>
+                    <button wire:click="$parent.showFirst" dusk="show-first">Show First</button>
+                </div>
+                HTML; }
+            },
+        ])
+        ->assertSee('First Child')
+        ->assertDontSee('Second Child')
+
+        // Patch startViewTransition to check if viewTransitionName is set synchronously
+        // within the update callback (not relying on async MutationObserver)...
+        ->tap(fn ($browser) => $browser->script("
+            let originalSVT = document.startViewTransition.bind(document);
+            window.__transitionNameSetSynchronously = null;
+            document.startViewTransition = function(configOrCallback) {
+                let originalUpdate = typeof configOrCallback === 'function' ? configOrCallback : configOrCallback.update;
+                let wrappedUpdate = function() {
+                    let result = originalUpdate();
+                    let allSet = Array.from(document.querySelectorAll('[wire\\\\:transition]')).every(
+                        el => !!el.style.viewTransitionName
+                    );
+                    window.__transitionNameSetSynchronously = allSet;
+                    return result;
+                };
+                if (typeof configOrCallback === 'function') {
+                    return originalSVT(wrappedUpdate);
+                }
+                return originalSVT({ ...configOrCallback, update: wrappedUpdate });
+            };
+        "))
+
+        // Swap to second child...
+        ->waitForLivewire()->click('@show-second')
+        ->waitUntil($animationsRunning)
+        ->waitUntil("!$animationsRunning")
+        ->assertSee('Second Child')
+        ->assertDontSee('First Child')
+
+        // Assert viewTransitionName was set synchronously during the update callback...
+        ->assertScript('window.__transitionNameSetSynchronously', true)
+
+        // Reset flag and swap back...
+        ->tap(fn ($browser) => $browser->script("window.__transitionNameSetSynchronously = null;"))
+        ->waitForLivewire()->click('@show-first')
+        ->waitUntil($animationsRunning)
+        ->waitUntil("!$animationsRunning")
+        ->assertSee('First Child')
+        ->assertDontSee('Second Child')
+
+        ->assertScript('window.__transitionNameSetSynchronously', true)
         ;
     }
 }

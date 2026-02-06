@@ -42,7 +42,19 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
     document.head.appendChild(style)
 
     let transitionConfig = {
-        update: () => callback(),
+        update: () => {
+            callback()
+
+            // After the morph, ensure any newly added wire:transition elements have
+            // their viewTransitionName set synchronously. Alpine's MutationObserver
+            // would handle this eventually, but the View Transitions API captures the
+            // new state before the observer fires, so we set it explicitly here...
+            fromEl.querySelectorAll('[wire\\:transition]').forEach(el => {
+                if (! el.style.viewTransitionName) {
+                    el.style.viewTransitionName = el.getAttribute('wire:transition') || 'match-element'
+                }
+            })
+        },
     }
 
     // Add transition types if provided...
@@ -60,7 +72,15 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
         await transition.updateCallbackDone
     } catch (e) {
         // Firefox 144+ supports View Transitions but only with a callback, not a config object (no transition types support)
-        let transition = document.startViewTransition(() => callback())
+        let transition = document.startViewTransition(() => {
+            callback()
+
+            fromEl.querySelectorAll('[wire\\:transition]').forEach(el => {
+                if (! el.style.viewTransitionName) {
+                    el.style.viewTransitionName = el.getAttribute('wire:transition') || 'match-element'
+                }
+            })
+        })
 
         transition.finished.finally(() => {
             style.remove()
