@@ -3,10 +3,19 @@
 namespace Livewire\Features\SupportStreaming;
 
 use Livewire\ComponentHook;
+use function Livewire\on;
 
 class SupportStreaming extends ComponentHook
 {
     protected static $response;
+
+    public static function provide()
+    {
+        on('flush-state', function () {
+            // Clear static response to prevent memory leaks in long-running processes (e.g., Octane)
+            static::$response = null;
+        });
+    }
 
     public function stream($content, $replace = false, $name = null, $el = null, $ref = null)
     {

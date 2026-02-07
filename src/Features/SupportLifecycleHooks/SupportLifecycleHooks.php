@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportLifecycleHooks;
 
 use function Livewire\store;
 use function Livewire\wrap;
+use function Livewire\on;
 use Livewire\ComponentHook;
 
 class SupportLifecycleHooks extends ComponentHook
@@ -13,6 +14,16 @@ class SupportLifecycleHooks extends ComponentHook
 
     // Performance optimization: Cache method existence checks per component class...
     protected static $methodCache = [];
+
+    public static function provide()
+    {
+        on('flush-state', function () {
+            // Clear caches to prevent memory leaks in long-running processes (e.g., Octane)
+            // These caches grow with each unique component class encountered
+            static::$traitCache = [];
+            static::$methodCache = [];
+        });
+    }
 
     public function mount($params)
     {
