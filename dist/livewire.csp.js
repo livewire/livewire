@@ -21,9 +21,9 @@
     mod
   ));
 
-  // node_modules/@alpinejs/csp/dist/module.cjs.js
+  // ../alpine/packages/csp/dist/module.cjs.js
   var require_module_cjs = __commonJS({
-    "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
+    "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
       var __create2 = Object.create;
       var __defProp2 = Object.defineProperty;
       var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -9337,7 +9337,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // node_modules/@alpinejs/sort/dist/module.esm.js
+  // ../alpine/packages/sort/dist/module.esm.js
   function ownKeys2(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -14050,7 +14050,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data;
   }
 
-  // node_modules/@alpinejs/morph/dist/module.esm.js
+  // ../alpine/packages/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -15725,6 +15725,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       } else if (el.attributes[i].name.startsWith("wire:sort:group")) {
         return;
+      } else if (el.attributes[i].name.startsWith("wire:sort:id")) {
+        continue;
       } else if (el.attributes[i].name.startsWith("wire:sort")) {
         let directive2 = extractDirective(el, el.attributes[i].name);
         let attribute = directive2.rawName.replace("wire:", "x-");
@@ -15744,10 +15746,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         import_alpinejs15.default.bind(el, {
           [attribute]() {
             setNextActionOrigin({ el, directive: directive2 });
-            evaluateActionExpression(el, expression, { scope: {
-              $item: this.$item,
-              $position: this.$position
-            }, params: [this.$item, this.$position] });
+            let params = [this.$item, this.$position];
+            let scope = { $item: this.$item, $position: this.$position };
+            let sortId = el.getAttribute("wire:sort:id");
+            if (sortId !== null) {
+              params.push(sortId);
+              scope.$id = sortId;
+            }
+            evaluateActionExpression(el, expression, { scope, params });
           }
         });
       }

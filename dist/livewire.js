@@ -874,7 +874,7 @@
     );
   }
 
-  // node_modules/alpinejs/dist/module.esm.js
+  // ../alpine/packages/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -7890,7 +7890,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // node_modules/@alpinejs/sort/dist/module.esm.js
+  // ../alpine/packages/sort/dist/module.esm.js
   function ownKeys3(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -12601,7 +12601,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // node_modules/@alpinejs/morph/dist/module.esm.js
+  // ../alpine/packages/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -14258,6 +14258,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       } else if (el.attributes[i].name.startsWith("wire:sort:group")) {
         return;
+      } else if (el.attributes[i].name.startsWith("wire:sort:id")) {
+        continue;
       } else if (el.attributes[i].name.startsWith("wire:sort")) {
         let directive3 = extractDirective(el, el.attributes[i].name);
         let attribute = directive3.rawName.replace("wire:", "x-");
@@ -14277,10 +14279,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         module_default.bind(el, {
           [attribute]() {
             setNextActionOrigin({ el, directive: directive3 });
-            evaluateActionExpression(el, expression, { scope: {
-              $item: this.$item,
-              $position: this.$position
-            }, params: [this.$item, this.$position] });
+            let params = [this.$item, this.$position];
+            let scope2 = { $item: this.$item, $position: this.$position };
+            let sortId = el.getAttribute("wire:sort:id");
+            if (sortId !== null) {
+              params.push(sortId);
+              scope2.$id = sortId;
+            }
+            evaluateActionExpression(el, expression, { scope: scope2, params });
           }
         });
       }

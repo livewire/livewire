@@ -77,7 +77,44 @@ new class extends Component {
 </div>
 ```
 
-When an item is dragged to a different group, only the handler of the destination group will receive the sort event. Your handler will need to detect that the item belongs to a different parent, re-associate it with the new parent model, and update the sort positions for both the old and new parent's items.
+When an item is dragged to a different group, only the handler of the destination group will receive the sort event.
+
+To identify which group the item was dropped into, use `wire:sort:id` on each container. The id value will be passed as a third parameter to your sort handler:
+
+```php
+<?php
+
+use Livewire\Component;
+use App\Models\TodoItem;
+
+new class extends Component {
+    public User $user;
+
+    public function sortItem($item, $position, $listId)
+    {
+        $item = TodoItem::findOrFail($item);
+
+        $item->update([
+            'todo_list_id' => $listId,
+            'position' => $position,
+        ]);
+    }
+};
+```
+
+```blade
+<div>
+    @foreach ($user->todoLists as $todo)
+        <ul wire:sort="sortItem" wire:sort:group="todos" wire:sort:id="{{ $todo->id }}">
+            @foreach ($todo->items as $item)
+                <li wire:sort:item="{{ $item->id }}">
+                    {{ $item->title }}
+                </li>
+            @endforeach
+        </ul>
+    @endforeach
+</div>
+```
 
 ## Sort handles
 
@@ -127,6 +164,7 @@ Clicking and dragging within an element marked with `wire:sort:ignore` will have
 wire:sort="method"
 wire:sort:item="id"
 wire:sort:group="name"
+wire:sort:id="identifier"
 wire:sort:handle
 wire:sort:ignore
 ```
