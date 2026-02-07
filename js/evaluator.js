@@ -46,10 +46,12 @@ export function contextualizeExpression(expression) {
 
     // 2. Prefix identifiers not after a dot (skip placeholders from step 1)
     //    Also skip object keys (identifiers immediately followed by colon)
-    result = result.replace(/(?<![.\w$])(\$?[a-zA-Z_]\w*)/g, (m, ident, offset) => {
-        if (SKIP.includes(ident) || /^___\d+___$/.test(ident)) return ident
-        if (result[offset + m.length] === ':') return ident
-        return '$wire.' + ident
+    //    Note: Using (^|[^.\w$]) instead of lookbehind (?<![.\w$]) for Safari iOS < 16.4 compatibility
+    //    @see https://caniuse.com/js-regexp-lookbehind
+    result = result.replace(/(^|[^.\w$])(\$?[a-zA-Z_]\w*)/g, (m, pre, ident, offset) => {
+        if (SKIP.includes(ident) || /^___\d+___$/.test(ident)) return pre + ident
+        if (result[offset + m.length] === ':') return pre + ident
+        return pre + '$wire.' + ident
     })
 
     // 3. Restore strings
