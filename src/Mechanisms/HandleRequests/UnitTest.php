@@ -84,4 +84,34 @@ class UnitTest extends TestCase
 
         $this->assertEquals(EndpointResolver::updatePath(), $uri);
     }
+
+    public function test_get_update_uri_works_when_route_name_is_not_indexed(): void
+    {
+        // Force-resolve the URL generator singleton first to prevent
+        // its initial resolution from rebuilding the nameList.
+        app('url');
+
+        // Simulate a scenario where the route exists in the router's allRoutes
+        // but isn't indexed in the RouteCollection's nameList. This can happen
+        // when ->name() executes after RouteCollection::add() and the name
+        // lookups aren't refreshed (e.g., due to Octane worker resets).
+        $routes = Route::getRoutes();
+        $nameListProperty = new ReflectionProperty($routes, 'nameList');
+        $nameListProperty->setAccessible(true);
+        $nameList = $nameListProperty->getValue($routes);
+        unset($nameList['default.livewire.update']);
+        $nameListProperty->setValue($routes, $nameList);
+
+        // Verify the route is still findable by iteration but not by name lookup
+        $found = collect($routes->getRoutes())
+            ->first(fn ($route) => str($route->getName())->endsWith('livewire.update'));
+        $this->assertNotNull($found);
+        $this->assertNull($routes->getByName('default.livewire.update'));
+
+        // getUpdateUri() should still work despite the name not being indexed
+        $handleRequests = app(HandleRequests::class);
+        $uri = $handleRequests->getUpdateUri();
+
+        $this->assertEquals(EndpointResolver::updatePath(), $uri);
+    }
 }
