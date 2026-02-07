@@ -1,9 +1,9 @@
 import { globalDirective } from "@/directives"
 
-globalDirective('transition', ({ el, directive, cleanup }) => {
-    let transitionName = directive.expression || 'match-element'
+let defaultName = 'match-element'
 
-    el.style.viewTransitionName = transitionName
+globalDirective('transition', ({ el, directive, cleanup }) => {
+    el.style.viewTransitionName = directive.expression || defaultName
 })
 
 export async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
@@ -16,6 +16,19 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
     // Check if View Transitions API is supported...
     if (typeof document.startViewTransition !== 'function') {
         return callback()
+    }
+
+    // After a morph, newly added wire:transition elements need their viewTransitionName
+    // set synchronously. Alpine's MutationObserver would normally handle this, but its
+    // internal queueMicrotask batching delays processing by one microtask hop — and the
+    // View Transitions API's "activate" step captures the new DOM state in between,
+    // before Alpine has a chance to initialize the directive...
+    let ensureTransitionNames = () => {
+        fromEl.querySelectorAll('[wire\\:transition]').forEach(el => {
+            if (! el.style.viewTransitionName) {
+                el.style.viewTransitionName = el.getAttribute('wire:transition') || defaultName
+            }
+        })
     }
 
     // Disable root transitions for the page...
@@ -41,9 +54,13 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
 
     document.head.appendChild(style)
 
-    let transitionConfig = {
-        update: () => callback(),
+    let update = () => {
+        callback()
+
+        ensureTransitionNames()
     }
+
+    let transitionConfig = { update }
 
     // Add transition types if provided...
     if (options.type) {
@@ -60,7 +77,7 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
         await transition.updateCallbackDone
     } catch (e) {
         // Firefox 144+ supports View Transitions but only with a callback, not a config object (no transition types support)
-        let transition = document.startViewTransition(() => callback())
+        let transition = document.startViewTransition(update)
 
         transition.finished.finally(() => {
             style.remove()
