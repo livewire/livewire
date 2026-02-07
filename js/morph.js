@@ -101,7 +101,17 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
 
     let transitionOptions = component.effects.transition || {}
 
-    await transitionDomMutation(fromContainer, toContainer, () => {
+    // Build a container with only the island's current content so that
+    // transitionDomMutation only detects [wire:transition] elements inside the
+    // island, not ones in the surrounding parent element...
+    let fromIslandContent = document.createElement(fromContainerTag)
+    let node = startNode.nextSibling
+    while (node && node !== endNode) {
+        fromIslandContent.appendChild(node.cloneNode(true))
+        node = node.nextSibling
+    }
+
+    await transitionDomMutation(fromIslandContent, toContainer, () => {
         Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
     }, transitionOptions)
 
