@@ -11,11 +11,11 @@ To make a list sortable, add `wire:sort` to the parent element with a handler me
 use Livewire\Component;
 
 new class extends Component {
-    public Project $project;
+    public TodoList $list;
 
-    public function sort($id, $position)
+    public function handleSort($id, $position)
     {
-        $task = $this->project->tasks()->findOrFail($id);
+        $task = $this->list->tasks()->findOrFail($id);
 
         // Update the task's position and re-order other tasks...
     }
@@ -23,9 +23,9 @@ new class extends Component {
 ```
 
 ```blade
-<ul wire:sort="sort">
-    @foreach ($project->tasks as $task)
-        <li wire:sort:item="{{ $task->id }}">
+<ul wire:sort="handleSort">
+    @foreach ($list->tasks as $task)
+        <li wire:key="{{ $task->id }}" wire:sort:item="{{ $task->id }}">
             {{ $task->title }}
         </li>
     @endforeach
@@ -38,15 +38,45 @@ You are responsible for persisting the new order in your database.
 
 ## Sorting across groups
 
-To allow dragging items between multiple lists, use `wire:sort:group` with the same group name on each container:
+To allow dragging items between multiple lists, use `wire:sort:group` with the same group name on each container.
+
+To identify which group the item was dropped into, add `wire:sort:id` to each container. Its value will be passed as a third parameter to your handler:
+
+```php
+<?php
+
+use Livewire\Component;
+use Livewire\Attributes\Computed;
+use App\Models\Card;
+
+new class extends Component {
+    public Board $board;
+
+    #[Computed]
+    public function columns()
+    {
+        return $this->board->columns;
+    }
+
+    public function handleSort($id, $position, $columnId)
+    {
+        $card = $this->board->cards()->findOrFail($id);
+
+        $card->update([
+            'column_id' => $columnId,
+            'position' => $position,
+        ]);
+    }
+};
+```
 
 ```blade
 <div>
-    @foreach ($projects as $project)
-        <ul wire:sort="sort" wire:sort:group="tasks">
-            @foreach ($project->tasks as $task)
-                <li wire:sort:item="{{ $task->id }}">
-                    {{ $task->title }}
+    @foreach ($this->columns as $column)
+        <ul wire:sort="handleSort" wire:sort:group="cards" wire:sort:id="{{ $column->id }}">
+            @foreach ($column->cards as $card)
+                <li wire:key="{{ $card->id }}" wire:sort:item="{{ $card->id }}">
+                    {{ $card->title }}
                 </li>
             @endforeach
         </ul>
@@ -56,49 +86,14 @@ To allow dragging items between multiple lists, use `wire:sort:group` with the s
 
 When an item is dragged to a different group, only the destination group's handler fires.
 
-To identify which group the item was dropped into, add `wire:sort:id` to each container. Its value will be passed as a third parameter to your handler:
-
-```php
-<?php
-
-use Livewire\Component;
-use App\Models\Task;
-
-new class extends Component {
-    public $projects;
-
-    public function sort($id, $position, $projectId)
-    {
-        Task::findOrFail($id)->update([
-            'project_id' => $projectId,
-            'position' => $position,
-        ]);
-    }
-};
-```
-
-```blade
-<div>
-    @foreach ($projects as $project)
-        <ul wire:sort="sort" wire:sort:group="tasks" wire:sort:id="{{ $project->id }}">
-            @foreach ($project->tasks as $task)
-                <li wire:sort:item="{{ $task->id }}">
-                    {{ $task->title }}
-                </li>
-            @endforeach
-        </ul>
-    @endforeach
-</div>
-```
-
 ## Sort handles
 
 By default, users can drag an item by clicking anywhere on it. To restrict dragging to a specific handle, use `wire:sort:handle`:
 
 ```blade
-<ul wire:sort="sort">
-    @foreach ($project->tasks as $task)
-        <li wire:sort:item="{{ $task->id }}">
+<ul wire:sort="handleSort">
+    @foreach ($list->tasks as $task)
+        <li wire:key="{{ $task->id }}" wire:sort:item="{{ $task->id }}">
             <div wire:sort:handle>
                 <!-- Drag icon... -->
             </div>
@@ -116,9 +111,9 @@ Now users can only initiate a drag from the handle element.
 To prevent specific areas from triggering drag operations, use `wire:sort:ignore`. This is useful for buttons or other interactive elements inside sortable items:
 
 ```blade
-<ul wire:sort="sort">
-    @foreach ($project->tasks as $task)
-        <li wire:sort:item="{{ $task->id }}">
+<ul wire:sort="handleSort">
+    @foreach ($list->tasks as $task)
+        <li wire:key="{{ $task->id }}" wire:sort:item="{{ $task->id }}">
             {{ $task->title }}
 
             <div wire:sort:ignore>
