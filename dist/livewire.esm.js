@@ -20,9 +20,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5230,9 +5230,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/sort/dist/module.cjs.js
+// ../alpine/packages/sort/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/sort/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/sort/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -7981,9 +7981,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
+// ../alpine/packages/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -13942,6 +13942,8 @@ import_alpinejs15.default.interceptInit((el) => {
           return expression;
         }
       });
+    } else if (el.attributes[i].name.startsWith("wire:sort:group-id")) {
+      continue;
     } else if (el.attributes[i].name.startsWith("wire:sort:group")) {
       return;
     } else if (el.attributes[i].name.startsWith("wire:sort")) {
@@ -13963,10 +13965,14 @@ import_alpinejs15.default.interceptInit((el) => {
       import_alpinejs15.default.bind(el, {
         [attribute]() {
           setNextActionOrigin({ el, directive: directive2 });
-          evaluateActionExpression(el, expression, { scope: {
-            $item: this.$item,
-            $position: this.$position
-          }, params: [this.$item, this.$position] });
+          let params = [this.$item, this.$position];
+          let scope = { $item: this.$item, $position: this.$position };
+          let sortId = el.getAttribute("wire:sort:group-id");
+          if (sortId !== null) {
+            params.push(sortId);
+            scope.$id = sortId;
+          }
+          evaluateActionExpression(el, expression, { scope, params });
         }
       });
     }
