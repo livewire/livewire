@@ -39,11 +39,15 @@ gh pr checks {number}
 gh api repos/{owner}/{repo}/issues/{number}/reactions
 ```
 
-## Step 4: Checkout locally
+## Step 4: Checkout locally and merge latest main
 
 ```bash
+git checkout main && git pull origin main
 gh pr checkout {number}
+git merge main
 ```
+
+If the merge has conflicts, resolve them before continuing.
 
 ## Step 5: Read and classify
 
@@ -75,14 +79,25 @@ This is the most important step. A PR might be well-written and correct, but sti
 
 Only after this bigger-picture analysis should you proceed to evaluate the PR as-is:
 
-## Step 7: Evaluate the PR
+## Step 7: Challenge the contributor's framing
+
+Don't accept the PR description's framing of the bug or problem at face value. Verify independently:
+
+1. **Identify the root cause yourself.** Read the code the PR modifies. Understand *why* the bug exists before looking at how the PR fixes it.
+2. **Does the test actually isolate that root cause?** Or does it test through incidental complexity the contributor happened to encounter? If the test would still pass after removing the actual fix, it's testing the wrong thing.
+3. **If the test encodes a wrong mental model, rewrite it.** Strip it to the minimum reproduction that targets the real bug. Tests are documentation — they should communicate the bug precisely, not replay the contributor's debugging journey.
+
+## Step 8: Evaluate the PR
 
 ### For bug fixes
 
 1. **Has a test?** If not, write one. The test should fail on `main` and pass on the PR branch.
 2. **Test covers the actual fix?** Including edge cases?
-3. **Fix is surgical/minimal?** No unrelated changes?
-4. **Regression risk?** Could this break something else?
+3. **Test isolates root cause?** Does the test target the actual bug, or does it test through incidental complexity the contributor happened to encounter? Strip tests to the minimum reproduction. Tests are documentation — they should communicate the bug precisely.
+4. **Naming quality?** Review all test names, component names, variable names. Contributors often use names that reflect their mental model, not the actual architecture (e.g., calling a child component "parent"). Fix these before merging — they become permanent.
+5. **Unnecessary fixtures/setup?** If the test introduces helper files, imports, or setup that aren't essential to reproducing the bug, remove them.
+6. **Fix is surgical/minimal?** No unrelated changes?
+7. **Regression risk?** Could this break something else?
 
 ### For features
 
@@ -103,7 +118,7 @@ Only after this bigger-picture analysis should you proceed to evaluate the PR as
 4. **Built JS assets in diff?** These should NOT be committed. Remove them.
 5. **"No for now" bias.** When in doubt, lean toward not merging. It's easier to add later than remove.
 
-## Step 8: Run relevant tests only
+## Step 9: Run relevant tests only
 
 **NEVER run the full test suite.** Only run tests the PR adds or touches:
 
@@ -127,7 +142,7 @@ Also check CI status:
 gh pr checks {number}
 ```
 
-## Step 9: Make fixes directly
+## Step 10: Make fixes directly
 
 Fix issues you find. Common fixes:
 
@@ -147,7 +162,7 @@ git commit -m "Review fixes: [brief description]
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 ```
 
-## Step 10: Push to PR branch
+## Step 11: Push to PR branch
 
 Try to push to the contributor's branch:
 
@@ -180,7 +195,7 @@ EOF
 
 6. Comment on the original PR explaining the new PR.
 
-## Step 11: Post verdict comment
+## Step 12: Post verdict comment
 
 Post a structured comment on the PR:
 
@@ -235,3 +250,6 @@ EOF
 - Fix what you can. Don't just point out problems if you can solve them.
 - Security is non-negotiable. If you see a security issue, verdict is always "Request changes" regardless of everything else.
 - Match the project voice: practical, direct, Laravel-flavored.
+- Don't accept the contributor's framing of the problem at face value. Verify the root cause independently, then ensure the test targets that root cause — not the contributor's incidental path to discovering it.
+- Tests are documentation. A sloppy test that passes is not good enough — it should precisely communicate what broke and why.
+- Review contributor naming as critically as contributor code. Bad names get merged and become permanent.
