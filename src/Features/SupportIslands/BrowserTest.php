@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportIslands;
 
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
+use Illuminate\Support\Facades\Blade;
 
 class BrowserTest extends BrowserTestCase
 {
@@ -11,6 +12,7 @@ class BrowserTest extends BrowserTestCase
     {
         return function () {
             app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');
+            Blade::anonymousComponentPath(__DIR__ . '/fixtures/components');
         };
     }
 
@@ -319,6 +321,43 @@ class BrowserTest extends BrowserTestCase
             ->assertDontSee('Loading...')
             ->assertSeeIn('@island-increment', 'Count: 0')
             ;
+    }
+
+    public function test_island_inside_blade_component_renders_after_lazy_parent_load()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:lazy-parent lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'lazy-parent' => new class extends \Livewire\Component {
+                public function mount()
+                {
+                    usleep(250000); // 250ms
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div dusk="lazy-parent-loaded">Lazy Parent Loaded</div>
+
+                        <x-island-wrapper />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertNotPresent('@island-content')
+            ->waitForText('Lazy Parent Loaded')
+            ->assertPresent('@island-content')
+            ->assertSeeIn('@island-content', 'Island content ready');
     }
 
     public function test_named_islands()
