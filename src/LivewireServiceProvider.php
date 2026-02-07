@@ -43,7 +43,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->app->singleton('livewire.compiler', function () {
             return new Compiler(
                 new CacheManager(
-                    storage_path('framework/views/livewire')
+                    config('livewire.cache_path', storage_path('framework/views/livewire'))
                 )
             );
         });
