@@ -79,9 +79,9 @@ new class extends Component {
 
 When an item is dragged to a different group, only the handler of the destination group will receive the sort event. Your handler will need to detect that the item belongs to a different parent, re-associate it with the new parent model, and update the sort positions for both the old and new parent's items.
 
-NOTE: In order to determine the attributes of the target group (the group the card has been dragged _to_), you will need a Livewire Component for the parent group(s). 
+Because the destination group's handler is the one that fires, each group should be its own Livewire component. That way, the handler has access to the group's identity (e.g. a column ID) and can re-associate the dragged item.
 
-For example, if you were creating a kanban board, each column would be a Livewire component. You would then define a `sortItem()` method on that 'column' component, not the parent component.
+For example, in a kanban board, each column would be its own component with the `sortItem` method:
 
 ```php
 <?php
@@ -90,55 +90,53 @@ use Livewire\Component;
 use App\Models\TodoItem;
 use App\Models\Column;
 
-new class extends Component {    // This is the column component
+new class extends Component {
     public Column $column;
 
     public function sortItem($item, $position)
     {
-        $item = ToDoItem::query()->findOrFail($item);
-        
+        $item = TodoItem::findOrFail($item);
+
+        $oldColumnId = $item->column_id;
+
         $item->update([
-            'column_id' => $this->columnId,
+            'column_id' => $this->column->id,
             'position' => $position,
         ]);
-        
-        // Reorder both columns
-        collect([$this->columnId, $item->column_id])
-            ->unique()
-            ->each(fn($columnId) => $this->reorderColumn($columnId));
+
+        // Reorder items in both the old and new columns...
+        $this->reorderColumn($oldColumnId);
+        $this->reorderColumn($this->column->id);
     }
 
     private function reorderColumn($columnId)
     {
-        $items = TodoItem::where('column_id', $columnId)
+        TodoItem::where('column_id', $columnId)
             ->orderBy('position')
-            ->get();
-            
-        $items->each(fn($item, $index) => $item->update(['position' => $index]));
+            ->get()
+            ->each(fn ($item, $index) => $item->update(['position' => $index]));
     }
 };
 ?>
-<ul wire:sort="sortItem" wire:sort:group="todos">
-    {{ $slot }}    // this is the card loop passed in parent view/component
-</ul>
 
+<ul wire:sort="sortItem" wire:sort:group="todos">
+    @foreach ($this->column->items as $item)
+        <li wire:sort:item="{{ $item->id }}">
+            {{ $item->title }}
+        </li>
+    @endforeach
+</ul>
 ```
 
+Then your parent board component renders each column:
+
 ```blade
-// This is the parent component (the board in our example
 <div>
-    @foreach ($user->todoLists as $list => $todo)
-        <livewire:kanban.column :column="$list">
-            @foreach ($todo->items as $item)
-                <li wire:sort:item="{{ $item->id }}">
-                    {{ $item->title }}
-                </li>
-            @endforeach
-        </livewire:kanban.column>
+    @foreach ($board->columns as $column)
+        <livewire:kanban.column :column="$column" :key="$column->id" />
     @endforeach
 </div>
 ```
-
 
 ## Sort handles
 
