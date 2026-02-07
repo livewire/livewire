@@ -90,13 +90,19 @@ trait WithFileUploads
             ? str_ireplace('files', $name, $errorsInJson)
             : str_ireplace('files.0', $name, $errorsInJson);
 
-        $decoded = json_decode($errorsInJson, true);
+        $errors = json_decode($errorsInJson, true)['errors'] ?? null;
 
-        if (!isset($decoded['errors'])) {
-            return $this->_uploadErrored($name, null, $isMultiple);
+        if (! $errors) {
+            $translator = app()->make('translator');
+
+            $attribute = $translator->get("validation.attributes.{$name}");
+            if ($attribute === "validation.attributes.{$name}") $attribute = $name;
+
+            $message = trans('validation.uploaded', ['attribute' => $attribute]);
+            if ($message === 'validation.uploaded') $message = "The {$name} failed to upload.";
+
+            throw ValidationException::withMessages([$name => $message]);
         }
-
-        $errors = $decoded['errors'];
 
         throw (ValidationException::withMessages($errors));
     }
