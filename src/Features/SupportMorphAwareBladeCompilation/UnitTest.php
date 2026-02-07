@@ -805,6 +805,30 @@ class UnitTest extends \Tests\TestCase
                 </{!! $tagName !!}>
                 HTML
             ],
+            // GitHub discussion #9776 comment by @gdebrauwer: multiple foreach loops with
+            // identical source expressions but different iteration syntax (with/without $key =>)
+            44 => [
+                3,
+                <<<'HTML'
+                <div>
+                    <div>
+                        @foreach (\App\Models\User::all() as $locale)
+                            <div></div>
+                        @endforeach
+                    </div>
+                    <div>
+                        @foreach (\App\Models\User::all() as $index => $locale)
+                            <div></div>
+                        @endforeach
+                    </div>
+                    <div>
+                        @foreach (\App\Models\User::all() as $locale)
+                            <div></div>
+                        @endforeach
+                    </div>
+                </div>
+                HTML
+            ],
         ];
     }
 

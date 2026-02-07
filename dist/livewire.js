@@ -393,10 +393,17 @@
     }
     let firstSegment = segments.shift();
     let restOfSegments = segments.join(".");
+    let nextSegment = segments[0];
     if (object[firstSegment] === void 0) {
       object[firstSegment] = {};
     }
+    if (isArray(object[firstSegment]) && isNumeric(nextSegment) && parseInt(nextSegment) > object[firstSegment].length) {
+      object[firstSegment] = { ...object[firstSegment] };
+    }
     dataSet(object[firstSegment], restOfSegments, value);
+  }
+  function isNumeric(subject) {
+    return !isNaN(parseInt(subject));
   }
   function dataDelete(object, key) {
     let segments = parsePathSegments(key);
@@ -867,7 +874,7 @@
     );
   }
 
-  // node_modules/alpinejs/dist/module.esm.js
+  // ../alpine/packages/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -3472,12 +3479,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       listenerTarget = document;
     if (modifiers.includes("debounce")) {
       let nextModifier = modifiers[modifiers.indexOf("debounce") + 1] || "invalid-wait";
-      let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
+      let wait = isNumeric2(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
       handler4 = debounce(handler4, wait);
     }
     if (modifiers.includes("throttle")) {
       let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
-      let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
+      let wait = isNumeric2(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
       handler4 = throttle(handler4, wait);
     }
     if (modifiers.includes("prevent"))
@@ -3541,7 +3548,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function camelCase2(subject) {
     return subject.toLowerCase().replace(/-(\w)/g, (match, char) => char.toUpperCase());
   }
-  function isNumeric(subject) {
+  function isNumeric2(subject) {
     return !Array.isArray(subject) && !isNaN(subject);
   }
   function kebabCase2(subject) {
@@ -3563,11 +3570,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     if (keyModifiers.includes("debounce")) {
       let debounceIndex = keyModifiers.indexOf("debounce");
-      keyModifiers.splice(debounceIndex, isNumeric((keyModifiers[debounceIndex + 1] || "invalid-wait").split("ms")[0]) ? 2 : 1);
+      keyModifiers.splice(debounceIndex, isNumeric2((keyModifiers[debounceIndex + 1] || "invalid-wait").split("ms")[0]) ? 2 : 1);
     }
     if (keyModifiers.includes("throttle")) {
       let debounceIndex = keyModifiers.indexOf("throttle");
-      keyModifiers.splice(debounceIndex, isNumeric((keyModifiers[debounceIndex + 1] || "invalid-wait").split("ms")[0]) ? 2 : 1);
+      keyModifiers.splice(debounceIndex, isNumeric2((keyModifiers[debounceIndex + 1] || "invalid-wait").split("ms")[0]) ? 2 : 1);
     }
     if (keyModifiers.length === 0)
       return false;
@@ -3790,12 +3797,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function safeParseNumber(rawValue) {
     let number = rawValue ? parseFloat(rawValue) : null;
-    return isNumeric2(number) ? number : rawValue;
+    return isNumeric22(number) ? number : rawValue;
   }
   function checkedAttrLooseCompare2(valueA, valueB) {
     return valueA == valueB;
   }
-  function isNumeric2(subject) {
+  function isNumeric22(subject) {
     return !Array.isArray(subject) && !isNaN(subject);
   }
   function isGetterSetter(value) {
@@ -7883,7 +7890,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // node_modules/@alpinejs/sort/dist/module.esm.js
+  // ../alpine/packages/sort/dist/module.esm.js
   function ownKeys3(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -11658,7 +11665,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (snapshotCache.has(alpine.snapshotIdx)) {
         let snapshot = snapshotCache.retrieve(alpine.snapshotIdx);
         handleHtml(snapshot.html, snapshot.url, snapshotCache.currentUrl, snapshotCache.currentKey);
+        snapshotCache.currentKey = alpine.snapshotIdx;
+        snapshotCache.currentUrl = snapshot.url;
       } else {
+        snapshotCache.currentKey = null;
+        snapshotCache.currentUrl = null;
         fallback2(alpine.url);
       }
     });
@@ -12262,7 +12273,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
-        updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
+        shouldPushToHistoryState && updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
         preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
           enablePersist && storePersistantElementsForLater((persistedEl) => {
             packUpPersistedTeleports(persistedEl);
@@ -12325,7 +12336,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         fireEventForOtherLibrariesToHookInto("alpine:navigating", {
           onSwap: (callback) => swapCallbacks.push(callback)
         });
-        updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
+        updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageKey, currentPageUrl);
         preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
           enablePersist && storePersistantElementsForLater((persistedEl) => {
             packUpPersistedTeleports(persistedEl);
@@ -12590,7 +12601,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // node_modules/@alpinejs/morph/dist/module.esm.js
+  // ../alpine/packages/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -14245,6 +14256,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             return expression;
           }
         });
+      } else if (el.attributes[i].name.startsWith("wire:sort:group-id")) {
+        continue;
       } else if (el.attributes[i].name.startsWith("wire:sort:group")) {
         return;
       } else if (el.attributes[i].name.startsWith("wire:sort")) {
@@ -14266,10 +14279,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         module_default.bind(el, {
           [attribute]() {
             setNextActionOrigin({ el, directive: directive3 });
-            evaluateActionExpression(el, expression, { scope: {
-              $item: this.$item,
-              $position: this.$position
-            }, params: [this.$item, this.$position] });
+            let params = [this.$item, this.$position];
+            let scope2 = { $item: this.$item, $position: this.$position };
+            let sortId = el.getAttribute("wire:sort:group-id");
+            if (sortId !== null) {
+              params.push(sortId);
+              scope2.$id = sortId;
+            }
+            evaluateActionExpression(el, expression, { scope: scope2, params });
           }
         });
       }
