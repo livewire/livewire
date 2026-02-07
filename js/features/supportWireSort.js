@@ -17,12 +17,12 @@ Alpine.interceptInit(el => {
                     return expression
                 }
             })
+        } else if (el.attributes[i].name.startsWith('wire:sort:group-id')) {
+            // This will get read by the wire:sort handler below...
+            continue
         } else if (el.attributes[i].name.startsWith('wire:sort:group')) {
             // This will get picked up by Alpine's x-sort source...
             return
-        } else if (el.attributes[i].name.startsWith('wire:sort:id')) {
-            // This will get read by the wire:sort handler below...
-            continue
         } else if (el.attributes[i].name.startsWith('wire:sort')) {
             let directive = extractDirective(el, el.attributes[i].name)
 
@@ -57,7 +57,7 @@ Alpine.interceptInit(el => {
                     let params = [this.$item, this.$position]
                     let scope = { $item: this.$item, $position: this.$position }
 
-                    let sortId = el.getAttribute('wire:sort:id')
+                    let sortId = el.getAttribute('wire:sort:group-id')
 
                     if (sortId !== null) {
                         params.push(sortId)

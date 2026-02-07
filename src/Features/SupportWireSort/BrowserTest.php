@@ -22,7 +22,7 @@ class BrowserTest extends BrowserTestCase
             {
                 return <<<'HTML'
                 <div>
-                    <ul dusk="sortable" wire:sort="sortItem" wire:sort:group="todos" wire:sort:id="column-3">
+                    <ul dusk="sortable" wire:sort="sortItem" wire:sort:group="todos" wire:sort:group-id="column-3">
                         <li wire:sort:item="item-1">Item 1</li>
                         <li wire:sort:item="item-2">Item 2</li>
                         <li wire:sort:item="item-3">Item 3</li>

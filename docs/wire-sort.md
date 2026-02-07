@@ -40,7 +40,7 @@ You are responsible for persisting the new order in your database.
 
 To allow dragging items between multiple lists, use `wire:sort:group` with the same group name on each container.
 
-To identify which group the item was dropped into, add `wire:sort:id` to each container. Its value will be passed as a third parameter to your handler:
+To identify which group the item was dropped into, add `wire:sort:group-id` to each container. Its value will be passed as a third parameter to your handler:
 
 ```php
 <?php
@@ -62,10 +62,7 @@ new class extends Component {
     {
         $card = $this->board->cards()->findOrFail($id);
 
-        $card->update([
-            'column_id' => $columnId,
-            'position' => $position,
-        ]);
+        // Update the card's position and re-order other cards...
     }
 };
 ```
@@ -73,7 +70,7 @@ new class extends Component {
 ```blade
 <div>
     @foreach ($this->columns as $column)
-        <ul wire:sort="handleSort" wire:sort:group="cards" wire:sort:id="{{ $column->id }}">
+        <ul wire:sort="handleSort" wire:sort:group="cards" wire:sort:group-id="{{ $column->id }}">
             @foreach ($column->cards as $card)
                 <li wire:key="{{ $card->id }}" wire:sort:item="{{ $card->id }}">
                     {{ $card->title }}
@@ -130,7 +127,7 @@ To prevent specific areas from triggering drag operations, use `wire:sort:ignore
 wire:sort="method"
 wire:sort:item="id"
 wire:sort:group="name"
-wire:sort:id="identifier"
+wire:sort:group-id="identifier"
 wire:sort:handle
 wire:sort:ignore
 ```
