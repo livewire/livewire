@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportModels;
 
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Model;
@@ -75,6 +76,14 @@ class ModelSynth extends Synth {
         }
 
         $key = $meta['key'];
+
+        // If this model was already resolved by route binding (via
+        // SubstituteBindings middleware), reuse it to avoid a duplicate query.
+        $resolvedModel = app(PersistentMiddleware::class)->getResolvedRouteModel($class, $key);
+
+        if ($resolvedModel) {
+            return $resolvedModel;
+        }
 
         return $this->makeLazyProxy($class, $meta, function () use ($class, $key) {
             return (new $class)->newQueryForRestoration($key)->useWritePdo()->firstOrFail();

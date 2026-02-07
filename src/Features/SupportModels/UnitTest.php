@@ -5,6 +5,8 @@ namespace Livewire\Features\SupportModels;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Route;
+use Livewire\Drawer\Utils;
 use Livewire\Livewire;
 use Sushi\Sushi;
 use Tests\TestComponent;
@@ -247,6 +249,46 @@ class UnitTest extends \Tests\TestCase
         // This should throw because stdClass doesn't extend Model
         $synth->hydrate(null, ['class' => \stdClass::class]);
     }
+
+    public function test_route_bound_models_are_not_queried_twice_on_update()
+    {
+        Route::livewire('/test-articles/{article}', RouteModelBindingComponent::class)
+            ->middleware('web');
+
+        // GET the page to mount the component and get a valid snapshot
+        $response = $this->withoutExceptionHandling()->get('/test-articles/1');
+        $response->assertOk();
+        $response->assertSee('First');
+
+        // Extract snapshot from the rendered HTML
+        $html = $response->getContent();
+        $snapshot = Utils::extractAttributeDataFromHtml($html, 'wire:snapshot');
+        $encodedSnapshot = json_encode($snapshot);
+
+        // Flush state from the initial render
+        app('livewire')->flushState();
+
+        // Enable query log and clear it
+        Article::resolveConnection()->enableQueryLog();
+        Article::resolveConnection()->flushQueryLog();
+
+        // POST to the update endpoint to trigger an update request
+        $this->post(app('livewire')->getUpdateUri(), [
+            'components' => [
+                [
+                    'snapshot' => $encodedSnapshot,
+                    'calls' => [['method' => '$refresh', 'params' => [], 'path' => '']],
+                    'updates' => [],
+                ],
+            ],
+        ])->assertOk();
+
+        // Count queries to the articles table — should only be one, not two
+        $queryLog = Article::resolveConnection()->getQueryLog();
+        $articleQueries = array_filter($queryLog, fn ($q) => str_contains($q['query'], 'articles'));
+
+        $this->assertCount(1, array_values($articleQueries));
+    }
 }
 
 #[\Attribute]
@@ -277,4 +319,14 @@ class Article extends Model
         ['title' => 'First'],
         ['title' => 'Second'],
     ];
+}
+
+class RouteModelBindingComponent extends \Livewire\Component
+{
+    public Article $article;
+
+    public function render()
+    {
+        return '<div>{{ $article->title }}</div>';
+    }
 }

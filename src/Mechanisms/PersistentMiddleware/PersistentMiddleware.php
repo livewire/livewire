@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Router;
 use Livewire\Mechanisms\Mechanism;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -26,6 +27,7 @@ class PersistentMiddleware extends Mechanism
     protected $path;
     protected $method;
     protected $cachedRoutes = [];
+    protected $resolvedRouteModels = [];
 
     function boot()
     {
@@ -50,6 +52,7 @@ class PersistentMiddleware extends Mechanism
             $this->path = null;
             $this->method = null;
             $this->cachedRoutes = [];
+            $this->resolvedRouteModels = [];
         });
     }
 
@@ -66,6 +69,11 @@ class PersistentMiddleware extends Mechanism
     function getPersistentMiddleware()
     {
         return static::$persistentMiddleware;
+    }
+
+    function getResolvedRouteModel($class, $key)
+    {
+        return $this->resolvedRouteModels[$class.':'.$key] ?? null;
     }
 
     protected function extractPathAndMethodFromRequest()
@@ -99,6 +107,18 @@ class PersistentMiddleware extends Mechanism
         if (is_null($middleware)) return;
 
         Utils::applyMiddleware($request, $middleware);
+
+        // After middleware has run (e.g. SubstituteBindings), collect any
+        // resolved model instances from the route parameters so that
+        // ModelSynth can reuse them instead of re-querying the database.
+        if ($route = $request->route()) {
+            foreach ($route->parameters() as $parameter) {
+                if ($parameter instanceof Model) {
+                    $key = get_class($parameter).':'.$parameter->getKey();
+                    $this->resolvedRouteModels[$key] = $parameter;
+                }
+            }
+        }
     }
 
     protected function makeFakeRequest()
