@@ -329,12 +329,12 @@ class BrowserTest extends BrowserTestCase
                 {
                     return <<<'HTML'
                     <div>
-                        <livewire:lazy-parent lazy />
+                        <livewire:child lazy />
                     </div>
                     HTML;
                 }
             },
-            'lazy-parent' => new class extends \Livewire\Component {
+            'child' => new class extends \Livewire\Component {
                 public function render()
                 {
                     return <<<'HTML'
