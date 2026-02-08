@@ -387,4 +387,69 @@ class UnitTest extends TestCase
         })
             ->assertSee('Inner component rendered');
     }
+
+    public function test_multiple_calls_targeting_same_island_only_renders_fragment_once()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public $isDialogOpen = true;
+
+            public function cancelDialog()
+            {
+                $this->isDialogOpen = false;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'dialog')
+                        <div>
+                            @if ($isDialogOpen)
+                                Dialog is open
+                            @else
+                                Dialog is closed
+                            @endif
+                        </div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        // Simulate two calls in one request both targeting the same island
+        // (like wire:model.live="isDialogOpen" + wire:cancel="cancelDialog")
+        $component->update(
+            calls: [
+                [
+                    'method' => 'cancelDialog',
+                    'params' => [],
+                    'path' => '',
+                    'metadata' => [
+                        'island' => [
+                            'name' => 'dialog',
+                            'mode' => 'morph',
+                        ],
+                    ],
+                ],
+                [
+                    'method' => '$commit',
+                    'params' => [],
+                    'path' => '',
+                    'metadata' => [
+                        'type' => 'model.live',
+                        'island' => [
+                            'name' => 'dialog',
+                            'mode' => 'morph',
+                        ],
+                    ],
+                ],
+            ],
+            updates: [
+                'isDialogOpen' => false,
+            ],
+        );
+
+        $fragments = $component->effects['islandFragments'] ?? [];
+
+        $this->assertCount(1, $fragments, 'Expected only one island fragment but got ' . count($fragments));
+    }
 }

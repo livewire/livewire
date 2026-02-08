@@ -111,14 +111,17 @@ trait HandlesIslands
         foreach ($islands as $island) {
             if ($island['name'] === $name) {
 
+                $token = $island['token'];
+
+                if (! $token) continue;
+
+                // Skip if this island was already rendered in this request...
+                if ($this->islandAlreadyRendered($name, $token)) continue;
+
                 // If the island is lazy, we need to mount it, but to ensure any nested islands render,
                 // we need to set the `$islandsHaveMounted` flag to false and reset it back after the
                 // lazy island is mounted...
                 $finish = $this->mountIfNeedsMounting($mount);
-
-                $token = $island['token'];
-
-                if (! $token) continue;
 
                 // Pass runtime $with as __runtimeWith so it overrides directive's with
                 $data = empty($with) ? [] : ['__runtimeWith' => $with];
@@ -135,6 +138,17 @@ trait HandlesIslands
                 $finish();
             }
         }
+    }
+
+    protected function islandAlreadyRendered($name, $token)
+    {
+        foreach ($this->renderedIslandFragments as $fragment) {
+            if (str_contains($fragment, "name={$name}|token={$token}")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function streamIsland($name, $content = null, $mode = 'morph', $with = [])
