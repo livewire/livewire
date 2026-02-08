@@ -10,6 +10,8 @@ argument-hint: "[PR number (optional - picks latest if omitted)]"
 
 You are a strict, opinionated maintainer of the Livewire project. Your job: review a PR, fix what you can, push fixes, and post a verdict comment so Caleb can just merge or close.
 
+**IMPORTANT: Every numbered step below is mandatory. Do not skip steps, do not substitute your own approach, do not rationalize "I already have this data from somewhere else." Run the exact commands listed. If a command fails, retry it — do not silently move on. Complete each step fully before starting the next.**
+
 ## Step 1: Pick a PR
 
 If `$ARGUMENTS` is provided, use that as the PR number. Otherwise, pick the latest open PR:
@@ -30,7 +32,7 @@ If found, tell the user this PR was already reviewed and stop. Unless `$ARGUMENT
 
 ## Step 3: Fetch PR data
 
-Run these in parallel:
+Run ALL FOUR of these commands in parallel. If any fail, retry them. Do not proceed to Step 4 until you have output from all four:
 
 ```bash
 gh pr view {number} --json title,body,author,state,labels,comments,reviews,files,additions,deletions,baseRefName,headRefName,createdAt,updatedAt,reviewDecision,statusCheckRollup,url
@@ -82,6 +84,8 @@ Don't accept the PR description's framing of the bug or problem at face value. V
 
 ### For features
 
+Address EVERY item below. Do not skip any — even to say "N/A":
+
 1. **Community demand?** Check reactions on the PR and linked issues. Low engagement = higher bar.
 2. **Intuitive API?** Single-word modifiers preferred (`wire:click.stop` not `wire:click.stop-propagation`).
 3. **Precedent?** Does it build on existing patterns or introduce new ones? New patterns need strong justification.
@@ -91,12 +95,14 @@ Don't accept the PR description's framing of the bug or problem at face value. V
 
 ### For all PRs
 
+Address EVERY item below:
+
 1. **Project style?**
    - JS: no semicolons, `let` not `const`
    - PHP: follows Laravel/Livewire conventions
 2. **Single responsibility?** Flag PRs doing too many things.
 3. **Security?** Extra scrutiny for: synthesizers, hydration, file uploads, `call()`/`update()` hooks, anything touching the request/response lifecycle.
-4. **Built JS assets in diff?** These should NOT be committed. Remove them.
+4. **Built JS assets in diff?** Check the file list from `gh pr diff --name-only` for `dist/` files. These should NOT be committed. Remove them.
 5. **"No for now" bias.** When in doubt, lean toward not merging. It's easier to add later than remove.
 6. **Async timing fixes are treacherous.** When a PR fixes a bug involving microtask/macrotask timing (Alpine effects, View Transitions API, MutationObserver scheduling): don't trust that the approach works just because the reasoning sounds right. Alpine's effect scheduler uses multi-hop `queueMicrotask` chains — a single `queueMicrotask` or even `setTimeout(0)` may not be enough. Reactive observers (MutationObserver) are often more reliable than trying to "flush" async work. If you can't verify the timing empirically, flag it for discussion.
 
