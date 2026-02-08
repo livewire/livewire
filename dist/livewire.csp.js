@@ -21,9 +21,9 @@
     mod
   ));
 
-  // ../alpine/packages/csp/dist/module.cjs.js
+  // node_modules/@alpinejs/csp/dist/module.cjs.js
   var require_module_cjs = __commonJS({
-    "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
+    "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
       var __create2 = Object.create;
       var __defProp2 = Object.defineProperty;
       var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -9337,7 +9337,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/sort/dist/module.esm.js
+  // node_modules/@alpinejs/sort/dist/module.esm.js
   function ownKeys2(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
@@ -14050,7 +14050,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
@@ -14158,11 +14158,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       for (let i = domAttributes.length - 1; i >= 0; i--) {
         let name = domAttributes[i].name;
         if (!to.hasAttribute(name)) {
-          if (name === "open" && from.nodeName === "DIALOG" && from.open) {
-            from.close();
-          } else {
-            from.removeAttribute(name);
-          }
+          from.removeAttribute(name);
         }
       }
       for (let i = toAttributes.length - 1; i >= 0; i--) {
@@ -14765,12 +14761,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       strings.push(m);
       return `___${strings.length - 1}___`;
     });
-    result = result.replace(/(?<![.\w$])(\$?[a-zA-Z_]\w*)/g, (m, ident, offset2) => {
+    result = result.replace(/(^|[^.\w$])(\$?[a-zA-Z_]\w*)/g, (m, pre, ident, offset2) => {
       if (SKIP.includes(ident) || /^___\d+___$/.test(ident))
-        return ident;
+        return pre + ident;
       if (result[offset2 + m.length] === ":")
-        return ident;
-      return "$wire." + ident;
+        return pre + ident;
+      return pre + "$wire." + ident;
     });
     return result.replace(/___(\d+)___/g, (m, i) => strings[i]);
   }
@@ -15053,7 +15049,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     trigger("island.morph", { startNode, endNode, component });
     let transitionOptions = component.effects.transition || {};
-    await transitionDomMutation(fromContainer, toContainer, () => {
+    let islandHasTransition = false;
+    let node = startNode.nextSibling;
+    while (node && node !== endNode) {
+      if (node.nodeType === 1 && (node.hasAttribute?.("wire:transition") || node.querySelector?.("[wire\\:transition]"))) {
+        islandHasTransition = true;
+        break;
+      }
+      node = node.nextSibling;
+    }
+    let fromEl = islandHasTransition ? fromContainer : document.createElement("div");
+    await transitionDomMutation(fromEl, toContainer, () => {
       import_alpinejs9.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
     }, transitionOptions);
     trigger("island.morphed", { startNode, endNode, component });
@@ -15207,11 +15213,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function shouldMarkDisabled(el) {
     let tag = el.tagName.toLowerCase();
+    let inputTypesThatDontSupportReadonly = [
+      "hidden",
+      "range",
+      "color",
+      "checkbox",
+      "radio",
+      "file",
+      "submit",
+      "image",
+      "reset",
+      "button"
+    ];
     if (tag === "select")
       return true;
     if (tag === "button" && el.type === "submit")
       return true;
-    if (tag === "input" && (el.type === "checkbox" || el.type === "radio"))
+    if (tag === "input" && inputTypesThatDontSupportReadonly.includes(el.type))
       return true;
     return false;
   }

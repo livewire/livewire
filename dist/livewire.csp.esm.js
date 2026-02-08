@@ -20,9 +20,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../alpine/packages/csp/dist/module.cjs.js
+// node_modules/@alpinejs/csp/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -6035,9 +6035,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/sort/dist/module.cjs.js
+// node_modules/@alpinejs/sort/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/sort/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/sort/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -8786,9 +8786,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8919,11 +8919,7 @@ var require_module_cjs8 = __commonJS({
         for (let i = domAttributes.length - 1; i >= 0; i--) {
           let name = domAttributes[i].name;
           if (!to.hasAttribute(name)) {
-            if (name === "open" && from.nodeName === "DIALOG" && from.open) {
-              from.close();
-            } else {
-              from.removeAttribute(name);
-            }
+            from.removeAttribute(name);
           }
         }
         for (let i = toAttributes.length - 1; i >= 0; i--) {
@@ -13789,12 +13785,12 @@ function contextualizeExpression(expression) {
     strings.push(m);
     return `___${strings.length - 1}___`;
   });
-  result = result.replace(/(?<![.\w$])(\$?[a-zA-Z_]\w*)/g, (m, ident, offset) => {
+  result = result.replace(/(^|[^.\w$])(\$?[a-zA-Z_]\w*)/g, (m, pre, ident, offset) => {
     if (SKIP.includes(ident) || /^___\d+___$/.test(ident))
-      return ident;
+      return pre + ident;
     if (result[offset + m.length] === ":")
-      return ident;
-    return "$wire." + ident;
+      return pre + ident;
+    return pre + "$wire." + ident;
   });
   return result.replace(/___(\d+)___/g, (m, i) => strings[i]);
 }
@@ -14077,7 +14073,17 @@ async function morphFragment(component, startNode, endNode, toHTML) {
   }
   trigger("island.morph", { startNode, endNode, component });
   let transitionOptions = component.effects.transition || {};
-  await transitionDomMutation(fromContainer, toContainer, () => {
+  let islandHasTransition = false;
+  let node = startNode.nextSibling;
+  while (node && node !== endNode) {
+    if (node.nodeType === 1 && (node.hasAttribute?.("wire:transition") || node.querySelector?.("[wire\\:transition]"))) {
+      islandHasTransition = true;
+      break;
+    }
+    node = node.nextSibling;
+  }
+  let fromEl = islandHasTransition ? fromContainer : document.createElement("div");
+  await transitionDomMutation(fromEl, toContainer, () => {
     import_alpinejs9.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
   }, transitionOptions);
   trigger("island.morphed", { startNode, endNode, component });
@@ -14231,11 +14237,23 @@ function disableForm(formEl) {
 }
 function shouldMarkDisabled(el) {
   let tag = el.tagName.toLowerCase();
+  let inputTypesThatDontSupportReadonly = [
+    "hidden",
+    "range",
+    "color",
+    "checkbox",
+    "radio",
+    "file",
+    "submit",
+    "image",
+    "reset",
+    "button"
+  ];
   if (tag === "select")
     return true;
   if (tag === "button" && el.type === "submit")
     return true;
-  if (tag === "input" && (el.type === "checkbox" || el.type === "radio"))
+  if (tag === "input" && inputTypesThatDontSupportReadonly.includes(el.type))
     return true;
   return false;
 }
