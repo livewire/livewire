@@ -130,6 +130,15 @@ Also check CI status:
 gh pr checks {number}
 ```
 
+## Step 8b: If the PR has no fix, write one
+
+If the PR only adds a failing test (or describes a bug without a fix), don't just review the test and stop. **Explore solution paths and try to fix the bug yourself.** This is the most valuable thing you can do.
+
+1. Identify 2-3 possible fix approaches
+2. Evaluate trade-offs of each (surgical vs broad, risk of regressions, etc.)
+3. Present the options to Caleb with a brief explanation of each
+4. Once Caleb picks a direction, implement and test it
+
 ## Step 9: Make fixes directly
 
 Fix issues you find. Common fixes:
@@ -195,8 +204,8 @@ gh pr comment {number} --body "$(cat <<'EOF'
 **Type**: {Bug fix | Feature | Refactor | Docs | Mixed}
 **Verdict**: {Merge | Request changes | Needs discussion | Close}
 
-### Summary
-{1-3 sentence summary of what the PR does and why}
+### What's happening (plain English)
+{Explain the PR like Caleb is a 3-year-old who happens to be an expert in Livewire internals but has zero context on this specific PR. Use a numbered step-by-step walkthrough of the exact sequence that triggers the bug/feature. No jargon beyond what Livewire/Alpine devs already know. Be crystal clear and concise — this is the most important section.}
 
 ### Changes Made
 {List of fixups you pushed, or "No changes made" if none}
