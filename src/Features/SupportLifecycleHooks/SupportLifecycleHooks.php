@@ -18,8 +18,6 @@ class SupportLifecycleHooks extends ComponentHook
     public static function provide()
     {
         on('flush-state', function () {
-            // Clear caches to prevent memory leaks in long-running processes (e.g., Octane)
-            // These caches grow with each unique component class encountered
             static::$traitCache = [];
             static::$methodCache = [];
         });

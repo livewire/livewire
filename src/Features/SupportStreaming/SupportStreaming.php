@@ -12,7 +12,6 @@ class SupportStreaming extends ComponentHook
     public static function provide()
     {
         on('flush-state', function () {
-            // Clear static response to prevent memory leaks in long-running processes (e.g., Octane)
             static::$response = null;
         });
     }

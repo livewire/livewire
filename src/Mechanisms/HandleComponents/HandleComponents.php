@@ -2,7 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use function Livewire\{store, trigger, wrap };
+use function Livewire\{on, store, trigger, wrap };
 use ReflectionUnionType;
 use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
@@ -34,15 +34,9 @@ class HandleComponents extends Mechanism
 
     public function boot()
     {
-        \Livewire\on('flush-state', function () {
-            // Clear component stacks to prevent memory leaks in long-running processes (e.g., Octane)
+        on('flush-state', function () {
             static::$renderStack = [];
             static::$componentStack = [];
-
-            // Clear synthesizer type cache to prevent unbounded growth
-            $this->synthesizerTypeCache = [];
-
-            // Clear reflection cache in BaseUtils to prevent unbounded growth
             Utils::flushReflectionCache();
         });
     }
