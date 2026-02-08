@@ -49,10 +49,6 @@ class HandleRequests extends Mechanism
         // In this case, find the route from the router.
         $route = $this->updateRoute ?? $this->findUpdateRoute();
 
-        // Use the route's URI directly instead of the route() helper.
-        // The route() helper can fail in edge cases where the route name
-        // isn't fully indexed in Laravel's named route collection yet,
-        // even though we have a valid route object.
         return (string) str($route->uri())->start('/');
     }
 
