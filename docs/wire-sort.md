@@ -1,75 +1,79 @@
 
-Livewire provides powerful drag-and-drop sorting capabilities through the `wire:sort` and `wire:sort:item` directives. With these tools, you can make lists of elements sortable with smooth animations—all handled for you out of the box.
+Livewire provides drag-and-drop sorting through the `wire:sort` directive. Add it to a parent element and use `wire:sort:item` on each child to make lists sortable with smooth animations out of the box.
 
 ## Basic usage
 
-To make a list sortable, add `wire:sort` to the parent element and specify a method name to handle the sort event. Then, add `wire:sort:item` to each child element with a unique identifier.
-
-Here's a basic example of a sortable todo list:
+To make a list sortable, add `wire:sort` to the parent element with a handler method name, and `wire:sort:item` to each child with a unique identifier:
 
 ```php
 <?php
 
 use Livewire\Component;
-use Livewire\Attributes\Computed;
 
 new class extends Component {
-    public Todo $todo;
+    public TodoList $list;
 
-    public function sortItem($item, $position)
+    public function handleSort($id, $position)
     {
-        $item = $this->todo->items()->findOrFail($item);
+        $task = $this->list->tasks()->findOrFail($id);
 
-        // Update the item's position in the database and re-order other items...
+        // Update the task's position and re-order other tasks...
     }
 };
 ```
 
 ```blade
-<ul wire:sort="sortItem">
-    @foreach ($todo->items as $item)
-        <li wire:sort:item="{{ $item->id }}">
-            {{ $item->title }}
+<ul wire:sort="handleSort">
+    @foreach ($list->tasks as $task)
+        <li wire:key="{{ $task->id }}" wire:sort:item="{{ $task->id }}">
+            {{ $task->title }}
         </li>
     @endforeach
 </ul>
 ```
 
-When a user drags and drops an item to a new position, Livewire will call your `sortItem` method with two parameters: the item's unique identifier (from `wire:sort:item`) and the new zero-based position in the list.
+When a user drags and drops an item to a new position, Livewire will call your handler with two parameters: the item's identifier (from `wire:sort:item`) and the new zero-based position.
 
-You are responsible for persisting the new order in your database. This typically involves updating the position of the moved item and adjusting the positions of other affected items.
+You are responsible for persisting the new order in your database.
 
 ## Sorting across groups
 
-If you have multiple sortable lists on a page and want to allow users to drag items between them, you can use `wire:sort:group` to create shared groups.
+To allow dragging items between multiple lists, use `wire:sort:group` with the same group name on each container.
 
-By assigning the same group name to multiple sortable containers, items can be dragged from one list to another:
+To identify which group the item was dropped into, add `wire:sort:group-id` to each container. Its value will be passed as a third parameter to your handler:
 
 ```php
 <?php
 
 use Livewire\Component;
 use Livewire\Attributes\Computed;
+use App\Models\Card;
 
 new class extends Component {
-    public User $user;
+    public Board $board;
 
-    public function sortItem($item, $position)
+    #[Computed]
+    public function columns()
     {
-        $item = $this->todo->items()->findOrFail($item);
+        return $this->board->columns;
+    }
 
-        // Update the item's position in the database and re-order other items...
+    public function handleSort($id, $position, $columnId)
+    {
+        $card = $this->board->cards()->findOrFail($id);
+
+        // Update the card's position and re-order other cards...
     }
 };
 ```
 
 ```blade
 <div>
-    @foreach ($user->todoLists as $todo)
-        <ul wire:sort="sortItem" wire:sort:group="todos">
-            @foreach ($todo->items as $item)
-                <li wire:sort:item="{{ $item->id }}">
-                    {{ $item->title }}
+    @foreach ($this->columns as $column)
+        <ul wire:sort="handleSort" wire:sort:group="cards" wire:sort:group-id="{{ $column->id }}">
+            @foreach ($column->cards as $card)
+                <li wire:key="{{ $card->id }}" wire:sort:item="{{ $card->id }}">
+                    {{ $card->title }}
                 </li>
             @endforeach
         </ul>
@@ -77,39 +81,37 @@ new class extends Component {
 </div>
 ```
 
-When an item is dragged to a different group, only the handler of the destination group will receive the sort event. Your handler will need to detect that the item belongs to a different parent, re-associate it with the new parent model, and update the sort positions for both the old and new parent's items.
+When an item is dragged to a different group, only the destination group's handler fires.
 
 ## Sort handles
 
-By default, users can drag an item by clicking and dragging anywhere on the sortable element. However, you can restrict dragging to a specific handle by using `wire:sort:handle`.
-
-This is useful when you have interactive elements within your sortable items and want to prevent accidental drags:
+By default, users can drag an item by clicking anywhere on it. To restrict dragging to a specific handle, use `wire:sort:handle`:
 
 ```blade
-<ul wire:sort="sortItem">
-    @foreach ($todo->items as $item)
-        <li wire:sort:item="{{ $item->id }}">
+<ul wire:sort="handleSort">
+    @foreach ($list->tasks as $task)
+        <li wire:key="{{ $task->id }}" wire:sort:item="{{ $task->id }}">
             <div wire:sort:handle>
                 <!-- Drag icon... -->
             </div>
 
-            {{ $item->title }}
+            {{ $task->title }}
         </li>
     @endforeach
 </ul>
 ```
 
-Now users can only drag items by clicking and dragging the element marked with `wire:sort:handle`.
+Now users can only initiate a drag from the handle element.
 
 ## Ignoring elements
 
-You can prevent specific areas within a sortable item from triggering drag operations by using `wire:sort:ignore`. This is particularly useful when you have buttons or other interactive elements inside sortable items:
+To prevent specific areas from triggering drag operations, use `wire:sort:ignore`. This is useful for buttons or other interactive elements inside sortable items:
 
 ```blade
-<ul wire:sort="sortItem">
-    @foreach ($todo->items as $item)
-        <li wire:sort:item="{{ $item->id }}">
-            {{ $item->title }}
+<ul wire:sort="handleSort">
+    @foreach ($list->tasks as $task)
+        <li wire:key="{{ $task->id }}" wire:sort:item="{{ $task->id }}">
+            {{ $task->title }}
 
             <div wire:sort:ignore>
                 <button type="button">Edit</button>
@@ -119,14 +121,13 @@ You can prevent specific areas within a sortable item from triggering drag opera
 </ul>
 ```
 
-Clicking and dragging within an element marked with `wire:sort:ignore` will have no effect, allowing users to interact with buttons and other controls without accidentally triggering a sort operation.
-
 ## Reference
 
 ```blade
 wire:sort="method"
 wire:sort:item="id"
 wire:sort:group="name"
+wire:sort:group-id="identifier"
 wire:sort:handle
 wire:sort:ignore
 ```

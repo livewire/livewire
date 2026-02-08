@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Router;
 use Livewire\Mechanisms\Mechanism;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -25,6 +26,8 @@ class PersistentMiddleware extends Mechanism
 
     protected $path;
     protected $method;
+    protected $cachedRoutes = [];
+    protected $resolvedRouteModels = [];
 
     function boot()
     {
@@ -48,6 +51,8 @@ class PersistentMiddleware extends Mechanism
             // Only flush these at the end of a full request, so that child components have access to this data.
             $this->path = null;
             $this->method = null;
+            $this->cachedRoutes = [];
+            $this->resolvedRouteModels = [];
         });
     }
 
@@ -64,6 +69,11 @@ class PersistentMiddleware extends Mechanism
     function getPersistentMiddleware()
     {
         return static::$persistentMiddleware;
+    }
+
+    function getResolvedRouteModel($class, $key)
+    {
+        return $this->resolvedRouteModels[$class.':'.$key] ?? null;
     }
 
     protected function extractPathAndMethodFromRequest()
@@ -97,6 +107,18 @@ class PersistentMiddleware extends Mechanism
         if (is_null($middleware)) return;
 
         Utils::applyMiddleware($request, $middleware);
+
+        // After middleware has run (e.g. SubstituteBindings), collect any
+        // resolved model instances from the route parameters so that
+        // ModelSynth can reuse them instead of re-querying the database.
+        if ($route = $request->route()) {
+            foreach ($route->parameters() as $parameter) {
+                if ($parameter instanceof Model) {
+                    $key = get_class($parameter).':'.$parameter->getKey();
+                    $this->resolvedRouteModels[$key] = $parameter;
+                }
+            }
+        }
     }
 
     protected function makeFakeRequest()
@@ -147,12 +169,27 @@ class PersistentMiddleware extends Mechanism
 
     protected function getRouteFromRequest($request)
     {
+        $cacheKey = $request->method() . '|' . $request->path();
+
+        // Reuse cached route if available for this method and path. This ensures
+        // that route bindings resolved during the first component's middleware
+        // run are available for subsequent child components on the same route,
+        // preventing re-resolution of deleted models (which would 404).
+        if (isset($this->cachedRoutes[$cacheKey])) {
+            $route = $this->cachedRoutes[$cacheKey];
+            $request->setRouteResolver(fn() => $route);
+
+            return $route;
+        }
+
         try {
             $route = app('router')->getRoutes()->match($request);
             $request->setRouteResolver(fn() => $route);
         } catch (NotFoundHttpException $e){
             return null;
         }
+
+        $this->cachedRoutes[$cacheKey] = $route;
 
         return $route;
     }

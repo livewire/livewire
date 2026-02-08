@@ -364,6 +364,31 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
+    function test_can_validate_a_form_object_using_rule_attributes_when_consolidated_update()
+    {
+        // Regression test for #9860: When ALL form fields change from their
+        // initial values, the JS diff algorithm consolidates individual field
+        // updates (form.name, form.email) into a single consolidated "form"
+        // update. This causes FormObjectSynth::hydrate() to be called again
+        // during updateProperties() — AFTER SupportAttributes::boot() has
+        // already run — creating a new form object whose #[Validate] attributes
+        // never have boot() called, leaving rulesFromOutside empty.
+        Livewire::test(new class extends TestComponent {
+            public PostFormRuleAttributeNullableStub $form;
+
+            function save()
+            {
+                $this->form->validate();
+            }
+        })
+        ->update(
+            calls: [['method' => 'save', 'params' => [], 'path' => '']],
+            updates: ['form' => ['name' => 'A valid name here', 'email' => 'test@example.com']],
+        )
+        ->assertHasNoErrors()
+        ;
+    }
+
     function test_multiple_forms_show_all_errors()
     {
         Livewire::test(new class extends TestComponent {
@@ -1060,6 +1085,15 @@ class PostFormRuleAttributeStub extends Form
 
     #[Validate('required')]
     public $content = '';
+}
+
+class PostFormRuleAttributeNullableStub extends Form
+{
+    #[Validate(['required', 'string', 'min:10', 'max:75'])]
+    public ?string $name = null;
+
+    #[Validate(['required', 'email', 'max:255'])]
+    public ?string $email = null;
 }
 
 class PostFormRuleAttributeWithCustomNameStub extends Form

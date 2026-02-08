@@ -331,18 +331,6 @@ class Finder
             $fullName = $fullName->replaceLast('.index', '');
         }
 
-        // If using a self-named component in a sub folder, remove the '.[last_segment]' so the name is the subfolder name...
-        $segments = explode('.', $fullName);
-
-        if (count($segments) >= 2) {
-            $lastSegment = end($segments);
-            $secondToLastSegment = $segments[count($segments) - 2];
-
-            if ($secondToLastSegment && $lastSegment === $secondToLastSegment) {
-                $fullName = $fullName->replaceLast('.' . $lastSegment, '');
-            }
-        }
-
         $classNamespaces = collect($this->classNamespaces)
             ->map(fn ($classNamespace) => $classNamespace['classNamespace'])
             ->merge($this->classLocations)
