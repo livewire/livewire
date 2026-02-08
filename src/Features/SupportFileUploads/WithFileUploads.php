@@ -73,38 +73,27 @@ trait WithFileUploads
     function _uploadErrored($name, $errorsInJson, $isMultiple) {
         $this->dispatch('upload:errored', name: $name)->self();
 
-        if (is_null($errorsInJson)) {
-            // Handle any translations/custom names
-            $translator = app()->make('translator');
+        if (! is_null($errorsInJson)) {
+            $errorsInJson = $isMultiple
+                ? str_ireplace('files', $name, $errorsInJson)
+                : str_ireplace('files.0', $name, $errorsInJson);
 
-            $attribute = $translator->get("validation.attributes.{$name}");
-            if ($attribute === "validation.attributes.{$name}") $attribute = $name;
+            $errors = json_decode($errorsInJson, true)['errors'] ?? null;
 
-            $message = trans('validation.uploaded', ['attribute' => $attribute]);
-            if ($message === 'validation.uploaded') $message = "The {$name} failed to upload.";
-
-            throw ValidationException::withMessages([$name => $message]);
+            if ($errors) {
+                throw ValidationException::withMessages($errors);
+            }
         }
 
-        $errorsInJson = $isMultiple
-            ? str_ireplace('files', $name, $errorsInJson)
-            : str_ireplace('files.0', $name, $errorsInJson);
+        $translator = app()->make('translator');
 
-        $errors = json_decode($errorsInJson, true)['errors'] ?? null;
+        $attribute = $translator->get("validation.attributes.{$name}");
+        if ($attribute === "validation.attributes.{$name}") $attribute = $name;
 
-        if (! $errors) {
-            $translator = app()->make('translator');
+        $message = trans('validation.uploaded', ['attribute' => $attribute]);
+        if ($message === 'validation.uploaded') $message = "The {$name} failed to upload.";
 
-            $attribute = $translator->get("validation.attributes.{$name}");
-            if ($attribute === "validation.attributes.{$name}") $attribute = $name;
-
-            $message = trans('validation.uploaded', ['attribute' => $attribute]);
-            if ($message === 'validation.uploaded') $message = "The {$name} failed to upload.";
-
-            throw ValidationException::withMessages([$name => $message]);
-        }
-
-        throw (ValidationException::withMessages($errors));
+        throw ValidationException::withMessages([$name => $message]);
     }
 
     function _removeUpload($name, $tmpFilename)
