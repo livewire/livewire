@@ -86,12 +86,13 @@ Don't accept the PR description's framing of the bug or problem at face value. V
 
 Address EVERY item below. Do not skip any — even to say "N/A":
 
-1. **Community demand?** Check reactions on the PR and linked issues. Low engagement = higher bar.
-2. **Intuitive API?** Single-word modifiers preferred (`wire:click.stop` not `wire:click.stop-propagation`).
-3. **Precedent?** Does it build on existing patterns or introduce new ones? New patterns need strong justification.
-4. **Alpine boundary?** Should this live in Alpine.js instead of Livewire?
-5. **Docs included?** Features need documentation. For new testing assertions, check `docs/testing.md` has both a usage section and a reference table entry. For new directives/attributes, check the relevant docs file exists and `docs/__nav.md` is updated.
-6. **Registration complete?** Check ServiceProvider, Component.php, JS index files per the project's adding-features rules.
+1. **Already possible without new API?** Default stance: reject new public API surface. Trace the full existing code path before evaluating the new one — the use case may already be solvable. New methods/hooks are maintained forever; only add when there's no existing path. Check what users can already do with Laravel primitives before accepting Livewire-specific wrappers. (Example: following `_startUpload` -> `GenerateSignedUploadUrl::forLocal()` -> `URL::temporarySignedRoute('livewire.upload-file')` would have revealed custom upload routes already work by name.)
+2. **Community demand?** Check reactions on the PR and linked issues. Low engagement = higher bar.
+3. **Intuitive API?** Single-word modifiers preferred (`wire:click.stop` not `wire:click.stop-propagation`).
+4. **Precedent?** Does it build on existing patterns or introduce new ones? New patterns need strong justification.
+5. **Alpine boundary?** Should this live in Alpine.js instead of Livewire?
+6. **Docs included?** Features need documentation. For new testing assertions, check `docs/testing.md` has both a usage section and a reference table entry. For new directives/attributes, check the relevant docs file exists and `docs/__nav.md` is updated.
+7. **Registration complete?** Check ServiceProvider, Component.php, JS index files per the project's adding-features rules.
 
 ### For all PRs
 
@@ -247,5 +248,6 @@ EOF
 - Security is non-negotiable. If you see a security issue, verdict is always "Request changes" regardless of everything else.
 - Match the project voice: practical, direct, Laravel-flavored.
 - Don't accept the contributor's framing of the problem at face value. Verify the root cause independently, then ensure the test targets that root cause — not the contributor's incidental path to discovering it.
+- "Should this exist?" before "Is this correct?" — Don't get pulled into reviewing implementation details (code quality, edge cases, naming) until you've decided the feature itself is justified. Implementation nits imply acceptance.
 - Tests are documentation. A sloppy test that passes is not good enough — it should precisely communicate what broke and why.
 - Review contributor naming as critically as contributor code. Bad names get merged and become permanent.
