@@ -10,18 +10,25 @@ trait TestsJsEvaluation
     {
         $js = $this->effects['xjs'] ?? [];
 
-        $expression = preg_replace('/\n\s*/', '', $expression);
-
         Assert::assertTrue(
             collect($js)
-                ->map(fn ($item) => [
-                    'expression' => preg_replace('/\n\s*/', '', $item['expression']),
-                    'params' => $item['params'] ?? [],
-                ])
                 ->contains(function ($item) use ($expression, $params) {
-                    return $item['expression'] === $expression && $item['params'] == $params;
+                    return $item['expression'] === $expression
+                        && ($item['params'] ?? []) == $params;
                 }),
-            'Failed asserting that dispatched JS matches expected JS.'
+            "Failed asserting that JS [{$expression}] was evaluated."
+        );
+
+        return $this;
+    }
+
+    public function assertNoJs()
+    {
+        $js = $this->effects['xjs'] ?? [];
+
+        Assert::assertEmpty(
+            $js,
+            'Failed asserting that no JS was evaluated.'
         );
 
         return $this;
