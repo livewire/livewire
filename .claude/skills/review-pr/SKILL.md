@@ -39,11 +39,14 @@ gh pr checks {number}
 gh api repos/{owner}/{repo}/issues/{number}/reactions
 ```
 
-## Step 4: Checkout locally
+## Step 4: Checkout locally and merge main
 
 ```bash
 gh pr checkout {number}
+git merge main
 ```
+
+Always merge main into the PR branch before reviewing. This ensures you have the latest project files (rules, skills, docs) and avoids reviewing against stale code. If the merge has conflicts, resolve them or flag for the contributor.
 
 ## Step 5: Read and classify
 
@@ -83,7 +86,7 @@ Don't accept the PR description's framing of the bug or problem at face value. V
 2. **Intuitive API?** Single-word modifiers preferred (`wire:click.stop` not `wire:click.stop-propagation`).
 3. **Precedent?** Does it build on existing patterns or introduce new ones? New patterns need strong justification.
 4. **Alpine boundary?** Should this live in Alpine.js instead of Livewire?
-5. **Docs included?** Features need documentation.
+5. **Docs included?** Features need documentation. For new testing assertions, check `docs/testing.md` has both a usage section and a reference table entry. For new directives/attributes, check the relevant docs file exists and `docs/__nav.md` is updated.
 6. **Registration complete?** Check ServiceProvider, Component.php, JS index files per the project's adding-features rules.
 
 ### For all PRs
@@ -130,7 +133,7 @@ Fix issues you find. Common fixes:
 - **Missing tests**: Write them
 - **Small refactors**: Simplify overly complex code
 - **Missing registration**: Add to ServiceProvider, index files, etc.
-- **Missing docs**: Write them if it's a feature
+- **Missing docs**: Write them if it's a feature. For testing helpers, update `docs/testing.md` (usage section + reference table). For directives/attributes, create the doc file and add to `docs/__nav.md`.
 
 Stage and commit fixes:
 
