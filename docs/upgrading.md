@@ -312,6 +312,21 @@ This change adds support for passing slots when mounting components and generall
 
 These changes only affect applications using advanced features or customization.
 
+### Livewire Asset and Endpoint URL Changes
+
+All Livewire URLs now include a unique hash derived from your `APP_KEY`. The prefix changed from `/livewire/` to `/livewire-{hash}/`:
+
+```
+# v3                          # v4
+/livewire/update        →     /livewire-{hash}/update
+/livewire/upload-file   →     /livewire-{hash}/upload-file
+/livewire/livewire.js   →     /livewire-{hash}/livewire.js
+```
+
+If your firewall rules, CDN config, or middleware reference `/livewire/` paths, update them to account for the new prefix.
+
+[Learn more about customizing Livewire's endpoints →](/docs/4.x/installation#customizing-livewires-update-endpoint)
+
 ### JavaScript deprecations
 
 #### Deprecated: `$wire.$js()` method

@@ -3,10 +3,13 @@
 namespace Livewire\Finder;
 
 use Livewire\Finder\Fixtures\SelfNamedComponent\SelfNamedComponent;
+use Livewire\Finder\Fixtures\NestedSelfNamed\SelfNamedViewComponent\SelfNamedViewComponent;
+use Livewire\Finder\Fixtures\NestedIndex\IndexViewComponent\Index as IndexViewComponent;
 use Livewire\Finder\Fixtures\Nested\NestedComponent;
 use Livewire\Finder\Fixtures\IndexComponent\Index;
 use Livewire\Finder\Fixtures\FinderTestClassComponent;
 use Livewire\Component;
+use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -191,7 +194,8 @@ class UnitTest extends \Tests\TestCase
 
         $name = $finder->normalizeName(SelfNamedComponent::class);
 
-        $this->assertEquals('self-named-component', $name);
+        // Self-named class components keep their full name (matching v3 behavior)...
+        $this->assertEquals('self-named-component.self-named-component', $name);
 
         $class = $finder->resolveClassComponentClassName($name);
 
@@ -609,6 +613,26 @@ class UnitTest extends \Tests\TestCase
         $name = $finder->normalizeName(SingleSegmentComponent::class);
 
         $this->assertEquals('lw' . crc32(SingleSegmentComponent::class), $name);
+    }
+
+    public function test_self_named_class_component_resolves_view_from_self_named_path()
+    {
+        config()->set('livewire.view_path', __DIR__ . '/Fixtures/views');
+
+        app('livewire.finder')->addLocation(classNamespace: 'Livewire\Finder\Fixtures');
+
+        Livewire::test(SelfNamedViewComponent::class)
+            ->assertSee('Self-named view component rendered');
+    }
+
+    public function test_index_class_component_resolves_view_from_collapsed_path()
+    {
+        config()->set('livewire.view_path', __DIR__ . '/Fixtures/views');
+
+        app('livewire.finder')->addLocation(classNamespace: 'Livewire\Finder\Fixtures');
+
+        Livewire::test(IndexViewComponent::class)
+            ->assertSee('Index view component rendered');
     }
 }
 
