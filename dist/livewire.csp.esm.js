@@ -20,9 +20,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../alpine/packages/csp/dist/module.cjs.js
+// node_modules/@alpinejs/csp/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/csp/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/csp/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -6035,9 +6035,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/sort/dist/module.cjs.js
+// node_modules/@alpinejs/sort/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/sort/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/sort/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -8786,9 +8786,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8919,11 +8919,7 @@ var require_module_cjs8 = __commonJS({
         for (let i = domAttributes.length - 1; i >= 0; i--) {
           let name = domAttributes[i].name;
           if (!to.hasAttribute(name)) {
-            if (name === "open" && from.nodeName === "DIALOG" && from.open) {
-              from.close();
-            } else {
-              from.removeAttribute(name);
-            }
+            from.removeAttribute(name);
           }
         }
         for (let i = toAttributes.length - 1; i >= 0; i--) {
@@ -13247,16 +13243,22 @@ var restoreScroll = true;
 var autofocus = false;
 function navigate_default(Alpine24) {
   Alpine24.navigate = (url, options = {}) => {
-    let { preserveScroll = false } = options;
+    let { preserveScroll = false, replace: replace2 = false } = options;
     let destination = createUrlObjectFromString2(url);
-    let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
-      url: destination,
-      history: false,
-      cached: false
-    });
+    let prevented = fireEventForOtherLibrariesToHookInto(
+      "alpine:navigate",
+      {
+        url: destination,
+        history: false,
+        cached: false
+      }
+    );
     if (prevented)
       return;
-    navigateTo(destination, { preserveScroll });
+    navigateTo(destination, {
+      preserveScroll,
+      shouldPushToHistoryState: !replace2
+    });
   };
   Alpine24.navigate.disableProgressBar = () => {
     showProgressBar = false;
@@ -13265,90 +13267,137 @@ function navigate_default(Alpine24) {
   Alpine24.directive("navigate", (el, { modifiers }) => {
     let shouldPrefetchOnHover = modifiers.includes("hover");
     let preserveScroll = modifiers.includes("preserve-scroll");
+    let shouldReplace = modifiers.includes("replace");
     shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
       let destination = extractDestinationFromLink(el);
       if (!destination)
         return;
-      prefetchHtml(destination, (html, finalDestination) => {
-        storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
-      }, () => {
-        showProgressBar && finishAndHideProgressBar();
-      });
+      prefetchHtml(
+        destination,
+        (html, finalDestination) => {
+          storeThePrefetchedHtmlForWhenALinkIsClicked(
+            html,
+            destination,
+            finalDestination
+          );
+        },
+        () => {
+          showProgressBar && finishAndHideProgressBar();
+        }
+      );
     });
     whenThisLinkIsPressed(el, (whenItIsReleased) => {
       let destination = extractDestinationFromLink(el);
       if (!destination)
         return;
-      prefetchHtml(destination, (html, finalDestination) => {
-        storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
-      }, () => {
-        showProgressBar && finishAndHideProgressBar();
-      });
+      prefetchHtml(
+        destination,
+        (html, finalDestination) => {
+          storeThePrefetchedHtmlForWhenALinkIsClicked(
+            html,
+            destination,
+            finalDestination
+          );
+        },
+        () => {
+          showProgressBar && finishAndHideProgressBar();
+        }
+      );
       whenItIsReleased(() => {
-        let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
-          url: destination,
-          history: false,
-          cached: false
-        });
+        let prevented = fireEventForOtherLibrariesToHookInto(
+          "alpine:navigate",
+          {
+            url: destination,
+            history: false,
+            cached: false
+          }
+        );
         if (prevented)
           return;
-        navigateTo(destination, { preserveScroll });
+        navigateTo(destination, {
+          preserveScroll,
+          shouldPushToHistoryState: !shouldReplace
+        });
       });
     });
   });
   function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
     showProgressBar && showAndStartProgressBar();
-    fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-      let swapCallbacks = [];
-      fireEventForOtherLibrariesToHookInto("alpine:navigating", {
-        onSwap: (callback) => swapCallbacks.push(callback)
-      });
-      restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
-      cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
-      shouldPushToHistoryState && updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
-      preventAlpineFromPickingUpDomChanges(Alpine24, (andAfterAllThis) => {
-        enablePersist && storePersistantElementsForLater((persistedEl) => {
-          packUpPersistedTeleports(persistedEl);
-          packUpPersistedPopovers(persistedEl);
+    fetchHtmlOrUsePrefetchedHtml(
+      destination,
+      (html, finalDestination) => {
+        let swapCallbacks = [];
+        fireEventForOtherLibrariesToHookInto("alpine:navigating", {
+          onSwap: (callback) => swapCallbacks.push(callback)
         });
-        if (shouldPushToHistoryState) {
-          updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
-        } else {
-          replaceUrl(finalDestination, html);
-        }
-        swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
-          removeAnyLeftOverStaleTeleportTargets(document.body);
-          enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
-            unPackPersistedTeleports(persistedEl);
-            unPackPersistedPopovers(persistedEl);
-          });
-          !preserveScroll && restoreScrollPositionOrScrollToTop();
-          swapCallbacks.forEach((callback) => callback());
-          afterNewScriptsAreDoneLoading(() => {
-            andAfterAllThis(() => {
-              setTimeout(() => {
-                autofocus && autofocusElementsWithTheAutofocusAttribute();
-              });
-              nowInitializeAlpineOnTheNewPage(Alpine24);
-              fireEventForOtherLibrariesToHookInto("alpine:navigated");
-              showProgressBar && finishAndHideProgressBar();
+        restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
+        cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
+        shouldPushToHistoryState && updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
+        preventAlpineFromPickingUpDomChanges(
+          Alpine24,
+          (andAfterAllThis) => {
+            enablePersist && storePersistantElementsForLater((persistedEl) => {
+              packUpPersistedTeleports(persistedEl);
+              packUpPersistedPopovers(persistedEl);
             });
-          });
-        });
-      });
-    }, () => {
-      showProgressBar && finishAndHideProgressBar();
-    });
+            if (shouldPushToHistoryState) {
+              updateUrlAndStoreLatestHtmlForFutureBackButtons(
+                html,
+                finalDestination
+              );
+            } else {
+              replaceUrl(finalDestination, html);
+            }
+            swapCurrentPageWithNewHtml(
+              html,
+              (afterNewScriptsAreDoneLoading) => {
+                removeAnyLeftOverStaleTeleportTargets(
+                  document.body
+                );
+                enablePersist && putPersistantElementsBack(
+                  (persistedEl, newStub) => {
+                    unPackPersistedTeleports(
+                      persistedEl
+                    );
+                    unPackPersistedPopovers(persistedEl);
+                  }
+                );
+                !preserveScroll && restoreScrollPositionOrScrollToTop();
+                swapCallbacks.forEach((callback) => callback());
+                afterNewScriptsAreDoneLoading(() => {
+                  andAfterAllThis(() => {
+                    setTimeout(() => {
+                      autofocus && autofocusElementsWithTheAutofocusAttribute();
+                    });
+                    nowInitializeAlpineOnTheNewPage(Alpine24);
+                    fireEventForOtherLibrariesToHookInto(
+                      "alpine:navigated"
+                    );
+                    showProgressBar && finishAndHideProgressBar();
+                  });
+                });
+              }
+            );
+          }
+        );
+      },
+      () => {
+        showProgressBar && finishAndHideProgressBar();
+      }
+    );
   }
   whenTheBackOrForwardButtonIsClicked(
     (ifThePageBeingVisitedHasntBeenCached) => {
       ifThePageBeingVisitedHasntBeenCached((url) => {
         let destination = createUrlObjectFromString2(url);
-        let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
-          url: destination,
-          history: true,
-          cached: false
-        });
+        let prevented = fireEventForOtherLibrariesToHookInto(
+          "alpine:navigate",
+          {
+            url: destination,
+            history: true,
+            cached: false
+          }
+        );
         if (prevented)
           return;
         navigateTo(destination, { shouldPushToHistoryState: false });
@@ -13356,11 +13405,14 @@ function navigate_default(Alpine24) {
     },
     (html, url, currentPageUrl, currentPageKey) => {
       let destination = createUrlObjectFromString2(url);
-      let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
-        url: destination,
-        history: true,
-        cached: true
-      });
+      let prevented = fireEventForOtherLibrariesToHookInto(
+        "alpine:navigate",
+        {
+          url: destination,
+          history: true,
+          cached: true
+        }
+      );
       if (prevented)
         return;
       storeScrollInformationInHtmlBeforeNavigatingAway();
@@ -13368,7 +13420,10 @@ function navigate_default(Alpine24) {
       fireEventForOtherLibrariesToHookInto("alpine:navigating", {
         onSwap: (callback) => swapCallbacks.push(callback)
       });
-      updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageKey, currentPageUrl);
+      updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(
+        currentPageKey,
+        currentPageUrl
+      );
       preventAlpineFromPickingUpDomChanges(Alpine24, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
@@ -14439,11 +14494,24 @@ interceptMessage(({ message, onStream }) => {
 document.addEventListener("livewire:initialized", () => {
   shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
 });
-document.addEventListener("alpine:navigate", (e) => forwardEvent("livewire:navigate", e));
-document.addEventListener("alpine:navigating", (e) => forwardEvent("livewire:navigating", e));
-document.addEventListener("alpine:navigated", (e) => forwardEvent("livewire:navigated", e));
+document.addEventListener(
+  "alpine:navigate",
+  (e) => forwardEvent("livewire:navigate", e)
+);
+document.addEventListener(
+  "alpine:navigating",
+  (e) => forwardEvent("livewire:navigating", e)
+);
+document.addEventListener(
+  "alpine:navigated",
+  (e) => forwardEvent("livewire:navigated", e)
+);
 function forwardEvent(name, original) {
-  let event = new CustomEvent(name, { cancelable: true, bubbles: true, detail: original.detail });
+  let event = new CustomEvent(name, {
+    cancelable: true,
+    bubbles: true,
+    detail: original.detail
+  });
   document.dispatchEvent(event);
   if (event.defaultPrevented) {
     original.preventDefault();
@@ -14452,7 +14520,9 @@ function forwardEvent(name, original) {
 function shouldRedirectUsingNavigateOr(effects, url, or) {
   let forceNavigate = effects.redirectUsingNavigate;
   if (forceNavigate) {
-    Alpine.navigate(url);
+    Alpine.navigate(url, {
+      replace: effects.replace || false
+    });
   } else {
     or();
   }
@@ -14659,17 +14729,27 @@ var import_alpinejs13 = __toESM(require_module_cjs());
 var wireNavigateSelectors = [
   "[wire\\:navigate]",
   "[wire\\:navigate\\.hover]",
+  "[wire\\:navigate\\.replace]",
+  "[wire\\:navigate\\.replace\\.hover]",
   "[wire\\:navigate\\.preserve-scroll]",
+  "[wire\\:navigate\\.replace\\.preserve-scroll]",
   "[wire\\:navigate\\.preserve-scroll\\.hover]",
-  "[wire\\:navigate\\.hover\\.preserve-scroll]"
+  "[wire\\:navigate\\.replace\\.preserve-scroll\\.hover]",
+  "[wire\\:navigate\\.hover\\.preserve-scroll]",
+  "[wire\\:navigate\\.replace\\.hover\\.preserve-scroll]"
 ];
 var wireNavigateSelector = wireNavigateSelectors.join(", ");
 var attributeMap = {
   "wire:navigate": "x-navigate",
   "wire:navigate.hover": "x-navigate.hover",
+  "wire:navigate.replace": "x-navigate.replace",
+  "wire:navigate.replace.hover": "x-navigate.replace.hover",
   "wire:navigate.preserve-scroll": "x-navigate.preserve-scroll",
+  "wire:navigate.replace.preserve-scroll": "x-navigate.replace.preserve-scroll",
   "wire:navigate.preserve-scroll.hover": "x-navigate.preserve-scroll.hover",
-  "wire:navigate.hover.preserve-scroll": "x-navigate.hover.preserve-scroll"
+  "wire:navigate.replace.preserve-scroll.hover": "x-navigate.replace.preserve-scroll.hover",
+  "wire:navigate.hover.preserve-scroll": "x-navigate.hover.preserve-scroll",
+  "wire:navigate.replace.hover.preserve-scroll": "x-navigate.replace.hover.preserve-scroll"
 };
 wireNavigateSelectors.forEach((selector) => {
   import_alpinejs13.default.addInitSelector(() => selector);

@@ -52,6 +52,7 @@ class SupportRedirects extends ComponentHook
 
         $to = $this->storeGet('redirect');
         $usingNavigate = $this->storeGet('redirectUsingNavigate');
+        $replace = $this->storeGet('redirectReplace');
 
         if (is_subclass_of($to, Component::class)) {
             $to = static::resolveComponentUrl($to);
@@ -65,6 +66,7 @@ class SupportRedirects extends ComponentHook
 
         $context->addEffect('redirect', $to);
         $usingNavigate && $context->addEffect('redirectUsingNavigate', true);
+        $replace && $context->addEffect('replace', true);
 
         if (! $context->isMounting()) {
             static::$atLeastOneMountedComponentHasRedirected = true;
