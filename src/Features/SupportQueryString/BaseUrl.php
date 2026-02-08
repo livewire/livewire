@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportQueryString;
 
-use Illuminate\Support\Facades\Validator;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportFormObjects\Form;
 use ReflectionClass;
@@ -18,10 +17,7 @@ class BaseUrl extends LivewireAttribute
         public $keep = false,
         public $except = null,
         public $nullable = null,
-        public $strict = true
-    )
-    {
-    }
+    ) {}
 
     public function mount()
     {
@@ -33,7 +29,7 @@ class BaseUrl extends LivewireAttribute
 
     public function dehydrate($context)
     {
-        if (!$context->mounting) return;
+        if (! $context->mounting) return;
 
         $this->pushQueryStringEffect($context);
     }
@@ -102,33 +98,14 @@ class BaseUrl extends LivewireAttribute
             $value = $decoded === null ? $initialValue : $decoded;
         }
 
-        // Check if the value is compatible with the property type strictly
-        if ($this->type) {
-            $value_type = gettype($value);
-            if ($value_type === 'array') {
-                $allowed = true;
-                if ($this->type instanceof \ReflectionNamedType && $this->type->getName() !== 'array') {
-                    $allowed = false;
-                }
-                if ($this->type instanceof \ReflectionUnionType) {
-                    $allowed = false;
-                    foreach ($this->type->getTypes() as $type) {
-                        if ($type instanceof \ReflectionNamedType && $type->getName() === 'array') {
-                            $allowed = true;
-                            break;
-                        }
-                    }
-                }
-                if (!$allowed) {
-                    if ($this->strict) {
-                        abort(400);
-                    } else {
-                        $this->component->addError($this->getSubName(), 'The value type is not compatible.');
-                        return;
-                    }
-                }
-            }
+        // If the value is an array but the property type doesn't accept arrays,
+        // silently ignore the invalid value and keep the property default.
+        // This prevents 500 errors from malformed query strings like ?search[]=foo
+        // when the property is typed as string/int/etc.
+        if (is_array($value) && $this->type && ! $this->typeAcceptsArray()) {
+            return;
         }
+
         $this->setValue($value, $this->nullable);
     }
 
@@ -171,9 +148,26 @@ class BaseUrl extends LivewireAttribute
         return $this->as ?? $this->getName();
     }
 
+    protected function typeAcceptsArray()
+    {
+        if ($this->type instanceof \ReflectionNamedType) {
+            return $this->type->getName() === 'array';
+        }
+
+        if ($this->type instanceof \ReflectionUnionType) {
+            foreach ($this->type->getTypes() as $type) {
+                if ($type instanceof \ReflectionNamedType && $type->getName() === 'array') {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public function getFromUrlQueryString($name, $default = null)
     {
-        if (!app('livewire')->isLivewireRequest()) {
+        if (! app('livewire')->isLivewireRequest()) {
             $value = request()->query($this->urlName(), $default);
 
             // If the property is present in the querystring without a value, then Laravel returns

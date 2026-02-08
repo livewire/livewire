@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportQueryString;
 
-use HttpException;
 use Livewire\Livewire;
 use Tests\TestComponent;
 
@@ -163,57 +162,81 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(100.0, $component->instance()->value);
     }
 
-    function test_return_400_error_on_invalid_type_input(){
-        Livewire::withQueryParams([
-            'test'=>['fake']
-        ])->test(new class extends TestComponent {
-            #[BaseUrl]
-            public string $test = '';
-        })->assertStatus(400);
-    }
-    function test_return_error_on_invalid_type_input(){
-
-        Livewire::withQueryParams([
-            'test'=>['fake']
-        ])->test(new class extends TestComponent {
-            #[BaseUrl(strict: false)]
-            public string $test = '';
-        })->assertStatus(200)->assertHasErrors('test');
-
-    }
-    function test_return_no_error_on_nullable_typed_property(){
-        Livewire::withQueryParams([
-            'test'=>null
-        ])->test(new class extends TestComponent {
-            #[BaseUrl(strict:false)]
-            public ?string $test = null;
-        })->assertStatus(200)->assertHasNoErrors();
-    }
-    function test_it_can_handle_union_typed_property()
+    function test_array_value_for_string_property_is_silently_ignored()
     {
-        Livewire::withQueryParams([
-            'test'=>'fake'
+        $component = Livewire::withQueryParams([
+            'search' => ['fake'],
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string $search = '';
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame('', $component->instance()->search);
+    }
+
+    function test_array_value_for_int_property_is_silently_ignored()
+    {
+        $component = Livewire::withQueryParams([
+            'page' => ['fake'],
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public int $page = 1;
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame(1, $component->instance()->page);
+    }
+
+    function test_array_value_for_union_typed_property_without_array_is_silently_ignored()
+    {
+        $component = Livewire::withQueryParams([
+            'test' => ['fake'],
         ])->test(new class extends TestComponent {
             #[BaseUrl]
             public string|int $test = '';
-        })->assertStatus(200)->assertHasNoErrors();
-        Livewire::withQueryParams([
-            'test'=>['fake']
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame('', $component->instance()->test);
+    }
+
+    function test_array_value_for_array_typed_property_is_allowed()
+    {
+        $component = Livewire::withQueryParams([
+            'filters' => ['status' => 'active'],
         ])->test(new class extends TestComponent {
             #[BaseUrl]
-            public string|int $test = '';
-        })->assertStatus(400);
-        Livewire::withQueryParams([
-            'test'=>'fake'
+            public array $filters = [];
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame(['status' => 'active'], $component->instance()->filters);
+    }
+
+    function test_array_value_for_union_typed_property_with_array_is_allowed()
+    {
+        $component = Livewire::withQueryParams([
+            'test' => ['foo'],
         ])->test(new class extends TestComponent {
-            #[BaseUrl(strict: false)]
-            public string|int $test = '';
-        })->assertStatus(200)->assertHasNoErrors();
-        Livewire::withQueryParams([
-            'test'=>['fake']
+            #[BaseUrl]
+            public string|array $test = '';
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame(['foo'], $component->instance()->test);
+    }
+
+    function test_valid_string_value_for_string_property_still_works()
+    {
+        $component = Livewire::withQueryParams([
+            'search' => 'hello',
         ])->test(new class extends TestComponent {
-            #[BaseUrl(strict: false)]
-            public string|int $test = '';
-        })->assertStatus(200)->assertHasErrors();
+            #[BaseUrl]
+            public string $search = '';
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame('hello', $component->instance()->search);
     }
 }
