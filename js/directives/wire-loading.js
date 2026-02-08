@@ -1,6 +1,7 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
-import { on } from '@/hooks'
+import { closestIsland } from '@/features/supportIslands'
+import { interceptMessage } from '@/request'
 import { listen } from '@/utils'
 
 directive('loading', ({ el, directive, component, cleanup }) => {
@@ -8,7 +9,7 @@ directive('loading', ({ el, directive, component, cleanup }) => {
 
     let [delay, abortDelay] = applyDelay(directive)
 
-    let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
+    let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
     ])
@@ -69,16 +70,54 @@ function applyDelay(directive) {
     ]
 }
 
-function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoading, endLoading ]) {
-    return on('commit', ({ component: iComponent, commit: payload, respond }) => {
-        if (iComponent !== component) return
+function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLoading, endLoading ]) {
+    return interceptMessage(({ message, onSend, onSuccess, onFinish }) => {
+        if (component !== message.component) return
 
-        if (targets.length > 0 && containsTargets(payload, targets) === inverted) return
+        // When explicit targets are set via wire:target, skip island scope filtering
+        // and let the target matching handle scoping. This allows wire:loading to
+        // respond to any request containing the target, regardless of island boundaries...
+        if (targets.length === 0) {
+            let island = closestIsland(el)
 
-        startLoading()
+            // If an island is found, see if the message has an action for the island and return if not...
+            if (island && ! message.hasActionForIsland(island)) {
+                return
+            }
 
-        respond(() => {
-            endLoading()
+            // If no island is found, see if the message has an action for the component and return if not...
+            if (! island && ! message.hasActionForComponent()) {
+                return
+            }
+        }
+
+        let matches = true
+        let cleared = false
+
+        onSend(({ payload }) => {
+            if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
+                matches = false
+            }
+
+            matches && startLoading()
+        })
+
+        // Clear loading before morph on success
+        onSuccess(({ onEffect }) => {
+            onEffect(() => {
+                if (matches && ! cleared) {
+                    endLoading()
+                    cleared = true
+                }
+            })
+        })
+
+        // Clear loading on cancel/error/failure (onFinish fires immediately on these paths)
+        onFinish(() => {
+            if (matches && ! cleared) {
+                endLoading()
+                cleared = true
+            }
         })
     })
 }
@@ -167,7 +206,7 @@ function getTargets(el) {
     } else {
         // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
         // and automatically scope this loading directive to that action.
-        let nonActionOrModelLivewireDirectives = [ 'init', 'dirty', 'offline', 'target', 'loading', 'poll', 'ignore', 'key', 'id' ]
+        let nonActionOrModelLivewireDirectives = [ 'init', 'dirty', 'offline', 'navigate', 'target', 'loading', 'poll', 'ignore', 'key', 'id' ]
 
         directives
             .all()

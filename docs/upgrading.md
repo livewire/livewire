@@ -1,617 +1,818 @@
+Livewire v4 introduces several improvements and optimizations while maintaining backward compatibility wherever possible. This guide will help you upgrade from Livewire v3 to v4.
 
-## Automated upgrade tool
+> [!tip] Smooth upgrade path
+> Most applications can upgrade to v4 with minimal changes. The breaking changes are primarily configuration updates and method signature changes that only affect advanced usage.
+>
+> Want to save time? You can use [Laravel Shift](https://laravelshift.com) to help automate your application upgrades.
 
-To save you time upgrading, we've included an Artisan command to automate as many parts of the upgrade process as possible.
+## Installation
 
-After [installing Livewire version 3](/docs/upgrading#update-livewire-to-version-3), run the following command, and you will receive prompts to upgrade each breaking change automatically:
+Update your `composer.json` to require Livewire v4:
 
-```shell
-php artisan livewire:upgrade
+```bash
+composer require livewire/livewire:^4.0
 ```
 
-Although the above command can upgrade much of your application, the only way to ensure a complete upgrade is to follow the step-by-step guide on this page.
+After updating, clear your application's cache:
 
-> [!tip] Hire us to upgrade your app instead
-> If you have a large Livewire application or just don't want to deal with upgrading from version 2 to version 3, you can hire us to handle it for you. [Learn more about our upgrade service here.](/jumpstart)
-
-## Upgrade PHP
-
-Livewire now requires that your application is running on PHP version 8.1 or greater.
-
-## Update Livewire to version 3
-
-Run the following composer command to upgrade your application's Livewire dependency from version 2 to 3:
-
-```shell
-composer require livewire/livewire "^3.0"
+```bash
+php artisan optimize:clear
 ```
 
-> [!warning] Livewire 3 package compatibility
-> Most of the major third-party Livewire packages either currently support Livewire 3 or are working on supporting it soon. However, there will inevitably be packages that take longer to release support for Livewire 3.
+> [!info] View all changes on GitHub
+> For a complete overview of all code changes between v3 and v4, you can review the full diff on GitHub: [Compare 3.x to main →](https://github.com/livewire/livewire/compare/3.x...main)
 
-## Clear the view cache
+## Upgrading to v4.1 from v4.0
 
-Run the following Artisan command from your application's root directory to clear any cached/compiled Blade views and force Livewire to re-compile them to be Livewire 3 compatible:
+### `wire:model` modifier behavior change
 
-```shell
-php artisan view:clear
+Modifiers like `.blur` and `.change` now control when client-side state syncs, not just network timing. If you're using these modifiers and want the previous behavior, add `.live` before them (e.g., `wire:model.live.blur`).
+
+[See full details below →](#wiremodel-modifiers-now-control-client-side-sync-timing)
+
+---
+
+The following changes apply when upgrading from v3 to v4.
+
+## High-impact changes
+
+These changes are most likely to affect your application and should be reviewed carefully.
+
+### Config file updates
+
+Several configuration keys have been renamed, reorganized, or have new defaults. Update your `config/livewire.php` file:
+
+> [!tip] View the full config file
+> For reference, you can view the complete v4 config file on GitHub: [livewire.php →](https://github.com/livewire/livewire/blob/main/config/livewire.php)
+
+#### Renamed configuration keys
+
+**Layout configuration:**
+```php
+// Before (v3)
+'layout' => 'components.layouts.app',
+
+// After (v4)
+'component_layout' => 'layouts::app',
 ```
 
-## Merge new configuration
+The layout now uses the `layouts::` namespace by default, pointing to `resources/views/layouts/app.blade.php`.
 
-Livewire 3 has changed multiple configuration options. If your application has a published configuration file (`config/livewire.php`), you will need to update it to account for the following changes.
+**Placeholder configuration:**
+```php
+// Before (v3)
+'lazy_placeholder' => 'livewire.placeholder',
 
-### New configuration
+// After (v4)
+'component_placeholder' => 'livewire.placeholder',
+```
 
-The following configuration keys have been introduced in version 3:
+#### Changed defaults
+
+**Smart wire:key behavior:**
+```php
+// Now defaults to true (was false in v3)
+'smart_wire_keys' => true,
+```
+
+This helps prevent wire:key issues on deeply nested components. Note: You still need to add `wire:key` manually in loops—this setting doesn't eliminate that requirement.
+
+[Learn more about wire:key →](/docs/4.x/nesting#rendering-children-in-a-loop)
+
+#### New configuration options
+
+**Component locations:**
+```php
+'component_locations' => [
+    resource_path('views/components'),
+    resource_path('views/livewire'),
+],
+```
+
+Defines where Livewire looks for single-file and multi-file (view-based) components.
+
+**Component namespaces:**
+```php
+'component_namespaces' => [
+    'layouts' => resource_path('views/layouts'),
+    'pages' => resource_path('views/pages'),
+],
+```
+
+Creates custom namespaces for organizing view-based components (e.g., `<livewire:pages::dashboard />`).
+
+**Make command defaults:**
+```php
+'make_command' => [
+    'type' => 'sfc',  // Options: 'sfc', 'mfc', or 'class'
+    'emoji' => true,   // Whether to use ⚡ emoji prefix
+],
+```
+
+Configure default component format and emoji usage. Set `type` to `'class'` to match v3 behavior.
+
+**CSP-safe mode:**
+```php
+'csp_safe' => false,
+```
+
+Enable Content Security Policy mode to avoid `unsafe-eval` violations. When enabled, Livewire uses the [Alpine CSP build](https://alpinejs.dev/advanced/csp). Note: This mode restricts complex JavaScript expressions in directives like `wire:click="addToCart($event.detail.productId)"` or global references like `window.location`.
+
+### Routing changes
+
+For full-page components, the recommended routing approach has changed:
 
 ```php
-'legacy_model_binding' => false,
+// Before (v3) - still works but not recommended
+Route::get('/dashboard', Dashboard::class);
 
-'inject_assets' => true,
+// After (v4) - recommended for all component types
+Route::livewire('/dashboard', Dashboard::class);
 
-'inject_morph_markers' => true,
-
-'navigate' => false,
-
-'pagination_theme' => 'tailwind',
+// For view-based components, you can use the component name
+Route::livewire('/dashboard', 'pages::dashboard');
 ```
 
-You can reference [Livewire's new configuration file on GitHub](https://github.com/livewire/livewire/blob/master/config/livewire.php) for additional option descriptions and copy-pastable code.
+Using `Route::livewire()` is now the preferred method and is required for single-file and multi-file components to work correctly as full-page components.
 
-### Changed configuration
+[Learn more about routing →](/docs/4.x/components#page-components)
 
-The following configuration items have been updated with new default values:
+### `wire:model` now ignores child events by default
 
-#### New class namespace
+In v3, `wire:model` would respond to input/change events that bubbled up from child elements. This caused unexpected behavior when using `wire:model` on container elements (like modals or accordions) that contained form inputs—clearing an input inside would bubble up and potentially close the modal.
 
-Livewire's default `class_namespace` has changed from `App\Http\Livewire` to `App\Livewire`. You are welcome to keep the old namespace configuration value; however, if you choose to update your configuration to the new namespace, you will have to move your Livewire components to `app/Livewire`:
+In v4, `wire:model` now only listens for events originating directly on the element itself (equivalent to the `.self` modifier behavior).
 
-```php
-'class_namespace' => 'App\\Http\\Livewire', // [tl! remove]
-'class_namespace' => 'App\\Livewire', // [tl! add]
-```
-
-#### New layout view path
-
-When rendering full-page components in version 2, Livewire would use `resources/views/layouts/app.blade.php` as the default layout Blade component.
-
-Because of a growing community preference for anonymous Blade components, Livewire 3 has changed the default location to: `resources/views/components/layouts/app.blade.php`.
-
-```php
-'layout' => 'layouts.app', // [tl! remove]
-'layout' => 'components.layouts.app', // [tl! add]
-```
-
-### Removed configuration
-
-Livewire no longer recognizes the following configuration items.
-
-#### `app_url`
-
-If your application is served under a non-root URI, in Livewire 2 you could use the `app_url` configuration option to configure the URL Livewire uses to make AJAX requests to.
-
-In this case, we've found a string configuration to be too rigid. Therefore, Livewire 3 has chosen to use runtime configuration instead. You can reference our documentation on [configuring Livewire's update endpoint](/docs/installation#configuring-livewires-update-endpoint) for more information.
-
-#### `asset_url`
-
-In Livewire 2, if your application was served under a non-root URI, you would use the `asset_url` configuration option to configure the base URL that Livewire uses to serve its JavaScript assets.
-
-Livewire 3 has instead chosen a runtime configuration strategy. You can reference our documentation on [configuring Livewire's script asset endpoint](/docs/installation#customizing-the-asset-url) for more information.
-
-#### `middleware_group`
-
-Because Livewire now exposes a more flexible way to customize its update endpoint, the `middleware_group` configuration option has been removed.
-
-You can reference our documentation on [customizing Livewire's update endpoint](/docs/installation#configuring-livewires-update-endpoint) for more information on applying custom middleware to Livewire requests.
-
-#### `manifest_path`
-
-Livewire 3 no longer uses a manifest file for component autoloading. Therefore, the `manifest_path` configuration is no longer necessary.
-
-#### `back_button_cache`
-
-Because Livewire 3 now offers an [SPA experience for your application using `wire:navigate`](/docs/navigate), the `back_button_cache` configuration is no longer necessary.
-
-## Livewire app namespace
-
-In version 2, Livewire components were generated and recognized automatically under the `App\Http\Livewire` namespace.
-
-Livewire 3 has changed this default to: `App\Livewire`.
-
-You can either move all of your components to the new location or add the following configuration to your application's `config/livewire.php` configuration file:
-
-```php
-'class_namespace' => 'App\\Http\\Livewire',
-```
-
-### Discovery
-
-With Livewire 3, there is no manifest present, and there is therefore nothing to “discover” in relation to Livewire Components, and you can safely remove any livewire:discover references from your build scripts without issue.
-
-## Page component layout view
-
-When rendering Livewire components as full pages using a syntax like the following:
-
-```php
-Route::get('/posts', ShowPosts::class);
-```
-
-The Blade layout file used by Livewire to render the component has changed from `resources/views/layouts/app.blade.php` to `resources/views/components/layouts/app.blade.php`:
-
-```shell
-resources/views/layouts/app.blade.php #[tl! remove]
-resources/views/components/layouts/app.blade.php #[tl! add]
-```
-
-You can either move your layout file to the new location or apply the following configuration inside your application's `config/livewire.php` configuration file:
-
-```php
-'layout' => 'layouts.app',
-```
-
-For more information, check out the documentation on [creating and using a page-component layout](/docs/components#layout-files).
-
-
-## Eloquent model binding
-
-Livewire 2 supported `wire:model` binding directly to Eloquent model properties. For example, the following was a common pattern:
-
-```php
-public Post $post;
-
-protected $rules = [
-    'post.title' => 'required',
-    'post.description' => 'required',
-];
-```
-
-```html
-<input wire:model="post.title">
-<input wire:model="post.description">
-```
-
-In Livewire 3, binding directly to Eloquent models has been disabled in favor of using individual properties, or extracting [Form Objects](/docs/forms#extracting-a-form-object).
-
-However, because this behavior is so heavily relied upon in Livewire applications, version 3 maintains support for this behavior via a configuration item in `config/livewire.php`:
-
-```php
-'legacy_model_binding' => true,
-```
-
-By setting `legacy_model_binding` to `true`, Livewire will handle Eloquent model properties exactly as it did in version 2.
-
-## AlpineJS
-
-Livewire 3 ships with [AlpineJS](https://alpinejs.dev) by default.
-
-If you manually include Alpine in your Livewire application, you will need to remove it, so that Livewire's built-in version doesn't conflict.
-
-### Including Alpine via a script tag
-
-If you include Alpine into your application via a script tag like the following, you can remove it entirely and Livewire will load its internal version instead:
-
-```html
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script> <!-- [tl! remove] -->
-```
-
-### Including plugins via a script tag
-
-Livewire 3 now ships with the following Alpine plugins out-of-the-box:
-
-* [Anchor](https://alpinejs.dev/plugins/anchor)
-* [Collapse](https://alpinejs.dev/plugins/collapse)
-* [Focus](https://alpinejs.dev/plugins/focus)
-* [Intersect](https://alpinejs.dev/plugins/intersect)
-* [Mask](https://alpinejs.dev/plugins/mask)
-* [Morph](https://alpinejs.dev/plugins/morph)
-* [Persist](https://alpinejs.dev/plugins/persist)
-
-It is worth keeping an eye on changes to the [package.json](https://github.com/livewire/livewire/blob/main/package.json) file, as new Alpine plugins may be added!
-
-If you have previously included any of these in your application via `<script>` tags like below, you should remove them along with Alpine's core:
-
-```html
-<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script> <!-- [tl! remove:1] -->
-<!-- ... -->
-```
-
-### Accessing the Alpine global via a script tag
-
-If you are currently accessing the `Alpine` global object from a script tag like so:
-
-```html
-<script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data(...)
-    })
-</script>
-```
-
-You may continue to do so, as Livewire internally includes and registers Alpine's global object like before.
-
-### Including via JS bundle
-
-If you have included Alpine or any of the popular core Alpine plugins mentioned above via NPM into your applications JavaScript bundle like so:
-
-```js
-// Warning: this is a snippet of the Livewire 2 approach to including Alpine
-
-import Alpine from 'alpinejs'
-import intersect from '@alpinejs/intersect'
-
-Alpine.plugin(intersect)
-
-Alpine.start()
-```
-
-You can remove them entirely, because Livewire includes Alpine and many popular Alpine plugins by default.
-
-#### Accessing Alpine via JS bundle
-
-If you are registering custom Alpine plugins or components inside your application's JavaScript bundle like so:
-
-```js
-// Warning: this is a snippet of the Livewire 2 approach to including Alpine
-
-import Alpine from 'alpinejs'
-import customPlugin from './plugins/custom-plugin'
-
-Alpine.plugin(customPlugin)
-
-Alpine.start()
-```
-
-You can still accomplish this by importing the Livewire core ESM module into your bundle and accessing `Alpine` from there.
-
-To import Livewire into your bundle, you must first disable Livewire's normal JavaScript injection and provide the necessary configuration to Livewire by replacing `@livewireScripts` with `@livewireScriptConfig` in your application's primary layout:
+If you have code that relies on capturing events from child elements, add the `.deep` modifier:
 
 ```blade
-    <!-- ... -->
+<!-- Before (v3) - listened to child events by default -->
+<div wire:model="value">
+    <input type="text">
+</div>
 
-    @livewireScripts <!-- [tl! remove] -->
-    @livewireScriptConfig <!-- [tl! add] -->
-</body>
+<!-- After (v4) - add .deep to restore old behavior -->
+<div wire:model.deep="value">
+    <input type="text">
+</div>
 ```
 
-Now, you can import `Alpine` and `Livewire` into your application's bundle like so:
+> [!tip] Most apps won't need changes
+> This change primarily affects non-standard uses of `wire:model` on container elements. Standard form input bindings (inputs, selects, textareas) are unaffected.
 
-```js
-import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
-import customPlugin from './plugins/custom-plugin'
+### Use `wire:navigate:scroll`
 
-Alpine.plugin(customPlugin)
+When using `wire:scroll` to preserve scroll in a scrollable container across `wire:navigate` requests in v3, you will need to instead use `wire:navigate:scroll` in v4:
 
-Livewire.start()
+```
+@persist('sidebar')
+    <div class="overflow-y-scroll" wire:scroll> <!-- [tl! remove] -->
+    <div class="overflow-y-scroll" wire:navigate:scroll> <!-- [tl! add] -->
+        <!-- ... -->
+    </div>
+@endpersist
 ```
 
-Notice you no longer need to call `Alpine.start()`. Livewire will start Alpine automatically.
+### Component tags must be closed
 
-For more information, please consult our documentation on [manually bundling Livewire's JavaScript](/docs/installation#manually-bundling-livewire-and-alpine).
-
-## `wire:model`
-
-In Livewire 3, `wire:model` is "deferred" by default (instead of by `wire:model.defer`). To achieve the same behavior as `wire:model` from Livewire 2, you must use `wire:model.live`.
-
-Below is a list of the necessary substitutions you will need to make in your templates to keep your application's behavior consistent:
-
-```html
-<input wire:model="..."> <!-- [tl! remove] -->
-<input wire:model.live="..."> <!-- [tl! add] -->
-
-<input wire:model.defer="..."> <!-- [tl! remove] -->
-<input wire:model="..."> <!-- [tl! add] -->
-
-<input wire:model.lazy="..."> <!-- [tl! remove] -->
-<input wire:model.blur="..."> <!-- [tl! add] -->
-```
-
-## `@entangle`
-
-Similar to the changes to `wire:model`, Livewire 3 defers all data binding by default. To match this behavior, `@entangle` has been updated as well.
-
-To keep your application running as expected, make the following `@entangle` substitutions:
+In v3, Livewire component tags would render even without being properly closed. In v4, with the addition of slot support, component tags must be properly closed—otherwise Livewire interprets subsequent content as slot content and the component won't render:
 
 ```blade
-@entangle(...) <!-- [tl! remove] -->
-@entangle(...).live <!-- [tl! add] -->
+<!-- Before (v3) - unclosed tag -->
+<livewire:component-name>
 
-@entangle(...).defer <!-- [tl! remove] -->
-@entangle(...) <!-- [tl! add] -->
+<!-- After (v4) - Self-closing tag -->
+<livewire:component-name />
 ```
 
-## Events
+[Learn more about rendering components →](/docs/4.x/components#rendering-components)
 
-In Livewire 2, Livewire had two different PHP methods for triggering events:
+[Learn more about slots →](/docs/4.x/nesting#slots)
 
-* `emit()`
-* `dispatchBrowserEvent()`
+## Medium-impact changes
 
-Livewire 3 has unified these two methods into a single method:
+These changes may affect certain parts of your application depending on which features you use.
 
-* `dispatch()`
+### `wire:model` modifiers now control client-side sync timing
 
-Here is a basic example of dispatching and listening for an event in Livewire 3:
+In v3, modifiers like `.blur` and `.change` only controlled when network requests were sent. The input's value was always synced to client-side state (`$wire.property`) immediately as the user typed.
+
+In v4, these modifiers now control when client-side state syncs too. This unlocks new UI patterns—like inputs that don't update until the user finishes typing and hits Enter or tabs away.
+
+**Migration:** If you're using `.blur` or `.change` and want the old behavior, add `.live` before the modifier:
+
+```blade
+<!-- v3 -->
+<input wire:model.blur="title">
+
+<!-- v4 equivalent -->
+<input wire:model.live.blur="title">
+```
+
+| v3 Syntax | v4 Equivalent |
+|-----------|---------------|
+| `wire:model.blur` | `wire:model.live.blur` |
+| `wire:model.change` | `wire:model.live.change` |
+
+> [!info] `.lazy` is backwards compatible
+> `wire:model.lazy` continues to work as it did in v3—no migration needed.
+
+**New in v4:** You can now delay client-side updates without sending network requests:
+
+```blade
+<!-- Only update $wire.width when user tabs away -->
+<input wire:model.blur="width">
+
+<!-- Update on Enter key or blur -->
+<input wire:model.blur.enter="search">
+```
+
+[Learn more about wire:model →](/docs/4.x/wire-model)
+
+### `wire:transition` now uses View Transitions API
+
+In v3, `wire:transition` was a wrapper around Alpine's `x-transition` directive, supporting modifiers like `.opacity`, `.scale`, `.duration.200ms`, and `.origin.top`.
+
+In v4, `wire:transition` uses the browser's native [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) instead. Basic usage still works—elements will fade in and out smoothly—but all modifiers have been removed.
+
+```blade
+<!-- This still works in v4 -->
+<div wire:transition>...</div>
+
+<!-- These modifiers are no longer supported -->
+<div wire:transition.opacity>...</div> <!-- [tl! remove] -->
+<div wire:transition.scale.origin.top>...</div> <!-- [tl! remove] -->
+<div wire:transition.duration.500ms>...</div> <!-- [tl! remove] -->
+```
+
+[Learn more about wire:transition →](/docs/4.x/wire-transition)
+
+### Performance improvements
+
+Livewire v4 includes significant performance improvements to the request handling system:
+
+- **Non-blocking polling**: `wire:poll` no longer blocks other requests or is blocked by them
+- **Parallel live updates**: `wire:model.live` requests now run in parallel, allowing faster typing and quicker results
+
+These improvements happen automatically—no changes needed to your code.
+
+### Update hooks consolidate array/object changes
+
+When replacing an entire array or object from the frontend (e.g., `$wire.items = ['new', 'values']`), Livewire now sends a single consolidated update instead of granular updates for each index.
+
+**Before:** Setting `$wire.items = ['a', 'b']` on an array of 4 items would fire `updatingItems`/`updatedItems` hooks multiple times—once for each index change plus `__rm__` removals.
+
+**After:** The same operation fires the hooks once with the full new array value, matching v2 behavior.
+
+If your code relies on individual index hooks firing when replacing entire arrays, you may need to adjust. Single-item changes (like `wire:model="items.0"`) still fire granular hooks as expected.
+
+### Method signature changes
+
+If you're extending Livewire's core functionality or using these methods directly, note these signature changes:
+
+**Streaming:**
+
+The `stream()` method parameter order has changed:
 
 ```php
-// Dispatching...
-class CreatePost extends Component
-{
-    public Post $post;
+// Before (v3)
+$this->stream(to: '#container', content: 'Hello', replace: true);
 
-    public function save()
-    {
-        $this->dispatch('post-created', postId: $this->post->id);
-    }
-}
-
-// Listening...
-class Dashboard extends Component
-{
-    #[On('post-created')]
-    public function postAdded($postId)
-    {
-        //
-    }
-}
+// After (v4)
+$this->stream(content: 'Hello', replace: true, el: '#container');
 ```
 
-The three main changes from Livewire 2 are:
-
-1. `emit()` has been renamed to `dispatch()` (Likewise `emitTo()` and `emitSelf()` are now `dispatch()->to()` and `dispatch()->self()`)
-2. `dispatchBrowserEvent()` has been renamed to `dispatch()`
-3. All event parameters must be named
-
-For more information, check out the new [events documentation page](/docs/events).
-
-Here are the "find and replace" differences that should be applied to your application:
+If you're using named parameters (as shown above), note that `to:` has been renamed to `el:`. If you're using positional parameters, you'll need to update to the following:
 
 ```php
-$this->emit('post-created'); // [tl! remove]
-$this->dispatch('post-created'); // [tl! add]
+// Before (v3) - positional parameters
+$this->stream('#container', 'Hello');
 
-$this->emitTo('foo', 'post-created'); // [tl! remove]
-$this->dispatch('post-created')->to('foo'); // [tl! add]
-
-$this->emitSelf('post-created'); // [tl! remove]
-$this->dispatch('post-created')->self(); // [tl! add]
-
-$this->emit('post-created', $post->id); // [tl! remove]
-$this->dispatch('post-created', postId: $post->id); // [tl! add]
-
-$this->dispatchBrowserEvent('post-created'); // [tl! remove]
-$this->dispatch('post-created'); // [tl! add]
-
-$this->dispatchBrowserEvent('post-created', ['postId' => $post->id]); // [tl! remove]
-$this->dispatch('post-created', postId: $post->id); // [tl! add]
+// After (v4) - positional/named parameters
+$this->stream('Hello', el: '#container');
 ```
 
-```html
-<button wire:click="$emit('post-created')">...</button> <!-- [tl! remove] -->
-<button wire:click="$dispatch('post-created')">...</button> <!-- [tl! add] -->
+[Learn more about streaming →](/docs/4.x/wire-stream)
 
-<button wire:click="$emit('post-created', 1)">...</button> <!-- [tl! remove] -->
-<button wire:click="$dispatch('post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
+**Component mounting (internal):**
 
-<button wire:click="$emitTo('foo', post-created', 1)">...</button> <!-- [tl! remove] -->
-<button wire:click="$dispatch('post-created', { postId: 1 })->to('foo')">...</button> <!-- [tl! add] -->
-
-<button x-on:click="$wire.emit('post-created', 1)">...</button> <!-- [tl! remove] -->
-<button x-on:click="$dispatch('post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
-```
-
-### `emitUp()`
-
-The concept of `emitUp` has been removed entirely. Events are now dispatched using browser events and therefore will "bubble up" by default.
-
-You can remove any instances of `$this->emitUp(...)` or `$emitUp(...)` from your components.
-
-### Testing events
-
-Livewire has also changed event assertions to match the new unified terminology regarding dispatching events:
+If you're extending `LivewireManager` or calling the `mount()` method directly:
 
 ```php
-Livewire::test(Component::class)->assertEmitted('post-created'); // [tl! remove]
-Livewire::test(Component::class)->assertDispatched('post-created'); // [tl! add]
+// Before (v3)
+public function mount($name, $params = [], $key = null)
 
-Livewire::test(Component::class)->assertEmittedTo(Foo::class, 'post-created'); // [tl! remove]
-Livewire::test(Component::class)->assertDispatchedTo(Foo:class, 'post-created'); // [tl! add]
-
-Livewire::test(Component::class)->assertNotEmitted('post-created'); // [tl! remove]
-Livewire::test(Component::class)->assertNotDispatched('post-created'); // [tl! add]
-
-Livewire::test(Component::class)->assertEmittedUp() // [tl! remove]
+// After (v4)
+public function mount($name, $params = [], $key = null, $slots = [])
 ```
 
-### URL query string
+This change adds support for passing slots when mounting components and generally won't affect most applications.
 
-In previous Livewire versions, if you bound a property to the URL's query string, the property value would always be present in the query string, unless you used the `except` option.
+## Low-impact changes
 
-In Livewire 3, all properties bound to the query string will only show up if their value has been changed after the page load. This default removes the need for the `except` option:
+These changes only affect applications using advanced features or customization.
 
-```php
-public $search = '';
+### Livewire Asset and Endpoint URL Changes
 
-protected $queryString = [
-    'search' => ['except' => ''], // [tl! remove]
-    'search', // [tl! add]
-];
+All Livewire URLs now include a unique hash derived from your `APP_KEY`. The prefix changed from `/livewire/` to `/livewire-{hash}/`:
+
+```
+# v3                          # v4
+/livewire/update        →     /livewire-{hash}/update
+/livewire/upload-file   →     /livewire-{hash}/upload-file
+/livewire/livewire.js   →     /livewire-{hash}/livewire.js
 ```
 
-If you'd like to revert back to the Livewire 2 behavior of always showing a property in the query string no matter its value, you can use the `keep` option:
+If your firewall rules, CDN config, or middleware reference `/livewire/` paths, update them to account for the new prefix.
 
-```php
-public $search = '';
+[Learn more about customizing Livewire's endpoints →](/docs/4.x/installation#customizing-livewires-update-endpoint)
 
-protected $queryString = [
-    'search' => ['keep' => true], // [tl! highlight]
-];
-```
+### JavaScript deprecations
 
-## Pagination
+#### Deprecated: `$wire.$js()` method
 
-The pagination system has been updated in Livewire 3 to better support multiple paginators within the same component.
-
-### Update published pagination views
-
-If you've published Livewire's pagination views, you can reference the new ones in the [pagination directory on GitHub](https://github.com/livewire/livewire/tree/master/src/Features/SupportPagination/views) and update your application accordingly.
-
-### Accessing `$this->page` directly
-
-Because Livewire now supports multiple paginators per component, it has removed the `$page` property from the component class and replaced it with a `$paginators` property that stores an array of paginators:
-
-```php
-$this->page = 2; // [tl! remove]
-$this->paginators['page'] = 2; // [tl! add]
-```
-
-However, it is recommended that you use the provided `getPage` and `setPage` methods to modify and access the current page:
-
-```php
-// Getter...
-$this->getPage();
-
-// Setter...
-$this->setPage(2);
-```
-
-### `wire:click.prefetch`
-
-Livewire's prefetching feature (`wire:click.prefetch`) has been removed entirely. If you depended on this feature, your application will still work, it will just be slightly less performant in the instances where you were previously benefiting from `.prefetch`.
-
-```html
-<button wire:click.prefetch=""> <!-- [tl! remove] -->
-<button wire:click="..."> <!-- [tl! add] -->
-```
-
-## Component class changes
-
-The following changes have been made to Livewire's base `Livewire\Component` class that your application's components may have relied on.
-
-### The component `$id` property
-
-If you accessed the component's ID directly via `$this->id`, you should instead use `$this->getId()`:
-
-```php
-$this->id; // [tl! remove]
-
-$this->getId(); // [tl! add]
-```
-
-### Duplicate method and property names
-
-PHP allows you to use the same name for both a class property and method. In Livewire 3, this will cause problems when calling methods from the frontend via `wire:click`.
-
-It is strongly recommended that you use distinct names for all public methods and properties in a component:
-
-```php
-public $search = ''; // [tl! remove]
-
-public function search() {
-    // ...
-}
-```
-
-```php
-public $query = ''; // [tl! add]
-
-public function search() {
-    // ...
-}
-```
-
-## JavaScript API changes
-
-### `livewire:load`
-
-In previous versions of Livewire, you could listen for the `livewire:load` event to execute JavaScript code immediately before Livewire initialized the page.
-
-In Livewire 3, that event name has been changed to `livewire:init` to match Alpine's `alpine:init`:
+The `$wire.$js()` method for defining JavaScript actions has been deprecated:
 
 ```js
-document.addEventListener('livewire:load', () => {...}) // [tl! remove]
-document.addEventListener('livewire:init', () => {...}) // [tl! add]
-```
-
-### Page expired hook
-
-In version 2, Livewire exposed a dedicated JavaScript method for customizing the page expiration behavior: `Livewire.onPageExpired()`. This method has been removed in favor of using the more powerful `request` hooks directly:
-
-```js
-Livewire.onPageExpired(() => {...}) // [tl! remove]
-
-Livewire.hook('request', ({ fail }) => { // [tl! add:8]
-    fail(({ status, preventDefault }) => {
-        if (status === 419) {
-            preventDefault()
-
-            confirm('Your custom page expiration behavior...')
-        }
-    })
+// Deprecated (v3)
+$wire.$js('bookmark', () => {
+    // Toggle bookmark...
 })
+
+// New (v4)
+$wire.$js.bookmark = () => {
+    // Toggle bookmark...
+}
 ```
 
-### New lifecycle hooks
+The new syntax is cleaner and more intuitive.
 
-Many of Livewire's internal JavaScript lifecycle hooks have been changed in Livewire 3.
+#### Deprecated: `$js` without prefix
 
-Here is a comparison of the old hooks and their new syntaxes for you to find/replace in your application:
+The use of `$js` in scripts without `$wire.$js` or `this.$js` prefix has been deprecated:
 
 ```js
-Livewire.hook('component.initialized', (component) => {}) // [tl! remove]
-Livewire.hook('component.init', ({ component, cleanup }) => {}) // [tl! add]
+// Deprecated (v3)
+$js('bookmark', () => {
+    // Toggle bookmark...
+})
 
-Livewire.hook('element.initialized', (el, component) => {}) // [tl! remove]
-Livewire.hook('element.init', ({ el, component }) => {}) // [tl! add]
+// New (v4)
+$wire.$js.bookmark = () => {
+    // Toggle bookmark...
+}
+// Or
+this.$js.bookmark = () => {
+    // Toggle bookmark...
+}
+```
 
-Livewire.hook('element.updating', (fromEl, toEl, component) => {}) // [tl! remove]
-Livewire.hook('morph.updating', ({ el, toEl, component }) => {}) // [tl! add]
+> [!tip] Old syntax still works
+> Both `$wire.$js('bookmark', ...)` and `$js('bookmark', ...)` will continue to work in v4 for backward compatibility, but you should migrate to the new syntax when convenient.
 
-Livewire.hook('element.updated', (el, component) => {}) // [tl! remove]
-Livewire.hook('morph.updated', ({ el, component }) => {}) // [tl! add]
+#### Deprecated: `commit` and `request` hooks
 
-Livewire.hook('element.removed', (el, component) => {}) // [tl! remove]
-Livewire.hook('morph.removed', ({ el, component }) => {}) // [tl! add]
+The `commit` and `request` hooks have been deprecated in favor of a new interceptor system that provides more granular control and better performance.
 
-Livewire.hook('message.sent', (message, component) => {}) // [tl! remove]
-Livewire.hook('message.failed', (message, component) => {}) // [tl! remove]
-Livewire.hook('message.received', (message, component) => {}) // [tl! remove]
-Livewire.hook('message.processed', (message, component) => {}) // [tl! remove]
+> [!tip] Old hooks still work
+> The deprecated hooks will continue to work in v4 for backward compatibility, but you should migrate to the new system when convenient.
 
-Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => { // [tl! add:14]
-    // Equivalent of 'message.sent'
+#### Migrating from `commit` hook
+
+The old `commit` hook:
+
+```js
+// OLD - Deprecated
+Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+    respond(() => {
+        // Runs after response received but before processing
+    })
 
     succeed(({ snapshot, effects }) => {
-        // Equivalent of 'message.received'
-
-        queueMicrotask(() => {
-            // Equivalent of 'message.processed'
-        })
+        // Runs after successful response
     })
 
     fail(() => {
-        // Equivalent of 'message.failed'
+        // Runs if request failed
     })
 })
 ```
 
-You may consult the new [JavaScript hook documentation](/docs/javascript) for a more thorough understanding of the new hook system.
+Should be replaced with the new `interceptMessage`:
 
-## Localization
+```js
+// NEW - Recommended
+Livewire.interceptMessage(({ component, message, onFinish, onSuccess, onError, onFailure }) => {
+    onFinish(() => {
+        // Equivalent to respond()
+    })
 
-If your application uses a locale prefix in the URI such as `https://example.com/en/...`, Livewire 2 automatically preserved this URL prefix when making component updates via `https://example.com/en/livewire/update`.
+    onSuccess(({ payload }) => {
+        // Equivalent to succeed()
+        // Access snapshot via payload.snapshot
+        // Access effects via payload.effects
+    })
 
-Livewire 3 has stopped supporting this behavior automatically. Instead, you can override Livewire's update endpoint with any URI prefixes you need using `setUpdateRoute()`:
+    onError(() => {
+        // Equivalent to fail() for server errors
+    })
 
-```php
-Route::group(['prefix' => LaravelLocalization::setLocale()], function ()
-{
-    // Your other localized routes...
-
-    Livewire::setUpdateRoute(function ($handle) {
-        return Route::post('/livewire/update', $handle);
-    });
-});
+    onFailure(() => {
+        // Equivalent to fail() for network errors
+    })
+})
 ```
 
-For more information, please consult our documentation on [configuring Livewire's update endpoint](/docs/installation#configuring-livewires-update-endpoint).
+#### Migrating from `request` hook
+
+The old `request` hook:
+
+```js
+// OLD - Deprecated
+Livewire.hook('request', ({ url, options, payload, respond, succeed, fail }) => {
+    respond(({ status, response }) => {
+        // Runs when response received
+    })
+
+    succeed(({ status, json }) => {
+        // Runs on successful response
+    })
+
+    fail(({ status, content, preventDefault }) => {
+        // Runs on failed response
+    })
+})
+```
+
+Should be replaced with the new `interceptRequest`:
+
+```js
+// NEW - Recommended
+Livewire.interceptRequest(({ request, onResponse, onSuccess, onError, onFailure }) => {
+    // Access url via request.uri
+    // Access options via request.options
+    // Access payload via request.payload
+
+    onResponse(({ response }) => {
+        // Equivalent to respond()
+        // Access status via response.status
+    })
+
+    onSuccess(({ response, responseJson }) => {
+        // Equivalent to succeed()
+        // Access status via response.status
+        // Access json via responseJson
+    })
+
+    onError(({ response, responseBody, preventDefault }) => {
+        // Equivalent to fail() for server errors
+        // Access status via response.status
+        // Access content via responseBody
+    })
+
+    onFailure(({ error }) => {
+        // Equivalent to fail() for network errors
+    })
+})
+```
+
+#### Key differences
+
+1. **More granular error handling**: The new system separates network failures (`onFailure`) from server errors (`onError`)
+2. **Better lifecycle hooks**: Message interceptors provide additional hooks like `onSync`, `onMorph`, and `onRender`
+3. **Cancellation support**: Both messages and requests can be cancelled/aborted
+4. **Component scoping**: Message interceptors can be scoped to specific components using `$wire.intercept(...)`
+
+For complete documentation on the new interceptor system, see the [JavaScript Interceptors documentation](/docs/4.x/javascript#interceptors).
+
+## Upgrading Volt
+
+Livewire v4 now supports single-file components, which use the same syntax as Volt class-based components. This means you can migrate from Volt to Livewire's built-in single-file components.
+
+### Update component imports
+
+Replace all instances of `Livewire\Volt\Component` with `Livewire\Component`:
+
+```php
+// Before (Volt)
+use Livewire\Volt\Component;
+
+new class extends Component { ... }
+
+// After (Livewire v4)
+use Livewire\Component;
+
+new class extends Component { ... }
+```
+
+### Update route definitions
+
+Replace `Volt::route()` with `Route::livewire()` in your routes files:
+
+```php
+// Before (Volt)
+use Livewire\Volt\Volt;
+
+Volt::route('/dashboard', 'dashboard');
+
+// After (Livewire v4)
+use Illuminate\Support\Facades\Route;
+
+Route::livewire('/dashboard', 'dashboard');
+```
+
+### Update test files
+
+Replace all instances of `Livewire\Volt\Volt` with `Livewire\Livewire` and change `Volt::test()` to `Livewire::test()`:
+
+```php
+// Before (Volt)
+use Livewire\Volt\Volt;
+
+Volt::test('counter')
+
+// After (Livewire v4)
+use Livewire\Livewire;
+
+Livewire::test('counter')
+```
+
+### Remove Volt service provider
+
+Delete the Volt service provider file:
+
+```bash
+rm app/Providers/VoltServiceProvider.php
+```
+
+Then remove it from the providers array in `bootstrap/providers.php`:
+
+```php
+// Before
+return [
+    App\Providers\AppServiceProvider::class,
+    App\Providers\VoltServiceProvider::class,
+];
+
+// After
+return [
+    App\Providers\AppServiceProvider::class,
+];
+```
+
+### Remove Volt package
+
+Uninstall the Volt package:
+
+```bash
+composer remove livewire/volt
+```
+
+### Install Livewire v4
+
+After completing the above changes, install Livewire v4. Your existing Volt class-based components will work without modification since they use the same syntax as Livewire's single-file components.
+
+## New features in v4
+
+Livewire v4 introduces several powerful new features you can start using immediately:
+
+### Component features
+
+**Single-file and multi-file components**
+
+v4 introduces new component formats alongside the traditional class-based approach. Single-file components combine PHP and Blade in one file, while multi-file components organize PHP, Blade, JavaScript, and tests in a directory.
+
+By default, view-based component files are prefixed with a ⚡ emoji to distinguish them from regular Blade files in your editor and searches. This can be disabled via the `make_command.emoji` config.
+
+```bash
+php artisan make:livewire create-post        # Single-file (default)
+php artisan make:livewire create-post --mfc  # Multi-file
+php artisan livewire:convert create-post     # Convert between formats
+```
+
+[Learn more about component formats →](/docs/4.x/components)
+
+**Slots and attribute forwarding**
+
+Components now support slots and automatic attribute bag forwarding using `{{ $attributes }}`, making component composition more flexible.
+
+[Learn more about nesting components →](/docs/4.x/nesting)
+
+**JavaScript in view-based components**
+
+View-based components can now include `<script>` tags without the `@script` wrapper. These scripts are served as separate cached files for better performance and automatic `$wire` binding:
+
+```blade
+<div>
+    <!-- Your component template -->
+</div>
+
+<script>
+    // $wire is automatically bound as 'this'
+    this.count++  // Same as $wire.count++
+
+    // $wire is still available if preferred
+    $wire.save()
+</script>
+```
+
+[Learn more about JavaScript in components →](/docs/4.x/javascript)
+
+### Islands
+
+Islands allow you to create isolated regions within a component that update independently, dramatically improving performance without creating separate child components.
+
+```blade
+@island(name: 'stats', lazy: true)
+    <div>{{ $this->expensiveStats }}</div>
+@endisland
+```
+
+[Learn more about islands →](/docs/4.x/islands)
+
+### Loading improvements
+
+**Deferred loading**
+
+In addition to lazy loading (viewport-based), components can now be deferred to load immediately after the initial page load:
+
+```blade
+<livewire:revenue defer />
+```
+
+```php
+#[Defer]
+class Revenue extends Component { ... }
+```
+
+**Bundled loading**
+
+Control whether multiple lazy/deferred components load in parallel or bundled together:
+
+```blade
+<livewire:revenue lazy.bundle />
+<livewire:expenses defer.bundle />
+```
+
+```php
+#[Lazy(bundle: true)]
+class Revenue extends Component { ... }
+```
+
+[Learn more about lazy and deferred loading →](/docs/4.x/lazy)
+
+### Async actions
+
+Run actions in parallel without blocking other requests using the `.async` modifier or `#[Async]` attribute:
+
+```blade
+<button wire:click.async="logActivity">Track</button>
+```
+
+```php
+#[Async]
+public function logActivity() { ... }
+```
+
+[Learn more about async actions →](/docs/4.x/actions#parallel-execution-with-async)
+
+### New directives and modifiers
+
+**`wire:sort` - Drag-and-drop sorting**
+
+Built-in support for sortable lists with drag-and-drop:
+
+```blade
+<ul wire:sort="updateOrder">
+    @foreach ($items as $item)
+        <li wire:sort:item="{{ $item->id }}" wire:key="{{ $item->id }}">{{ $item->name }}</li>
+    @endforeach
+</ul>
+```
+
+[Learn more about wire:sort →](/docs/4.x/wire-sort)
+
+**`wire:intersect` - Viewport intersection**
+
+Run actions when elements enter or leave the viewport, similar to Alpine's [`x-intersect`](https://alpinejs.dev/plugins/intersect):
+
+```blade
+<!-- Basic usage -->
+<div wire:intersect="loadMore">...</div>
+
+<!-- With modifiers -->
+<div wire:intersect.once="trackView">...</div>
+<div wire:intersect:leave="pauseVideo">...</div>
+<div wire:intersect.half="loadMore">...</div>
+<div wire:intersect.full="startAnimation">...</div>
+
+<!-- With options -->
+<div wire:intersect.margin.200px="loadMore">...</div>
+<div wire:intersect.threshold.50="trackScroll">...</div>
+```
+
+Available modifiers:
+- `.once` - Fire only once
+- `.half` - Wait until half is visible
+- `.full` - Wait until fully visible
+- `.threshold.X` - Custom visibility percentage (0-100)
+- `.margin.Xpx` or `.margin.X%` - Intersection margin
+
+[Learn more about wire:intersect →](/docs/4.x/wire-intersect)
+
+**`wire:ref` - Element references**
+
+Easily reference and interact with elements in your template:
+
+```blade
+<div wire:ref="modal">
+    <!-- Modal content -->
+</div>
+
+<button wire:click="$js.scrollToModal">Scroll to modal</button>
+
+<script>
+    this.$js.scrollToModal = () => {
+        this.$refs.modal.scrollIntoView()
+    }
+</script>
+```
+
+[Learn more about wire:ref →](/docs/4.x/wire-ref)
+
+**`.renderless` modifier**
+
+Skip component re-rendering directly from the template:
+
+```blade
+<button wire:click.renderless="trackClick">Track</button>
+```
+
+This is an alternative to the `#[Renderless]` attribute for actions that don't need to update the UI.
+
+**`.preserve-scroll` modifier**
+
+Preserve scroll position during updates to prevent layout jumps:
+
+```blade
+<button wire:click.preserve-scroll="loadMore">Load More</button>
+```
+
+**`data-loading` attribute**
+
+Every element that triggers a network request automatically receives a `data-loading` attribute, making it easy to style loading states with Tailwind:
+
+```blade
+<button wire:click="save" class="data-loading:opacity-50 data-loading:pointer-events-none">
+    Save Changes
+</button>
+```
+
+[Learn more about loading states →](/docs/4.x/loading-states)
+
+### JavaScript improvements
+
+**`$errors` magic property**
+
+Access your component's error bag from JavaScript:
+
+```blade
+<div wire:show="$errors.has('email')">
+    <span wire:text="$errors.first('email')"></span>
+</div>
+```
+
+[Learn more about validation →](/docs/4.x/validation)
+
+**`$intercept` magic**
+
+Intercept and modify Livewire requests from JavaScript:
+
+```blade
+<script>
+this.$intercept('save', ({ ... }) => {
+    // ...
+})
+</script>
+```
+
+[Learn more about JavaScript interceptors →](/docs/4.x/javascript#interceptors)
+
+**Island targeting from JavaScript**
+
+Trigger island renders directly from the template:
+
+```blade
+<button wire:click="loadMore" wire:island.append="stats">
+    Load more
+</button>
+```
+
+[Learn more about islands →](/docs/4.x/islands)
+
+## Getting help
+
+If you encounter issues during the upgrade:
+
+- Check the [documentation](https://livewire.laravel.com) for detailed feature guides
+- Visit the [GitHub discussions](https://github.com/livewire/livewire/discussions) for community support

@@ -21,7 +21,7 @@ export function toggleBooleanStateDirective(el, directive, isTruthy, cachedDispl
             .getComputedStyle(el, null)
             .getPropertyValue('display')
 
-        let display = (['inline', 'block', 'table', 'flex', 'grid', 'inline-flex']
+        let display = (['inline', 'list-item', 'block', 'table', 'flex', 'grid', 'inline-flex']
             .filter(i => directive.modifiers.includes(i))[0] || 'inline-block')
 
         // If element is to be removed, set display to its current value...

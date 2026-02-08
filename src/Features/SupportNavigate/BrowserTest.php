@@ -40,6 +40,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('child-component', ChildComponent::class);
             Livewire::component('script-component', ScriptComponent::class);
             Livewire::component('page-with-link-to-an-error-page', PageWithLinkToAnErrorPage::class);
+            Livewire::component('page-with-redirect-to-external-page', PageWithRedirectToExternalPage::class);
+            Livewire::component('page-with-redirect-to-internal-which-has-external-link', PageWithRedirectToInternalWhichHasExternalLinkPage::class);
 
             Livewire::component('nav-bar-component', NavBarComponent::class);
 
@@ -95,6 +97,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             HTML));
 
             Route::get('/page-with-alpine-for-loop', PageWithAlpineForLoop::class);
+            Route::get('/page-with-redirect-to-internal-which-has-external-link', PageWithRedirectToInternalWhichHasExternalLinkPage::class)->middleware('web');
+            Route::get('/page-with-redirect-to-external-page', PageWithRedirectToExternalPage::class)->middleware('web');
             Route::get('/script-component', ScriptComponent::class);
 
             Route::get('/first-noscript', FirstNoscriptPage::class)->middleware('web');
@@ -256,10 +260,12 @@ class BrowserTest extends \Tests\BrowserTestCase
             $browser
                 ->visit('/first-hide-progress')
                 ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertConsoleLogHasNoErrors()
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first')
                 ->click('@link.to.third')
                 ->pause(500)
+                ->assertScript('return window._lw_dusk_test')
                 ->assertMissing('#nprogress')
                 ->waitForText('Done loading...');
         });
@@ -458,10 +464,10 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->visit('/first-asset')
                 ->assertScript('return _lw_dusk_asset_count', 1)
                 ->assertSee('On first')
-                ->click('@link.to.second')
+                ->waitForNavigate()->click('@link.to.second')
                 ->waitForText('On second')
                 ->assertScript('return _lw_dusk_asset_count', 1)
-                ->click('@link.to.third')
+                ->waitForNavigate()->click('@link.to.third')
                 ->waitForText('On third')
                 ->assertScript('return _lw_dusk_asset_count', 2);
         });
@@ -557,7 +563,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         $this->browse(function ($browser) {
             $browser
                 ->visit('/first-scroll')
-                ->tinker()
+                // ->tinker()
                 ->assertVisible('@first-target')
                 ->assertNotInViewPort('@first-target')
                 ->scrollTo('@first-target')
@@ -693,7 +699,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->click('@link.to.first') // second attempt baz -> bat
                 ->assertScript('window.foo', 'bat')
                 ->assertSee('On fourth')
-                ->click('@link.to.first') // finally navigate
+                ->waitForNavigate()->click('@link.to.first') // finally navigate
                 ->assertSee('On first')
             ;
         });
@@ -999,12 +1005,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertHasClass('@link.five', 'active')
                 ->assertClassMissing('@link.six', 'active')
 
-                // Assert a navigate request was triggered as the remaining pages should no longer be in the cache
-                ->waitForNavigateRequest()->back()
+                // Page four is still in the cache (we navigated to 13 pages, cache holds 10,
+                // so pages 1-3 were evicted but page 4 is still cached)
+                ->waitForNoNavigateRequest()->back()
                 ->assertSeeIn('@title', 'four')
                 ->assertHasClass('@link.four', 'active')
                 ->assertClassMissing('@link.five', 'active')
 
+                // Assert a navigate request was triggered as the remaining pages should no longer be in the cache
                 ->waitForNavigateRequest()->back()
                 ->assertSeeIn('@title', 'three')
                 ->assertHasClass('@link.three', 'active')
@@ -1020,6 +1028,39 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertHasClass('@link.one', 'active')
                 ->assertClassMissing('@link.two', 'active')
 
+            ;
+        });
+    }
+
+    public function test_back_and_forward_buttons_work_after_page_refresh()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                // 1. Visit /navbar/one
+                ->visit('/navbar/one')
+                ->assertSeeIn('@title', 'one')
+
+                // 2. Navigate to /navbar/two
+                ->waitForNavigateRequest()->click('@link.two')
+                ->assertSeeIn('@title', 'two')
+
+                // 3. Refresh the page (clears in-memory snapshot cache)
+                ->waitForLivewire()->refresh()
+                ->assertSeeIn('@title', 'two')
+
+                // 4. Back → works (cache miss, fetches from server)
+                ->waitForNavigateRequest()->back()
+                ->assertSeeIn('@title', 'one')
+
+                // 5. Forward → works
+                ->forward()
+                ->waitForTextIn('@title', 'two')
+                ->assertSeeIn('@title', 'two')
+
+                // 6. Back again — this is the step that breaks without the fix
+                ->back()
+                ->waitForTextIn('@title', 'one')
+                ->assertSeeIn('@title', 'one')
             ;
         });
     }
@@ -1209,6 +1250,51 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_an_error_with_fetch_such_as_a_backend_redirect_to_an_external_site_does_not_break_livewire_and_progress_bar_is_removed()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/page-with-redirect-to-internal-which-has-external-link')
+                ->waitForLivewireToLoad()
+                ->tap(fn ($b) => $b->script('window._lw_dusk_navigated_started = false; document.addEventListener("livewire:navigate", () => { window._lw_dusk_navigated_started = true })'))
+                ->click('@link')
+                ->assertScript('return window._lw_dusk_navigated_started')
+
+                // We can't listen for a navigate request, as it will fail, so just pause for a bit and make sure the progress bar is removed...
+                ->pause(300)
+                ->waitUntilMissing('#nprogress')
+                ->assertPathIs('/page-with-redirect-to-internal-which-has-external-link')
+                ->waitForLivewire()->click('@refresh')
+            ;
+        });
+    }
+
+    public function test_data_current_is_automatically_added_to_wire_navigate_links()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForText('On first')
+
+                ->assertAttribute('@link.to.first.no.wire.current', 'data-current', '')
+                ->assertAttributeMissing('@link.to.second.no.wire.current', 'data-current')
+
+                ->assertAttributeMissing('@link.to.first.wire.current.ignore', 'data-current')
+                ->assertAttributeMissing('@link.to.second.wire.current.ignore', 'data-current')
+
+                ->click('@link.to.second.no.wire.current')
+                ->waitForText('On second')
+
+                ->assertAttributeMissing('@link.to.first.no.wire.current', 'data-current')
+                ->assertAttribute('@link.to.second.no.wire.current', 'data-current', '')
+
+                ->assertAttributeMissing('@link.to.first.wire.current.ignore', 'data-current')
+                ->assertAttributeMissing('@link.to.second.wire.current.ignore', 'data-current')
+
+                ;
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -1252,6 +1338,12 @@ class FirstPage extends Component
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
             <a href="/redirect-to-second" wire:navigate dusk="redirect.to.second.link">Redirect to second page from link</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
+
+            <a href="/first" wire:navigate dusk="link.to.first.no.wire.current">First (no wire:current)</a>
+            <a href="/second" wire:navigate dusk="link.to.second.no.wire.current">Second (no wire:current)</a>
+
+            <a href="/first" wire:navigate wire:current.ignore dusk="link.to.first.wire.current.ignore">First (wire:current.ignore)</a>
+            <a href="/second" wire:navigate wire:current.ignore dusk="link.to.second.wire.current.ignore">Second (wire:current.ignore)</a>
 
             @script
             <script>
@@ -1314,6 +1406,12 @@ class SecondPage extends Component
             <a href="/first" wire:navigate dusk="link.to.first">Go to first page</a>
             <button type="button" wire:click="redirectToPageOne" dusk="redirect.to.first">Redirect to first page</button>
 
+            <a href="/first" wire:navigate dusk="link.to.first.no.wire.current">First (no wire:current)</a>
+            <a href="/second" wire:navigate dusk="link.to.second.no.wire.current">Second (no wire:current)</a>
+
+            <a href="/first" wire:navigate wire:current.ignore dusk="link.to.first.wire.current.ignore">First (wire:current.ignore)</a>
+            <a href="/second" wire:navigate wire:current.ignore dusk="link.to.second.wire.current.ignore">Second (wire:current.ignore)</a>
+
             @persist('foo')
                 <div x-data="{ count: 1 }">
                     <span x-text="count" dusk="count"></span>
@@ -1364,6 +1462,10 @@ class FourthPage extends Component
 
             <script>
                 document.addEventListener('livewire:navigate', (event) => {
+                    if (window.foo === 'bob') {
+                        return
+                    }
+
                     event.preventDefault();
                     if (window.foo === 'bar') {
                         window.foo = 'baz'
@@ -1371,6 +1473,7 @@ class FourthPage extends Component
                     else if (window.foo === 'baz') {
                         window.foo ='bat'
                     } else {
+                        window.foo = 'bob'
                         Alpine.navigate(event.detail.url)
                     }
                 })
@@ -1605,6 +1708,38 @@ class PageWithAlpineForLoop extends Component
                     <p x-text="value"></p>
                 </template>
             </div>
+        </div>
+        HTML;
+    }
+}
+
+class PageWithRedirectToInternalWhichHasExternalLinkPage extends Component
+{
+    #[Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-redirect-to-internal-which-has-external-link">
+            <a href="/page-with-redirect-to-external-page" wire:navigate dusk="link">Go to other component</a>
+            <button type="button" wire:click="$refresh" dusk="refresh">Refresh</button>
+        </div>
+        HTML;
+    }
+}
+
+class PageWithRedirectToExternalPage extends Component
+{
+    public function mount()
+    {
+        $this->redirect('https://www.google.com');
+    }
+
+    #[Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-redirect-to-external-page">
+            Test
         </div>
         HTML;
     }

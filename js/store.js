@@ -1,5 +1,7 @@
 import { Component } from "@/component";
 import { trigger } from "@/hooks";
+import { walkBackwards, walkUpwards } from "./utils";
+import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFragmentMarker } from "./fragment";
 
 let components = {}
 
@@ -31,24 +33,61 @@ export function hasComponent(id) {
     return !! components[id]
 }
 
-export function findComponent(id) {
+export function findComponent(id, strict = true) {
     let component = components[id]
 
-    if (! component) throw 'Component not found: ' + id
+    if (! component) {
+        if (strict) throw 'Component not found: ' + id
+
+        return
+    }
 
     return component
 }
 
-export function closestComponent(el, strict = true) {
-    let closestRoot = Alpine.findClosest(el, i => i.__livewire)
+export function findComponentByEl(el, strict = true) {
+    let componentId = walkUpwards(el, (node, { stop }) => {
+        if (node.__livewire) return stop(node.__livewire.id)
 
-    if (! closestRoot) {
+        let endMarkers = []
+
+        let slotParentId = walkBackwards(node, (siblingNode, { stop }) => {
+            if (isEndFragmentMarker(siblingNode)) {
+                let metadata = extractFragmentMetadataFromMarkerNode(siblingNode)
+
+                if (metadata.type !== 'slot') return
+
+                endMarkers.push('a')
+
+                return
+            }
+
+            if (isStartFragmentMarker(siblingNode)) {
+                let metadata = extractFragmentMetadataFromMarkerNode(siblingNode)
+
+                if (metadata.type !== 'slot') return
+
+
+                if (endMarkers.length > 0) {
+                    endMarkers.pop()
+                } else {
+                    return stop(metadata.parent)
+                }
+            }
+        })
+
+        if (slotParentId) return stop(slotParentId)
+    })
+
+    let component = findComponent(componentId, strict)
+
+    if (! component) {
         if (strict) throw "Could not find Livewire component in DOM tree"
 
         return
     }
 
-    return closestRoot.__livewire
+    return component
 }
 
 export function componentsByName(name) {

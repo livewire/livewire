@@ -18,11 +18,11 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
     {
         on('flush-state', function () {
             static::$shouldInjectConditionalMarkers = config('livewire.inject_morph_markers', true);
-            static::$shouldInjectLoopMarkers = config('livewire.smart_wire_keys', false);
+            static::$shouldInjectLoopMarkers = config('livewire.smart_wire_keys', true);
         });
 
         static::$shouldInjectConditionalMarkers = config('livewire.inject_morph_markers', true);
-        static::$shouldInjectLoopMarkers = config('livewire.smart_wire_keys', false);
+        static::$shouldInjectLoopMarkers = config('livewire.smart_wire_keys', true);
 
         if (! static::$shouldInjectConditionalMarkers && ! static::$shouldInjectLoopMarkers) {
             return;
@@ -121,9 +121,16 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
                 && str($match[0])->endsWith(')')
                 && ! static::hasEvenNumberOfParentheses($match[0])
             ) {
-                if (($after = str($template)->after($match[0])->toString()) === $template) {
+                // Use position-based approach to find the text after the current match,
+                // rather than searching for the match string (which could find an earlier
+                // occurrence if the same pattern appears multiple times in the template)...
+                $afterPosition = $matchPosition + strlen($match[0]);
+
+                if ($afterPosition >= strlen($template)) {
                     break;
                 }
+
+                $after = substr($template, $afterPosition);
 
                 $rest = str($after)->before(')');
 
@@ -311,7 +318,8 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         $loopDirectives = [
             'foreach',
             'forelse',
-            'for',
+            // temp disabling because of "missing $loop" error
+            // 'for',
             'while',
         ];
 
@@ -326,7 +334,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
             'endforeach',
             // This `endforelse` should NOT be included here, but it is left here for documentation purposes. The close of a `@forelse` loop is handled by the `@empty` directive...
             // 'endforelse',
-            'endfor',
+            // 'endfor',
             'endwhile',
         ];
 

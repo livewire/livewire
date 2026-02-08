@@ -2,8 +2,12 @@
 
 namespace Livewire\Mechanisms\HandleRequests;
 
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+use Livewire\Exceptions\PayloadTooLargeException;
+use Livewire\Exceptions\TooManyComponentsException;
 
 use Livewire\Mechanisms\Mechanism;
 
@@ -19,9 +23,9 @@ class HandleRequests extends Mechanism
         // so it's positioned before any catch-all routes.
         if (! $this->updateRoute && ! $this->updateRouteExists()) {
             app($this::class)->setUpdateRoute(function ($handle) {
-                return Route::post('/livewire/update', $handle)
+                return Route::post(EndpointResolver::updatePath(), $handle)
                     ->middleware('web')
-                    ->name('default.livewire.update');
+                    ->name('default-livewire.update');
             });
         }
 
@@ -31,6 +35,11 @@ class HandleRequests extends Mechanism
     protected function updateRouteExists()
     {
         return $this->findUpdateRoute() !== null;
+    }
+
+    function getUriPrefix()
+    {
+        return EndpointResolver::prefix();
     }
 
     function getUpdateUri()
@@ -56,7 +65,7 @@ class HandleRequests extends Mechanism
         foreach (Route::getRoutes()->getRoutes() as $route) {
             if (str($route->getName())->endsWith('livewire.update')) {
                 // If it's the default route, save it but keep looking for a custom one
-                if ($route->getName() === 'default.livewire.update') {
+                if ($route->getName() === 'default-livewire.update') {
                     $defaultRoute = $route;
                     continue;
                 }
@@ -115,7 +124,25 @@ class HandleRequests extends Mechanism
 
     function handleUpdate()
     {
+        // Check payload size limit...
+        $maxSize = config('livewire.payload.max_size');
+
+        if ($maxSize !== null) {
+            $contentLength = request()->header('Content-Length', 0);
+
+            if ($contentLength > $maxSize) {
+                throw new PayloadTooLargeException($contentLength, $maxSize);
+            }
+        }
+
         $requestPayload = request(key: 'components', default: []);
+
+        // Check max components limit...
+        $maxComponents = config('livewire.payload.max_components');
+
+        if ($maxComponents !== null && count($requestPayload) > $maxComponents) {
+            throw new TooManyComponentsException(count($requestPayload), $maxComponents);
+        }
 
         $finish = trigger('request', $requestPayload);
 
@@ -143,6 +170,23 @@ class HandleRequests extends Mechanism
 
         $finish = trigger('response', $responsePayload);
 
-        return $finish($responsePayload);
+        $payload = $finish($responsePayload);
+
+        // When wire:stream is used, headers are sent early by SupportStreaming::ensureStreamResponseStarted().
+        // The streaming content has already been output via echo/flush in SupportStreaming::streamContent().
+        // This final JSON response contains the component snapshot and must be output without attempting
+        // to send additional headers, which would cause "headers already sent" warnings (since Symfony 7.2.7).
+        if (headers_sent()) {
+            $response = new StreamedResponse(
+                json_encode($payload),
+                200,
+                ['Content-Type' => 'application/json']
+            );
+
+            // Headers won't be sent due to override, but are documented on the object
+            return $response;
+        }
+
+        return $payload;
     }
 }

@@ -35,3 +35,15 @@ Livewire provides a helpful `.prompt` modifier, that when applied to `wire:confi
 
 When a user presses "Delete account", the action will only be performed if "DELETE" is entered into the prompt, otherwise, the action will be cancelled.
 
+## Reference
+
+```blade
+wire:confirm="message"
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.prompt` | Prompt user for input; format: "message\|expected-input" |
+

@@ -1,6 +1,9 @@
 
 Loading indicators are an important part of crafting good user interfaces. They give users visual feedback when a request is being made to the server, so they know they are waiting for a process to complete.
 
+> [!tip] Consider using data-loading selectors instead
+> While `wire:loading` is great for simple show/hide scenarios, Livewire v4 introduces automatic `data-loading` attributes on elements that trigger network requests. This approach is often simpler and more flexible—you can style loading states directly with Tailwind without needing `wire:target` directives, and it works seamlessly even when dispatching events to other components. [Learn more about data-loading →](/docs/4.x/loading-states)
+
 ## Basic usage
 
 Livewire provides a simple yet extremely powerful syntax for controlling loading indicators: `wire:loading`. Adding `wire:loading` to any element will hide it by default (using `display: none` in CSS) and show it when a request is sent to the server.
@@ -97,7 +100,7 @@ You may find yourself in a situation where you would like `wire:loading` to reac
 
 ```blade
 <form wire:submit="save">
-    <input type="text" wire:model.blur="title">
+    <input type="text" wire:model.live.blur="title">
 
     <!-- ... -->
 
@@ -212,3 +215,94 @@ To customize the amount of time to delay the loading indicator, you can use one 
 <div wire:loading.delay.longer>...</div>   <!-- 500ms -->
 <div wire:loading.delay.longest>...</div>  <!-- 1000ms -->
 ```
+
+## Styling with data-loading
+
+Livewire automatically adds a `data-loading` attribute to any element that triggers a network request. This allows you to style loading states directly with CSS or Tailwind without using `wire:loading` directives.
+
+### Using Tailwind's data attribute variant
+
+You can use Tailwind's `data-loading` variant to apply styles when an element is loading:
+
+```blade
+<button
+    wire:click="save"
+    class="data-loading:opacity-50 data-loading:pointer-events-none"
+>
+    Save Changes
+</button>
+```
+
+When the button is clicked and the request is in-flight, it will automatically become semi-transparent and unclickable.
+
+### Using CSS
+
+If you're not using Tailwind, you can target the `data-loading` attribute with standard CSS:
+
+```css
+[data-loading] {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+button[data-loading] {
+    background-color: #ccc;
+    cursor: wait;
+}
+```
+
+### Styling parent and child elements
+
+You can style parent elements when a child has `data-loading` using the `has-data-loading:` variant:
+
+```blade
+<div class="has-data-loading:opacity-50">
+    <button wire:click="save">Save</button>
+</div>
+```
+
+Or style child elements from a parent with `data-loading` using the `in-data-loading:` variant:
+
+```blade
+<button wire:click="save">
+    <span class="in-data-loading:hidden">Save</span>
+    <span class="hidden in-data-loading:block">Saving...</span>
+</button>
+```
+
+## See also
+
+- **[Loading States](/docs/4.x/loading-states)** — Modern approach with data-loading attributes
+- **[Actions](/docs/4.x/actions)** — Show feedback during action processing
+- **[Forms](/docs/4.x/forms)** — Display form submission progress
+
+## Reference
+
+```blade
+wire:loading
+wire:target="action"
+wire:target="property"
+wire:target.except="action"
+```
+
+### Modifiers
+
+| Modifier | Description |
+|----------|-------------|
+| `.remove` | Show element by default, hide during loading |
+| `.class="class-name"` | Add a CSS class during loading |
+| `.class.remove="class-name"` | Remove a CSS class during loading |
+| `.attr="attribute"` | Add an HTML attribute during loading |
+| `.delay` | Delay showing indicator by 200ms |
+| `.delay.shortest` | Delay by 50ms |
+| `.delay.shorter` | Delay by 100ms |
+| `.delay.short` | Delay by 150ms |
+| `.delay.long` | Delay by 300ms |
+| `.delay.longer` | Delay by 500ms |
+| `.delay.longest` | Delay by 1000ms |
+| `.inline-flex` | Use `inline-flex` display value |
+| `.inline` | Use `inline` display value |
+| `.block` | Use `block` display value |
+| `.table` | Use `table` display value |
+| `.flex` | Use `flex` display value |
+| `.grid` | Use `grid` display value |

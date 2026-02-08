@@ -28,11 +28,95 @@ class BrowserTest extends BrowserTestCase
         })
             ->assertSee('The data is in-sync...')
             ->check('@checkbox')
+            ->pause(50)
             ->assertDontSee('The data is in-sync')
             ->assertSee('Unsaved changes...')
             ->uncheck('@checkbox')
             ->assertSee('The data is in-sync...')
             ->assertDontSee('Unsaved changes...')
+        ;
+    }
+
+    function test_can_use_dollar_dirty_to_check_if_component_is_dirty()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model="title" />
+
+                        <div x-show="$wire.$dirty()" dusk="dirty-indicator">Component is dirty</div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertNotVisible('@dirty-indicator')
+            ->type('@input', 'Hello')
+            ->pause(50)
+            ->assertVisible('@dirty-indicator');
+        ;
+    }
+
+    function test_can_use_dollar_dirty_to_check_if_specific_property_is_dirty()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+            public $description = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="title" type="text" wire:model="title" />
+                        <input dusk="description" type="text" wire:model="description" />
+
+                        <div x-show="$wire.$dirty('title')" dusk="title-dirty">Title is dirty</div>
+                        <div x-show="$wire.$dirty('description')" dusk="description-dirty">Description is dirty</div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertNotVisible('@title-dirty')
+            ->assertNotVisible('@description-dirty')
+            ->type('@title', 'Hello')
+            ->pause(50)
+            ->assertVisible('@title-dirty')
+            ->assertNotVisible('@description-dirty')
+            ->type('@description', 'World')
+            ->pause(50)
+            ->assertVisible('@title-dirty')
+            ->assertVisible('@description-dirty')
+        ;
+    }
+
+    function test_dollar_dirty_clears_after_network_request()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model="title" />
+
+                        <button dusk="commit" type="button" wire:click="$commit">Commit</button>
+
+                        <div x-show="$wire.$dirty()" dusk="dirty-indicator">Component is dirty</div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertNotVisible('@dirty-indicator')
+            ->type('@input', 'Hello')
+            ->pause(50)
+            ->assertVisible('@dirty-indicator')
+            ->waitForLivewire()->click('@commit')
+            ->pause(50)
+            ->assertNotVisible('@dirty-indicator')
         ;
     }
 
@@ -127,5 +211,555 @@ class BrowserTest extends BrowserTestCase
             ->assertSelected('@child', '')
             ->waitForLivewire()->select('@parent', 'foo')
             ->assertSelected('@child', 'bar');
+    }
+
+    public function test_multiple_wire_set_calls_to_empty_string_are_all_sent_to_server()
+    {
+        Livewire::visit(new class extends Component {
+            public array $parent = [
+                'foo' => 'bar',
+                'baz' => 'qux',
+            ];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <span dusk="foo">{{ $parent['foo'] }}</span>
+                        <span dusk="baz">{{ $parent['baz'] }}</span>
+
+                        <button
+                            dusk="clear-both"
+                            type="button"
+                            x-on:click="$wire.set('parent.foo', ''); $wire.set('parent.baz', ''); $wire.commit()"
+                        >
+                            Clear Both
+                        </button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@foo', 'bar')
+            ->assertSeeIn('@baz', 'qux')
+            ->waitForLivewire()->click('@clear-both')
+            ->assertDontSeeIn('@foo', 'bar')
+            ->assertDontSeeIn('@baz', 'qux')
+        ;
+    }
+
+    public function test_wire_model_ephemeral_syncs_immediately_no_network()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+        ;
+    }
+
+    public function test_wire_model_blur_delays_ephemeral_sync_no_network()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.blur="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->click('@blur-target')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+        ;
+    }
+
+    public function test_wire_model_change_delays_ephemeral_sync_no_network()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.change.live="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->click('@blur-target')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+        ;
+    }
+
+    public function test_wire_model_enter_delays_ephemeral_sync_no_network()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.enter="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->click('@blur-target')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->click('@input')
+            ->keys('@input', '{enter}')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+        ;
+    }
+
+    public function test_wire_model_blur_enter_delays_ephemeral_sync_until_blur_or_enter()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.blur.enter="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->type('@input', 'by-enter')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->keys('@input', '{enter}')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'by-enter')
+            ->assertSeeNothingIn('@server')
+            ->clear('@input')
+            ->type('@input', 'by-blur')
+            ->pause(50)
+            ->click('@blur-target')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'by-blur')
+            ->assertSeeNothingIn('@server')
+        ;
+    }
+
+    public function test_wire_model_live_ephemeral_immediate_network_debounced()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->waitForTextIn('@server', 'hello')
+        ;
+    }
+
+    public function test_wire_model_live_blur_ephemeral_immediate_network_on_blur()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live.blur="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+            ->waitForLivewire()->click('@blur-target')
+            ->assertSeeIn('@server', 'hello')
+        ;
+    }
+
+    public function test_wire_model_blur_live_ephemeral_on_blur_network_on_blur()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.blur.live="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->waitForLivewire()->click('@blur-target')
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeIn('@server', 'hello')
+        ;
+    }
+
+    public function test_wire_model_blur_live_debounce_ephemeral_on_blur_network_debounced()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.blur.live.debounce.300ms="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->click('@blur-target')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+            ->waitForTextIn('@server', 'hello')
+        ;
+    }
+
+    public function test_wire_model_live_enter_ephemeral_immediate_network_on_enter()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live.enter="title" />
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->type('@input', 'hello')
+            ->pause(50)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+            ->click('@blur-target')
+            ->pause(200)
+            ->assertSeeNothingIn('@server')
+            ->click('@input')
+            ->waitForLivewire()->keys('@input', '{enter}')
+            ->assertSeeIn('@server', 'hello')
+        ;
+    }
+
+    function test_wire_model_blur_syncs_value_on_form_submit_via_enter()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public $submitted = false;
+
+            public function submit()
+            {
+                $this->submitted = true;
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <form wire:submit="submit">
+                            <input dusk="input" type="text" wire:model.blur="title" />
+                            <button dusk="submit" type="submit">Submit</button>
+                        </form>
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <span dusk="submitted">{{ $submitted ? 'yes' : 'no' }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->assertSeeIn('@submitted', 'no')
+            ->type('@input', 'hello')
+            ->pause(50)
+            // Value hasn't synced yet (blur hasn't fired)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            // Press Enter to submit the form from inside the input
+            ->waitForLivewire()->keys('@input', '{enter}')
+            // The value should have been synced before the submit payload was built
+            ->assertSeeIn('@submitted', 'yes')
+            ->assertSeeIn('@server', 'hello')
+        ;
+    }
+
+    function test_wire_model_change_syncs_value_on_form_submit_via_enter()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public $submitted = false;
+
+            public function submit()
+            {
+                $this->submitted = true;
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <form wire:submit="submit">
+                            <input dusk="input" type="text" wire:model.change="title" />
+                            <button dusk="submit" type="submit">Submit</button>
+                        </form>
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <span dusk="submitted">{{ $submitted ? 'yes' : 'no' }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->assertSeeIn('@submitted', 'no')
+            ->type('@input', 'hello')
+            ->pause(50)
+            // Value hasn't synced yet (change hasn't fired)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            // Press Enter to submit the form from inside the input
+            ->waitForLivewire()->keys('@input', '{enter}')
+            // The value should have been synced before the submit payload was built
+            ->assertSeeIn('@submitted', 'yes')
+            ->assertSeeIn('@server', 'hello')
+        ;
+    }
+
+    function test_wire_model_enter_syncs_value_on_form_submit_via_enter()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public $submitted = false;
+
+            public function submit()
+            {
+                $this->submitted = true;
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <form wire:submit="submit">
+                            <input dusk="input" type="text" wire:model.enter="title" />
+                            <button dusk="submit" type="submit">Submit</button>
+                        </form>
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <span dusk="submitted">{{ $submitted ? 'yes' : 'no' }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->assertSeeIn('@submitted', 'no')
+            ->type('@input', 'hello')
+            ->pause(50)
+            // Value hasn't synced yet (enter hasn't been pressed)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            // Press Enter to submit the form from inside the input
+            ->waitForLivewire()->keys('@input', '{enter}')
+            // The value should have been synced before the submit payload was built
+            ->assertSeeIn('@submitted', 'yes')
+            ->assertSeeIn('@server', 'hello')
+        ;
+    }
+
+    function test_wire_model_with_large_numeric_key_does_not_create_massive_array()
+    {
+        Livewire::visit(new class extends Component {
+            public array $data = [];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="checkbox" type="checkbox" wire:model.live="data.1000">
+
+                        <span dusk="output">{{ json_encode($data) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '[]')
+            ->waitForLivewire()->check('@checkbox')
+            // Should be {"1000":true} not an array with 1000 null values
+            ->assertSeeIn('@output', '{"1000":true}')
+        ;
+    }
+
+    function test_wire_model_with_nested_numeric_key_does_not_create_massive_array()
+    {
+        Livewire::visit(new class extends Component {
+            public array $items = [];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live="items.500.name">
+
+                        <span dusk="output">{{ json_encode($items) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '[]')
+            ->waitForLivewire()->type('@input', 'test')
+            // Should be {"500":{"name":"test"}} not an array with 500 null values
+            ->assertSeeIn('@output', '{"500":{"name":"test"}}')
+        ;
+    }
+
+    function test_wire_model_with_sequential_array_still_works()
+    {
+        Livewire::visit(new class extends Component {
+            public array $items = ['first', 'second'];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live="items.1">
+
+                        <span dusk="output">{{ json_encode($items) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '["first","second"]')
+            ->waitForLivewire()->type('@input', 'updated')
+            // Sequential array should remain an array
+            ->assertSeeIn('@output', '["first","updated"]')
+        ;
+    }
+
+    function test_wire_model_with_large_numeric_key_on_non_empty_array_preserves_data()
+    {
+        Livewire::visit(new class extends Component {
+            public array $data = ['a', 'b'];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="checkbox" type="checkbox" wire:model.live="data.1000">
+
+                        <span dusk="output">{{ json_encode($data) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '["a","b"]')
+            ->waitForLivewire()->check('@checkbox')
+            // Should preserve existing data and add the new key without creating massive array
+            ->assertSeeIn('@output', '{"0":"a","1":"b","1000":true}')
+        ;
     }
 }

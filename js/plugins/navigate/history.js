@@ -1,3 +1,4 @@
+import historyCoordinator from "@/plugins/history/coordinator"
 
 class Snapshot {
     constructor(url, html) {
@@ -64,10 +65,11 @@ export function storeCurrentPageStatus(status) {
 }
 
 export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
+    // Get the URL with all querystring changes...
+    let url = historyCoordinator.getUrl()
+    
     // Create a history state entry for the initial page load.
     // (This is so later hitting back can restore this page).
-    let url = new URL(window.location.href, document.baseURI)
-
     replaceUrl(url, document.documentElement.outerHTML)
 }
 
@@ -105,7 +107,13 @@ export function whenTheBackOrForwardButtonIsClicked(
             let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
 
             handleHtml(snapshot.html, snapshot.url, snapshotCache.currentUrl, snapshotCache.currentKey)
+
+            snapshotCache.currentKey = alpine.snapshotIdx
+            snapshotCache.currentUrl = snapshot.url
         } else {
+            snapshotCache.currentKey = null
+            snapshotCache.currentUrl = null
+
             fallback(alpine.url)
         }
     })
@@ -133,27 +141,17 @@ function updateUrl(method, url, html) {
         ? snapshotCache.push(key, new Snapshot(url, html))
         : snapshotCache.replace(key = (snapshotCache.currentKey ?? key), new Snapshot(url, html))
 
-    let state = history.state || {}
-
-    if (!state.alpine) state.alpine = {}
-
-    state.alpine.snapshotIdx = key
-    state.alpine.url = url.toString()
-
-    try {
-        // 640k character limit:
-        history[method](state, JSON.stringify(document.title), url)
-
-        snapshotCache.currentKey = key
-        snapshotCache.currentUrl = url
-    } catch (error) {
+    historyCoordinator.addErrorHandler('navigate', error => {
         if (error instanceof DOMException && error.name === 'SecurityError') {
             console.error(
                 "Livewire: You can't use wire:navigate with a link to a different root domain: " +
                     url
             )
         }
+    })
 
-        console.error(error)
-    }
+    historyCoordinator[method](url, { snapshotIdx: key, url: url.toString() })
+
+    snapshotCache.currentKey = key
+    snapshotCache.currentUrl = url
 }

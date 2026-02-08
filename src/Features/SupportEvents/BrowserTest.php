@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportEvents;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Renderless;
+use Livewire\Features\SupportWireModelingNestedComponents\BaseModelable;
 use Tests\BrowserTestCase;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -87,8 +88,10 @@ class BrowserTest extends BrowserTestCase
         })
             ->assertSeeIn('@button', 'Text')
             ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@button', 'Param Set Text')
             ->assertSeeIn('@button', 'Param Set Text')
             ->waitForLivewire()->click('@bar-button')
+            ->waitForTextIn('@button', 'Bar set text')
             ->assertSeeIn('@button', 'Bar set text');
     }
 
@@ -321,5 +324,173 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewireToLoad()
             ->waitForLivewire()->click('@change')
             ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_empty_wire_expression_does_not_throw_errors()
+    {
+        Livewire::visit(new class extends Component {
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click dusk="button">Click me</button>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->click('@button')
+            ->pause(100)
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_dispatched_event_with_multiple_listeners_and_modelable_children_does_not_throw_duplicate_message_error()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $received = false;
+
+                #[On('test-event')]
+                public function handleEvent()
+                {
+                    $this->received = true;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <span dusk="parent-status">Parent: {{ $received ? 'yes' : 'no' }}</span>
+                        <livewire:child />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $value = '';
+                public $received = false;
+
+                #[On('test-event')]
+                public function handleEvent()
+                {
+                    $this->received = true;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <span dusk="child-status">Child: {{ $received ? 'yes' : 'no' }}</span>
+                        <button wire:click="$dispatch('test-event')" dusk="dispatch">Dispatch</button>
+                        <livewire:modelable-child wire:model="value" />
+                    </div>
+                    HTML;
+                }
+            },
+            'modelable-child' => new class extends Component {
+                #[BaseModelable]
+                public $input = '';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" wire:model="input" dusk="input" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertSeeIn('@parent-status', 'Parent: no')
+            ->assertSeeIn('@child-status', 'Child: no')
+            ->click('@dispatch')
+            ->pause(500)
+            ->assertConsoleLogHasNoErrors()
+            ->waitForTextIn('@parent-status', 'Parent: yes')
+            ->waitForTextIn('@child-status', 'Child: yes');
+    }
+
+    public function test_can_dispatch_to_element_using_wire_dispatch_el()
+    {
+        Livewire::visit(new class extends Component {
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button x-on:click="$wire.dispatchEl('#target', 'foo', { message: 'bar' })" dusk="button">Dispatch to element</button>
+
+                    <div id="target" x-data="{ message: 'initial' }" @foo="message = $event.detail.message">
+                        <span x-text="message" dusk="output"></span>
+                    </div>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@output', 'initial')
+            ->click('@button')
+            ->waitForTextIn('@output', 'bar');
+    }
+
+    public function test_can_dispatch_to_element_using_wire_dispatch_ref()
+    {
+        Livewire::visit(new class extends Component {
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button x-on:click="$wire.dispatchRef('target', 'foo', { message: 'bar' })" dusk="button">Dispatch to ref</button>
+
+                    <div wire:ref="target" x-data="{ message: 'initial' }" @foo="message = $event.detail.message">
+                        <span x-text="message" dusk="output"></span>
+                    </div>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@output', 'initial')
+            ->click('@button')
+            ->waitForTextIn('@output', 'bar');
+    }
+
+    public function test_can_dispatch_to_element_using_wire_click_dispatch_el()
+    {
+        Livewire::visit(new class extends Component {
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="$dispatchEl('#target', 'foo', { message: 'baz' })" dusk="button">Dispatch to element</button>
+
+                    <div id="target" x-data="{ message: 'initial' }" @foo="message = $event.detail.message">
+                        <span x-text="message" dusk="output"></span>
+                    </div>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@output', 'initial')
+            ->click('@button')
+            ->waitForTextIn('@output', 'baz');
+    }
+
+    public function test_can_dispatch_to_element_using_wire_click_dispatch_ref()
+    {
+        Livewire::visit(new class extends Component {
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="$dispatchRef('target', 'foo', { message: 'baz' })" dusk="button">Dispatch to ref</button>
+
+                    <div wire:ref="target" x-data="{ message: 'initial' }" @foo="message = $event.detail.message">
+                        <span x-text="message" dusk="output"></span>
+                    </div>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@output', 'initial')
+            ->click('@button')
+            ->waitForTextIn('@output', 'baz');
     }
 }

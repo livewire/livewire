@@ -61,13 +61,21 @@ class BaseUrl extends LivewireAttribute
         if ($initialValue === $nonExistentValue) return;
 
         $decoded = is_array($initialValue)
-            ? json_decode(json_encode($initialValue), true)
-            : json_decode($initialValue ?? '', true);
+            ? json_decode(json_encode($initialValue, flags: JSON_BIGINT_AS_STRING), true, flags: JSON_BIGINT_AS_STRING)
+            : json_decode($initialValue ?? '', true, flags: JSON_BIGINT_AS_STRING);
 
         // If only part of an array is present in the query string,
         // we want to merge instead of override the value...
         if (is_array($decoded) && is_array($original = $this->getValue())) {
             $decoded = $this->recursivelyMergeArraysWithoutAppendingDuplicateValues($original, $decoded);
+        }
+
+        // If json_decode produced a non-finite float (INF, -INF, NAN),
+        // it means the value looked like scientific notation with an
+        // overflowing exponent (e.g. "123456e7890"). Fall back to
+        // the original string to avoid data corruption...
+        if (is_float($decoded) && ! is_finite($decoded)) {
+            $decoded = null;
         }
 
         // Handle empty strings differently depending on if this

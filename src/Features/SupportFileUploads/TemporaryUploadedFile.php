@@ -13,6 +13,7 @@ class TemporaryUploadedFile extends UploadedFile
     protected $disk;
     protected $storage;
     protected $path;
+    protected $metaFileData;
 
     public function __construct($path, $disk)
     {
@@ -45,8 +46,15 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getSize(): int
     {
-        if (app()->runningUnitTests() && str($this->getFilename())->contains('-size=')) {
-            return (int) str($this->getFilename())->between('-size=', '.')->__toString();
+        if (app()->runningUnitTests()) {
+            if (isset($this->metaFileData()['size'])) {
+                return $this->metaFileData()['size'];
+            }
+
+            // This is for backwards compatibility when test file meta data was stored in the filename...
+            if (str($this->getFilename())->contains('-size=')) {
+                return (int) str($this->getFilename())->between('-size=', '.')->__toString();
+            }
         }
 
         return (int) $this->storage->size($this->path);
@@ -54,12 +62,19 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getMimeType(): string
     {
-        if (app()->runningUnitTests() && str($this->getFilename())->contains('-mimeType=')) {
-            $escapedMimeType = str($this->getFilename())->between('-mimeType=', '-');
+        if (app()->runningUnitTests()) {
+            if (isset($this->metaFileData()['type'])) {
+                return $this->metaFileData()['type'];
+            }
 
-            // MimeTypes contain slashes, but we replaced them with underscores in `SupportTesting\Testable`
-            // to ensure the filename is valid, so we now need to revert that.
-            return (string) $escapedMimeType->replace('_', '/');
+            // This is for backwards compatibility when test file meta data was stored in the filename...
+            if (str($this->getFilename())->contains('-mimeType=')) {
+                $escapedMimeType = str($this->getFilename())->between('-mimeType=', '-');
+
+                // MimeTypes contain slashes, but we replaced them with underscores in `SupportTesting\Testable`
+                // to ensure the filename is valid, so we now need to revert that.
+                return (string) $escapedMimeType->replace('_', '/');
+            }
         }
 
         $mimeType = $this->storage->mimeType($this->path);
@@ -92,7 +107,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getClientOriginalName(): string
     {
-        return $this->extractOriginalNameFromFilePath($this->path);
+        return $this->extractOriginalNameFromMetaFileData() ?? $this->extractOriginalNameFromFilePath($this->path);
     }
 
     public function dimensions()
@@ -161,7 +176,7 @@ class TemporaryUploadedFile extends UploadedFile
     {
         $options = $this->parseOptions($options);
 
-        $disk = Arr::pull($options, 'disk') ?: $this->disk;
+        $disk = Arr::pull($options, 'disk') ?: config('filesystems.default');
 
         $newPath = trim($path.'/'.$name, '/');
 
@@ -170,6 +185,14 @@ class TemporaryUploadedFile extends UploadedFile
         );
 
         return $newPath;
+    }
+
+    public static function generateHashName($file)
+    {
+        $hash = str()->random(40);
+        $extension = '.'.$file->getClientOriginalExtension();
+
+        return $hash.$extension;
     }
 
     public static function generateHashNameWithOriginalNameEmbedded($file)
@@ -183,8 +206,15 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function hashName($path = null)
     {
-        if (app()->runningUnitTests() && str($this->getFilename())->contains('-hash=')) {
-            return str($this->getFilename())->between('-hash=', '-mimeType')->value();
+        if (app()->runningUnitTests()) {
+            if (isset($this->metaFileData()['hash'])) {
+                return $this->metaFileData()['hash'];
+            }
+
+            // This is for backwards compatibility when test file meta data was stored in the filename...
+            if (str($this->getFilename())->contains('-hash=')) {
+                return str($this->getFilename())->between('-hash=', '-mimeType')->value();
+            }
         }
 
         return parent::hashName($path);
@@ -195,9 +225,66 @@ class TemporaryUploadedFile extends UploadedFile
         return base64_decode(head(explode('-', last(explode('-meta', str($path)->replace('_', '/'))))));
     }
 
+    public function extractOriginalNameFromMetaFileData()
+    {
+        return $this->metaFileData()['name'] ?? null;
+    }
+
+    public function metaFileData()
+    {
+        if (is_null($this->metaFileData)) {
+            $this->metaFileData = [];
+
+            // S3 uploads don't have a meta file — the original filename is
+            // embedded in the file path instead, so skip the lookup entirely.
+            if (! $this->isActuallyUsingS3() && $contents = $this->storage->get($this->path.'.json')) {
+                $contents = json_decode($contents, true);
+
+                $this->metaFileData = $contents;
+            }
+        }
+        return $this->metaFileData;
+    }
+
+    protected function isActuallyUsingS3(): bool
+    {
+        $diskConfig = config('filesystems.disks.' . $this->disk);
+
+        return is_array($diskConfig) && ($diskConfig['driver'] ?? null) === 's3';
+    }
+
     public static function createFromLivewire($filePath)
     {
         return new static($filePath, FileUploadConfiguration::disk());
+    }
+
+    /**
+     * Generate a short token for a given path using the app key and session ID.
+     * This ensures tokens are unique per session and cannot be forged without the app key.
+     */
+    protected static function generateToken(string $path): string
+    {
+        return substr(hash_hmac('sha256', $path, app('encrypter')->getKey() . session()->getId()), 0, 8);
+    }
+
+    public static function signPath(string $path): string
+    {
+        return static::generateToken($path) . ':' . $path;
+    }
+
+    public static function extractPathFromSignedPath(string $signedPath): string|false
+    {
+        if (! str_contains($signedPath, ':')) {
+            return false;
+        }
+
+        [$token, $path] = explode(':', $signedPath, 2);
+
+        if (! hash_equals(static::generateToken($path), $token)) {
+            return false;
+        }
+
+        return $path;
     }
 
     public static function canUnserialize($subject)

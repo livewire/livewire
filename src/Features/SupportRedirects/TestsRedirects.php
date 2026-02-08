@@ -11,7 +11,7 @@ trait TestsRedirects
     public function assertRedirect($uri = null)
     {
         if (is_subclass_of($uri, Component::class)) {
-            $uri = url()->action($uri);
+            $uri = SupportRedirects::resolveComponentUrl($uri);
         }
 
         if (! app('livewire')->isLivewireRequest()) {
@@ -36,7 +36,7 @@ trait TestsRedirects
     public function assertRedirectContains($uri)
     {
         if (is_subclass_of($uri, Component::class)) {
-            $uri = url()->action($uri);
+            $uri = SupportRedirects::resolveComponentUrl($uri);
         }
 
         if (! app('livewire')->isLivewireRequest()) {

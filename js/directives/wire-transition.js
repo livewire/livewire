@@ -1,59 +1,131 @@
-import { directive } from "@/directives"
-import { on } from '@/hooks'
-import Alpine from 'alpinejs'
+import { globalDirective } from "@/directives"
 
-on('morph.added', ({ el }) => {
-    el.__addedByMorph = true
+let defaultName = 'match-element'
+
+// No-op — viewTransitionName is now set dynamically by transitionDomMutation()
+// to avoid creating permanent stacking contexts...
+globalDirective('transition', ({ el, directive, cleanup }) => {
+    //
 })
 
-directive('transition', ({ el, directive, component, cleanup }) => {
-    // Support using wire:transition with wire:show as well...
-    for (let i = 0; i < el.attributes.length; i++) {
-        if (el.attributes[i].name.startsWith('wire:show')) {
-            Alpine.bind(el, {
-                [directive.rawName.replace('wire:transition', 'x-transition')]: directive.expression,
-            })
-
-            return
+function setTransitionNames(root) {
+    root.querySelectorAll('[wire\\:transition]').forEach(el => {
+        if (! el.style.viewTransitionName) {
+            el.style.viewTransitionName = el.getAttribute('wire:transition') || defaultName
         }
+    })
+}
+
+function clearTransitionNames(root) {
+    root.querySelectorAll('[wire\\:transition]').forEach(el => {
+        el.style.viewTransitionName = ''
+    })
+}
+
+export async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
+    // Skip transitions entirely if requested...
+    if (options.skip) return callback()
+
+    // Only transition if there is a [wire:transition] element within either the from or to elements...
+    if (! fromEl.querySelector('[wire\\:transition]') && ! toEl.querySelector('[wire\\:transition]')) return callback()
+
+    // Check if View Transitions API is supported...
+    if (typeof document.startViewTransition !== 'function') {
+        return callback()
     }
 
-    let visibility = Alpine.reactive({ state: el.__addedByMorph ? false : true })
+    // Skip entirely if a modal dialog is already open (transitions behind
+    // a dialog are invisible to the user and the ::view-transition pseudo-
+    // elements would paint above the dialog during animation)...
+    if (document.querySelector('dialog:modal')) return callback()
 
-    // We're going to control the element's transition with Alpine transitions...
-    Alpine.bind(el, {
-        [directive.rawName.replace('wire:', 'x-')]: '',
-        'x-show'() { return visibility.state },
-    })
+    // Set transition names right before the transition starts (not permanently)...
+    setTransitionNames(fromEl)
 
-    // If it's not the initial page load, transition the element in...
-    el.__addedByMorph && setTimeout(() => visibility.state = true)
+    // Disable root transitions for the page...
+    let style = document.createElement('style')
 
-    let cleanups = []
+    style.textContent = `
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+                animation: none !important;
+            }
+        }
 
-    cleanups.push(on('morph.removing', ({ el, skip }) => {
-        // Here we interupt morphdom from removing an element...
-        skip()
+        ::view-transition-old(root) {
+            animation: none !important;
+            opacity: 0 !important;
+        }
 
-        // When the transition ends...
-        el.addEventListener('transitionend', () => {
-            // We can actually remove the element and all the listeners along with it...
-            el.remove()
+        ::view-transition-new(root) {
+            animation: none !important;
+            opacity: 1 !important;
+        }
+    `
+
+    document.head.appendChild(style)
+
+    let update = () => {
+        callback()
+
+        // After a morph, newly added wire:transition elements need their viewTransitionName
+        // set synchronously. Alpine's MutationObserver would normally handle this, but its
+        // internal queueMicrotask batching delays processing by one microtask hop — and the
+        // View Transitions API's "activate" step captures the new DOM state in between,
+        // before Alpine has a chance to initialize the directive...
+        setTransitionNames(fromEl)
+    }
+
+    let transitionConfig = { update }
+
+    // Add transition types if provided...
+    if (options.type) {
+        transitionConfig.types = [options.type]
+    }
+
+    let cleanup = () => {
+        style.remove()
+        clearTransitionNames(fromEl)
+    }
+
+    // Watch for modal dialogs opening during the transition (e.g., via Alpine x-effect).
+    // ::view-transition pseudo-elements paint above the top layer, so elements with
+    // wire:transition would visually appear above dialog modals during animation.
+    // This observer catches showModal() the instant it sets the `open` attribute
+    // and skips the transition before the browser paints a frame...
+    let skipOnDialog = (transition) => {
+        let observer = new MutationObserver(() => {
+            if (document.querySelector('dialog:modal')) {
+                transition.skipTransition()
+                observer.disconnect()
+            }
         })
 
-        // Now we can trigger a transition:
-        visibility.state = false
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['open'],
+            subtree: true,
+        })
 
-        cleanups.push(on('morph', ({ component: morphComponent }) => {
-            if (morphComponent !== component) return
+        transition.finished.finally(() => observer.disconnect())
+    }
 
-            // While this element is transitioning out, a new morph is about to occur.
-            // Let's expidite this one and clean it up so it doesn't interfere...
-            el.remove()
+    try {
+        let transition = document.startViewTransition(transitionConfig)
 
-            cleanups.forEach(i => i())
-        }))
-    }))
+        skipOnDialog(transition)
 
-    cleanup(() => cleanups.forEach(i => i()))
-})
+        transition.finished.finally(cleanup)
+
+        await transition.updateCallbackDone
+    } catch (e) {
+        // Firefox 144+ supports View Transitions but only with a callback, not a config object (no transition types support)
+        let transition = document.startViewTransition(update)
+
+        skipOnDialog(transition)
+
+        transition.finished.finally(cleanup)
+
+        await transition.updateCallbackDone
+    }
+}

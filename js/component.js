@@ -1,7 +1,8 @@
-import { dataSet, deepClone, diff, extractData} from '@/utils'
+import { dataGet, dataSet, dataDelete, deepClone, diff, diffAndConsolidate, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
-import { closestComponent, findComponent, hasComponent } from '@/store'
+import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
+import { setNextActionOrigin } from '@/request'
 
 export class Component {
     constructor(el) {
@@ -12,6 +13,8 @@ export class Component {
         this.el = el
 
         this.id = el.getAttribute('wire:id')
+
+        this.key = el.getAttribute('wire:key')
 
         this.__livewireId = this.id // @legacy
 
@@ -42,10 +45,30 @@ export class Component {
         // this.$wire = this.reactive
         this.$wire = generateWireObject(this, this.reactive)
 
+        // Set the $wire property on the root element...
+        el.$wire = this.$wire
+
         this.cleanups = []
 
         // Effects will be processed after every request, but we'll also handle them on initialization.
         this.processEffects(this.effects)
+    }
+
+    addActionContext(context) {
+        // New system: just set the origin for next action
+        if (context.el || context.directive) {
+            setNextActionOrigin({
+                el: context.el,
+                directive: context.directive
+            })
+        }
+
+        // Note: Non-origin metadata should be passed directly to fireAction
+        // This method is kept for backwards compatibility but simplified
+    }
+
+    intercept(action, callback = null) {
+        return this.$wire.$intercept(action, callback)
     }
 
     mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
@@ -68,15 +91,35 @@ export class Component {
 
         let newData = extractData(deepClone(snapshot.data))
 
+        // Apply changes surgically to preserve client-side ephemeral state
+        // that wasn't sent with this request (e.g., changes made during the request)
+
+        // Separate changes from removals
+        let changes = []
+        let removals = []
+
         Object.entries(dirty).forEach(([key, value]) => {
-            let rootKey = key.split('.')[0]
-            this.reactive[rootKey] = newData[rootKey]
+            if (value === '__rm__') {
+                removals.push(key)
+            } else {
+                changes.push(key)
+            }
         })
-        // Object.entries(this.ephemeral).forEach(([key, value]) => {
-        //     if (! deeplyEqual(this.ephemeral[key], newData[key])) {
-        //         this.reactive[key] = newData[key]
-        //     }
-        // })
+
+        // Apply changes first
+        changes.forEach(key => {
+            dataSet(this.reactive, key, dataGet(newData, key))
+        })
+
+        // Apply removals in reverse order (by the numeric suffix) so array indices stay valid
+        // e.g., remove items.2, then items.1, then items.0
+        removals.sort((a, b) => {
+            let aNum = parseInt(a.split('.').pop()) || 0
+            let bNum = parseInt(b.split('.').pop()) || 0
+            return bNum - aNum // Descending order
+        }).forEach(key => {
+            dataDelete(this.reactive, key)
+        })
 
         return dirty
     }
@@ -94,7 +137,7 @@ export class Component {
         // priority against ephemeral updates that have happend since them...
         Object.entries(this.queuedUpdates).forEach(([updateKey, updateValue]) => {
             Object.entries(diff).forEach(([diffKey, diffValue]) => {
-                if (diffKey.startsWith(updateValue)) {
+                if (diffKey.startsWith(updateKey)) {
                     delete diff[diffKey]
                 }
             })
@@ -105,6 +148,12 @@ export class Component {
         this.queuedUpdates = []
 
         return diff
+    }
+
+    getUpdates() {
+        let propertiesDiff = diffAndConsolidate(this.canonical, this.ephemeral)
+
+        return this.mergeQueuedUpdates(propertiesDiff)
     }
 
     applyUpdates(object, updates) {
@@ -128,28 +177,107 @@ export class Component {
      * server and use them to update the existing data that
      * users interact with, triggering reactive effects.
      */
-    processEffects(effects) {
+    processEffects(effects, request) {
         // This is for BC.
         trigger('effects', this, effects)
 
         trigger('effect', {
             component: this,
             effects,
-            cleanup: i => this.addCleanup(i)
+            cleanup: i => this.addCleanup(i),
+            request,
         })
     }
 
     get children() {
-        let meta = this.snapshot.memo
-        let childIds = Object.values(meta.children).map(i => i[1])
+        let componentEl = this.el
 
-        return childIds
-            .filter(id => hasComponent(id))
-            .map(id => findComponent(id))
+        let children = []
+
+        componentEl.querySelectorAll('[wire\\:id]').forEach(el => {
+            let parentComponentEl = el.parentElement.closest('[wire\\:id]')
+
+            if (parentComponentEl !== componentEl) return
+
+            let componentInstance = el.__livewire
+
+            if (! componentInstance) return
+
+            children.push(componentInstance)
+        })
+
+        return children
+    }
+
+    get islands() {
+        let islands = this.snapshot.memo.islands
+
+        return islands
     }
 
     get parent() {
-        return closestComponent(this.el.parentElement)
+        return findComponentByEl(this.el.parentElement)
+    }
+
+    get isIsolated() {
+        return this.snapshot.memo.isolate
+    }
+
+    get isLazy() {
+        return this.snapshot.memo.lazyLoaded !== undefined
+    }
+
+    get hasBeenLazyLoaded() {
+        return this.snapshot.memo.lazyLoaded === true
+    }
+
+    get isLazyIsolated() {
+        return !! this.snapshot.memo.lazyIsolated
+    }
+
+    getDeepChildrenWithBindings(callback) {
+        this.getDeepChildren(child => {
+            if (child.hasReactiveProps() || child.hasWireModelableBindings()) {
+                callback(child)
+            }
+        })
+    }
+
+    hasReactiveProps() {
+        let meta = this.snapshot.memo
+        let props = meta.props
+
+        return !! props
+    }
+
+    hasWireModelableBindings() {
+        let meta = this.snapshot.memo
+        let bindings = meta.bindings
+
+        return !! bindings
+    }
+
+    getDeepChildren(callback) {
+        this.children.forEach(child => {
+            callback(child)
+
+            child.getDeepChildren(callback)
+        })
+    }
+
+    getEncodedSnapshotWithLatestChildrenMergedIn() {
+        let { snapshotEncoded, children, snapshot } = this
+
+        let childrenMemo = {}
+
+        children.forEach(child => {
+            childrenMemo[child.key] = [child.el.tagName.toLowerCase(), child.id]
+        })
+
+        return snapshotEncoded.replace(
+            /"children":\{[^}]*\}/,
+            `"children":${JSON.stringify(childrenMemo)}`
+        )
     }
 
     inscribeSnapshotAndEffectsOnElement() {
@@ -173,6 +301,8 @@ export class Component {
         }
 
         el.setAttribute('wire:effects', JSON.stringify(effects))
+
+        el.setAttribute('wire:key', this.key)
     }
 
     addJsAction(name, action) {
@@ -189,6 +319,19 @@ export class Component {
 
     getJsActions() {
         return this.jsActions
+    }
+
+    // Called by JSON.stringify() on both $wire (via the Proxy) and the
+    // Component instance directly. Without this, stringifying a Component
+    // throws a circular reference error (el <-> component). Tools like
+    // Laravel Boost trigger this when logging objects to the browser console.
+    toJSON() {
+        return {
+            id: this.id,
+            name: this.name,
+            key: this.key,
+            data: Object.fromEntries(Object.entries(this.ephemeral)),
+        }
     }
 
     addCleanup(cleanup) {

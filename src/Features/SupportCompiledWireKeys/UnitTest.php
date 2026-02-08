@@ -648,6 +648,15 @@ class UnitTest extends \Tests\TestCase
         );
     }
 
+    public function test_plain_string_key_matching_view_name_is_not_rendered_as_view()
+    {
+        // "show-name" is an existing test view in tests/views/show-name.blade.php
+        // Using it as a wire:key should return the literal string, not render the view
+        SupportCompiledWireKeys::processElementKey('show-name', []);
+
+        $this->assertEquals('show-name', SupportCompiledWireKeys::$currentLoop['key']);
+    }
+
     public function test_we_can_open_a_loop()
     {
         SupportCompiledWireKeys::openLoop();

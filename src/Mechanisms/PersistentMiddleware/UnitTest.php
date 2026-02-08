@@ -6,6 +6,7 @@ use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Facade;
 use Livewire\Component as BaseComponent;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 class UnitTest extends \LegacyTests\Unit\TestCase
 {
@@ -54,7 +55,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         app('router')->setRoutes($runningCollection);
 
         // Hit update endpoint, including PersistentMiddleware
-        $response = $this->post('/livewire/update', [
+        $response = $this->post(EndpointResolver::updatePath(), [
             'components' => [
                 [
                     'calls' => [],

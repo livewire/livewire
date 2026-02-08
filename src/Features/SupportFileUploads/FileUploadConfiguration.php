@@ -124,4 +124,21 @@ class FileUploadConfiguration
     {
         return config('livewire.temporary_file_upload.max_upload_time') ?: 5;
     }
+
+    public static function storeTemporaryFile($file, $disk)
+    {
+        $filename = TemporaryUploadedFile::generateHashName($file);
+        $metaFilename = $filename . '.json';
+        
+        Storage::disk($disk)->put('/'.static::path($metaFilename), json_encode([
+            'name' => $file->getClientOriginalName(),
+            'type' => $file->getMimeType(),
+            'size' => $file->getSize(),
+            'hash' => $file->hashName(),
+        ]));
+
+        return $file->storeAs('/'.static::path(), $filename, [
+            'disk' => $disk
+        ]);
+    }
 }
