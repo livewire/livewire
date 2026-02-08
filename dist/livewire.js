@@ -12709,7 +12709,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       for (let i = domAttributes.length - 1; i >= 0; i--) {
         let name = domAttributes[i].name;
         if (!to.hasAttribute(name)) {
-          from.removeAttribute(name);
+          if (name === "open" && from.nodeName === "DIALOG" && from.open) {
+            from.close();
+          } else {
+            from.removeAttribute(name);
+          }
         }
       }
       for (let i = toAttributes.length - 1; i >= 0; i--) {
@@ -13445,10 +13449,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/wire-transition.js
+  var defaultName = "match-element";
   globalDirective("transition", ({ el, directive: directive3, cleanup: cleanup2 }) => {
-    let transitionName = directive3.expression || "match-element";
-    el.style.viewTransitionName = transitionName;
   });
+  function setTransitionNames(root) {
+    root.querySelectorAll("[wire\\:transition]").forEach((el) => {
+      if (!el.style.viewTransitionName) {
+        el.style.viewTransitionName = el.getAttribute("wire:transition") || defaultName;
+      }
+    });
+  }
+  function clearTransitionNames(root) {
+    root.querySelectorAll("[wire\\:transition]").forEach((el) => {
+      el.style.viewTransitionName = "";
+    });
+  }
   async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
     if (options.skip)
       return callback();
@@ -13457,6 +13472,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (typeof document.startViewTransition !== "function") {
       return callback();
     }
+    if (document.querySelector("dialog:modal"))
+      return callback();
+    setTransitionNames(fromEl);
     let style = document.createElement("style");
     style.textContent = `
         @media (prefers-reduced-motion: reduce) {
@@ -13476,23 +13494,41 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
     `;
     document.head.appendChild(style);
-    let transitionConfig = {
-      update: () => callback()
+    let update = () => {
+      callback();
+      setTransitionNames(fromEl);
     };
+    let transitionConfig = { update };
     if (options.type) {
       transitionConfig.types = [options.type];
     }
+    let cleanup2 = () => {
+      style.remove();
+      clearTransitionNames(fromEl);
+    };
+    let skipOnDialog = (transition2) => {
+      let observer2 = new MutationObserver(() => {
+        if (document.querySelector("dialog:modal")) {
+          transition2.skipTransition();
+          observer2.disconnect();
+        }
+      });
+      observer2.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["open"],
+        subtree: true
+      });
+      transition2.finished.finally(() => observer2.disconnect());
+    };
     try {
       let transition2 = document.startViewTransition(transitionConfig);
-      transition2.finished.finally(() => {
-        style.remove();
-      });
+      skipOnDialog(transition2);
+      transition2.finished.finally(cleanup2);
       await transition2.updateCallbackDone;
     } catch (e) {
-      let transition2 = document.startViewTransition(() => callback());
-      transition2.finished.finally(() => {
-        style.remove();
-      });
+      let transition2 = document.startViewTransition(update);
+      skipOnDialog(transition2);
+      transition2.finished.finally(cleanup2);
       await transition2.updateCallbackDone;
     }
   }
