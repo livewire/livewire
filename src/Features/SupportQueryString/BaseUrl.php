@@ -9,8 +9,6 @@ use ReflectionClass;
 #[\Attribute]
 class BaseUrl extends LivewireAttribute
 {
-    protected $type = null;
-
     public function __construct(
         public $as = null,
         public $history = false,
@@ -22,7 +20,6 @@ class BaseUrl extends LivewireAttribute
     public function mount()
     {
         $this->nullable = $this->determineNullability();
-        $this->type = $this->determineType();
 
         $this->setPropertyFromQueryString();
     }
@@ -49,15 +46,6 @@ class BaseUrl extends LivewireAttribute
         }
 
         return false;
-    }
-
-    protected function determineType()
-    {
-        $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
-        if ($this->getSubName() && $reflectionClass->hasProperty($this->getSubName())) {
-            return $reflectionClass->getProperty($this->getSubName())?->getType();
-        }
-        return null;
     }
 
     public function setPropertyFromQueryString()
@@ -98,15 +86,12 @@ class BaseUrl extends LivewireAttribute
             $value = $decoded === null ? $initialValue : $decoded;
         }
 
-        // If the value is an array but the property type doesn't accept arrays,
-        // silently ignore the invalid value and keep the property default.
-        // This prevents 500 errors from malformed query strings like ?search[]=foo
-        // when the property is typed as string/int/etc.
-        if (is_array($value) && $this->type && ! $this->typeAcceptsArray()) {
+        try {
+            $this->setValue($value, $this->nullable);
+        } catch (\TypeError $e) {
+            // Silently ignore invalid query string types and keep the default.
             return;
         }
-
-        $this->setValue($value, $this->nullable);
     }
 
     protected function recursivelyMergeArraysWithoutAppendingDuplicateValues(&$array1, &$array2)
@@ -146,23 +131,6 @@ class BaseUrl extends LivewireAttribute
     public function urlName()
     {
         return $this->as ?? $this->getName();
-    }
-
-    protected function typeAcceptsArray()
-    {
-        if ($this->type instanceof \ReflectionNamedType) {
-            return $this->type->getName() === 'array';
-        }
-
-        if ($this->type instanceof \ReflectionUnionType) {
-            foreach ($this->type->getTypes() as $type) {
-                if ($type instanceof \ReflectionNamedType && $type->getName() === 'array') {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     public function getFromUrlQueryString($name, $default = null)
