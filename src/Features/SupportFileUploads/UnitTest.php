@@ -244,6 +244,31 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['photo' => 'max']);
     }
 
+    public function test_an_uploaded_file_can_be_validated_when_default_disk_uses_s3_driver()
+    {
+        // Regression test: when the app's default filesystem uses an S3 driver,
+        // metaFileData() was incorrectly skipping the .json lookup during tests.
+        // This caused getSize() to return the actual file size instead of the
+        // fake size, breaking validation.
+        config()->set('filesystems.disks.s3', [
+            'driver' => 's3',
+            'key' => 'test',
+            'secret' => 'test',
+            'region' => 'us-east-1',
+            'bucket' => 'test',
+        ]);
+        config()->set('filesystems.default', 's3');
+
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg')->size(200); // 200KB, over the 100KB limit
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('validateUpload') // validates 'photo' => 'file|max:100'
+            ->assertHasErrors(['photo' => 'max']);
+    }
+
     public function test_multiple_uploaded_files_can_be_validated()
     {
         Storage::fake('avatars');
@@ -883,6 +908,36 @@ class UnitTest extends \Tests\TestCase
         $disk->assertMissing('livewire-tmp/'.$temporaryFile->getFileName().'.json');
 
         $this->assertEquals($file->getClientOriginalName(), $temporaryFile->getClientOriginalName());
+    }
+
+    public function test_store_without_disk_uses_default_filesystem_disk_not_temporary_upload_disk()
+    {
+        Storage::fake('tmp-for-tests');
+        Storage::fake('default-disk');
+
+        config()->set('filesystems.default', 'default-disk');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        Livewire::test(FileUploadToDefaultDiskComponent::class)
+            ->set('photo', $file)
+            ->call('save');
+
+        // File should be on the default filesystem disk, not the temporary upload disk
+        Storage::disk('default-disk')->assertExists('images/avatar.jpg');
+        Storage::disk('tmp-for-tests')->assertMissing('images/avatar.jpg');
+    }
+}
+
+class FileUploadToDefaultDiskComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    public $photo;
+
+    public function save()
+    {
+        $this->photo->storeAs('images', 'avatar.jpg');
     }
 }
 

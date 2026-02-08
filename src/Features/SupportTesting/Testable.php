@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportTesting;
 
 use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
+use Livewire\Features\SupportJsEvaluation\TestsJsEvaluation;
 use Livewire\Features\SupportValidation\TestsValidation;
 use Livewire\Features\SupportRedirects\TestsRedirects;
 use Livewire\Features\SupportEvents\TestsEvents;
@@ -21,6 +22,7 @@ class Testable
         TestsEvents,
         TestsRedirects,
         TestsValidation,
+        TestsJsEvaluation,
         TestsFileDownloads;
 
     use Macroable { Macroable::__call as macroCall; }

@@ -401,6 +401,25 @@ it('dispatches event with correct data', function () {
 });
 ```
 
+### Testing JS evaluation
+
+Assert that a component evaluated JavaScript via `$this->js()`:
+
+```php
+it('shows an alert after saving', function () {
+    Livewire::test('post.create')
+        ->set('title', 'New post')
+        ->call('save')
+        ->assertJs("alert('Post saved!')");
+});
+```
+
+You can also assert that no JS was evaluated:
+
+```php
+->assertNoJs();
+```
+
 ## Using PHPUnit
 
 While Pest is recommended, you can absolutely use PHPUnit to test Livewire components. All the same testing utilities work with PHPUnit's syntax.
@@ -500,6 +519,8 @@ Below is a comprehensive reference of every Livewire testing method available to
 | `assertViewHas('postCount', 3)`                       | Assert that view data has a specific value                                                                                                   |
 | `assertViewHas('posts', function ($posts) { ... })`   | Assert view data passes custom validation                                                                         |
 | `assertViewIs('livewire.show-posts')`                 | Assert that a specific view was rendered                                                                                                            |
+| `assertJs("alert('...')")`                            | Assert that a JS expression was evaluated                                                                                                                                       |
+| `assertNoJs()`                                        | Assert that no JS was evaluated                                                                                                                                                 |
 | `assertFileDownloaded()`                              | Assert that a file download was triggered                                                                                                                                       |
 | `assertFileDownloaded($filename)`                     | Assert that a specific file was downloaded                                                                                                       |
 | `assertUnauthorized()`                                | Assert that an authorization exception was thrown (401)                                                                                       |

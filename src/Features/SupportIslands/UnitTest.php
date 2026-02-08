@@ -4,9 +4,121 @@ namespace Livewire\Features\SupportIslands;
 
 use Tests\TestCase;
 use Livewire\Livewire;
+use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
+use Illuminate\Support\Facades\File;
 
 class UnitTest extends TestCase
 {
+    public function test_class_component_island_recovers_when_cached_file_is_deleted_between_requests()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public int $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+                $this->renderIsland('counter');
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'counter')
+                        <div>count: {{ $count }}</div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        $component->assertSee('count: 0');
+
+        // Get the island token from the component's stored islands...
+        $islands = $component->instance()->getIslands();
+        $token = $islands[0]['token'];
+        $cachedPath = IslandCompiler::getCachedPathFromToken($token);
+
+        // Verify the island cache file exists after initial render...
+        $this->assertFileExists($cachedPath);
+
+        // Delete the island cache file and its compiled Blade cache to simulate a deployment...
+        File::delete($cachedPath);
+
+        $compiledPath = app('blade.compiler')->getCompiledPath($cachedPath);
+        if (file_exists($compiledPath)) {
+            File::delete($compiledPath);
+        }
+
+        $this->assertFileDoesNotExist($cachedPath);
+
+        // A subsequent request should still work, not throw FileNotFoundException...
+        $component->call('increment');
+    }
+
+    public function test_sfc_island_recovers_when_cached_file_is_deleted_between_requests()
+    {
+        // Create a temporary view file to simulate an SFC's compiled view...
+        $viewPath = storage_path('framework/views/livewire/test-sfc-island.blade.php');
+        File::ensureDirectoryExists(dirname($viewPath));
+        File::put($viewPath, <<<'HTML'
+        <div>
+            @island(name: 'counter')
+                <div>count: {{ $count }}</div>
+            @endisland
+        </div>
+        HTML);
+
+        $component = Livewire::test(new class($viewPath) extends \Livewire\Component {
+            public int $count = 0;
+            protected static string $viewPath;
+
+            public function __construct($viewPath = null)
+            {
+                if ($viewPath) {
+                    static::$viewPath = $viewPath;
+                }
+            }
+
+            public function increment()
+            {
+                $this->count++;
+                $this->renderIsland('counter');
+            }
+
+            // SFCs use view() instead of render()...
+            protected function view($data = [])
+            {
+                return app('view')->file(static::$viewPath, $data);
+            }
+        }, ['viewPath' => $viewPath]);
+
+        $component->assertSee('count: 0');
+
+        // Get the island token from the component's stored islands...
+        $islands = $component->instance()->getIslands();
+        $token = $islands[0]['token'];
+        $cachedPath = IslandCompiler::getCachedPathFromToken($token);
+
+        // Verify the island cache file exists after initial render...
+        $this->assertFileExists($cachedPath);
+
+        // Delete the island cache file and its compiled Blade cache to simulate a deployment...
+        File::delete($cachedPath);
+
+        $compiledPath = app('blade.compiler')->getCompiledPath($cachedPath);
+        if (file_exists($compiledPath)) {
+            File::delete($compiledPath);
+        }
+
+        $this->assertFileDoesNotExist($cachedPath);
+
+        // A subsequent request should still work, not throw FileNotFoundException...
+        $component->call('increment');
+
+        // Clean up...
+        File::delete($viewPath);
+    }
+
     public function test_render_island_directives()
     {
         Livewire::test(new class extends \Livewire\Component {

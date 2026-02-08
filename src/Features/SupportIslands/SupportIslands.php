@@ -85,6 +85,8 @@ class SupportIslands extends ComponentHook
 
     public function hydrate($memo)
     {
+        if (($memo['lazyLoaded'] ?? null) === false) return;
+
         $this->component->markIslandsAsMounted();
 
         $islands = $memo['islands'] ?? null;

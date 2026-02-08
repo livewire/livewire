@@ -172,6 +172,10 @@ trait HandlesIslands
     {
         $path = IslandCompiler::getCachedPathFromToken($token);
 
+        if (! file_exists($path)) {
+            $this->regenerateIslandCacheFiles();
+        }
+
         $view = app('view')->file($path);
 
         app(ExtendBlade::class)->startLivewireRendering($this);
@@ -197,6 +201,33 @@ trait HandlesIslands
         app(ExtendBlade::class)->endLivewireRendering();
 
         return $html;
+    }
+
+    protected function regenerateIslandCacheFiles()
+    {
+        // Get the view - SFCs use view(), regular components use render()...
+        if (method_exists($this, 'view')) {
+            $viewOrString = $this->view();
+        } elseif (method_exists($this, 'render')) {
+            $viewOrString = $this->render();
+        } else {
+            return;
+        }
+
+        if (! $viewOrString) return;
+
+        $view = Utils::generateBladeView($viewOrString);
+        $viewPath = $view->getPath();
+
+        // Force Blade to recompile the view, which triggers island cache file
+        // regeneration via the prepareStringsForCompilationUsing hook...
+        $compiledPath = app('blade.compiler')->getCompiledPath($viewPath);
+
+        if (file_exists($compiledPath)) {
+            @unlink($compiledPath);
+        }
+
+        app('blade.compiler')->compile($viewPath);
     }
 
     protected function wrapWithFragmentMarkers($output, $metadata)

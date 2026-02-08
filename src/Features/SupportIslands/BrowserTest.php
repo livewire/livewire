@@ -321,6 +321,36 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_island_renders_inside_lazy_loaded_component()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends \Livewire\Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        @island
+                            <div dusk="island-content">Island loaded</div>
+                        @endisland
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitFor('@island-content')
+            ->assertSeeIn('@island-content', 'Island loaded');
+    }
+
     public function test_named_islands()
     {
         Livewire::visit([new class extends \Livewire\Component {

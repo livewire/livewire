@@ -113,12 +113,25 @@ export function dataSet(object, key, value) {
 
     let firstSegment = segments.shift()
     let restOfSegments = segments.join('.')
+    let nextSegment = segments[0]
 
     if (object[firstSegment] === undefined) {
         object[firstSegment] = {}
     }
 
+    // If we're about to set a numeric key that would create null gaps, convert to object.
+    // This prevents JavaScript from filling intermediate indices with nulls
+    // (e.g., arr[1000] = true creates 1000 null entries in a JS array).
+    // We only convert when the key would create gaps (key > length), not when appending.
+    if (isArray(object[firstSegment]) && isNumeric(nextSegment) && parseInt(nextSegment) > object[firstSegment].length) {
+        object[firstSegment] = { ...object[firstSegment] }
+    }
+
     dataSet(object[firstSegment], restOfSegments, value)
+}
+
+function isNumeric(subject) {
+    return ! isNaN(parseInt(subject))
 }
 
 /**
