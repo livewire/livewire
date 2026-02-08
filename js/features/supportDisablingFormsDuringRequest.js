@@ -56,14 +56,14 @@ function disableForm(formEl) {
 
 function shouldMarkDisabled(el) {
     let tag = el.tagName.toLowerCase()
-    let inputTypesThatDontSupportsReadonly = [
-        'hidden', 'range', 'color', 'checkbox', 'radio', 
+    let inputTypesThatDontSupportReadonly = [
+        'hidden', 'range', 'color', 'checkbox', 'radio',
         'file', 'submit', 'image', 'reset', 'button'
     ]
 
     if (tag === 'select') return true
     if (tag === 'button' && el.type === 'submit') return true
-    if (tag === 'input' && inputTypesThatDontSupportsReadonly.includes(el.type)) return true
+    if (tag === 'input' && inputTypesThatDontSupportReadonly.includes(el.type)) return true
 
     return false
 }
