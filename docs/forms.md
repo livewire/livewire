@@ -485,7 +485,7 @@ class PostForm extends Form
 }
 ```
 
-Now if the `$title` property is updated before the form is submitted—like when using [`wire:model.blur`](/docs/4.x/wire-model#updating-on-blur-event)—the validation for `$title` will be run.
+Now if the `$title` property is updated before the form is submitted—like when using [`wire:model.live.blur`](/docs/4.x/wire-model#updating-on-blur-event)—the validation for `$title` will be run.
 
 ### Showing a loading indicator
 
@@ -537,7 +537,7 @@ For most cases, `wire:model.live` is fine for real-time form field updating; how
 If instead of sending network requests as a user types, you want to instead only send the request when a user "tabs" out of the text input (also referred to as "blurring" an input), you can use the `.blur` modifier instead:
 
 ```blade
-<input type="text" wire:model.blur="title" >
+<input type="text" wire:model.live.blur="title" >
 ```
 
 Now the component class on the server won't be updated until the user presses tab or clicks away from the text input.
@@ -549,7 +549,7 @@ Sometimes, you may want to show validation errors as the user fills out the form
 Livewire handles this sort of thing automatically. By using `.live` or `.blur` on `wire:model`, Livewire will send network requests as the user fills out the form. Each of those network requests will run the appropriate validation rules before updating each property. If validation fails, the property won't be updated on the server and a validation message will be shown to the user:
 
 ```blade
-<input type="text" wire:model.blur="title">
+<input type="text" wire:model.live.blur="title">
 
 <div>
     @error('title') <span class="error">{{ $message }}</span> @enderror
@@ -602,12 +602,12 @@ new class extends Component {
 ?>
 
 <form wire:submit>
-    <input type="text" wire:model.blur="title">
+    <input type="text" wire:model.live.blur="title">
     <div>
         @error('title') <span class="error">{{ $message }}</span> @enderror
     </div>
 
-    <input type="text" wire:model.blur="content">
+    <input type="text" wire:model.live.blur="content">
     <div>
         @error('content') <span class="error">{{ $message }}</span> @enderror
     </div>
@@ -631,7 +631,7 @@ For example, if a user visits a `post.edit` page and starts modifying the title 
 Livewire provides the `wire:dirty` directive to allow you to toggle elements or modify classes when an input's value diverges from the server-side component:
 
 ```blade
-<input type="text" wire:model.blur="title" wire:dirty.class="border-yellow">
+<input type="text" wire:model.live.blur="title" wire:dirty.class="border-yellow">
 ```
 
 In the above example, when a user types into the input field, a yellow border will appear around the field. When the user tabs away, the network request is sent and the border will disappear; signaling to them that the input has been persisted and is no longer "dirty".

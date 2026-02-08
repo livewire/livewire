@@ -118,7 +118,7 @@ Here is an example of using Alpine to listen for a "blur" event on an input and 
 </form>
 ```
 
-Typically, you would just use `wire:model.blur="title"` in this situation, however, it's helpful for demonstration purposes how you can achieve this using Alpine.
+Typically, you would just use `wire:model.live.blur="title"` in this situation, however, it's helpful for demonstration purposes how you can achieve this using Alpine.
 
 #### Passing parameters
 

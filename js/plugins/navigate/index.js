@@ -91,7 +91,10 @@ export default function (Alpine) {
 
             cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement()
 
-            updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
+            // Only update the current page's history state if we're pushing to history.
+            // For popstate-triggered navigations (shouldPushToHistoryState = false),
+            // the history state has already changed and we shouldn't overwrite it.
+            shouldPushToHistoryState && updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
                 enablePersist && storePersistantElementsForLater(persistedEl => {
@@ -174,7 +177,7 @@ export default function (Alpine) {
             // Update the snapshot (not the history state, as the history state has
             // already changed to the new page due to the popstate event).
             // This ensures the current HTML has the latest snapshot.
-            updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey)
+            updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageKey, currentPageUrl)
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
                 enablePersist && storePersistantElementsForLater(persistedEl => {

@@ -190,10 +190,29 @@ function sendMessages() {
             callback({
                 message,
                 compileRequest: (messages) => {
-                    if (Array.from(requests).some(request => Array.from(request.messages).some(message => messages.includes(message)))) {
-                        throw new Error('A request already contains one of the messages in this array')
+                    // When multiple components in a hierarchy listen to the same event and one
+                    // has a modelable child, the partition interceptor may try to bundle the
+                    // same child message into multiple requests. For example: Parent and Child
+                    // both listen to 'foo', and Child has a modelable grandchild. Parent's
+                    // interceptor bundles [Parent, Grandchild] into Request 1. Then Child's
+                    // interceptor tries to bundle [Child, Grandchild], but Grandchild is already
+                    // in Request 1. Rather than throwing an error, we merge Child into Request 1
+                    // so all related components are sent together, maintaining data consistency.
+                    let existingRequest = Array.from(requests).find(request =>
+                        messages.some(message => request.messages.has(message))
+                    )
+
+                    if (existingRequest) {
+                        // Add any new messages to the existing request
+                        messages.forEach(message => {
+                            if (!existingRequest.messages.has(message)) {
+                                existingRequest.addMessage(message)
+                            }
+                        })
+                        return existingRequest
                     }
 
+                    // No overlap, create a new request
                     let request = new MessageRequest()
 
                     messages.forEach(message => request.addMessage(message))
@@ -356,6 +375,8 @@ function sendMessages() {
                     confirm(
                         'This page has expired.\nWould you like to refresh the page?'
                     ) && window.location.reload()
+
+                    return
                 }
 
                 if (response.aborted) return
@@ -400,35 +421,35 @@ function sendMessages() {
                             message.invokeOnSuccess()
                             if (message.isCancelled()) return
 
-                            message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
+                            // Use Alpine.transaction to batch data updates and DOM morphing
+                            // This prevents effects from firing before the morph cleanup runs
+                            Alpine.transaction(async () => {
+                                message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
 
-                            message.invokeOnSync()
-                            if (message.isCancelled()) return
-
-                            // Trigger any side effects from the payload like "morph" and "dispatch event"...
-                            message.component.processEffects(effects, request)
-
-                            message.invokeOnEffect()
-                            if (message.isCancelled()) return
-
-                            queueMicrotask(() => {
+                                message.invokeOnSync()
                                 if (message.isCancelled()) return
 
-                                message.invokeOnMorph().finally(() => {
-                                    // Resolve promises & finish AFTER morph completes
-                                    if (! message.isCancelled()) {
-                                        message.resolveActionPromises(
-                                            message.pendingReturns,
-                                            message.pendingReturnsMeta
-                                        )
-                                        message.invokeOnFinish()
-                                    }
+                                // Trigger any side effects from the payload like "morph" and "dispatch event"...
+                                message.component.processEffects(effects, request)
 
-                                    requestAnimationFrame(() => {
-                                        if (message.isCancelled()) return
+                                message.invokeOnEffect()
+                                if (message.isCancelled()) return
 
-                                        message.invokeOnRender()
-                                    })
+                                await message.invokeOnMorph()
+                            }).then(() => {
+                                // Resolve promises & finish AFTER morph completes
+                                if (! message.isCancelled()) {
+                                    message.resolveActionPromises(
+                                        message.pendingReturns,
+                                        message.pendingReturnsMeta
+                                    )
+                                    message.invokeOnFinish()
+                                }
+
+                                requestAnimationFrame(() => {
+                                    if (message.isCancelled()) return
+
+                                    message.invokeOnRender()
                                 })
                             })
                         }

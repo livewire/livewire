@@ -32,6 +32,13 @@ class Checksum {
 
     protected static function enforceRateLimit()
     {
+        $request = request();
+
+        // Only check the rate limit once per request (not once per component)
+        if ($request->attributes->get('livewire_rate_limit_checked')) {
+            return;
+        }
+
         $key = static::rateLimitKey();
 
         if (RateLimiter::tooManyAttempts($key, static::$maxFailures)) {
@@ -42,6 +49,8 @@ class Checksum {
                 'Too many invalid Livewire requests. Please try again later.'
             );
         }
+
+        $request->attributes->set('livewire_rate_limit_checked', true);
     }
 
     protected static function recordFailure()

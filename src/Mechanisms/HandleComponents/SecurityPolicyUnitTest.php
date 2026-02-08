@@ -1,11 +1,11 @@
 <?php
 
-namespace Tests\Unit\Mechanisms\HandleComponents;
+namespace Livewire\Mechanisms\HandleComponents;
 
 use Illuminate\Console\Command;
 use Livewire\Mechanisms\HandleComponents\SecurityPolicy;
 
-class SecurityPolicyTest extends \Tests\TestCase
+class SecurityPolicyUnitTest extends \Tests\TestCase
 {
     public function test_validates_safe_classes()
     {

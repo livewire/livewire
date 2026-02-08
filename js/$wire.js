@@ -1,11 +1,11 @@
 import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
-import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
+import { dispatch, dispatchEl, dispatchRef, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
-import { fireAction, interceptComponentAction, interceptComponentMessage, interceptComponentRequest } from '@/request'
+import { fireAction, setNextActionMetadata, interceptComponentAction, interceptComponentMessage, interceptComponentRequest } from '@/request'
 import { getErrorsObject } from '@/features/supportErrors'
 import { findRefEl } from '@/features/supportRefs'
 import { checkDirty } from './directives/wire-dirty'
@@ -49,6 +49,8 @@ let aliases = {
     'interceptRequest': '$interceptRequest',
     'dispatchTo': '$dispatchTo',
     'dispatchSelf': '$dispatchSelf',
+    'dispatchEl': '$dispatchEl',
+    'dispatchRef': '$dispatchRef',
     'removeUpload': '$removeUpload',
     'cancelUpload': '$cancelUpload',
     'uploadMultiple': '$uploadMultiple',
@@ -67,6 +69,12 @@ export function generateWireObject(component, state) {
                 return getProperty(component, property)
             } else if (property in state) {
                 return state[property]
+            } else if (property === 'toJSON') {
+                // Tools like Laravel Boost call JSON.stringify() on objects
+                // (e.g. for browser console logging). Without this, the Proxy
+                // fallback would send "toJSON" as a server-side method call,
+                // throwing a MethodNotFoundException.
+                return () => component.toJSON()
             } else if (! ['then'].includes(property)) {
                 return getFallback(component)(property)
             }
@@ -241,10 +249,10 @@ wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
 })
 
-wireProperty('$island', (component) => async (name, options = {}) => {
-    return fireAction(component, '$refresh', [], {
-        island: { name, ...options },
-    })
+wireProperty('$island', (component) => (name, options = {}) => {
+    setNextActionMetadata({ island: { name, mode: 'morph', ...options } })
+
+    return component.$wire
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {
@@ -303,6 +311,8 @@ wireProperty('$hook', (component) => (name, callback) => {
 wireProperty('$dispatch', (component) => (...params) => dispatch(component, ...params))
 wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
 wireProperty('$dispatchTo', () => (...params) => dispatchTo(...params))
+wireProperty('$dispatchEl', (component) => (...params) => dispatchEl(component, ...params))
+wireProperty('$dispatchRef', (component) => (...params) => dispatchRef(component, ...params))
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
