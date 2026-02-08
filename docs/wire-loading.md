@@ -100,7 +100,7 @@ You may find yourself in a situation where you would like `wire:loading` to reac
 
 ```blade
 <form wire:submit="save">
-    <input type="text" wire:model.blur="title">
+    <input type="text" wire:model.live.blur="title">
 
     <!-- ... -->
 

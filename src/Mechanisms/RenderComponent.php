@@ -62,7 +62,6 @@ unset(\$__name);
 unset(\$__params);
 unset(\$__componentSlots);
 unset(\$__split);
-if (isset(\$__slots)) unset(\$__slots);
 ?>
 EOT;
     }

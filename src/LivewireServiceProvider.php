@@ -48,7 +48,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             );
         });
 
-        $this->app->scoped('livewire.factory', function ($app) {
+        $this->app->singleton('livewire.factory', function ($app) {
             return new Factory(
                 $app['livewire.finder'],
                 $app['livewire.compiler']
@@ -76,6 +76,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Mechanisms\PersistentMiddleware\PersistentMiddleware::class,
             Mechanisms\HandleComponents\HandleComponents::class,
             Mechanisms\HandleRequests\HandleRequests::class,
+            Mechanisms\HandleRouting\HandleRouting::class,
             Mechanisms\FrontendAssets\FrontendAssets::class,
             Mechanisms\ExtendBlade\ExtendBlade::class,
             Mechanisms\CompileLivewireTags\CompileLivewireTags::class,
@@ -196,7 +197,6 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportNavigate\SupportNavigate::class,
             Features\SupportEntangle\SupportEntangle::class,
             Features\SupportWireRef\SupportWireRef::class,
-            Features\SupportRouting\SupportRouting::class,
             Features\SupportLocales\SupportLocales::class,
             Features\SupportTesting\SupportTesting::class,
             Features\SupportIslands\SupportIslands::class,

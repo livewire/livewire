@@ -113,7 +113,8 @@ class CacheManager
 
         $classPath = $this->getClassPath($sourcePath);
 
-        File::ensureDirectoryExists($this->cacheDirectory . '/classes');
+        $this->ensureCacheDirectoryExists();
+        File::makeDirectory($this->cacheDirectory . '/classes', 0777, true, true);
 
         File::put($classPath, $contents);
     }
@@ -122,7 +123,8 @@ class CacheManager
     {
         $viewPath = $this->getViewPath($sourcePath);
 
-        File::ensureDirectoryExists($this->cacheDirectory . '/views');
+        $this->ensureCacheDirectoryExists();
+        File::makeDirectory($this->cacheDirectory . '/views', 0777, true, true);
 
         File::put($viewPath, $contents);
 
@@ -133,7 +135,8 @@ class CacheManager
     {
         $scriptPath = $this->getScriptPath($sourcePath);
 
-        File::ensureDirectoryExists($this->cacheDirectory . '/scripts');
+        $this->ensureCacheDirectoryExists();
+        File::makeDirectory($this->cacheDirectory . '/scripts', 0777, true, true);
 
         File::put($scriptPath, $contents);
     }
@@ -142,7 +145,8 @@ class CacheManager
     {
         $stylePath = $this->getStylePath($sourcePath);
 
-        File::ensureDirectoryExists($this->cacheDirectory . '/styles');
+        $this->ensureCacheDirectoryExists();
+        File::makeDirectory($this->cacheDirectory . '/styles', 0777, true, true);
 
         File::put($stylePath, $contents);
     }
@@ -151,7 +155,8 @@ class CacheManager
     {
         $stylePath = $this->getGlobalStylePath($sourcePath);
 
-        File::ensureDirectoryExists($this->cacheDirectory . '/styles');
+        $this->ensureCacheDirectoryExists();
+        File::makeDirectory($this->cacheDirectory . '/styles', 0777, true, true);
 
         File::put($stylePath, $contents);
     }
@@ -160,7 +165,8 @@ class CacheManager
     {
         $placeholderPath = $this->getPlaceholderPath($sourcePath);
 
-        File::ensureDirectoryExists($this->cacheDirectory . '/placeholders');
+        $this->ensureCacheDirectoryExists();
+        File::makeDirectory($this->cacheDirectory . '/placeholders', 0777, true, true);
 
         File::put($placeholderPath, $contents);
 
@@ -171,7 +177,8 @@ class CacheManager
     {
         $viewPath = $this->getViewPath($sourcePath);
 
-        File::ensureDirectoryExists($this->cacheDirectory . '/views');
+        $this->ensureCacheDirectoryExists();
+        File::makeDirectory($this->cacheDirectory . '/views', 0777, true, true);
 
         File::put($viewPath, $contents);
 
@@ -182,6 +189,21 @@ class CacheManager
     {
         if (function_exists('opcache_invalidate')) {
             opcache_invalidate($sourcePath, true);
+        }
+    }
+
+    protected function ensureCacheDirectoryExists(): void
+    {
+        File::makeDirectory($this->cacheDirectory, 0777, true, true);
+
+        $gitignorePath = $this->cacheDirectory . '/.gitignore';
+
+        if (! file_exists($gitignorePath)) {
+            try {
+                File::put($gitignorePath, "*\n!.gitignore");
+            } catch (\Throwable) {
+                // Non-critical, ignore if another process created it
+            }
         }
     }
 
@@ -201,36 +223,14 @@ class CacheManager
     public function clearCompiledFiles($output = null): void
     {
         try {
-            $cacheDirectory = $this->cacheDirectory;
-
-            if (is_dir($cacheDirectory)) {
-                // Count files before clearing for informative output
-                $totalFiles = 0;
-                foreach (['classes', 'views', 'scripts', 'styles', 'placeholders'] as $subdir) {
-                    $path = $cacheDirectory . '/' . $subdir;
-                    if (is_dir($path)) {
-                        $totalFiles += count(glob($path . '/*'));
-                    }
-                }
-
-                // Use the same cleanup approach as our clear command
-                File::deleteDirectory($cacheDirectory);
-
-                // Recreate the directory structure
-                File::makeDirectory($cacheDirectory . '/classes', 0755, true);
-                File::makeDirectory($cacheDirectory . '/views', 0755, true);
-                File::makeDirectory($cacheDirectory . '/scripts', 0755, true);
-                File::makeDirectory($cacheDirectory . '/styles', 0755, true);
-                File::makeDirectory($cacheDirectory . '/placeholders', 0755, true);
-
-                // Recreate .gitignore
-                File::put($cacheDirectory . '/.gitignore', "*\n!.gitignore");
+            if (is_dir($this->cacheDirectory)) {
+                File::deleteDirectory($this->cacheDirectory);
             }
         } catch (\Exception $e) {
             // Silently fail to avoid breaking view:clear if there's an issue
             // But we can log it if output is available
             if ($output && method_exists($output, 'writeln')) {
-                $output->writeln("<comment>1Note: Could not clear Livewire compiled files.</comment>");
+                $output->writeln("<comment>Note: Could not clear Livewire compiled files.</comment>");
             }
         }
     }

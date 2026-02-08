@@ -39,6 +39,116 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
+    public function test_multiple_named_slots()
+    {
+        Livewire::test([
+            new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        <livewire:child>
+                            <livewire:slot name="first">
+                                First slot content
+                            </livewire:slot>
+                            <livewire:slot name="second">
+                                Second slot content
+                            </livewire:slot>
+                        </livewire:child>
+                    </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        @if ($slots->has('first'))
+                            <div id="first">{{ $slots['first'] }}</div>
+                        @endif
+
+                        @if ($slots->has('second'))
+                            <div id="second">{{ $slots['second'] }}</div>
+                        @endif
+                    </div>
+                HTML; }
+            },
+        ])
+        ->assertSee('First slot content')
+        ->assertSee('Second slot content')
+        ;
+    }
+
+    public function test_single_named_slot_with_nested_livewire_component()
+    {
+        Livewire::test([
+            new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        <livewire:child>
+                            <livewire:slot name="actions">
+                                <livewire:nested />
+                            </livewire:slot>
+                        </livewire:child>
+                    </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        @if ($slots->has('actions'))
+                            <div id="actions">{{ $slots['actions'] }}</div>
+                        @endif
+                    </div>
+                HTML; }
+            },
+            'nested' => new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>Nested content</div>
+                HTML; }
+            },
+        ])
+        ->assertSee('Nested content')
+        ;
+    }
+
+    public function test_multiple_named_slots_with_nested_livewire_component()
+    {
+        Livewire::test([
+            new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        <livewire:child>
+                            <livewire:slot name="first">
+                                First slot content
+                            </livewire:slot>
+                            <livewire:slot name="second">
+                                <livewire:nested />
+                            </livewire:slot>
+                        </livewire:child>
+                    </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        @if ($slots->has('first'))
+                            <div id="first">{{ $slots['first'] }}</div>
+                        @endif
+
+                        @if ($slots->has('second'))
+                            <div id="second">{{ $slots['second'] }}</div>
+                        @endif
+                    </div>
+                HTML; }
+            },
+            'nested' => new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>Nested component content</div>
+                HTML; }
+            },
+        ])
+        ->assertSee('First slot content')
+        ->assertSee('Nested component content')
+        ;
+    }
+
     public function test_slot_with_short_attribute_syntax()
     {
         Livewire::test([

@@ -1,12 +1,12 @@
 <?php
 
-namespace Livewire\Features\SupportRouting;
+namespace Livewire\Mechanisms\HandleRouting;
 
 class LivewirePageController
 {
     public function __invoke()
     {
-        $component = request()->route()->defaults['_livewire_component'];
+        $component = request()->route()->action['livewire_component'];
 
         $instance = is_object($component)
             ? $component

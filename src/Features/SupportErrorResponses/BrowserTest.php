@@ -35,6 +35,18 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->dismissDialog()
         ;
     }
+
+    public function test_it_does_not_show_html_modal_after_session_expired_dialog()
+    {
+        Livewire::visit(Component::class)
+            ->waitForLivewire()->click('@regenerateSession')
+            ->click('@refresh')
+            ->waitForDialog()
+            ->dismissDialog()
+            ->pause(100) // Brief pause to ensure any modal would have rendered
+            ->assertMissing('#livewire-error')
+        ;
+    }
 }
 
 class Component extends BaseComponent

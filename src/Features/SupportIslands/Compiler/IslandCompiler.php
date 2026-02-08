@@ -45,7 +45,12 @@ class IslandCompiler
             throw new \Exception('Start @island directive found without a matching @endisland directive');
         }
 
-        $result = $compiler->compileStatementsMadePublic($this->mutableContents);
+        // Strip Blade comments so @island directives inside them are ignored...
+        [$contents, $comments] = $this->stripBladeComments($this->mutableContents);
+
+        $result = $compiler->compileStatementsMadePublic($contents);
+
+        $result = $this->restoreBladeComments($result, $comments);
 
         for ($i=$maxNestingLevel; $i >= $currentNestingLevel; $i--) {
             $result = preg_replace_callback('/(\[STARTISLAND:([0-9]+):' . $i . '\])\((.*?)\)(.*?)(\[ENDISLAND:' . $i . '\])/s', function ($matches) use ($i) {
@@ -147,6 +152,26 @@ PHP;
         return app('livewire.compiler')->cacheManager->getHash(
             $this->pathSignature,
         );
+    }
+
+    protected function stripBladeComments(string $contents): array
+    {
+        $comments = [];
+
+        $contents = preg_replace_callback('/\{\{--(.*?)--\}\}/s', function ($match) use (&$comments) {
+            $placeholder = '[BLADE_COMMENT:' . count($comments) . ']';
+            $comments[] = $match[0];
+            return $placeholder;
+        }, $contents);
+
+        return [$contents, $comments];
+    }
+
+    protected function restoreBladeComments(string $contents, array $comments): string
+    {
+        return preg_replace_callback('/\[BLADE_COMMENT:(\d+)\]/', function ($match) use ($comments) {
+            return $comments[(int) $match[1]];
+        }, $contents);
     }
 
     public function getHackedBladeCompiler()

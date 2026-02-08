@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportPageComponents;
 use function Livewire\{on, off, once};
 use Livewire\Drawer\ImplicitRouteBinding;
 use Livewire\ComponentHook;
-use Livewire\Features\SupportRouting\LivewirePageController;
+use Livewire\Mechanisms\HandleRouting\LivewirePageController;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -244,7 +244,7 @@ class SupportPageComponents extends ComponentHook
 
             // Case 2: Route::livewire macro usage (via LivewirePageController)
             if (str($uses)->contains(LivewirePageController::class)) {
-                $component = $route->defaults['_livewire_component'] ?? null;
+                $component = $action['livewire_component'] ?? null;
 
                 if (! $component) return false;
 
