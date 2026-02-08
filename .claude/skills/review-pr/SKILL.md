@@ -67,6 +67,7 @@ Don't accept the PR description's framing of the bug or problem at face value. V
 1. **Identify the root cause yourself.** Read the code the PR modifies. Understand *why* the bug exists before looking at how the PR fixes it.
 2. **Does the test actually isolate that root cause?** Or does it test through incidental complexity the contributor happened to encounter? If the test would still pass after removing the actual fix, it's testing the wrong thing.
 3. **If the test encodes a wrong mental model, rewrite it.** Strip it to the minimum reproduction that targets the real bug. Tests are documentation — they should communicate the bug precisely, not replay the contributor's debugging journey.
+4. **Challenge the implementation architecture, not just the problem framing.** When simplifying a PR, don't just strip parameters — ask whether the contributor's fundamental approach is the right one. A simpler version of a bad approach is still a bad approach. Ask: "What's the laziest correct solution? Does the language/framework already handle this if I just let it?"
 
 ## Step 7: Evaluate
 
@@ -106,6 +107,7 @@ Address EVERY item below:
 4. **Built JS assets in diff?** Check the file list from `gh pr diff --name-only` for `dist/` files. These should NOT be committed. Remove them.
 5. **"No for now" bias.** When in doubt, lean toward not merging. It's easier to add later than remove.
 6. **Async timing fixes are treacherous.** When a PR fixes a bug involving microtask/macrotask timing (Alpine effects, View Transitions API, MutationObserver scheduling): don't trust that the approach works just because the reasoning sounds right. Alpine's effect scheduler uses multi-hop `queueMicrotask` chains — a single `queueMicrotask` or even `setTimeout(0)` may not be enough. Reactive observers (MutationObserver) are often more reliable than trying to "flush" async work. If you can't verify the timing empirically, flag it for discussion.
+7. **"What's the laziest correct solution?"** Before evaluating the PR's implementation details, independently brainstorm the simplest possible fix. If the language runtime or framework already provides the behavior (e.g., PHP TypeError on type mismatch, Laravel's built-in validation), wrapping it in a try/catch or leveraging it directly beats reimplementing the check manually. The contributor's approach is often shaped by their discovery path, not by what's optimal.
 
 ## Step 8: Run relevant tests only
 
@@ -150,6 +152,7 @@ Fix issues you find. Common fixes:
 - **Small refactors**: Simplify overly complex code
 - **Missing registration**: Add to ServiceProvider, index files, etc.
 - **Missing docs**: Write them if it's a feature. For testing helpers, update `docs/testing.md` (usage section + reference table). For directives/attributes, create the doc file and add to `docs/__nav.md`.
+- **Before committing a simplified version of the contributor's code, do a smell test:** Could this be done in fewer lines with a completely different approach? If the fix uses reflection, type checking, or manual validation — ask whether PHP/Laravel already handles the case natively (try/catch, type coercion, etc.). The best code is the code you delete.
 
 Stage and commit fixes:
 
