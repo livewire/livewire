@@ -15380,16 +15380,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             window.Echo.join(channel)[event_name]((e) => {
               dispatchSelf(component, event, [e]);
             });
+            component.addCleanup(() => {
+              window.Echo.leave(channel);
+            });
           } else {
             let handler = (e) => dispatchSelf(component, event, [e]);
             window.Echo.join(channel).listen(event_name, handler);
             component.addCleanup(() => {
-              window.Echo.leaveChannel(channel);
+              window.Echo.leave(channel);
             });
           }
         } else if (channel_type == "notification") {
           window.Echo.private(channel).notification((notification) => {
             dispatchSelf(component, event, [notification]);
+          });
+          component.addCleanup(() => {
+            window.Echo.private(channel).stopListening(".Illuminate\\Notifications\\Events\\BroadcastNotificationCreated");
           });
         } else {
           console.warn("Echo channel type not yet supported");
