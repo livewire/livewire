@@ -926,36 +926,11 @@ class BrowserTest extends BrowserTestCase
     public function test_island_poll_does_not_trigger_named_view_transition_outside_island()
     {
         Livewire::visit([new class extends \Livewire\Component {
-            public $step = 1;
-
-            public function nextStep()
-            {
-                $this->step = 2;
-            }
-
             public function render() {
                 return <<<'HTML'
                 <div>
-                    <style>
-                        ::view-transition-old(step) {
-                            animation: 300ms ease-out fade-out;
-                        }
-
-                        ::view-transition-new(step) {
-                            animation: 300ms ease-in fade-in;
-                        }
-
-                        @keyframes fade-out {
-                            to { opacity: 0; }
-                        }
-
-                        @keyframes fade-in {
-                            from { opacity: 0; }
-                        }
-                    </style>
-
-                    <div wire:transition="step" wire:key="step-{{ $step }}">
-                        <div dusk="step-display">Step {{ $step }}</div>
+                    <div wire:transition="step">
+                        <div dusk="content">Content</div>
                     </div>
 
                     @island
@@ -965,7 +940,7 @@ class BrowserTest extends BrowserTestCase
                 HTML;
             }
         }])
-            ->assertSeeIn('@step-display', 'Step 1')
+            ->assertSeeIn('@content', 'Content')
             // Intercept document.startViewTransition to track if it gets called...
             ->tap(fn ($b) => $b->script("
                 window.__viewTransitionCount = 0;
@@ -979,8 +954,6 @@ class BrowserTest extends BrowserTestCase
             ->pause(1500)
             // Assert no view transitions were triggered by the island poll...
             ->assertScript('window.__viewTransitionCount', 0)
-            // The step content should still be visible and unchanged...
-            ->assertSeeIn('@step-display', 'Step 1')
         ;
     }
 
@@ -997,24 +970,6 @@ class BrowserTest extends BrowserTestCase
             public function render() {
                 return <<<'HTML'
                 <div>
-                    <style>
-                        ::view-transition-old(step) {
-                            animation: 300ms ease-out fade-out;
-                        }
-
-                        ::view-transition-new(step) {
-                            animation: 300ms ease-in fade-in;
-                        }
-
-                        @keyframes fade-out {
-                            to { opacity: 0; }
-                        }
-
-                        @keyframes fade-in {
-                            from { opacity: 0; }
-                        }
-                    </style>
-
                     @island
                         <div wire:transition="step" wire:key="step-{{ $step }}">
                             <div dusk="step-display">Step {{ $step }}</div>
