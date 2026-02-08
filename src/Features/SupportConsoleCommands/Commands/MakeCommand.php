@@ -143,6 +143,15 @@ class MakeCommand extends Command
     {
         $path = $this->finder->resolveSingleFileComponentPathForCreation($name);
 
+        if ($path === null) {
+            [$namespace] = $this->finder->parseNamespaceAndName($name);
+            $this->components->error(sprintf(
+                "Namespace [%s] is not registered. Register it in config/livewire.php under 'component_namespaces' or use Livewire::addNamespace() in a service provider.",
+                $namespace
+            ));
+            return 1;
+        }
+
         // Check if we're converting from a multi-file component
         $mfcPath = $this->finder->resolveMultiFileComponentPath($name);
         if ($mfcPath && $this->files->exists($mfcPath) && $this->files->isDirectory($mfcPath)) {
@@ -201,6 +210,15 @@ class MakeCommand extends Command
     {
         $directory = $this->finder->resolveMultiFileComponentPathForCreation($name);
 
+        if ($directory === null) {
+            [$namespace] = $this->finder->parseNamespaceAndName($name);
+            $this->components->error(sprintf(
+                "Namespace [%s] is not registered. Register it in config/livewire.php under 'component_namespaces' or use Livewire::addNamespace() in a service provider.",
+                $namespace
+            ));
+            return 1;
+        }
+
         // Get the component name without emoji for file names inside the directory
         $componentName = basename($directory);
         if ($this->shouldUseEmoji()) {
@@ -212,6 +230,7 @@ class MakeCommand extends Command
         $viewPath = $directory . '/' . $componentName . '.blade.php';
         $testPath = $directory . '/' . $componentName . '.test.php';
         $jsPath = $directory . '/' . $componentName . '.js';
+        $cssPath = $directory . '/' . $componentName . '.css';
 
         // Check if we're upgrading from a single-file component
         $sfcPath = $this->finder->resolveSingleFileComponentPathForCreation($name);
@@ -255,6 +274,11 @@ class MakeCommand extends Command
             $this->files->put($jsPath, $jsContent);
         }
 
+        if ($this->option('css') || config('livewire.make_command.with.css')) {
+            $cssContent = $this->buildMultiFileComponentCss();
+            $this->files->put($cssPath, $cssContent);
+        }
+
         $this->components->info(sprintf('Livewire component [%s] created successfully.', $directory));
 
         return 0;
@@ -284,7 +308,7 @@ class MakeCommand extends Command
             $namespace = $classNamespaceDetails['classNamespace'];
             $viewPath = $classNamespaceDetails['classViewPath'];
         } else {
-            $namespace = 'App\\Livewire';
+            $namespace = config('livewire.class_namespace', 'App\\Livewire');
             $viewPath = config('livewire.view_path', resource_path('views/livewire'));
         }
 
@@ -297,8 +321,10 @@ class MakeCommand extends Command
         // Get the configured view path and extract the view namespace from it
         $viewNamespace = $this->extractViewNamespace($viewPath);
 
-        $viewName = $viewNamespace . '.' . collect($segments)
+        $viewName = collect($segments)
             ->map(fn($segment) => Str::kebab($segment))
+            ->prepend($viewNamespace)
+            ->filter()
             ->implode('.');
 
         $stub = str_replace('[namespace]', $namespace, $stub);
@@ -356,6 +382,11 @@ class MakeCommand extends Command
     protected function buildMultiFileComponentJs(): string
     {
         return $this->files->get($this->getStubPath('livewire-mfc-js.stub'));
+    }
+
+    protected function buildMultiFileComponentCss(): string
+    {
+        return $this->files->get($this->getStubPath('livewire-mfc-css.stub'));
     }
 
     protected function getSingleFileComponentTestPath(string $sfcPath): string
@@ -436,6 +467,10 @@ class MakeCommand extends Command
         // e.g., resource_path('views/not-livewire') => 'not-livewire'
         $viewsPath = resource_path('views');
 
+        if ($viewPath === $viewsPath) {
+            return '';
+        }
+
         // Remove the base views path to get the relative path
         $relativePath = str_replace($viewsPath . DIRECTORY_SEPARATOR, '', $viewPath);
         $relativePath = str_replace($viewsPath . '/', '', $relativePath);
@@ -456,7 +491,7 @@ class MakeCommand extends Command
 
         // Check for single-file component
         $sfcPath = $finder->resolveSingleFileComponentPathForCreation($name);
-        if ($this->files->exists($sfcPath)) {
+        if ($sfcPath !== null && $this->files->exists($sfcPath)) {
             return true;
         }
 
@@ -498,7 +533,7 @@ class MakeCommand extends Command
 
         // Check for single-file component
         $sfcPath = $finder->resolveSingleFileComponentPathForCreation($name);
-        if ($this->files->exists($sfcPath)) {
+        if ($sfcPath !== null && $this->files->exists($sfcPath)) {
             $testPath = $this->getSingleFileComponentTestPath($sfcPath);
 
             if ($this->files->exists($testPath)) {
@@ -556,6 +591,7 @@ class MakeCommand extends Command
             ['test', null, InputOption::VALUE_NONE, 'Create a test file'],
             ['emoji', null, InputOption::VALUE_REQUIRED, 'Use emoji in file/directory names (true or false)'],
             ['js', null, InputOption::VALUE_NONE, 'Create a JavaScript file for multi-file components'],
+            ['css', null, InputOption::VALUE_NONE, 'Create CSS files for multi-file components'],
         ];
     }
 }

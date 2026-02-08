@@ -331,18 +331,6 @@ class Finder
             $fullName = $fullName->replaceLast('.index', '');
         }
 
-        // If using a self-named component in a sub folder, remove the '.[last_segment]' so the name is the subfolder name...
-        $segments = explode('.', $fullName);
-
-        if (count($segments) >= 2) {
-            $lastSegment = end($segments);
-            $secondToLastSegment = $segments[count($segments) - 2];
-
-            if ($secondToLastSegment && $lastSegment === $secondToLastSegment) {
-                $fullName = $fullName->replaceLast('.' . $lastSegment, '');
-            }
-        }
-
         $classNamespaces = collect($this->classNamespaces)
             ->map(fn ($classNamespace) => $classNamespace['classNamespace'])
             ->merge($this->classLocations)
@@ -408,13 +396,18 @@ class Finder
             && file_exists($dir . '/' . $fileBaseName . '.blade.php');
     }
 
-    public function resolveSingleFileComponentPathForCreation(string $name): string
+    public function resolveSingleFileComponentPathForCreation(string $name): ?string
     {
         [$namespace, $componentName] = $this->parseNamespaceAndName($name);
 
         // Get the appropriate location
-        if ($namespace !== null && isset($this->viewNamespaces[$namespace])) {
-            $location = $this->viewNamespaces[$namespace];
+        if ($namespace !== null) {
+            if (isset($this->viewNamespaces[$namespace])) {
+                $location = $this->viewNamespaces[$namespace];
+            } else {
+                // Namespace specified but not registered
+                return null;
+            }
         } else {
             // Use the first configured component location or fallback
             $location = $this->viewLocations[0] ?? resource_path('views/components');
@@ -435,13 +428,18 @@ class Finder
         return $location . '/' . $leadingPath . $prefix . $lastSegment . '.blade.php';
     }
 
-    public function resolveMultiFileComponentPathForCreation(string $name): string
+    public function resolveMultiFileComponentPathForCreation(string $name): ?string
     {
         [$namespace, $componentName] = $this->parseNamespaceAndName($name);
 
         // Get the appropriate location
-        if ($namespace !== null && isset($this->viewNamespaces[$namespace])) {
-            $location = $this->viewNamespaces[$namespace];
+        if ($namespace !== null) {
+            if (isset($this->viewNamespaces[$namespace])) {
+                $location = $this->viewNamespaces[$namespace];
+            } else {
+                // Namespace specified but not registered
+                return null;
+            }
         } else {
             // Use the first configured component location or fallback
             $location = $this->viewLocations[0] ?? resource_path('views/components');

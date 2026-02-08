@@ -7,6 +7,13 @@ use Livewire\Livewire;
 
 class BrowserTest extends BrowserTestCase
 {
+    public static function tweakApplicationHook()
+    {
+        return function () {
+            app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');
+        };
+    }
+
     public function test_island_directive()
     {
         Livewire::visit([new class extends \Livewire\Component {
@@ -312,6 +319,36 @@ class BrowserTest extends BrowserTestCase
             ->assertDontSee('Loading...')
             ->assertSeeIn('@island-increment', 'Count: 0')
             ;
+    }
+
+    public function test_island_renders_inside_lazy_loaded_component()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends \Livewire\Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        @island
+                            <div dusk="island-content">Island loaded</div>
+                        @endisland
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitFor('@island-content')
+            ->assertSeeIn('@island-content', 'Island loaded');
     }
 
     public function test_named_islands()
@@ -750,6 +787,158 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@increment')
             // Now the island should show the updated count (including the renderless increment)...
             ->assertSeeIn('@island-count', 'Count: 3')
+            ;
+    }
+
+    public function test_renderless_modifier_skips_island_render()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo')
+                        <div dusk="island-count">Count: {{ $count }}</div>
+                    @endisland
+
+                    <button type="button" wire:click="increment" dusk="increment" wire:island="foo">Increment</button>
+                    <button type="button" wire:click.renderless="increment" dusk="increment-renderless" wire:island="foo">Increment Renderless</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->waitForLivewire()->click('@increment-renderless')
+            // The count was incremented server-side but the island should NOT re-render...
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->waitForLivewire()->click('@increment')
+            // Now the island should show the updated count (including the renderless increment)...
+            ->assertSeeIn('@island-count', 'Count: 2')
+            ;
+    }
+
+    public function test_wire_island_calls_method_scoped_to_island()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo')
+                        <div dusk="island-count">Count: {{ $count }}</div>
+                    @endisland
+
+                    <button type="button" x-on:click="$wire.$island('foo').increment()" dusk="island-increment">Increment Island</button>
+
+                    <div dusk="root-count">Root count: {{ $count }}</div>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->assertSeeIn('@root-count', 'Root count: 0')
+            ->waitForLivewire()->click('@island-increment')
+            ->assertSeeIn('@island-count', 'Count: 1')
+            ->assertSeeIn('@root-count', 'Root count: 0')
+            ;
+    }
+
+    public function test_wire_island_refresh_scoped_to_island()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo')
+                        <div dusk="island-count">Count: {{ $count }}</div>
+                    @endisland
+
+                    <button type="button" wire:click="increment" dusk="root-increment">Increment</button>
+
+                    <button type="button" x-on:click="$wire.$island('foo').$refresh()" dusk="island-refresh">Refresh Island</button>
+
+                    <div dusk="root-count">Root count: {{ $count }}</div>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->assertSeeIn('@root-count', 'Root count: 0')
+            ->waitForLivewire()->click('@root-increment')
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->assertSeeIn('@root-count', 'Root count: 1')
+            ->waitForLivewire()->click('@island-refresh')
+            ->assertSeeIn('@island-count', 'Count: 1')
+            ->assertSeeIn('@root-count', 'Root count: 1')
+            ;
+    }
+
+    public function test_wire_island_with_append_mode()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div dusk="foo-island">
+                        @island(name: 'foo')<div>Count: {{ $count }}</div>@endisland
+                    </div>
+
+                    <button type="button" x-on:click="$wire.$island('foo', { mode: 'append' }).increment()" dusk="append-increment">Append</button>
+                    <button type="button" x-on:click="$wire.$island('foo', { mode: 'prepend' }).increment()" dusk="prepend-increment">Prepend</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSourceHas('<div>Count: 0</div>')
+            ->waitForLivewire()->click('@append-increment')
+            ->assertSourceHas('<div>Count: 0</div><div>Count: 1</div>')
+            ->waitForLivewire()->click('@prepend-increment')
+            ->assertSourceHas('<div>Count: 2</div><div>Count: 0</div><div>Count: 1</div>')
+            ;
+    }
+
+    public function test_more_than_ten_islands_using_single_file_component()
+    {
+        Livewire::visit('twelve-islands')
+            ->assertSee('island test 1')
+            ->assertSee('island test 2')
+            ->assertSee('island test 3')
+            ->assertSee('island test 4')
+            ->assertSee('island test 5')
+            ->assertSee('island test 6')
+            ->assertSee('island test 7')
+            ->assertSee('island test 8')
+            ->assertSee('island test 9')
+            ->assertSee('island test 10')
+            ->assertSee('island test 11')
+            ->assertDontSee('STARTISLAND')
+            ->assertDontSee('ENDISLAND')
             ;
     }
 }

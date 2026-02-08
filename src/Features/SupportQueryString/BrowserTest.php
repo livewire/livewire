@@ -256,7 +256,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 {
                     return <<<'HTML'
                     <div>
-                        <select dusk="filter1" wire:model.change="filter1">
+                        <select dusk="filter1" wire:model.change.live="filter1">
                             <option value="">All</option>
                             <option value="some">Some</option>
                             <option value="none">None</option>
@@ -270,7 +270,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                               @break
                             @endswitch
                         </div>
-                        <select dusk="filter2" wire:model.change="filter2">
+                        <select dusk="filter2" wire:model.change.live="filter2">
                             <option value="all">All</option>
                             <option value="some">Some</option>
                             <option value="none">None</option>

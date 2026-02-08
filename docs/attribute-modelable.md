@@ -101,7 +101,7 @@ The parent can use wire:model modifiers, and they'll work as expected:
 <livewire:todo-input wire:model.live="todo" />
 
 {{-- Update on blur --}}
-<livewire:todo-input wire:model.blur="todo" />
+<livewire:todo-input wire:model.live.blur="todo" />
 
 {{-- Debounce updates --}}
 <livewire:todo-input wire:model.live.debounce.500ms="todo" />

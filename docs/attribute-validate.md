@@ -73,10 +73,10 @@ new class extends Component {
 ?>
 
 <div>
-    <input type="email" wire:model.blur="email">
+    <input type="email" wire:model.live.blur="email">
     @error('email') <span>{{ $message }}</span> @enderror
 
-    <input type="password" wire:model.blur="password">
+    <input type="password" wire:model.live.blur="password">
     @error('password') <span>{{ $message }}</span> @enderror
 </div>
 ```
@@ -241,22 +241,22 @@ new class extends Component {
 
     <form wire:submit="submit">
         <div>
-            <input type="text" wire:model.blur="name" placeholder="Your name">
+            <input type="text" wire:model.live.blur="name" placeholder="Your name">
             @error('name') <span class="error">{{ $message }}</span> @enderror
         </div>
 
         <div>
-            <input type="email" wire:model.blur="email" placeholder="Your email">
+            <input type="email" wire:model.live.blur="email" placeholder="Your email">
             @error('email') <span class="error">{{ $message }}</span> @enderror
         </div>
 
         <div>
-            <input type="text" wire:model.blur="subject" placeholder="Subject">
+            <input type="text" wire:model.live.blur="subject" placeholder="Subject">
             @error('subject') <span class="error">{{ $message }}</span> @enderror
         </div>
 
         <div>
-            <textarea wire:model.blur="message" placeholder="Your message"></textarea>
+            <textarea wire:model.live.blur="message" placeholder="Your message"></textarea>
             @error('message') <span class="error">{{ $message }}</span> @enderror
         </div>
 

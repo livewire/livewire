@@ -14,9 +14,9 @@ class SupportReleaseTokens extends ComponentHook
             $context->addMemo('release', ReleaseToken::generate($component));
         });
 
-        // Use `snapshot-verified` to run the check before any component properties are hydrated
-        // but after the snapshot has been verified to ensure it hasn't been tampered with...
-        on('snapshot-verified', function ($snapshot) {
+        // Verify the release token before verifying the snapshot checksum, as we don't want to trigger a checksum
+        // failure if the release token doesn't match as there may be intentional changes in the snapshot...
+        on('checksum.verify', function ($checksum, $snapshot) {
             ReleaseToken::verify($snapshot);
         });
     }

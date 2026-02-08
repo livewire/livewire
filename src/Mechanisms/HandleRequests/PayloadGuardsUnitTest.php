@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Mechanisms\HandleRequests;
+namespace Livewire\Mechanisms\HandleRequests;
 
 use Livewire\Component;
 use Livewire\Livewire;
@@ -8,8 +8,9 @@ use Livewire\Exceptions\PayloadTooLargeException;
 use Livewire\Exceptions\TooManyComponentsException;
 use Livewire\Exceptions\TooManyCallsException;
 use Tests\TestCase;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
-class PayloadGuardsTest extends TestCase
+class PayloadGuardsUnitTest extends TestCase
 {
     public function test_rejects_payload_exceeding_max_size()
     {
@@ -21,7 +22,7 @@ class PayloadGuardsTest extends TestCase
         // Simulate a request with a large Content-Length header
         $this->withoutExceptionHandling()
             ->withHeaders(['Content-Length' => 1000, 'X-Livewire' => 'true'])
-            ->post(route('livewire.update'), [
+            ->post(EndpointResolver::updatePath(), [
                 'components' => [
                     [
                         'snapshot' => json_encode([
@@ -70,7 +71,7 @@ class PayloadGuardsTest extends TestCase
         // Create a request with 3 components (exceeds limit of 2)
         $this->withoutExceptionHandling()
             ->withHeaders(['X-Livewire' => 'true'])
-            ->post(route('livewire.update'), [
+            ->post(EndpointResolver::updatePath(), [
                 'components' => [
                     ['snapshot' => '{}', 'updates' => [], 'calls' => []],
                     ['snapshot' => '{}', 'updates' => [], 'calls' => []],
@@ -117,7 +118,7 @@ class PayloadGuardsTest extends TestCase
         // Send a request with 4 calls (exceeds limit of 3)
         $this->withoutExceptionHandling()
             ->withHeaders(['X-Livewire' => 'true'])
-            ->post(route('livewire.update'), [
+            ->post(EndpointResolver::updatePath(), [
                 'components' => [
                     [
                         'snapshot' => json_encode($snapshot),

@@ -4,7 +4,6 @@ import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import { setNextActionMetadata, setNextActionOrigin } from '@/request'
 import Alpine from 'alpinejs'
-// Action is no longer needed - wire:model uses $commit which creates its own actions
 
 directive('model', ({ el, directive, component, cleanup }) => {
     // @todo: will need to probaby do this further upstream i just don't want to bog down the entire lifecycle right now...
@@ -26,18 +25,48 @@ directive('model', ({ el, directive, component, cleanup }) => {
         return handleFileUpload(el, expression, component, cleanup)
     }
 
-    if (! modifiers.includes('self') && ! modifiers.includes('deep')) {
-        // Make wire:model self-binding by default...
-        modifiers.push('self')
+    // Split modifiers at .live boundary
+    // Modifiers BEFORE .live control client-side (x-model) sync timing
+    // Modifiers AFTER .live control network request timing
+    let liveIndex = modifiers.indexOf('live')
+    let isLive = liveIndex !== -1
+
+    // Backwards compatibility: .lazy without .live implies .change.live
+    let hasLazyWithoutLive = modifiers.includes('lazy') && ! isLive
+    let shouldSendNetwork = isLive || hasLazyWithoutLive
+
+    let ephemeralModifiers = isLive && ! hasLazyWithoutLive ? modifiers.slice(0, liveIndex) : modifiers.slice()
+    let networkModifiers = isLive && ! hasLazyWithoutLive ? modifiers.slice(liveIndex + 1) : []
+
+    // For .lazy backwards compat, trigger network on change
+    if (hasLazyWithoutLive) {
+        // Remove 'lazy' from ephemeralModifiers for .lazy backwards compat
+        ephemeralModifiers = ephemeralModifiers.filter(m => m !== 'lazy')
+        networkModifiers.push('change')
     }
 
-    let isLive = modifiers.includes('live')
-    let isLazy = modifiers.includes('lazy') || modifiers.includes('change')
-    let onBlur = modifiers.includes('blur')
-    let isDebounced = modifiers.includes('debounce')
-    let isThrottled = modifiers.includes('throttle')
+    // Add self/deep modifier for event propagation control
+    if (! (ephemeralModifiers.includes('deep') || networkModifiers.includes('deep'))) {
+        if (! ephemeralModifiers.includes('self')) {
+            ephemeralModifiers.push('self')
+        }
+    }
 
-    // Trigger a network request (only if .live or .lazy is added to wire:model)...
+    // Extract ephemeral trigger modifiers (these control when x-model syncs)
+    let ephemeralOnBlur = ephemeralModifiers.includes('blur')
+    let ephemeralOnChange = ephemeralModifiers.includes('change') || ephemeralModifiers.includes('lazy')
+    let ephemeralOnEnter = ephemeralModifiers.includes('enter')
+    let hasEphemeralTriggers = ephemeralOnBlur || ephemeralOnChange || ephemeralOnEnter
+
+    // Extract network trigger modifiers
+    let networkOnBlur = networkModifiers.includes('blur')
+    let networkOnChange = networkModifiers.includes('change') || networkModifiers.includes('lazy')
+    let networkOnEnter = networkModifiers.includes('enter')
+    let hasNetworkTriggers = networkOnBlur || networkOnChange || networkOnEnter
+    let isDebounced = networkModifiers.includes('debounce')
+    let isThrottled = networkModifiers.includes('throttle')
+
+    // Trigger a network request
     let update = () => {
         setNextActionOrigin({ el, directive })
 
@@ -52,39 +81,59 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     let debouncedUpdate = update
 
-    if ((isLive && isRealtimeInput(el)) || isDebounced) {
-        debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(modifiers, 'debounce') || 150)
+    // Apply debounce/throttle from network modifiers
+    if ((shouldSendNetwork && ! hasNetworkTriggers && isRealtimeInput(el)) || isDebounced) {
+        debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(networkModifiers, 'debounce') || 150)
     }
 
     if (isThrottled) {
-        debouncedUpdate = throttle(debouncedUpdate, parseModifierDuration(modifiers, 'throttle') || 150)
+        debouncedUpdate = throttle(debouncedUpdate, parseModifierDuration(networkModifiers, 'throttle') || 150)
     }
 
-    Alpine.bind(el, {
-        ['@change']() {
-            isLazy && update()
-        },
-        ['@blur']() {
-            onBlur && update()
-        },
-        ['x-model' + getModifierTail(modifiers)]() {
-            return {
-                get() {
-                    return dataGet(component.$wire, expression)
-                },
-                set(value) {
-                    dataSet(component.$wire, expression, value)
+    // Build the bindings object
+    let bindings = {}
 
-                    isLive && (! isLazy) && (! onBlur) && debouncedUpdate()
-                },
-            }
+    // Network event listeners (for modifiers after .live, or .lazy backwards compat)
+    if (shouldSendNetwork && networkOnBlur) {
+        bindings['@blur'] = () => update()
+    }
+
+    if (shouldSendNetwork && networkOnChange) {
+        bindings['@change'] = () => update()
+    }
+
+    if (shouldSendNetwork && networkOnEnter) {
+        bindings['@keydown.enter'] = () => update()
+    }
+
+    // Build x-model modifier tail from ephemeral modifiers
+    let xModelTail = getModifierTail(ephemeralModifiers)
+
+    bindings['x-model' + xModelTail] = () => {
+        return {
+            get() {
+                return dataGet(component.$wire, expression)
+            },
+            set(value) {
+                dataSet(component.$wire, expression, value)
+
+                // If .live is present and no specific network triggers, fire on every ephemeral sync
+                if (shouldSendNetwork && ! hasNetworkTriggers) {
+                    debouncedUpdate()
+                }
+            },
         }
-    })
+    }
+
+    Alpine.bind(el, bindings)
 })
 
 function getModifierTail(modifiers) {
+    // Filter out Livewire-specific modifiers that shouldn't go to x-model
+    // Keep: blur, change, lazy, enter, self, deep, number, boolean, trim, fill
+    // Remove: defer, live, debounce, throttle (and their durations)
     modifiers = modifiers.filter(i => ! [
-        'lazy', 'defer'
+        'defer', 'live'
     ].includes(i))
 
     if (modifiers.includes('debounce')) {

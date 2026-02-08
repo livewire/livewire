@@ -337,6 +337,76 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('<span>{{ $message }}</span>', $viewContents);
     }
 
+    public function test_clear_compiled_files_deletes_cache_directory()
+    {
+        $cacheManager = new CacheManager($this->cacheDir);
+        $compiler = new Compiler($cacheManager);
+
+        // Compile a component to create the cache directories
+        $compiler->compile(__DIR__ . '/Fixtures/sfc-component.blade.php');
+
+        // Verify the directories exist
+        $this->assertTrue(is_dir($this->cacheDir . '/classes'));
+        $this->assertTrue(is_dir($this->cacheDir . '/views'));
+
+        // Clear the compiled files
+        $cacheManager->clearCompiledFiles();
+
+        // Verify the cache directory is deleted
+        $this->assertFalse(is_dir($this->cacheDir));
+    }
+
+    public function test_directories_are_lazily_recreated_after_clearing()
+    {
+        $cacheManager = new CacheManager($this->cacheDir);
+        $compiler = new Compiler($cacheManager);
+
+        // Compile a component to create the cache directories
+        $compiler->compile(__DIR__ . '/Fixtures/sfc-component.blade.php');
+
+        // Clear the compiled files
+        $cacheManager->clearCompiledFiles();
+
+        // Verify the cache directory is deleted
+        $this->assertFalse(is_dir($this->cacheDir));
+
+        // Compile again - this should lazily recreate the directories
+        $class = $compiler->compile(__DIR__ . '/Fixtures/sfc-component.blade.php');
+
+        // Verify the directories were recreated
+        $this->assertTrue(is_dir($this->cacheDir . '/classes'));
+        $this->assertTrue(is_dir($this->cacheDir . '/views'));
+
+        // Verify the component still works
+        $this->assertInstanceOf(Component::class, new $class);
+    }
+
+    public function test_gitignore_is_created_when_cache_directory_is_lazily_recreated()
+    {
+        $cacheManager = new CacheManager($this->cacheDir);
+        $compiler = new Compiler($cacheManager);
+
+        // Compile a component to create the cache directories
+        $compiler->compile(__DIR__ . '/Fixtures/sfc-component.blade.php');
+
+        // Verify the .gitignore exists
+        $this->assertFileExists($this->cacheDir . '/.gitignore');
+        $this->assertEquals("*\n!.gitignore", file_get_contents($this->cacheDir . '/.gitignore'));
+
+        // Clear the compiled files
+        $cacheManager->clearCompiledFiles();
+
+        // Verify the cache directory is deleted (including .gitignore)
+        $this->assertFalse(is_dir($this->cacheDir));
+
+        // Compile again - this should lazily recreate the directories AND .gitignore
+        $compiler->compile(__DIR__ . '/Fixtures/sfc-component.blade.php');
+
+        // Verify the .gitignore was recreated
+        $this->assertFileExists($this->cacheDir . '/.gitignore');
+        $this->assertEquals("*\n!.gitignore", file_get_contents($this->cacheDir . '/.gitignore'));
+    }
+
     #[DataProvider('classReturnProvider')]
     public function test_anonymous_class_has_return_statement_added_if_required($classContents, $expectedOutput)
     {

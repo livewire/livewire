@@ -22,6 +22,18 @@ php artisan optimize:clear
 > [!info] View all changes on GitHub
 > For a complete overview of all code changes between v3 and v4, you can review the full diff on GitHub: [Compare 3.x to main →](https://github.com/livewire/livewire/compare/3.x...main)
 
+## Upgrading to v4.1 from v4.0
+
+### `wire:model` modifier behavior change
+
+Modifiers like `.blur` and `.change` now control when client-side state syncs, not just network timing. If you're using these modifiers and want the previous behavior, add `.live` before them (e.g., `wire:model.live.blur`).
+
+[See full details below →](#wiremodel-modifiers-now-control-client-side-sync-timing)
+
+---
+
+The following changes apply when upgrading from v3 to v4.
+
 ## High-impact changes
 
 These changes are most likely to affect your application and should be reviewed carefully.
@@ -181,6 +193,42 @@ In v3, Livewire component tags would render even without being properly closed. 
 
 These changes may affect certain parts of your application depending on which features you use.
 
+### `wire:model` modifiers now control client-side sync timing
+
+In v3, modifiers like `.blur` and `.change` only controlled when network requests were sent. The input's value was always synced to client-side state (`$wire.property`) immediately as the user typed.
+
+In v4, these modifiers now control when client-side state syncs too. This unlocks new UI patterns—like inputs that don't update until the user finishes typing and hits Enter or tabs away.
+
+**Migration:** If you're using `.blur` or `.change` and want the old behavior, add `.live` before the modifier:
+
+```blade
+<!-- v3 -->
+<input wire:model.blur="title">
+
+<!-- v4 equivalent -->
+<input wire:model.live.blur="title">
+```
+
+| v3 Syntax | v4 Equivalent |
+|-----------|---------------|
+| `wire:model.blur` | `wire:model.live.blur` |
+| `wire:model.change` | `wire:model.live.change` |
+
+> [!info] `.lazy` is backwards compatible
+> `wire:model.lazy` continues to work as it did in v3—no migration needed.
+
+**New in v4:** You can now delay client-side updates without sending network requests:
+
+```blade
+<!-- Only update $wire.width when user tabs away -->
+<input wire:model.blur="width">
+
+<!-- Update on Enter key or blur -->
+<input wire:model.blur.enter="search">
+```
+
+[Learn more about wire:model →](/docs/4.x/wire-model)
+
 ### `wire:transition` now uses View Transitions API
 
 In v3, `wire:transition` was a wrapper around Alpine's `x-transition` directive, supporting modifiers like `.opacity`, `.scale`, `.duration.200ms`, and `.origin.top`.
@@ -263,6 +311,21 @@ This change adds support for passing slots when mounting components and generall
 ## Low-impact changes
 
 These changes only affect applications using advanced features or customization.
+
+### Livewire Asset and Endpoint URL Changes
+
+All Livewire URLs now include a unique hash derived from your `APP_KEY`. The prefix changed from `/livewire/` to `/livewire-{hash}/`:
+
+```
+# v3                          # v4
+/livewire/update        →     /livewire-{hash}/update
+/livewire/upload-file   →     /livewire-{hash}/upload-file
+/livewire/livewire.js   →     /livewire-{hash}/livewire.js
+```
+
+If your firewall rules, CDN config, or middleware reference `/livewire/` paths, update them to account for the new prefix.
+
+[Learn more about customizing Livewire's endpoints →](/docs/4.x/installation#customizing-livewires-update-endpoint)
 
 ### JavaScript deprecations
 
@@ -440,6 +503,38 @@ new class extends Component { ... }
 use Livewire\Component;
 
 new class extends Component { ... }
+```
+
+### Update route definitions
+
+Replace `Volt::route()` with `Route::livewire()` in your routes files:
+
+```php
+// Before (Volt)
+use Livewire\Volt\Volt;
+
+Volt::route('/dashboard', 'dashboard');
+
+// After (Livewire v4)
+use Illuminate\Support\Facades\Route;
+
+Route::livewire('/dashboard', 'dashboard');
+```
+
+### Update test files
+
+Replace all instances of `Livewire\Volt\Volt` with `Livewire\Livewire` and change `Volt::test()` to `Livewire::test()`:
+
+```php
+// Before (Volt)
+use Livewire\Volt\Volt;
+
+Volt::test('counter')
+
+// After (Livewire v4)
+use Livewire\Livewire;
+
+Livewire::test('counter')
 ```
 
 ### Remove Volt service provider

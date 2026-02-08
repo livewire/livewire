@@ -70,6 +70,14 @@ class BaseUrl extends LivewireAttribute
             $decoded = $this->recursivelyMergeArraysWithoutAppendingDuplicateValues($original, $decoded);
         }
 
+        // If json_decode produced a non-finite float (INF, -INF, NAN),
+        // it means the value looked like scientific notation with an
+        // overflowing exponent (e.g. "123456e7890"). Fall back to
+        // the original string to avoid data corruption...
+        if (is_float($decoded) && ! is_finite($decoded)) {
+            $decoded = null;
+        }
+
         // Handle empty strings differently depending on if this
         // field is considered "nullable" by typehint or API.
         if ($initialValue === null) {

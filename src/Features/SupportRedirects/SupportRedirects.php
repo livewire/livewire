@@ -2,7 +2,9 @@
 
 namespace Livewire\Features\SupportRedirects;
 
+use Illuminate\Support\Facades\Route;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
+use Livewire\Mechanisms\HandleRouting\LivewirePageController;
 use Livewire\ComponentHook;
 use Livewire\Component;
 use function Livewire\on;
@@ -55,7 +57,7 @@ class SupportRedirects extends ComponentHook
         $usingNavigate = $this->storeGet('redirectUsingNavigate');
 
         if (is_subclass_of($to, Component::class)) {
-            $to = url()->action($to);
+            $to = static::resolveComponentUrl($to);
         }
 
         if ($to && ! app(HandleRequests::class)->isLivewireRequest()) {
@@ -70,5 +72,40 @@ class SupportRedirects extends ComponentHook
         if (! $context->isMounting()) {
             static::$atLeastOneMountedComponentHasRedirected = true;
         }
+    }
+
+    public static function resolveComponentUrl(string $componentClass): string
+    {
+        // First try using Laravel's action URL resolver (works when component is registered directly on route)
+        try {
+            return url()->action($componentClass);
+        } catch (\InvalidArgumentException $e) {
+            // Component wasn't registered directly as a route action, continue to search routes
+        }
+
+        // Search through all routes to find one that uses this component via Route::livewire()
+        foreach (Route::getRoutes() as $route) {
+            $uses = $route->action['uses'] ?? null;
+
+            if (! is_string($uses)) continue;
+
+            // Check if this route uses LivewirePageController (indicates Route::livewire() was used)
+            if (str_contains($uses, LivewirePageController::class)) {
+                $routeComponent = $route->action['livewire_component'] ?? null;
+
+                if (! $routeComponent) continue;
+
+                // Resolve the component class name (handles both class strings and component names)
+                $resolvedClass = is_string($routeComponent) && class_exists($routeComponent)
+                    ? $routeComponent
+                    : app('livewire.factory')->resolveComponentClass($routeComponent);
+
+                if ($resolvedClass === $componentClass) {
+                    return url($route->uri());
+                }
+            }
+        }
+
+        throw new \InvalidArgumentException("Unable to resolve URL for Livewire component [{$componentClass}]. Make sure the component is registered as a route.");
     }
 }
