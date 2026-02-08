@@ -103,6 +103,113 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_wire_transition_names_are_cleared_after_transition_completes()
+    {
+        $animationsRunning = 'document.getAnimations().some(a => a.playState === "running")';
+
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $show = false;
+
+                function toggle()
+                {
+                    $this->show = ! $this->show;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="toggle" dusk="toggle">Toggle</button>
+
+                    <style>
+                        ::view-transition-old(transition) {
+                            animation: 300ms ease-out fade-out;
+                        }
+                        ::view-transition-new(transition) {
+                            animation: 300ms ease-in fade-in;
+                        }
+                        @keyframes fade-out { to { opacity: 0; } }
+                        @keyframes fade-in { from { opacity: 0; } }
+                    </style>
+
+                    @if ($show)
+                    <div dusk="target" wire:transition="transition">
+                        Transition Me!
+                    </div>
+                    @endif
+                </div>
+                HTML; }
+        })
+        // Toggle on to trigger a transition...
+        ->waitForLivewire()->click('@toggle')
+        ->waitUntil($animationsRunning)
+        ->waitUntil("!$animationsRunning")
+        ->assertPresent('@target')
+
+        // After transition completes, viewTransitionName should be cleared
+        // to avoid creating a permanent stacking context...
+        ->assertScript(
+            "document.querySelector('[dusk=\"target\"]').style.viewTransitionName",
+            ''
+        )
+        ;
+    }
+
+    public function test_transition_is_skipped_when_dialog_opens_during_morph()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $items = ['Item A', 'Item B'];
+                public $showModal = false;
+
+                public function openModal()
+                {
+                    $this->showModal = true;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <style>
+                        ::view-transition-old(*) { animation: 2s ease-out fade-out; }
+                        ::view-transition-new(*) { animation: 2s ease-in fade-in; }
+                        @keyframes fade-out { to { opacity: 0; } }
+                        @keyframes fade-in { from { opacity: 0; } }
+                    </style>
+
+                    @foreach ($items as $index => $item)
+                        <div
+                            wire:transition="card-{{ $index }}"
+                            wire:key="item-{{ $index }}"
+                            dusk="card-{{ $index }}"
+                        >
+                            {{ $item }}
+                        </div>
+                    @endforeach
+
+                    <button wire:click="openModal" dusk="open">Open</button>
+
+                    <dialog
+                        wire:ignore.self
+                        x-ref="modal"
+                        x-effect="
+                            if ($wire.showModal) { if (!$refs.modal.open) $refs.modal.showModal() }
+                        "
+                    >
+                        <p>Modal Content</p>
+                    </dialog>
+                </div>
+                HTML; }
+            }
+        )
+        ->waitForLivewire()->click('@open')
+        ->waitFor('dialog[open]')
+
+        // Without the fix, the 2s view transition animations would still be playing
+        // and the transitioning elements would appear above the dialog.
+        // With the fix, the transition is skipped the instant the dialog opens...
+        ->assertScript('document.getAnimations().some(a => a.playState === "running")', false)
+        ;
+    }
+
     public function test_can_transition_dynamic_component_swap()
     {
         $animationsRunning = 'document.getAnimations().some(a => a.playState === "running")';
