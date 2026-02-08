@@ -207,6 +207,9 @@ gh pr comment {number} --body "$(cat <<'EOF'
 ### What's happening (plain English)
 {Explain the PR like Caleb is a 3-year-old who happens to be an expert in Livewire internals but has zero context on this specific PR. Use a numbered step-by-step walkthrough of the exact sequence that triggers the bug/feature. No jargon beyond what Livewire/Alpine devs already know. Be crystal clear and concise — this is the most important section.}
 
+### Other approaches considered
+{Briefly list 2-3 alternative ways this could have been solved, with one sentence each on why the PR's approach is better (or worse). If there's only one reasonable approach, say so and explain why. This helps Caleb quickly evaluate whether the chosen path is the right one.}
+
 ### Changes Made
 {List of fixups you pushed, or "No changes made" if none}
 
