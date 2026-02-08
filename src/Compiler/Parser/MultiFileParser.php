@@ -8,6 +8,8 @@ class MultiFileParser extends Parser
 {
     public function __construct(
         public string $path,
+        public string $classPath,
+        public string $viewPath,
         public ?string $scriptPortion,
         public string $classPortion,
         public string $viewPortion,
@@ -41,6 +43,8 @@ class MultiFileParser extends Parser
 
         return new self(
             $path,
+            $classPath,
+            $viewPath,
             $scriptPortion,
             $classPortion,
             $viewPortion,
@@ -55,6 +59,9 @@ class MultiFileParser extends Parser
         $classContents = $this->stripTrailingPhpTag($classContents);
         $classContents = $this->ensureAnonymousClassHasReturn($classContents);
         $classContents = $this->ensureAnonymousClassHasTrailingSemicolon($classContents);
+
+        // Inject #line directive after opening PHP tag to map errors back to source file
+        $classContents = $this->injectSourceCommentAfterPhpTag($classContents);
 
         if ($viewFileName) {
             $classContents = $this->injectViewMethod($classContents, $viewFileName);
@@ -71,9 +78,34 @@ class MultiFileParser extends Parser
         return $classContents;
     }
 
+    protected function injectSourceCommentAfterPhpTag(string $classContents): string
+    {
+        // Find the position after opening PHP tag and any following whitespace/newline
+        if (preg_match('/^<\?php\s*\n?/', $classContents, $match)) {
+            $phpTagWithWhitespace = $match[0];
+            $restOfContents = substr($classContents, strlen($phpTagWithWhitespace));
+
+            // Calculate start line (line after opening tag in the original file)
+            $newlinesInTag = substr_count($phpTagWithWhitespace, "\n");
+            $startLine = 1 + $newlinesInTag;
+
+            // The #line directive tells PHP: "the next line is line N of file X"
+            $lineDirective = $this->injectSourceComment('', $this->classPath, $startLine);
+
+            return $phpTagWithWhitespace . $lineDirective . $restOfContents;
+        }
+
+        return $classContents;
+    }
+
     public function generateViewContents(): string
     {
-        return trim($this->viewPortion);
+        $viewContents = trim($this->viewPortion);
+
+        // Add source annotation for error handlers to reference
+        $sourceAnnotation = sprintf("{{-- @livewireSource %s:1 --}}\n", $this->viewPath);
+
+        return $sourceAnnotation . $viewContents;
     }
 
     public function generateScriptContents(): ?string

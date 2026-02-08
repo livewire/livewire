@@ -108,6 +108,9 @@ class SingleFileParser extends Parser
         $classContents = $this->ensureAnonymousClassHasReturn($classContents);
         $classContents = $this->ensureAnonymousClassHasTrailingSemicolon($classContents);
 
+        // Inject #line directive after <?php tag to map errors back to source file
+        $classContents = $this->injectSourceCommentAfterPhpTag($classContents);
+
         if ($viewFileName) {
             $classContents = $this->injectViewMethod($classContents, $viewFileName);
         }
@@ -121,6 +124,52 @@ class SingleFileParser extends Parser
         }
 
         return $classContents;
+    }
+
+    protected function injectSourceCommentAfterPhpTag(string $classContents): string
+    {
+        // Skip if no path (e.g., in tests)
+        if (empty($this->path)) {
+            return $classContents;
+        }
+
+        // Find where the class portion starts in the original file content
+        $classStartLine = $this->getClassStartLine();
+
+        // Find the position after <?php and any following whitespace/newline
+        if (preg_match('/^<\?php\s*\n?/', $classContents, $match)) {
+            $phpTagWithWhitespace = $match[0];
+            $restOfContents = substr($classContents, strlen($phpTagWithWhitespace));
+
+            // The #line directive tells PHP: "the next line is line N of file X"
+            $lineDirective = $this->injectSourceComment('', $this->path, $classStartLine);
+
+            return $phpTagWithWhitespace . $lineDirective . $restOfContents;
+        }
+
+        return $classContents;
+    }
+
+    protected function getClassStartLine(): int
+    {
+        // Find where the <?php block starts in the original file
+        $phpBlockPosition = strpos($this->contents, $this->classPortion);
+
+        if ($phpBlockPosition === false) {
+            return 1;
+        }
+
+        // Count newlines before the PHP block to get the starting line
+        $beforePhpBlock = substr($this->contents, 0, $phpBlockPosition);
+        $phpBlockStartLine = substr_count($beforePhpBlock, "\n") + 1;
+
+        // Count newlines in the <?php tag portion to get where actual code starts
+        if (preg_match('/^<\?php\s*\n?/', $this->classPortion, $match)) {
+            $newlinesInTag = substr_count($match[0], "\n");
+            return $phpBlockStartLine + $newlinesInTag;
+        }
+
+        return $phpBlockStartLine + 1;
     }
 
     /**
@@ -142,7 +191,37 @@ class SingleFileParser extends Parser
 
         $viewContents = $this->injectUseStatementsFromClassPortion($viewContents, $this->classPortion);
 
+        // Add source annotation for error handlers to reference
+        if (!empty($this->path)) {
+            $viewStartLine = $this->getViewStartLine();
+            $sourceAnnotation = sprintf("{{-- @livewireSource %s:%d --}}\n", $this->path, $viewStartLine);
+            $viewContents = $sourceAnnotation . $viewContents;
+        }
+
         return $viewContents;
+    }
+
+    protected function getViewStartLine(): int
+    {
+        // The view starts after the closing PHP tag
+        $closeTag = '?' . '>';
+        $phpClosePos = strpos($this->contents, $closeTag);
+
+        if ($phpClosePos === false) {
+            return 1;
+        }
+
+        // Count lines up to and including the closing tag
+        $beforeView = substr($this->contents, 0, $phpClosePos + 2);
+        $linesBeforeView = substr_count($beforeView, "\n");
+
+        // Skip any blank lines between the closing tag and view content
+        $afterPhpClose = substr($this->contents, $phpClosePos + 2);
+        if (preg_match('/^[\s]*[\r\n]+/', $afterPhpClose, $match)) {
+            $linesBeforeView += substr_count($match[0], "\n");
+        }
+
+        return $linesBeforeView + 1;
     }
 
     public function generateViewContentsForMultiFile(): string

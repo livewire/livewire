@@ -4,6 +4,14 @@ namespace Livewire\Compiler\Parser;
 
 class Parser
 {
+    protected function injectSourceComment(string $contents, string $sourcePath, int $startLine): string
+    {
+        // Add a PHP comment that error handlers can parse to map back to original source
+        $comment = sprintf("/** @livewireSource %s:%d */\n", $sourcePath, $startLine);
+
+        return $comment . $contents;
+    }
+
     public static function extractPlaceholderPortion(string &$contents): ?string
     {
         $islandsPattern = '/(@'.'island.*?@endisland)/s';

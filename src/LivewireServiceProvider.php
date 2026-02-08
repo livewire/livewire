@@ -160,6 +160,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     protected function bootFeatures()
     {
         foreach([
+            Features\SupportBetterExceptions\SupportBetterExceptions::class,
             Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
             Features\SupportMultipleRootElementDetection\SupportMultipleRootElementDetection::class,
             Features\SupportMorphAwareBladeCompilation\SupportMorphAwareBladeCompilation::class,
