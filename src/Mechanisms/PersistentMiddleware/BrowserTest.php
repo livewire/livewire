@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
+use Livewire\Attributes\Modelable;
+use Livewire\Attributes\Reactive;
 use Livewire\Component as BaseComponent;
 use Livewire\Livewire;
 use Sushi\Sushi;
@@ -76,6 +78,17 @@ class BrowserTest extends BrowserTestCase
 
             Route::get('/with-authorization/{post}/inline-auth', Component::class)
                 ->middleware(['web', 'auth', 'can:update,post']);
+
+            Livewire::component('page-with-reactive-child', PageComponentWithReactiveChild::class);
+            Livewire::component('child-with-reactive', ChildComponentWithReactive::class);
+            Livewire::component('page-with-modelable-child', PageComponentWithModelableChild::class);
+            Livewire::component('child-with-modelable', ChildComponentWithModelable::class);
+
+            Route::get('/page-with-reactive-child/{post}', PageComponentWithReactiveChild::class)
+                ->middleware('web');
+
+            Route::get('/page-with-modelable-child/{post}', PageComponentWithModelableChild::class)
+                ->middleware('web');
         };
     }
     public function test_that_persistent_middleware_is_applied_to_subsequent_livewire_requests()
@@ -277,6 +290,58 @@ JS;
             })
             ->waitForText('response-ready: ')
             ->assertDontSee('Protected Content')
+        ;
+    }
+
+    public function test_child_component_does_not_404_after_parent_deletes_route_bound_model()
+    {
+        // This test relies on "app('router')->subsituteImplicitBindingsUsing()"...
+        if (app()->version() < '10.37.1') {
+            $this->markTestSkipped();
+        }
+
+        Post::truncate();
+        Post::insert([
+            ['id' => 1, 'title' => 'First', 'user_id' => 1],
+            ['id' => 2, 'title' => 'Second', 'user_id' => 2],
+        ]);
+
+        Livewire::visit(Component::class)
+            ->visit('/page-with-reactive-child/1')
+            ->assertSee('test')
+
+            // Delete the route-bound model - without the fix, this would
+            // 404 because PersistentMiddleware tries to resolve the route binding
+            // for the deleted model when processing the child's snapshot
+            ->waitForLivewire()->click('@delete')
+            ->assertSee('test2')
+            ->assertDontSee('404')
+        ;
+    }
+
+    public function test_modelable_child_component_does_not_404_after_parent_deletes_route_bound_model()
+    {
+        // This test relies on "app('router')->subsituteImplicitBindingsUsing()"...
+        if (app()->version() < '10.37.1') {
+            $this->markTestSkipped();
+        }
+
+        Post::truncate();
+        Post::insert([
+            ['id' => 1, 'title' => 'First', 'user_id' => 1],
+            ['id' => 2, 'title' => 'Second', 'user_id' => 2],
+        ]);
+
+        Livewire::visit(Component::class)
+            ->visit('/page-with-modelable-child/1')
+            ->assertSee('test')
+
+            // Delete the route-bound model - without the fix, this would
+            // 404 because PersistentMiddleware tries to resolve the route binding
+            // for the deleted model when processing the child's snapshot
+            ->waitForLivewire()->click('@delete')
+            ->assertSee('test2')
+            ->assertDontSee('404')
         ;
     }
 }
@@ -504,5 +569,83 @@ class IsBanned
         }
 
         return $next($request);
+    }
+}
+
+class PageComponentWithReactiveChild extends BaseComponent
+{
+    public Post $post;
+
+    public $test = 'test';
+
+    public function delete()
+    {
+        $this->post->delete();
+        $this->test = 'test2';
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <livewire:child-with-reactive :$test />
+
+            <button wire:click="delete" dusk="delete">Delete</button>
+        </div>
+        HTML;
+    }
+}
+
+class ChildComponentWithReactive extends BaseComponent
+{
+    #[Reactive]
+    public $test;
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ $test }}
+        </div>
+        HTML;
+    }
+}
+
+class PageComponentWithModelableChild extends BaseComponent
+{
+    public Post $post;
+
+    public $test = 'test';
+
+    public function delete()
+    {
+        $this->post->delete();
+        $this->test = 'test2';
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <livewire:child-with-modelable wire:model="test" />
+
+            <button wire:click="delete" dusk="delete">Delete</button>
+        </div>
+        HTML;
+    }
+}
+
+class ChildComponentWithModelable extends BaseComponent
+{
+    #[Modelable]
+    public $value;
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ $value }}
+        </div>
+        HTML;
     }
 }

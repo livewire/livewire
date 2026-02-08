@@ -469,6 +469,36 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.test.php')));
     }
 
+    public function test_multi_file_component_with_css_when_css_flag_provided()
+    {
+        Artisan::call('make:livewire', ['name' => 'foo', '--mfc' => true, '--css' => true]);
+
+        $this->assertTrue(File::isDirectory($this->livewireComponentsPath('⚡foo')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.css')));
+    }
+
+    public function test_multi_file_component_with_css_when_configured_in_make_command_with()
+    {
+        $this->app['config']->set('livewire.make_command.with.css', true);
+
+        Artisan::call('make:livewire', ['name' => 'foo', '--mfc' => true]);
+
+        $this->assertTrue(File::isDirectory($this->livewireComponentsPath('⚡foo')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.css')));
+    }
+
+    public function test_multi_file_component_without_css_by_default()
+    {
+        Artisan::call('make:livewire', ['name' => 'foo', '--mfc' => true]);
+
+        $this->assertTrue(File::isDirectory($this->livewireComponentsPath('⚡foo')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡foo/foo.css')));
+    }
+
     public function test_multi_file_component_with_both_test_and_js_configured_in_make_command_with()
     {
         $this->app['config']->set('livewire.make_command.with.test', true);
@@ -481,6 +511,22 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.blade.php')));
         $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.test.php')));
         $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.js')));
+    }
+
+    public function test_multi_file_component_with_all_options_configured_in_make_command_with()
+    {
+        $this->app['config']->set('livewire.make_command.with.test', true);
+        $this->app['config']->set('livewire.make_command.with.js', true);
+        $this->app['config']->set('livewire.make_command.with.css', true);
+
+        Artisan::call('make:livewire', ['name' => 'foo', '--mfc' => true]);
+
+        $this->assertTrue(File::isDirectory($this->livewireComponentsPath('⚡foo')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.test.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.js')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.css')));
     }
 
     public function test_converting_single_file_to_multi_file_preserves_test_file()

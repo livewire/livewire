@@ -42,3 +42,11 @@ src/Features/SupportSlots/[UnitTest.php|BrowserTest.php]
 
 Unit: Run `phpunit --testsuite="Unit" [optional test file] [optional test name]`
 Browser: Run `phpunit --testsuite="Browser" [optional test file] [optional test name]`
+
+When running browser tests, use `DUSK_HEADLESS_DISABLED=false` to run Chrome in headless mode so the browser window doesn't pop up:
+
+```bash
+DUSK_HEADLESS_DISABLED=false phpunit --testsuite="Browser" path/to/BrowserTest.php
+```
+
+**IMPORTANT:** Never run the full Livewire browser test suite — it takes too long. Always use `--filter` to run only the specific tests relevant to your changes. The full suite runs in CI.
