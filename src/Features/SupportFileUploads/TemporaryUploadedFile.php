@@ -180,8 +180,8 @@ class TemporaryUploadedFile extends UploadedFile
 
         $newPath = trim($path.'/'.$name, '/');
 
-        // Same disk and no extra options, so we can just move the file.
-        if ($this->disk === $disk && count($options) === 1 && isset($options['disk'])) {
+        // Same disk and no extra options — move instead of copy for performance.
+        if ($this->disk === $disk && empty($options)) {
             Storage::disk($disk)->move($this->path, $newPath);
         } else {
             Storage::disk($disk)->put(
