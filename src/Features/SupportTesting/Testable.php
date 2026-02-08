@@ -365,8 +365,8 @@ class Testable
      */
     function dumpErrors()
     {
-        dump($this->getData(), $this->errors());
-        
+        dump($this->errors());
+
         return $this;
     }
 
@@ -375,7 +375,7 @@ class Testable
      */
     function ddErrors()
     {
-        dd($this->getData(), $this->errors());
+        dd($this->errors());
     }
 
     /**
