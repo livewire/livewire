@@ -1,15 +1,17 @@
 <?php
 
-namespace Livewire\Features\SupportRouting;
+namespace Livewire\Mechanisms\HandleRouting;
 
 use Illuminate\Routing\Route as IlluminateRoute;
 use Illuminate\Support\Facades\Route;
-use Livewire\ComponentHook;
+use Livewire\Mechanisms\Mechanism;
 
-class SupportRouting extends ComponentHook
+class HandleRouting extends Mechanism
 {
-    public static function provide()
+    public function register()
     {
+        parent::register();
+
         Route::macro('livewire', function ($uri, $component): IlluminateRoute {
             if (is_object($component)) {
                 app('livewire')->addComponent($component);
