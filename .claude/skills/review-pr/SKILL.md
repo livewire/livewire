@@ -39,15 +39,11 @@ gh pr checks {number}
 gh api repos/{owner}/{repo}/issues/{number}/reactions
 ```
 
-## Step 4: Checkout locally and merge latest main
+## Step 4: Checkout locally
 
 ```bash
-git checkout main && git pull origin main
 gh pr checkout {number}
-git merge main
 ```
-
-If the merge has conflicts, resolve them before continuing.
 
 ## Step 5: Read and classify
 
@@ -59,27 +55,7 @@ Read through the diff and PR body. Classify the PR:
 - **Docs** - Documentation only
 - **Mixed** - Multiple categories (flag this as a concern)
 
-## Step 6: Think bigger picture — is this solving the right problem?
-
-Before evaluating the PR on its own terms, step back and ask: **does this PR address a symptom or the root cause?**
-
-This is the most important step. A PR might be well-written and correct, but still be the wrong solution. Ask yourself:
-
-1. **Is there a real gap in the experience?** If the PR adds docs/workarounds for something confusing, that confusion is a signal. Don't just accept the docs — ask why the experience is confusing in the first place.
-
-2. **Could a code change eliminate the need for this PR entirely?** If a PR adds documentation explaining a workaround, consider whether a small feature addition would make the workaround unnecessary. A 10-line code change that closes a gap fundamentally is better than 60 lines of docs explaining how to work around it.
-
-3. **Research how others solve this.** Check Alpine.js, SortableJS, Phoenix LiveView, HTMX, or whatever the relevant upstream/peer projects are. If they expose something we don't, that's a signal we should too.
-
-4. **What's the minimal code change that would close the gap?** Don't just identify the problem — sketch the solution. Look at the JS and PHP implementation. Often the information or hook point already exists internally but isn't exposed to the user.
-
-5. **When the answer is a code change, implement it.** Don't just flag it — actually build it if it's small enough. Write the JS/PHP change, update the docs to show the new approach, and write tests. Present the complete solution.
-
-**Example:** A PR adds docs explaining users need separate Livewire components for cross-group sort identity. The right response isn't to fix the docs — it's to ask "why can't we just pass the group identity to the handler?" Then check if the underlying library (SortableJS) already has this info (it does — `evt.from`/`evt.to`), and add a `wire:sort:id` directive that passes it as a third parameter. Problem solved at the root.
-
-Only after this bigger-picture analysis should you proceed to evaluate the PR as-is:
-
-## Step 7: Challenge the contributor's framing
+## Step 6: Challenge the contributor's framing
 
 Don't accept the PR description's framing of the bug or problem at face value. Verify independently:
 
@@ -87,17 +63,19 @@ Don't accept the PR description's framing of the bug or problem at face value. V
 2. **Does the test actually isolate that root cause?** Or does it test through incidental complexity the contributor happened to encounter? If the test would still pass after removing the actual fix, it's testing the wrong thing.
 3. **If the test encodes a wrong mental model, rewrite it.** Strip it to the minimum reproduction that targets the real bug. Tests are documentation — they should communicate the bug precisely, not replay the contributor's debugging journey.
 
-## Step 8: Evaluate the PR
+## Step 7: Evaluate
 
 ### For bug fixes
 
 1. **Has a test?** If not, write one. The test should fail on `main` and pass on the PR branch.
 2. **Test covers the actual fix?** Including edge cases?
-3. **Test isolates root cause?** Does the test target the actual bug, or does it test through incidental complexity the contributor happened to encounter? Strip tests to the minimum reproduction. Tests are documentation — they should communicate the bug precisely.
-4. **Naming quality?** Review all test names, component names, variable names. Contributors often use names that reflect their mental model, not the actual architecture (e.g., calling a child component "parent"). Fix these before merging — they become permanent.
-5. **Unnecessary fixtures/setup?** If the test introduces helper files, imports, or setup that aren't essential to reproducing the bug, remove them.
-6. **Fix is surgical/minimal?** No unrelated changes?
-7. **Regression risk?** Could this break something else?
+3. **Actually verify regression.** Don't just reason about whether the test fails without the fix — prove it. Stash the fix (`git stash -- <fix files>`), rebuild if JS changed (`npm run build`), run the test. If it passes without the fix, the test is not testing the fix. Unstash and rewrite the test. This is non-negotiable for bug fix PRs.
+4. **Test isolates root cause?** Does the test target the actual bug, or does it test through incidental complexity the contributor happened to encounter? Strip tests to the minimum reproduction. Tests are documentation — they should communicate the bug precisely.
+5. **Naming quality?** Review all test names, component names, variable names. Contributors often use names that reflect their mental model, not the actual architecture (e.g., calling a child component "parent"). Fix these before merging — they become permanent.
+6. **Unnecessary fixtures/setup?** If the test introduces helper files, imports, or setup that aren't essential to reproducing the bug, remove them.
+7. **For visual/browser bugs, test observable behavior, not DOM state.** Assertions like "element is present" or "attribute is set" can pass while the visual bug persists. For animation bugs: assert on `document.getAnimations()` state. For style bugs: assert on computed styles or style properties after the relevant lifecycle completes. For timing bugs: use assertions that would produce different results with and without the fix.
+8. **Fix is surgical/minimal?** No unrelated changes?
+9. **Regression risk?** Could this break something else?
 
 ### For features
 
@@ -117,8 +95,9 @@ Don't accept the PR description's framing of the bug or problem at face value. V
 3. **Security?** Extra scrutiny for: synthesizers, hydration, file uploads, `call()`/`update()` hooks, anything touching the request/response lifecycle.
 4. **Built JS assets in diff?** These should NOT be committed. Remove them.
 5. **"No for now" bias.** When in doubt, lean toward not merging. It's easier to add later than remove.
+6. **Async timing fixes are treacherous.** When a PR fixes a bug involving microtask/macrotask timing (Alpine effects, View Transitions API, MutationObserver scheduling): don't trust that the approach works just because the reasoning sounds right. Alpine's effect scheduler uses multi-hop `queueMicrotask` chains — a single `queueMicrotask` or even `setTimeout(0)` may not be enough. Reactive observers (MutationObserver) are often more reliable than trying to "flush" async work. If you can't verify the timing empirically, flag it for discussion.
 
-## Step 9: Run relevant tests only
+## Step 8: Run relevant tests only
 
 **NEVER run the full test suite.** Only run tests the PR adds or touches:
 
@@ -142,7 +121,7 @@ Also check CI status:
 gh pr checks {number}
 ```
 
-## Step 10: Make fixes directly
+## Step 9: Make fixes directly
 
 Fix issues you find. Common fixes:
 
@@ -162,7 +141,7 @@ git commit -m "Review fixes: [brief description]
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 ```
 
-## Step 11: Push to PR branch
+## Step 10: Push to PR branch
 
 Try to push to the contributor's branch:
 
@@ -195,7 +174,7 @@ EOF
 
 6. Comment on the original PR explaining the new PR.
 
-## Step 12: Post verdict comment
+## Step 11: Post verdict comment
 
 Post a structured comment on the PR:
 
@@ -205,7 +184,7 @@ gh pr comment {number} --body "$(cat <<'EOF'
 ## PR Review: #{number} — {title}
 
 **Type**: {Bug fix | Feature | Refactor | Docs | Mixed}
-**Verdict**: {Merge | Superseded | Request changes | Needs discussion | Close}
+**Verdict**: {Merge | Request changes | Needs discussion | Close}
 
 ### Summary
 {1-3 sentence summary of what the PR does and why}
@@ -215,9 +194,6 @@ gh pr comment {number} --body "$(cat <<'EOF'
 
 ### Test Results
 {Which tests ran, pass/fail status, CI status}
-
-### Bigger Picture
-{Did this PR reveal a gap that could be solved at a deeper level? If so, what's the root-cause fix? Did you implement it? Or "No deeper changes needed — this PR addresses the right level."}
 
 ### Code Review
 {Specific feedback with file:line references. What's good, what's concerning.}
@@ -237,7 +213,6 @@ EOF
 ## Verdict guidelines
 
 - **Merge**: Code is correct, tests pass, style is clean, feature is wanted. You've fixed any minor issues.
-- **Superseded**: You identified a root-cause fix and implemented it yourself. The PR exposed a real gap but the solution is different from what was proposed. Thank the contributor for surfacing the issue — their PR was the catalyst. Present your implementation for Caleb to review.
 - **Request changes**: Significant issues you can't fix yourself (architectural problems, missing context, needs author input).
 - **Needs discussion**: Feature scope questions, API design debates, Alpine boundary questions. Tag these for Caleb.
 - **Close**: PR is stale with no response, duplicates existing functionality, or solves a problem that shouldn't be solved. Be kind.
