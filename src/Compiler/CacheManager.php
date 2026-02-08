@@ -116,7 +116,9 @@ class CacheManager
         $this->ensureCacheDirectoryExists();
         File::makeDirectory($this->cacheDirectory . '/classes', 0777, true, true);
 
-        File::put($classPath, $contents);
+        // Use atomic write to prevent race conditions when multiple
+        // concurrent requests try to compile the same component.
+        File::replace($classPath, $contents);
     }
 
     public function writeViewFile(string $sourcePath, string $contents): void
@@ -126,7 +128,7 @@ class CacheManager
         $this->ensureCacheDirectoryExists();
         File::makeDirectory($this->cacheDirectory . '/views', 0777, true, true);
 
-        File::put($viewPath, $contents);
+        File::replace($viewPath, $contents);
 
         $this->mutateFileModificationTime($viewPath);
     }
@@ -138,7 +140,7 @@ class CacheManager
         $this->ensureCacheDirectoryExists();
         File::makeDirectory($this->cacheDirectory . '/scripts', 0777, true, true);
 
-        File::put($scriptPath, $contents);
+        File::replace($scriptPath, $contents);
     }
 
     public function writeStyleFile(string $sourcePath, string $contents): void
@@ -148,7 +150,7 @@ class CacheManager
         $this->ensureCacheDirectoryExists();
         File::makeDirectory($this->cacheDirectory . '/styles', 0777, true, true);
 
-        File::put($stylePath, $contents);
+        File::replace($stylePath, $contents);
     }
 
     public function writeGlobalStyleFile(string $sourcePath, string $contents): void
@@ -158,7 +160,7 @@ class CacheManager
         $this->ensureCacheDirectoryExists();
         File::makeDirectory($this->cacheDirectory . '/styles', 0777, true, true);
 
-        File::put($stylePath, $contents);
+        File::replace($stylePath, $contents);
     }
 
     public function writePlaceholderFile(string $sourcePath, string $contents): void
@@ -168,7 +170,7 @@ class CacheManager
         $this->ensureCacheDirectoryExists();
         File::makeDirectory($this->cacheDirectory . '/placeholders', 0777, true, true);
 
-        File::put($placeholderPath, $contents);
+        File::replace($placeholderPath, $contents);
 
         $this->mutateFileModificationTime($placeholderPath);
     }
@@ -180,7 +182,7 @@ class CacheManager
         $this->ensureCacheDirectoryExists();
         File::makeDirectory($this->cacheDirectory . '/views', 0777, true, true);
 
-        File::put($viewPath, $contents);
+        File::replace($viewPath, $contents);
 
         $this->mutateFileModificationTime($viewPath);
     }
