@@ -25,7 +25,7 @@ class HandleRequests extends Mechanism
             app($this::class)->setUpdateRoute(function ($handle) {
                 return Route::post(EndpointResolver::updatePath(), $handle)
                     ->middleware('web')
-                    ->name('default.livewire.update');
+                    ->name('default-livewire.update');
             });
         }
 
@@ -49,9 +49,7 @@ class HandleRequests extends Mechanism
         // In this case, find the route from the router.
         $route = $this->updateRoute ?? $this->findUpdateRoute();
 
-        return (string) str(
-            route($route->getName(), [], false)
-        )->start('/');
+        return (string) str($route->uri())->start('/');
     }
 
     protected function findUpdateRoute()
@@ -65,7 +63,7 @@ class HandleRequests extends Mechanism
         foreach (Route::getRoutes()->getRoutes() as $route) {
             if (str($route->getName())->endsWith('livewire.update')) {
                 // If it's the default route, save it but keep looking for a custom one
-                if ($route->getName() === 'default.livewire.update') {
+                if ($route->getName() === 'default-livewire.update') {
                     $defaultRoute = $route;
                     continue;
                 }
