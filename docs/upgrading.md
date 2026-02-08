@@ -314,33 +314,18 @@ These changes only affect applications using advanced features or customization.
 
 ### Livewire Asset and Endpoint URL Changes
 
-Livewire v4 asset urls and endpoints were updated to include a unique hash derived from your `APP_KEY`.
+All Livewire URLs now include a unique hash derived from your `APP_KEY`. The prefix changed from `/livewire/` to `/livewire-{hash}/`:
 
-In v3, all assets and update endpoints were prefixed with `/livewire/`. In v4, all assets and endpoints are now prefixed with `/livewire-{hash}/`:
-
-```bash
-#v3
-GET|HEAD   livewire/livewire.min.js
-GET|HEAD   livewire/livewire.min.js.map
-GET|HEAD   livewire/preview-file/{filename}
-POST       livewire/update
-POST       livewire/upload-file
-
-#v4 (example hash "711cadab")
-GET|HEAD   livewire-711cadab/css/{component}.css
-GET|HEAD   livewire-711cadab/css/{component}.global.css
-GET|HEAD   livewire-711cadab/js/{component}.js
-GET|HEAD   livewire-711cadab/livewire.csp.min.js.map
-GET|HEAD   livewire-711cadab/livewire.js
-GET|HEAD   livewire-711cadab/livewire.min.js.map
-GET|HEAD   livewire-711cadab/preview-file/{filename}
-POST       livewire-711cadab/update
-POST       livewire-711cadab/upload-file
+```
+# v3                          # v4
+/livewire/update        →     /livewire-{hash}/update
+/livewire/upload-file   →     /livewire-{hash}/upload-file
+/livewire/livewire.js   →     /livewire-{hash}/livewire.js
 ```
 
-If you are using these URLs directly in your application, middleware, deployment scripts, CDN, or networking firewalls, be aware of the changes. You can also customize these URLs if needed.
+If your firewall rules, CDN config, or middleware reference `/livewire/` paths, update them to account for the new prefix.
 
-[Learn more about endpoint customization →](/docs/4.x/installation#customizing-livewires-update-endpoint)
+[Learn more about customizing Livewire's endpoints →](/docs/4.x/installation#customizing-livewires-update-endpoint)
 
 ### JavaScript deprecations
 
