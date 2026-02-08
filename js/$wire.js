@@ -85,7 +85,10 @@ Alpine.magic('wire', (el, { cleanup }) => {
     // we would want the entangle effect freed if the element was removed from the DOM...
     return new Proxy({}, {
         get(target, property) {
-            if (! component) component = closestComponent(el)
+            if (! component) {
+                if (! el.isConnected) return () => {}
+                component = closestComponent(el)
+            }
 
             if (['$entangle', 'entangle'].includes(property)) {
                 return generateEntangleFunction(component, cleanup)
@@ -95,7 +98,10 @@ Alpine.magic('wire', (el, { cleanup }) => {
         },
 
         set(target, property, value) {
-            if (! component) component = closestComponent(el)
+            if (! component) {
+                if (! el.isConnected) return true
+                component = closestComponent(el)
+            }
 
             component.$wire[property] = value
 
