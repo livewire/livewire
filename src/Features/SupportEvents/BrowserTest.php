@@ -323,20 +323,24 @@ class BrowserTest extends BrowserTestCase
             ->assertConsoleLogHasNoErrors();
     }
 
-    public function test_dispatching_browser_event_after_morphing_element_with_changed_wire_key_does_not_throw_error()
+    public function test_dispatched_event_does_not_throw_when_wire_key_changes_during_morph()
     {
+        // Regression: when a Livewire dispatch triggers an Alpine event chain
+        // that accesses $wire on an element whose wire:key changed during morph,
+        // $wire throws "Could not find Livewire component in DOM tree" because
+        // morph replaced the element before the event chain completes.
         Livewire::visit([
             new class () extends Component {
-                public ?string $mountedAction = 'delete';
+                public ?string $action = 'delete';
 
-                public function callAction(): void
+                public function confirm(): void
                 {
-                    $this->mountedAction = null;
+                    $this->action = null;
 
-                    $this->dispatch('close-modal', id: 'action-modal');
+                    $this->dispatch('action-confirmed');
                 }
 
-                public function unmountAction(): void
+                public function cleanup(): void
                 {
                     //
                 }
@@ -347,30 +351,30 @@ class BrowserTest extends BrowserTestCase
                     <div>
                         <div
                             x-data="{
-                                isOpen: true,
+                                open: true,
                                 close() {
-                                    this.isOpen = false
-                                    this.$refs.modalContainer.dispatchEvent(
-                                        new CustomEvent('modal-closed', { detail: { id: 'action-modal' } })
+                                    this.open = false
+                                    this.$refs.container.dispatchEvent(
+                                        new CustomEvent('closed')
                                     )
                                 },
                             }"
-                            x-on:close-modal.window="if ($event.detail.id === 'action-modal') close()"
+                            x-on:action-confirmed.window="close()"
                         >
-                            <div x-show="isOpen">
+                            <div x-show="open">
                                 <div
-                                    x-ref="modalContainer"
-                                    x-on:modal-closed.stop="$wire.unmountAction()"
-                                    @if($mountedAction)
-                                        wire:key="modal.{{ $mountedAction }}"
+                                    x-ref="container"
+                                    x-on:closed.stop="$wire.cleanup()"
+                                    @if($action)
+                                        wire:key="action.{{ $action }}"
                                     @endif
                                 >
-                                    <button dusk="confirm" wire:click="callAction">Confirm</button>
+                                    <button dusk="confirm" wire:click="confirm">Confirm</button>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- This needs to be here... --}}
+                        {{-- Extra x-data with x-show is required to trigger Alpine scheduling that exposes the race --}}
                         <div x-data="{ show: false }" x-cloak>
                             <div x-show="show"></div>
                         </div>
