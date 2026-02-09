@@ -2,9 +2,7 @@
 
 namespace Livewire\Features\SupportRedirects;
 
-use RuntimeException;
 use function Livewire\store;
-use InvalidArgumentException;
 
 trait HandlesRedirects
 {
@@ -15,8 +13,6 @@ trait HandlesRedirects
         if ($navigate) store($this)->set('redirectUsingNavigate', true);
 
         if ($replace) store($this)->set('redirectReplace', true);
-
-        throw_if($replace && ! $navigate, new InvalidArgumentException('[replace] can only be used when [navigate] is true.'));
 
         $shouldSkipRender = ! config('livewire.render_on_redirect', false);
 
