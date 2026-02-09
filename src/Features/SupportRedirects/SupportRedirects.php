@@ -26,6 +26,7 @@ class SupportRedirects extends ComponentHook
 
         on('flush-state', function () {
             static::$atLeastOneMountedComponentHasRedirected = false;
+            static::$redirectorCacheStack = [];
         });
     }
 

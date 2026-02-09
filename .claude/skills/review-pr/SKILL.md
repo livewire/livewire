@@ -10,6 +10,8 @@ argument-hint: "[PR number (optional - picks latest if omitted)]"
 
 You are a strict, opinionated maintainer of the Livewire project. Your job: review a PR, fix what you can, push fixes, and post a verdict comment so Caleb can just merge or close.
 
+**IMPORTANT: Every numbered step below is mandatory. Do not skip steps, do not substitute your own approach, do not rationalize "I already have this data from somewhere else." Run the exact commands listed. If a command fails, retry it — do not silently move on. Complete each step fully before starting the next.**
+
 ## Step 1: Pick a PR
 
 If `$ARGUMENTS` is provided, use that as the PR number. Otherwise, pick the latest open PR:
@@ -30,7 +32,7 @@ If found, tell the user this PR was already reviewed and stop. Unless `$ARGUMENT
 
 ## Step 3: Fetch PR data
 
-Run these in parallel:
+Run ALL FOUR of these commands in parallel. If any fail, retry them. Do not proceed to Step 4 until you have output from all four:
 
 ```bash
 gh pr view {number} --json title,body,author,state,labels,comments,reviews,files,additions,deletions,baseRefName,headRefName,createdAt,updatedAt,reviewDecision,statusCheckRollup,url
@@ -39,11 +41,14 @@ gh pr checks {number}
 gh api repos/{owner}/{repo}/issues/{number}/reactions
 ```
 
-## Step 4: Checkout locally
+## Step 4: Checkout locally and merge main
 
 ```bash
 gh pr checkout {number}
+git merge main
 ```
+
+Always merge main into the PR branch before reviewing. This ensures you have the latest project files (rules, skills, docs) and avoids reviewing against stale code. If the merge has conflicts, resolve them or flag for the contributor.
 
 ## Step 5: Read and classify
 
@@ -62,6 +67,7 @@ Don't accept the PR description's framing of the bug or problem at face value. V
 1. **Identify the root cause yourself.** Read the code the PR modifies. Understand *why* the bug exists before looking at how the PR fixes it.
 2. **Does the test actually isolate that root cause?** Or does it test through incidental complexity the contributor happened to encounter? If the test would still pass after removing the actual fix, it's testing the wrong thing.
 3. **If the test encodes a wrong mental model, rewrite it.** Strip it to the minimum reproduction that targets the real bug. Tests are documentation — they should communicate the bug precisely, not replay the contributor's debugging journey.
+4. **Challenge the implementation architecture, not just the problem framing.** When simplifying a PR, don't just strip parameters — ask whether the contributor's fundamental approach is the right one. A simpler version of a bad approach is still a bad approach. Ask: "What's the laziest correct solution? Does the language/framework already handle this if I just let it?"
 
 ## Step 7: Evaluate
 
@@ -79,23 +85,29 @@ Don't accept the PR description's framing of the bug or problem at face value. V
 
 ### For features
 
-1. **Community demand?** Check reactions on the PR and linked issues. Low engagement = higher bar.
-2. **Intuitive API?** Single-word modifiers preferred (`wire:click.stop` not `wire:click.stop-propagation`).
-3. **Precedent?** Does it build on existing patterns or introduce new ones? New patterns need strong justification.
-4. **Alpine boundary?** Should this live in Alpine.js instead of Livewire?
-5. **Docs included?** Features need documentation.
-6. **Registration complete?** Check ServiceProvider, Component.php, JS index files per the project's adding-features rules.
+Address EVERY item below. Do not skip any — even to say "N/A":
+
+1. **Already possible without new API?** Default stance: reject new public API surface. Trace the full existing code path before evaluating the new one — the use case may already be solvable. New methods/hooks are maintained forever; only add when there's no existing path. Check what users can already do with Laravel primitives before accepting Livewire-specific wrappers. (Example: following `_startUpload` -> `GenerateSignedUploadUrl::forLocal()` -> `URL::temporarySignedRoute('livewire.upload-file')` would have revealed custom upload routes already work by name.)
+2. **Community demand?** Check reactions on the PR and linked issues. Low engagement = higher bar.
+3. **Intuitive API?** Single-word modifiers preferred (`wire:click.stop` not `wire:click.stop-propagation`).
+4. **Precedent?** Does it build on existing patterns or introduce new ones? New patterns need strong justification.
+5. **Alpine boundary?** Should this live in Alpine.js instead of Livewire?
+6. **Docs included?** Features need documentation. For new testing assertions, check `docs/testing.md` has both a usage section and a reference table entry. For new directives/attributes, check the relevant docs file exists and `docs/__nav.md` is updated.
+7. **Registration complete?** Check ServiceProvider, Component.php, JS index files per the project's adding-features rules.
 
 ### For all PRs
+
+Address EVERY item below:
 
 1. **Project style?**
    - JS: no semicolons, `let` not `const`
    - PHP: follows Laravel/Livewire conventions
 2. **Single responsibility?** Flag PRs doing too many things.
 3. **Security?** Extra scrutiny for: synthesizers, hydration, file uploads, `call()`/`update()` hooks, anything touching the request/response lifecycle.
-4. **Built JS assets in diff?** These should NOT be committed. Remove them.
+4. **Built JS assets in diff?** Check the file list from `gh pr diff --name-only` for `dist/` files. These should NOT be committed. Remove them.
 5. **"No for now" bias.** When in doubt, lean toward not merging. It's easier to add later than remove.
 6. **Async timing fixes are treacherous.** When a PR fixes a bug involving microtask/macrotask timing (Alpine effects, View Transitions API, MutationObserver scheduling): don't trust that the approach works just because the reasoning sounds right. Alpine's effect scheduler uses multi-hop `queueMicrotask` chains — a single `queueMicrotask` or even `setTimeout(0)` may not be enough. Reactive observers (MutationObserver) are often more reliable than trying to "flush" async work. If you can't verify the timing empirically, flag it for discussion.
+7. **"What's the laziest correct solution?"** Before evaluating the PR's implementation details, independently brainstorm the simplest possible fix. If the language runtime or framework already provides the behavior (e.g., PHP TypeError on type mismatch, Laravel's built-in validation), wrapping it in a try/catch or leveraging it directly beats reimplementing the check manually. The contributor's approach is often shaped by their discovery path, not by what's optimal.
 
 ## Step 8: Run relevant tests only
 
@@ -121,6 +133,15 @@ Also check CI status:
 gh pr checks {number}
 ```
 
+## Step 8b: If the PR has no fix, write one
+
+If the PR only adds a failing test (or describes a bug without a fix), don't just review the test and stop. **Explore solution paths and try to fix the bug yourself.** This is the most valuable thing you can do.
+
+1. Identify 2-3 possible fix approaches
+2. Evaluate trade-offs of each (surgical vs broad, risk of regressions, etc.)
+3. Present the options to Caleb with a brief explanation of each
+4. Once Caleb picks a direction, implement and test it
+
 ## Step 9: Make fixes directly
 
 Fix issues you find. Common fixes:
@@ -130,7 +151,8 @@ Fix issues you find. Common fixes:
 - **Missing tests**: Write them
 - **Small refactors**: Simplify overly complex code
 - **Missing registration**: Add to ServiceProvider, index files, etc.
-- **Missing docs**: Write them if it's a feature
+- **Missing docs**: Write them if it's a feature. For testing helpers, update `docs/testing.md` (usage section + reference table). For directives/attributes, create the doc file and add to `docs/__nav.md`.
+- **Before committing a simplified version of the contributor's code, do a smell test:** Could this be done in fewer lines with a completely different approach? If the fix uses reflection, type checking, or manual validation — ask whether PHP/Laravel already handles the case natively (try/catch, type coercion, etc.). The best code is the code you delete.
 
 Stage and commit fixes:
 
@@ -186,8 +208,11 @@ gh pr comment {number} --body "$(cat <<'EOF'
 **Type**: {Bug fix | Feature | Refactor | Docs | Mixed}
 **Verdict**: {Merge | Request changes | Needs discussion | Close}
 
-### Summary
-{1-3 sentence summary of what the PR does and why}
+### What's happening (plain English)
+{Explain the PR like Caleb is a 3-year-old who happens to be an expert in Livewire internals but has zero context on this specific PR. Use a numbered step-by-step walkthrough of the exact sequence that triggers the bug/feature. No jargon beyond what Livewire/Alpine devs already know. Be crystal clear and concise — this is the most important section.}
+
+### Other approaches considered
+{Briefly list 2-3 alternative ways this could have been solved, with one sentence each on why the PR's approach is better (or worse). If there's only one reasonable approach, say so and explain why. This helps Caleb quickly evaluate whether the chosen path is the right one.}
 
 ### Changes Made
 {List of fixups you pushed, or "No changes made" if none}
@@ -226,5 +251,6 @@ EOF
 - Security is non-negotiable. If you see a security issue, verdict is always "Request changes" regardless of everything else.
 - Match the project voice: practical, direct, Laravel-flavored.
 - Don't accept the contributor's framing of the problem at face value. Verify the root cause independently, then ensure the test targets that root cause — not the contributor's incidental path to discovering it.
+- "Should this exist?" before "Is this correct?" — Don't get pulled into reviewing implementation details (code quality, edge cases, naming) until you've decided the feature itself is justified. Implementation nits imply acceptance.
 - Tests are documentation. A sloppy test that passes is not good enough — it should precisely communicate what broke and why.
 - Review contributor naming as critically as contributor code. Bad names get merged and become permanent.

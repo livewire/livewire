@@ -325,6 +325,20 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('The upload failed to upload.', $test->errors()->get('file')[0]);
     }
 
+    public function test_file_upload_error_with_malformed_json_falls_back_to_default_message()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->create('upload.xls', 100);
+
+        $test = Livewire::test(FileUploadComponent::class)
+            ->set('file', $file)
+            ->call('uploadErrorWithMalformedJson', 'file')
+            ->assertHasErrors(['file']);
+
+        $this->assertEquals('The file failed to upload.', $test->errors()->get('file')[0]);
+    }
+
     public function test_image_dimensions_can_be_validated()
     {
         Storage::fake('avatars');
@@ -927,6 +941,51 @@ class UnitTest extends \Tests\TestCase
         Storage::disk('default-disk')->assertExists('images/avatar.jpg');
         Storage::disk('tmp-for-tests')->assertMissing('images/avatar.jpg');
     }
+
+    public function test_same_disk_store_moves_file_instead_of_copying()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $component = Livewire::test(FileUploadSameDiskComponent::class)
+            ->set('photo', $file);
+
+        $tmpFile = $component->viewData('photo');
+        $tmpPath = FileUploadConfiguration::directory().'/'.$tmpFile->getFilename();
+
+        // The temp file exists before storing.
+        Storage::disk('tmp-for-tests')->assertExists($tmpPath);
+
+        $component->call('save');
+
+        // After storing to the same disk, the file was moved (temp file gone).
+        Storage::disk('tmp-for-tests')->assertExists('photos/avatar.jpg');
+        Storage::disk('tmp-for-tests')->assertMissing($tmpPath);
+    }
+
+    public function test_different_disk_store_copies_file()
+    {
+        Storage::fake('tmp-for-tests');
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file);
+
+        $tmpFile = $component->viewData('photo');
+        $tmpPath = FileUploadConfiguration::directory().'/'.$tmpFile->getFilename();
+
+        // The temp file exists before storing.
+        Storage::disk('tmp-for-tests')->assertExists($tmpPath);
+
+        $component->call('upload', 'avatar.jpg');
+
+        // After storing to a different disk, the file was copied (temp file still exists).
+        Storage::disk('avatars')->assertExists('avatar.jpg');
+        Storage::disk('tmp-for-tests')->assertExists($tmpPath);
+    }
 }
 
 class FileUploadToDefaultDiskComponent extends TestComponent
@@ -938,6 +997,18 @@ class FileUploadToDefaultDiskComponent extends TestComponent
     public function save()
     {
         $this->photo->storeAs('images', 'avatar.jpg');
+    }
+}
+
+class FileUploadSameDiskComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    public $photo;
+
+    public function save()
+    {
+        $this->photo->storeAs('photos', 'avatar.jpg', 'tmp-for-tests');
     }
 }
 
@@ -1026,6 +1097,13 @@ class FileUploadComponent extends TestComponent
     public function uploadError($name)
     {
         $this->_uploadErrored($name, null, false);
+    }
+
+    public function uploadErrorWithMalformedJson($name)
+    {
+        // Simulate malformed JSON without 'errors' key
+        $malformedJson = '{"message":"Something went wrong"}';
+        $this->_uploadErrored($name, $malformedJson, false);
     }
 }
 
