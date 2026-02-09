@@ -268,6 +268,43 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeNothingIn('@child.ephemeral', '')
         ;
     }
+
+    public function test_parent_can_commit_while_modelable_child_request_is_in_flight()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <livewire:child wire:model="foo" />
+                    <button wire:click="$refresh" dusk="refresh">refresh</button>
+                </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $value = '';
+
+                public function hydrate()
+                {
+                    usleep(500 * 1000);
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <input type="text" wire:model.blur="value" dusk="input" />
+                </div>
+                HTML; }
+            },
+        ])
+        ->click('@input')
+        ->keys('@input', 'foo')
+        ->clickAtXPath('//body') // Blur the input so the child's commit is sent separately...
+        ->waitForLivewire()->click('@refresh')
+        ->assertConsoleLogHasNoErrors()
+        ;
+    }
 }
 
 class CreatePost extends Form
