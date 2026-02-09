@@ -1,7 +1,6 @@
 import Alpine from 'alpinejs'
 
 // Export all wire:navigate variations for use in other files
-// Export all wire:navigate variations for use in other files
 export let wireNavigateSelectors = [
     '[wire\\:navigate]',
     '[wire\\:navigate\\.hover]',
