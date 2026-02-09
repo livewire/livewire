@@ -300,7 +300,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ])
         ->click('@input')
         ->keys('@input', 'foo')
-        ->clickAtXPath('//body')
+        ->clickAtXPath('//body') // Blur the input so the child's commit is sent separately...
         ->waitForLivewire()->click('@refresh')
         ->assertConsoleLogHasNoErrors()
         ;
