@@ -57,7 +57,7 @@ export async function start() {
     })
 
     Alpine.interceptInit(
-        Alpine.skipDuringClone((el, skip) => {
+        Alpine.skipDuringClone(el => {
             // if there are no "wire:" directives we don't need to process this element any further.
             // This prevents Livewire from causing general slowness for other Alpine elements on the page...
             if (! Array.from(el.attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return

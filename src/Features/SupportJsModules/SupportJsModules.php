@@ -7,9 +7,6 @@ use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
-use function Livewire\on;
-use function Livewire\store;
-
 class SupportJsModules extends ComponentHook
 {
     static function provide()
@@ -41,21 +38,13 @@ class SupportJsModules extends ComponentHook
                 $component.'.js',
             );
         });
-
-        on('mount', function ($component, $params, $key, $parent) {
-            if ($parent && method_exists($component, 'scriptModuleSrc')) {
-                $path = $component->scriptModuleSrc();
-                $hash = crc32(filemtime($path));
-                $name = $component->getName();
-                store($parent)->push('childScriptModules', [$name, $hash]);
-            }
-        });
     }
 
     public function dehydrate($context)
     {
-        // Own script module - only send on mount
-        if ($context->isMounting() && method_exists($this->component, 'scriptModuleSrc')) {
+        if (! $context->isMounting()) return;
+
+        if (method_exists($this->component, 'scriptModuleSrc')) {
             $path = $this->component->scriptModuleSrc();
 
             $filemtime = filemtime($path);
@@ -63,13 +52,6 @@ class SupportJsModules extends ComponentHook
             $hash = crc32($filemtime);
 
             $context->addEffect('scriptModule', $hash);
-        }
-
-        // Child script modules - send whenever children with scripts are added
-        $childModules = store($this->component)->get('childScriptModules', []);
-
-        if (! empty($childModules)) {
-            $context->addEffect('childScriptModules', $childModules);
         }
     }
 }

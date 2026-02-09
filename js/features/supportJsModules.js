@@ -11,22 +11,8 @@ export async function preloadExistingModules() {
 
     let promises = []
 
-    document.querySelectorAll('[wire\\:id]').forEach(el => {
-        let effectsAttr = el.getAttribute('wire:effects')
-
-        if (! effectsAttr) return
-
-        let effects = JSON.parse(effectsAttr)
-
-        if (! effects.scriptModule) return
-
-        let snapshotAttr = el.getAttribute('wire:snapshot')
-
-        if (! snapshotAttr) return
-
-        let snapshot = JSON.parse(snapshotAttr)
-        let name = snapshot.memo.name
-        let path = buildModulePath(name, effects.scriptModule)
+    findModulesInElements(document.querySelectorAll('[wire\\:id]')).forEach(({ name, hash }) => {
+        let path = buildModulePath(name, hash)
 
         promises.push(
             import(/* @vite-ignore */ path).then(module => {
@@ -43,12 +29,43 @@ function buildModulePath(name, hash) {
     return `${getModuleUrl()}/js/${encodedName}.js?v=${hash}`
 }
 
+function findModulesInElements(elements) {
+    let modules = []
+
+    elements.forEach(el => {
+        let effectsAttr = el.getAttribute('wire:effects')
+
+        if (! effectsAttr) return
+
+        let effects = JSON.parse(effectsAttr)
+
+        if (! effects.scriptModule) return
+
+        let snapshotAttr = el.getAttribute('wire:snapshot')
+
+        if (! snapshotAttr) return
+
+        let snapshot = JSON.parse(snapshotAttr)
+
+        modules.push({ name: snapshot.memo.name, hash: effects.scriptModule })
+    })
+
+    return modules
+}
+
+function findModulesInHtml(html) {
+    let temp = document.createElement('div')
+    temp.innerHTML = html
+
+    return findModulesInElements(temp.querySelectorAll('[wire\\:effects]'))
+}
+
 // Intercept messages to pre-load script modules before morph
 interceptMessage(({ message, onSuccess }) => {
     onSuccess(({ payload, onEffect }) => {
         let modulesToLoad = []
 
-        // Own module (for lazy-loaded components - scenario 2)
+        // Own module (for lazy-loaded components)
         if (payload.effects.scriptModule) {
             modulesToLoad.push({
                 name: message.component.name,
@@ -57,9 +74,9 @@ interceptMessage(({ message, onSuccess }) => {
             })
         }
 
-        // Child modules (for dynamically added children - scenario 3)
-        if (payload.effects.childScriptModules) {
-            payload.effects.childScriptModules.forEach(([name, hash]) => {
+        // Child modules (scan response HTML for components with script modules)
+        if (payload.effects.html) {
+            findModulesInHtml(payload.effects.html).forEach(({ name, hash }) => {
                 modulesToLoad.push({ name, hash, isOwn: false })
             })
         }
@@ -76,7 +93,6 @@ interceptMessage(({ message, onSuccess }) => {
                 loadPromises.push(
                     import(/* @vite-ignore */ path).then(module => {
                         preloadedModules.set(path, module)
-                        return { path, module }
                     })
                 )
             }
