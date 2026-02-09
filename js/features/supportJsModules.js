@@ -115,16 +115,3 @@ on('effect', ({ component, effects }) => {
         module.run.call(component.$wire, component.$wire, component.$wire.js)
     }
 })
-
-// Backwards compatibility - no longer needed
-export function hasPendingModule(el) {
-    return false
-}
-
-export function assetIsPendingFor(component) {
-    return false
-}
-
-export function runAfterAssetIsLoadedFor(component, callback) {
-    callback()
-}
