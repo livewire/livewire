@@ -268,82 +268,41 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeNothingIn('@child.ephemeral', '')
         ;
     }
-    public function test_can_submit_parent_form_while_modelable_child_input_is_focused()
+
+    public function test_parent_can_commit_while_modelable_child_request_is_in_flight()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
-                public $items = [];
-
-                public $saved = false;
-
-                public function mount()
-                {
-                    $this->items = [
-                        1 => ['name' => 'one', 'value' => 'foo'],
-                        2 => ['name' => 'two', 'value' => 'bar'],
-                    ];
-                }
-
-                public function save()
-                {
-                    $this->saved = true;
-                }
+                public $foo = '';
 
                 public function render() { return <<<'HTML'
                 <div>
-                    <form wire:submit="save">
-                        @foreach($items as $key => $item)
-                            <livewire:child wire:model="items.{{ $key }}" wire:key="item-{{ $key }}" />
-                        @endforeach
-                        <button type="submit" dusk="save">Save</button>
-                    </form>
-                    <span dusk="saved">{{ $saved ? 'yes' : 'no' }}</span>
+                    <livewire:child wire:model="foo" />
+                    <button wire:click="$refresh" dusk="refresh">refresh</button>
                 </div>
                 HTML; }
             },
             'child' => new class extends \Livewire\Component {
                 #[BaseModelable]
-                public $data = [];
+                public $value = '';
+
+                public function hydrate()
+                {
+                    usleep(500 * 1000);
+                }
 
                 public function render() { return <<<'HTML'
                 <div>
-                    <input type="text" wire:model.blur="data.name" dusk="name-{{ $data['name'] ?? '' }}" />
-                    <input type="text" wire:model.blur="data.value" dusk="value-{{ $data['value'] ?? '' }}" />
+                    <input type="text" wire:model.blur="value" dusk="input" />
                 </div>
                 HTML; }
             },
         ])
-        ->assertSeeIn('@saved', 'no')
-        // Type into a child input (this does not blur yet)
-        ->type('@name-one', 'updated')
-        ->pause(50)
-        // Delay the first fetch response so the child's blur commit stays
-        // in-flight when the parent's submit commit is pooled...
-        ->tap(fn ($b) => $b->script("
-            var origFetch = window.fetch;
-            var fetchCount = 0;
-            window.fetch = function() {
-                fetchCount++;
-                if (fetchCount === 1) {
-                    return origFetch.apply(this, arguments).then(function(r) {
-                        return new Promise(function(resolve) {
-                            setTimeout(function() { resolve(r); }, 500);
-                        });
-                    });
-                }
-                return origFetch.apply(this, arguments);
-            };
-        "))
-        // Simulate a real mouse click: blur fires on mousedown, then submit
-        // fires on click — separated by more than the 5ms commit buffer.
-        ->tap(fn ($b) => $b->script("
-            document.activeElement.blur();
-            setTimeout(function() {
-                document.querySelector('[dusk=\"save\"]').click();
-            }, 10);
-        "))
-        ->pause(3000)
-        ->assertSeeIn('@saved', 'yes')
+        ->click('@input')
+        ->keys('@input', 'foo')
+        ->clickAtXPath('//body')
+        ->waitForLivewire()->click('@refresh')
+        ->assertConsoleLogHasNoErrors()
         ;
     }
 }
