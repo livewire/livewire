@@ -11795,16 +11795,27 @@ import_alpinejs2.default.magic("wire", (el, { cleanup }) => {
   let component;
   return new Proxy({}, {
     get(target, property) {
-      if (!component)
-        component = findComponentByEl(el);
+      if (!component) {
+        try {
+          component = findComponentByEl(el);
+        } catch (e) {
+          return () => {
+          };
+        }
+      }
       if (["$entangle", "entangle"].includes(property)) {
         return generateEntangleFunction(component, cleanup);
       }
       return component.$wire[property];
     },
     set(target, property, value) {
-      if (!component)
-        component = findComponentByEl(el);
+      if (!component) {
+        try {
+          component = findComponentByEl(el);
+        } catch (e) {
+          return true;
+        }
+      }
       component.$wire[property] = value;
       return true;
     }

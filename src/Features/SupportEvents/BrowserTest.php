@@ -326,6 +326,72 @@ class BrowserTest extends BrowserTestCase
             ->assertConsoleLogHasNoErrors();
     }
 
+    public function test_dispatched_event_does_not_throw_when_wire_key_changes_during_morph()
+    {
+        // Regression: when a Livewire dispatch triggers an Alpine event chain
+        // that accesses $wire on an element whose wire:key changed during morph,
+        // $wire throws "Could not find Livewire component in DOM tree" because
+        // morph replaced the element before the event chain completes.
+        Livewire::visit([
+            new class () extends Component {
+                public ?string $action = 'delete';
+
+                public function confirm(): void
+                {
+                    $this->action = null;
+
+                    $this->dispatch('action-confirmed');
+                }
+
+                public function cleanup(): void
+                {
+                    //
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div
+                            x-data="{
+                                open: true,
+                                close() {
+                                    this.open = false
+                                    this.$refs.container.dispatchEvent(
+                                        new CustomEvent('closed')
+                                    )
+                                },
+                            }"
+                            x-on:action-confirmed.window="close()"
+                        >
+                            <div x-show="open">
+                                <div
+                                    x-ref="container"
+                                    x-on:closed.stop="$wire.cleanup()"
+                                    @if($action)
+                                        wire:key="action.{{ $action }}"
+                                    @endif
+                                >
+                                    <button dusk="confirm" wire:click="confirm">Confirm</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Extra x-data with x-show is required to trigger Alpine scheduling that exposes the race --}}
+                        <div x-data="{ show: false }" x-cloak>
+                            <div x-show="show"></div>
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->waitForLivewire()->click('@confirm')
+            ->pause(500)
+            ->assertConsoleLogHasNoErrors();
+    }
+
     public function test_empty_wire_expression_does_not_throw_errors()
     {
         Livewire::visit(new class extends Component {
