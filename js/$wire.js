@@ -86,8 +86,11 @@ Alpine.magic('wire', (el, { cleanup }) => {
     return new Proxy({}, {
         get(target, property) {
             if (! component) {
-                if (! el.isConnected) return () => {}
-                component = closestComponent(el)
+                try {
+                    component = closestComponent(el)
+                } catch (e) {
+                    return () => {}
+                }
             }
 
             if (['$entangle', 'entangle'].includes(property)) {
@@ -99,8 +102,11 @@ Alpine.magic('wire', (el, { cleanup }) => {
 
         set(target, property, value) {
             if (! component) {
-                if (! el.isConnected) return true
-                component = closestComponent(el)
+                try {
+                    component = closestComponent(el)
+                } catch (e) {
+                    return true
+                }
             }
 
             component.$wire[property] = value
