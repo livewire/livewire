@@ -17,6 +17,8 @@ class HandleRequests extends Mechanism
 {
     protected $updateRoute;
 
+    protected $defaultRouteDisabled = false;
+
     function boot()
     {
         // Register the default route immediately (before routes files load)
@@ -97,6 +99,13 @@ class HandleRequests extends Mechanism
         }
 
         $this->updateRoute = $route;
+
+        // When a custom route is registered, disable the default route so
+        // attackers cannot bypass middleware on the custom route by sending
+        // requests directly to the default hashed endpoint.
+        if ($route->getName() !== 'default-livewire.update') {
+            $this->defaultRouteDisabled = true;
+        }
     }
 
     function isLivewireRequest()
@@ -122,6 +131,13 @@ class HandleRequests extends Mechanism
 
     function handleUpdate()
     {
+        // When a custom update route is registered, reject requests that arrive
+        // via the default route. This prevents attackers from bypassing middleware
+        // (e.g. auth, tenant scoping) added to the custom route.
+        if ($this->defaultRouteDisabled && request()->route()?->getName() === 'default-livewire.update') {
+            abort(404);
+        }
+
         // Check payload size limit...
         $maxSize = config('livewire.payload.max_size');
 
