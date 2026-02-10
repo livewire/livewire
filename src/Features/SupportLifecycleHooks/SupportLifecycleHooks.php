@@ -99,9 +99,9 @@ class SupportLifecycleHooks extends ComponentHook
     public function call($methodName, $params, $returnEarly, $metadata)
     {
         $protectedMethods = [
-            'mount*',
-            'boot*',
-            'booted*',
+            'mount',
+            'boot',
+            'booted',
             'exception',
             'hydrate*',
             'dehydrate*',
@@ -111,6 +111,20 @@ class SupportLifecycleHooks extends ComponentHook
             'rendered',
             'scriptSrc',
         ];
+
+        // Also block trait-suffixed lifecycle hooks (e.g. mountWithFileUploads, bootMyTrait)
+        $class = get_class($this->component);
+
+        if (! isset(static::$traitCache[$class])) {
+            static::$traitCache[$class] = class_uses_recursive($this->component);
+        }
+
+        foreach (static::$traitCache[$class] as $trait) {
+            $traitBasename = class_basename($trait);
+            $protectedMethods[] = 'mount'.$traitBasename;
+            $protectedMethods[] = 'boot'.$traitBasename;
+            $protectedMethods[] = 'booted'.$traitBasename;
+        }
 
         throw_if(
             str($methodName)->is($protectedMethods),

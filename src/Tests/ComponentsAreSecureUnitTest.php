@@ -188,20 +188,20 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
     {
         $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
 
-        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
-        $component = app('livewire')->test('lifecycle-target');
+        app('livewire')->component('lifecycle-target-with-trait', LifecycleMethodStubWithTrait::class);
+        $component = app('livewire')->test('lifecycle-target-with-trait');
 
-        $component->runAction('mountMyTrait');
+        $component->runAction('mountStubTrait');
     }
 
     public function test_cannot_call_trait_boot_variant_from_frontend()
     {
         $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
 
-        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
-        $component = app('livewire')->test('lifecycle-target');
+        app('livewire')->component('lifecycle-target-with-trait', LifecycleMethodStubWithTrait::class);
+        $component = app('livewire')->test('lifecycle-target-with-trait');
 
-        $component->runAction('bootMyTrait');
+        $component->runAction('bootStubTrait');
     }
 
     public function test_cannot_call_hydrate_property_variant_from_frontend()
@@ -214,6 +214,18 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $component->runAction('hydratePropertyName');
     }
 
+    public function test_can_call_methods_that_share_lifecycle_prefix_but_are_not_lifecycle_hooks()
+    {
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        // mountAction is a regular user method, not a lifecycle hook.
+        // It should not be blocked despite starting with "mount".
+        $component->runAction('mountAction');
+
+        $this->assertTrue(true);
+    }
+
     public function test_is_lifecycle_method_allows_regular_methods()
     {
         $this->assertFalse(HandleComponents::isLifecycleMethod('save'));
@@ -222,25 +234,52 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $this->assertFalse(HandleComponents::isLifecycleMethod('handleClick'));
     }
 
-    public function test_is_lifecycle_method_blocks_all_lifecycle_prefixes()
+    public function test_is_lifecycle_method_does_not_block_methods_sharing_lifecycle_prefix()
+    {
+        // Without a component, trait-suffixed variants can't be checked,
+        // so only exact names and safe wildcard prefixes are blocked.
+        $this->assertFalse(HandleComponents::isLifecycleMethod('mountAction'));
+        $this->assertFalse(HandleComponents::isLifecycleMethod('mountSomeTrait'));
+        $this->assertFalse(HandleComponents::isLifecycleMethod('bootstrap'));
+        $this->assertFalse(HandleComponents::isLifecycleMethod('bootUp'));
+        $this->assertFalse(HandleComponents::isLifecycleMethod('bootedSomeTrait'));
+    }
+
+    public function test_is_lifecycle_method_blocks_trait_suffixed_variants_with_component()
+    {
+        $component = new LifecycleMethodStubWithTrait;
+
+        $this->assertTrue(HandleComponents::isLifecycleMethod('mountStubTrait', $component));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('bootStubTrait', $component));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('bootedStubTrait', $component));
+
+        // Non-matching trait suffix should not be blocked.
+        $this->assertFalse(HandleComponents::isLifecycleMethod('mountAction', $component));
+        $this->assertFalse(HandleComponents::isLifecycleMethod('mountSomeOtherTrait', $component));
+    }
+
+    public function test_is_lifecycle_method_blocks_exact_lifecycle_names()
     {
         $this->assertTrue(HandleComponents::isLifecycleMethod('mount'));
-        $this->assertTrue(HandleComponents::isLifecycleMethod('mountSomeTrait'));
         $this->assertTrue(HandleComponents::isLifecycleMethod('boot'));
-        $this->assertTrue(HandleComponents::isLifecycleMethod('bootSomeTrait'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('booted'));
         $this->assertTrue(HandleComponents::isLifecycleMethod('hydrate'));
-        $this->assertTrue(HandleComponents::isLifecycleMethod('hydrateProperty'));
-        $this->assertTrue(HandleComponents::isLifecycleMethod('hydrateSomething'));
         $this->assertTrue(HandleComponents::isLifecycleMethod('dehydrate'));
-        $this->assertTrue(HandleComponents::isLifecycleMethod('dehydrateProperty'));
-        $this->assertTrue(HandleComponents::isLifecycleMethod('dehydrateSomething'));
         $this->assertTrue(HandleComponents::isLifecycleMethod('updating'));
-        $this->assertTrue(HandleComponents::isLifecycleMethod('updatingName'));
         $this->assertTrue(HandleComponents::isLifecycleMethod('updated'));
-        $this->assertTrue(HandleComponents::isLifecycleMethod('updatedName'));
         $this->assertTrue(HandleComponents::isLifecycleMethod('rendering'));
         $this->assertTrue(HandleComponents::isLifecycleMethod('rendered'));
         $this->assertTrue(HandleComponents::isLifecycleMethod('exception'));
+    }
+
+    public function test_is_lifecycle_method_blocks_wildcard_property_hooks()
+    {
+        $this->assertTrue(HandleComponents::isLifecycleMethod('hydrateProperty'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('hydrateSomething'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('dehydrateProperty'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('dehydrateSomething'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('updatingName'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('updatedName'));
     }
 
     public function test_is_lifecycle_method_is_case_insensitive()
@@ -286,9 +325,26 @@ class LifecycleMethodStub extends TestComponent
     public function rendering() {}
     public function rendered() {}
     public function exception($e) {}
-    public function mountMyTrait() {}
-    public function bootMyTrait() {}
     public function hydratePropertyName() {}
+
+    public function mountAction() {}
+    public function saveData() {}
+}
+
+trait StubTrait
+{
+    //
+}
+
+class LifecycleMethodStubWithTrait extends TestComponent
+{
+    use StubTrait;
+
+    public $name = 'foo';
+
+    public function mountStubTrait() {}
+    public function bootStubTrait() {}
+    public function bootedStubTrait() {}
 
     public function saveData() {}
 }
