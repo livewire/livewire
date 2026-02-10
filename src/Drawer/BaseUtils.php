@@ -14,6 +14,9 @@ class BaseUtils
     static function isSyntheticTuple($payload) {
         return is_array($payload)
             && count($payload) === 2
+            && array_key_exists(0, $payload)
+            && array_key_exists(1, $payload)
+            && is_array($payload[1])
             && isset($payload[1]['s']);
     }
 
