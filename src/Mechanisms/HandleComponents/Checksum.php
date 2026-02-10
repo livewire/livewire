@@ -8,8 +8,11 @@ use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use function Livewire\trigger;
 
 class Checksum {
-    protected static $maxFailures = 10;
+    protected static $maxFailures = 5;
     protected static $decaySeconds = 600; // 10 minutes
+
+    protected static $maxGlobalFailures = 50;
+    protected static $globalDecaySeconds = 60; // 1 minute
 
     static function verify($snapshot) {
         // Check if this IP is already blocked due to too many failures
@@ -39,6 +42,31 @@ class Checksum {
             return;
         }
 
+        // Check global rate limit first — this catches distributed attacks
+        // using IP rotation where no single IP exceeds its individual limit.
+        $globalKey = static::globalRateLimitKey();
+
+        if (RateLimiter::tooManyAttempts($globalKey, static::$maxGlobalFailures)) {
+            $seconds = RateLimiter::availableIn($globalKey);
+
+            throw new TooManyRequestsHttpException(
+                $seconds,
+                'Too many invalid Livewire requests. Please try again later.'
+            );
+        }
+
+        // Check per-IP rate limit.
+        //
+        // Note: request()->ip() relies on trusted proxy configuration. If your
+        // application sits behind a reverse proxy or load balancer, you must
+        // configure trusted proxies in App\Http\Middleware\TrustProxies (or
+        // the TRUSTED_PROXIES environment variable) so that request()->ip()
+        // returns the real client IP rather than the proxy IP. Without this,
+        // all requests appear to come from the same IP, which will cause
+        // legitimate users to be rate-limited after only a few failures from
+        // any client behind that proxy.
+        //
+        // See: https://laravel.com/docs/requests#configuring-trusted-proxies
         $key = static::rateLimitKey();
 
         if (RateLimiter::tooManyAttempts($key, static::$maxFailures)) {
@@ -56,11 +84,17 @@ class Checksum {
     protected static function recordFailure()
     {
         RateLimiter::hit(static::rateLimitKey(), static::$decaySeconds);
+        RateLimiter::hit(static::globalRateLimitKey(), static::$globalDecaySeconds);
     }
 
     protected static function rateLimitKey(): string
     {
         return 'livewire-checksum-failures:' . request()->ip();
+    }
+
+    protected static function globalRateLimitKey(): string
+    {
+        return 'livewire-checksum-failures:global';
     }
 
     static function generate($snapshot) {
