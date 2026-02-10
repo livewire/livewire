@@ -91,6 +91,14 @@ class HandleRequests extends Mechanism
     {
         $route = $callback([self::class, 'handleUpdate']);
 
+        // Ensure the route includes the `web` middleware group.
+        // Without it, CSRF protection is lost entirely on the update endpoint.
+        // Note: we use middleware() (not gatherMiddleware()) to avoid polluting
+        // the route's computed middleware cache before it's fully configured.
+        if (! in_array('web', $route->middleware())) {
+            $route->middleware('web');
+        }
+
         // Append `livewire.update` to the existing name, if any.
         if (! str($route->getName())->endsWith('livewire.update')) {
             $route->name('livewire.update');
