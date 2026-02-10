@@ -13,6 +13,9 @@ class UnitTest extends TestCase
     #[DataProvider('malformedRequestPayloads')]
     public function test_malformed_request_payload_returns_404($payload): void
     {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
         $response = $this->withHeaders(['X-Livewire' => 'true'])
             ->postJson(EndpointResolver::updatePath(), $payload);
 
@@ -37,6 +40,9 @@ class UnitTest extends TestCase
     #[DataProvider('malformedSnapshots')]
     public function test_malformed_snapshot_returns_404($snapshot): void
     {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
         $response = $this->withHeaders(['X-Livewire' => 'true'])
             ->postJson(EndpointResolver::updatePath(), ['components' => [
                 ['snapshot' => $snapshot, 'updates' => [], 'calls' => []],
@@ -60,6 +66,9 @@ class UnitTest extends TestCase
     #[DataProvider('malformedCalls')]
     public function test_malformed_calls_returns_404($calls): void
     {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
         $snapshot = json_encode(['data' => [], 'memo' => ['id' => 'abc', 'name' => 'foo'], 'checksum' => 'hash']);
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
@@ -82,6 +91,9 @@ class UnitTest extends TestCase
 
     public function test_bad_checksum_returns_419(): void
     {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
         $testable = Livewire::test(new class extends TestComponent {});
 
         $snapshot = json_encode([
@@ -100,6 +112,9 @@ class UnitTest extends TestCase
 
     public function test_valid_request_returns_200(): void
     {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
         $testable = Livewire::test(new class extends TestComponent {});
         $snapshotJson = json_encode($testable->snapshot);
 
