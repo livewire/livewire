@@ -385,3 +385,121 @@ This checksum is then used on the next network request to verify that the snapsh
 If Livewire finds a checksum mismatch, it will throw a `CorruptComponentPayloadException` and the request will fail.
 
 This protects against any form of malicious tampering that would otherwise result in granting users the ability to execute or modify unrelated code.
+
+## Protecting your APP_KEY
+
+Livewire's snapshot checksums are signed using your application's `APP_KEY`. If an attacker gains access to your `APP_KEY`, they can forge valid checksums and craft malicious payloads — potentially achieving **remote code execution** on your server.
+
+This was demonstrated in [CVE-2025-54068](https://github.com/livewire/livewire/security/advisories/GHSA-29cq-5w36-x7w3), where a leaked `APP_KEY` combined with Livewire's hydration system enabled full server compromise.
+
+> [!warning] APP_KEY exposure is critical
+> A leaked `APP_KEY` is not just a session-hijacking risk — it can lead to remote code execution through Livewire's component hydration. Treat your `APP_KEY` as you would a database password or private key.
+
+To protect your `APP_KEY`:
+
+- **Never commit it to version control.** Ensure `.env` is in your `.gitignore` and audit your repository history for accidental exposure.
+- **Rotate it immediately if exposed.** If your `APP_KEY` has ever been committed to a public repository, leaked in logs, or exposed through a `.env` file accessible via the web, rotate it immediately. Generate a new key with `php artisan key:generate` and invalidate all existing sessions.
+- **Restrict access in production.** Only infrastructure engineers who manage deployments should have access to production environment variables. Use your hosting provider's secrets management (e.g., environment variables in Forge, Vapor, or your CI/CD pipeline) rather than `.env` files on disk.
+- **Audit third-party packages.** Be cautious of packages that log, transmit, or expose configuration values — a package that dumps `config('app.key')` to a log file or error reporting service could inadvertently leak your key.
+
+## Custom route security
+
+When you customise Livewire's update endpoint using `Livewire::setUpdateRoute()`, keep the following in mind:
+
+### Use unpredictable paths
+
+By default, Livewire uses a hash-based endpoint (`/livewire-{hash}/update`) that varies per installation. This makes it harder for automated scanners to locate the endpoint.
+
+If you override this with a custom route, **avoid using predictable paths** like `/livewire/update` — this is the well-known v3 default path that exploitation tools specifically target.
+
+Instead, use Livewire's built-in hash:
+
+```php
+use Livewire\Livewire;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+
+Livewire::setUpdateRoute(function ($handle) {
+    return Route::post(EndpointResolver::updatePath(), $handle)
+        ->middleware(['web', 'auth']);
+});
+```
+
+This preserves the scanner resistance of the default endpoint while allowing you to add custom middleware.
+
+### Always include the `web` middleware
+
+Livewire's default route is registered within the `web` middleware group, which provides CSRF protection via Laravel's `VerifyCsrfToken` middleware. If your custom route doesn't include `web`, **CSRF protection is lost entirely** and attackers may be able to submit forged requests to your components.
+
+Always include `->middleware('web')` (or a middleware group that includes it) on your custom route.
+
+## Monitoring for attacks
+
+Livewire rate-limits checksum failures to slow down brute-force attacks on the update endpoint. However, any checksum failure is unusual — legitimate Livewire requests should never produce one unless a user's session has expired.
+
+Repeated checksum failures from the same IP address are a strong indicator that someone is probing or attempting to exploit the endpoint.
+
+You can listen for checksum failures using Livewire's `checksum.fail` hook and forward them to your monitoring or logging system:
+
+```php
+use Livewire\Livewire;
+
+Livewire::listen('checksum.fail', function ($checksum, $expected, $snapshot) {
+    Log::warning('Livewire checksum failure', [
+        'ip' => request()->ip(),
+        'user_agent' => request()->userAgent(),
+        'component' => $snapshot['memo']['name'] ?? 'unknown',
+    ]);
+});
+```
+
+> [!tip] Set up alerts
+> Consider setting up alerts in your monitoring system (e.g., Sentry, Datadog, or Laravel Telescope) for checksum failure patterns. A burst of failures from a single IP or targeting a specific component warrants investigation.
+
+### Trusted proxies
+
+If your application is behind a reverse proxy or load balancer, ensure you have [trusted proxies](https://laravel.com/docs/requests#configuring-trusted-proxies) configured correctly. Without this, `request()->ip()` may return the proxy's IP address rather than the client's real IP, undermining both rate limiting and monitoring.
+
+## Strict property types
+
+Declaring strict types on your component properties provides an additional layer of defence against payload manipulation. When a property has a strict type declaration (e.g., `int`, `string`, `bool`, or an enum), PHP will reject values that don't match the expected type — preventing attackers from substituting unexpected data structures.
+
+For example, consider the difference between:
+
+```php
+// Loosely typed — accepts any value PHP can coerce:
+public $quantity;
+
+// Strictly typed — rejects non-integer values:
+public int $quantity = 0;
+```
+
+A loosely-typed property can be set to an array, an object, or any other value that might trigger unexpected behaviour during processing. A strictly-typed property will throw a `TypeError` if anything other than the declared type is provided.
+
+> [!info] Type strictness as a security boundary
+> During the analysis of [CVE-2025-54068](https://github.com/livewire/livewire/security/advisories/GHSA-29cq-5w36-x7w3), security researchers noted that strictly-typed properties were **not exploitable** — the attack relied on properties that accepted arbitrary types. Strict type declarations effectively closed the exploitation path for those properties.
+
+**Recommendations:**
+
+- **Declare types on all public properties.** Use `int`, `string`, `float`, `bool`, typed arrays, enums, or model types — never leave a public property untyped.
+- **Use enums for constrained values.** If a property should only accept specific values (e.g., a status or category), use a [backed enum](https://www.php.net/manual/en/language.enumerations.backed.php) instead of a plain string.
+- **Combine with `#[Locked]`.** Properties that should never be modified from the frontend should use both a strict type and the `#[Locked]` attribute for defence in depth.
+
+```php
+<?php
+
+use App\Enums\Status;
+use Livewire\Component;
+use Livewire\Attributes\Locked;
+
+class UpdateOrder extends Component
+{
+    #[Locked]
+    public int $order_id;
+
+    public string $note = '';
+
+    public Status $status;
+
+    // ...
+}
+```
