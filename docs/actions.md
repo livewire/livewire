@@ -550,6 +550,23 @@ You can call JavaScript actions directly from Alpine using the `$wire` object. F
 <button x-on:click="$wire.$js.bookmark()">Bookmark</button>
 ```
 
+> [!warning] Calling JavaScript actions inside Alpine for-loop
+> When using a JavaScript action inside Alpine for-loop, make sure to call it from alpine
+> ```blade
+> <template x-for="user in $wire.users" :key="user.id">
+>   <div>
+>     /.../
+>     <button x-on:click="$wire.$js.addUser(user)"></button>
+>   </div>
+> </template>
+> <script>
+>     this.$js.addUser = (user) => { /* ... */ }
+> </script>
+> ```
+> This will make sure the User is avalible as an object in `$js` function
+
+
+
 ### Calling from PHP
 
 JavaScript actions can also be called using the `js()` method from PHP:
