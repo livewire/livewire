@@ -1,7 +1,16 @@
 // This errors object has the most common methods from \Illuminate\Support\MessageBag class on the backend...
+import Alpine from 'alpinejs'
+
 export function getErrorsObject(component) {
+    if (! component.__errorsVersion) {
+        component.__errorsVersion = Alpine.reactive({ v: 0 })
+    }
+
+    let version = component.__errorsVersion
+
     return {
         messages() {
+            version.v
             return component.snapshot.memo.errors
         },
 
@@ -50,6 +59,7 @@ export function getErrorsObject(component) {
         },
 
         get(key) {
+            version.v
             return component.snapshot.memo.errors[key] || []
         },
 
@@ -73,6 +83,16 @@ export function getErrorsObject(component) {
             return Object.values(this.messages()).reduce((total, array) => {
                 return total + array.length;
             }, 0);
+        },
+
+        clear(field = null) {
+            if (field === null) {
+                component.snapshot.memo.errors = {}
+            } else {
+                delete component.snapshot.memo.errors[field]
+            }
+
+            version.v++
         },
     }
 }
