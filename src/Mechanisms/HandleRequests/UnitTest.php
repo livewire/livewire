@@ -1,12 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
+use Tests\TestComponent;
 
 class UnitTest extends TestCase
 {
@@ -82,11 +82,11 @@ class UnitTest extends TestCase
 
     public function test_bad_checksum_returns_419(): void
     {
-        Livewire::component('schema-test', SchemaValidationTestComponent::class);
+        $testable = Livewire::test(new class extends TestComponent {});
 
         $snapshot = json_encode([
             'data' => [],
-            'memo' => ['id' => 'abc', 'name' => 'schema-test'],
+            'memo' => ['id' => 'abc', 'name' => $testable->snapshot['memo']['name']],
             'checksum' => 'invalid-checksum-value',
         ]);
 
@@ -100,9 +100,7 @@ class UnitTest extends TestCase
 
     public function test_valid_request_returns_200(): void
     {
-        Livewire::component('schema-test', SchemaValidationTestComponent::class);
-
-        $testable = Livewire::test(SchemaValidationTestComponent::class);
+        $testable = Livewire::test(new class extends TestComponent {});
         $snapshotJson = json_encode($testable->snapshot);
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
@@ -152,9 +150,7 @@ class UnitTest extends TestCase
             return 'catch-all';
         })->where('all', '.*');
 
-        Livewire::component('schema-test', SchemaValidationTestComponent::class);
-
-        $testable = Livewire::test(SchemaValidationTestComponent::class);
+        $testable = Livewire::test(new class extends TestComponent {});
         $snapshotJson = json_encode($testable->snapshot);
 
         // Livewire's update route should still be matched, not the catch-all
@@ -208,13 +204,5 @@ class UnitTest extends TestCase
         $uri = $handleRequests->getUpdateUri();
 
         $this->assertEquals(EndpointResolver::updatePath(), $uri);
-    }
-}
-
-class SchemaValidationTestComponent extends Component
-{
-    public function render()
-    {
-        return '<div></div>';
     }
 }
