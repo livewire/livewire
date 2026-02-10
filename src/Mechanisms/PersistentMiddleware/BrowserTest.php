@@ -28,6 +28,14 @@ class BrowserTest extends BrowserTestCase
         $app['config']->set('auth.providers.users.model', User::class);
     }
 
+    public function tearDown(): void
+    {
+        User::deleteSushiCache();
+        Post::deleteSushiCache();
+
+        parent::tearDown();
+    }
+
     protected function resolveApplicationHttpKernel($app)
     {
         $app->singleton(\Illuminate\Contracts\Http\Kernel::class, HttpKernel::class);
@@ -525,9 +533,24 @@ class BlockListedMiddleware
     }
 }
 
+trait DeletesSushiCache
+{
+    public static function deleteSushiCache(): void
+    {
+        $cachePath = (new self)->sushiCachePath();
+
+        if (!file_exists($cachePath)) {
+            return;
+        }
+
+        unlink($cachePath);
+    }
+}
+
 class User extends AuthUser
 {
     use Sushi;
+    use DeletesSushiCache;
 
     protected $fillable = ['banned'];
 
@@ -557,6 +580,7 @@ class User extends AuthUser
 class Post extends Model
 {
     use Sushi;
+    use DeletesSushiCache;
 
     public function user()
     {
