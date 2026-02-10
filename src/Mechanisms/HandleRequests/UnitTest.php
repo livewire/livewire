@@ -147,15 +147,17 @@ class UnitTest extends TestCase
 
     public function test_catch_all_route_does_not_intercept_livewire_update_requests(): void
     {
-        Livewire::component('schema-test', SchemaValidationTestComponent::class);
-
+        // Register a catch-all route (simulating what happens in routes files)
         Route::any('{all?}', function () {
             return 'catch-all';
         })->where('all', '.*');
 
+        Livewire::component('schema-test', SchemaValidationTestComponent::class);
+
         $testable = Livewire::test(SchemaValidationTestComponent::class);
         $snapshotJson = json_encode($testable->snapshot);
 
+        // Livewire's update route should still be matched, not the catch-all
         $response = $this->withHeaders(['X-Livewire' => 'true'])
             ->postJson(EndpointResolver::updatePath(), ['components' => [
                 ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => []],
