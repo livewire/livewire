@@ -448,6 +448,8 @@ class HandleComponents extends Mechanism
         $finishes = [];
 
         foreach ($updates as $path => $value) {
+            $this->rejectSyntheticTuplesInUpdateValue($value);
+
             $value = $this->hydrateForUpdate($data, $path, $value, $context);
 
             // We only want to run "updated" hooks after all properties have
@@ -523,6 +525,30 @@ class HandleComponents extends Mechanism
         }
 
         return $value;
+    }
+
+    protected function rejectSyntheticTuplesInUpdateValue($value)
+    {
+        if (! is_array($value)) return;
+
+        if (Utils::isSyntheticTuple($value) && $this->isRegisteredSynthesizerKey($value[1]['s'])) {
+            throw new CorruptComponentPayloadException;
+        }
+
+        foreach ($value as $child) {
+            $this->rejectSyntheticTuplesInUpdateValue($child);
+        }
+    }
+
+    protected function isRegisteredSynthesizerKey($key)
+    {
+        foreach ($this->propertySynthesizers as $synth) {
+            if ($synth::getKey() === $key) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected function getMetaForPath($raw, $path)

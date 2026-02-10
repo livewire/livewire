@@ -91,11 +91,80 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         // If it worked, then an exception will be thrown that will fail the test.
         $component->runAction('someMethod');
     }
+
+    public function test_synthetic_tuples_with_collection_synth_key_are_rejected_in_updates()
+    {
+        $this->expectException(CorruptComponentPayloadException::class);
+
+        app('livewire')->component('security-target', SecurityTargetStub::class);
+        $component = app('livewire')->test('security-target');
+
+        // Simulate an attacker injecting a synthetic tuple with a CollectionSynth key
+        // into the updates field — this is the attack vector from CVE-2025-54068.
+        $component->set('publicProperty', ['malicious_data', ['s' => 'clctn']]);
+    }
+
+    public function test_synthetic_tuples_with_model_synth_key_are_rejected_in_updates()
+    {
+        $this->expectException(CorruptComponentPayloadException::class);
+
+        app('livewire')->component('security-target', SecurityTargetStub::class);
+        $component = app('livewire')->test('security-target');
+
+        $component->set('publicProperty', ['malicious_data', ['s' => 'mdl']]);
+    }
+
+    public function test_synthetic_tuples_with_form_synth_key_are_rejected_in_updates()
+    {
+        $this->expectException(CorruptComponentPayloadException::class);
+
+        app('livewire')->component('security-target', SecurityTargetStub::class);
+        $component = app('livewire')->test('security-target');
+
+        $component->set('publicProperty', ['malicious_data', ['s' => 'form']]);
+    }
+
+    public function test_nested_synthetic_tuples_are_rejected_in_updates()
+    {
+        $this->expectException(CorruptComponentPayloadException::class);
+
+        app('livewire')->component('security-target', SecurityTargetStub::class);
+        $component = app('livewire')->test('security-target');
+
+        // Synthetic tuple nested inside an outer array.
+        $component->set('items', [
+            'safe_value',
+            ['malicious_data', ['s' => 'clctn']],
+        ]);
+    }
+
+    public function test_two_element_arrays_with_non_synthesizer_s_key_are_allowed_in_updates()
+    {
+        app('livewire')->component('security-target', SecurityTargetStub::class);
+        $component = app('livewire')->test('security-target');
+
+        // A 2-element array where [1] has an 's' key but it doesn't match
+        // any registered synthesiser key — this should NOT be rejected.
+        $component->set('items', ['foo', ['s' => 'not-a-synth-key']]);
+
+        $this->assertEquals(['foo', ['s' => 'not-a-synth-key']], $component->get('items'));
+    }
+
+    public function test_normal_array_updates_are_not_affected_by_synthetic_tuple_check()
+    {
+        app('livewire')->component('security-target', SecurityTargetStub::class);
+        $component = app('livewire')->test('security-target');
+
+        $component->set('items', ['one', 'two', 'three']);
+
+        $this->assertEquals(['one', 'two', 'three'], $component->get('items'));
+    }
 }
 
 class SecurityTargetStub extends TestComponent
 {
     public $publicProperty = 'foo';
+    public $items = [];
     protected $protectedProperty = 'bar';
 
     public function publicMethod()
