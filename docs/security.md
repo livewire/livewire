@@ -385,3 +385,24 @@ This checksum is then used on the next network request to verify that the snapsh
 If Livewire finds a checksum mismatch, it will throw a `CorruptComponentPayloadException` and the request will fail.
 
 This protects against any form of malicious tampering that would otherwise result in granting users the ability to execute or modify unrelated code.
+
+## Hashed update endpoint
+
+Livewire uses a hashed URL path for its update endpoint (e.g. `/livewire-a1b2c3d4e5f67890/update`) instead of a predictable path like `/livewire/update`. The hash is derived from your application's `APP_KEY`, making it unique per installation.
+
+This hashed endpoint is designed as **scanner resistance** — it protects against blind automated scanners and exploitation tools that target known Livewire paths without rendering the page. If a scanner sends requests to `/livewire/update`, they will receive a 404 because that path doesn't exist.
+
+> [!warning] The hashed endpoint is not a security boundary
+> The hash is present in every page response — it appears in the `data-update-uri` attribute on Livewire's script tag and in the JavaScript asset URL. Any attacker who can view a single page of your application can read the hash directly from the HTML source.
+>
+> The hash protects against:
+> - Automated scanners that don't render JavaScript or parse HTML
+> - Mass-targeting tools using hardcoded paths across many sites
+>
+> The hash does **not** protect against:
+> - An attacker who can view any page of your application
+> - Targeted attacks where the attacker visits your site first
+>
+> Additionally, the hash is derived from `APP_KEY` — if your `APP_KEY` is leaked, an attacker can compute the endpoint hash offline. However, a leaked `APP_KEY` is a far more serious problem on its own, as it compromises all encryption and signed data in your application.
+
+Your actual security boundaries are Livewire's [snapshot checksums](#snapshot-checksums), [CSRF protection](#middleware), and proper [authorisation of actions and properties](#authorizing-action-parameters) in your component code.

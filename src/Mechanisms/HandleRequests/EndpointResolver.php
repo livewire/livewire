@@ -12,7 +12,7 @@ class EndpointResolver
      */
     public static function prefix(): string
     {
-        $hash = substr(hash('sha256', config('app.key') . 'livewire-endpoint'), 0, 8);
+        $hash = substr(hash('sha256', config('app.key') . 'livewire-endpoint'), 0, 16);
 
         return '/livewire-' . $hash;
     }
