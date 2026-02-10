@@ -99,12 +99,16 @@ class SupportLifecycleHooks extends ComponentHook
     public function call($methodName, $params, $returnEarly, $metadata)
     {
         $protectedMethods = [
-            'mount',
+            'mount*',
+            'boot*',
+            'booted*',
             'exception',
             'hydrate*',
             'dehydrate*',
             'updating*',
             'updated*',
+            'rendering',
+            'rendered',
             'scriptSrc',
         ];
 

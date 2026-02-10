@@ -633,6 +633,14 @@ class HandleComponents extends Mechanism
             // @todo: put this in a better place:
             $methods[] = '__dispatch';
 
+            // Block lifecycle methods from being called via the frontend.
+            // These are defined on user subclasses so they pass the
+            // getPublicMethodsDefinedBySubClass filter, but they should
+            // never be invocable via $wire — they are internal hooks.
+            if (static::isLifecycleMethod($method)) {
+                throw new MethodNotFoundException($method);
+            }
+
             if (! in_array($method, $methods)) {
                 throw new MethodNotFoundException($method);
             }
@@ -650,6 +658,31 @@ class HandleComponents extends Mechanism
         }
 
         $componentContext->addEffect('returns', $returns);
+    }
+
+    public static function isLifecycleMethod(string $method): bool
+    {
+        $blockedPrefixes = [
+            'mount',
+            'boot',
+            'hydrate',
+            'dehydrate',
+            'updating',
+            'updated',
+            'rendering',
+            'rendered',
+            'exception',
+        ];
+
+        $lower = strtolower($method);
+
+        foreach ($blockedPrefixes as $prefix) {
+            if (str_starts_with($lower, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function findSynth($keyOrTarget, $component): ?Synth

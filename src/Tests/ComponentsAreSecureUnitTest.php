@@ -2,7 +2,9 @@
 
 namespace Livewire\Tests;
 
+use Livewire\Features\SupportLifecycleHooks\DirectlyCallingLifecycleHooksNotAllowedException;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
+use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MethodNotFoundException;
 use Tests\TestComponent;
@@ -91,6 +93,162 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         // If it worked, then an exception will be thrown that will fail the test.
         $component->runAction('someMethod');
     }
+
+    public function test_cannot_call_mount_from_frontend()
+    {
+        $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
+
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        $component->runAction('mount');
+    }
+
+    public function test_cannot_call_boot_from_frontend()
+    {
+        $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
+
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        $component->runAction('boot');
+    }
+
+    public function test_cannot_call_hydrate_from_frontend()
+    {
+        $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
+
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        $component->runAction('hydrate');
+    }
+
+    public function test_cannot_call_dehydrate_from_frontend()
+    {
+        $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
+
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        $component->runAction('dehydrate');
+    }
+
+    public function test_cannot_call_updating_hook_from_frontend()
+    {
+        $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
+
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        $component->runAction('updatingName');
+    }
+
+    public function test_cannot_call_updated_hook_from_frontend()
+    {
+        $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
+
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        $component->runAction('updatedName');
+    }
+
+    public function test_cannot_call_rendering_from_frontend()
+    {
+        $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
+
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        $component->runAction('rendering');
+    }
+
+    public function test_cannot_call_rendered_from_frontend()
+    {
+        $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
+
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        $component->runAction('rendered');
+    }
+
+    public function test_cannot_call_exception_from_frontend()
+    {
+        $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
+
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        $component->runAction('exception');
+    }
+
+    public function test_cannot_call_trait_mount_variant_from_frontend()
+    {
+        $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
+
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        $component->runAction('mountMyTrait');
+    }
+
+    public function test_cannot_call_trait_boot_variant_from_frontend()
+    {
+        $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
+
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        $component->runAction('bootMyTrait');
+    }
+
+    public function test_cannot_call_hydrate_property_variant_from_frontend()
+    {
+        $this->expectException(DirectlyCallingLifecycleHooksNotAllowedException::class);
+
+        app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
+        $component = app('livewire')->test('lifecycle-target');
+
+        $component->runAction('hydratePropertyName');
+    }
+
+    public function test_is_lifecycle_method_allows_regular_methods()
+    {
+        $this->assertFalse(HandleComponents::isLifecycleMethod('save'));
+        $this->assertFalse(HandleComponents::isLifecycleMethod('delete'));
+        $this->assertFalse(HandleComponents::isLifecycleMethod('submit'));
+        $this->assertFalse(HandleComponents::isLifecycleMethod('handleClick'));
+    }
+
+    public function test_is_lifecycle_method_blocks_all_lifecycle_prefixes()
+    {
+        $this->assertTrue(HandleComponents::isLifecycleMethod('mount'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('mountSomeTrait'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('boot'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('bootSomeTrait'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('hydrate'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('hydrateProperty'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('hydrateSomething'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('dehydrate'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('dehydrateProperty'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('dehydrateSomething'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('updating'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('updatingName'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('updated'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('updatedName'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('rendering'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('rendered'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('exception'));
+    }
+
+    public function test_is_lifecycle_method_is_case_insensitive()
+    {
+        $this->assertTrue(HandleComponents::isLifecycleMethod('Mount'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('BOOT'));
+        $this->assertTrue(HandleComponents::isLifecycleMethod('Hydrate'));
+    }
 }
 
 class SecurityTargetStub extends TestComponent
@@ -113,4 +271,24 @@ class UnsafeComponentStub extends TestComponent
     {
         throw new \Exception('Should not be able to acess me!');
     }
+}
+
+class LifecycleMethodStub extends TestComponent
+{
+    public $name = 'foo';
+
+    public function mount() {}
+    public function boot() {}
+    public function hydrate() {}
+    public function dehydrate() {}
+    public function updatingName() {}
+    public function updatedName() {}
+    public function rendering() {}
+    public function rendered() {}
+    public function exception($e) {}
+    public function mountMyTrait() {}
+    public function bootMyTrait() {}
+    public function hydratePropertyName() {}
+
+    public function saveData() {}
 }
