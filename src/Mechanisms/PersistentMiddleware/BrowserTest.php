@@ -83,14 +83,31 @@ class BrowserTest extends BrowserTestCase
             Livewire::component('child-with-reactive', ChildComponentWithReactive::class);
             Livewire::component('page-with-modelable-child', PageComponentWithModelableChild::class);
             Livewire::component('child-with-modelable', ChildComponentWithModelable::class);
+            Livewire::component('nested-with-route-model-binding', NestedWithRouteModelBinding::class);
 
             Route::get('/page-with-reactive-child/{post}', PageComponentWithReactiveChild::class)
                 ->middleware('web');
 
             Route::get('/page-with-modelable-child/{post}', PageComponentWithModelableChild::class)
                 ->middleware('web');
+
+            Route::model('todo', TodoList::class);
+            Route::get('/with-route-model-binding/{todo}', ComponentWithRouteModelBinding::class)
+                ->middleware('web');
         };
     }
+
+    public function test_route_model_binding_does_not_404_on_subsequent_requests()
+    {
+        $this->browse(function ($browser) {
+            $browser->visit('/with-route-model-binding/1')
+                ->assertSeeIn('@name', 'Todo List 1')
+                ->waitForLivewire()->click('@refresh')
+                ->assertSeeIn('@name', 'Todo List 1')
+                ->screenshot('route-model-binding-does-not-404-on-subsequent-requests');
+        });
+    }
+
     public function test_that_persistent_middleware_is_applied_to_subsequent_livewire_requests()
     {
         // @todo: Copy implementation from V2 for persistent middleware and ensure localisation and subdirectory hosting are supported. https://github.com/livewire/livewire/pull/5490
@@ -645,6 +662,57 @@ class ChildComponentWithModelable extends BaseComponent
         return <<<'HTML'
         <div>
             {{ $value }}
+        </div>
+        HTML;
+    }
+}
+
+class TodoList extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'name' => 'Todo List 1'],
+    ];
+}
+
+class ComponentWithRouteModelBinding extends BaseComponent
+{
+    public $name;
+
+    public function mount(TodoList $todo)
+    {
+        $this->name = $todo->name;
+    }
+
+    public function refresh()
+    {
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <span dusk="name">{{ $name }}</span>
+            <button wire:click="refresh" dusk="refresh">Refresh</button>
+
+            <livewire:nested-with-route-model-binding lazy />
+        </div>
+        HTML;
+    }
+}
+
+class NestedWithRouteModelBinding extends BaseComponent
+{
+    public function refresh()
+    {
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <button wire:click="refresh" dusk="nested-refresh">Nested Refresh</button>
         </div>
         HTML;
     }
