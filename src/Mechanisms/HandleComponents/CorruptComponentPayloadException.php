@@ -26,6 +26,8 @@ class CorruptComponentPayloadException extends \Exception
      */
     public function render($request)
     {
+        if (config('app.debug')) return false;
+
         return response('', 419);
     }
 }

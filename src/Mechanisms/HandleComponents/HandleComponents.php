@@ -199,8 +199,27 @@ class HandleComponents extends Mechanism
 
     public function update($snapshot, $updates, $calls)
     {
-        if (! is_array($snapshot) || ! isset($snapshot['data'], $snapshot['memo'])) {
-            throw new \InvalidArgumentException('Invalid Livewire snapshot');
+        if (! is_array($snapshot)
+            || ! is_array($snapshot['data'] ?? null)
+            || ! is_array($snapshot['memo'] ?? null)
+            || ! is_string($snapshot['checksum'] ?? null)
+            || ! is_string($snapshot['memo']['id'] ?? null)
+            || ! is_string($snapshot['memo']['name'] ?? null)
+        ) {
+            if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire snapshot structure: expected [data], [memo], [checksum], [memo.id], and [memo.name].');
+
+            abort(404);
+        }
+
+        foreach ($calls as $call) {
+            if (! is_array($call)
+                || ! is_string($call['method'] ?? null)
+                || ! is_array($call['params'] ?? null)
+            ) {
+                if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire call structure: each call must contain [method] (string) and [params] (array).');
+
+                abort(404);
+            }
         }
 
         $data = $snapshot['data'];
