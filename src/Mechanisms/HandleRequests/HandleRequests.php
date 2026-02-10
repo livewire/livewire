@@ -133,23 +133,50 @@ class HandleRequests extends Mechanism
             }
         }
 
-        $requestPayload = request(key: 'components', default: []);
+        $components = request('components');
+
+        // Request-level schema validation: `components` must be a non-empty array,
+        // and each element must contain `snapshot` (string), `updates` (array), `calls` (array).
+        // The legitimate JS client always sends a well-formed payload, so any request
+        // failing these checks did not originate from the Livewire frontend.
+        if (! is_array($components) || empty($components)) {
+            abort(404);
+        }
+
+        foreach ($components as $component) {
+            if (! is_array($component)
+                || ! is_string($component['snapshot'] ?? null)
+                || ! is_array($component['updates'] ?? null)
+                || ! is_array($component['calls'] ?? null)
+            ) {
+                abort(404);
+            }
+        }
 
         // Check max components limit...
         $maxComponents = config('livewire.payload.max_components');
 
-        if ($maxComponents !== null && count($requestPayload) > $maxComponents) {
-            throw new TooManyComponentsException(count($requestPayload), $maxComponents);
+        if ($maxComponents !== null && count($components) > $maxComponents) {
+            throw new TooManyComponentsException(count($components), $maxComponents);
         }
 
-        $finish = trigger('request', $requestPayload);
+        $finish = trigger('request', $components);
 
-        $requestPayload = $finish($requestPayload);
+        $requestPayload = $finish($components);
 
         $componentResponses = [];
 
         foreach ($requestPayload as $componentPayload) {
             $snapshot = json_decode($componentPayload['snapshot'], associative: true);
+
+            // Component-level schema validation: the decoded snapshot must contain
+            // the expected structure. Calls must each have `method` and `params`.
+            if (! $this->isValidSnapshot($snapshot)
+                || ! $this->isValidCalls($componentPayload['calls'])
+            ) {
+                abort(404);
+            }
+
             $updates = $componentPayload['updates'];
             $calls = $componentPayload['calls'];
 
@@ -186,5 +213,31 @@ class HandleRequests extends Mechanism
         }
 
         return $payload;
+    }
+
+    protected function isValidSnapshot($snapshot): bool
+    {
+        if (! is_array($snapshot)) return false;
+        if (! is_array($snapshot['data'] ?? null)) return false;
+        if (! is_array($snapshot['memo'] ?? null)) return false;
+        if (! is_string($snapshot['checksum'] ?? null)) return false;
+        if (! is_string($snapshot['memo']['id'] ?? null)) return false;
+        if (! is_string($snapshot['memo']['name'] ?? null)) return false;
+
+        return true;
+    }
+
+    protected function isValidCalls(array $calls): bool
+    {
+        foreach ($calls as $call) {
+            if (! is_array($call)
+                || ! is_string($call['method'] ?? null)
+                || ! is_array($call['params'] ?? null)
+            ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
