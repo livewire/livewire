@@ -325,6 +325,22 @@ All Livewire URLs now include a unique hash derived from your `APP_KEY`. The pre
 
 If your firewall rules, CDN config, or middleware reference `/livewire/` paths, update them to account for the new prefix.
 
+If you're using `Livewire::setUpdateRoute()` with a hardcoded path, update it to use `EndpointResolver::updatePath()` to preserve the hash-based prefix:
+
+```php
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+
+// Before (v3)
+Livewire::setUpdateRoute(function ($handle) {
+    return Route::post('/custom/livewire/update', $handle);
+});
+
+// After (v4)
+Livewire::setUpdateRoute(function ($handle) {
+    return Route::post('/custom' . EndpointResolver::updatePath(), $handle);
+});
+```
+
 [Learn more about customizing Livewire's endpoints →](/docs/4.x/installation#customizing-livewires-update-endpoint)
 
 ### JavaScript deprecations
