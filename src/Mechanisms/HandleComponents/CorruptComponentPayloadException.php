@@ -16,14 +16,6 @@ class CorruptComponentPayloadException extends \Exception
         );
     }
 
-    /**
-     * Render the exception as an HTTP response.
-     *
-     * Returns 419 ("Page Expired") — the JS client already handles this status
-     * with a "page expired, refresh?" prompt, which is the correct UX for stale
-     * snapshots (expired session, rotated key, stale tab). A generic body avoids
-     * leaking any internal details to attackers.
-     */
     public function render($request)
     {
         if (config('app.debug')) return false;
