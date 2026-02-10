@@ -33,7 +33,7 @@ class SubsequentRender extends Render
 
         [$response, $componentInstance, $componentView] = $this->extractComponentAndBladeView(function () use ($uri, $payload, $cookies) {
             return $this->requestBroker->temporarilyDisableExceptionHandlingAndMiddleware(function ($requestBroker) use ($uri, $payload, $cookies) {
-                return $requestBroker->addHeaders(['X-Livewire' => true])->call('POST', $uri, $payload, $cookies);
+                return $requestBroker->addHeaders(['X-Livewire' => true, 'Content-Type' => 'application/json'])->call('POST', $uri, [], $cookies, [], [], json_encode($payload));
             });
         });
 

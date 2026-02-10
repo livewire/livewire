@@ -273,15 +273,16 @@ class UnitTest extends \Tests\TestCase
         Article::resolveConnection()->flushQueryLog();
 
         // POST to the update endpoint to trigger an update request
-        $this->post(app('livewire')->getUpdateUri(), [
-            'components' => [
-                [
-                    'snapshot' => $encodedSnapshot,
-                    'calls' => [['method' => '$refresh', 'params' => [], 'path' => '']],
-                    'updates' => [],
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(app('livewire')->getUpdateUri(), [
+                'components' => [
+                    [
+                        'snapshot' => $encodedSnapshot,
+                        'calls' => [['method' => '$refresh', 'params' => [], 'path' => '']],
+                        'updates' => [],
+                    ],
                 ],
-            ],
-        ])->assertOk();
+            ])->assertOk();
 
         // Count queries to the articles table — should only be one, not two
         $queryLog = Article::resolveConnection()->getQueryLog();

@@ -55,15 +55,16 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         app('router')->setRoutes($runningCollection);
 
         // Hit update endpoint, including PersistentMiddleware
-        $response = $this->post(EndpointResolver::updatePath(), [
-            'components' => [
-                [
-                    'calls' => [],
-                    'updates' => [],
-                    'snapshot' => $snapshot
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), [
+                'components' => [
+                    [
+                        'calls' => [],
+                        'updates' => [],
+                        'snapshot' => $snapshot
+                    ]
                 ]
-            ]
-        ]);
+            ]);
         $response->assertStatus(200);
         $response->assertJsonPath('components.0.snapshot', $snapshot);
     }
