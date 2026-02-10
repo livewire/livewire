@@ -18,6 +18,12 @@ class CustomUpdateRouteUnitTest extends TestCase
 
     public function test_custom_route_is_used_for_url_generation(): void
     {
+        // Both default and custom routes exist (with different names to avoid collision)
+        $livewireUpdateRoutes = collect(Route::getRoutes()->getRoutes())->filter(function ($route) {
+            return str($route->getName())->endsWith('livewire.update');
+        });
+
+        $this->assertCount(2, $livewireUpdateRoutes);
         $this->assertEquals('/custom/livewire/update', Livewire::getUpdateUri());
     }
 
