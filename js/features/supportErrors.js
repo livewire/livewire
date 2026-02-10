@@ -2,11 +2,7 @@
 import Alpine from 'alpinejs'
 
 export function getErrorsObject(component) {
-    if (! component.__errorsVersion) {
-        component.__errorsVersion = Alpine.reactive({ v: 0 })
-    }
-
-    let version = component.__errorsVersion
+    let version = component.__errorsVersion ??= Alpine.reactive({ v: 0 })
 
     return {
         messages() {
@@ -59,8 +55,7 @@ export function getErrorsObject(component) {
         },
 
         get(key) {
-            version.v
-            return component.snapshot.memo.errors[key] || []
+            return this.messages()[key] || []
         },
 
         all() {
