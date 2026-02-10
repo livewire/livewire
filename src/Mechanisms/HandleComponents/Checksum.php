@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\HandleComponents;
 
 use Illuminate\Support\Facades\RateLimiter;
+use Livewire\Events\ChecksumFailure;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 use function Livewire\trigger;
@@ -25,6 +26,8 @@ class Checksum {
             trigger('checksum.fail', $checksum, $comparitor, $snapshot);
 
             static::recordFailure();
+
+            static::fireFailureEvent($snapshot);
 
             throw new CorruptComponentPayloadException;
         }
@@ -56,6 +59,17 @@ class Checksum {
     protected static function recordFailure()
     {
         RateLimiter::hit(static::rateLimitKey(), static::$decaySeconds);
+    }
+
+    protected static function fireFailureEvent($snapshot)
+    {
+        $request = request();
+
+        event(new ChecksumFailure(
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent() ?? '',
+            componentName: $snapshot['memo']['name'] ?? null,
+        ));
     }
 
     protected static function rateLimitKey(): string
