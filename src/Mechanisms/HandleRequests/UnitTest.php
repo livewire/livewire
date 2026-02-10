@@ -164,6 +164,7 @@ class UnitTest extends TestCase
             ]]);
 
         $response->assertOk();
+        $this->assertArrayHasKey('components', $response->json());
     }
 
     public function test_get_update_uri_works_when_update_route_property_is_null(): void
