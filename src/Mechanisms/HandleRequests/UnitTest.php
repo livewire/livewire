@@ -1,114 +1,42 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\Mechanisms\HandleComponents\Checksum;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class UnitTest extends TestCase
 {
-    public function test_missing_components_returns_404(): void
+    #[DataProvider('malformedRequestPayloads')]
+    public function test_malformed_request_payload_returns_404($payload): void
     {
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), []);
+            ->postJson(EndpointResolver::updatePath(), $payload);
 
         $response->assertNotFound();
     }
 
-    public function test_empty_components_array_returns_404(): void
+    public static function malformedRequestPayloads()
     {
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => []]);
-
-        $response->assertNotFound();
+        return [
+            'missing components' => [[]],
+            'empty components' => [['components' => []]],
+            'non-array components' => [['components' => 'not-an-array']],
+            'missing snapshot' => [['components' => [['updates' => [], 'calls' => []]]]],
+            'non-string snapshot' => [['components' => [['snapshot' => 123, 'updates' => [], 'calls' => []]]]],
+            'missing updates' => [['components' => [['snapshot' => '{}', 'calls' => []]]]],
+            'missing calls' => [['components' => [['snapshot' => '{}', 'updates' => []]]]],
+            'non-array updates' => [['components' => [['snapshot' => '{}', 'updates' => 'bad', 'calls' => []]]]],
+            'non-array calls' => [['components' => [['snapshot' => '{}', 'updates' => [], 'calls' => 'bad']]]],
+        ];
     }
 
-    public function test_non_array_components_returns_404(): void
+    #[DataProvider('malformedSnapshots')]
+    public function test_malformed_snapshot_returns_404($snapshot): void
     {
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => 'not-an-array']);
-
-        $response->assertNotFound();
-    }
-
-    public function test_component_missing_snapshot_returns_404(): void
-    {
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['updates' => [], 'calls' => []],
-            ]]);
-
-        $response->assertNotFound();
-    }
-
-    public function test_component_with_non_string_snapshot_returns_404(): void
-    {
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => 123, 'updates' => [], 'calls' => []],
-            ]]);
-
-        $response->assertNotFound();
-    }
-
-    public function test_component_missing_updates_returns_404(): void
-    {
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => '{}', 'calls' => []],
-            ]]);
-
-        $response->assertNotFound();
-    }
-
-    public function test_component_missing_calls_returns_404(): void
-    {
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => '{}', 'updates' => []],
-            ]]);
-
-        $response->assertNotFound();
-    }
-
-    public function test_component_with_non_array_updates_returns_404(): void
-    {
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => '{}', 'updates' => 'bad', 'calls' => []],
-            ]]);
-
-        $response->assertNotFound();
-    }
-
-    public function test_component_with_non_array_calls_returns_404(): void
-    {
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => '{}', 'updates' => [], 'calls' => 'bad'],
-            ]]);
-
-        $response->assertNotFound();
-    }
-
-    public function test_snapshot_decoding_to_null_returns_404(): void
-    {
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => 'not-valid-json', 'updates' => [], 'calls' => []],
-            ]]);
-
-        $response->assertNotFound();
-    }
-
-    public function test_decoded_snapshot_missing_data_returns_404(): void
-    {
-        $snapshot = json_encode(['memo' => ['id' => 'abc', 'name' => 'foo'], 'checksum' => 'hash']);
-
         $response = $this->withHeaders(['X-Livewire' => 'true'])
             ->postJson(EndpointResolver::updatePath(), ['components' => [
                 ['snapshot' => $snapshot, 'updates' => [], 'calls' => []],
@@ -117,108 +45,39 @@ class UnitTest extends TestCase
         $response->assertNotFound();
     }
 
-    public function test_decoded_snapshot_missing_memo_returns_404(): void
+    public static function malformedSnapshots()
     {
-        $snapshot = json_encode(['data' => [], 'checksum' => 'hash']);
-
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => $snapshot, 'updates' => [], 'calls' => []],
-            ]]);
-
-        $response->assertNotFound();
+        return [
+            'invalid json' => ['not-valid-json'],
+            'missing data' => [json_encode(['memo' => ['id' => 'abc', 'name' => 'foo'], 'checksum' => 'hash'])],
+            'missing memo' => [json_encode(['data' => [], 'checksum' => 'hash'])],
+            'missing checksum' => [json_encode(['data' => [], 'memo' => ['id' => 'abc', 'name' => 'foo']])],
+            'missing memo.id' => [json_encode(['data' => [], 'memo' => ['name' => 'foo'], 'checksum' => 'hash'])],
+            'missing memo.name' => [json_encode(['data' => [], 'memo' => ['id' => 'abc'], 'checksum' => 'hash'])],
+        ];
     }
 
-    public function test_decoded_snapshot_missing_checksum_returns_404(): void
-    {
-        $snapshot = json_encode(['data' => [], 'memo' => ['id' => 'abc', 'name' => 'foo']]);
-
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => $snapshot, 'updates' => [], 'calls' => []],
-            ]]);
-
-        $response->assertNotFound();
-    }
-
-    public function test_decoded_snapshot_memo_missing_id_returns_404(): void
-    {
-        $snapshot = json_encode(['data' => [], 'memo' => ['name' => 'foo'], 'checksum' => 'hash']);
-
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => $snapshot, 'updates' => [], 'calls' => []],
-            ]]);
-
-        $response->assertNotFound();
-    }
-
-    public function test_decoded_snapshot_memo_missing_name_returns_404(): void
-    {
-        $snapshot = json_encode(['data' => [], 'memo' => ['id' => 'abc'], 'checksum' => 'hash']);
-
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => $snapshot, 'updates' => [], 'calls' => []],
-            ]]);
-
-        $response->assertNotFound();
-    }
-
-    public function test_call_missing_method_returns_404(): void
+    #[DataProvider('malformedCalls')]
+    public function test_malformed_calls_returns_404($calls): void
     {
         $snapshot = json_encode(['data' => [], 'memo' => ['id' => 'abc', 'name' => 'foo'], 'checksum' => 'hash']);
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
             ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => $snapshot, 'updates' => [], 'calls' => [
-                    ['params' => []],
-                ]],
+                ['snapshot' => $snapshot, 'updates' => [], 'calls' => $calls],
             ]]);
 
         $response->assertNotFound();
     }
 
-    public function test_call_missing_params_returns_404(): void
+    public static function malformedCalls()
     {
-        $snapshot = json_encode(['data' => [], 'memo' => ['id' => 'abc', 'name' => 'foo'], 'checksum' => 'hash']);
-
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => $snapshot, 'updates' => [], 'calls' => [
-                    ['method' => 'doSomething'],
-                ]],
-            ]]);
-
-        $response->assertNotFound();
-    }
-
-    public function test_call_with_non_string_method_returns_404(): void
-    {
-        $snapshot = json_encode(['data' => [], 'memo' => ['id' => 'abc', 'name' => 'foo'], 'checksum' => 'hash']);
-
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => $snapshot, 'updates' => [], 'calls' => [
-                    ['method' => 123, 'params' => []],
-                ]],
-            ]]);
-
-        $response->assertNotFound();
-    }
-
-    public function test_call_with_non_array_params_returns_404(): void
-    {
-        $snapshot = json_encode(['data' => [], 'memo' => ['id' => 'abc', 'name' => 'foo'], 'checksum' => 'hash']);
-
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => $snapshot, 'updates' => [], 'calls' => [
-                    ['method' => 'doSomething', 'params' => 'bad'],
-                ]],
-            ]]);
-
-        $response->assertNotFound();
+        return [
+            'missing method' => [[['params' => []]]],
+            'missing params' => [[['method' => 'doSomething']]],
+            'non-string method' => [[['method' => 123, 'params' => []]]],
+            'non-array params' => [[['method' => 'doSomething', 'params' => 'bad']]],
+        ];
     }
 
     public function test_bad_checksum_returns_419(): void
