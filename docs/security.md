@@ -366,16 +366,13 @@ use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 Livewire::setUpdateRoute(function ($handle) {
 	return Route::post(EndpointResolver::updatePath(), $handle)
-        ->middleware(['web', App\Http\Middleware\LocalizeViewPaths::class]);
+        ->middleware(App\Http\Middleware\LocalizeViewPaths::class);
 });
 ```
 
 Any Livewire AJAX/fetch requests made to the server will use the above endpoint and apply the `LocalizeViewPaths` middleware before handling the component update.
 
-> [!warning] Preserve the hashed path and `web` middleware
-> Use `EndpointResolver::updatePath()` to keep the hash-based path that protects against automated scanners. Avoid hardcoding predictable paths like `/livewire/update`. Always include the `web` middleware to ensure CSRF protection remains active.
-
-Learn more about [customising the update route on the Installation page](https://livewire.laravel.com/docs/installation#configuring-livewires-update-endpoint).
+Learn more about [customizing the update route on the Installation page](https://livewire.laravel.com/docs/installation#configuring-livewires-update-endpoint).
 
 ## Snapshot checksums
 
