@@ -118,32 +118,30 @@ Livewire.start()
 
 ## Customizing Livewire's update endpoint
 
-**When you need this:** If your application uses route prefixes for localization (like `/en/`, `/fr/`) or multi-tenancy (like `/tenant-1/`, `/tenant-2/`), you may need to customize Livewire's update endpoint to match your routing structure.
+**When you need this:** If your application uses route prefixes for localisation (like `/en/`, `/fr/`) or multi-tenancy (like `/tenant-1/`, `/tenant-2/`), or you need to apply additional middleware to all Livewire requests.
 
-By default, Livewire sends component updates to a hash-based endpoint like `/livewire-{hash}/update`, where `{hash}` is derived from your application's `APP_KEY`. To customize this, register your own route in a service provider (typically `App\Providers\AppServiceProvider`):
+By default, Livewire sends component updates to a hash-based endpoint like `/livewire-{hash}/update`, where `{hash}` is derived from your application's `APP_KEY`. This unique-per-installation path makes it harder to target Livewire applications with automated scanners.
+
+To customise this, register your own route in a service provider (typically `App\Providers\AppServiceProvider`):
 
 ```php
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function boot()
     {
         Livewire::setUpdateRoute(function ($handle) {
-            return Route::post('/custom/livewire/update', $handle);
+            return Route::post(EndpointResolver::updatePath(), $handle)
+                ->middleware(['web', 'auth']);
         });
     }
 }
 ```
 
-You can also add middleware to the update route:
-
-```php
-Livewire::setUpdateRoute(function ($handle) {
-    return Route::post('/custom/livewire/update', $handle)
-        ->middleware(['web', 'auth']);
-});
-```
+> [!warning] Use `EndpointResolver::updatePath()` for the route path
+> Avoid using predictable paths like `/livewire/update` or `/custom/livewire/update` — these are well-known to automated scanning tools. Use `EndpointResolver::updatePath()` to preserve the hash-based path while adding your own middleware or route group configuration. Always include the `web` middleware to ensure CSRF protection remains active.
 
 ## Customizing the JavaScript asset URL
 

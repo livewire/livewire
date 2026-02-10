@@ -362,15 +362,20 @@ If a Livewire component is loaded on a page that uses the `EnsureUserHasRole` mi
 Alternatively, if you wish to apply specific middleware to every single Livewire update network request, you can do so by registering your own Livewire update route with any middleware you wish:
 
 ```php
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+
 Livewire::setUpdateRoute(function ($handle) {
-	return Route::post('/livewire/update', $handle)
-        ->middleware(App\Http\Middleware\LocalizeViewPaths::class);
+	return Route::post(EndpointResolver::updatePath(), $handle)
+        ->middleware(['web', App\Http\Middleware\LocalizeViewPaths::class]);
 });
 ```
 
 Any Livewire AJAX/fetch requests made to the server will use the above endpoint and apply the `LocalizeViewPaths` middleware before handling the component update.
 
-Learn more about [customizing the update route on the Installation page](https://livewire.laravel.com/docs/installation#configuring-livewires-update-endpoint).
+> [!warning] Preserve the hashed path and `web` middleware
+> Use `EndpointResolver::updatePath()` to keep the hash-based path that protects against automated scanners. Avoid hardcoding predictable paths like `/livewire/update`. Always include the `web` middleware to ensure CSRF protection remains active.
+
+Learn more about [customising the update route on the Installation page](https://livewire.laravel.com/docs/installation#configuring-livewires-update-endpoint).
 
 ## Snapshot checksums
 
