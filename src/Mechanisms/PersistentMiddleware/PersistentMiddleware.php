@@ -156,7 +156,7 @@ class PersistentMiddleware extends Mechanism
         // run are available for subsequent child components on the same route,
         // preventing re-resolution of deleted models (which would 404).
         if (isset($this->cachedRoutes[$cacheKey])) {
-            $route = clone $this->cachedRoutes[$cacheKey];
+            $route = $this->cachedRoutes[$cacheKey];
             $request->setRouteResolver(fn() => $route);
 
             return $route;
@@ -169,7 +169,7 @@ class PersistentMiddleware extends Mechanism
             return null;
         }
 
-        $this->cachedRoutes[$cacheKey] = clone $route;
+        $this->cachedRoutes[$cacheKey] = $route;
 
         return $route;
     }
