@@ -25,6 +25,10 @@ class CollectionSynth extends ArraySynth {
     }
 
     function hydrate($value, $meta, $hydrateChild) {
+        if (! is_a($meta['class'], Collection::class, true)) {
+            throw new \Exception("Livewire: Class [{$meta['class']}] is not a valid Collection type.");
+        }
+
         foreach ($value as $key => $child) {
             $value[$key] = $hydrateChild($key, $child);
         }
