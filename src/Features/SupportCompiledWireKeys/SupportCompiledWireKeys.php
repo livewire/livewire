@@ -53,8 +53,8 @@ class SupportCompiledWireKeys extends ComponentHook
         preg_match_all('/(?<=\s)wire:key\s*=\s*(?:"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"|\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\')/', $cleanedContents, $keys);
 
         foreach ($keys[0] as $index => $key) {
-            $escapedKey = str_replace("'", "\'", $keys[1][$index]);
-            $prefix = "<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processElementKey('{$escapedKey}', get_defined_vars()); ?>";
+            $keyExpression = static::compileKeyExpression($keys[1][$index]);
+            $prefix = "<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::\$currentLoop['key'] = {$keyExpression}; ?>";
             $contents = str_replace($key, $prefix . $key, $contents);
         }
 
@@ -100,18 +100,29 @@ class SupportCompiledWireKeys extends ComponentHook
         static::$currentLoop = array_pop(static::$loopStack);
     }
 
-    public static function processElementKey($keyString, $data)
+    public static function compileKeyExpression($keyString)
     {
-        // If the key string matches an existing view name, return it as-is.
-        // This prevents Blade::render() from incorrectly rendering a view
-        // when the user just wants a literal string key like "account".
-        if (view()->exists($keyString)) {
-            $key = $keyString;
-        } else {
-            $key = Blade::render($keyString, $data);
-        }
+        // Compile Blade echo statements into PHP string concatenation
+        // (mirrors Laravel's ComponentTagCompiler::compileAttributeEchos approach)...
+        $value = Blade::compileEchos($keyString);
 
-        static::$currentLoop['key'] = $key;
+        // Escape single quotes only outside of PHP blocks...
+        $value = collect(token_get_all('<'.'?php ?'.'>'.$value))
+            ->slice(2)
+            ->map(function ($token) {
+                if (! is_array($token)) {
+                    return $token;
+                }
+
+                return $token[0] === T_INLINE_HTML
+                    ? str_replace("'", "\\'", $token[1])
+                    : $token[1];
+            })->implode('');
+
+        $value = str_replace('<'.'?php echo ', "'.", $value);
+        $value = str_replace('; ?'.'>', ".'", $value);
+
+        return "'".$value."'";
     }
 
     public static function processComponentKey($component)
