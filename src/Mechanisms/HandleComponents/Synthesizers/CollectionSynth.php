@@ -25,7 +25,7 @@ class CollectionSynth extends ArraySynth {
     }
 
     function hydrate($value, $meta, $hydrateChild) {
-        if (! is_a($meta['class'], Collection::class, true)) {
+        if (! isset($meta['class']) || ! is_a($meta['class'], Collection::class, true)) {
             throw new \Exception("Livewire: Class [{$meta['class']}] is not a valid Collection type.");
         }
 
