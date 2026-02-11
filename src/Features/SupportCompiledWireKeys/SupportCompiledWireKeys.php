@@ -102,11 +102,22 @@ class SupportCompiledWireKeys extends ComponentHook
 
     public static function compileKeyExpression($keyString)
     {
-        $value = str_replace("'", "\\'", $keyString);
-
         // Compile Blade echo statements into PHP string concatenation
-        // This mirrors Laravel's ComponentTagCompiler::compileAttributeEchos approach...
-        $value = Blade::compileEchos($value);
+        // (mirrors Laravel's ComponentTagCompiler::compileAttributeEchos approach)...
+        $value = Blade::compileEchos($keyString);
+
+        // Escape single quotes only outside of PHP blocks...
+        $value = collect(token_get_all('<'.'?php ?'.'>'.$value))
+            ->slice(2)
+            ->map(function ($token) {
+                if (! is_array($token)) {
+                    return $token;
+                }
+
+                return $token[0] === T_INLINE_HTML
+                    ? str_replace("'", "\\'", $token[1])
+                    : $token[1];
+            })->implode('');
 
         $value = str_replace('<'.'?php echo ', "'.", $value);
         $value = str_replace('; ?'.'>', ".'", $value);
