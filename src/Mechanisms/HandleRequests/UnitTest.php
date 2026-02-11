@@ -98,7 +98,11 @@ class UnitTest extends TestCase
 
         $snapshot = json_encode([
             'data' => [],
-            'memo' => ['id' => 'abc', 'name' => $testable->snapshot['memo']['name']],
+            'memo' => [
+                'id' => 'abc',
+                'name' => $testable->snapshot['memo']['name'],
+                'release' => $testable->snapshot['memo']['release'],
+            ],
             'checksum' => 'invalid-checksum-value',
         ]);
 
