@@ -740,6 +740,50 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    function test_wire_model_sets_value_when_string_array_key_does_not_exist()
+    {
+        Livewire::visit(new class extends Component {
+            public array $items = [
+                [],
+                [],
+                ['name' => ''],
+                ['name' => ''],
+            ];
+
+            public function check()
+            {
+                //
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        @foreach($items as $index => $item)
+                            <div wire:key="{{ $index }}">
+                                <input dusk="input-{{ $index }}" type="text" wire:model="items.{{ $index }}.name">
+                            </div>
+                        @endforeach
+
+                        <button dusk="check" wire:click="check">Check</button>
+
+                        <span dusk="output">{{ json_encode($items) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->type('@input-0', 'Alice')
+            ->type('@input-1', 'Bob')
+            ->type('@input-2', 'Charlie')
+            ->type('@input-3', 'Dave')
+            ->waitForLivewire()->click('@check')
+            ->assertSeeIn('@output', '"Alice"')
+            ->assertSeeIn('@output', '"Bob"')
+            ->assertSeeIn('@output', '"Charlie"')
+            ->assertSeeIn('@output', '"Dave"')
+        ;
+    }
+
     function test_wire_model_with_large_numeric_key_on_non_empty_array_preserves_data()
     {
         Livewire::visit(new class extends Component {
