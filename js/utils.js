@@ -320,7 +320,9 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     Object.assign(diffs, childDiffs)
 
     // If any child was consolidated, bubble that up to prevent further consolidation
-    return { changed: changedCount > 0, consolidated: consolidatedCount > 0 }
+    // Also bubble up convertedToObject to prevent parent consolidation from
+    // JSON-serializing arrays with non-numeric keys (which JSON.stringify ignores)
+    return { changed: changedCount > 0, consolidated: consolidatedCount > 0 || convertedToObject }
 }
 
 /**

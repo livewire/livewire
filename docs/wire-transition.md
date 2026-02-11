@@ -49,11 +49,11 @@ View Transitions are controlled entirely through CSS. You can customize the anim
 ```css
 /* Customize the transition for a specific element */
 ::view-transition-old(sidebar) {
-    animation: 300ms ease-out slide-out;
+    animation: 300ms ease-out both slide-out;
 }
 
 ::view-transition-new(sidebar) {
-    animation: 300ms ease-in slide-in;
+    animation: 300ms ease-in both slide-in;
 }
 
 @keyframes slide-out {
@@ -95,19 +95,19 @@ Then target the type in your CSS using the `:active-view-transition-type()` sele
 ```css
 html:active-view-transition-type(forward) {
     &::view-transition-old(content) {
-        animation: 300ms ease-out slide-out-left;
+        animation: 300ms ease-out both slide-out-left;
     }
     &::view-transition-new(content) {
-        animation: 300ms ease-in slide-in-right;
+        animation: 300ms ease-in both slide-in-right;
     }
 }
 
 html:active-view-transition-type(backward) {
     &::view-transition-old(content) {
-        animation: 300ms ease-out slide-out-right;
+        animation: 300ms ease-out both slide-out-right;
     }
     &::view-transition-new(content) {
-        animation: 300ms ease-in slide-in-left;
+        animation: 300ms ease-in both slide-in-left;
     }
 }
 

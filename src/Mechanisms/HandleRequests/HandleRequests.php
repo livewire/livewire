@@ -24,7 +24,7 @@ class HandleRequests extends Mechanism
         if (! $this->updateRoute && ! $this->updateRouteExists()) {
             app($this::class)->setUpdateRoute(function ($handle) {
                 return Route::post(EndpointResolver::updatePath(), $handle)
-                    ->middleware('web')
+                    ->middleware(['web', RequireLivewireHeaders::class])
                     ->name('default-livewire.update');
             });
         }
@@ -89,7 +89,10 @@ class HandleRequests extends Mechanism
 
     function setUpdateRoute($callback)
     {
-        $route = $callback([self::class, 'handleUpdate']);
+        $route = $callback([self::class, 'handleUpdate'], EndpointResolver::updatePath());
+
+        // Ensure the header guard middleware is always present, even on custom routes.
+        $route->middleware(RequireLivewireHeaders::class);
 
         // Append `livewire.update` to the existing name, if any.
         if (! str($route->getName())->endsWith('livewire.update')) {
@@ -122,6 +125,14 @@ class HandleRequests extends Mechanism
 
     function handleUpdate()
     {
+        // When a custom update route is registered, reject requests that arrive
+        // via the default route. This prevents attackers from bypassing middleware
+        // (e.g. auth, tenant scoping) added to the custom route.
+        if (request()->route()?->getName() === 'default-livewire.update'
+            && $this->findUpdateRoute()?->getName() !== 'default-livewire.update') {
+            abort(404);
+        }
+
         // Check payload size limit...
         $maxSize = config('livewire.payload.max_size');
 
