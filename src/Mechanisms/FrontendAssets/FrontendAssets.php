@@ -58,7 +58,7 @@ class FrontendAssets extends Mechanism
 
     function setScriptRoute($callback)
     {
-        $route = $callback([self::class, 'returnJavaScriptAsFile']);
+        $route = $callback([self::class, 'returnJavaScriptAsFile'], EndpointResolver::scriptPath());
 
         $this->javaScriptRoute = $route;
     }

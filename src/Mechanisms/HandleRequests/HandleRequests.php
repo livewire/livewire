@@ -89,7 +89,7 @@ class HandleRequests extends Mechanism
 
     function setUpdateRoute($callback)
     {
-        $route = $callback([self::class, 'handleUpdate']);
+        $route = $callback([self::class, 'handleUpdate'], EndpointResolver::updatePath());
 
         // Append `livewire.update` to the existing name, if any.
         if (! str($route->getName())->endsWith('livewire.update')) {
