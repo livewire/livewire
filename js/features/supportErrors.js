@@ -2,12 +2,20 @@
 import Alpine from 'alpinejs'
 
 export function getErrorsObject(component) {
-    let version = component.__errorsVersion ??= Alpine.reactive({ v: 0 })
+    let state = component.__errorsState ??= Alpine.reactive({
+        clientErrors: null,
+        lastSnapshot: component.snapshot,
+    })
 
     return {
         messages() {
-            version.v
-            return component.snapshot.memo.errors
+            // If the snapshot changed (server responded), reset client overrides...
+            if (state.lastSnapshot !== component.snapshot) {
+                state.clientErrors = null
+                state.lastSnapshot = component.snapshot
+            }
+
+            return state.clientErrors ?? component.snapshot.memo.errors
         },
 
         keys() {
@@ -82,12 +90,12 @@ export function getErrorsObject(component) {
 
         clear(field = null) {
             if (field === null) {
-                component.snapshot.memo.errors = {}
+                state.clientErrors = {}
             } else {
-                delete component.snapshot.memo.errors[field]
+                let errors = { ...(state.clientErrors ?? component.snapshot.memo.errors) }
+                delete errors[field]
+                state.clientErrors = errors
             }
-
-            version.v++
         },
     }
 }
