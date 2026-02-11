@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
@@ -11,9 +10,12 @@ class UnitTest extends TestCase
     public function test_livewire_can_run_handle_request_without_components_on_payload(): void
     {
         $handleRequestsInstance = new HandleRequests();
-        $request = new Request();
 
-        $result = $handleRequestsInstance->handleUpdate($request);
+        // Set the required headers on the container's request instance...
+        request()->headers->set('X-Livewire', '1');
+        request()->headers->set('Content-Type', 'application/json');
+
+        $result = $handleRequestsInstance->handleUpdate();
 
         $this->assertIsArray($result);
         $this->assertArrayHasKey('components', $result);
@@ -64,7 +66,38 @@ class UnitTest extends TestCase
 
         // Livewire's update route should still be matched
         $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => []]);
+
+        $response->assertOk();
+        $this->assertArrayHasKey('components', $response->json());
+    }
+
+    public function test_update_endpoint_returns_404_without_x_livewire_header(): void
+    {
+        $response = $this->postJson(EndpointResolver::updatePath(), ['components' => []]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_update_endpoint_returns_404_without_json_content_type(): void
+    {
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
             ->post(EndpointResolver::updatePath(), ['components' => []]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_update_endpoint_returns_404_without_either_required_header(): void
+    {
+        $response = $this->post(EndpointResolver::updatePath(), ['components' => []]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_update_endpoint_succeeds_with_required_headers(): void
+    {
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => []]);
 
         $response->assertOk();
         $this->assertArrayHasKey('components', $response->json());
