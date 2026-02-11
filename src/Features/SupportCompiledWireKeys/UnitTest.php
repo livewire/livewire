@@ -40,6 +40,23 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringNotContainsString('SupportCompiledWireKeys::$currentLoop[\'key\']', $compiled);
     }
 
+    public function test_child_keys_are_correctly_generated_with_array_access_wire_key()
+    {
+        app('livewire')->component('keys-parent-with-array-access', KeysParentWithArrayAccess::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithArrayAccess::class);
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(2, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B',
+            'lw-XXXXXXXX-0-0-D'
+        ], $childKeys);
+    }
+
     public function test_child_keys_are_correctly_generated()
     {
         app('livewire')->component('keys-parent', KeysParent::class);
@@ -1290,6 +1307,24 @@ class KeysParentWithForElse extends Component
                     <livewire:keys-child item="empty" />
                 </div>
             @endforelse
+        </div>
+        HTML;
+    }
+}
+
+class KeysParentWithArrayAccess extends Component
+{
+    public $items = [['id' => 'B'], ['id' => 'D']];
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            @foreach ($items as $item)
+                <div wire:key="{{ $item['id'] }}">
+                    <livewire:keys-child :item="$item['id']" />
+                </div>
+            @endforeach
         </div>
         HTML;
     }
