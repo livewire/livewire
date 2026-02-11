@@ -125,6 +125,14 @@ class HandleRequests extends Mechanism
 
     function handleUpdate()
     {
+        // When a custom update route is registered, reject requests that arrive
+        // via the default route. This prevents attackers from bypassing middleware
+        // (e.g. auth, tenant scoping) added to the custom route.
+        if (request()->route()?->getName() === 'default-livewire.update'
+            && $this->findUpdateRoute()?->getName() !== 'default-livewire.update') {
+            abort(404);
+        }
+
         // Check payload size limit...
         $maxSize = config('livewire.payload.max_size');
 
