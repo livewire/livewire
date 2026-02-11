@@ -167,7 +167,13 @@ class HandleRequests extends Mechanism
             $updates = $componentPayload['updates'];
             $calls = $componentPayload['calls'];
 
-            [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
+            try {
+                [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
+            } catch (\TypeError|\ErrorException $e) {
+                if (config('app.debug')) throw $e;
+
+                abort(419);
+            }
 
             $componentResponses[] = [
                 'snapshot' => json_encode($snapshot),

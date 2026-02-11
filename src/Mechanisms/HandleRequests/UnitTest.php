@@ -110,6 +110,26 @@ class UnitTest extends TestCase
         $response->assertStatus(419);
     }
 
+    public function test_type_mismatched_update_value_returns_419(): void
+    {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
+        $testable = Livewire::test(new class extends TestComponent {
+            public array $items = [];
+        });
+
+        $snapshotJson = json_encode($testable->snapshot);
+
+        // Send a string where an array property is expected...
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $snapshotJson, 'updates' => ['items' => 'not_an_array'], 'calls' => []],
+            ]]);
+
+        $response->assertStatus(419);
+    }
+
     public function test_valid_request_returns_200(): void
     {
         // Disable debug mode to test production HTTP responses (404/419)...
