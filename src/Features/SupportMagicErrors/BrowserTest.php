@@ -126,7 +126,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ;
     }
 
-    public function test_clear_removes_all_errors()
+    public function test_can_clear_errors_by_field_and_clear_all()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
