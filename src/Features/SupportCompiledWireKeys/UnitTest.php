@@ -37,7 +37,7 @@ class UnitTest extends \Tests\TestCase
 
         $compiled = $this->compile('<div wire:key="foo">');
 
-        $this->assertStringNotContainsString('<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processElementKey', $compiled);
+        $this->assertStringNotContainsString('SupportCompiledWireKeys::$currentLoop[\'key\']', $compiled);
     }
 
     public function test_child_keys_are_correctly_generated()
@@ -648,15 +648,6 @@ class UnitTest extends \Tests\TestCase
         );
     }
 
-    public function test_plain_string_key_matching_view_name_is_not_rendered_as_view()
-    {
-        // "show-name" is an existing test view in tests/views/show-name.blade.php
-        // Using it as a wire:key should return the literal string, not render the view
-        SupportCompiledWireKeys::processElementKey('show-name', []);
-
-        $this->assertEquals('show-name', SupportCompiledWireKeys::$currentLoop['key']);
-    }
-
     public function test_we_can_open_a_loop()
     {
         SupportCompiledWireKeys::openLoop();
@@ -898,7 +889,7 @@ class UnitTest extends \Tests\TestCase
     {
         $compiled = $this->compile($template);
 
-        $this->assertOccurrences($occurrences, '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processElementKey', $compiled);
+        $this->assertOccurrences($occurrences, 'SupportCompiledWireKeys::$currentLoop[\'key\']', $compiled);
     }
 
     #[DataProvider('bladeComponentsTestProvider')]
