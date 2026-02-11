@@ -633,14 +633,6 @@ class HandleComponents extends Mechanism
             // @todo: put this in a better place:
             $methods[] = '__dispatch';
 
-            // Block lifecycle methods from being called via the frontend.
-            // These are defined on user subclasses so they pass the
-            // getPublicMethodsDefinedBySubClass filter, but they should
-            // never be invocable via $wire — they are internal hooks.
-            if (static::isLifecycleMethod($method, $root)) {
-                throw new MethodNotFoundException($method);
-            }
-
             if (! in_array($method, $methods)) {
                 throw new MethodNotFoundException($method);
             }
@@ -658,57 +650,6 @@ class HandleComponents extends Mechanism
         }
 
         $componentContext->addEffect('returns', $returns);
-    }
-
-    public static function isLifecycleMethod(string $method, $component = null): bool
-    {
-        $lower = strtolower($method);
-
-        // Exact lifecycle method names — always blocked.
-        $exactMethods = [
-            'mount', 'boot', 'booted',
-            'hydrate', 'dehydrate',
-            'updating', 'updated',
-            'rendering', 'rendered',
-            'exception',
-        ];
-
-        if (in_array($lower, $exactMethods)) {
-            return true;
-        }
-
-        // Prefix-based blocking for property/general hooks
-        // (hydrate*, dehydrate*, updating*, updated*).
-        $wildcardPrefixes = ['hydrate', 'dehydrate', 'updating', 'updated'];
-
-        foreach ($wildcardPrefixes as $prefix) {
-            if (str_starts_with($lower, $prefix) && strlen($method) > strlen($prefix)) {
-                return true;
-            }
-        }
-
-        // Trait-suffixed lifecycle hooks: only block if the suffix
-        // matches an actual trait used by the component.
-        if ($component) {
-            $traitPrefixes = ['mount', 'boot', 'booted'];
-            $traitBasenames = [];
-
-            foreach (class_uses_recursive($component) as $trait) {
-                $traitBasenames[] = strtolower(class_basename($trait));
-            }
-
-            foreach ($traitPrefixes as $prefix) {
-                if (str_starts_with($lower, $prefix) && strlen($method) > strlen($prefix)) {
-                    $suffix = strtolower(substr($method, strlen($prefix)));
-
-                    if (in_array($suffix, $traitBasenames)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
     }
 
     public function findSynth($keyOrTarget, $component): ?Synth
