@@ -83,11 +83,18 @@ class BrowserTest extends BrowserTestCase
             Livewire::component('child-with-reactive', ChildComponentWithReactive::class);
             Livewire::component('page-with-modelable-child', PageComponentWithModelableChild::class);
             Livewire::component('child-with-modelable', ChildComponentWithModelable::class);
+            Livewire::component('page-with-explicit-binding', PageComponentWithExplicitBinding::class);
+            Livewire::component('child-for-explicit-binding', ChildForExplicitBinding::class);
 
             Route::get('/page-with-reactive-child/{post}', PageComponentWithReactiveChild::class)
                 ->middleware('web');
 
             Route::get('/page-with-modelable-child/{post}', PageComponentWithModelableChild::class)
+                ->middleware('web');
+
+            Route::model('bound_model', BoundModel::class);
+
+            Route::get('/explicit-binding/{bound_model}', PageComponentWithExplicitBinding::class)
                 ->middleware('web');
         };
     }
@@ -341,6 +348,22 @@ JS;
             // for the deleted model when processing the child's snapshot
             ->waitForLivewire()->click('@delete')
             ->assertSee('test2')
+            ->assertDontSee('404')
+        ;
+    }
+
+    public function test_explicit_route_model_binding_does_not_break_with_lazy_child()
+    {
+        Livewire::visit(Component::class)
+            ->visit('/explicit-binding/valid-slug')
+            ->assertSee('original')
+
+            // Without the fix, when the lazy child loads via a subsequent
+            // Livewire request, SubstituteBindings would re-resolve the
+            // explicit model binding on the cached route using the model
+            // instance instead of the original route key string, causing
+            // a 404 or wrong model.
+            ->waitForText('child loaded')
             ->assertDontSee('404')
         ;
     }
@@ -645,6 +668,56 @@ class ChildComponentWithModelable extends BaseComponent
         return <<<'HTML'
         <div>
             {{ $value }}
+        </div>
+        HTML;
+    }
+}
+
+class BoundModel extends Model
+{
+    protected $guarded = [];
+
+    public function __toString()
+    {
+        return 'string-representation';
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if ($value !== 'valid-slug') {
+            return null;
+        }
+
+        return new static(['slug' => 'valid-slug']);
+    }
+}
+
+class PageComponentWithExplicitBinding extends BaseComponent
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <span dusk="output">original</span>
+
+            <livewire:child-for-explicit-binding lazy />
+        </div>
+        HTML;
+    }
+}
+
+class ChildForExplicitBinding extends BaseComponent
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <span dusk="child-output">child loaded</span>
         </div>
         HTML;
     }
