@@ -870,13 +870,13 @@ class MakeCommandUnitTest extends \Tests\TestCase
     {
         // The "pages" namespace is registered as a view namespace only (via component_namespaces config),
         // not a class namespace. Creating a class-based component with it should show an error, not crash.
-        $exitCode = Artisan::call('make:livewire', ['name' => 'pages::create-post', '--class' => true]);
+        $exitCode = Artisan::call('make:livewire', ['name' => 'pages::edit-post', '--class' => true]);
 
         $this->assertEquals(1, $exitCode);
         $this->assertStringContainsString('Class namespace [pages] not found', Artisan::output());
 
         // Ensure no files were created
-        $this->assertFalse(File::exists($this->livewireClassesPath('CreatePost.php')));
+        $this->assertFalse(File::exists($this->livewireClassesPath('EditPost.php')));
     }
 
     public function test_unregistered_namespace_shows_error_for_sfc()
