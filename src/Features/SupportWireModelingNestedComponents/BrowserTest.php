@@ -306,6 +306,173 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_can_bind_a_blur_property_from_parent_to_property_from_child()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span dusk="parent">Parent: {{ $foo }}</span>
+                    <span x-text="$wire.foo" dusk="parent.ephemeral"></span>
+
+                    <livewire:child wire:model.blur="foo" />
+
+                    <button dusk="outside">Outside</button>
+                    <button wire:click="$refresh" dusk="refresh">refresh</button>
+                </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $bar = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span x-text="$wire.bar" dusk="child.ephemeral"></span>
+                    <input type="text" wire:model="bar" dusk="child.input" />
+                </div>
+                HTML; }
+            },
+        ])
+        // Type in the child input — child ephemeral updates immediately
+        ->type('@child.input', 'hello')
+        ->assertSeeIn('@child.ephemeral', 'hello')
+        // Parent ephemeral should NOT update yet (blur hasn't happened)
+        ->assertSeeNothingIn('@parent.ephemeral')
+        // Click outside the child to trigger blur
+        ->click('@outside')
+        // Now parent ephemeral should update
+        ->assertSeeIn('@parent.ephemeral', 'hello')
+        // But no network request, so server state unchanged
+        ->assertDontSeeIn('@parent', 'hello')
+        // Trigger a refresh to sync server state
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@parent', 'Parent: hello')
+        ;
+    }
+
+    public function test_can_bind_a_live_blur_property_from_parent_to_property_from_child()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span dusk="parent">Parent: {{ $foo }}</span>
+                    <span x-text="$wire.foo" dusk="parent.ephemeral"></span>
+
+                    <livewire:child wire:model.live.blur="foo" />
+
+                    <button dusk="outside">Outside</button>
+                </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $bar = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span x-text="$wire.bar" dusk="child.ephemeral"></span>
+                    <input type="text" wire:model="bar" dusk="child.input" />
+                </div>
+                HTML; }
+            },
+        ])
+        // Type in the child input — parent ephemeral updates immediately (no ephemeral trigger before .live)
+        ->type('@child.input', 'hello')
+        ->assertSeeIn('@parent.ephemeral', 'hello')
+        // But no network request yet (network triggers on blur)
+        ->assertDontSeeIn('@parent', 'hello')
+        // Click outside to trigger blur — network request fires
+        ->waitForLivewire()->click('@outside')
+        ->assertSeeIn('@parent', 'Parent: hello')
+        ;
+    }
+
+    public function test_can_bind_a_blur_live_property_from_parent_to_property_from_child()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span dusk="parent">Parent: {{ $foo }}</span>
+                    <span x-text="$wire.foo" dusk="parent.ephemeral"></span>
+
+                    <livewire:child wire:model.blur.live="foo" />
+
+                    <button dusk="outside">Outside</button>
+                </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $bar = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span x-text="$wire.bar" dusk="child.ephemeral"></span>
+                    <input type="text" wire:model="bar" dusk="child.input" />
+                </div>
+                HTML; }
+            },
+        ])
+        // Type in the child input — parent ephemeral should NOT update (blur hasn't happened)
+        ->type('@child.input', 'hello')
+        ->assertSeeIn('@child.ephemeral', 'hello')
+        ->assertSeeNothingIn('@parent.ephemeral')
+        // No network request either
+        ->assertDontSeeIn('@parent', 'hello')
+        // Click outside to trigger blur — ephemeral updates AND network request fires
+        ->waitForLivewire()->click('@outside')
+        ->assertSeeIn('@parent.ephemeral', 'hello')
+        ->assertSeeIn('@parent', 'Parent: hello')
+        ;
+    }
+
+    public function test_blur_does_not_trigger_when_focus_moves_within_modelable_child()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span x-text="$wire.foo" dusk="parent.ephemeral"></span>
+
+                    <livewire:child wire:model.blur="foo" />
+
+                    <button dusk="outside">Outside</button>
+                </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $bar = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <input type="text" wire:model="bar" dusk="input1" />
+                    <input type="text" dusk="input2" />
+                </div>
+                HTML; }
+            },
+        ])
+        ->type('@input1', 'hello')
+        // Focus moves to input2 (still inside child) — should NOT trigger blur
+        ->click('@input2')
+        ->assertSeeNothingIn('@parent.ephemeral')
+        // Now click outside the child — should trigger blur
+        ->click('@outside')
+        ->assertSeeIn('@parent.ephemeral', 'hello')
+        ;
+    }
+
     public function test_can_still_forward_wire_model_attribute()
     {
         Livewire::visit([
