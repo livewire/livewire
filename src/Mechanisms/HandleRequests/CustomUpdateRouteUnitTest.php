@@ -5,6 +5,7 @@ use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\TestCase;
+use Tests\TestComponent;
 
 class CustomUpdateRouteUnitTest extends TestCase
 {
@@ -37,8 +38,13 @@ class CustomUpdateRouteUnitTest extends TestCase
 
     public function test_custom_route_accepts_requests_when_registered(): void
     {
+        $testable = Livewire::test(new class extends TestComponent {});
+        $snapshotJson = json_encode($testable->snapshot);
+
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->post('/custom/livewire/update', ['components' => []]);
+            ->postJson('/custom/livewire/update', ['components' => [
+                ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => []],
+            ]]);
 
         $response->assertOk();
         $this->assertArrayHasKey('components', $response->json());
