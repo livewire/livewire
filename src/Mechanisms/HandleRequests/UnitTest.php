@@ -149,21 +149,6 @@ class UnitTest extends TestCase
 
         $response->assertOk();
         $this->assertArrayHasKey('components', $response->json());
-        $handleRequestsInstance = new HandleRequests();
-
-        // Set the required headers on the container's request instance...
-        request()->headers->set('X-Livewire', '1');
-        request()->headers->set('Content-Type', 'application/json');
-
-        $result = $handleRequestsInstance->handleUpdate();
-
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('components', $result);
-        $this->assertArrayHasKey('assets', $result);
-        $this->assertIsArray($result['components']);
-        $this->assertEmpty($result['components']);
-        $this->assertIsArray($result['assets']);
-        $this->assertEmpty($result['assets']);
     }
 
     public function test_default_livewire_update_route_is_registered(): void
@@ -212,7 +197,6 @@ class UnitTest extends TestCase
             ->postJson(EndpointResolver::updatePath(), ['components' => [
                 ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => []],
             ]]);
-            ->postJson(EndpointResolver::updatePath(), ['components' => []]);
 
         $response->assertOk();
         $this->assertArrayHasKey('components', $response->json());
@@ -242,8 +226,13 @@ class UnitTest extends TestCase
 
     public function test_update_endpoint_succeeds_with_required_headers(): void
     {
+        $testable = Livewire::test(new class extends TestComponent {});
+        $snapshotJson = json_encode($testable->snapshot);
+
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => []]);
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => []],
+            ]]);
 
         $response->assertOk();
         $this->assertArrayHasKey('components', $response->json());
