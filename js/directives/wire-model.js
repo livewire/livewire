@@ -92,30 +92,35 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     let isModelable = expression.startsWith('$parent')
 
+    // For modelable components with ephemeral event triggers (blur, change, enter),
+    // x-model modifiers don't work because the component root is a <div> and values
+    // flow through x-modelable's reactivity, bypassing DOM events entirely.
+    // Instead, we buffer the value in set() and flush when the appropriate event fires.
+    let bufferEphemeral = isModelable && hasEphemeralTriggers
+
+    let pendingValue = undefined
+    let hasPending = false
+
+    let flushPending = () => {
+        if (! hasPending) return
+
+        dataSet(component.$wire, expression, pendingValue)
+        hasPending = false
+
+        if (shouldSendNetwork && ! hasNetworkTriggers) {
+            debouncedUpdate()
+        }
+    }
+
     // Build the bindings object
     let bindings = {}
 
-    if (isModelable && hasEphemeralTriggers) {
-        // For modelable components with ephemeral event triggers (blur, change, enter),
-        // x-model modifiers don't work because the component root is a <div> and values
-        // flow through x-modelable's reactivity, bypassing DOM events entirely.
-        // Instead, we buffer the value in set() and flush when the appropriate event fires.
-        // We use focusout instead of blur because focusout bubbles from inner inputs.
-        let pendingValue = undefined
-        let hasPending = false
+    // Blur/focusout listener
+    let wantsBlur = (bufferEphemeral && ephemeralOnBlur) || (shouldSendNetwork && networkOnBlur)
 
-        let flushPending = () => {
-            if (! hasPending) return
-
-            dataSet(component.$wire, expression, pendingValue)
-            hasPending = false
-
-            if (shouldSendNetwork && ! hasNetworkTriggers) {
-                debouncedUpdate()
-            }
-        }
-
-        if (ephemeralOnBlur || (shouldSendNetwork && networkOnBlur)) {
+    if (wantsBlur) {
+        if (isModelable) {
+            // Use focusout instead of blur — blur doesn't bubble from inner inputs.
             bindings['@focusout'] = (e) => {
                 // Only trigger when focus leaves the component entirely,
                 // not when moving between inputs within the component
@@ -125,80 +130,52 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
                 if (shouldSendNetwork && networkOnBlur) update()
             }
+        } else {
+            bindings['@blur'] = () => update()
         }
+    }
 
-        if (ephemeralOnChange || (shouldSendNetwork && networkOnChange)) {
-            bindings['@change'] = () => {
-                flushPending()
+    if ((bufferEphemeral && ephemeralOnChange) || (shouldSendNetwork && networkOnChange)) {
+        bindings['@change'] = () => {
+            flushPending()
 
-                if (shouldSendNetwork && networkOnChange) update()
-            }
+            if (shouldSendNetwork && networkOnChange) update()
         }
+    }
 
-        if (ephemeralOnEnter || (shouldSendNetwork && networkOnEnter)) {
-            bindings['@keydown.enter'] = () => {
-                flushPending()
+    if ((bufferEphemeral && ephemeralOnEnter) || (shouldSendNetwork && networkOnEnter)) {
+        bindings['@keydown.enter'] = () => {
+            flushPending()
 
-                if (shouldSendNetwork && networkOnEnter) update()
-            }
+            if (shouldSendNetwork && networkOnEnter) update()
         }
+    }
 
-        // Strip event-based modifiers from x-model tail (they don't work on divs)
-        let modelableModifiers = ephemeralModifiers.filter(m => ! ['blur', 'change', 'enter'].includes(m))
-        let xModelTail = getModifierTail(modelableModifiers)
+    // Strip event-based modifiers from x-model tail for modelable (they don't work on divs)
+    let xModelModifiers = bufferEphemeral
+        ? ephemeralModifiers.filter(m => ! ['blur', 'change', 'enter'].includes(m))
+        : ephemeralModifiers
 
-        bindings['x-model' + xModelTail] = () => ({
-            get() {
-                // Return pending value so x-modelable doesn't sync the old value back
-                return hasPending ? pendingValue : dataGet(component.$wire, expression)
-            },
-            set(value) {
+    let xModelTail = getModifierTail(xModelModifiers)
+
+    bindings['x-model' + xModelTail] = () => ({
+        get() {
+            // Return pending value so x-modelable doesn't sync the old value back
+            return hasPending ? pendingValue : dataGet(component.$wire, expression)
+        },
+        set(value) {
+            if (bufferEphemeral) {
                 pendingValue = value
                 hasPending = true
-            },
-        })
-    } else {
-        // Regular elements, or modelable components without ephemeral triggers
-
-        // Network event listeners (for modifiers after .live, or .lazy backwards compat)
-        if (shouldSendNetwork && networkOnBlur) {
-            if (isModelable) {
-                // Use focusout instead of blur — blur doesn't bubble from inner inputs
-                bindings['@focusout'] = (e) => {
-                    if (el.contains(e.relatedTarget)) return
-
-                    update()
-                }
             } else {
-                bindings['@blur'] = () => update()
-            }
-        }
-
-        if (shouldSendNetwork && networkOnChange) {
-            bindings['@change'] = () => update()
-        }
-
-        if (shouldSendNetwork && networkOnEnter) {
-            bindings['@keydown.enter'] = () => update()
-        }
-
-        // Build x-model modifier tail from ephemeral modifiers
-        let xModelTail = getModifierTail(ephemeralModifiers)
-
-        bindings['x-model' + xModelTail] = () => ({
-            get() {
-                return dataGet(component.$wire, expression)
-            },
-            set(value) {
                 dataSet(component.$wire, expression, value)
 
-                // If .live is present and no specific network triggers, fire on every ephemeral sync
                 if (shouldSendNetwork && ! hasNetworkTriggers) {
                     debouncedUpdate()
                 }
-            },
-        })
-    }
+            }
+        },
+    })
 
     Alpine.bind(el, bindings)
 })
