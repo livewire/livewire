@@ -92,6 +92,8 @@ new class extends Component {
 <livewire:date-picker wire:model="endDate" />
 ```
 
+Be sure to wrap your input elements in a `<div>` rather than using them as the root element. Livewire needs the root element to wire up the parent binding.
+
 ## Modifiers
 
 The parent can use wire:model modifiers, and they'll work as expected:
