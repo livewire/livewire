@@ -199,7 +199,7 @@ class FrontendAssets extends Mechanism
         $url = rtrim($url, '/');
 
         $url = (string) str($url)->when(
-            ! str($url)->isUrl() && ! preg_match('#^[a-zA-Z][a-zA-Z0-9+\-.]*://#', $url),
+            ! str_contains($url, '://'),
             fn ($url) => $url->start('/')
         );
 
