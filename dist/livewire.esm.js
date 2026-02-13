@@ -7412,6 +7412,11 @@ function diff(left, right, diffs = {}, path = "") {
     return diffs;
   }
   let leftKeys = Object.keys(left);
+  let rightKeys = Object.keys(right);
+  if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i])) {
+    diffs[path] = right;
+    return diffs;
+  }
   Object.entries(right).forEach(([key, value]) => {
     diffs = { ...diffs, ...diff(left[key], right[key], diffs, path === "" ? key : `${path}.${key}`) };
     leftKeys = leftKeys.filter((i) => i !== key);
