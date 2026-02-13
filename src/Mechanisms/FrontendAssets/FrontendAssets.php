@@ -198,7 +198,10 @@ class FrontendAssets extends Mechanism
 
         $url = rtrim($url, '/');
 
-        $url = (string) str($url)->when(! str($url)->isUrl(), fn($url) => $url->start('/'));
+        $url = (string) str($url)->when(
+            ! str($url)->isUrl() && ! preg_match('#^[a-zA-Z][a-zA-Z0-9+\-.]*://#', $url),
+            fn ($url) => $url->start('/')
+        );
 
         // Add the build manifest hash to it...
         $manifest = json_decode(file_get_contents(__DIR__.'/../../../dist/manifest.json'), true);
