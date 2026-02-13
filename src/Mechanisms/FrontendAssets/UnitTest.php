@@ -170,6 +170,12 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringStartsWith('<script src="/'.$url, FrontendAssets::js(['url' => $url]));
     }
 
+    public function test_js_does_not_prepend_slash_for_non_standard_protocol_scheme()
+    {
+        $url = 'php://127.0.0.1/livewire/livewire.js';
+        $this->assertStringStartsWith('<script src="'.$url, FrontendAssets::js(['url' => $url]));
+    }
+
     public function test_js_appends_version_with_correct_query_separator()
     {
         // URL without query params should use ?
