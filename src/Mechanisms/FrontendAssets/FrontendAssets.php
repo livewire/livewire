@@ -198,6 +198,7 @@ class FrontendAssets extends Mechanism
 
         $url = rtrim($url, '/');
 
+        // Ensure relative URLs start with "/", but don't touch URLs with protocol schemes (e.g. "php://")...
         $url = (string) str($url)->when(
             ! str_contains($url, '://'),
             fn ($url) => $url->start('/')
