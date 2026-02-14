@@ -15,7 +15,7 @@ export function evaluateExpression(el, expression, options = {}) {
 export function evaluateActionExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 
-    let contextualExpression = contextualizeExpression(expression)
+    let contextualExpression = contextualizeExpression(expression, el)
 
     try {
         let result = Alpine.evaluateRaw(el, contextualExpression, options)
@@ -34,8 +34,21 @@ export function evaluateActionExpression(el, expression, options = {}) {
     }
 }
 
-export function contextualizeExpression(expression) {
+export function contextualizeExpression(expression, el) {
     let SKIP = ['JSON', 'true', 'false', 'null', 'undefined', 'this', '$wire', '$event']
+
+    // If an element is provided, collect Alpine scope keys (e.g. x-for loop variables)
+    // so they don't get incorrectly prefixed with $wire.
+    if (el) {
+        let dataStack = Alpine.closestDataStack(el)
+        if (dataStack) {
+            dataStack.forEach(scope => {
+                Object.keys(Alpine.raw(scope)).forEach(key => {
+                    if (! SKIP.includes(key)) SKIP.push(key)
+                })
+            })
+        }
+    }
     let strings = []
 
     // 1. Yank out string literals so we don't touch them
