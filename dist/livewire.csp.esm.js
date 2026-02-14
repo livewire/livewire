@@ -9613,7 +9613,7 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     return { changed: true, consolidated: true };
   }
   Object.assign(diffs, childDiffs);
-  return { changed: changedCount > 0, consolidated: consolidatedCount > 0 || convertedToObject };
+  return { changed: changedCount > 0, consolidated: consolidatedCount > 0 };
 }
 function extractData(payload) {
   let value = isSynthetic(payload) ? payload[0] : payload;
@@ -15251,66 +15251,30 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
   if (isThrottled) {
     debouncedUpdate = throttle(debouncedUpdate, parseModifierDuration(networkModifiers, "throttle") || 150);
   }
-  let isModelable = expression.startsWith("$parent");
-  let bufferEphemeral = isModelable && hasEphemeralTriggers;
-  let pendingValue = void 0;
-  let hasPending = false;
-  let flushPending = () => {
-    if (!hasPending)
-      return;
-    dataSet(component.$wire, expression, pendingValue);
-    hasPending = false;
-    if (shouldSendNetwork && !hasNetworkTriggers) {
-      debouncedUpdate();
-    }
-  };
   let bindings = {};
-  let wantsBlur = bufferEphemeral && ephemeralOnBlur || shouldSendNetwork && networkOnBlur;
-  if (wantsBlur) {
-    if (isModelable) {
-      bindings["@focusout"] = (e) => {
-        if (el.contains(e.relatedTarget))
-          return;
-        flushPending();
-        if (shouldSendNetwork && networkOnBlur)
-          update();
-      };
-    } else {
-      bindings["@blur"] = () => update();
-    }
+  if (shouldSendNetwork && networkOnBlur) {
+    bindings["@blur"] = () => update();
   }
-  if (bufferEphemeral && ephemeralOnChange || shouldSendNetwork && networkOnChange) {
-    bindings["@change"] = () => {
-      flushPending();
-      if (shouldSendNetwork && networkOnChange)
-        update();
-    };
+  if (shouldSendNetwork && networkOnChange) {
+    bindings["@change"] = () => update();
   }
-  if (bufferEphemeral && ephemeralOnEnter || shouldSendNetwork && networkOnEnter) {
-    bindings["@keydown.enter"] = () => {
-      flushPending();
-      if (shouldSendNetwork && networkOnEnter)
-        update();
-    };
+  if (shouldSendNetwork && networkOnEnter) {
+    bindings["@keydown.enter"] = () => update();
   }
-  let xModelModifiers = bufferEphemeral ? ephemeralModifiers.filter((m) => !["blur", "change", "enter"].includes(m)) : ephemeralModifiers;
-  let xModelTail = getModifierTail(xModelModifiers);
-  bindings["x-model" + xModelTail] = () => ({
-    get() {
-      return hasPending ? pendingValue : dataGet(component.$wire, expression);
-    },
-    set(value) {
-      if (bufferEphemeral) {
-        pendingValue = value;
-        hasPending = true;
-      } else {
+  let xModelTail = getModifierTail(ephemeralModifiers);
+  bindings["x-model" + xModelTail] = () => {
+    return {
+      get() {
+        return dataGet(component.$wire, expression);
+      },
+      set(value) {
         dataSet(component.$wire, expression, value);
         if (shouldSendNetwork && !hasNetworkTriggers) {
           debouncedUpdate();
         }
       }
-    }
-  });
+    };
+  };
   import_alpinejs18.default.bind(el, bindings);
 });
 function getModifierTail(modifiers) {
