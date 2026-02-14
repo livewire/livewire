@@ -68,9 +68,9 @@ class Finder
         if ($viewPath !== null) $this->viewNamespaces[$namespace] = $viewPath;
     }
 
-    public function getClassNamespace(string $namespace): array
+    public function getClassNamespace(string $namespace): ?array
     {
-        return $this->classNamespaces[$namespace];
+        return $this->classNamespaces[$namespace] ?? null;
     }
 
     public function normalizeName($nameComponentOrClass): ?string

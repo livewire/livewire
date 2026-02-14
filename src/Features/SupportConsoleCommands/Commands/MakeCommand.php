@@ -116,7 +116,7 @@ class MakeCommand extends Command
             $classNamespaceDetails = $this->finder->getClassNamespace($namespace);
 
             if ($classNamespaceDetails === null) {
-                $this->components->error('Namespace not found.');
+                $this->components->error(sprintf('Class namespace [%s] not found.', $namespace));
                 return 1;
             }
         } else {
