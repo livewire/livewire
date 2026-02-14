@@ -30,7 +30,7 @@ class CustomUpdateRouteUnitTest extends TestCase
     public function test_default_route_returns_404_when_custom_route_registered(): void
     {
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->post(EndpointResolver::updatePath(), ['components' => []]);
+            ->postJson(EndpointResolver::updatePath(), ['components' => []]);
 
         $response->assertNotFound();
     }
@@ -38,7 +38,7 @@ class CustomUpdateRouteUnitTest extends TestCase
     public function test_custom_route_accepts_requests_when_registered(): void
     {
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->post('/custom/livewire/update', ['components' => []]);
+            ->postJson('/custom/livewire/update', ['components' => []]);
 
         $response->assertOk();
         $this->assertArrayHasKey('components', $response->json());
