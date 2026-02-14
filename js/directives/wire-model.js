@@ -106,6 +106,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
         dataSet(component.$wire, expression, pendingValue)
         hasPending = false
+        pendingValue = undefined
 
         if (shouldSendNetwork && ! hasNetworkTriggers) {
             debouncedUpdate()

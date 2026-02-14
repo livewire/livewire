@@ -473,6 +473,99 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_can_bind_a_change_property_from_parent_to_property_from_child()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span dusk="parent">Parent: {{ $foo }}</span>
+                    <span x-text="$wire.foo" dusk="parent.ephemeral"></span>
+
+                    <livewire:child wire:model.change="foo" />
+
+                    <button dusk="outside">Outside</button>
+                    <button wire:click="$refresh" dusk="refresh">refresh</button>
+                </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $bar = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span x-text="$wire.bar" dusk="child.ephemeral"></span>
+                    <input type="text" wire:model="bar" dusk="child.input" />
+                </div>
+                HTML; }
+            },
+        ])
+        // Type in the child input — child ephemeral updates immediately
+        ->type('@child.input', 'hello')
+        ->assertSeeIn('@child.ephemeral', 'hello')
+        // Parent ephemeral should NOT update yet (change hasn't fired)
+        ->assertSeeNothingIn('@parent.ephemeral')
+        // Click outside to trigger change event
+        ->click('@outside')
+        // Now parent ephemeral should update
+        ->assertSeeIn('@parent.ephemeral', 'hello')
+        // But no network request, so server state unchanged
+        ->assertDontSeeIn('@parent', 'hello')
+        // Trigger a refresh to sync server state
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@parent', 'Parent: hello')
+        ;
+    }
+
+    public function test_can_bind_an_enter_property_from_parent_to_property_from_child()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span dusk="parent">Parent: {{ $foo }}</span>
+                    <span x-text="$wire.foo" dusk="parent.ephemeral"></span>
+
+                    <livewire:child wire:model.enter="foo" />
+
+                    <button wire:click="$refresh" dusk="refresh">refresh</button>
+                </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $bar = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span x-text="$wire.bar" dusk="child.ephemeral"></span>
+                    <input type="text" wire:model="bar" dusk="child.input" />
+                </div>
+                HTML; }
+            },
+        ])
+        // Type in the child input — child ephemeral updates immediately
+        ->type('@child.input', 'hello')
+        ->assertSeeIn('@child.ephemeral', 'hello')
+        // Parent ephemeral should NOT update yet (enter hasn't been pressed)
+        ->assertSeeNothingIn('@parent.ephemeral')
+        // Press Enter to trigger flush
+        ->keys('@child.input', '{enter}')
+        // Now parent ephemeral should update
+        ->assertSeeIn('@parent.ephemeral', 'hello')
+        // But no network request, so server state unchanged
+        ->assertDontSeeIn('@parent', 'hello')
+        // Trigger a refresh to sync server state
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@parent', 'Parent: hello')
+        ;
+    }
+
     public function test_can_still_forward_wire_model_attribute()
     {
         Livewire::visit([
