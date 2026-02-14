@@ -128,4 +128,108 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->select('@parent', 'foo')
             ->assertSelected('@child', 'bar');
     }
+
+    function test_wire_data_reflects_key_order_changes()
+    {
+        Livewire::visit(new class extends Component {
+            public $items = [
+                'a' => 1,
+                'b' => 2,
+            ];
+
+            public function reorder()
+            {
+                $this->items = [
+                    'b' => 2,
+                    'a' => 1,
+                ];
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <button wire:click="reorder" dusk="reorder">Reorder</button>
+
+                        <span dusk="output" x-text="Object.keys($wire.items).join(',')"></span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', 'a,b')
+            ->waitForLivewire()->click('@reorder')
+            ->assertSeeIn('@output', 'b,a')
+        ;
+    }
+
+    function test_wire_data_reflects_nested_key_order_changes()
+    {
+        Livewire::visit(new class extends Component {
+            public $data = [
+                'items' => [
+                    'a' => 1,
+                    'b' => 2,
+                ],
+            ];
+
+            public function reorder()
+            {
+                $this->data = [
+                    'items' => [
+                        'b' => 2,
+                        'a' => 1,
+                    ],
+                ];
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <button wire:click="reorder" dusk="reorder">Reorder</button>
+                        <span dusk="output" x-text="Object.keys($wire.data.items).join(',')"></span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', 'a,b')
+            ->waitForLivewire()->click('@reorder')
+            ->assertSeeIn('@output', 'b,a')
+        ;
+    }
+
+    function test_wire_data_reflects_key_order_and_value_changes()
+    {
+        Livewire::visit(new class extends Component {
+            public $items = [
+                'a' => 1,
+                'b' => 2,
+            ];
+
+            public function reorder()
+            {
+                $this->items = [
+                    'b' => 3,
+                    'a' => 1,
+                ];
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <button wire:click="reorder" dusk="reorder">Reorder</button>
+                        <span dusk="keys" x-text="Object.keys($wire.items).join(',')"></span>
+                        <span dusk="values" x-text="Object.values($wire.items).join(',')"></span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@keys', 'a,b')
+            ->assertSeeIn('@values', '1,2')
+            ->waitForLivewire()->click('@reorder')
+            ->assertSeeIn('@keys', 'b,a')
+            ->assertSeeIn('@values', '3,1')
+        ;
+    }
 }
