@@ -4,15 +4,17 @@ import Alpine from 'alpinejs'
 export function getErrorsObject(component) {
     let state = component.__errorsState ??= Alpine.reactive({
         clientErrors: null,
-        lastSnapshot: component.snapshot,
     })
+
+    // Store lastSnapshot outside reactive state to avoid Proxy wrapping breaking identity comparison...
+    component.__lastErrorsSnapshot ??= component.snapshot
 
     return {
         messages() {
             // If the snapshot changed (server responded), reset client overrides...
-            if (state.lastSnapshot !== component.snapshot) {
+            if (component.__lastErrorsSnapshot !== component.snapshot) {
                 state.clientErrors = null
-                state.lastSnapshot = component.snapshot
+                component.__lastErrorsSnapshot = component.snapshot
             }
 
             return state.clientErrors ?? component.snapshot.memo.errors
