@@ -7412,11 +7412,6 @@ function diff(left, right, diffs = {}, path = "") {
     return diffs;
   }
   let leftKeys = Object.keys(left);
-  let rightKeys = Object.keys(right);
-  if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i])) {
-    diffs[path] = right;
-    return diffs;
-  }
   Object.entries(right).forEach(([key, value]) => {
     diffs = { ...diffs, ...diff(left[key], right[key], diffs, path === "" ? key : `${path}.${key}`) };
     leftKeys = leftKeys.filter((i) => i !== key);
@@ -8266,27 +8261,16 @@ import_alpinejs2.default.magic("wire", (el, { cleanup }) => {
   let component;
   return new Proxy({}, {
     get(target, property) {
-      if (!component) {
-        try {
-          component = closestComponent(el);
-        } catch (e) {
-          return () => {
-          };
-        }
-      }
+      if (!component)
+        component = closestComponent(el);
       if (["$entangle", "entangle"].includes(property)) {
         return generateEntangleFunction(component, cleanup);
       }
       return component.$wire[property];
     },
     set(target, property, value) {
-      if (!component) {
-        try {
-          component = closestComponent(el);
-        } catch (e) {
-          return true;
-        }
-      }
+      if (!component)
+        component = closestComponent(el);
       component.$wire[property] = value;
       return true;
     }
@@ -10327,8 +10311,6 @@ function getPooledCommits(pools) {
 function colocateCommitsByComponent(pools, component, foreignComponent) {
   let pool = findPoolWithComponent(pools, component);
   let foreignPool = findPoolWithComponent(pools, foreignComponent);
-  if (!foreignPool)
-    return;
   let foreignCommit = foreignPool.findCommitByComponent(foreignComponent);
   foreignPool.delete(foreignCommit);
   pool.add(foreignCommit);
