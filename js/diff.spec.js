@@ -285,4 +285,29 @@ describe('diffAndConsolidate', () => {
             data: { b: 2, a: 1 }
         })
     })
+
+    it('ignores key order changes at root level', () => {
+        expect(diffAndConsolidate(
+            { a: 1, b: 2 },
+            { b: 2, a: 1 }
+        )).toEqual({})
+    })
+
+    it('detects key order changes in deeply nested objects', () => {
+        expect(diffAndConsolidate(
+            { a: { b: { c: 1, d: 2 } } },
+            { a: { b: { d: 2, c: 1 } } }
+        )).toEqual({
+            'a.b': { d: 2, c: 1 }
+        })
+    })
+
+    it('detects key order changes with simultaneous value changes', () => {
+        expect(diffAndConsolidate(
+            { data: { a: 1, b: 2 } },
+            { data: { b: 3, a: 1 } }
+        )).toEqual({
+            data: { b: 3, a: 1 }
+        })
+    })
 })
