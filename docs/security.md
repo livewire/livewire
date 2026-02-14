@@ -362,8 +362,8 @@ If a Livewire component is loaded on a page that uses the `EnsureUserHasRole` mi
 Alternatively, if you wish to apply specific middleware to every single Livewire update network request, you can do so by registering your own Livewire update route with any middleware you wish:
 
 ```php
-Livewire::setUpdateRoute(function ($handle) {
-	return Route::post('/livewire/update', $handle)
+Livewire::setUpdateRoute(function ($handle, $path) {
+	return Route::post($path, $handle)
         ->middleware(App\Http\Middleware\LocalizeViewPaths::class);
 });
 ```

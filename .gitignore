@@ -24,3 +24,6 @@ Thumbs.db
 
 # Obsidian files for documentation editin
 docs/.obsidian/workspace.json
+
+# PR review bot (WIP)
+scripts/review/

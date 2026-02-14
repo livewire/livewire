@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\TestCase;
 
 class CustomUpdateRouteUnitTest extends TestCase
@@ -24,6 +25,23 @@ class CustomUpdateRouteUnitTest extends TestCase
 
         $this->assertCount(2, $livewireUpdateRoutes);
         $this->assertEquals('/custom/livewire/update', Livewire::getUpdateUri());
+    }
+
+    public function test_default_route_returns_404_when_custom_route_registered(): void
+    {
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => []]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_custom_route_accepts_requests_when_registered(): void
+    {
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson('/custom/livewire/update', ['components' => []]);
+
+        $response->assertOk();
+        $this->assertArrayHasKey('components', $response->json());
     }
 }
 
