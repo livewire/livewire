@@ -282,6 +282,14 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
         return { changed: true, consolidated: true }
     }
 
+    // Did the key order change?
+    if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i])) {
+        if (path !== '') {
+            diffs[path] = dataGet(rootRight, path)
+            return { changed: true, consolidated: true }
+        }
+    }
+
     // Check if all keys are the same (no additions/removals)
     let keysMatch = leftKeys.every(k => rightKeys.includes(k))
 

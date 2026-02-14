@@ -276,4 +276,13 @@ describe('diffAndConsolidate', () => {
             'form.text': 'Text'
         })
     })
+
+    it('detects key order changes in objects', () => {
+        expect(diffAndConsolidate(
+            { data: { a: 1, b: 2 } },
+            { data: { b: 2, a: 1 } }
+        )).toEqual({
+            data: { b: 2, a: 1 }
+        })
+    })
 })
