@@ -73,9 +73,13 @@ class SupportWireModelingNestedComponents extends ComponentHook
 
             // Throw if the root element already has wire:model, since HTML
             // doesn't allow duplicate attributes and the parent binding
-            // would silently break.
+            // would silently break. We extract just the opening tag first
+            // to avoid regex backtracking on long attribute lists.
+            $trimmed = ltrim($html);
+            $tagEnd = strpos($trimmed, '>');
+
             throw_if(
-                preg_match('/^<[^>]*\bwire:model[=.\s>]/', ltrim($html)),
+                $tagEnd !== false && preg_match('/\bwire:model[=.\s>]/', substr($trimmed, 0, $tagEnd)),
                 new ModelableRootHasWireModelException
             );
 
