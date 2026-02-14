@@ -93,7 +93,7 @@ new class extends Component {
 ```
 
 > [!warning]
-> Your component's root element must be a wrapper element (like `<div>`), not the input element itself. Livewire injects attributes on the root element to wire up the parent binding, which conflicts with an existing `wire:model`.
+> Your component's root element cannot be a form control with `wire:model`. Wrap your input in a wrapper element like `<div>`. Livewire injects `wire:model` and `x-modelable` on the root element to wire up the parent binding — a second `wire:model` on the same element creates a conflict.
 
 ## Modifiers
 
