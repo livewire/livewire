@@ -55,7 +55,7 @@ php artisan make:livewire pages::post.create
 
 This creates the component at `resources/views/pages/post/⚡create.blade.php`. This organization makes it clear which components are pages versus reusable UI components.
 
-Learn more about using components as pages in the [Page components section](#page-components) below. You can also register your own custom namespaces—see the [Component namespaces documentation](/docs/4.x/pages#component-namespaces).
+Learn more about using components as pages in the [Page components section](#page-components) below. You can also register your own custom namespaces—see the [Component namespaces documentation](/docs/4.x/components#component-namespaces).
 
 ### Multi-file components
 

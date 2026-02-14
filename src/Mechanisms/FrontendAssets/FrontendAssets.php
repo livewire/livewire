@@ -198,7 +198,11 @@ class FrontendAssets extends Mechanism
 
         $url = rtrim($url, '/');
 
-        $url = (string) str($url)->when(! str($url)->isUrl(), fn($url) => $url->start('/'));
+        // Ensure relative URLs start with "/", but don't touch URLs with protocol schemes (e.g. "php://")...
+        $url = (string) str($url)->when(
+            ! str_contains($url, '://'),
+            fn ($url) => $url->start('/')
+        );
 
         // Add the build manifest hash to it...
         $manifest = json_decode(file_get_contents(__DIR__.'/../../../dist/manifest.json'), true);
