@@ -92,7 +92,8 @@ new class extends Component {
 <livewire:date-picker wire:model="endDate" />
 ```
 
-Be sure to wrap your input elements in a `<div>` rather than using them as the root element. Livewire needs the root element to wire up the parent binding.
+> [!warning]
+> Your component's root element must be a wrapper element (like `<div>`), not the input element itself. Livewire injects attributes on the root element to wire up the parent binding, which conflicts with an existing `wire:model`.
 
 ## Modifiers
 
