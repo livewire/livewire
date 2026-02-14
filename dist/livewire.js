@@ -513,7 +513,7 @@
       return { changed: true, consolidated: true };
     }
     Object.assign(diffs, childDiffs);
-    return { changed: changedCount > 0, consolidated: consolidatedCount > 0 };
+    return { changed: changedCount > 0, consolidated: consolidatedCount > 0 || convertedToObject };
   }
   function extractData(payload) {
     let value = isSynthetic(payload) ? payload[0] : payload;
@@ -5612,9 +5612,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportErrors.js
   function getErrorsObject(component) {
+    let state = component.__errorsState ??= module_default.reactive({
+      clientErrors: null,
+      lastSnapshot: component.snapshot
+    });
     return {
       messages() {
-        return component.snapshot.memo.errors;
+        if (state.lastSnapshot !== component.snapshot) {
+          state.clientErrors = null;
+          state.lastSnapshot = component.snapshot;
+        }
+        return state.clientErrors ?? component.snapshot.memo.errors;
       },
       keys() {
         return Object.keys(this.messages());
@@ -5654,7 +5662,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return Array.isArray(firstMessage) ? firstMessage[0] : firstMessage;
       },
       get(key) {
-        return component.snapshot.memo.errors[key] || [];
+        return this.messages()[key] || [];
       },
       all() {
         return Object.values(this.messages()).flat();
@@ -5672,6 +5680,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return Object.values(this.messages()).reduce((total, array) => {
           return total + array.length;
         }, 0);
+      },
+      clear(field = null) {
+        if (field === null) {
+          state.clientErrors = {};
+        } else {
+          let errors = { ...state.clientErrors ?? component.snapshot.memo.errors };
+          delete errors[field];
+          state.clientErrors = errors;
+        }
       }
     };
   }
