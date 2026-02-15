@@ -279,4 +279,42 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertScript('window.test === "through backend js method with params: foo, bar"')
         ;
     }
+
+    public function test_can_call_js_action_with_alpine_x_for_loop_variable()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $users = [
+                    ['id' => 1, 'name' => 'Alice'],
+                    ['id' => 2, 'name' => 'Bob'],
+                ];
+
+                public function render() {
+                    return <<<'HTML'
+                        <div>
+                            <template x-for="user in $wire.users" :key="user.id">
+                                <div>
+                                    <button wire:click="$js.selectUser(user)" x-text="user.name" :dusk="'select-' + user.id"></button>
+                                </div>
+                            </template>
+                        </div>
+
+                        @script
+                        <script>
+                            $wire.$js.selectUser = (user) => {
+                                window.selectedUser = JSON.stringify(user)
+                            }
+                        </script>
+                        @endscript
+                    HTML;
+                }
+            }
+        )
+        ->waitForText('Alice')
+        ->click('@select-1')
+        ->assertScript('JSON.parse(window.selectedUser).name === "Alice"')
+        ->click('@select-2')
+        ->assertScript('JSON.parse(window.selectedUser).name === "Bob"')
+        ;
+    }
 }
