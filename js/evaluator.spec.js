@@ -39,75 +39,58 @@ describe('Contextualize expressions', () => {
         expect(contextualizeExpression("{ fooBar: foo }")).toBe('{ fooBar: $wire.foo }')
     })
 
-    it('x-for loop variables are skipped', () => {
-        // Create a mock element with x-for attribute
+    it('alpine scope variables are skipped', () => {
         let mockEl = {
-            nodeType: 1,
-            getAttribute: (attr) => attr === 'x-for' ? 'user in users' : null,
-            parentElement: null
+            _x_dataStack: [{ user: {}, index: 0 }],
+            hasAttribute: () => false,
+            parentElement: null,
         }
 
         expect(contextualizeExpression('user', mockEl)).toBe('user')
         expect(contextualizeExpression('user.name', mockEl)).toBe('user.name')
         expect(contextualizeExpression('doSomething(user)', mockEl)).toBe('$wire.doSomething(user)')
-    })
-
-    it('x-for with index variable', () => {
-        let mockEl = {
-            nodeType: 1,
-            getAttribute: (attr) => attr === 'x-for' ? '(user, index) in users' : null,
-            parentElement: null
-        }
-
-        expect(contextualizeExpression('user', mockEl)).toBe('user')
         expect(contextualizeExpression('index', mockEl)).toBe('index')
-        expect(contextualizeExpression('users', mockEl)).toBe('$wire.users')
     })
 
-    it('x-for with all variables (item, index, collection)', () => {
-        let mockEl = {
-            nodeType: 1,
-            getAttribute: (attr) => attr === 'x-for' ? '(value, key, collection) in items' : null,
-            parentElement: null
+    it('nested alpine scopes', () => {
+        let parentEl = {
+            _x_dataStack: [{ user: {} }],
+            hasAttribute: () => false,
+            parentElement: null,
         }
 
-        expect(contextualizeExpression('value', mockEl)).toBe('value')
-        expect(contextualizeExpression('key', mockEl)).toBe('key')
-        expect(contextualizeExpression('collection', mockEl)).toBe('collection')
-        expect(contextualizeExpression('items', mockEl)).toBe('$wire.items')
-    })
-
-    it('nested x-for loops', () => {
         let childEl = {
-            nodeType: 1,
-            getAttribute: (attr) => attr === 'x-for' ? 'item in items' : null,
-            parentElement: {
-                nodeType: 1,
-                getAttribute: (attr) => attr === 'x-for' ? 'user in users' : null,
-                parentElement: null
-            }
+            _x_dataStack: [{ item: {} }],
+            hasAttribute: () => false,
+            parentElement: parentEl,
         }
 
         expect(contextualizeExpression('item', childEl)).toBe('item')
         expect(contextualizeExpression('user', childEl)).toBe('user')
-        expect(contextualizeExpression('items', childEl)).toBe('$wire.items')
-        expect(contextualizeExpression('users', childEl)).toBe('$wire.users')
+        expect(contextualizeExpression('other', childEl)).toBe('$wire.other')
     })
 
-    it('only loop variables are skipped, not Alpine x-data scope', () => {
-        // This is the key test: Alpine scope variables that aren't loop variables
-        // should still get prefixed with $wire, allowing intentional shadowing
-        let mockEl = {
-            nodeType: 1,
-            getAttribute: (attr) => attr === 'x-for' ? 'item in items' : null,
-            parentElement: null
+    it('stops at livewire component root', () => {
+        let rootEl = {
+            _x_dataStack: [{ outsideVar: {} }],
+            hasAttribute: (attr) => attr === 'wire:id',
+            parentElement: {
+                _x_dataStack: [{ aboveComponent: {} }],
+                hasAttribute: () => false,
+                parentElement: null,
+            },
         }
 
-        // 'item' is a loop variable, so it's skipped
-        expect(contextualizeExpression('item', mockEl)).toBe('item')
+        let childEl = {
+            _x_dataStack: [{ innerVar: {} }],
+            hasAttribute: () => false,
+            parentElement: rootEl,
+        }
 
-        // But other identifiers (even if they exist in Alpine x-data scope)
-        // should be prefixed, allowing Livewire properties to shadow them
-        expect(contextualizeExpression('someProperty', mockEl)).toBe('$wire.someProperty')
+        // innerVar and outsideVar are within the component, so they're skipped
+        expect(contextualizeExpression('innerVar', childEl)).toBe('innerVar')
+        expect(contextualizeExpression('outsideVar', childEl)).toBe('outsideVar')
+        // aboveComponent is above the wire:id root, so it gets prefixed
+        expect(contextualizeExpression('aboveComponent', childEl)).toBe('$wire.aboveComponent')
     })
 })
