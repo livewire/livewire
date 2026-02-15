@@ -92,6 +92,9 @@ new class extends Component {
 <livewire:date-picker wire:model="endDate" />
 ```
 
+> [!warning]
+> Your component's root element cannot be a form control with `wire:model`. Wrap your input in a wrapper element like `<div>`. Livewire injects `wire:model` and `x-modelable` on the root element to wire up the parent binding — a second `wire:model` on the same element creates a conflict.
+
 ## Modifiers
 
 The parent can use `wire:model` modifiers for timing and network control:
