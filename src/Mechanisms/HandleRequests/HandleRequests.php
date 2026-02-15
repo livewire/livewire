@@ -152,7 +152,21 @@ class HandleRequests extends Mechanism
             }
         }
 
-        $requestPayload = request(key: 'components', default: []);
+        $requestPayload = request('components');
+
+        if (! is_array($requestPayload) || empty($requestPayload)) {
+            abort(404);
+        }
+
+        foreach ($requestPayload as $component) {
+            if (! is_array($component)
+                || ! is_string($component['snapshot'] ?? null)
+                || ! is_array($component['updates'] ?? null)
+                || ! is_array($component['calls'] ?? null)
+            ) {
+                abort(404);
+            }
+        }
 
         // Check max components limit...
         $maxComponents = config('livewire.payload.max_components');
@@ -172,7 +186,13 @@ class HandleRequests extends Mechanism
             $updates = $componentPayload['updates'];
             $calls = $componentPayload['calls'];
 
-            [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
+            try {
+                [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
+            } catch (\TypeError $e) {
+                if (config('app.debug')) throw $e;
+
+                abort(419);
+            }
 
             $componentResponses[] = [
                 'snapshot' => json_encode($snapshot),

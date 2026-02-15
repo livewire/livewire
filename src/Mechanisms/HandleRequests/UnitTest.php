@@ -1,29 +1,154 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Livewire\Livewire;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
+use Tests\TestComponent;
 
 class UnitTest extends TestCase
 {
-    public function test_livewire_can_run_handle_request_without_components_on_payload(): void
+    #[DataProvider('malformedRequestPayloads')]
+    public function test_malformed_request_payload_returns_404($payload): void
     {
-        $handleRequestsInstance = new HandleRequests();
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
 
-        // Set the required headers on the container's request instance...
-        request()->headers->set('X-Livewire', '1');
-        request()->headers->set('Content-Type', 'application/json');
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), $payload);
 
-        $result = $handleRequestsInstance->handleUpdate();
+        $response->assertNotFound();
+    }
 
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('components', $result);
-        $this->assertArrayHasKey('assets', $result);
-        $this->assertIsArray($result['components']);
-        $this->assertEmpty($result['components']);
-        $this->assertIsArray($result['assets']);
-        $this->assertEmpty($result['assets']);
+    public static function malformedRequestPayloads()
+    {
+        return [
+            'missing components' => [[]],
+            'empty components' => [['components' => []]],
+            'non-array components' => [['components' => 'not-an-array']],
+            'missing snapshot' => [['components' => [['updates' => [], 'calls' => []]]]],
+            'non-string snapshot' => [['components' => [['snapshot' => 123, 'updates' => [], 'calls' => []]]]],
+            'missing updates' => [['components' => [['snapshot' => '{}', 'calls' => []]]]],
+            'missing calls' => [['components' => [['snapshot' => '{}', 'updates' => []]]]],
+            'non-array updates' => [['components' => [['snapshot' => '{}', 'updates' => 'bad', 'calls' => []]]]],
+            'non-array calls' => [['components' => [['snapshot' => '{}', 'updates' => [], 'calls' => 'bad']]]],
+        ];
+    }
+
+    #[DataProvider('malformedSnapshots')]
+    public function test_malformed_snapshot_returns_404($snapshot): void
+    {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $snapshot, 'updates' => [], 'calls' => []],
+            ]]);
+
+        $response->assertNotFound();
+    }
+
+    public static function malformedSnapshots()
+    {
+        return [
+            'invalid json' => ['not-valid-json'],
+            'missing data' => [json_encode(['memo' => ['id' => 'abc', 'name' => 'foo'], 'checksum' => 'hash'])],
+            'missing memo' => [json_encode(['data' => [], 'checksum' => 'hash'])],
+            'missing checksum' => [json_encode(['data' => [], 'memo' => ['id' => 'abc', 'name' => 'foo']])],
+            'missing memo.id' => [json_encode(['data' => [], 'memo' => ['name' => 'foo'], 'checksum' => 'hash'])],
+            'missing memo.name' => [json_encode(['data' => [], 'memo' => ['id' => 'abc'], 'checksum' => 'hash'])],
+        ];
+    }
+
+    #[DataProvider('malformedCalls')]
+    public function test_malformed_calls_returns_404($calls): void
+    {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
+        $snapshot = json_encode(['data' => [], 'memo' => ['id' => 'abc', 'name' => 'foo'], 'checksum' => 'hash']);
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $snapshot, 'updates' => [], 'calls' => $calls],
+            ]]);
+
+        $response->assertNotFound();
+    }
+
+    public static function malformedCalls()
+    {
+        return [
+            'missing method' => [[['params' => []]]],
+            'missing params' => [[['method' => 'doSomething']]],
+            'non-string method' => [[['method' => 123, 'params' => []]]],
+            'non-array params' => [[['method' => 'doSomething', 'params' => 'bad']]],
+        ];
+    }
+
+    public function test_bad_checksum_returns_419(): void
+    {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
+        $testable = Livewire::test(new class extends TestComponent {});
+
+        $snapshot = json_encode([
+            'data' => [],
+            'memo' => [
+                'id' => 'abc',
+                'name' => $testable->snapshot['memo']['name'],
+                'release' => $testable->snapshot['memo']['release'],
+            ],
+            'checksum' => 'invalid-checksum-value',
+        ]);
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $snapshot, 'updates' => [], 'calls' => []],
+            ]]);
+
+        $response->assertStatus(419);
+    }
+
+    public function test_type_mismatched_update_value_returns_419(): void
+    {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
+        $testable = Livewire::test(new class extends TestComponent {
+            public array $items = [];
+        });
+
+        $snapshotJson = json_encode($testable->snapshot);
+
+        // Send a string where an array property is expected...
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $snapshotJson, 'updates' => ['items' => 'not_an_array'], 'calls' => []],
+            ]]);
+
+        $response->assertStatus(419);
+    }
+
+    public function test_valid_request_returns_200(): void
+    {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
+        $testable = Livewire::test(new class extends TestComponent {});
+        $snapshotJson = json_encode($testable->snapshot);
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => []],
+            ]]);
+
+        $response->assertOk();
+        $this->assertArrayHasKey('components', $response->json());
     }
 
     public function test_default_livewire_update_route_is_registered(): void
@@ -64,9 +189,14 @@ class UnitTest extends TestCase
             return 'catch-all';
         })->where('all', '.*');
 
-        // Livewire's update route should still be matched
+        $testable = Livewire::test(new class extends TestComponent {});
+        $snapshotJson = json_encode($testable->snapshot);
+
+        // Livewire's update route should still be matched, not the catch-all
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => []]);
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => []],
+            ]]);
 
         $response->assertOk();
         $this->assertArrayHasKey('components', $response->json());
@@ -96,8 +226,13 @@ class UnitTest extends TestCase
 
     public function test_update_endpoint_succeeds_with_required_headers(): void
     {
+        $testable = Livewire::test(new class extends TestComponent {});
+        $snapshotJson = json_encode($testable->snapshot);
+
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => []]);
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => []],
+            ]]);
 
         $response->assertOk();
         $this->assertArrayHasKey('components', $response->json());
