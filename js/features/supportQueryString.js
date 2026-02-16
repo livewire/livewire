@@ -47,6 +47,13 @@ on('effect', ({ component, effects, cleanup }) => {
                 })
             })
 
+            // If the component already has a value that differs from the seed
+            // (e.g. restored from session), update the URL immediately...
+            let currentValue = dataGet(component.ephemeral, name)
+            if (JSON.stringify(currentValue) !== JSON.stringify(initialValue)) {
+                replace(currentValue)
+            }
+
             cleanup(() => {
                 forgetCommitHandler()
                 forgetPopHandler()
