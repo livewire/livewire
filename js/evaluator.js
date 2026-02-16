@@ -1,5 +1,28 @@
 import Alpine from 'alpinejs'
 
+function getAlpineScopeKeys(el) {
+    let keys = []
+
+    let currentEl = el
+
+    while (currentEl) {
+        if (currentEl._x_dataStack) {
+            for (let scope of currentEl._x_dataStack) {
+                for (let key of Object.keys(scope)) {
+                    if (! keys.includes(key)) keys.push(key)
+                }
+            }
+        }
+
+        // Stop at the Livewire component root element...
+        if (currentEl.hasAttribute && currentEl.hasAttribute('wire:id')) break
+
+        currentEl = currentEl.parentElement
+    }
+
+    return keys
+}
+
 export function evaluateExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 
@@ -15,7 +38,7 @@ export function evaluateExpression(el, expression, options = {}) {
 export function evaluateActionExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 
-    let contextualExpression = contextualizeExpression(expression)
+    let contextualExpression = contextualizeExpression(expression, el)
 
     try {
         let result = Alpine.evaluateRaw(el, contextualExpression, options)
@@ -34,8 +57,15 @@ export function evaluateActionExpression(el, expression, options = {}) {
     }
 }
 
-export function contextualizeExpression(expression) {
+export function contextualizeExpression(expression, el) {
     let SKIP = ['JSON', 'true', 'false', 'null', 'undefined', 'this', '$wire', '$event']
+
+    // If an element is provided, collect Alpine scope keys between
+    // this element and the Livewire component root so they don't
+    // get incorrectly prefixed with $wire.
+    if (el) {
+        SKIP.push(...getAlpineScopeKeys(el))
+    }
     let strings = []
 
     // 1. Yank out string literals so we don't touch them
