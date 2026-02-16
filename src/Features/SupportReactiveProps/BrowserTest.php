@@ -175,6 +175,61 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@child.count', 1);
     }
 
+    public function test_reactive_child_skips_render_when_prop_is_unchanged()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $count = 0;
+
+                public $other = 'foo';
+
+                public function changeOther() { $this->other = $this->other . '!'; }
+
+                public function inc() { $this->count++; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <span dusk="parent.other">{{ $other }}</span>
+
+                        <button wire:click="changeOther" dusk="parent.changeOther">Change Other</button>
+                        <button wire:click="inc" dusk="parent.inc">Inc</button>
+
+                        <livewire:child :$count />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[BaseReactive]
+                public $count;
+
+                public $renderCount = 0;
+
+                public function render() {
+                    $this->renderCount++;
+
+                    return <<<'HTML'
+                        <div>
+                            <span dusk="child.count">{{ $count }}</span>
+                            <span dusk="child.renderCount">{{ $renderCount }}</span>
+                        </div>
+                        HTML;
+                }
+            }
+        ])
+            ->assertSeeIn('@child.count', 0)
+            ->assertSeeIn('@child.renderCount', 1)
+
+            ->waitForLivewire()->click('@parent.changeOther')
+            ->assertSeeIn('@parent.other', 'foo!')
+            ->assertSeeIn('@child.count', 0)
+            ->assertSeeIn('@child.renderCount', 1)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@child.count', 1)
+            ->assertSeeIn('@child.renderCount', 2);
+    }
+
     public function test_can_pass_a_reactive_property_from_parent_to_lazy_child()
     {
         Livewire::visit([
