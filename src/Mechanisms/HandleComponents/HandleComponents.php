@@ -93,6 +93,8 @@ class HandleComponents extends Mechanism
 
         $this->pushOntoComponentStack($component);
 
+        store($component)->set('pendingUpdates', $updates);
+        store($component)->set('pendingCalls', $calls);
         trigger('hydrate', $component, $memo, $context);
 
         $this->updateProperties($component, $updates, $data, $context);

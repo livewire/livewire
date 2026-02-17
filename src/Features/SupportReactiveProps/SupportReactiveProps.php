@@ -34,6 +34,9 @@ class SupportReactiveProps extends ComponentHook
 
             if (store($component)->get('reactivePropsChanged', false)) return;
 
+            if (! empty(store($component)->get('pendingUpdates', []))) return;
+            if (! empty(store($component)->get('pendingCalls', []))) return;
+
             $pooled = store()->get('pooledChildIds', []);
 
             if (! isset($pooled[$component->getId()])) return;
