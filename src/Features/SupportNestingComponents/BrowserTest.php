@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportNestingComponents;
 
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -393,6 +394,86 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertNotPresent('@child')
         ->waitForLivewire()->click('@refresh-parent')
         ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_concatenated_child_key_does_not_overwrite_foreach_variable()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $items = [];
+
+                public function mount()
+                {
+                    $this->items['abc-123'] = [
+                        'id' => null,
+                        'name' => null,
+                        'quantity' => null,
+                        'cost' => null,
+                    ];
+                }
+
+                public function addItem()
+                {
+                    $key = Str::ulid()->toString();
+
+                    $this->items[$key] = [
+                        'id' => null,
+                        'name' => null,
+                        'quantity' => null,
+                        'cost' => null,
+                    ];
+                }
+
+                public function render()
+                {
+                    return <<<'BLADE'
+                    <div>
+                        @foreach ($items as $key => $item)
+                            <div wire:key="item-{{ $key }}">
+                                <livewire:child-dropdown
+                                    :key="$key . '-child-dropdown'"
+                                    :item-key="$key"
+                                />
+
+                                <input dusk="quantity-{{ $key }}" wire:model="items.{{ $key }}.quantity" />
+                                <input dusk="cost-{{ $key }}" wire:model="items.{{ $key }}.cost" />
+                            </div>
+                        @endforeach
+
+                        <button dusk="add-item" wire:click="addItem">Add Item</button>
+                        <div dusk="item-count">{{ count($items) }}</div>
+                        <div dusk="item-keys">{{ implode(',', array_keys($items)) }}</div>
+                    </div>
+                    BLADE;
+                }
+            },
+            'child-dropdown' => new class extends Component {
+                public string $itemKey = '';
+                public string $search = '';
+
+                public function render()
+                {
+                    return <<<'BLADE'
+                    <div>
+                        <span>Child: {{ $itemKey }}</span>
+                    </div>
+                    BLADE;
+                }
+            },
+        ])
+            // Assert the input uses the correct $key (abc-123), not the
+            // concatenated child key (abc-123-child-dropdown).
+            ->assertPresent('[dusk="quantity-abc-123"]')
+            ->assertPresent('[dusk="cost-abc-123"]')
+            // Type into the inputs and verify they bind to the right property.
+            ->type('[dusk="quantity-abc-123"]', '5')
+            ->type('[dusk="cost-abc-123"]', '10')
+            ->waitForLivewire()->click('@add-item')
+            // After adding, the original item's values should still be bound correctly.
+            ->assertInputValue('[dusk="quantity-abc-123"]', '5')
+            ->assertInputValue('[dusk="cost-abc-123"]', '10')
+            ->assertSeeIn('@item-count', '2')
+        ;
     }
 }
 
