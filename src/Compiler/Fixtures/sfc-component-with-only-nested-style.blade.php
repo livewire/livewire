@@ -1,0 +1,19 @@
+<?php
+
+use Livewire\Component;
+
+new class extends Component
+{
+    public $message = 'Hello World';
+};
+?>
+
+<div>
+    {{ $message }}
+
+    <div>
+        <style>
+            .nested { color: red; }
+        </style>
+    </div>
+</div>
