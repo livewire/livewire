@@ -5,7 +5,9 @@ namespace Livewire\Features\SupportQueryString;
 use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Session;
 use Livewire\Features\SupportTesting\DuskTestable;
+use Illuminate\Support\Facades\Route;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -1209,6 +1211,37 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('return countOfReplaceStateCalls', 1)
         ;
     }
+
+    public function test_push_mode_syncs_url_on_initial_load_when_value_restored_from_session()
+    {
+        $this->beforeServingApplication(function () {
+            app('livewire')->component('session-url-push', SessionUrlPushComponent::class);
+
+            Route::get('/session-url-push', function () {
+                return app('livewire')->new('session-url-push')();
+            })->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/session-url-push')
+                ->waitForLivewireToLoad()
+                ->assertQueryStringMissing('search')
+                ->assertInputValue('@search', '')
+
+                // Type a value — it should update the query string and store in session...
+                ->waitForLivewire()->type('@search', 'hello')
+                ->assertQueryStringHas('search', 'hello')
+
+                // Revisit the page with a clean URL — session should restore
+                // the value AND the query string should reflect it...
+                ->visit('/session-url-push')
+                ->waitForLivewireToLoad()
+                ->assertInputValue('@search', 'hello')
+                ->assertQueryStringHas('search', 'hello')
+            ;
+        });
+    }
 }
 
 class FormObject extends \Livewire\Form
@@ -1230,4 +1263,21 @@ enum IntegerBackedEnumForUrlTesting: int
 {
     case First = 1;
     case Second = 2;
+}
+
+class SessionUrlPushComponent extends Component
+{
+    #[Session]
+    #[BaseUrl(history: true, except: '')]
+    public string $search = '';
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <input type="text" dusk="search" wire:model.live="search" />
+            <span dusk="output">{{ $search }}</span>
+        </div>
+        HTML;
+    }
 }
