@@ -334,6 +334,45 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
 }
 
 /**
+ * Walk two object trees (old server state and new server state) and apply
+ * differences directly onto the reactive proxy. This avoids building
+ * dot-notated path strings, which break when object keys contain dots.
+ */
+export function applyServerChanges(oldObj, newObj, reactive) {
+    let oldKeys = new Set(Object.keys(oldObj || {}))
+    let newKeys = Object.keys(newObj)
+
+    newKeys.forEach(key => {
+        oldKeys.delete(key)
+
+        if (deeplyEqual(oldObj?.[key], newObj[key])) return
+
+        if (isObjecty(oldObj?.[key]) && isObjecty(newObj[key]) && isObjecty(reactive[key])
+            && isArray(newObj[key]) === isArray(reactive[key])) {
+            applyServerChanges(oldObj[key], newObj[key], reactive[key])
+        } else {
+            reactive[key] = newObj[key]
+        }
+    })
+
+    // Handle removals — keys present in old but not in new.
+    // Sort in reverse numeric order so array splice indices stay valid.
+    let removedKeys = [...oldKeys]
+
+    removedKeys.sort((a, b) => {
+        let aNum = parseInt(a) || 0
+        let bNum = parseInt(b) || 0
+        return bNum - aNum
+    }).forEach(key => {
+        if (isArray(reactive)) {
+            reactive.splice(parseInt(key), 1)
+        } else {
+            delete reactive[key]
+        }
+    })
+}
+
+/**
  * The data that's passed between the browser and server is in the form of
  * nested tuples consisting of the schema: [rawValue, metadata]. In this
  * method we're extracting the plain JS object of only the raw values.
