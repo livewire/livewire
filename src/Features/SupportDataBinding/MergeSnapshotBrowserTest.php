@@ -246,6 +246,52 @@ class MergeSnapshotBrowserTest extends BrowserTestCase
             ->assertSeeIn('@title-ephemeral', 'TYPED DURING REQUEST');
     }
 
+    function test_dot_containing_keys_preserved_across_multiple_requests()
+    {
+        Livewire::visit(new class extends Component {
+            public $articles = [];
+
+            public function mount()
+            {
+                $this->articles['order.foo'] = ['show' => 'abc'];
+            }
+
+            public function addSomething()
+            {
+                $this->articles['order.foo.bar'] = ['show' => 'ghl'];
+            }
+
+            public function addSomethingAgain()
+            {
+                $this->articles['order.foo.lol'] = ['show' => 'xyz'];
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <button dusk="add" wire:click="addSomething">Add</button>
+                        <button dusk="add-again" wire:click="addSomethingAgain">Add Again</button>
+                        <div dusk="output">
+                            @foreach($articles as $key => $value)
+                                <span>{{ $key }}:{{ $value['show'] }}</span>
+                            @endforeach
+                        </div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', 'order.foo:abc')
+            ->waitForLivewire()->click('@add')
+            ->assertSeeIn('@output', 'order.foo:abc')
+            ->assertSeeIn('@output', 'order.foo.bar:ghl')
+            // Second interaction — this is where the bug occurs
+            ->waitForLivewire()->click('@add-again')
+            ->assertSeeIn('@output', 'order.foo:abc')
+            ->assertSeeIn('@output', 'order.foo.bar:ghl')
+            ->assertSeeIn('@output', 'order.foo.lol:xyz');
+    }
+
     function test_nested_array_removals_at_different_levels()
     {
         Livewire::visit(new class extends Component {
