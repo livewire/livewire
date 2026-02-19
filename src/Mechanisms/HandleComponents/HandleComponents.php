@@ -93,8 +93,11 @@ class HandleComponents extends Mechanism
 
         $this->pushOntoComponentStack($component);
 
+        // Store updates and calls before hydration so reactive prop hooks
+        // can check whether this component has its own work to do.
         store($component)->set('pendingUpdates', $updates);
         store($component)->set('pendingCalls', $calls);
+
         trigger('hydrate', $component, $memo, $context);
 
         $this->updateProperties($component, $updates, $data, $context);

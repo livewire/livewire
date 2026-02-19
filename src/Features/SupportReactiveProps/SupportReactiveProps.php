@@ -19,6 +19,9 @@ class SupportReactiveProps extends ComponentHook
             static::$pendingChildParams[$id] = $params;
         });
 
+        // Track which component IDs are children pooled alongside a parent commit.
+        // This lets us distinguish "child committed because parent committed" from
+        // "child committed independently (e.g. its own method call)."
         on('hydrate', function ($component, $memo) {
             $pooled = store()->get('pooledChildIds', []);
 
@@ -29,6 +32,10 @@ class SupportReactiveProps extends ComponentHook
             store()->set('pooledChildIds', $pooled);
         });
 
+        // After all attributes (including BaseReactive) have hydrated, check whether
+        // this reactive child actually needs to re-render. Skip the Blade render when:
+        // no reactive prop changed, no client-side updates/calls, and the child was
+        // only committed because it was pooled with a parent — not independently.
         after('hydrate', function ($component, $memo) {
             if (empty($memo['props'] ?? [])) return;
 
