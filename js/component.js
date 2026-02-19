@@ -1,4 +1,4 @@
-import { diffAndPatch, dataSet, deepClone, diff, diffAndConsolidate, extractData} from '@/utils'
+import { dataSet, deepClone, diff, diffAndConsolidate, diffAndPatchRecursive, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
@@ -94,7 +94,7 @@ export class Component {
         // Diff old vs new server state and patch differences onto the reactive proxy.
         // This walks the trees directly, avoiding dot-notated paths which break
         // when object keys contain dots.
-        diffAndPatch(updatedOldCanonical, newData, this.reactive)
+        diffAndPatchRecursive(updatedOldCanonical, newData, this.reactive)
 
         return dirty
     }

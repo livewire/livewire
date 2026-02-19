@@ -338,7 +338,7 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
  * Walks the trees directly via object key access, avoiding dot-notated path
  * strings which break when object keys themselves contain dots.
  */
-export function diffAndPatch(oldObj, newObj, reactive) {
+export function diffAndPatchRecursive(oldObj, newObj, reactive) {
     let oldKeys = new Set(Object.keys(oldObj || {}))
     let newKeys = Object.keys(newObj)
 
@@ -349,7 +349,7 @@ export function diffAndPatch(oldObj, newObj, reactive) {
 
         if (isObjecty(oldObj?.[key]) && isObjecty(newObj[key]) && isObjecty(reactive[key])
             && isArray(newObj[key]) === isArray(reactive[key])) {
-            diffAndPatch(oldObj[key], newObj[key], reactive[key])
+            diffAndPatchRecursive(oldObj[key], newObj[key], reactive[key])
         } else {
             reactive[key] = newObj[key]
         }
