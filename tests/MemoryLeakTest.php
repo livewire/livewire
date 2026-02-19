@@ -4,6 +4,8 @@ namespace Livewire\Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\EventBus;
+use Livewire\Attributes\Computed;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Features\SupportStreaming\SupportStreaming;
@@ -17,6 +19,11 @@ class MemoryLeakTest extends \Orchestra\Testbench\TestCase
         return [
             \Livewire\LivewireServiceProvider::class,
         ];
+    }
+
+    protected function defineEnvironment($app)
+    {
+        $app['config']->set('app.key', 'base64:Hupx3yAySikrM2/edkZQNQHslgDWYfiBfCuSThJ5SK8=');
     }
 
     /** @test */
@@ -129,5 +136,60 @@ class MemoryLeakTest extends \Orchestra\Testbench\TestCase
             $this->assertEmpty(HandleComponents::$componentStack);
             $this->assertEmpty(SupportRedirects::$redirectorCacheStack);
         }
+    }
+
+    /** @test */
+    public function event_bus_listeners_dont_grow_across_multiple_requests()
+    {
+        $countListeners = function () {
+            $eventBus = app(EventBus::class);
+            $reflection = new \ReflectionClass($eventBus);
+            $total = 0;
+
+            foreach (['listeners', 'listenersAfter', 'listenersBefore'] as $prop) {
+                $property = $reflection->getProperty($prop);
+                $property->setAccessible(true);
+
+                foreach ($property->getValue($eventBus) as $listeners) {
+                    $total += count($listeners);
+                }
+            }
+
+            return $total;
+        };
+
+        // Do a warm-up mount + flush to settle one-time registrations.
+        Livewire::test(MemoryLeakComputedStub::class);
+        Livewire::flushState();
+
+        $baselineListeners = $countListeners();
+
+        // Simulate 20 request cycles.
+        for ($i = 0; $i < 20; $i++) {
+            Livewire::test(MemoryLeakComputedStub::class);
+            Livewire::flushState();
+        }
+
+        $this->assertEquals($baselineListeners, $countListeners());
+    }
+}
+
+class MemoryLeakComputedStub extends Component
+{
+    #[Computed]
+    public function items(): array
+    {
+        return ['a', 'b', 'c'];
+    }
+
+    #[Computed]
+    public function total(): int
+    {
+        return count($this->items);
+    }
+
+    public function render()
+    {
+        return '<div>{{ $this->total }}</div>';
     }
 }
