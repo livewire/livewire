@@ -24,20 +24,23 @@ class SupportReactiveProps extends ComponentHook
             static::$pendingChildParams[$id] = $params;
         });
 
-        // Process queued reactive prop updates AFTER all hooks have hydrated
-        // This ensures SupportLifecycleHooks is initialized before we trigger updates
+        // Fire updating*/updated* hooks after all hooks have hydrated
+        // Values are already set in BaseReactive::hydrate() so lifecycle hooks see fresh data
         after('hydrate', function ($component) {
             $id = $component->getId();
             $updates = static::$pendingUpdates[$id] ?? [];
             unset(static::$pendingUpdates[$id]);
 
             foreach ($updates as $update) {
-                ['property' => $property, 'value' => $value, 'setValue' => $setValue] = $update;
+                ['property' => $property, 'oldValue' => $oldValue, 'value' => $value, 'setValue' => $setValue] = $update;
 
-                // Trigger updating* hooks (they see the old value)
+                // Temporarily restore old value so updating* hooks see the previous state
+                $setValue($oldValue);
+
+                // Trigger updating* hooks (they see the old value via $this->property)
                 $finish = trigger('update', $component, $property, $value);
 
-                // Set the new value on the component
+                // Restore the new value for updated* hooks
                 $setValue($value);
 
                 // Trigger updated* hooks (they see the new value)
@@ -56,9 +59,10 @@ class SupportReactiveProps extends ComponentHook
         return $params[$name] ?? null;
     }
 
-    static function queueUpdate($id, $property, $value, $setValue) {
+    static function queueUpdate($id, $property, $oldValue, $value, $setValue) {
         static::$pendingUpdates[$id][] = [
             'property' => $property,
+            'oldValue' => $oldValue,
             'value' => $value,
             'setValue' => $setValue,
         ];
