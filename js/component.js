@@ -1,4 +1,4 @@
-import { applyServerChanges, dataSet, deepClone, diffAndConsolidate, extractData} from '@/utils'
+import { applyServerChanges, dataSet, deepClone, diff, diffAndConsolidate, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
@@ -77,6 +77,10 @@ export class Component {
         let oldCanonical = deepClone(this.canonical)
         let updatedOldCanonical = this.applyUpdates(oldCanonical, updates)
 
+        let newCanonical = extractData(deepClone(snapshot.data))
+
+        let dirty = diff(updatedOldCanonical, newCanonical)
+
         this.snapshotEncoded = snapshotEncoded
 
         this.snapshot = snapshot
@@ -90,6 +94,8 @@ export class Component {
         // Apply changes surgically by walking the object trees directly.
         // This avoids dot-notated paths which break when object keys contain dots.
         applyServerChanges(updatedOldCanonical, newData, this.reactive)
+
+        return dirty
     }
 
     queueUpdate(propertyName, value) {
