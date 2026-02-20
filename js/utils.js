@@ -334,40 +334,40 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
 }
 
 /**
- * Diff two object trees and patch the differences onto a third (target) object.
- * Walks the trees directly via object key access, avoiding dot-notated path
- * strings which break when object keys themselves contain dots.
+ * Diff two object trees (left = old, right = new) and patch the differences
+ * onto a target object. Walks the trees directly via object key access,
+ * avoiding dot-notated path strings which break when object keys contain dots.
  */
-export function diffAndPatchRecursive(oldObj, newObj, reactive) {
-    let oldKeys = new Set(Object.keys(oldObj || {}))
-    let newKeys = Object.keys(newObj)
+export function diffAndPatchRecursive(left, right, target) {
+    let leftKeys = new Set(Object.keys(left || {}))
+    let rightKeys = Object.keys(right)
 
-    newKeys.forEach(key => {
-        oldKeys.delete(key)
+    rightKeys.forEach(key => {
+        leftKeys.delete(key)
 
-        if (deeplyEqual(oldObj?.[key], newObj[key])) return
+        if (deeplyEqual(left?.[key], right[key])) return
 
-        if (isObjecty(oldObj?.[key]) && isObjecty(newObj[key]) && isObjecty(reactive[key])
-            && isArray(newObj[key]) === isArray(reactive[key])) {
-            diffAndPatchRecursive(oldObj[key], newObj[key], reactive[key])
+        if (isObjecty(left?.[key]) && isObjecty(right[key]) && isObjecty(target[key])
+            && isArray(right[key]) === isArray(target[key])) {
+            diffAndPatchRecursive(left[key], right[key], target[key])
         } else {
-            reactive[key] = newObj[key]
+            target[key] = right[key]
         }
     })
 
-    // Handle removals — keys present in old but not in new.
+    // Handle removals — keys present in left but not in right.
     // Sort in reverse numeric order so array splice indices stay valid.
-    let removedKeys = [...oldKeys]
+    let removedKeys = [...leftKeys]
 
     removedKeys.sort((a, b) => {
         let aNum = parseInt(a) || 0
         let bNum = parseInt(b) || 0
         return bNum - aNum
     }).forEach(key => {
-        if (isArray(reactive)) {
-            reactive.splice(parseInt(key), 1)
+        if (isArray(target)) {
+            target.splice(parseInt(key), 1)
         } else {
-            delete reactive[key]
+            delete target[key]
         }
     })
 }

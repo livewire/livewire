@@ -91,9 +91,9 @@ export class Component {
 
         let newData = extractData(deepClone(snapshot.data))
 
-        // Diff old vs new server state and patch differences onto the reactive proxy.
-        // This walks the trees directly, avoiding dot-notated paths which break
-        // when object keys contain dots.
+        // Diff old vs new and patch differences onto the reactive proxy. Walks
+        // the trees directly, avoiding dot-notated paths which break when
+        // object keys contain dots.
         diffAndPatchRecursive(updatedOldCanonical, newData, this.reactive)
 
         return dirty
