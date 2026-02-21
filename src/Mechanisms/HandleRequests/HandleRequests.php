@@ -115,6 +115,24 @@ class HandleRequests extends Mechanism
 
     function handleUpdate()
     {
+        // Laravel 13 (laravel/framework#58400) introduced Sec-Fetch-Site origin
+        // verification in its CSRF middleware. When the browser sends
+        // "Sec-Fetch-Site: same-origin" (which it does for same-origin fetch
+        // requests), the middleware trusts the origin and skips CSRF token
+        // validation entirely. This means that after a session is regenerated,
+        // the stale CSRF token sent by the browser is never checked, so the
+        // middleware never returns a 419 — and Livewire's page expired dialog
+        // is never triggered. To ensure session expiry is still detected, we
+        // verify the CSRF token ourselves before processing the update.
+        if (request()->hasSession() && ! (app()->runningInConsole() && app()->runningUnitTests())) {
+            $sessionToken = request()->session()->token();
+            $requestToken = request()->input('_token') ?? '';
+
+            if (! is_string($sessionToken) || ! is_string($requestToken) || ! hash_equals($sessionToken, $requestToken)) {
+                abort(419);
+            }
+        }
+
         $requestPayload = request(key: 'components', default: []);
 
         $finish = trigger('request', $requestPayload);
