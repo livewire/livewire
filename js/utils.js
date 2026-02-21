@@ -341,6 +341,45 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
 }
 
 /**
+ * Diff two object trees (left = old, right = new) and patch the differences
+ * onto a target object. Walks the trees directly via object key access,
+ * avoiding dot-notated path strings which break when object keys contain dots.
+ */
+export function diffAndPatchRecursive(left, right, target) {
+    let leftKeys = new Set(Object.keys(left || {}))
+    let rightKeys = Object.keys(right)
+
+    rightKeys.forEach(key => {
+        leftKeys.delete(key)
+
+        if (deeplyEqual(left?.[key], right[key])) return
+
+        if (isObjecty(left?.[key]) && isObjecty(right[key]) && isObjecty(target[key])
+            && isArray(right[key]) === isArray(target[key])) {
+            diffAndPatchRecursive(left[key], right[key], target[key])
+        } else {
+            target[key] = right[key]
+        }
+    })
+
+    // Handle removals — keys present in left but not in right.
+    // Sort in reverse numeric order so array splice indices stay valid.
+    let removedKeys = [...leftKeys]
+
+    removedKeys.sort((a, b) => {
+        let aNum = parseInt(a) || 0
+        let bNum = parseInt(b) || 0
+        return bNum - aNum
+    }).forEach(key => {
+        if (isArray(target)) {
+            target.splice(parseInt(key), 1)
+        } else {
+            delete target[key]
+        }
+    })
+}
+
+/**
  * The data that's passed between the browser and server is in the form of
  * nested tuples consisting of the schema: [rawValue, metadata]. In this
  * method we're extracting the plain JS object of only the raw values.
