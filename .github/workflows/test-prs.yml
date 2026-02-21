@@ -73,7 +73,7 @@ jobs:
       fail-fast: false
       matrix:
         php: [8.4, 8.5]
-        laravel: [11.*, 12.*]
+        laravel: [11.*, 12.*, 13.*]
 
     name: 1. Unit - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
 
@@ -120,7 +120,7 @@ jobs:
       fail-fast: false
       matrix:
         php: [8.4, 8.5]
-        laravel: [11.*, 12.*]
+        laravel: [11.*, 12.*, 13.*]
         shard: [1, 2, 3]
 
     name: 2. Browser ${{ matrix.shard }} - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
@@ -185,7 +185,7 @@ jobs:
       fail-fast: false
       matrix:
         php: [8.4, 8.5]
-        laravel: [11.*, 12.*]
+        laravel: [11.*, 12.*, 13.*]
 
     name: 3. Legacy - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
 
