@@ -6,7 +6,7 @@ class MvCommand extends MoveCommand
 {
     protected $signature = 'livewire:mv {name} {new-name} {--inline} {--force}';
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setHidden(true);
     }
