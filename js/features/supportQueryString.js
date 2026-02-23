@@ -41,10 +41,8 @@ on('effect', ({ component, effects, cleanup }) => {
             let forgetPopHandler = pop(async newValue => {
                 await component.$wire.set(name, newValue)
 
-                // @todo: this is the absolute worst thing ever I'm so sorry this needs to be refactored stat:
-                document.querySelectorAll('input').forEach(el => {
-                    el._x_forceModelUpdate && el._x_forceModelUpdate(el._x_model.get())
-                })
+                // Ensure model-bound elements reflect popstate-restored values.
+                refreshComponentModelElements(component)
             })
 
             // If the current property value differs from the initial value
@@ -73,4 +71,20 @@ function normalizeQueryStringEntry(key, value) {
 
         return {...fullerDefaults, ...value }
     }
+}
+
+function refreshComponentModelElements(component) {
+    let root = component?.el
+
+    if (! root) return
+
+    let refresh = (el) => {
+        if (! el?._x_forceModelUpdate || ! el?._x_model?.get) return
+
+        el._x_forceModelUpdate(el._x_model.get())
+    }
+
+    refresh(root)
+
+    root.querySelectorAll('*').forEach(refresh)
 }

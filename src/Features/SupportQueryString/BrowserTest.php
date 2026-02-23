@@ -1262,6 +1262,42 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('return window.location.hash', '#default-tab')
         ;
     }
+
+    public function test_push_mode_back_button_restores_select_model_value()
+    {
+        $this->beforeServingApplication(function () {
+            app('livewire')->component('select-url-push', SelectUrlPushComponent::class);
+
+            Route::get('/select-url-push', function () {
+                return app('livewire')->new('select-url-push')();
+            })->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/select-url-push')
+                ->waitForLivewireToLoad()
+                ->assertQueryStringMissing('status')
+                ->assertSelected('@status', 'all')
+                ->assertSeeIn('@output', 'all')
+
+                ->waitForLivewire()->select('@status', 'active')
+                ->assertQueryStringHas('status', 'active')
+                ->assertSelected('@status', 'active')
+                ->assertSeeIn('@output', 'active')
+
+                ->waitForLivewire()->select('@status', 'archived')
+                ->assertQueryStringHas('status', 'archived')
+                ->assertSelected('@status', 'archived')
+                ->assertSeeIn('@output', 'archived')
+
+                ->waitForLivewire()->back()
+                ->assertQueryStringHas('status', 'active')
+                ->assertSelected('@status', 'active')
+                ->assertSeeIn('@output', 'active')
+            ;
+        });
+    }
 }
 
 class FormObject extends \Livewire\Form
@@ -1297,6 +1333,27 @@ class SessionUrlPushComponent extends Component
         <div>
             <input type="text" dusk="search" wire:model.live="search" />
             <span dusk="output">{{ $search }}</span>
+        </div>
+        HTML;
+    }
+}
+
+class SelectUrlPushComponent extends Component
+{
+    #[BaseUrl(history: true, except: 'all')]
+    public string $status = 'all';
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <select dusk="status" wire:model.change.live="status">
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="archived">Archived</option>
+            </select>
+
+            <span dusk="output">{{ $status }}</span>
         </div>
         HTML;
     }
