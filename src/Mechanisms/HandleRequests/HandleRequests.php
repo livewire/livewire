@@ -145,10 +145,12 @@ class HandleRequests extends Mechanism
         $maxSize = config('livewire.payload.max_size');
 
         if ($maxSize !== null) {
-            $contentLength = request()->header('Content-Length', 0);
+            $actualPayloadSize = strlen(request()->getContent() ?? '');
+            $declaredPayloadSize = (int) request()->header('Content-Length', 0);
+            $payloadSize = max($actualPayloadSize, $declaredPayloadSize);
 
-            if ($contentLength > $maxSize) {
-                throw new PayloadTooLargeException($contentLength, $maxSize);
+            if ($payloadSize > $maxSize) {
+                throw new PayloadTooLargeException($payloadSize, $maxSize);
             }
         }
 

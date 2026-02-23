@@ -37,6 +37,28 @@ class PayloadGuardsUnitTest extends TestCase
             ]);
     }
 
+    public function test_rejects_payload_exceeding_max_size_even_with_small_content_length_header()
+    {
+        config()->set('livewire.payload.max_size', 100);
+
+        $this->expectException(PayloadTooLargeException::class);
+        $this->expectExceptionMessage('payload.max_size');
+
+        $largeSnapshot = str_repeat('x', 1000);
+
+        $this->withoutExceptionHandling()
+            ->withHeaders(['Content-Length' => 1, 'X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), [
+                'components' => [
+                    [
+                        'snapshot' => $largeSnapshot,
+                        'updates' => [],
+                        'calls' => [],
+                    ],
+                ],
+            ]);
+    }
+
     public function test_allows_payload_within_max_size()
     {
         config()->set('livewire.payload.max_size', 1024 * 1024); // 1MB
