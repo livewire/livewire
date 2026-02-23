@@ -294,5 +294,5 @@ return [
     |
     */
 
-    'route_prefix' => '',
+    'route_prefix' => null,
 ];
