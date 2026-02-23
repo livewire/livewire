@@ -266,7 +266,7 @@ function fromQueryString(search, queryKey) {
         let shouldBeHandledAsArray = decodedKey.includes('[') && decodedKey.startsWith(queryKey)
 
         if (!shouldBeHandledAsArray) {
-            data[key] = value
+            data[decodedKey] = value
         } else {
             // Convert to dot notation because it's easier...
             let dotNotatedKey = decodedKey.replaceAll('[', '.').replaceAll(']', '')
