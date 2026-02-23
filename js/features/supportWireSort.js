@@ -54,8 +54,18 @@ Alpine.interceptInit(el => {
                 [attribute]() {
                     setNextActionOrigin({ el, directive })
 
-                    let params = [this.$item, this.$position]
-                    let scope = { $item: this.$item, $position: this.$position }
+                    // Alpine's x-sort provides $position as the raw DOM index (e.newIndex
+                    // from SortableJS), which counts ALL children including non-sortable
+                    // siblings like wire:sort:ignore / x-sort:ignore elements. Recalculate
+                    // as the index among only sortable items (wire:sort:item / x-sort:item).
+                    let sortableChildren = Array.from(el.children).filter(child =>
+                        child.hasAttribute('x-sort:item') || child.hasAttribute('wire:sort:item')
+                    )
+                    let itemPosition = sortableChildren.findIndex(child => child._x_sort_key === this.$item)
+                    let position = itemPosition !== -1 ? itemPosition : this.$position
+
+                    let params = [this.$item, position]
+                    let scope = { $item: this.$item, $position: position }
 
                     let sortId = el.getAttribute('wire:sort:group-id')
 
