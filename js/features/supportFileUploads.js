@@ -74,6 +74,7 @@ export function handleFileUpload(el, property, component, cleanup) {
     cleanup(() => {
         el.removeEventListener('change', eventHandler)
         el.removeEventListener('click', clearFileInputValue)
+        el.removeEventListener('livewire-upload-cancel', clearFileInputValue)
     })
 }
 
