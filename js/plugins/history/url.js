@@ -21,16 +21,11 @@ export function setQueryParam(param, value) {
     history.replaceState(history.state, '', url)
 }
 
-function urlFromParams(params = {}) {
-    let queryParams = new URLSearchParams(window.location.search);
+function urlFromQueryParams(queryParams) {
+    let queryString = queryParams.toString()
 
-    Object.entries(params).forEach(([key, value]) => {
-        queryParams.set(key, value)
-    })
-
-    let queryString = Array.from(queryParams.entries()).length > 0
-        ? '?'+params.toString()
-        : ''
-
-    return window.location.origin + window.location.pathname + '?'+queryString + window.location.hash
+    return window.location.origin
+        + window.location.pathname
+        + (queryString ? `?${queryString}` : '')
+        + window.location.hash
 }
