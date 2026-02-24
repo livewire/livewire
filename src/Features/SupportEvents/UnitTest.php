@@ -79,6 +79,34 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
+    public function test_dispatched_event_callback_assertion_checks_all_matching_events()
+    {
+        Livewire::test(new class extends TestComponent {
+            public function dispatchFooTwice()
+            {
+                $this->dispatch('foo', id: 1);
+                $this->dispatch('foo', id: 2);
+            }
+        })
+            ->call('dispatchFooTwice')
+            ->assertDispatched('foo', fn ($name, $params) => $params['id'] === 2)
+            ->assertNotDispatched('foo', fn ($name, $params) => $params['id'] === 3);
+    }
+
+    public function test_can_assert_dispatched_event_times()
+    {
+        Livewire::test(new class extends TestComponent {
+            public function dispatchFooTwice()
+            {
+                $this->dispatch('foo');
+                $this->dispatch('foo');
+            }
+        })
+            ->call('dispatchFooTwice')
+            ->assertDispatchedTimes('foo', 2)
+            ->assertDispatchedTimes('bar', 0);
+    }
+
     public function test_it_can_register_multiple_listeners_via_attribute(): void
     {
         Livewire::test(new class extends TestComponent {
