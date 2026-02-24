@@ -12,6 +12,8 @@ use Livewire\Exceptions\MaxNestingDepthExceededException;
 use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\View;
+use Livewire\Features\SupportAttributes\AttributeLevel;
+use Livewire\Features\SupportSync\BaseSync;
 
 class HandleComponents extends Mechanism
 {
@@ -280,6 +282,7 @@ class HandleComponents extends Mechanism
     public function snapshot($component, $context = null)
     {
         $context ??= new ComponentContext($component);
+        $this->addSyncMemoToContext($component, $context);
 
         $data = $this->dehydrateProperties($component, $context);
 
@@ -302,6 +305,7 @@ class HandleComponents extends Mechanism
         $data = Utils::getPublicPropertiesDefinedOnSubclass($component);
 
         foreach ($data as $key => $value) {
+            $value = $this->applySyncValueToLivewire($component, $key, $value);
             $data[$key] = $this->dehydrate($value, $context, $key);
         }
 
@@ -329,6 +333,7 @@ class HandleComponents extends Mechanism
             if (! property_exists($component, $key)) continue;
 
             $child = $this->hydrate($value, $context, $key);
+            $child = $this->applySyncValueFromLivewire($component, $key, $child);
 
             // Typed properties shouldn't be set back to "null". It will throw an error...
             if ((new \ReflectionProperty($component, $key))->getType() && is_null($child)) continue;
@@ -519,7 +524,11 @@ class HandleComponents extends Mechanism
 
         // If we have meta data already for this property, let's use that to get a synth...
         if ($meta) {
-            return $this->hydratePropertyUpdate([$value, $meta], $context, $path);
+            return $this->applySyncValueFromLivewire(
+                $context->component,
+                $path,
+                $this->hydratePropertyUpdate([$value, $meta], $context, $path)
+            );
         }
 
         // If we don't, let's check to see if it's a typed property and fetch the synth that way...
@@ -537,11 +546,17 @@ class HandleComponents extends Mechanism
             foreach ($types as $type) {
                 $synth = $this->getSynthesizerByType($type->getName(), $context, $path);
 
-                if ($synth) return $synth->hydrateFromType($type->getName(), $value);
+                if ($synth) {
+                    return $this->applySyncValueFromLivewire(
+                        $context->component,
+                        $path,
+                        $synth->hydrateFromType($type->getName(), $value)
+                    );
+                }
             }
         }
 
-        return $value;
+        return $this->applySyncValueFromLivewire($context->component, $path, $value);
     }
 
     protected function getMetaForPath($raw, $path)
@@ -728,6 +743,46 @@ class HandleComponents extends Mechanism
         }
 
         return null;
+    }
+
+    protected function getSyncAttribute($component, string $property): ?BaseSync
+    {
+        return $component->getAttributes()
+            ->whereInstanceOf(BaseSync::class)
+            ->first(fn ($attribute) => $attribute->getLevel() === AttributeLevel::PROPERTY && $attribute->getName() === $property);
+    }
+
+    protected function addSyncMemoToContext($component, ComponentContext $context): void
+    {
+        $syncMemo = $component->getAttributes()
+            ->whereInstanceOf(BaseSync::class)
+            ->filter(fn ($attribute) => $attribute->getLevel() === AttributeLevel::PROPERTY)
+            ->mapWithKeys(fn (BaseSync $attribute) => [$attribute->getName() => $attribute->getClientStrategy()])
+            ->all();
+
+        if ($syncMemo === []) return;
+
+        $context->addMemo('sync', $syncMemo);
+    }
+
+    protected function applySyncValueToLivewire($component, string $property, mixed $value): mixed
+    {
+        $attribute = $this->getSyncAttribute($component, $property);
+
+        if (! $attribute) return $value;
+
+        return $attribute->toLivewire($value);
+    }
+
+    protected function applySyncValueFromLivewire($component, string $path, mixed $value): mixed
+    {
+        if (str_contains($path, '.')) return $value;
+
+        $attribute = $this->getSyncAttribute($component, $path);
+
+        if (! $attribute) return $value;
+
+        return $attribute->fromLivewire($value);
     }
 
     protected function pushOntoComponentStack($component)

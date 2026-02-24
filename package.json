@@ -1,5 +1,6 @@
 {
     "main": "dist/livewire.js",
+    "types": "js/livewire.d.ts",
     "name": "laravel-livewire",
     "scripts": {
         "build": "node ./scripts/build.js",

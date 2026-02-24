@@ -3,6 +3,7 @@ import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
 import { setNextActionOrigin } from '@/request'
+import { applySyncDataFromServer, applySyncUpdatesFromServer, applySyncUpdatesToServer } from '@/sync'
 
 export class Component {
     constructor(el) {
@@ -27,14 +28,17 @@ export class Component {
         }
 
         this.name = this.snapshot.memo.name
+        this.sync = this.snapshot.memo.sync || {}
 
         this.effects = JSON.parse(el.getAttribute('wire:effects'))
         this.originalEffects = deepClone(this.effects)
 
+        let hydratedData = applySyncDataFromServer(extractData(deepClone(this.snapshot.data)), this.sync)
+
         // "canonical" data represents the last known server state.
-        this.canonical = extractData(deepClone(this.snapshot.data))
+        this.canonical = deepClone(hydratedData)
         // "ephemeral" represents the most current state. (This can be freely manipulated by end users)
-        this.ephemeral = extractData(deepClone(this.snapshot.data))
+        this.ephemeral = deepClone(hydratedData)
         // "reactive" is just ephemeral, except when you mutate it, front-ends like Vue react.
         this.reactive = Alpine.reactive(this.ephemeral)
 
@@ -73,23 +77,26 @@ export class Component {
 
     mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
         let snapshot = JSON.parse(snapshotEncoded)
+        let currentSync = this.sync || {}
+        let nextSync = snapshot.memo.sync || {}
 
         let oldCanonical = deepClone(this.canonical)
-        let updatedOldCanonical = this.applyUpdates(oldCanonical, updates)
+        let updatedOldCanonical = this.applyUpdates(oldCanonical, applySyncUpdatesFromServer(updates, currentSync))
 
-        let newCanonical = extractData(deepClone(snapshot.data))
+        let newCanonical = applySyncDataFromServer(extractData(deepClone(snapshot.data)), nextSync)
 
         let dirty = diff(updatedOldCanonical, newCanonical)
 
         this.snapshotEncoded = snapshotEncoded
 
         this.snapshot = snapshot
+        this.sync = nextSync
 
         this.effects = effects
 
-        this.canonical = extractData(deepClone(snapshot.data))
+        this.canonical = deepClone(newCanonical)
 
-        let newData = extractData(deepClone(snapshot.data))
+        let newData = deepClone(newCanonical)
 
         // Apply changes surgically to preserve client-side ephemeral state
         // that wasn't sent with this request (e.g., changes made during the request)
@@ -153,7 +160,7 @@ export class Component {
     getUpdates() {
         let propertiesDiff = diffAndConsolidate(this.canonical, this.ephemeral)
 
-        return this.mergeQueuedUpdates(propertiesDiff)
+        return applySyncUpdatesToServer(this.mergeQueuedUpdates(propertiesDiff), this.sync)
     }
 
     applyUpdates(object, updates) {

@@ -5,6 +5,7 @@ import { on as hook, trigger, triggerAsync } from './hooks'
 import { directive } from './directives'
 import Alpine from 'alpinejs'
 import { fireAction, interceptAction, interceptMessage, interceptRequest } from '@/request'
+import { registerSyncCodec, removeSyncCodec } from '@/sync'
 
 let Livewire = {
     directive,
@@ -13,6 +14,9 @@ let Livewire = {
     interceptAction: (callback) => interceptAction(callback),
     interceptMessage: (callback) => interceptMessage(callback),
     interceptRequest: (callback) => interceptRequest(callback),
+    sync: (strategy, codec) => registerSyncCodec(strategy, codec),
+    registerSyncCodec: (strategy, codec) => registerSyncCodec(strategy, codec),
+    removeSyncCodec: (strategy) => removeSyncCodec(strategy),
     fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),
     start,
     first,
