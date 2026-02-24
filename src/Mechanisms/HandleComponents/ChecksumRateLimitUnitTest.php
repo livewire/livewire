@@ -181,6 +181,56 @@ class ChecksumRateLimitUnitTest extends TestCase
         // tooManyAttempts should be called twice (once per request)
         RateLimiter::shouldHaveReceived('tooManyAttempts')->twice();
     }
+
+    public function test_debug_mode_includes_first_payload_difference_on_checksum_failure()
+    {
+        config()->set('app.debug', true);
+
+        $snapshot = [
+            'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
+            'data' => ['foo' => 'bar'],
+        ];
+
+        $snapshot['checksum'] = Checksum::generate($snapshot);
+
+        $tamperedSnapshot = $snapshot;
+        $tamperedSnapshot['data']['foo'] = 'baz';
+
+        request()->attributes->remove('livewire_rate_limit_checked');
+
+        try {
+            Checksum::verify($tamperedSnapshot);
+            $this->fail('Expected CorruptComponentPayloadException to be thrown.');
+        } catch (CorruptComponentPayloadException $e) {
+            $this->assertStringContainsString('Checksum mismatch details:', $e->getMessage());
+            $this->assertStringContainsString('First differing path [data.foo]', $e->getMessage());
+            $this->assertStringContainsString('expected "bar" and received "baz"', $e->getMessage());
+        }
+    }
+
+    public function test_debug_details_are_not_included_when_debug_mode_is_disabled()
+    {
+        config()->set('app.debug', false);
+
+        $snapshot = [
+            'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
+            'data' => ['foo' => 'bar'],
+        ];
+
+        $snapshot['checksum'] = Checksum::generate($snapshot);
+
+        $tamperedSnapshot = $snapshot;
+        $tamperedSnapshot['data']['foo'] = 'baz';
+
+        request()->attributes->remove('livewire_rate_limit_checked');
+
+        try {
+            Checksum::verify($tamperedSnapshot);
+            $this->fail('Expected CorruptComponentPayloadException to be thrown.');
+        } catch (CorruptComponentPayloadException $e) {
+            $this->assertStringNotContainsString('Checksum mismatch details:', $e->getMessage());
+        }
+    }
 }
 
 class ChecksumRateLimitTestComponent extends Component
