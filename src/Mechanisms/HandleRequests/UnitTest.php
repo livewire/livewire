@@ -238,6 +238,42 @@ class UnitTest extends TestCase
         $this->assertArrayHasKey('components', $response->json());
     }
 
+    /**
+     * When a public property contains non-UTF-8 bytes (e.g. from a latin1/Windows-1252 database),
+     * json_encode() fails. Instead of silently returning "snapshot": false (which causes
+     * a cryptic JS error "f.memo is undefined" on the client), a SnapshotEncodingException
+     * should be thrown with a clear message pointing to the actual problem.
+     */
+    public function test_snapshot_json_encode_failure_throws_exception(): void
+    {
+        $this->withoutExceptionHandling();
+        $this->expectException(\Livewire\Exceptions\SnapshotEncodingException::class);
+
+        $testable = Livewire::test(new class extends TestComponent {
+            public array $items = [];
+
+            public function loadItems()
+            {
+                // 0x92 = right single quotation mark in Windows-1252, invalid UTF-8 byte
+                $this->items = [
+                    ['name' => "Test\x92s Item"],
+                ];
+            }
+        });
+
+        $snapshotJson = json_encode($testable->snapshot);
+
+        // This request triggers loadItems(), which sets a non-UTF-8 property.
+        // When the snapshot is serialized for the response, json_encode fails
+        // and a SnapshotEncodingException should be thrown.
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => [
+                    ['method' => 'loadItems', 'params' => []],
+                ]],
+            ]]);
+    }
+
     public function test_get_update_uri_works_when_update_route_property_is_null(): void
     {
         // Simulate the cached routes scenario where routes are loaded from cache

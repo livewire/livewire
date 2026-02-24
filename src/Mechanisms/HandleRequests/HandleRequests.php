@@ -194,8 +194,17 @@ class HandleRequests extends Mechanism
                 abort(419);
             }
 
+            $encoded = json_encode($snapshot);
+
+            if ($encoded === false) {
+                throw new \Livewire\Exceptions\SnapshotEncodingException(
+                    $snapshot['memo']['name'] ?? 'unknown',
+                    json_last_error_msg()
+                );
+            }
+
             $componentResponses[] = [
-                'snapshot' => json_encode($snapshot),
+                'snapshot' => $encoded,
                 'effects' => $effects,
             ];
         }
