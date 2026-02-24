@@ -138,7 +138,9 @@ class HandleRequests extends Mechanism
         // (e.g. auth, tenant scoping) added to the custom route.
         if (request()->route()?->getName() === 'default-livewire.update'
             && $this->findUpdateRoute()?->getName() !== 'default-livewire.update') {
-            abort(404);
+            $this->rejectInvalidUpdateRequest(
+                'Invalid Livewire update route: request hit [default-livewire.update] while a custom update route is registered.'
+            );
         }
 
         // Check payload size limit...
@@ -155,16 +157,34 @@ class HandleRequests extends Mechanism
         $requestPayload = request('components');
 
         if (! is_array($requestPayload) || empty($requestPayload)) {
-            abort(404);
+            $this->rejectInvalidUpdateRequest(
+                'Invalid Livewire request payload: expected [components] to be a non-empty array.'
+            );
         }
 
-        foreach ($requestPayload as $component) {
-            if (! is_array($component)
-                || ! is_string($component['snapshot'] ?? null)
-                || ! is_array($component['updates'] ?? null)
-                || ! is_array($component['calls'] ?? null)
-            ) {
-                abort(404);
+        foreach ($requestPayload as $index => $component) {
+            if (! is_array($component)) {
+                $this->rejectInvalidUpdateRequest(
+                    "Invalid Livewire request payload: expected [components.{$index}] to be an array containing [snapshot], [updates], and [calls]."
+                );
+            }
+
+            if (! is_string($component['snapshot'] ?? null)) {
+                $this->rejectInvalidUpdateRequest(
+                    "Invalid Livewire request payload: expected [components.{$index}.snapshot] to be a string."
+                );
+            }
+
+            if (! is_array($component['updates'] ?? null)) {
+                $this->rejectInvalidUpdateRequest(
+                    "Invalid Livewire request payload: expected [components.{$index}.updates] to be an array."
+                );
+            }
+
+            if (! is_array($component['calls'] ?? null)) {
+                $this->rejectInvalidUpdateRequest(
+                    "Invalid Livewire request payload: expected [components.{$index}.calls] to be an array."
+                );
             }
         }
 
@@ -225,5 +245,14 @@ class HandleRequests extends Mechanism
         }
 
         return $payload;
+    }
+
+    protected function rejectInvalidUpdateRequest(string $message)
+    {
+        if (config('app.debug')) {
+            throw new \InvalidArgumentException($message);
+        }
+
+        abort(404);
     }
 }

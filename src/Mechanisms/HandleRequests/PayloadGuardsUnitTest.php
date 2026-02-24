@@ -195,6 +195,51 @@ class PayloadGuardsUnitTest extends TestCase
         $this->assertStringContainsString('60', $callsException->getMessage());
         $this->assertStringContainsString('50', $callsException->getMessage());
     }
+
+    public function test_debug_mode_reports_invalid_components_root_payload()
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('expected [components] to be a non-empty array');
+
+        $this->withoutExceptionHandling()
+            ->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), [
+                'components' => 'invalid',
+            ]);
+    }
+
+    public function test_debug_mode_reports_invalid_component_field_path()
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('expected [components.0.snapshot] to be a string');
+
+        $this->withoutExceptionHandling()
+            ->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), [
+                'components' => [
+                    [
+                        'snapshot' => ['invalid'],
+                        'updates' => [],
+                        'calls' => [],
+                    ],
+                ],
+            ]);
+    }
+
+    public function test_production_mode_keeps_404_for_invalid_payload()
+    {
+        config()->set('app.debug', false);
+
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), [
+                'components' => 'invalid',
+            ])
+            ->assertNotFound();
+    }
 }
 
 class PayloadGuardComponent extends Component
