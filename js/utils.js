@@ -179,6 +179,13 @@ export function diff(left, right, diffs = {}, path = '') {
 
     // We now know both are objects...
     let leftKeys = Object.keys(left)
+    let rightKeys = Object.keys(right)
+
+    // Did the key order change?
+    if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i])) {
+        diffs[path] = right
+        return diffs
+    }
 
     // Recursively diff the object's properties...
     Object.entries(right).forEach(([key, value]) => {

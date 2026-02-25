@@ -15,7 +15,7 @@ trait HandlesStreaming
 
         $stream = new StreamManager($this, $hook);
 
-        if (! $content) {
+        if (is_null($content)) {
             return $stream;
         }
 
