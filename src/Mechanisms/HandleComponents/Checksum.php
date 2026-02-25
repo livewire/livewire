@@ -71,7 +71,7 @@ class Checksum {
         // modify children as it needs to for dom-diffing purposes...
         unset($snapshot['memo']['children']);
         
-        $checksum = hash_hmac('sha256', json_encode($snapshot), $hashKey);
+        $checksum = hash_hmac('sha256', json_encode($snapshot, JSON_THROW_ON_ERROR), $hashKey);
 
         trigger('checksum.generate', $checksum, $snapshot);
 
