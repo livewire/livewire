@@ -28,7 +28,7 @@ class HistoryCoordinator {
         if (this.url) {
             // Always pick up the current hash from the browser, since Livewire only manages query strings
             // and the hash may have been changed externally (e.g. during Alpine init)...
-            this.url.hash = window.location.hash
+            if (this.url instanceof URL) this.url.hash = window.location.hash
             return this.url
         }
 
