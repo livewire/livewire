@@ -1242,6 +1242,26 @@ class BrowserTest extends \Tests\BrowserTestCase
             ;
         });
     }
+
+    public function test_window_location_hash_set_during_alpine_init_is_preserved()
+    {
+        Livewire::visit([
+            new class extends Component {
+                #[BaseUrl]
+                public $foo = 'bar';
+
+                public function render() { return <<<'HTML'
+                <div x-init="if (! window.location.hash) window.location.hash = '#default-tab'">
+                    <span dusk="output" x-text="window.location.hash"></span>
+                </div>
+                HTML; }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->pause(100)
+            ->assertScript('return window.location.hash', '#default-tab')
+        ;
+    }
 }
 
 class FormObject extends \Livewire\Form
