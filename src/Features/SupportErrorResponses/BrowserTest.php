@@ -9,7 +9,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 {
     public function test_it_shows_page_expired_dialog_when_session_has_expired()
     {
-        if (version_compare(app()->version(), '13.0.0', '>=')) {
+        if (app()->version() >= '13') {
             $this->markTestSkipped(
                 'Laravel 13+ uses Sec-Fetch-Site origin verification which bypasses CSRF token checks for same-origin requests.'
             );
@@ -29,7 +29,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_it_shows_custom_hook_dialog_using_on_error_response_hook_when_session_has_expired()
     {
-        if (version_compare(app()->version(), '13.0.0', '>=')) {
+        if (app()->version() >= '13') {
             $this->markTestSkipped(
                 'Laravel 13+ uses Sec-Fetch-Site origin verification which bypasses CSRF token checks for same-origin requests.'
             );
