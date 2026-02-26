@@ -50,6 +50,12 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_it_does_not_show_html_modal_after_session_expired_dialog()
     {
+        if (app()->version() >= '13') {
+            $this->markTestSkipped(
+                'Laravel 13+ uses Sec-Fetch-Site origin verification which bypasses CSRF token checks for same-origin requests.'
+            );
+        }
+
         Livewire::visit(Component::class)
             ->waitForLivewire()->click('@regenerateSession')
             ->click('@refresh')
