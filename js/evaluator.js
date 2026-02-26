@@ -9,7 +9,7 @@ function getAlpineScopeKeys(el) {
         if (currentEl._x_dataStack) {
             for (let scope of currentEl._x_dataStack) {
                 for (let key of Object.keys(scope)) {
-                    if (! keys.includes(key)) keys.push(key)
+                    if (! keys.includes(key) && ! key.startsWith('$')) keys.push(key)
                 }
             }
         }

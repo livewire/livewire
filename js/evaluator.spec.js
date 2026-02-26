@@ -70,6 +70,16 @@ describe('Contextualize expressions', () => {
         expect(contextualizeExpression('other', childEl)).toBe('$wire.other')
     })
 
+    it('$-prefixed alpine scope keys are not skipped', () => {
+        let mockEl = {
+            _x_dataStack: [{ $set: () => {} }],
+            hasAttribute: () => false,
+            parentElement: null,
+        }
+
+        expect(contextualizeExpression("$set('foo', 'bar')", mockEl)).toBe('$wire.$set(\'foo\', \'bar\')')
+    })
+
     it('stops at livewire component root', () => {
         let rootEl = {
             _x_dataStack: [{ outsideVar: {} }],
