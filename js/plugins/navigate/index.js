@@ -13,6 +13,7 @@ let enablePersist = true
 let showProgressBar = true
 let restoreScroll = true
 let autofocus = false
+let dirtyConfirmMessage = 'You have unsaved changes. Are you sure you want to leave this page?'
 
 export default function (Alpine) {
 
@@ -36,10 +37,11 @@ export default function (Alpine) {
 
     Alpine.addInitSelector(() => `[${Alpine.prefixed('navigate')}]`)
 
-    Alpine.directive('navigate', (el, { modifiers }) => {
+    Alpine.directive('navigate', (el, { modifiers, expression }, { evaluate }) => {
         let shouldPrefetchOnHover = modifiers.includes('hover')
 
         let preserveScroll = modifiers.includes('preserve-scroll')
+        let shouldConfirmWhenDirty = modifiers.includes('dirty-confirm')
 
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
@@ -65,6 +67,8 @@ export default function (Alpine) {
             })
 
             whenItIsReleased(() => {
+                if (shouldConfirmWhenDirty && ! shouldProceedWithDirtyNavigationConfirmation({ expression, evaluate, destination })) return
+
                 let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
                     url: destination, history: false, cached: false,
                  })
@@ -273,4 +277,45 @@ function cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement() {
     // to be a performance issue at some point (walking the DOM tree),
     // we can be more surgical about cleaning up x-for/if instead...
     Alpine.destroyTree(document.body, walker)
+}
+
+export function shouldProceedWithDirtyNavigationConfirmation({ expression = '', evaluate = null, destination = null } = {}) {
+    if (! hasDirtyLivewireComponents()) return true
+
+    if (expression && evaluate) {
+        let usedFallbackConfirm = false
+        let fallbackConfirmResult = false
+
+        let fallbackConfirm = () => {
+            usedFallbackConfirm = true
+            fallbackConfirmResult = window.confirm(dirtyConfirmMessage)
+
+            return fallbackConfirmResult
+        }
+
+        try {
+            evaluate(expression, {
+                scope: {
+                    $url: destination?.href || '',
+                    $fallbackConfirm: fallbackConfirm,
+                },
+            })
+        } catch (e) {
+            return window.confirm(dirtyConfirmMessage)
+        }
+
+        if (usedFallbackConfirm) return fallbackConfirmResult
+
+        return false
+    }
+
+    return window.confirm(dirtyConfirmMessage)
+}
+
+export function hasDirtyLivewireComponents() {
+    if (! window.Livewire || typeof window.Livewire.all !== 'function') return false
+
+    return window.Livewire.all().some(component => {
+        return JSON.stringify(component.canonical) !== JSON.stringify(component.reactive)
+    })
 }

@@ -197,6 +197,31 @@ To do this, you must add `wire:navigate:scroll` to the element containing a scro
 @endpersist
 ```
 
+### Confirming before leaving dirty state
+
+When users have unsaved Livewire changes, you can require confirmation before navigating away:
+
+```blade
+<a href="/settings" wire:navigate.dirty-confirm>Settings</a>
+```
+
+Livewire will prompt only when a component on the current page is dirty. If everything is in sync, it navigates immediately.
+
+You can also provide an expression for custom modal flows:
+
+```blade
+<a
+    href="/settings"
+    wire:navigate.dirty-confirm="isOpenDialog = true; pendingUrl = $url"
+>
+    Settings
+</a>
+```
+
+With an expression, Livewire pauses the current navigation and lets your expression decide the UX. You can resume manually (for example from a Tailwind modal) with `Livewire.navigate(pendingUrl)`.
+
+For browser-confirm fallback inside custom flows, call `$fallbackConfirm()`.
+
 ## JavaScript hooks
 
 Each page navigation triggers three lifecycle hooks:

@@ -675,6 +675,99 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_wire_navigate_dirty_confirm_prompts_only_when_page_has_unsaved_changes()
+    {
+        $this->registerComponentTestRoutes([
+            '/dirty-confirm-destination' => new class extends Component {
+                public function render()
+                {
+                    return '<div dusk="destination">Destination page</div>';
+                }
+            },
+        ]);
+
+        $browser = Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="text" wire:model="title" dusk="title-input">
+
+                    <a href="/dirty-confirm-destination" wire:navigate.dirty-confirm dusk="link.to.destination">
+                        Go to destination
+                    </a>
+                </div>
+                HTML;
+            }
+        })
+        ->assertDontSee('Destination page')
+        ->type('@title-input', 'Dirty changes')
+        ->click('@link.to.destination')
+        ->assertDialogOpened('You have unsaved changes. Are you sure you want to leave this page?')
+        ->dismissDialog()
+        ->pause(200)
+        ->assertDontSee('Destination page')
+        ->click('@link.to.destination')
+        ->assertDialogOpened('You have unsaved changes. Are you sure you want to leave this page?')
+        ->acceptDialog();
+
+        $browser
+            ->waitFor('@destination')
+            ->assertSee('Destination page')
+        ;
+    }
+
+    public function test_wire_navigate_dirty_confirm_can_run_a_custom_expression_for_custom_dialogs()
+    {
+        $this->registerComponentTestRoutes([
+            '/dirty-confirm-destination' => new class extends Component {
+                public function render()
+                {
+                    return '<div dusk="destination">Destination page</div>';
+                }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div x-data="{ isOpenDialog: false, pendingUrl: null }">
+                    <div x-text="isOpenDialog ? 'open' : 'closed'" dusk="dialog-state"></div>
+
+                    <input type="text" wire:model="title" dusk="title-input">
+
+                    <a
+                        href="/dirty-confirm-destination"
+                        wire:navigate.dirty-confirm="isOpenDialog = true; pendingUrl = $url"
+                        dusk="link.to.destination"
+                    >
+                        Go to destination
+                    </a>
+
+                    <button type="button" x-on:click="Livewire.navigate(pendingUrl)" dusk="dialog-confirm">
+                        Confirm navigation
+                    </button>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@dialog-state', 'closed')
+        ->type('@title-input', 'Dirty changes')
+        ->click('@link.to.destination')
+        ->pause(200)
+        ->assertSeeIn('@dialog-state', 'open')
+        ->assertDontSee('Destination page')
+        ->click('@dialog-confirm')
+        ->waitFor('@destination')
+        ->assertSee('Destination page')
+        ;
+    }
+
     public function test_livewire_navigated_event_is_fired_on_first_page_load()
     {
         $this->browse(function ($browser) {

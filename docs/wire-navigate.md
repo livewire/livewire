@@ -37,6 +37,42 @@ By adding the `.hover` modifier, Livewire will pre-fetch a page when a user hove
 <a href="/" wire:navigate.hover>Dashboard</a>
 ```
 
+## Confirming when there are unsaved changes
+
+Use `.dirty-confirm` to show a confirmation dialog before navigating away if any Livewire component on the page has unsaved state:
+
+```blade
+<a href="/posts" wire:navigate.dirty-confirm>Posts</a>
+```
+
+If the page is clean, navigation proceeds normally without showing a dialog.
+
+### Using a custom dialog flow
+
+You can provide an expression to `.dirty-confirm` and open your own modal/dialog instead of using the browser confirm:
+
+```blade
+<a
+    href="/posts"
+    wire:navigate.dirty-confirm="isOpenDialog = true; pendingUrl = $url"
+>
+    Posts
+</a>
+```
+
+When an expression is present, Livewire evaluates it and pauses the current navigation. You can then continue later from your custom dialog by calling `Livewire.navigate(pendingUrl)`.
+
+If you still want browser fallback inside your expression, use `$fallbackConfirm()`:
+
+```blade
+<a
+    href="/posts"
+    wire:navigate.dirty-confirm="if ($fallbackConfirm()) Livewire.navigate($url)"
+>
+    Posts
+</a>
+```
+
 ## Going deeper
 
 For more complete documentation on this feature, visit [Livewire's navigate documentation page](/docs/4.x/navigate).
@@ -58,3 +94,4 @@ wire:navigate
 | Modifier | Description |
 |----------|-------------|
 | `.hover` | Prefetches the page when user hovers over the link |
+| `.dirty-confirm` | Prompts before navigating away when Livewire state is dirty |
