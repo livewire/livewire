@@ -889,6 +889,54 @@ new class extends Component {
 
 Because the suggestions are stored purely in Alpine's `suggestions` data and never in Livewire's component state, it's safe to fetch them asynchronously.
 
+## Queueing actions while offline
+
+For actions that should wait until connectivity is restored, use `#[QueueOffline]` or `.offline.queue`.
+
+### Using the offline queue modifier
+
+Add `.offline.queue` to any action listener:
+
+```blade
+<button wire:click.offline.queue="saveDraft">Save Draft</button>
+```
+
+If the browser is offline, Livewire defers this action and replays it automatically when the browser comes back online.
+
+### Using the QueueOffline attribute
+
+Mark a method with `#[QueueOffline]` to make all calls to that action offline-queue aware:
+
+```php
+<?php
+
+use Livewire\Attributes\QueueOffline;
+use Livewire\Component;
+
+new class extends Component {
+    #[QueueOffline]
+    public function saveDraft()
+    {
+        // Persist draft...
+    }
+};
+```
+
+```blade
+<button wire:click="saveDraft">Save Draft</button>
+```
+
+### When to use offline queueing
+
+- Draft-saving or progress-saving actions users expect not to lose
+- Low-risk write operations that can be replayed safely after reconnect
+
+### Important behavior notes
+
+- Offline queued actions are kept in browser memory and replayed when the page is still open
+- If the page is refreshed or closed before reconnecting, queued actions are lost
+- Prefer idempotent server handlers for replayed actions
+
 ## Preserving scroll position
 
 When updating content, the browser may jump to a different scroll position. The `.preserve-scroll` modifier maintains the current scroll position during updates:

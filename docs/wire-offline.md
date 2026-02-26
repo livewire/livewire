@@ -34,6 +34,16 @@ The `.attr` modifier allows you to add an attribute to an element when the user 
 <button wire:offline.attr="disabled">Save</button>
 ```
 
+## Queueing actions while offline
+
+If you want an action click to be preserved while offline, use the `.offline.queue` action modifier:
+
+```blade
+<button wire:click.offline.queue="saveDraft">Save Draft</button>
+```
+
+Livewire will defer the action while offline and automatically send it when the browser reconnects.
+
 ## Reference
 
 ```blade

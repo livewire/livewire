@@ -1,4 +1,5 @@
 import { constructAction, createOrAddToOutstandingMessage, interceptAction, interceptPartition } from '@/request'
+import { queueActionForOffline } from './offlineQueue.js'
 
 export function coordinateNetworkInteractions(messageBus) {
     // Handle isolated components...
@@ -39,6 +40,12 @@ export function coordinateNetworkInteractions(messageBus) {
 
     // If a request is in-flight, queue up the action to fire after the in-flight request has finished...
     interceptAction(({ action }) => {
+        if (action.isOfflineQueued() && ! window.navigator.onLine) {
+            queueActionForOffline(action)
+
+            return
+        }
+
         // Wire:click.renderless
         let isRenderless = action?.origin?.directive?.modifiers.includes('renderless')
         if (isRenderless) {

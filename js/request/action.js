@@ -99,6 +99,17 @@ export default class Action {
         return methodIsMarkedAsync || actionIsAsync
     }
 
+    isOfflineQueued() {
+        let offlineQueueMethods = this.component.snapshot.memo?.offlineQueue || []
+
+        let methodIsMarkedOfflineQueue = offlineQueueMethods.includes(this.name)
+
+        let hasOfflineModifier = this.origin?.directive?.modifiers.includes('offline')
+        let hasQueueModifier = this.origin?.directive?.modifiers.includes('queue')
+        let actionIsMarkedOfflineQueue = (hasOfflineModifier && hasQueueModifier) || (!! this.metadata.offlineQueue)
+
+        return methodIsMarkedOfflineQueue || actionIsMarkedOfflineQueue
+    }
     isJson() {
         let jsonMethods = this.component.snapshot.memo?.json || []
 

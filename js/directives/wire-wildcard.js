@@ -21,6 +21,15 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
         attribute = attribute.replace('.async', '')
     }
 
+    // Strip .offline from Alpine expression because it only concerns Livewire and trips up Alpine...
+    if (directive.modifiers.includes('offline')) {
+        attribute = attribute.replace('.offline', '')
+    }
+
+    // Strip .queue from Alpine expression because it only concerns Livewire and trips up Alpine...
+    if (directive.modifiers.includes('queue')) {
+        attribute = attribute.replace('.queue', '')
+    }
     // Strip .renderless from Alpine expression because it only concerns Livewire and trips up Alpine...
     if (directive.modifiers.includes('renderless')) {
         attribute = attribute.replace('.renderless', '')

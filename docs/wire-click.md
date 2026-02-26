@@ -77,6 +77,16 @@ By default, Livewire queues actions within the same component. Use `.async` to a
 <button wire:click.async="process">Process</button>
 ```
 
+## Queueing while offline
+
+Use `.offline.queue` to hold an action while the browser has no network connection, then send it automatically when the connection returns:
+
+```blade
+<button wire:click.offline.queue="saveDraft">Save Draft</button>
+```
+
+This is useful for actions users expect to "stick" even when they temporarily lose connectivity.
+
 ## Going deeper
 
 The `wire:click` directive is just one of many different available event listeners in Livewire. For full documentation on its (and other event listeners) capabilities, visit [the Livewire actions documentation page](/docs/4.x/actions).
@@ -114,3 +124,4 @@ wire:click="methodName(param1, param2)"
 | `.renderless` | Skips re-rendering after action completes |
 | `.preserve-scroll` | Maintains scroll position during updates |
 | `.async` | Executes action in parallel instead of queued |
+| `.offline.queue` | Queues the action while offline and replays it when back online |
