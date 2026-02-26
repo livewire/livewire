@@ -6,7 +6,7 @@ class CpCommand extends CopyCommand
 {
     protected $signature = 'livewire:cp {name} {new-name} {--inline} {--force} {--test}';
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setHidden(true);
     }

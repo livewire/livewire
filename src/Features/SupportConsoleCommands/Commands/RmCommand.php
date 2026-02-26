@@ -6,7 +6,7 @@ class RmCommand extends DeleteCommand
 {
     protected $signature = 'livewire:rm {name} {--inline} {--force} {--test}';
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setHidden(true);
     }
