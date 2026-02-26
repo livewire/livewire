@@ -48,6 +48,8 @@ class RenderComponent extends Mechanism
 };
 [\$__name, \$__params] = \$__split($expression);
 
+\$__keyOuter = \$__key ?? null;
+
 \$__key = $key;
 \$__componentSlots = $slots;
 
@@ -59,6 +61,8 @@ echo \$__html;
 
 unset(\$__html);
 unset(\$__key);
+\$__key = \$__keyOuter;
+unset(\$__keyOuter);
 unset(\$__name);
 unset(\$__params);
 unset(\$__componentSlots);
