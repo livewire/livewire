@@ -4931,6 +4931,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           resolvedActions.add(action);
           return;
         }
+        if (meta?.status) {
+          action.rejectPromise({ status: meta.status, body: null, json: null, errors: null });
+          action.invokeOnFinish();
+          resolvedActions.add(action);
+          return;
+        }
         action.invokeOnSuccess(value);
         action.resolvePromise(value);
         action.invokeOnFinish();
@@ -11601,7 +11607,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.errorHandlers[key] = callback;
     }
     getUrl() {
-      return this.url ?? new URL(window.location.href);
+      if (this.url) {
+        if (this.url instanceof URL)
+          this.url.hash = window.location.hash;
+        return this.url;
+      }
+      return new URL(window.location.href);
     }
     replaceState(url, updates) {
       this.url = url;
