@@ -732,6 +732,40 @@ You can also skip render from an element directly using the `.renderless` modifi
 <button type="button" wire:click.renderless="incrementViewCount">
 ```
 
+## Optimistic actions
+
+Sometimes you want the UI to update instantly, then let the server catch up.  
+Use `#[Optimistic]` or `.optimistic` for this behavior.
+
+When an optimistic action sends local Livewire updates and the request fails, Livewire rolls those updates back automatically.
+
+### Using the optimistic modifier
+
+```blade
+<button wire:click.optimistic="$set('likes', likes + 1)">
+    👍 <span wire:text="likes"></span>
+</button>
+```
+
+### Using the Optimistic attribute
+
+```php
+<?php
+
+use Livewire\Attributes\Optimistic;
+use Livewire\Component;
+
+new class extends Component {
+    #[Optimistic]
+    public function saveLike()
+    {
+        // Persist like...
+    }
+};
+```
+
+Use optimistic actions for small, reversible UI interactions such as reactions, toggles, and lightweight counters.
+
 ## Parallel execution with async
 
 By default, Livewire serializes actions within the same component to ensure predictable state updates. If one action is in-flight, subsequent actions are queued and wait for it to finish. While this prevents race conditions and keeps your component's state consistent, there are times when you want actions to run immediately without waiting—in parallel rather than sequentially.

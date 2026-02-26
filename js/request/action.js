@@ -99,6 +99,16 @@ export default class Action {
         return methodIsMarkedAsync || actionIsAsync
     }
 
+    isOptimistic() {
+        let optimisticMethods = this.component.snapshot.memo?.optimistic || []
+
+        let methodIsMarkedOptimistic = optimisticMethods.includes(this.name)
+
+        let actionIsOptimistic = this.origin?.directive?.modifiers.includes('optimistic') || (!! this.metadata.optimistic)
+
+        return methodIsMarkedOptimistic || actionIsOptimistic
+    }
+
     isJson() {
         let jsonMethods = this.component.snapshot.memo?.json || []
 

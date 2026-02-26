@@ -77,6 +77,18 @@ By default, Livewire queues actions within the same component. Use `.async` to a
 <button wire:click.async="process">Process</button>
 ```
 
+## Optimistic actions
+
+Use `.optimistic` when you want instant UI feedback with automatic rollback on request failure:
+
+```blade
+<button wire:click.optimistic="$set('likes', likes + 1)">
+    Like
+</button>
+```
+
+If the request succeeds, the new value is kept. If it fails, Livewire restores the previous value.
+
 ## Going deeper
 
 The `wire:click` directive is just one of many different available event listeners in Livewire. For full documentation on its (and other event listeners) capabilities, visit [the Livewire actions documentation page](/docs/4.x/actions).
@@ -114,3 +126,4 @@ wire:click="methodName(param1, param2)"
 | `.renderless` | Skips re-rendering after action completes |
 | `.preserve-scroll` | Maintains scroll position during updates |
 | `.async` | Executes action in parallel instead of queued |
+| `.optimistic` | Enables optimistic updates with automatic rollback on failure |

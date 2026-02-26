@@ -33,6 +33,11 @@ Alpine.interceptInit(el => {
                 attribute = attribute.replace('.async', '')
             }
 
+            // Strip .optimistic from Alpine expression because it only concerns Livewire and trips up Alpine...
+            if (directive.modifiers.includes('optimistic')) {
+                attribute = attribute.replace('.optimistic', '')
+            }
+
             // Strip .renderless from Alpine expression because it only concerns Livewire and trips up Alpine...
             if (directive.modifiers.includes('renderless')) {
                 attribute = attribute.replace('.renderless', '')

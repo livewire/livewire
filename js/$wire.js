@@ -193,13 +193,21 @@ wireProperty('$js', (component) => {
     })
 })
 
-wireProperty('$set', (component) => async (property, value, live = true) => {
+wireProperty('$set', (component) => async (property, value, live = true, options = {}) => {
     dataSet(component.reactive, property, value)
 
     // If "live", send a request, queueing the property update to happen first
     // on the server, then trickle back down to the client and get merged...
     if (live) {
+        let optimistic = typeof options === 'boolean'
+            ? options
+            : !! options?.optimistic
+
         component.queueUpdate(property, value)
+
+        if (optimistic) {
+            setNextActionMetadata({ optimistic: true })
+        }
 
         return fireAction(component, '$set')
     }

@@ -164,6 +164,59 @@ export class Component {
         return object
     }
 
+    captureRollbackStateForUpdates(updates = {}) {
+        let rollback = {}
+
+        Object.keys(updates).forEach(path => {
+            if (this.pathExists(this.canonical, path)) {
+                let value = dataGet(this.canonical, path)
+
+                rollback[path] = {
+                    exists: true,
+                    value: value === undefined ? undefined : deepClone(value),
+                }
+            } else {
+                rollback[path] = { exists: false }
+            }
+        })
+
+        return rollback
+    }
+
+    rollbackOptimisticUpdates(rollback = {}) {
+        Object.entries(rollback).forEach(([path, snapshot]) => {
+            if (snapshot.exists) {
+                dataSet(this.reactive, path, snapshot.value === undefined ? undefined : deepClone(snapshot.value))
+            } else {
+                dataDelete(this.reactive, path)
+            }
+        })
+    }
+
+    pathExists(object, key) {
+        if (key === '') return true
+
+        let segments = this.parsePathSegments(key)
+        let current = object
+
+        for (let segment of segments) {
+            if (current === null || current === undefined) return false
+            if (! Object.prototype.hasOwnProperty.call(current, segment)) return false
+
+            current = current[segment]
+        }
+
+        return true
+    }
+
+    parsePathSegments(path) {
+        return path
+            .replace(/\[(['"]?)(.+?)\1\]/g, '.$2')
+            .replace(/^\./, '')
+            .split('.')
+            .filter(Boolean)
+    }
+
     replayUpdate(snapshot, html) {
         let effects = { ...this.effects, html}
 

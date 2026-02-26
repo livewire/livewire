@@ -13,6 +13,7 @@ export default class Message {
     cancelled = false
     request = null
     _scope = null
+    optimisticRollback = null
 
     // Ensure scope isn't accessed until it's been set...
     get scope() {
@@ -114,6 +115,17 @@ export default class Message {
         return Array.from(this.actions).every(action => action.isAsync())
     }
 
+    hasOptimisticAction() {
+        return Array.from(this.actions).some(action => action.isOptimistic())
+    }
+
+    rollbackOptimisticState() {
+        if (! this.optimisticRollback || ! this.hasOptimisticAction()) return
+
+        this.component.rollbackOptimisticUpdates(this.optimisticRollback)
+        this.optimisticRollback = null
+    }
+
     /**
      * Lifecycle methods...
      */
@@ -133,6 +145,8 @@ export default class Message {
     invokeOnCancel() {
         this.interceptors.forEach(interceptor => interceptor.onCancel())
 
+        this.rollbackOptimisticState()
+
         this.rejectActionPromises({ status: null, body: null, json: null, errors: null })
 
         // Invoke action-level onFinish callbacks
@@ -146,6 +160,8 @@ export default class Message {
 
         // Invoke action-level onFailure callbacks
         Array.from(this.actions).forEach(action => action.invokeOnFailure({ error }))
+
+        this.rollbackOptimisticState()
 
         this.rejectActionPromises({ status: null, body: null, json: null, errors: null })
 
@@ -164,6 +180,8 @@ export default class Message {
 
         // Invoke action-level onError callbacks
         Array.from(this.actions).forEach(action => action.invokeOnError({ response, body, preventDefault }))
+
+        this.rollbackOptimisticState()
 
         // Try to parse body as JSON for the rejection payload
         let json = null

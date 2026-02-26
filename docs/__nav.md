@@ -63,6 +63,7 @@ PHP Attributes:
     Locked: { uri: /docs/4.x/attribute-locked, file: /attribute-locked.md }
     Modelable: { uri: /docs/4.x/attribute-modelable, file: /attribute-modelable.md }
     On: { uri: /docs/4.x/attribute-on, file: /attribute-on.md }
+    Optimistic: { uri: /docs/4.x/attribute-optimistic, file: /attribute-optimistic.md }
     Reactive: { uri: /docs/4.x/attribute-reactive, file: /attribute-reactive.md }
     Renderless: { uri: /docs/4.x/attribute-renderless, file: /attribute-renderless.md }
     Session: { uri: /docs/4.x/attribute-session, file: /attribute-session.md }
