@@ -48,7 +48,7 @@ class Utils extends BaseUtils
             return htmlspecialchars($subject, ENT_QUOTES|ENT_SUBSTITUTE);
         }
 
-        return htmlspecialchars(json_encode($subject), ENT_QUOTES|ENT_SUBSTITUTE);
+        return htmlspecialchars(json_encode($subject, JSON_THROW_ON_ERROR), ENT_QUOTES|ENT_SUBSTITUTE);
     }
 
     static function pretendResponseIsFile($file, $contentType = 'application/javascript; charset=utf-8')

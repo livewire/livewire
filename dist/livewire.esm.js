@@ -314,7 +314,7 @@ var require_module_cjs = __commonJS({
             return {
               [`Set(${val.size})`]: [...val.values()]
             };
-          } else if (isObject2(val) && !isArray2(val) && !isPlainObject2(val)) {
+          } else if (isObject2(val) && !isArray2(val) && !isPlainObject(val)) {
             return String(val);
           }
           return val;
@@ -357,7 +357,7 @@ var require_module_cjs = __commonJS({
         var toRawType = (value) => {
           return toTypeString(value).slice(8, -1);
         };
-        var isPlainObject2 = (val) => toTypeString(val) === "[object Object]";
+        var isPlainObject = (val) => toTypeString(val) === "[object Object]";
         var isIntegerKey = (key) => isString(key) && key !== "NaN" && key[0] !== "-" && "" + parseInt(key, 10) === key;
         var isReservedProp = /* @__PURE__ */ makeMap(
           ",key,ref,onVnodeBeforeMount,onVnodeMounted,onVnodeBeforeUpdate,onVnodeUpdated,onVnodeBeforeUnmount,onVnodeUnmounted"
@@ -429,7 +429,7 @@ var require_module_cjs = __commonJS({
         exports2.isNoUnitNumericStyleProp = isNoUnitNumericStyleProp;
         exports2.isObject = isObject2;
         exports2.isOn = isOn;
-        exports2.isPlainObject = isPlainObject2;
+        exports2.isPlainObject = isPlainObject;
         exports2.isPromise = isPromise;
         exports2.isReservedProp = isReservedProp;
         exports2.isSSRSafeAttrName = isSSRSafeAttrName;
@@ -1322,8 +1322,16 @@ var require_module_cjs = __commonJS({
     var flushing = false;
     var queue = [];
     var lastFlushedIndex = -1;
+    var transactionActive = false;
     function scheduler(callback) {
       queueJob(callback);
+    }
+    function startTransaction() {
+      transactionActive = true;
+    }
+    function commitTransaction() {
+      transactionActive = false;
+      queueFlush();
     }
     function queueJob(job) {
       if (!queue.includes(job))
@@ -1337,6 +1345,8 @@ var require_module_cjs = __commonJS({
     }
     function queueFlush() {
       if (!flushing && !flushPending) {
+        if (transactionActive)
+          return;
         flushPending = true;
         queueMicrotask(flushJobs);
       }
@@ -1408,16 +1418,26 @@ var require_module_cjs = __commonJS({
         let value = getter();
         JSON.stringify(value);
         if (!firstTime) {
-          queueMicrotask(() => {
-            callback(value, oldValue);
-            oldValue = value;
-          });
-        } else {
-          oldValue = value;
+          if (typeof value === "object" || value !== oldValue) {
+            let previousValue = oldValue;
+            queueMicrotask(() => {
+              callback(value, previousValue);
+            });
+          }
         }
+        oldValue = value;
         firstTime = false;
       });
       return () => release(effectReference);
+    }
+    async function transaction(callback) {
+      startTransaction();
+      try {
+        await callback();
+        await Promise.resolve();
+      } finally {
+        commitTransaction();
+      }
     }
     var onAttributeAddeds = [];
     var onElRemoveds = [];
@@ -2017,6 +2037,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     var alpineAttributeRegex = () => new RegExp(`^${prefixAsString}([^:^.]+)\\b`);
     function toParsedDirectives(transformedAttributeMap, originalAttributeOverride) {
       return ({ name, value }) => {
+        if (name === value)
+          value = "";
         let typeMatch = name.match(alpineAttributeRegex());
         let valueMatch = name.match(/:([a-zA-Z0-9\-_:]+)/);
         let modifiers = name.match(/\.[^.\]]+(?=[^\]]*$)/g) || [];
@@ -2971,7 +2993,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.15.3",
+      get transaction() {
+        return transaction;
+      },
+      version: "3.15.8",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3278,6 +3303,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         handler4 = wrapHandler(handler4, (next, e) => {
           e.target === el && next(e);
         });
+      if (event === "submit") {
+        handler4 = wrapHandler(handler4, (next, e) => {
+          if (e.target._x_pendingModelUpdates) {
+            e.target._x_pendingModelUpdates.forEach((fn) => fn());
+          }
+          next(e);
+        });
+      }
       if (isKeyEvent(event) || isClickEvent(event)) {
         handler4 = wrapHandler(handler4, (next, e) => {
           if (isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers)) {
@@ -3315,7 +3348,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
       let keyModifiers = modifiers.filter((i) => {
-        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
+        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll", "blur", "change", "lazy"].includes(i);
       });
       if (keyModifiers.includes("debounce")) {
         let debounceIndex = keyModifiers.indexOf("debounce");
@@ -3412,11 +3445,43 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             el.setAttribute("name", expression);
         });
       }
-      let event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
-      let removeListener = isCloning ? () => {
-      } : on3(el, event, modifiers, (e) => {
-        setValue(getInputValue(el, modifiers, e, getValue()));
-      });
+      let hasChangeModifier = modifiers.includes("change") || modifiers.includes("lazy");
+      let hasBlurModifier = modifiers.includes("blur");
+      let hasEnterModifier = modifiers.includes("enter");
+      let hasExplicitEventModifiers = hasChangeModifier || hasBlurModifier || hasEnterModifier;
+      let removeListener;
+      if (isCloning) {
+        removeListener = () => {
+        };
+      } else if (hasExplicitEventModifiers) {
+        let listeners2 = [];
+        let syncValue = (e) => setValue(getInputValue(el, modifiers, e, getValue()));
+        if (hasChangeModifier) {
+          listeners2.push(on3(el, "change", modifiers, syncValue));
+        }
+        if (hasBlurModifier) {
+          listeners2.push(on3(el, "blur", modifiers, syncValue));
+          if (el.form) {
+            let syncCallback = () => syncValue({ target: el });
+            if (!el.form._x_pendingModelUpdates)
+              el.form._x_pendingModelUpdates = [];
+            el.form._x_pendingModelUpdates.push(syncCallback);
+            cleanup(() => el.form._x_pendingModelUpdates.splice(el.form._x_pendingModelUpdates.indexOf(syncCallback), 1));
+          }
+        }
+        if (hasEnterModifier) {
+          listeners2.push(on3(el, "keydown", modifiers, (e) => {
+            if (e.key === "Enter")
+              syncValue(e);
+          }));
+        }
+        removeListener = () => listeners2.forEach((remove) => remove());
+      } else {
+        let event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) ? "change" : "input";
+        removeListener = on3(el, event, modifiers, (e) => {
+          setValue(getInputValue(el, modifiers, e, getValue()));
+        });
+      }
       if (modifiers.includes("fill")) {
         if ([void 0, null, ""].includes(getValue()) || isCheckbox(el) && Array.isArray(getValue()) || el.tagName.toLowerCase() === "select" && el.multiple) {
           setValue(
@@ -6171,7 +6236,7 @@ var require_module_cjs5 = __commonJS({
       }
     }
     function src_default2(Alpine25) {
-      Alpine25.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate, evaluateLater, cleanup }) => {
+      Alpine25.directive("sort", (el, { value, modifiers, expression }, { effect, evaluate, cleanup }) => {
         if (value === "config") {
           return;
         }
@@ -6192,7 +6257,7 @@ var require_module_cjs5 = __commonJS({
           useHandles: !!el.querySelector("[x-sort\\:handle],[wire\\:sort\\:handle]"),
           group: getGroupName(el, modifiers)
         };
-        let handleSort = generateSortHandler(expression, evaluateLater);
+        let handleSort = generateSortHandler(expression, evaluate);
         let config = getConfigurationOverrides(el, modifiers, evaluate);
         let sortable = initSortable(el, config, preferences, (key, position) => {
           handleSort(key, position);
@@ -6200,25 +6265,19 @@ var require_module_cjs5 = __commonJS({
         cleanup(() => sortable.destroy());
       });
     }
-    function generateSortHandler(expression, evaluateLater) {
+    function generateSortHandler(expression, evaluate) {
       if ([void 0, null, ""].includes(expression))
         return () => {
         };
-      let handle = evaluateLater(expression);
       return (key, position) => {
-        Alpine.dontAutoEvaluateFunctions(() => {
-          handle(
-            (received) => {
-              if (typeof received === "function")
-                received(key, position);
-            },
-            { scope: {
-              $key: key,
-              $item: key,
-              $position: position
-            } }
-          );
-        });
+        evaluate(expression, { scope: {
+          $key: key,
+          $item: key,
+          $position: position
+        }, params: [
+          key,
+          position
+        ] });
       };
     }
     function getConfigurationOverrides(el, modifiers, evaluate) {
@@ -9815,6 +9874,12 @@ var Message = class {
         resolvedActions.add(action);
         return;
       }
+      if (meta?.status) {
+        action.rejectPromise({ status: meta.status, body: null, json: null, errors: null });
+        action.invokeOnFinish();
+        resolvedActions.add(action);
+        return;
+      }
       action.invokeOnSuccess(value);
       action.resolvePromise(value);
       action.invokeOnFinish();
@@ -11150,205 +11215,6 @@ wireFallback((component) => (property) => (...params) => {
   return fireAction(component, property, params);
 });
 
-// js/sync.js
-var customCodecs = /* @__PURE__ */ new Map();
-var passthroughCodec = {
-  toServer: (value) => value,
-  fromServer: (value) => value
-};
-var builtInCodecs = {
-  int: {
-    toServer: castInteger,
-    fromServer: castInteger
-  },
-  integer: {
-    toServer: castInteger,
-    fromServer: castInteger
-  },
-  float: {
-    toServer: castFloat,
-    fromServer: castFloat
-  },
-  double: {
-    toServer: castFloat,
-    fromServer: castFloat
-  },
-  bool: {
-    toServer: castBoolean,
-    fromServer: castBoolean
-  },
-  boolean: {
-    toServer: castBoolean,
-    fromServer: castBoolean
-  },
-  string: {
-    toServer: castString,
-    fromServer: castString
-  },
-  array: {
-    toServer: castArray,
-    fromServer: castArray
-  },
-  object: {
-    toServer: castObject,
-    fromServer: castObject
-  }
-};
-function registerSyncCodec(strategy, codec) {
-  let normalizedStrategy = normalizeStrategy(strategy);
-  if (!normalizedStrategy) {
-    throw new Error("Livewire.sync() requires a non-empty strategy key.");
-  }
-  if (!codec || typeof codec !== "object") {
-    throw new Error("Livewire.sync() expects a codec object.");
-  }
-  if (typeof codec.toServer !== "function" && typeof codec.fromServer !== "function") {
-    throw new Error("Livewire.sync() expects at least one transform function (toServer or fromServer).");
-  }
-  customCodecs.set(normalizedStrategy, {
-    toServer: typeof codec.toServer === "function" ? codec.toServer : passthroughCodec.toServer,
-    fromServer: typeof codec.fromServer === "function" ? codec.fromServer : passthroughCodec.fromServer
-  });
-  return () => removeSyncCodec(normalizedStrategy);
-}
-function removeSyncCodec(strategy) {
-  let normalizedStrategy = normalizeStrategy(strategy);
-  if (!normalizedStrategy)
-    return;
-  customCodecs.delete(normalizedStrategy);
-}
-function applySyncDataFromServer(data, syncMap = {}) {
-  if (!data || typeof data !== "object")
-    return data;
-  Object.entries(syncMap || {}).forEach(([path, strategy]) => {
-    if (path.includes("."))
-      return;
-    if (!Object.prototype.hasOwnProperty.call(data, path))
-      return;
-    data[path] = applyFromServer(strategy, data[path]);
-  });
-  return data;
-}
-function applySyncUpdatesFromServer(updates, syncMap = {}) {
-  return applySyncUpdates(updates, syncMap, applyFromServer);
-}
-function applySyncUpdatesToServer(updates, syncMap = {}) {
-  return applySyncUpdates(updates, syncMap, applyToServer);
-}
-function applySyncUpdates(updates, syncMap, transform) {
-  return Object.fromEntries(
-    Object.entries(updates || {}).map(([path, value]) => {
-      if (path.includes("."))
-        return [path, value];
-      if (!Object.prototype.hasOwnProperty.call(syncMap || {}, path))
-        return [path, value];
-      return [path, transform(syncMap[path], value)];
-    })
-  );
-}
-function applyToServer(strategy, value) {
-  return resolveCodec(strategy).toServer(value);
-}
-function applyFromServer(strategy, value) {
-  return resolveCodec(strategy).fromServer(value);
-}
-function resolveCodec(strategy) {
-  let normalizedStrategy = normalizeStrategy(strategy);
-  if (!normalizedStrategy)
-    return passthroughCodec;
-  return customCodecs.get(normalizedStrategy) || builtInCodecs[normalizedStrategy.toLowerCase()] || passthroughCodec;
-}
-function normalizeStrategy(strategy) {
-  if (typeof strategy !== "string")
-    return null;
-  let normalizedStrategy = strategy.trim();
-  if (normalizedStrategy === "")
-    return null;
-  return normalizedStrategy;
-}
-function castInteger(value) {
-  if (value === null || value === "")
-    return null;
-  if (typeof value === "number" && Number.isInteger(value) && Number.isFinite(value))
-    return value;
-  if (typeof value === "boolean")
-    return value ? 1 : 0;
-  if (typeof value === "string" && /^-?\d+$/.test(value.trim())) {
-    return Number.parseInt(value, 10);
-  }
-  return value;
-}
-function castFloat(value) {
-  if (value === null || value === "")
-    return null;
-  if (typeof value === "number" && Number.isFinite(value))
-    return value;
-  if (typeof value === "string" && value.trim() !== "" && !Number.isNaN(Number(value))) {
-    return Number(value);
-  }
-  return value;
-}
-function castBoolean(value) {
-  if (typeof value === "boolean")
-    return value;
-  if (value === null || value === "")
-    return false;
-  if (typeof value === "number")
-    return value !== 0;
-  if (typeof value === "string") {
-    let normalized = value.trim().toLowerCase();
-    if (["1", "true", "on", "yes"].includes(normalized))
-      return true;
-    if (["0", "false", "off", "no", ""].includes(normalized))
-      return false;
-  }
-  return value;
-}
-function castString(value) {
-  if (value === null)
-    return null;
-  if (typeof value === "string")
-    return value;
-  if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint")
-    return `${value}`;
-  return value;
-}
-function castArray(value) {
-  if (value === null || value === "")
-    return [];
-  if (Array.isArray(value))
-    return value;
-  if (typeof value === "string") {
-    try {
-      let parsed = JSON.parse(value);
-      if (Array.isArray(parsed))
-        return parsed;
-    } catch (e) {
-    }
-  }
-  return value;
-}
-function castObject(value) {
-  if (value === null || value === "")
-    return {};
-  if (isPlainObject(value))
-    return value;
-  if (Array.isArray(value))
-    return Object.assign({}, value);
-  if (typeof value === "string") {
-    try {
-      let parsed = JSON.parse(value);
-      if (isPlainObject(parsed))
-        return parsed;
-    } catch (e) {
-    }
-  }
-  return value;
-}
-function isPlainObject(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 // js/component.js
 var Component = class {
   constructor(el) {
@@ -11365,12 +11231,10 @@ var Component = class {
       throw `Snapshot missing on Livewire component with id: ` + this.id;
     }
     this.name = this.snapshot.memo.name;
-    this.sync = this.snapshot.memo.sync || {};
     this.effects = JSON.parse(el.getAttribute("wire:effects"));
     this.originalEffects = deepClone(this.effects);
-    let hydratedData = applySyncDataFromServer(extractData(deepClone(this.snapshot.data)), this.sync);
-    this.canonical = deepClone(hydratedData);
-    this.ephemeral = deepClone(hydratedData);
+    this.canonical = extractData(deepClone(this.snapshot.data));
+    this.ephemeral = extractData(deepClone(this.snapshot.data));
     this.reactive = Alpine.reactive(this.ephemeral);
     this.queuedUpdates = {};
     this.jsActions = {};
@@ -11392,18 +11256,15 @@ var Component = class {
   }
   mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
     let snapshot = JSON.parse(snapshotEncoded);
-    let currentSync = this.sync || {};
-    let nextSync = snapshot.memo.sync || {};
     let oldCanonical = deepClone(this.canonical);
-    let updatedOldCanonical = this.applyUpdates(oldCanonical, applySyncUpdatesFromServer(updates, currentSync));
-    let newCanonical = applySyncDataFromServer(extractData(deepClone(snapshot.data)), nextSync);
+    let updatedOldCanonical = this.applyUpdates(oldCanonical, updates);
+    let newCanonical = extractData(deepClone(snapshot.data));
     let dirty = diff(updatedOldCanonical, newCanonical);
     this.snapshotEncoded = snapshotEncoded;
     this.snapshot = snapshot;
-    this.sync = nextSync;
     this.effects = effects;
-    this.canonical = deepClone(newCanonical);
-    let newData = deepClone(newCanonical);
+    this.canonical = extractData(deepClone(snapshot.data));
+    let newData = extractData(deepClone(snapshot.data));
     let changes = [];
     let removals = [];
     Object.entries(dirty).forEach(([key, value]) => {
@@ -11442,7 +11303,7 @@ var Component = class {
   }
   getUpdates() {
     let propertiesDiff = diffAndConsolidate(this.canonical, this.ephemeral);
-    return applySyncUpdatesToServer(this.mergeQueuedUpdates(propertiesDiff), this.sync);
+    return this.mergeQueuedUpdates(propertiesDiff);
   }
   applyUpdates(object, updates) {
     for (let key in updates) {
@@ -11968,7 +11829,12 @@ var HistoryCoordinator = class {
     this.errorHandlers[key] = callback;
   }
   getUrl() {
-    return this.url ?? new URL(window.location.href);
+    if (this.url) {
+      if (this.url instanceof URL)
+        this.url.hash = window.location.hash;
+      return this.url;
+    }
+    return new URL(window.location.href);
   }
   replaceState(url, updates) {
     this.url = url;
@@ -14906,9 +14772,6 @@ var Livewire2 = {
   interceptAction: (callback) => interceptAction(callback),
   interceptMessage: (callback) => interceptMessage(callback),
   interceptRequest: (callback) => interceptRequest(callback),
-  sync: (strategy, codec) => registerSyncCodec(strategy, codec),
-  registerSyncCodec: (strategy, codec) => registerSyncCodec(strategy, codec),
-  removeSyncCodec: (strategy) => removeSyncCodec(strategy),
   fireAction: (component, method, params = [], metadata = {}) => fireAction(component, method, params, metadata),
   start,
   first,

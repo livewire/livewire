@@ -29,6 +29,12 @@ class SupportMultipleRootElementDetection extends ComponentHook
 
     function getRootElementCount($html)
     {
+        // Strip <script> and <style> tags before parsing to avoid inconsistent
+        // behavior across different libxml2 versions (older versions misparse
+        // these elements, producing incorrect DOM structures)...
+        $html = preg_replace('/<script\b[^>]*>.*?<\/script>/si', '', $html);
+        $html = preg_replace('/<style\b[^>]*>.*?<\/style>/si', '', $html);
+
         $dom = new \DOMDocument();
 
         @$dom->loadHTML($html);
@@ -39,8 +45,6 @@ class SupportMultipleRootElementDetection extends ComponentHook
 
         foreach ($body->childNodes as $child) {
             if ($child->nodeType == XML_ELEMENT_NODE) {
-                if ($child->tagName === 'script') continue;
-
                 $count++;
             }
         }
