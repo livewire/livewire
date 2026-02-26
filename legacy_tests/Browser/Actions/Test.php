@@ -99,7 +99,7 @@ class Test extends TestCase
                 })
                 ->waitForLivewire(function ($b) {
                     $b->press('@blog.button')
-                        ->waitUntil("document.querySelector('[dusk=\"blog.button\"]').disabled === true");
+                        ->pause(10);
 
                     $this->assertEquals('true', $b->attribute('@blog.button', 'disabled'));
                     $this->assertEquals('true', $b->attribute('@blog.input', 'readonly'));
@@ -114,7 +114,7 @@ class Test extends TestCase
                  * Elements are un-marked as readonly when form errors out.
                  */
                 ->press('@boo.button')
-                ->waitUntil("document.querySelector('[dusk=\"boo.button\"]').disabled === true")
+                ->pause(10)
                 ->tap(function ($b) {
                     $this->assertEquals('true', $b->attribute('@boo.button', 'disabled'));
                 })
