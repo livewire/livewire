@@ -266,7 +266,10 @@ function fromQueryString(search, queryKey) {
         let shouldBeHandledAsArray = decodedKey.includes('[') && decodedKey.startsWith(queryKey)
 
         if (!shouldBeHandledAsArray) {
-            data[decodedKey] = value
+            // Decode only the key being tracked. Preserve unrelated encoded keys.
+            let nonArrayKey = decodedKey === queryKey ? decodedKey : key
+
+            data[nonArrayKey] = value
         } else {
             // Convert to dot notation because it's easier...
             let dotNotatedKey = decodedKey.replaceAll('[', '.').replaceAll(']', '')
