@@ -199,7 +199,7 @@ function extractUriAndQueryString(el) {
 }
 
 function isAsset(el) {
-    return (el.tagName.toLowerCase() === 'link' && el.getAttribute('rel').toLowerCase() === 'stylesheet')
+    return (el.tagName.toLowerCase() === 'link' && el.getAttribute('rel')?.toLowerCase() === 'stylesheet')
         || el.tagName.toLowerCase() === 'style'
         || el.tagName.toLowerCase() === 'script'
 }

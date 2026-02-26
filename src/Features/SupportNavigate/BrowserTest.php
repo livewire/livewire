@@ -31,6 +31,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('first-asset-page', FirstAssetPage::class);
             Livewire::component('second-asset-page', SecondAssetPage::class);
             Livewire::component('third-asset-page', ThirdAssetPage::class);
+            Livewire::component('first-head-link-without-rel-page', FirstHeadLinkWithoutRelPage::class);
+            Livewire::component('second-head-link-without-rel-page', SecondHeadLinkWithoutRelPage::class);
             Livewire::component('first-tracked-asset-page', FirstTrackedAssetPage::class);
             Livewire::component('second-tracked-asset-page', SecondTrackedAssetPage::class);
             Livewire::component('second-remote-asset', SecondRemoteAsset::class);
@@ -67,6 +69,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
             Route::get('/second-asset', SecondAssetPage::class)->middleware('web');
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
+            Route::get('/first-head-link-without-rel', FirstHeadLinkWithoutRelPage::class)->middleware('web');
+            Route::get('/second-head-link-without-rel', SecondHeadLinkWithoutRelPage::class)->middleware('web');
             Route::get('/first-scroll', FirstScrollPage::class)->middleware('web');
             Route::get('/second-scroll', SecondScrollPage::class)->middleware('web');
             Route::get('/second-remote-asset', SecondRemoteAsset::class)->middleware('web');
@@ -470,6 +474,18 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForNavigate()->click('@link.to.third')
                 ->waitForText('On third')
                 ->assertScript('return _lw_dusk_asset_count', 2);
+        });
+    }
+
+    public function test_can_navigate_when_head_contains_link_tag_without_rel_attribute()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-head-link-without-rel')
+                ->assertSee('On first page with head link without rel')
+                ->click('@link.to.second')
+                ->waitForText('On second page with head link without rel')
+                ->assertConsoleLogHasNoErrors();
         });
     }
 
@@ -1525,6 +1541,29 @@ class ThirdAssetPage extends Component
     public function render()
     {
         return '<div>On third asset page</div>';
+    }
+}
+
+class FirstHeadLinkWithoutRelPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            On first page with head link without rel
+            <a href="/second-head-link-without-rel" wire:navigate dusk="link.to.second">Go to second page</a>
+        </div>
+        HTML;
+    }
+}
+
+class SecondHeadLinkWithoutRelPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::layout-with-head-link-without-rel')]
+    public function render()
+    {
+        return '<div>On second page with head link without rel</div>';
     }
 }
 
