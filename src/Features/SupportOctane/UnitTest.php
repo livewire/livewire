@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Tests;
+namespace Livewire\Features\SupportOctane;
 
 use Livewire\Livewire;
 use Livewire\Component;
@@ -12,22 +12,9 @@ use Livewire\Features\SupportStreaming\SupportStreaming;
 use Livewire\Features\SupportRedirects\SupportRedirects;
 use Livewire\Drawer\BaseUtils;
 
-class MemoryLeakTest extends \Orchestra\Testbench\TestCase
+class UnitTest extends \Tests\TestCase
 {
-    protected function getPackageProviders($app)
-    {
-        return [
-            \Livewire\LivewireServiceProvider::class,
-        ];
-    }
-
-    protected function defineEnvironment($app)
-    {
-        $app['config']->set('app.key', 'base64:Hupx3yAySikrM2/edkZQNQHslgDWYfiBfCuSThJ5SK8=');
-    }
-
-    /** @test */
-    public function component_stacks_are_cleared_on_flush_state()
+    public function test_component_stacks_are_cleared_on_flush_state()
     {
         HandleComponents::$componentStack = [new \stdClass()];
         HandleComponents::$renderStack = [new \stdClass()];
@@ -38,8 +25,7 @@ class MemoryLeakTest extends \Orchestra\Testbench\TestCase
         $this->assertEmpty(HandleComponents::$renderStack);
     }
 
-    /** @test */
-    public function streaming_response_is_cleared_on_flush_state()
+    public function test_streaming_response_is_cleared_on_flush_state()
     {
         $reflection = new \ReflectionClass(SupportStreaming::class);
         $property = $reflection->getProperty('response');
@@ -52,8 +38,7 @@ class MemoryLeakTest extends \Orchestra\Testbench\TestCase
         $this->assertNull($property->getValue(null));
     }
 
-    /** @test */
-    public function lifecycle_hooks_caches_are_cleared_on_flush_state()
+    public function test_lifecycle_hooks_caches_are_cleared_on_flush_state()
     {
         $reflection = new \ReflectionClass(SupportLifecycleHooks::class);
 
@@ -72,8 +57,7 @@ class MemoryLeakTest extends \Orchestra\Testbench\TestCase
         $this->assertEmpty($methodCache->getValue(null));
     }
 
-    /** @test */
-    public function redirector_cache_stack_is_cleared_on_flush_state()
+    public function test_redirector_cache_stack_is_cleared_on_flush_state()
     {
         SupportRedirects::$redirectorCacheStack = [new \stdClass()];
 
@@ -82,8 +66,7 @@ class MemoryLeakTest extends \Orchestra\Testbench\TestCase
         $this->assertEmpty(SupportRedirects::$redirectorCacheStack);
     }
 
-    /** @test */
-    public function reflection_cache_is_cleared_on_flush_state()
+    public function test_reflection_cache_is_cleared_on_flush_state()
     {
         $reflection = new \ReflectionClass(BaseUtils::class);
         $property = $reflection->getProperty('reflectionCache');
@@ -96,8 +79,7 @@ class MemoryLeakTest extends \Orchestra\Testbench\TestCase
         $this->assertEmpty($property->getValue(null));
     }
 
-    /** @test */
-    public function flush_state_clears_component_stack_after_exception_during_mount()
+    public function test_flush_state_clears_component_stack_after_exception_during_mount()
     {
         HandleComponents::$componentStack = [];
 
@@ -124,8 +106,7 @@ class MemoryLeakTest extends \Orchestra\Testbench\TestCase
         $this->assertEmpty(HandleComponents::$componentStack);
     }
 
-    /** @test */
-    public function repeated_requests_dont_accumulate_static_state()
+    public function test_repeated_requests_dont_accumulate_static_state()
     {
         for ($i = 0; $i < 5; $i++) {
             HandleComponents::$componentStack[] = new \stdClass();
@@ -138,8 +119,7 @@ class MemoryLeakTest extends \Orchestra\Testbench\TestCase
         }
     }
 
-    /** @test */
-    public function event_bus_listeners_dont_grow_across_multiple_requests()
+    public function test_event_bus_listeners_dont_grow_across_multiple_requests()
     {
         $countListeners = function () {
             $eventBus = app(EventBus::class);
