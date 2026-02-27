@@ -901,6 +901,19 @@ class UnitTest extends \Tests\TestCase
         );
     }
 
+    public function test_deprecated_process_element_key_shim_still_sets_current_loop_key()
+    {
+        SupportCompiledWireKeys::$currentLoop = [
+            'count' => null,
+            'index' => null,
+            'key' => null,
+        ];
+
+        SupportCompiledWireKeys::processElementKey('{{ $foo }}', ['foo' => 'bar']);
+
+        $this->assertEquals('bar', SupportCompiledWireKeys::$currentLoop['key']);
+    }
+
     #[DataProvider('elementsTestProvider')]
     public function test_we_can_correctly_find_wire_keys_on_elements_only_but_not_blade_or_livewire_components($occurrences, $template)
     {
