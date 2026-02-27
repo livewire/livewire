@@ -70,6 +70,24 @@ describe('Contextualize expressions', () => {
         expect(contextualizeExpression('other', childEl)).toBe('$wire.other')
     })
 
+    it('$-prefixed Alpine scope keys should not prevent $wire prefixing', () => {
+        // When Alpine plugins (e.g. Filament) expose $set/$get on the data stack,
+        // those $-prefixed keys should NOT be added to the SKIP list.
+        // Livewire's $set must still be contextualized to $wire.$set.
+        let mockEl = {
+            _x_dataStack: [{ open: true, $set: () => {}, $get: () => {} }],
+            hasAttribute: () => false,
+            parentElement: null,
+        }
+
+        // $set should route to $wire.$set, not Alpine's $set
+        expect(contextualizeExpression("$set('foo', 'bar')", mockEl)).toBe("$wire.$set('foo', 'bar')")
+        // $get should also route to $wire.$get
+        expect(contextualizeExpression("$get('foo')", mockEl)).toBe("$wire.$get('foo')")
+        // Regular Alpine keys should still be skipped (not prefixed)
+        expect(contextualizeExpression('open', mockEl)).toBe('open')
+    })
+
     it('stops at livewire component root', () => {
         let rootEl = {
             _x_dataStack: [{ outsideVar: {} }],
