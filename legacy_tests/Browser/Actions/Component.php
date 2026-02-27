@@ -26,12 +26,12 @@ class Component extends BaseComponent
 
     public function pause()
     {
-        usleep(1000 * 150);
+        usleep(1000 * 500);
     }
 
     public function throwError()
     {
-        usleep(1000 * 150);
+        usleep(1000 * 500);
         throw new \Exception;
     }
 

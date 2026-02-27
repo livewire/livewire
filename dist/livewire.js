@@ -433,6 +433,11 @@
       return diffs;
     }
     let leftKeys = Object.keys(left);
+    let rightKeys = Object.keys(right);
+    if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i])) {
+      diffs[path] = right;
+      return diffs;
+    }
     Object.entries(right).forEach(([key, value]) => {
       diffs = { ...diffs, ...diff(left[key], right[key], diffs, path === "" ? key : `${path}.${key}`) };
       leftKeys = leftKeys.filter((i) => i !== key);
@@ -489,6 +494,12 @@
       diffs[path] = dataGet(rootRight, path);
       return { changed: true, consolidated: true };
     }
+    if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i])) {
+      if (path !== "") {
+        diffs[path] = dataGet(rootRight, path);
+        return { changed: true, consolidated: true };
+      }
+    }
     let keysMatch = leftKeys.every((k) => rightKeys.includes(k));
     if (!keysMatch && !convertedToObject) {
       if (path !== "") {
@@ -513,7 +524,7 @@
       return { changed: true, consolidated: true };
     }
     Object.assign(diffs, childDiffs);
-    return { changed: changedCount > 0, consolidated: consolidatedCount > 0 };
+    return { changed: changedCount > 0, consolidated: consolidatedCount > 0 || convertedToObject };
   }
   function extractData(payload) {
     let value = isSynthetic(payload) ? payload[0] : payload;
@@ -4920,6 +4931,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           resolvedActions.add(action);
           return;
         }
+        if (meta?.status) {
+          action.rejectPromise({ status: meta.status, body: null, json: null, errors: null });
+          action.invokeOnFinish();
+          resolvedActions.add(action);
+          return;
+        }
         action.invokeOnSuccess(value);
         action.resolvePromise(value);
         action.invokeOnFinish();
@@ -5612,9 +5629,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportErrors.js
   function getErrorsObject(component) {
+    let state = component.__errorsState ??= module_default.reactive({
+      clientErrors: null
+    });
+    component.__lastErrorsSnapshot ??= component.snapshot;
     return {
       messages() {
-        return component.snapshot.memo.errors;
+        if (component.__lastErrorsSnapshot !== component.snapshot) {
+          state.clientErrors = null;
+          component.__lastErrorsSnapshot = component.snapshot;
+        }
+        return state.clientErrors ?? component.snapshot.memo.errors;
       },
       keys() {
         return Object.keys(this.messages());
@@ -5654,7 +5679,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return Array.isArray(firstMessage) ? firstMessage[0] : firstMessage;
       },
       get(key) {
-        return component.snapshot.memo.errors[key] || [];
+        return this.messages()[key] || [];
       },
       all() {
         return Object.values(this.messages()).flat();
@@ -5672,6 +5697,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return Object.values(this.messages()).reduce((total, array) => {
           return total + array.length;
         }, 0);
+      },
+      clear(field = null) {
+        if (field === null) {
+          state.clientErrors = {};
+        } else {
+          let errors = { ...state.clientErrors ?? component.snapshot.memo.errors };
+          delete errors[field];
+          state.clientErrors = errors;
+        }
       }
     };
   }
@@ -11573,7 +11607,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.errorHandlers[key] = callback;
     }
     getUrl() {
-      return this.url ?? new URL(window.location.href);
+      if (this.url) {
+        if (this.url instanceof URL)
+          this.url.hash = window.location.hash;
+        return this.url;
+      }
+      return new URL(window.location.href);
     }
     replaceState(url, updates) {
       this.url = url;
@@ -13280,6 +13319,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/evaluator.js
+  function getAlpineScopeKeys(el) {
+    let keys = [];
+    let currentEl = el;
+    while (currentEl) {
+      if (currentEl._x_dataStack) {
+        for (let scope2 of currentEl._x_dataStack) {
+          for (let key of Object.keys(scope2)) {
+            if (!keys.includes(key))
+              keys.push(key);
+          }
+        }
+      }
+      if (currentEl.hasAttribute && currentEl.hasAttribute("wire:id"))
+        break;
+      currentEl = currentEl.parentElement;
+    }
+    return keys;
+  }
   function evaluateExpression(el, expression, options = {}) {
     if (!expression || expression.trim() === "")
       return;
@@ -13293,7 +13350,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function evaluateActionExpression(el, expression, options = {}) {
     if (!expression || expression.trim() === "")
       return;
-    let contextualExpression = contextualizeExpression(expression);
+    let contextualExpression = contextualizeExpression(expression, el);
     try {
       let result = module_default.evaluateRaw(el, contextualExpression, options);
       if (result instanceof Promise && result._livewireAction) {
@@ -13308,8 +13365,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       console.error(error2);
     }
   }
-  function contextualizeExpression(expression) {
+  function contextualizeExpression(expression, el) {
     let SKIP = ["JSON", "true", "false", "null", "undefined", "this", "$wire", "$event"];
+    if (el) {
+      SKIP.push(...getAlpineScopeKeys(el));
+    }
     let strings = [];
     let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (m) => {
       strings.push(m);
@@ -13870,6 +13930,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             el._x_forceModelUpdate && el._x_forceModelUpdate(el._x_model.get());
           });
         });
+        let currentValue = dataGet(component.ephemeral, name);
+        if (JSON.stringify(currentValue) !== JSON.stringify(initialValue)) {
+          replace2(currentValue);
+        }
         cleanup2(() => {
           forgetCommitHandler();
           forgetPopHandler();

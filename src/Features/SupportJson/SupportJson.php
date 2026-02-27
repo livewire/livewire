@@ -6,6 +6,7 @@ use function Livewire\on;
 use Livewire\ComponentHook;
 
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class SupportJson extends ComponentHook
 {
@@ -27,6 +28,14 @@ class SupportJson extends ComponentHook
                 $context->addEffect('returnsMeta', $existingMeta);
 
                 // Return null so the returns array stays aligned
+                $returnEarly(null);
+            } catch (\Throwable $e) {
+                $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
+
+                $existingMeta = $context->effects['returnsMeta'] ?? [];
+                $existingMeta[$index] = ['status' => $status];
+                $context->addEffect('returnsMeta', $existingMeta);
+
                 $returnEarly(null);
             }
         });

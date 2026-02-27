@@ -37,22 +37,21 @@ class BaseReactive extends LivewireAttribute
             $updatedHash = crc32(json_encode($updatedValue));
 
             if ($currentHash !== $updatedHash) {
-                // Queue the update to be processed after all hooks are hydrated
-                // This ensures SupportLifecycleHooks is initialized before we trigger updates
-                // Don't set the value yet - it will be set when processing the queue
-                // so that updating* hooks see the old value
+                // Set value immediately so lifecycle hooks (boot/hydrate/booted) see updated data
+                $this->setValue($updatedValue);
+                $this->originalValueHash = crc32(json_encode($updatedValue));
+
+                // Queue the update trigger for after hydrate so updating*/updated* hooks fire
+                // Pass both old and new values plus a setValue callback so that
+                // updating* hooks can temporarily see the old value
                 SupportReactiveProps::queueUpdate(
                     $this->component->getId(),
                     $propertyName,
+                    $currentValue,
                     $updatedValue,
-                    function ($value) {
-                        $this->setValue($value);
-                        // Update the hash so dehydrate doesn't think we mutated the prop
-                        $this->originalValueHash = crc32(json_encode($value));
-                    }
+                    fn ($value) => $this->setValue($value),
                 );
 
-                // Return early - hash will be updated when the queue is processed
                 return;
             }
         }

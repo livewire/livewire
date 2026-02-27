@@ -25,7 +25,14 @@ class HistoryCoordinator {
 
     getUrl() {
         // If the querystring has started changing the URL before the batch has been flushed, use the URL that was passed in...
-        return this.url ?? new URL(window.location.href)
+        if (this.url) {
+            // Always pick up the current hash from the browser, since Livewire only manages query strings
+            // and the hash may have been changed externally (e.g. during Alpine init)...
+            if (this.url instanceof URL) this.url.hash = window.location.hash
+            return this.url
+        }
+
+        return new URL(window.location.href)
     }
 
     replaceState(url, updates) {

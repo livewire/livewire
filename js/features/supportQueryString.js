@@ -47,6 +47,14 @@ on('effect', ({ component, effects, cleanup }) => {
                 })
             })
 
+            // If the current property value differs from the initial value
+            // (e.g. restored from session), sync the URL via replaceState...
+            let currentValue = dataGet(component.ephemeral, name)
+
+            if (JSON.stringify(currentValue) !== JSON.stringify(initialValue)) {
+                replace(currentValue)
+            }
+
             cleanup(() => {
                 forgetCommitHandler()
                 forgetPopHandler()
