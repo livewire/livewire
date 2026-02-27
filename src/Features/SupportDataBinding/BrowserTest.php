@@ -317,6 +317,38 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    function test_wire_data_reflects_key_insertion_order()
+    {
+        Livewire::visit(new class extends Component {
+            public $items = [
+                'a' => 'A',
+                'b' => 'B',
+                'c' => 'C',
+            ];
+
+            public function insertBetween()
+            {
+                $before = array_slice($this->items, 0, 1, true);
+                $after = array_slice($this->items, 1, null, true);
+                $this->items = $before + ['new' => 'NEW'] + $after;
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <button wire:click="insertBetween" dusk="insert">Insert</button>
+                        <span dusk="keys" x-text="Object.keys($wire.items).join(',')"></span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@keys', 'a,b,c')
+            ->waitForLivewire()->click('@insert')
+            ->assertSeeIn('@keys', 'a,new,b,c')
+        ;
+    }
+
     public function test_multiple_wire_set_calls_to_empty_string_are_all_sent_to_server()
     {
         Livewire::visit(new class extends Component {
