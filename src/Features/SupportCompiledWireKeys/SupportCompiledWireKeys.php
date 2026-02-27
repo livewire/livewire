@@ -125,6 +125,23 @@ class SupportCompiledWireKeys extends ComponentHook
         return "'".$value."'";
     }
 
+    /**
+     * Backward-compatibility shim for cached compiled Blade views that still
+     * reference this method from before the smart keys optimisation in v4.2.
+     *
+     * TODO: Remove in v5.
+     */
+    public static function processElementKey($keyString, $data)
+    {
+        if (view()->exists($keyString)) {
+            $key = $keyString;
+        } else {
+            $key = Blade::render($keyString, $data);
+        }
+
+        static::$currentLoop['key'] = $key;
+    }
+
     public static function processComponentKey($component)
     {
         if ($component->attributes->has('wire:key')) {
