@@ -509,6 +509,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             new class extends Component {
                 public string $search = '';
 
+                public int $updateCount = 0;
+
                 public array $facets = [
                     'brand' => [
                         'label' => 'Brand',
@@ -529,6 +531,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 {
                     usleep(200 * 1000);
 
+                    $this->updateCount++;
                     $this->facets['query']['values'][0]['value'] = $this->search;
                 }
 
@@ -536,7 +539,31 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div>
                         <input type="text" wire:model.live.debounce.5ms="search" dusk="parent.search">
 
+                        <span dusk="parent.update-count">{{ $updateCount }}</span>
+
                         <livewire:child-facets :facets="$facets" />
+
+                        @script
+                        <script>
+                            window.__parentSnapshotUpdateCounts ??= []
+
+                            Livewire.interceptRequest(({ request, onSend }) => {
+                                onSend(() => {
+                                    request.messages.forEach((message) => {
+                                        try {
+                                            let snapshot = JSON.parse(message.snapshot)
+
+                                            if (snapshot.data && Object.prototype.hasOwnProperty.call(snapshot.data, 'updateCount')) {
+                                                window.__parentSnapshotUpdateCounts.push(snapshot.data.updateCount)
+                                            }
+                                        } catch (error) {
+                                            window.__parentSnapshotUpdateCounts.push('parse-error')
+                                        }
+                                    })
+                                })
+                            })
+                        </script>
+                        @endscript
                     </div>
                     HTML;
                 }
@@ -555,10 +582,16 @@ class BrowserTest extends \Tests\BrowserTestCase
         ])
             ->waitForLivewireToLoad()
             ->assertMissing('#livewire-error')
-            ->keys('@parent.search', 'b', 'o', 'l', 't', 'a', 'r')
-            ->pause(1400)
+            ->keys('@parent.search', 'b')
+            ->pause(25)
+            ->keys('@parent.search', 'o')
+            ->pause(1200)
             ->assertMissing('#livewire-error')
-            ->assertSeeIn('@child.query', 'boltar')
+            ->assertScript('JSON.stringify(window.__parentSnapshotUpdateCounts)', '[0,1]')
+            ->waitForTextIn('@parent.update-count', '2', 3)
+            ->waitForTextIn('@child.query', 'bo', 3)
+            ->assertSeeIn('@parent.update-count', '2')
+            ->assertSeeIn('@child.query', 'bo')
         ;
     }
 
