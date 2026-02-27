@@ -32,6 +32,33 @@ describe('diff (legacy)', () => {
             'items.3': '__rm__'
         })
     })
+
+    it('detects key order changes in objects', () => {
+        expect(diff(
+            { items: { a: 1, b: 2 } },
+            { items: { b: 2, a: 1 } }
+        )).toEqual({
+            items: { b: 2, a: 1 }
+        })
+    })
+
+    it('consolidates object when key is inserted in middle', () => {
+        expect(diff(
+            { items: { a: 1, b: 2, c: 3 } },
+            { items: { a: 1, new: 'NEW', b: 2, c: 3 } }
+        )).toEqual({
+            items: { a: 1, new: 'NEW', b: 2, c: 3 }
+        })
+    })
+
+    it('does not consolidate object when key is appended at end', () => {
+        expect(diff(
+            { items: { a: 1, b: 2 } },
+            { items: { a: 1, b: 2, c: 3 } }
+        )).toEqual({
+            'items.c': 3
+        })
+    })
 })
 
 describe('diffAndConsolidate', () => {
@@ -308,6 +335,15 @@ describe('diffAndConsolidate', () => {
             { data: { b: 3, a: 1 } }
         )).toEqual({
             data: { b: 3, a: 1 }
+        })
+    })
+
+    it('consolidates object when key is inserted in middle', () => {
+        expect(diffAndConsolidate(
+            { items: { a: 1, b: 2, c: 3 } },
+            { items: { a: 1, new: 'NEW', b: 2, c: 3 } }
+        )).toEqual({
+            items: { a: 1, new: 'NEW', b: 2, c: 3 }
         })
     })
 })
