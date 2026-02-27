@@ -84,8 +84,27 @@ describe('Contextualize expressions', () => {
         expect(contextualizeExpression("$set('foo', 'bar')", mockEl)).toBe("$wire.$set('foo', 'bar')")
         // $get should also route to $wire.$get
         expect(contextualizeExpression("$get('foo')", mockEl)).toBe("$wire.$get('foo')")
+        // $toggle should also route to $wire.$toggle
+        expect(contextualizeExpression("$toggle('active')", mockEl)).toBe("$wire.$toggle('active')")
         // Regular Alpine keys should still be skipped (not prefixed)
         expect(contextualizeExpression('open', mockEl)).toBe('open')
+    })
+
+    it('$-prefixed keys on parent scope should not prevent $wire prefixing', () => {
+        let parentEl = {
+            _x_dataStack: [{ $set: () => {}, $get: () => {} }],
+            hasAttribute: () => false,
+            parentElement: null,
+        }
+
+        let childEl = {
+            _x_dataStack: [{ item: {} }],
+            hasAttribute: () => false,
+            parentElement: parentEl,
+        }
+
+        expect(contextualizeExpression("$set('foo', 'bar')", childEl)).toBe("$wire.$set('foo', 'bar')")
+        expect(contextualizeExpression('item', childEl)).toBe('item')
     })
 
     it('stops at livewire component root', () => {
