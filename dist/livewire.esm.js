@@ -8729,7 +8729,7 @@ function diff(left, right, diffs = {}, path = "") {
   }
   let leftKeys = Object.keys(left);
   let rightKeys = Object.keys(right);
-  if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i])) {
+  if (isObject(left) && leftKeys.some((key, i) => key !== rightKeys[i])) {
     diffs[path] = right;
     return diffs;
   }
@@ -13003,7 +13003,7 @@ function getAlpineScopeKeys(el) {
     if (currentEl._x_dataStack) {
       for (let scope of currentEl._x_dataStack) {
         for (let key of Object.keys(scope)) {
-          if (!keys.includes(key))
+          if (!keys.includes(key) && !key.startsWith("$"))
             keys.push(key);
         }
       }
