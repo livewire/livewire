@@ -6,7 +6,7 @@ let attributesExemptFromScriptTagHashing = [
     'aria-hidden',
 ]
 
-export function swapCurrentPageWithNewHtml(html, andThen) {
+export function swapCurrentPageWithNewHtml(html, andThen, options = {}) {
     let newDocument = (new DOMParser()).parseFromString(html, "text/html")
     let newHtml = newDocument.documentElement
     let newBody = document.adoptNode(newDocument.body)
@@ -28,11 +28,38 @@ export function swapCurrentPageWithNewHtml(html, andThen) {
 
     let oldBody = document.body
 
-    document.body.replaceWith(newBody)
+    let swap = () => {
+        document.body.replaceWith(newBody)
 
-    Alpine.destroyTree(oldBody)
+        Alpine.destroyTree(oldBody)
+    }
 
-    andThen(i => afterRemoteScriptsHaveLoaded = i)
+    let transitionFinished = Promise.resolve()
+
+    if (options.transition && document.startViewTransition) {
+        // Inject styles to handle view transitions properly
+        let style = document.createElement('style')
+
+        style.textContent = `
+            @media (prefers-reduced-motion: reduce) {
+                ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+                    animation: none !important;
+                }
+            }
+        `
+
+        document.head.appendChild(style)
+
+        let transition = document.startViewTransition(() => swap())
+
+        transitionFinished = transition.finished.finally(() => {
+            style.remove()
+        })
+    } else {
+        swap()
+    }
+
+    andThen(i => afterRemoteScriptsHaveLoaded = i, transitionFinished)
 }
 
 function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes) {

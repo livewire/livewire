@@ -7,6 +7,17 @@ export let wireNavigateSelectors = [
     '[wire\\:navigate\\.preserve-scroll]',
     '[wire\\:navigate\\.preserve-scroll\\.hover]',
     '[wire\\:navigate\\.hover\\.preserve-scroll]',
+    '[wire\\:navigate\\.transition]',
+    '[wire\\:navigate\\.transition\\.hover]',
+    '[wire\\:navigate\\.hover\\.transition]',
+    '[wire\\:navigate\\.transition\\.preserve-scroll]',
+    '[wire\\:navigate\\.preserve-scroll\\.transition]',
+    '[wire\\:navigate\\.transition\\.hover\\.preserve-scroll]',
+    '[wire\\:navigate\\.transition\\.preserve-scroll\\.hover]',
+    '[wire\\:navigate\\.hover\\.transition\\.preserve-scroll]',
+    '[wire\\:navigate\\.hover\\.preserve-scroll\\.transition]',
+    '[wire\\:navigate\\.preserve-scroll\\.transition\\.hover]',
+    '[wire\\:navigate\\.preserve-scroll\\.hover\\.transition]',
 ]
 
 // Combined selector for querying all wire:navigate elements
@@ -19,6 +30,17 @@ let attributeMap = {
     'wire:navigate.preserve-scroll': 'x-navigate.preserve-scroll',
     'wire:navigate.preserve-scroll.hover': 'x-navigate.preserve-scroll.hover',
     'wire:navigate.hover.preserve-scroll': 'x-navigate.hover.preserve-scroll',
+    'wire:navigate.transition': 'x-navigate.transition',
+    'wire:navigate.transition.hover': 'x-navigate.transition.hover',
+    'wire:navigate.hover.transition': 'x-navigate.hover.transition',
+    'wire:navigate.transition.preserve-scroll': 'x-navigate.transition.preserve-scroll',
+    'wire:navigate.preserve-scroll.transition': 'x-navigate.preserve-scroll.transition',
+    'wire:navigate.transition.hover.preserve-scroll': 'x-navigate.transition.hover.preserve-scroll',
+    'wire:navigate.transition.preserve-scroll.hover': 'x-navigate.transition.preserve-scroll.hover',
+    'wire:navigate.hover.transition.preserve-scroll': 'x-navigate.hover.transition.preserve-scroll',
+    'wire:navigate.hover.preserve-scroll.transition': 'x-navigate.hover.preserve-scroll.transition',
+    'wire:navigate.preserve-scroll.transition.hover': 'x-navigate.preserve-scroll.transition.hover',
+    'wire:navigate.preserve-scroll.hover.transition': 'x-navigate.preserve-scroll.hover.transition',
 }
 
 // Register all selectors with Alpine
