@@ -256,6 +256,39 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_lazy_component_outside_viewport_is_not_loaded_when_reactive_prop_changes()
+    {
+        Livewire::visit([new class extends Component {
+            public $count = 1;
+            public function inc() { $this->count++; }
+            public function render() { return <<<'HTML'
+            <div>
+                <button wire:click="inc" dusk="button">+</button>
+                <div dusk="parent-count">Parent: {{ $count }}</div>
+                <div style="height: 200vh"></div>
+                <livewire:child :$count lazy />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            #[Reactive]
+            public $count;
+            public $config = [];
+            public function mount() { $this->config = ['label' => 'Count']; }
+            public function render() { return <<<'HTML'
+            <div id="child">
+                <div x-data="{ state: $wire.$entangle('config.label') }">
+                    <span dusk="child-label" x-text="state"></span>
+                </div>
+            </div>
+            HTML; }
+        }])
+        ->assertMissing('#child')
+        ->waitForLivewire()->click('@button')
+        ->waitForTextIn('@parent-count', 'Parent: 2')
+        ->assertMissing('#child')
+        ;
+    }
+
     public function test_can_access_component_parameters_in_placeholder_view()
     {
         Livewire::visit([new class extends Component {
