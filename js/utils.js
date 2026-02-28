@@ -349,6 +349,15 @@ export function diffAndPatchRecursive(left, right, target) {
     let leftKeys = new Set(Object.keys(left || {}))
     let rightKeys = Object.keys(right)
 
+    // If existing keys shifted position in an object (e.g. a key was inserted
+    // in the middle), we can't patch key-by-key because new keys would be
+    // appended at the end. Replace all keys on the target to preserve order.
+    if (!isArray(target) && [...leftKeys].some((key, i) => key !== rightKeys[i])) {
+        for (let key of Object.keys(target)) delete target[key]
+        for (let key of rightKeys) target[key] = right[key]
+        return
+    }
+
     rightKeys.forEach(key => {
         leftKeys.delete(key)
 
