@@ -8,11 +8,13 @@ import { finishAndHideProgressBar, removeAnyLeftOverStaleProgressBars, showAndSt
 import { packUpPersistedPopovers, unPackPersistedPopovers } from "./popover"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
+import { performViewTransition } from "@/directives/wire-transition"
 
 let enablePersist = true
 let showProgressBar = true
 let restoreScroll = true
 let autofocus = false
+let useViewTransitions = false
 
 export default function (Alpine) {
 
@@ -34,12 +36,18 @@ export default function (Alpine) {
         showProgressBar = false
     }
 
+    Alpine.navigate.enableViewTransitions = () => {
+        useViewTransitions = true
+    }
+
     Alpine.addInitSelector(() => `[${Alpine.prefixed('navigate')}]`)
 
     Alpine.directive('navigate', (el, { modifiers }) => {
         let shouldPrefetchOnHover = modifiers.includes('hover')
 
         let preserveScroll = modifiers.includes('preserve-scroll')
+
+        let transition = modifiers.includes('transition')
 
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
@@ -71,12 +79,12 @@ export default function (Alpine) {
 
                 if (prevented) return
 
-                navigateTo(destination, { preserveScroll })
+                navigateTo(destination, { preserveScroll, transition })
             })
         })
     })
 
-    function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
+    function navigateTo(destination, { preserveScroll = false, transition = false, shouldPushToHistoryState = true }) {
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
@@ -108,29 +116,31 @@ export default function (Alpine) {
                     replaceUrl(finalDestination, html)
                 }
 
-                swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
-                    removeAnyLeftOverStaleTeleportTargets(document.body)
+                transitionPage(transition, () => {
+                    swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
+                        removeAnyLeftOverStaleTeleportTargets(document.body)
 
-                    enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
-                        unPackPersistedTeleports(persistedEl)
-                        unPackPersistedPopovers(persistedEl)
-                    })
+                        enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+                            unPackPersistedTeleports(persistedEl)
+                            unPackPersistedPopovers(persistedEl)
+                        })
 
-                    !preserveScroll && restoreScrollPositionOrScrollToTop()
+                        !preserveScroll && restoreScrollPositionOrScrollToTop()
 
-                    // Invoke any callbacks registered via onSwap during the navigating event
-                    swapCallbacks.forEach(callback => callback())
+                        // Invoke any callbacks registered via onSwap during the navigating event
+                        swapCallbacks.forEach(callback => callback())
 
-                    afterNewScriptsAreDoneLoading(() => {
-                        andAfterAllThis(() => {
-                            setTimeout(() => {
-                                autofocus && autofocusElementsWithTheAutofocusAttribute()
+                        afterNewScriptsAreDoneLoading(() => {
+                            andAfterAllThis(() => {
+                                setTimeout(() => {
+                                    autofocus && autofocusElementsWithTheAutofocusAttribute()
+                                })
+
+                                nowInitializeAlpineOnTheNewPage(Alpine)
+
+                                fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                                showProgressBar && finishAndHideProgressBar()
                             })
-
-                            nowInitializeAlpineOnTheNewPage(Alpine)
-
-                            fireEventForOtherLibrariesToHookInto('alpine:navigated')
-                            showProgressBar && finishAndHideProgressBar()
                         })
                     })
                 })
@@ -185,27 +195,30 @@ export default function (Alpine) {
                     packUpPersistedPopovers(persistedEl)
                 })
 
-                swapCurrentPageWithNewHtml(html, () => {
-                    removeAnyLeftOverStaleProgressBars()
+                // No per-link transition; global setting still applies via useViewTransitions...
+                transitionPage(false, () => {
+                    swapCurrentPageWithNewHtml(html, () => {
+                        removeAnyLeftOverStaleProgressBars()
 
-                    removeAnyLeftOverStaleTeleportTargets(document.body)
+                        removeAnyLeftOverStaleTeleportTargets(document.body)
 
-                    enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
-                        unPackPersistedTeleports(persistedEl)
-                        unPackPersistedPopovers(persistedEl)
-                    })
+                        enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+                            unPackPersistedTeleports(persistedEl)
+                            unPackPersistedPopovers(persistedEl)
+                        })
 
-                    restoreScrollPositionOrScrollToTop()
+                        restoreScrollPositionOrScrollToTop()
 
-                    // Invoke any callbacks registered via onSwap during the navigating event
-                    swapCallbacks.forEach(callback => callback())
+                        // Invoke any callbacks registered via onSwap during the navigating event
+                        swapCallbacks.forEach(callback => callback())
 
-                    andAfterAllThis(() => {
-                        autofocus && autofocusElementsWithTheAutofocusAttribute()
+                        andAfterAllThis(() => {
+                            autofocus && autofocusElementsWithTheAutofocusAttribute()
 
-                        nowInitializeAlpineOnTheNewPage(Alpine)
+                            nowInitializeAlpineOnTheNewPage(Alpine)
 
-                        fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                            fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                        })
                     })
                 })
             })
@@ -216,6 +229,25 @@ export default function (Alpine) {
     // we should fire alpine:navigated as a replacement as well...
     setTimeout(() => {
         fireEventForOtherLibrariesToHookInto('alpine:navigated')
+    })
+}
+
+function transitionPage(perLinkTransition, callback) {
+    let shouldTransition = perLinkTransition || useViewTransitions
+
+    // If view transitions disabled or unsupported, call callback directly...
+    if (! shouldTransition || typeof document.startViewTransition !== 'function') {
+        return callback()
+    }
+
+    // Skip if a modal dialog is open (transitions paint above the dialog)...
+    if (document.querySelector('dialog:modal')) {
+        return callback()
+    }
+
+    performViewTransition({
+        root: document.body,
+        update: callback,
     })
 }
 
