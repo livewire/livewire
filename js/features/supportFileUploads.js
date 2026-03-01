@@ -1,4 +1,4 @@
-import { getCsrfToken } from '@/utils';
+import { getCsrfToken } from '@/utils'
 
 let uploadManagers = new WeakMap
 
@@ -14,7 +14,7 @@ function getUploadManager(component) {
     return uploadManagers.get(component)
 }
 
-export function handleFileUpload(el, property, component, cleanup) {
+export function handleFileUpload(el, property, component, cleanup, options = {}) {
     let manager = getUploadManager(component)
 
     let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true, detail: { id: component.id, property} }))
@@ -22,7 +22,7 @@ export function handleFileUpload(el, property, component, cleanup) {
     let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true, detail: { id: component.id, property} }))
     let cancel = () => el.dispatchEvent(new CustomEvent('livewire-upload-cancel', { bubbles: true, detail: { id: component.id, property} }))
     let progress = (progressEvent) => {
-        var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
+        let percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
 
         el.dispatchEvent(
             new CustomEvent('livewire-upload-progress', {
@@ -37,9 +37,9 @@ export function handleFileUpload(el, property, component, cleanup) {
         start()
 
         if (e.target.multiple) {
-            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel)
+            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel, true, options)
         } else {
-            manager.upload(property, e.target.files[0], finish, error, progress, cancel)
+            manager.upload(property, e.target.files[0], finish, error, progress, cancel, options)
         }
     }
 
@@ -55,7 +55,7 @@ export function handleFileUpload(el, property, component, cleanup) {
         if (value === null || value === '') {
             el.value = ''
         }
-        
+
         // If the file input is a multiple file input and the value has been reset to an empty array, then reset the input...
         if (el.multiple && Array.isArray(value) && value.length === 0) {
             el.value = ''
@@ -100,12 +100,18 @@ class UploadManager {
             this.handleS3PreSignedUrl(name, payload)
         })
 
+        this.component.$wire.$on('upload:generatedSignedChunkUrl', ({ name, url, uploadId }) => {
+            setUploadLoading(this.component, name)
+
+            this.handleSignedChunkUrl(name, url, uploadId)
+        })
+
         this.component.$wire.$on('upload:finished', ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames))
         this.component.$wire.$on('upload:errored', ({ name }) => this.markUploadErrored(name))
         this.component.$wire.$on('upload:removed', ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename))
     }
 
-    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback, options = {}) {
         this.setUpload(name, {
             files: [file],
             multiple: false,
@@ -114,10 +120,11 @@ class UploadManager {
             progressCallback,
             cancelledCallback,
             append: false,
+            options,
         })
     }
 
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = true) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = true, options = {}) {
         this.setUpload(name, {
             files: Array.from(files),
             multiple: true,
@@ -126,6 +133,7 @@ class UploadManager {
             progressCallback,
             cancelledCallback,
             append,
+            options,
         })
     }
 
@@ -134,7 +142,7 @@ class UploadManager {
             tmpFilename, finishCallback
         })
 
-        this.component.$wire.call('_removeUpload', name, tmpFilename);
+        this.component.$wire.call('_removeUpload', name, tmpFilename)
     }
 
     setUpload(name, uploadObject) {
@@ -172,6 +180,101 @@ class UploadManager {
         this.makeRequest(name, formData, 'put', url, headers, response => {
             return [payload.path]
         })
+    }
+
+    handleSignedChunkUrl(name, url, uploadId) {
+        let uploadObject = this.uploadBag.first(name)
+        let fileIndex = uploadObject.currentFileIndex || 0
+        let file = uploadObject.files[fileIndex]
+        let chunkSize = (uploadObject.options && uploadObject.options.chunkSize) || (2 * 1024 * 1024)
+        let totalChunks = Math.ceil(file.size / chunkSize)
+
+        uploadObject.chunkUploadId = uploadId
+        uploadObject.completedPaths = uploadObject.completedPaths || []
+
+        this.uploadChunkSequence(name, url, uploadId, file, 0, totalChunks, chunkSize, fileIndex)
+    }
+
+    uploadChunkSequence(name, url, uploadId, file, chunkIndex, totalChunks, chunkSize, fileIndex) {
+        let uploadObject = this.uploadBag.first(name)
+        if (!uploadObject) return
+
+        let start = chunkIndex * chunkSize
+        let end = Math.min(start + chunkSize, file.size)
+        let chunk = file.slice(start, end)
+
+        let formData = new FormData()
+        formData.append('chunk', chunk, file.name)
+        formData.append('uploadId', uploadId)
+        formData.append('chunkIndex', chunkIndex)
+        formData.append('totalChunks', totalChunks)
+
+        let headers = { 'Accept': 'application/json' }
+        let csrfToken = getCsrfToken()
+        if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken
+
+        let request = new XMLHttpRequest()
+        request.open('post', url)
+
+        Object.entries(headers).forEach(([key, value]) => {
+            request.setRequestHeader(key, value)
+        })
+
+        // Calculate total size across all files for multi-file progress
+        let totalAllFilesSize = uploadObject.files.reduce((sum, f) => sum + f.size, 0)
+        let completedFilesSize = uploadObject.files.slice(0, fileIndex).reduce((sum, f) => sum + f.size, 0)
+
+        request.upload.addEventListener('progress', e => {
+            let chunkProgress = e.loaded / e.total
+            let currentFileLoaded = (chunkIndex * chunkSize) + (chunkProgress * (end - start))
+            let overallLoaded = completedFilesSize + currentFileLoaded
+            let overallProgress = Math.floor((overallLoaded * 100) / totalAllFilesSize)
+
+            let progressEvent = { detail: { progress: overallProgress }, loaded: overallLoaded, total: totalAllFilesSize }
+            uploadObject.progressCallback(progressEvent)
+        })
+
+        request.addEventListener('load', () => {
+            if ((request.status + '')[0] === '2') {
+                let response = JSON.parse(request.response)
+
+                if (response.path) {
+                    // Final chunk for this file — server has assembled it
+                    uploadObject.completedPaths.push(response.path)
+
+                    let nextFileIndex = fileIndex + 1
+
+                    if (nextFileIndex < uploadObject.files.length) {
+                        // More files to upload — start chunked upload for next file
+                        uploadObject.currentFileIndex = nextFileIndex
+                        this.component.$wire.call('_startChunkedUpload', name, [{ name: uploadObject.files[nextFileIndex].name, size: uploadObject.files[nextFileIndex].size, type: uploadObject.files[nextFileIndex].type }], uploadObject.multiple)
+                    } else {
+                        // All files done — call _finishUpload with all paths
+                        this.component.$wire.call('_finishUpload', name, uploadObject.completedPaths, uploadObject.multiple, uploadObject.append)
+                    }
+                } else {
+                    // More chunks to send for this file
+                    this.uploadChunkSequence(name, url, uploadId, file, chunkIndex + 1, totalChunks, chunkSize, fileIndex)
+                }
+                return
+            }
+
+            let errors = null
+
+            if (request.status === 422) {
+                errors = request.response
+            }
+
+            this.component.$wire.call('_uploadErrored', name, errors, uploadObject.multiple)
+        })
+
+        request.addEventListener('error', () => {
+            this.component.$wire.call('_uploadErrored', name, null, uploadObject.multiple)
+        })
+
+        uploadObject.request = request
+
+        request.send(formData)
     }
 
     makeRequest(name, formData, method, url, headers, retrievePaths) {
@@ -218,7 +321,11 @@ class UploadManager {
             return { name: file.name, size: file.size, type: file.type }
         })
 
-        this.component.$wire.call('_startUpload', name, fileInfos, uploadObject.multiple);
+        if (uploadObject.options && uploadObject.options.chunked) {
+            this.component.$wire.call('_startChunkedUpload', name, fileInfos, uploadObject.multiple)
+        } else {
+            this.component.$wire.call('_startUpload', name, fileInfos, uploadObject.multiple)
+        }
 
         setUploadLoading(this.component, name)
     }
@@ -243,14 +350,19 @@ class UploadManager {
     cancelUpload(name, cancelledCallback = null) {
         unsetUploadLoading(this.component)
 
-        let uploadItem = this.uploadBag.first(name);
+        let uploadItem = this.uploadBag.first(name)
 
         if (uploadItem) {
             if (uploadItem.request) {
-                uploadItem.request.abort();
+                uploadItem.request.abort()
             }
 
-            this.uploadBag.shift(name).cancelledCallback();
+            // If this was a chunked upload, notify server to clean up
+            if (uploadItem.options && uploadItem.options.chunked && uploadItem.chunkUploadId) {
+                this.component.$wire.call('_cancelChunkedUpload', uploadItem.chunkUploadId)
+            }
+
+            this.uploadBag.shift(name).cancelledCallback()
 
             if (cancelledCallback) cancelledCallback()
         }
@@ -292,15 +404,6 @@ export default class MessageBag {
         return this.bag[name].shift()
     }
 
-    call(name, ...params) {
-        (this.listeners[name] || []).forEach(callback => {
-            callback(...params)
-        })
-    }
-
-    has(name) {
-        return Object.keys(this.listeners).includes(name)
-    }
 }
 
 function setUploadLoading() {
@@ -319,6 +422,7 @@ export function upload(
     errorCallback = () => { },
     progressCallback = () => { },
     cancelledCallback = () => { },
+    options = {},
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -329,6 +433,7 @@ export function upload(
         errorCallback,
         progressCallback,
         cancelledCallback,
+        options,
     )
 }
 
@@ -341,6 +446,7 @@ export function uploadMultiple(
     progressCallback = () => { },
     cancelledCallback = () => { },
     append = true,
+    options = {},
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -352,6 +458,7 @@ export function uploadMultiple(
         progressCallback,
         cancelledCallback,
         append,
+        options,
     )
 }
 

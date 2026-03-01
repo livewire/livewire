@@ -24,7 +24,7 @@ class SupportFileUploads extends ComponentHook
         ]);
 
         on('call', function ($component, $method, $params, $componentContext, $earlyReturn) {
-            if ($method === '_startUpload') {
+            if (in_array($method, ['_startUpload', '_startChunkedUpload', '_cancelChunkedUpload'])) {
                 if (! method_exists($component, $method)) {
                     throw new MissingFileUploadsTraitException($component);
                 }
@@ -33,6 +33,9 @@ class SupportFileUploads extends ComponentHook
 
         Route::post(EndpointResolver::uploadPath(), [FileUploadController::class, 'handle'])
             ->name('livewire.upload-file');
+
+        Route::post(EndpointResolver::chunkUploadPath(), [ChunkUploadController::class, 'handle'])
+            ->name('livewire.upload-chunk');
 
         Route::get(EndpointResolver::previewPath(), [FilePreviewController::class, 'handle'])
             ->name('livewire.preview-file');
