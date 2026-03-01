@@ -634,6 +634,36 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(IndexViewComponent::class)
             ->assertSee('Index view component rendered');
     }
+
+    public function test_can_normalize_namespace_class_component()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
+
+        $name = $finder->normalizeName(FinderTestClassComponent::class);
+
+        $this->assertEquals('admin::finder-test-class-component', $name);
+
+        $class = $finder->resolveClassComponentClassName($name);
+
+        $this->assertEquals('Livewire\Finder\Fixtures\FinderTestClassComponent', $class);
+    }
+
+    public function test_can_normalize_namespace_class_nested_component()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
+
+        $name = $finder->normalizeName(NestedComponent::class);
+
+        $this->assertEquals('admin::nested.nested-component', $name);
+
+        $class = $finder->resolveClassComponentClassName($name);
+
+        $this->assertEquals('Livewire\Finder\Fixtures\Nested\NestedComponent', $class);
+    }
 }
 
 class SingleSegmentComponent extends Component

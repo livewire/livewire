@@ -336,7 +336,7 @@ class Finder
             ->merge($this->classLocations)
             ->toArray();
 
-        foreach ($classNamespaces as $classNamespace) {
+        foreach ($classNamespaces as $key => $classNamespace) {
             $namespace = str_replace(
                 ['/', '\\'],
                 '.',
@@ -348,7 +348,9 @@ class Finder
                 ->implode('.');
 
             if ($fullName->startsWith($namespace)) {
-                return (string) $fullName->substr(strlen($namespace) + 1);
+                $name = (string) $fullName->substr(strlen($namespace) + 1);
+
+                return is_string($key) ? $key . '::' . $name : $name;
             }
         }
 
