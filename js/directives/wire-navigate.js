@@ -12,6 +12,12 @@ export let wireNavigateSelectors = [
     '[wire\\:navigate\\.transition\\.hover]',
     '[wire\\:navigate\\.preserve-scroll\\.transition]',
     '[wire\\:navigate\\.transition\\.preserve-scroll]',
+    '[wire\\:navigate\\.hover\\.preserve-scroll\\.transition]',
+    '[wire\\:navigate\\.hover\\.transition\\.preserve-scroll]',
+    '[wire\\:navigate\\.preserve-scroll\\.hover\\.transition]',
+    '[wire\\:navigate\\.preserve-scroll\\.transition\\.hover]',
+    '[wire\\:navigate\\.transition\\.hover\\.preserve-scroll]',
+    '[wire\\:navigate\\.transition\\.preserve-scroll\\.hover]',
 ]
 
 // Combined selector for querying all wire:navigate elements

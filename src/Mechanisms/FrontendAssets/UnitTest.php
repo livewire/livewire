@@ -66,6 +66,24 @@ class UnitTest extends \Tests\TestCase
         $this->assertEmpty($assets->scripts());
     }
 
+    public function test_scripts_include_navigate_view_transitions_data_attribute_when_enabled()
+    {
+        config()->set('livewire.navigate.view_transitions', true);
+
+        $scripts = app(FrontendAssets::class)->scripts();
+
+        $this->assertStringContainsString('data-navigate-view-transitions', $scripts);
+    }
+
+    public function test_script_config_includes_view_transitions_flag()
+    {
+        config()->set('livewire.navigate.view_transitions', true);
+
+        $scriptConfig = FrontendAssets::scriptConfig();
+
+        $this->assertStringContainsString('"viewTransitions":true', $scriptConfig);
+    }
+
     public function test_use_normal_scripts_url_if_app_debug_is_true()
     {
         config()->set('app.debug', true);
