@@ -184,10 +184,18 @@ class UploadManager {
 
     handleSignedChunkUrl(name, url, uploadId) {
         let uploadObject = this.uploadBag.first(name)
+        if (! uploadObject) {
+            this.component.$wire.call('_cancelChunkedUpload', uploadId)
+
+            return
+        }
+
         let fileIndex = uploadObject.currentFileIndex || 0
         let file = uploadObject.files[fileIndex]
         let chunkSize = (uploadObject.options && uploadObject.options.chunkSize) || (2 * 1024 * 1024)
-        let totalChunks = Math.ceil(file.size / chunkSize)
+        chunkSize = chunkSize > 0 ? chunkSize : (2 * 1024 * 1024)
+
+        let totalChunks = Math.max(1, Math.ceil(file.size / chunkSize))
 
         uploadObject.chunkUploadId = uploadId
         uploadObject.completedPaths = uploadObject.completedPaths || []
@@ -197,7 +205,7 @@ class UploadManager {
 
     uploadChunkSequence(name, url, uploadId, file, chunkIndex, totalChunks, chunkSize, fileIndex) {
         let uploadObject = this.uploadBag.first(name)
-        if (!uploadObject) return
+        if (! uploadObject) return
 
         let start = chunkIndex * chunkSize
         let end = Math.min(start + chunkSize, file.size)

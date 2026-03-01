@@ -144,6 +144,28 @@ class ChunkUnitTest extends \Tests\TestCase
         $response->assertStatus(403);
     }
 
+    public function test_chunk_upload_rejects_upload_id_mismatch_between_signature_and_payload()
+    {
+        $signedUploadId = (string) Str::uuid();
+        $payloadUploadId = (string) Str::uuid();
+
+        $this->addChunkedUploadToSession($signedUploadId);
+        $this->addChunkedUploadToSession($payloadUploadId);
+
+        $url = URL::temporarySignedRoute('livewire.upload-chunk', now()->addMinutes(5), ['uploadId' => $signedUploadId]);
+
+        $chunk = UploadedFile::fake()->createWithContent('file.txt', 'test');
+
+        $response = $this->post($url, [
+            'chunk' => $chunk,
+            'uploadId' => $payloadUploadId,
+            'chunkIndex' => 0,
+            'totalChunks' => 1,
+        ]);
+
+        $response->assertStatus(403);
+    }
+
     public function test_chunk_upload_rejects_invalid_signature()
     {
         $uploadId = (string) Str::uuid();

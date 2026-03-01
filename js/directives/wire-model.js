@@ -31,7 +31,11 @@ directive('model', ({ el, directive, component, cleanup }) => {
             let nextMod = modifiers[chunkedIndex + 1]
 
             if (nextMod && /^[0-9]+$/.test(nextMod)) {
-                options.chunkSize = parseInt(nextMod) * 1024
+                let chunkSize = parseInt(nextMod, 10) * 1024
+
+                if (chunkSize > 0) {
+                    options.chunkSize = chunkSize
+                }
             }
         }
 

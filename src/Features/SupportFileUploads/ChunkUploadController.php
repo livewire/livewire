@@ -37,6 +37,8 @@ class ChunkUploadController implements HasMiddleware
         $chunkIndex = (int) $validated['chunkIndex'];
         $totalChunks = (int) $validated['totalChunks'];
 
+        abort_unless($uploadId === request()->query('uploadId'), 403, 'Upload ID mismatch.');
+
         abort_if($chunkIndex >= $totalChunks, 422, 'Chunk index exceeds total chunks.');
 
         $chunkedUploads = session()->get('livewire_chunked_uploads', []);
