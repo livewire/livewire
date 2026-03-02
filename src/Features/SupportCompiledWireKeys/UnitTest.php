@@ -1093,6 +1093,42 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($expected, count(explode($needle, $haystack)) - 1);
     }
 
+    public function test_nested_loop_iterations_generate_unique_keys()
+    {
+        $keys = [];
+
+        // Simulate: @for ($i = 0; $i < 3; $i++) -> @for ($j = 0; $j < 2; $j++)
+        SupportCompiledWireKeys::openLoop();
+
+        for ($i = 0; $i < 3; $i++) {
+            SupportCompiledWireKeys::startLoopIteration();
+
+            SupportCompiledWireKeys::openLoop();
+
+            for ($j = 0; $j < 2; $j++) {
+                SupportCompiledWireKeys::startLoopIteration();
+                $keys[] = SupportCompiledWireKeys::generateKey('test');
+                SupportCompiledWireKeys::endLoop();
+            }
+
+            SupportCompiledWireKeys::closeLoop();
+            SupportCompiledWireKeys::endLoop();
+        }
+
+        SupportCompiledWireKeys::closeLoop();
+
+        // All 6 keys should be unique, and the outer loop index should
+        // increment across iterations (not be reset by the inner loop)...
+        $this->assertEquals([
+            'test-0-0-0-0', // outer=0, inner=0
+            'test-0-0-0-1', // outer=0, inner=1
+            'test-0-1-0-0', // outer=1, inner=0
+            'test-0-1-0-1', // outer=1, inner=1
+            'test-0-2-0-0', // outer=2, inner=0
+            'test-0-2-0-1', // outer=2, inner=1
+        ], $keys);
+    }
+
     protected function assertKeysMatchPattern($expected, $keys)
     {
         for ($i = 0; $i < count($expected); $i++) {
