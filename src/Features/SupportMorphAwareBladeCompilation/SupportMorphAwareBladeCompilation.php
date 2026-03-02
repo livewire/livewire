@@ -318,6 +318,9 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         $loopDirectives = [
             'foreach',
             'forelse',
+            // temp disabling because of "missing $loop" error
+            // 'for',
+            // 'while',
         ];
 
         $pattern = '/@(' . implode('|', $loopDirectives) . ')(?![a-zA-Z])/i';
@@ -331,6 +334,8 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
             'endforeach',
             // This `endforelse` should NOT be included here, but it is left here for documentation purposes. The close of a `@forelse` loop is handled by the `@empty` directive...
             // 'endforelse',
+            // 'endfor',
+            // 'endwhile',
         ];
 
         $pattern = '/@(' . implode('|', $loopDirectives) . ')(?![a-zA-Z])/i';
