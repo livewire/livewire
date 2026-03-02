@@ -9,6 +9,7 @@ use Livewire\WithPagination;
 use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Database\Eloquent\Model;
 
@@ -1115,6 +1116,79 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('Post #6')
             ->assertQueryStringMissing('page')
         ;
+    }
+
+    public function test_sessioned_pagination_query_string_is_restored_on_revisit()
+    {
+        $this->beforeServingApplication(function () {
+            app('livewire')->component('session-pagination', SessionPaginationComponent::class);
+
+            Route::get('/session-pagination', function () {
+                return app('livewire')->new('session-pagination')();
+            })->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/session-pagination')
+                ->waitForLivewireToLoad()
+                ->assertSee('Post #1')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                ->assertQueryStringMissing('page')
+
+                // Navigate to page 2 — stores page in session...
+                ->waitForLivewire()->click('@nextPage.before')
+                ->assertSee('Post #4')
+                ->assertSee('Post #6')
+                ->assertDontSee('Post #1')
+                ->assertQueryStringHas('page', '2')
+
+                // Revisit with a clean URL — session should restore
+                // the page AND the query string should reflect it...
+                ->visit('/session-pagination')
+                ->waitForLivewireToLoad()
+                ->assertSee('Post #4')
+                ->assertSee('Post #6')
+                ->assertDontSee('Post #1')
+                ->assertQueryStringHas('page', '2')
+            ;
+        });
+    }
+}
+
+class SessionPaginationComponent extends Component
+{
+    use WithPagination;
+
+    public function mount()
+    {
+        if ($page = session('test_pagination_page')) {
+            $this->setPage($page);
+        }
+    }
+
+    public function updatedPaginators($page, $pageName)
+    {
+        session(['test_pagination_page' => $page]);
+    }
+
+    public function render()
+    {
+        return Blade::render(
+            <<< 'HTML'
+            <div>
+                @foreach ($posts as $post)
+                    <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                @endforeach
+
+                {{ $posts->links() }}
+            </div>
+            HTML,
+            [
+                'posts' => Post::paginate(3),
+            ]
+        );
     }
 }
 
