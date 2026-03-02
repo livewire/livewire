@@ -884,6 +884,169 @@ class UnitTest extends \Tests\TestCase
         );
     }
 
+    public function test_nested_loop_iterations_generate_unique_keys()
+    {
+        $keys = [];
+
+        // Simulate: @for ($i = 0; $i < 3; $i++) -> @for ($j = 0; $j < 2; $j++)
+        SupportCompiledWireKeys::openLoop();
+
+        for ($i = 0; $i < 3; $i++) {
+            SupportCompiledWireKeys::startLoopIteration();
+
+            SupportCompiledWireKeys::openLoop();
+
+            for ($j = 0; $j < 2; $j++) {
+                SupportCompiledWireKeys::startLoopIteration();
+                $keys[] = SupportCompiledWireKeys::generateKey('test');
+                SupportCompiledWireKeys::endLoop();
+            }
+
+            SupportCompiledWireKeys::closeLoop();
+            SupportCompiledWireKeys::endLoop();
+        }
+
+        SupportCompiledWireKeys::closeLoop();
+
+        // All 6 keys should be unique, and the outer loop index should
+        // increment across iterations (not be reset by the inner loop)...
+        $this->assertEquals([
+            'test-0-0-0-0', // outer=0, inner=0
+            'test-0-0-0-1', // outer=0, inner=1
+            'test-0-1-0-0', // outer=1, inner=0
+            'test-0-1-0-1', // outer=1, inner=1
+            'test-0-2-0-0', // outer=2, inner=0
+            'test-0-2-0-1', // outer=2, inner=1
+        ], $keys);
+    }
+
+    public function test_break_in_loop_does_not_corrupt_key_generation()
+    {
+        $keys = [];
+
+        // Simulate: @for with break on iteration 1 (endLoop is skipped)
+        // followed by a second loop that should generate correct keys...
+        SupportCompiledWireKeys::openLoop();
+
+        // Iteration 0: normal...
+        SupportCompiledWireKeys::startLoopIteration();
+        $keys[] = SupportCompiledWireKeys::generateKey('test');
+        SupportCompiledWireKeys::endLoop();
+
+        // Iteration 1: break (endLoop is skipped)...
+        SupportCompiledWireKeys::startLoopIteration();
+        $keys[] = SupportCompiledWireKeys::generateKey('test');
+        // No endLoop() — @break skips it...
+
+        SupportCompiledWireKeys::closeLoop();
+
+        // A second loop after the broken one should work correctly...
+        SupportCompiledWireKeys::openLoop();
+
+        SupportCompiledWireKeys::startLoopIteration();
+        $keys[] = SupportCompiledWireKeys::generateKey('test');
+        SupportCompiledWireKeys::endLoop();
+
+        SupportCompiledWireKeys::startLoopIteration();
+        $keys[] = SupportCompiledWireKeys::generateKey('test');
+        SupportCompiledWireKeys::endLoop();
+
+        SupportCompiledWireKeys::closeLoop();
+
+        $this->assertEquals(4, count(array_unique($keys)));
+    }
+
+    public function test_continue_in_loop_does_not_corrupt_key_generation()
+    {
+        $keys = [];
+
+        // Simulate: @for with continue on iteration 1 (endLoop is skipped)...
+        SupportCompiledWireKeys::openLoop();
+
+        // Iteration 0: normal...
+        SupportCompiledWireKeys::startLoopIteration();
+        $keys[] = SupportCompiledWireKeys::generateKey('test');
+        SupportCompiledWireKeys::endLoop();
+
+        // Iteration 1: continue (endLoop is skipped)...
+        SupportCompiledWireKeys::startLoopIteration();
+        // No generateKey or endLoop — @continue skips them...
+
+        // Iteration 2: should still get the correct index...
+        SupportCompiledWireKeys::startLoopIteration();
+        $keys[] = SupportCompiledWireKeys::generateKey('test');
+        SupportCompiledWireKeys::endLoop();
+
+        SupportCompiledWireKeys::closeLoop();
+
+        $this->assertEquals([
+            'test-0-0',  // iteration 0
+            'test-0-2',  // iteration 2 (1 was skipped by continue)
+        ], $keys);
+    }
+
+    public function test_break_in_nested_loop_does_not_corrupt_outer_loop_keys()
+    {
+        $keys = [];
+
+        // Simulate: outer @for (3 iterations) -> inner @for (break on iteration 1)...
+        SupportCompiledWireKeys::openLoop();
+
+        for ($i = 0; $i < 3; $i++) {
+            SupportCompiledWireKeys::startLoopIteration();
+
+            SupportCompiledWireKeys::openLoop();
+
+            // Inner iteration 0: normal...
+            SupportCompiledWireKeys::startLoopIteration();
+            $keys[] = SupportCompiledWireKeys::generateKey('test');
+
+            // Break — endLoop is skipped, closeLoop still runs...
+            SupportCompiledWireKeys::closeLoop();
+            SupportCompiledWireKeys::endLoop();
+        }
+
+        SupportCompiledWireKeys::closeLoop();
+
+        // Each outer iteration should have a different key, proving the
+        // inner break didn't corrupt the outer loop's index...
+        $this->assertEquals(3, count(array_unique($keys)));
+    }
+
+    public function test_continue_in_nested_loop_does_not_corrupt_outer_loop_keys()
+    {
+        $keys = [];
+
+        // Simulate: outer @for (3 iterations) -> inner @for (continue on iteration 0)...
+        SupportCompiledWireKeys::openLoop();
+
+        for ($i = 0; $i < 3; $i++) {
+            SupportCompiledWireKeys::startLoopIteration();
+
+            SupportCompiledWireKeys::openLoop();
+
+            // Inner iteration 0: continue (endLoop is skipped)...
+            SupportCompiledWireKeys::startLoopIteration();
+
+            // Inner iteration 1: normal...
+            SupportCompiledWireKeys::startLoopIteration();
+            $keys[] = SupportCompiledWireKeys::generateKey('test');
+            SupportCompiledWireKeys::endLoop();
+
+            SupportCompiledWireKeys::closeLoop();
+            SupportCompiledWireKeys::endLoop();
+        }
+
+        SupportCompiledWireKeys::closeLoop();
+
+        // The outer loop index should still increment correctly...
+        $this->assertEquals([
+            'test-0-0-0-1', // outer=0, inner=1
+            'test-0-1-0-1', // outer=1, inner=1
+            'test-0-2-0-1', // outer=2, inner=1
+        ], $keys);
+    }
+
     #[DataProvider('elementsTestProvider')]
     public function test_we_can_correctly_find_wire_keys_on_elements_only_but_not_blade_or_livewire_components($occurrences, $template)
     {
@@ -1091,169 +1254,6 @@ class UnitTest extends \Tests\TestCase
     protected function assertOccurrences($expected, $needle, $haystack)
     {
         $this->assertEquals($expected, count(explode($needle, $haystack)) - 1);
-    }
-
-    public function test_nested_loop_iterations_generate_unique_keys()
-    {
-        $keys = [];
-
-        // Simulate: @for ($i = 0; $i < 3; $i++) -> @for ($j = 0; $j < 2; $j++)
-        SupportCompiledWireKeys::openLoop();
-
-        for ($i = 0; $i < 3; $i++) {
-            SupportCompiledWireKeys::startLoopIteration();
-
-            SupportCompiledWireKeys::openLoop();
-
-            for ($j = 0; $j < 2; $j++) {
-                SupportCompiledWireKeys::startLoopIteration();
-                $keys[] = SupportCompiledWireKeys::generateKey('test');
-                SupportCompiledWireKeys::endLoop();
-            }
-
-            SupportCompiledWireKeys::closeLoop();
-            SupportCompiledWireKeys::endLoop();
-        }
-
-        SupportCompiledWireKeys::closeLoop();
-
-        // All 6 keys should be unique, and the outer loop index should
-        // increment across iterations (not be reset by the inner loop)...
-        $this->assertEquals([
-            'test-0-0-0-0', // outer=0, inner=0
-            'test-0-0-0-1', // outer=0, inner=1
-            'test-0-1-0-0', // outer=1, inner=0
-            'test-0-1-0-1', // outer=1, inner=1
-            'test-0-2-0-0', // outer=2, inner=0
-            'test-0-2-0-1', // outer=2, inner=1
-        ], $keys);
-    }
-
-    public function test_break_in_loop_does_not_corrupt_key_generation()
-    {
-        $keys = [];
-
-        // Simulate: @for with break on iteration 1 (endLoop is skipped)
-        // followed by a second loop that should generate correct keys...
-        SupportCompiledWireKeys::openLoop();
-
-        // Iteration 0: normal...
-        SupportCompiledWireKeys::startLoopIteration();
-        $keys[] = SupportCompiledWireKeys::generateKey('test');
-        SupportCompiledWireKeys::endLoop();
-
-        // Iteration 1: break (endLoop is skipped)...
-        SupportCompiledWireKeys::startLoopIteration();
-        $keys[] = SupportCompiledWireKeys::generateKey('test');
-        // No endLoop() — @break skips it...
-
-        SupportCompiledWireKeys::closeLoop();
-
-        // A second loop after the broken one should work correctly...
-        SupportCompiledWireKeys::openLoop();
-
-        SupportCompiledWireKeys::startLoopIteration();
-        $keys[] = SupportCompiledWireKeys::generateKey('test');
-        SupportCompiledWireKeys::endLoop();
-
-        SupportCompiledWireKeys::startLoopIteration();
-        $keys[] = SupportCompiledWireKeys::generateKey('test');
-        SupportCompiledWireKeys::endLoop();
-
-        SupportCompiledWireKeys::closeLoop();
-
-        $this->assertEquals(4, count(array_unique($keys)));
-    }
-
-    public function test_continue_in_loop_does_not_corrupt_key_generation()
-    {
-        $keys = [];
-
-        // Simulate: @for with continue on iteration 1 (endLoop is skipped)...
-        SupportCompiledWireKeys::openLoop();
-
-        // Iteration 0: normal...
-        SupportCompiledWireKeys::startLoopIteration();
-        $keys[] = SupportCompiledWireKeys::generateKey('test');
-        SupportCompiledWireKeys::endLoop();
-
-        // Iteration 1: continue (endLoop is skipped)...
-        SupportCompiledWireKeys::startLoopIteration();
-        // No generateKey or endLoop — @continue skips them...
-
-        // Iteration 2: should still get the correct index...
-        SupportCompiledWireKeys::startLoopIteration();
-        $keys[] = SupportCompiledWireKeys::generateKey('test');
-        SupportCompiledWireKeys::endLoop();
-
-        SupportCompiledWireKeys::closeLoop();
-
-        $this->assertEquals([
-            'test-0-0',  // iteration 0
-            'test-0-2',  // iteration 2 (1 was skipped by continue)
-        ], $keys);
-    }
-
-    public function test_break_in_nested_loop_does_not_corrupt_outer_loop_keys()
-    {
-        $keys = [];
-
-        // Simulate: outer @for (3 iterations) -> inner @for (break on iteration 1)...
-        SupportCompiledWireKeys::openLoop();
-
-        for ($i = 0; $i < 3; $i++) {
-            SupportCompiledWireKeys::startLoopIteration();
-
-            SupportCompiledWireKeys::openLoop();
-
-            // Inner iteration 0: normal...
-            SupportCompiledWireKeys::startLoopIteration();
-            $keys[] = SupportCompiledWireKeys::generateKey('test');
-
-            // Break — endLoop is skipped, closeLoop still runs...
-            SupportCompiledWireKeys::closeLoop();
-            SupportCompiledWireKeys::endLoop();
-        }
-
-        SupportCompiledWireKeys::closeLoop();
-
-        // Each outer iteration should have a different key, proving the
-        // inner break didn't corrupt the outer loop's index...
-        $this->assertEquals(3, count(array_unique($keys)));
-    }
-
-    public function test_continue_in_nested_loop_does_not_corrupt_outer_loop_keys()
-    {
-        $keys = [];
-
-        // Simulate: outer @for (3 iterations) -> inner @for (continue on iteration 0)...
-        SupportCompiledWireKeys::openLoop();
-
-        for ($i = 0; $i < 3; $i++) {
-            SupportCompiledWireKeys::startLoopIteration();
-
-            SupportCompiledWireKeys::openLoop();
-
-            // Inner iteration 0: continue (endLoop is skipped)...
-            SupportCompiledWireKeys::startLoopIteration();
-
-            // Inner iteration 1: normal...
-            SupportCompiledWireKeys::startLoopIteration();
-            $keys[] = SupportCompiledWireKeys::generateKey('test');
-            SupportCompiledWireKeys::endLoop();
-
-            SupportCompiledWireKeys::closeLoop();
-            SupportCompiledWireKeys::endLoop();
-        }
-
-        SupportCompiledWireKeys::closeLoop();
-
-        // The outer loop index should still increment correctly...
-        $this->assertEquals([
-            'test-0-0-0-1', // outer=0, inner=1
-            'test-0-1-0-1', // outer=1, inner=1
-            'test-0-2-0-1', // outer=2, inner=1
-        ], $keys);
     }
 
     protected function assertKeysMatchPattern($expected, $keys)
