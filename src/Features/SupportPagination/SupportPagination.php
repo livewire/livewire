@@ -27,7 +27,6 @@ class SupportPagination extends ComponentHook
     }
 
     protected $restoreOverriddenPaginationViews;
-    protected $urlHooksAdded = [];
 
     function skip()
     {
@@ -88,16 +87,14 @@ class SupportPagination extends ComponentHook
     protected function ensurePaginatorIsInitialized($pageName, $defaultPage = 1)
     {
         if (isset($this->component->paginators[$pageName])) {
-            // On subsequent Livewire requests, the value came from hydration.
-            // The URL hook was set up on the initial page load — nothing to do.
+            // On subsequent requests, the value came from hydration
+            // and JS already has URL tracking from the initial load...
             if (app('livewire')->isLivewireRequest()) return;
         } else {
             $queryStringDetails = $this->getQueryStringDetails($pageName);
 
             $this->component->paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], $defaultPage);
         }
-
-        if (isset($this->urlHooksAdded[$pageName])) return;
 
         $shouldSkipUrlTracking = in_array(
             WithoutUrlPagination::class, class_uses_recursive($this->component)
@@ -108,7 +105,6 @@ class SupportPagination extends ComponentHook
         $queryStringDetails ??= $this->getQueryStringDetails($pageName);
 
         $this->addUrlHook($pageName, $queryStringDetails, $defaultPage);
-        $this->urlHooksAdded[$pageName] = true;
     }
 
     protected function getQueryStringDetails($pageName)
