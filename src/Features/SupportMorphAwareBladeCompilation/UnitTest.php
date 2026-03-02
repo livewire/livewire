@@ -259,8 +259,9 @@ class UnitTest extends \Tests\TestCase
 
         $output = $this->render('<livewire:foo />');
 
-        $this->assertStringContainsString('Test', $output);
+        preg_match_all('/<span>(.*?)<\/span>/', $output, $matches);
 
+        $this->assertEquals(['Test', 'Test', 'Test'], $matches[1]);
         $this->assertEquals(0, SupportCompiledWireKeys::$currentLoop['count']);
     }
 
@@ -284,10 +285,12 @@ class UnitTest extends \Tests\TestCase
 
         $output = $this->render('<livewire:foo />');
 
-        $this->assertStringContainsString('Test', $output);
+        preg_match_all('/<span>(.*?)<\/span>/', $output, $matches);
 
+        $this->assertEquals(['Test', 'Test', 'Test'], $matches[1]);
         $this->assertEquals(0, SupportCompiledWireKeys::$currentLoop['count']);
     }
+
 
     #[DataProvider('templatesProvider')]
     public function test_foo($occurrences, $template, $expectedCompiled = null)
