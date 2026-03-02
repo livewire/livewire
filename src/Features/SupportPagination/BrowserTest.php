@@ -1155,6 +1155,43 @@ class BrowserTest extends BrowserTestCase
             ;
         });
     }
+
+    public function test_sessioned_cursor_pagination_query_string_is_restored_on_revisit()
+    {
+        $this->beforeServingApplication(function () {
+            app('livewire')->component('session-cursor-pagination', SessionCursorPaginationComponent::class);
+
+            Route::get('/session-cursor-pagination', function () {
+                return app('livewire')->new('session-cursor-pagination')();
+            })->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/session-cursor-pagination')
+                ->waitForLivewireToLoad()
+                ->assertSee('Post #1')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                ->assertQueryStringMissing('page')
+
+                // Navigate to page 2 — stores cursor in session...
+                ->waitForLivewire()->click('@nextPage')
+                ->assertSee('Post #4')
+                ->assertSee('Post #6')
+                ->assertDontSee('Post #1')
+
+                // Revisit with a clean URL — session should restore
+                // the cursor AND the query string should reflect it...
+                ->visit('/session-cursor-pagination')
+                ->waitForLivewireToLoad()
+                ->assertSee('Post #4')
+                ->assertSee('Post #6')
+                ->assertDontSee('Post #1')
+                ->assertScript("return new URL(window.location.href).searchParams.has('page')", true)
+            ;
+        });
+    }
 }
 
 class SessionPaginationComponent extends Component
@@ -1187,6 +1224,41 @@ class SessionPaginationComponent extends Component
             HTML,
             [
                 'posts' => Post::paginate(3),
+            ]
+        );
+    }
+}
+
+class SessionCursorPaginationComponent extends Component
+{
+    use WithPagination;
+
+    public function mount()
+    {
+        if ($cursor = session('test_cursor_pagination')) {
+            $this->setPage($cursor);
+        }
+    }
+
+    public function updatedPaginators($page, $pageName)
+    {
+        session(['test_cursor_pagination' => $page]);
+    }
+
+    public function render()
+    {
+        return Blade::render(
+            <<< 'HTML'
+            <div>
+                @foreach ($posts as $post)
+                    <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                @endforeach
+
+                {{ $posts->links() }}
+            </div>
+            HTML,
+            [
+                'posts' => Post::cursorPaginate(3, '*', 'page'),
             ]
         );
     }
