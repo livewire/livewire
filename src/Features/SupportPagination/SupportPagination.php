@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportPagination;
 use function Livewire\invade;
 use Livewire\WithPagination;
 use Livewire\Features\SupportQueryString\SupportQueryString;
+use Livewire\Features\SupportQueryString\BaseUrl;
 use Livewire\ComponentHookRegistry;
 use Livewire\ComponentHook;
 use Livewire\Livewire;
@@ -86,15 +87,23 @@ class SupportPagination extends ComponentHook
 
     protected function ensurePaginatorIsInitialized($pageName, $defaultPage = 1)
     {
-        if (isset($this->component->paginators[$pageName])) {
+        $alreadyInitialized = isset($this->component->paginators[$pageName]);
+
+        if ($alreadyInitialized) {
             // On subsequent requests, the value came from hydration
             // and JS already has URL tracking from the initial load...
             if (app('livewire')->isLivewireRequest()) return;
+
+            // If SupportQueryString already registered a URL attribute
+            // for this paginator, it's handling URL tracking...
+            $key = 'paginators.' . $pageName;
+
+            if ($this->component->getAttributes()->contains(fn ($attr) => $attr instanceof BaseUrl && $attr->getName() === $key)) return;
         }
 
         $queryStringDetails = $this->getQueryStringDetails($pageName);
 
-        if (! isset($this->component->paginators[$pageName])) {
+        if (! $alreadyInitialized) {
             $this->component->paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], $defaultPage);
         }
 
@@ -104,7 +113,7 @@ class SupportPagination extends ComponentHook
 
         if ($shouldSkipUrlTracking) return;
 
-        $this->addUrlHook($pageName, $queryStringDetails, $defaultPage);
+        $this->addUrlHook($pageName, $queryStringDetails, $alreadyInitialized ? $defaultPage : null);
     }
 
     protected function getQueryStringDetails($pageName)
