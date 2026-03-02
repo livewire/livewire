@@ -812,7 +812,14 @@ class UnitTest extends \Tests\TestCase
                         <span> {{ $i }} </span>
                     @endfor
                 </div>
-                HTML
+                HTML,
+                <<<'HTML'
+                <div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php for($i = 0; $i < 3; $i++): ?>
+                        <span> <?php echo e($i); ?> </span>
+                    <?php endfor; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+                HTML,
             ],
             // @while loops should not inject $loop variable references...
             46 => [
@@ -824,7 +831,15 @@ class UnitTest extends \Tests\TestCase
                         @break
                     @endwhile
                 </div>
-                HTML
+                HTML,
+                <<<'HTML'
+                <div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php while(true): ?>
+                        <span>Looping</span>
+                        <?php break; ?>
+                    <?php endwhile; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+                HTML,
             ],
         ];
     }
