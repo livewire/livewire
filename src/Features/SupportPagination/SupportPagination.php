@@ -27,6 +27,7 @@ class SupportPagination extends ComponentHook
     }
 
     protected $restoreOverriddenPaginationViews;
+    protected $urlHooksAdded = [];
 
     function skip()
     {
@@ -86,11 +87,17 @@ class SupportPagination extends ComponentHook
 
     protected function ensurePaginatorIsInitialized($pageName, $defaultPage = 1)
     {
-        if (isset($this->component->paginators[$pageName])) return;
+        if (isset($this->component->paginators[$pageName])) {
+            // On subsequent Livewire requests, the value came from hydration.
+            // The URL hook was set up on the initial page load — nothing to do.
+            if (app('livewire')->isLivewireRequest()) return;
+        } else {
+            $queryStringDetails = $this->getQueryStringDetails($pageName);
 
-        $queryStringDetails = $this->getQueryStringDetails($pageName);
+            $this->component->paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], $defaultPage);
+        }
 
-        $this->component->paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], $defaultPage);
+        if (isset($this->urlHooksAdded[$pageName])) return;
 
         $shouldSkipUrlTracking = in_array(
             WithoutUrlPagination::class, class_uses_recursive($this->component)
@@ -98,7 +105,10 @@ class SupportPagination extends ComponentHook
 
         if ($shouldSkipUrlTracking) return;
 
-        $this->addUrlHook($pageName, $queryStringDetails);
+        $queryStringDetails ??= $this->getQueryStringDetails($pageName);
+
+        $this->addUrlHook($pageName, $queryStringDetails, $defaultPage);
+        $this->urlHooksAdded[$pageName] = true;
     }
 
     protected function getQueryStringDetails($pageName)
@@ -117,14 +127,14 @@ class SupportPagination extends ComponentHook
         return request()->query($alias, $default);
     }
 
-    protected function addUrlHook($pageName, $queryStringDetails)
+    protected function addUrlHook($pageName, $queryStringDetails, $defaultPage = 1)
     {
         $key = 'paginators.' . $pageName;
         $alias = $queryStringDetails['as'];
         $history = $queryStringDetails['history'];
         $keep = $queryStringDetails['keep'];
 
-        $attribute = new PaginationUrl(as: $alias, history: $history, keep: $keep);
+        $attribute = new PaginationUrl(as: $alias, history: $history, keep: $keep, except: $defaultPage);
 
         $this->component->setPropertyAttribute($key, $attribute);
 
