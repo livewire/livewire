@@ -181,8 +181,8 @@ export function diff(left, right, diffs = {}, path = '') {
     let leftKeys = Object.keys(left)
     let rightKeys = Object.keys(right)
 
-    // Did the key order change?
-    if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i])) {
+    // Did the key order change? (includes insertions that shift existing keys)
+    if (isObject(left) && leftKeys.some((key, i) => key !== rightKeys[i])) {
         diffs[path] = right
         return diffs
     }

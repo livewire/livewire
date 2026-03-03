@@ -317,4 +317,28 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertScript('JSON.parse(window.selectedUser).name === "Bob"')
         ;
     }
+
+    public function test_dollar_prefixed_wire_methods_work_inside_alpine_scope()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $value = 'initial';
+
+                public function render() {
+                    return <<<'HTML'
+                        <div>
+                            <div x-data="{ $set: () => {}, $get: () => {} }">
+                                <button wire:click="$set('value', 'updated')" dusk="button">Click</button>
+                            </div>
+                            <span dusk="output" x-text="$wire.value"></span>
+                        </div>
+                    HTML;
+                }
+            }
+        )
+        ->assertSeeIn('@output', 'initial')
+        ->waitForLivewire()->click('@button')
+        ->assertSeeIn('@output', 'updated')
+        ;
+    }
 }

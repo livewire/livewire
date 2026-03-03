@@ -434,7 +434,7 @@
     }
     let leftKeys = Object.keys(left);
     let rightKeys = Object.keys(right);
-    if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i])) {
+    if (isObject(left) && leftKeys.some((key, i) => key !== rightKeys[i])) {
       diffs[path] = right;
       return diffs;
     }
@@ -4927,6 +4927,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let meta = returnsMeta[index2];
         if (meta?.errors) {
           action.rejectPromise({ status: 422, body: null, json: null, errors: meta.errors });
+          action.invokeOnFinish();
+          resolvedActions.add(action);
+          return;
+        }
+        if (meta?.status) {
+          action.rejectPromise({ status: meta.status, body: null, json: null, errors: null });
           action.invokeOnFinish();
           resolvedActions.add(action);
           return;
@@ -11601,7 +11607,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.errorHandlers[key] = callback;
     }
     getUrl() {
-      return this.url ?? new URL(window.location.href);
+      if (this.url) {
+        if (this.url instanceof URL)
+          this.url.hash = window.location.hash;
+        return this.url;
+      }
+      return new URL(window.location.href);
     }
     replaceState(url, updates) {
       this.url = url;
@@ -13315,7 +13326,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (currentEl._x_dataStack) {
         for (let scope2 of currentEl._x_dataStack) {
           for (let key of Object.keys(scope2)) {
-            if (!keys.includes(key))
+            if (!keys.includes(key) && !key.startsWith("$"))
               keys.push(key);
           }
         }

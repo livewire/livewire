@@ -195,7 +195,7 @@ class HandleRequests extends Mechanism
             }
 
             $componentResponses[] = [
-                'snapshot' => json_encode($snapshot),
+                'snapshot' => json_encode($snapshot, JSON_THROW_ON_ERROR),
                 'effects' => $effects,
             ];
         }

@@ -238,6 +238,33 @@ class UnitTest extends TestCase
         $this->assertArrayHasKey('components', $response->json());
     }
 
+    public function test_snapshot_json_encode_failure_throws_exception(): void
+    {
+        $this->withoutExceptionHandling();
+        $this->expectException(\JsonException::class);
+
+        $testable = Livewire::test(new class extends TestComponent {
+            public array $items = [];
+
+            public function loadItems()
+            {
+                // 0x92 = right single quotation mark in Windows-1252, invalid UTF-8 byte
+                $this->items = [
+                    ['name' => "Test\x92s Item"],
+                ];
+            }
+        });
+
+        $snapshotJson = json_encode($testable->snapshot);
+
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => [
+                    ['method' => 'loadItems', 'params' => []],
+                ]],
+            ]]);
+    }
+
     public function test_get_update_uri_works_when_update_route_property_is_null(): void
     {
         // Simulate the cached routes scenario where routes are loaded from cache

@@ -233,10 +233,17 @@ export default class Message {
 
             if (! action) return;
 
-            // Check for validation errors in returnsMeta
+            // Check for errors in returnsMeta
             let meta = returnsMeta[index]
             if (meta?.errors) {
                 action.rejectPromise({ status: 422, body: null, json: null, errors: meta.errors })
+                action.invokeOnFinish()
+                resolvedActions.add(action)
+                return
+            }
+
+            if (meta?.status) {
+                action.rejectPromise({ status: meta.status, body: null, json: null, errors: null })
                 action.invokeOnFinish()
                 resolvedActions.add(action)
                 return
