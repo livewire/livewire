@@ -46,7 +46,7 @@ new class extends Component {
 > ```
 
 > [!tip] Prefer v3 conventions?
-> If you prefer the class-based component style from Livewire v2/v3, you can restore the previous defaults with two config lines in `config/livewire.php`:
+> If you prefer class-based components from v3, you can restore the previous defaults with two config lines in `config/livewire.php`:
 >
 > ```php
 > 'make_command' => [
@@ -54,8 +54,6 @@ new class extends Component {
 >     'emoji' => false,
 > ],
 > ```
->
-> This makes `make:livewire` generate class-based components without the emoji prefix, just like v3. You can also override these per-command with the `--class`, `--sfc`, `--mfc`, and `--emoji` flags.
 
 ### Creating page components
 
