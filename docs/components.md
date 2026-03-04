@@ -37,11 +37,7 @@ new class extends Component {
 > [!info] Why the ⚡ emoji?
 > You might be wondering about the lightning bolt in the filename. This small touch serves a practical purpose: it makes Livewire components instantly recognizable in your editor's file tree and search results. Since it's a Unicode character, it works seamlessly across all platforms — Windows, macOS, Linux, Git, and your production servers.
 >
-> The emoji is completely optional. You can disable it per-command with the `--emoji` flag or globally in your `config/livewire.php` file:
->
-> ```shell
-> php artisan make:livewire post.create --emoji=false
-> ```
+> The emoji is completely optional and if you find it outside your comfort zone you can disable it entirely in your `config/livewire.php` file:
 >
 > ```php
 > 'make_command' => [
