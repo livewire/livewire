@@ -100,9 +100,9 @@ The `make:livewire` command accepts the following options:
 | `--class` | Create a class-based component |
 | `--type=sfc\|mfc\|class` | Set the component type explicitly |
 | `--emoji=true\|false` | Override the config emoji setting for this command |
-| `--test` | Create a Pest test file alongside the component |
-| `--js` | Create a JavaScript file (multi-file components only) |
-| `--css` | Create CSS files (multi-file components only) |
+| `--test` | Include a Pest test file |
+| `--js` | Include a JavaScript file (multi-file components only) |
+| `--css` | Include CSS files (multi-file components only) |
 
 ### Converting between formats
 
