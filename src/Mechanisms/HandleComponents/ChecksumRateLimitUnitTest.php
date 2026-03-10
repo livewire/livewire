@@ -17,11 +17,21 @@ class ChecksumRateLimitUnitTest extends TestCase
     {
         parent::setUp();
 
+        // Enable rate limiting for these tests (disabled by default in tests)
+        Checksum::enableRateLimitingForTesting();
+
         // Clear any existing rate limits before each test
         RateLimiter::clear('livewire-checksum-failures:127.0.0.1');
 
         // Register a test component for use in snapshots
         Livewire::component('test-component', ChecksumRateLimitTestComponent::class);
+    }
+
+    public function tearDown(): void
+    {
+        Checksum::disableRateLimitingForTesting();
+
+        parent::tearDown();
     }
 
     public function test_checksum_failure_is_recorded()
