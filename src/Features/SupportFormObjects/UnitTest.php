@@ -977,6 +977,22 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
+    function test_form_object_updated_lifecycle_hook_fires_during_consolidated_update()
+    {
+        // When ALL form fields change, JS consolidates individual field updates
+        // into a single "form" update. The updated() lifecycle hook on the form
+        // object must still fire for each changed property.
+        Livewire::test(new class extends TestComponent {
+            public FormWithUpdatedHookStub $form;
+        })
+        ->update(
+            updates: ['form' => ['title' => 'New Title', 'content' => 'New Content']],
+        )
+        ->assertSuccessful()
+        ->assertSetStrict('form.updated_properties', ['title', 'content'])
+        ;
+    }
+
     function test_form_object_synth_rejects_non_form_classes()
     {
         $this->expectException(\Exception::class);
@@ -1351,4 +1367,16 @@ class FormWithEnumPropertyStub extends Form
 {
     public string $title = '';
     public FormEnumStub $status = FormEnumStub::Draft;
+}
+
+class FormWithUpdatedHookStub extends Form
+{
+    public string $title = '';
+    public string $content = '';
+    public array $updated_properties = [];
+
+    public function updated(string $property)
+    {
+        $this->updated_properties[] = $property;
+    }
 }

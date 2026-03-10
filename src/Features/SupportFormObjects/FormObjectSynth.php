@@ -3,10 +3,8 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Livewire\Drawer\Utils;
-use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Features\SupportAttributes\AttributeCollection;
-use ReflectionUnionType;
 
 use function Livewire\wrap;
 
@@ -84,33 +82,9 @@ class FormObjectSynth extends Synth {
                 continue;
             }
 
-            $child = $hydrateChild($key, $child);
-
-            // During consolidated updates, the hydrateChild callback may return
-            // raw values (e.g. strings) without casting them to their proper types.
-            // Check the form property's type and cast through the synth system...
-            if (! is_object($child) && property_exists($form, $key) && Utils::propertyIsTyped($form, $key)) {
-                $child = $this->castValueByType($form, $key, $child);
-            }
-
-            $form->$key = $child;
+            $form->$key = $hydrateChild($key, $child);
         }
 
         return $form;
-    }
-
-    protected function castValueByType($form, $key, $value)
-    {
-        $type = Utils::getProperty($form, $key)->getType();
-
-        $types = $type instanceof ReflectionUnionType ? $type->getTypes() : [$type];
-
-        foreach ($types as $type) {
-            $synth = app(HandleComponents::class)->getSynthesizerByType($type->getName(), $this->context, "{$this->path}.{$key}");
-
-            if ($synth) return $synth->hydrateFromType($type->getName(), $value);
-        }
-
-        return $value;
     }
 }
