@@ -37,7 +37,7 @@ class SupportMultipleRootElementDetection extends ComponentHook
 
         $dom = new \DOMDocument();
 
-        @$dom->loadHTML($html);
+        $dom->loadHTML($html, LIBXML_NOERROR);
 
         $body = $dom->getElementsByTagName('body')->item(0);
 
