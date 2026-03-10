@@ -195,6 +195,46 @@ class BrowserTest extends BrowserTestCase
         });
     }
 
+    public function test_can_lazy_load_component_without_mount_using_route()
+    {
+        $this->beforeServingApplication(function() {
+            Livewire::component('page-without-mount', PageWithoutMount::class);
+            Route::get('/', PageWithoutMount::class)->lazy()->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('Loading...')
+                ->assertDontSee('Hello World')
+                ->waitFor('#page')
+                ->assertDontSee('Loading...')
+                ->assertSee('Hello World');
+        });
+    }
+
+    public function test_can_defer_lazy_load_component_without_mount_using_route()
+    {
+        $this->beforeServingApplication(function() {
+            Livewire::component('page-without-mount', PageWithoutMount::class);
+            Route::get('/', PageWithoutMount::class)->defer()->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('Loading...')
+                ->assertDontSee('Hello World')
+                ->waitFor('#page')
+                ->assertDontSee('Loading...')
+                ->assertSee('Hello World');
+        });
+    }
+
     public function test_can_lazy_load_a_component_with_a_placeholder()
     {
         Livewire::visit([new class extends Component {
@@ -541,6 +581,20 @@ class Page extends Component {
         sleep(1);
     }
 
+    public function placeholder() { return <<<HTML
+            <div id="loading">
+                Loading...
+            </div>
+            HTML; }
+
+    public function render() { return <<<HTML
+            <div id="page">
+                Hello World
+            </div>
+            HTML; }
+}
+
+class PageWithoutMount extends Component {
     public function placeholder() { return <<<HTML
             <div id="loading">
                 Loading...
