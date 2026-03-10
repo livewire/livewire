@@ -216,7 +216,7 @@ export class Component {
     }
 
     get parent() {
-        return findComponentByEl(this.el.parentElement)
+        return findComponentByEl(this.el.parentElement, false)
     }
 
     get isIsolated() {

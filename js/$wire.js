@@ -333,13 +333,17 @@ wireProperty('$cancelUpload', (component) => (...params) => cancelUpload(compone
 let parentMemo = new WeakMap
 
 wireProperty('$parent', component => {
-    if (parentMemo.has(component)) return parentMemo.get(component).$wire
+    if (parentMemo.has(component)) {
+        let parent = parentMemo.get(component)
+
+        return parent ? parent.$wire : undefined
+    }
 
     let parent = component.parent
 
     parentMemo.set(component, parent)
 
-    return parent.$wire
+    return parent ? parent.$wire : undefined
 })
 
 let overriddenMethods = new WeakMap
