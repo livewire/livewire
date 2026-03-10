@@ -339,7 +339,7 @@ wireProperty('$parent', component => {
         return parent ? parent.$wire : undefined
     }
 
-    let parent = component.parent
+    let parent = findComponentByEl(component.el.parentElement, false)
 
     parentMemo.set(component, parent)
 
