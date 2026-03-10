@@ -595,6 +595,10 @@ class Page extends Component {
 }
 
 class PageWithoutMount extends Component {
+    public function boot() {
+        usleep(200_000);
+    }
+
     public function placeholder() { return <<<HTML
             <div id="loading">
                 Loading...
