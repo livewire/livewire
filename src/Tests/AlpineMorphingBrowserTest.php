@@ -413,6 +413,36 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_template_x_if_with_wire_click_does_not_duplicate_content()
+    {
+        // When a Livewire property controls an x-if template and is toggled via wire:click,
+        // the template content should only render once - not be duplicated by the morph.
+        Livewire::visit(new class extends Component {
+            public bool $show = false;
+
+            public function open(): void
+            {
+                $this->show = true;
+            }
+
+            function render() {
+                return <<<'HTML'
+                <div>
+                    <template x-if="$wire.show">
+                        <p dusk="message">Hello world!</p>
+                    </template>
+                    <button wire:click="open" dusk="open">Open</button>
+                </div>
+                HTML;
+            }
+        })
+            ->assertMissing('@message')
+            ->waitForLivewire()->click('@open')
+            ->assertVisible('@message')
+            ->assertScript('document.querySelectorAll("[dusk=message]").length', 1)
+        ;
+    }
+
     public function test_nested_array_property_access_after_removal()
     {
         // This tests deeply nested property access that would fail if effects fire before cleanup

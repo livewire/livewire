@@ -146,6 +146,18 @@ function getMorphConfig(component) {
 
             if (isntElement(el)) return
 
+            // When an x-if template hasn't rendered its content yet (e.g. $wire.show just
+            // changed from false to true), prevent Alpine's cloneNode from evaluating x-if
+            // on the "to" element and injecting duplicate content into the "to" DOM. We strip
+            // the directive from "to" so cloneNode is inert, and use childrenOnly() to skip
+            // attribute patching so the "from" element keeps its original x-if directive...
+            if (el.tagName === 'TEMPLATE' && toEl.tagName === 'TEMPLATE'
+                && ! el._x_currentIfEl && toEl.hasAttribute('x-if')
+            ) {
+                toEl.removeAttribute('x-if')
+                childrenOnly()
+            }
+
             trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil })
 
             // bypass DOM diffing for children by overwriting the content
