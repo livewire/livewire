@@ -952,6 +952,31 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('form.bob', 'lob2');
     }
 
+    function test_form_object_with_enum_property_works_with_consolidated_update()
+    {
+        // When ALL form fields change, JS consolidates individual field updates
+        // into a single "form" update. Enum properties must still be properly
+        // cast from their string values during this consolidated hydration.
+        Livewire::test(new class extends TestComponent {
+            public FormWithEnumPropertyStub $form;
+
+            function save()
+            {
+                Assert::assertInstanceOf(FormEnumStub::class, $this->form->status);
+                Assert::assertEquals(FormEnumStub::Active, $this->form->status);
+                Assert::assertEquals('Some Title', $this->form->title);
+            }
+        })
+        // Simulate a consolidated update where all form fields are sent at once
+        // (this happens when JS detects all fields have changed from their initial values)
+        ->update(
+            calls: [['method' => 'save', 'params' => [], 'path' => '']],
+            updates: ['form' => ['title' => 'Some Title', 'status' => 'active']],
+        )
+        ->assertSuccessful() // Should not 419/500 due to TypeError
+        ;
+    }
+
     function test_form_object_synth_rejects_non_form_classes()
     {
         $this->expectException(\Exception::class);
@@ -1314,4 +1339,16 @@ class LifecycleHooksForm extends Form
 
         $this->lifecycles['updatedBarBaz'] = true;
     }
+}
+
+enum FormEnumStub: string
+{
+    case Draft = 'draft';
+    case Active = 'active';
+}
+
+class FormWithEnumPropertyStub extends Form
+{
+    public string $title = '';
+    public FormEnumStub $status = FormEnumStub::Draft;
 }
