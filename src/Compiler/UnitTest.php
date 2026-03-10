@@ -658,6 +658,106 @@ class UnitTest extends \Tests\TestCase
 
                 EOT,
             ],
+            'single line comment with new' => [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                // new
+                new class extends Component {
+                    //
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                // new
+                return new class extends Component {
+                    //
+                };
+
+                EOT,
+            ],
+            'multi line comment with new' => [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                /* new */
+                new class extends Component {
+                    //
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                /* new */
+                return new class extends Component {
+                    //
+                };
+
+                EOT,
+            ],
+            'docblock comment with new' => [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                /**
+                 * new
+                 */
+                new class extends Component {
+                    //
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                /**
+                 * new
+                 */
+                return new class extends Component {
+                    //
+                };
+
+                EOT,
+            ],
+            'todo comment with new keyword' => [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                // TODO: new feature coming soon
+                new class extends Component {
+                    //
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                // TODO: new feature coming soon
+                return new class extends Component {
+                    //
+                };
+
+                EOT,
+            ],
         ];
     }
 }
