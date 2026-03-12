@@ -5917,8 +5917,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire-dirty.js
   var refreshDirtyStatesByComponent = new WeakBag();
-  on2("commit", ({ component, succeed }) => {
-    succeed(() => {
+  on2("commit", ({ component, respond }) => {
+    respond(() => {
       setTimeout(() => {
         refreshDirtyStatesByComponent.each(component, (i) => i(false));
       });

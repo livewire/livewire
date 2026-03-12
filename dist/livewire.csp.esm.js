@@ -11666,8 +11666,8 @@ function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = n
 
 // js/directives/wire-dirty.js
 var refreshDirtyStatesByComponent = new WeakBag();
-on("commit", ({ component, succeed }) => {
-  succeed(() => {
+on("commit", ({ component, respond }) => {
+  respond(() => {
     setTimeout(() => {
       refreshDirtyStatesByComponent.each(component, (i) => i(false));
     });
