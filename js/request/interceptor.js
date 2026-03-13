@@ -9,7 +9,7 @@ export class MessageInterceptor {
     onSuccess = () => {}
     onFinish = () => {}
     onSync = () => {}
-    onEffect = async () => {}
+    onEffect = () => {}
     onMorph = async () => {}
     onRender = () => {}
 

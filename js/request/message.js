@@ -201,10 +201,8 @@ export default class Message {
         this.interceptors.forEach(interceptor => interceptor.onSync())
     }
 
-    async invokeOnEffect() {
-        await Promise.all(
-            this.interceptors.map(interceptor => interceptor.onEffect())
-        )
+    invokeOnEffect() {
+        this.interceptors.forEach(interceptor => interceptor.onEffect())
     }
 
     async invokeOnMorph() {

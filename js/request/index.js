@@ -389,9 +389,9 @@ function sendMessages() {
 
                 let messageResponsePayloads = responseJson.components
 
-                for (let message of request.messages) {
-                    for (let payload of messageResponsePayloads) {
-                        if (message.isCancelled()) continue
+                request.messages.forEach(message => {
+                    messageResponsePayloads.forEach(payload => {
+                        if (message.isCancelled()) return
 
                         let { snapshot: snapshotEncoded, effects } = payload
                         let snapshot = JSON.parse(snapshotEncoded)
@@ -400,18 +400,18 @@ function sendMessages() {
                             message.responsePayload = { snapshot, effects }
 
                             message.invokeOnSuccess()
-                            if (message.isCancelled()) continue
+                            if (message.isCancelled()) return
 
                             message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
 
                             message.invokeOnSync()
-                            if (message.isCancelled()) continue
+                            if (message.isCancelled()) return
 
                             // Trigger any side effects from the payload like "morph" and "dispatch event"...
                             message.component.processEffects(effects, request)
 
-                            await message.invokeOnEffect()
-                            if (message.isCancelled()) continue
+                            message.invokeOnEffect()
+                            if (message.isCancelled()) return
 
                             queueMicrotask(() => {
                                 if (message.isCancelled()) return
@@ -434,8 +434,8 @@ function sendMessages() {
                                 })
                             })
                         }
-                    }
-                }
+                    })
+                })
             },
         })
     })
