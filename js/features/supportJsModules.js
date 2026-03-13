@@ -104,6 +104,15 @@ interceptMessage(({ message, onSuccess }) => {
                 imports.push(ensureCached(name, hash))
             })
 
+            // Child modules found in island fragments
+            let islandFragments = effects.islandFragments || []
+            islandFragments.forEach(fragmentHtml => {
+                let fragmentModules = discoverModulesInHtml(fragmentHtml)
+                fragmentModules.forEach(({ name, hash }) => {
+                    imports.push(ensureCached(name, hash))
+                })
+            })
+
             await Promise.allSettled(imports)
         })
     })

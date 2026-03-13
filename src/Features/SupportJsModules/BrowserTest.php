@@ -71,4 +71,15 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@target', 'alpine-data-loaded')
             ->assertConsoleLogHasNoErrors();
     }
+
+    public function test_alpine_data_works_in_component_inside_island()
+    {
+        Livewire::visit('testns::island-with-alpine-data')
+            ->assertSeeIn('@placeholder', 'No child yet')
+            ->assertDontSee('alpine-data-loaded')
+            ->waitForLivewire()->click('@toggle')
+            ->waitFor('@target')
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
 }
