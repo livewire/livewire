@@ -59,6 +59,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         }])
             ->assertDontSee('alpine-data-loaded')
             ->waitForLivewire()->click('@toggle')
+            ->waitFor('@target')
             ->assertSeeIn('@target', 'alpine-data-loaded')
             ->assertConsoleLogHasNoErrors();
     }

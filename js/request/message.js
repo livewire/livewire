@@ -186,6 +186,7 @@ export default class Message {
             interceptor.onSuccess({
                 payload: this.responsePayload,
                 onSync: callback => interceptor.onSync = callback,
+                onPrepare: callback => interceptor.onPrepare = callback,
                 onEffect: callback => interceptor.onEffect = callback,
                 onMorph: callback => interceptor.onMorph = callback,
                 onRender: callback => interceptor.onRender = callback
@@ -199,6 +200,12 @@ export default class Message {
 
     invokeOnSync() {
         this.interceptors.forEach(interceptor => interceptor.onSync())
+    }
+
+    async invokeOnPrepare() {
+        await Promise.all(
+            this.interceptors.map(interceptor => interceptor.onPrepare())
+        )
     }
 
     invokeOnEffect() {
