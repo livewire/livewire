@@ -118,6 +118,11 @@ interceptMessage(({ message, onSuccess }) => {
     })
 })
 
+// Scenario 4: Pre-load modules before Alpine re-inits after wire:navigate
+document.addEventListener('alpine:navigating', (e) => {
+    e.detail.onSwap(() => preloadInitialModules())
+})
+
 // Effect handler: run modules (from cache if available, otherwise import)
 on('effect', ({ component, effects }) => {
     let scriptModuleHash = effects.scriptModule
