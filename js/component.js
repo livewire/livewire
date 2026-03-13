@@ -1,4 +1,4 @@
-import { dataSet, deepClone, diff, diffAndConsolidate, extractData} from '@/utils'
+import { dataGet, dataSet, dataDelete, deepClone, diff, diffAndConsolidate, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
@@ -91,15 +91,35 @@ export class Component {
 
         let newData = extractData(deepClone(snapshot.data))
 
+        // Apply changes surgically to preserve client-side ephemeral state
+        // that wasn't sent with this request (e.g., changes made during the request)
+
+        // Separate changes from removals
+        let changes = []
+        let removals = []
+
         Object.entries(dirty).forEach(([key, value]) => {
-            let rootKey = key.split('.')[0]
-            this.reactive[rootKey] = newData[rootKey]
+            if (value === '__rm__') {
+                removals.push(key)
+            } else {
+                changes.push(key)
+            }
         })
-        // Object.entries(this.ephemeral).forEach(([key, value]) => {
-        //     if (! deeplyEqual(this.ephemeral[key], newData[key])) {
-        //         this.reactive[key] = newData[key]
-        //     }
-        // })
+
+        // Apply changes first
+        changes.forEach(key => {
+            dataSet(this.reactive, key, dataGet(newData, key))
+        })
+
+        // Apply removals in reverse order (by the numeric suffix) so array indices stay valid
+        // e.g., remove items.2, then items.1, then items.0
+        removals.sort((a, b) => {
+            let aNum = parseInt(a.split('.').pop()) || 0
+            let bNum = parseInt(b.split('.').pop()) || 0
+            return bNum - aNum // Descending order
+        }).forEach(key => {
+            dataDelete(this.reactive, key)
+        })
 
         return dirty
     }
@@ -299,6 +319,19 @@ export class Component {
 
     getJsActions() {
         return this.jsActions
+    }
+
+    // Called by JSON.stringify() on both $wire (via the Proxy) and the
+    // Component instance directly. Without this, stringifying a Component
+    // throws a circular reference error (el <-> component). Tools like
+    // Laravel Boost trigger this when logging objects to the browser console.
+    toJSON() {
+        return {
+            id: this.id,
+            name: this.name,
+            key: this.key,
+            data: Object.fromEntries(Object.entries(this.ephemeral)),
+        }
     }
 
     addCleanup(cleanup) {

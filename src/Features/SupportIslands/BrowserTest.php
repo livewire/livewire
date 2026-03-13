@@ -321,6 +321,36 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_island_renders_inside_lazy_loaded_component()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends \Livewire\Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        @island
+                            <div dusk="island-content">Island loaded</div>
+                        @endisland
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitFor('@island-content')
+            ->assertSeeIn('@island-content', 'Island loaded');
+    }
+
     public function test_named_islands()
     {
         Livewire::visit([new class extends \Livewire\Component {
@@ -791,6 +821,183 @@ class BrowserTest extends BrowserTestCase
             // Now the island should show the updated count (including the renderless increment)...
             ->assertSeeIn('@island-count', 'Count: 2')
             ;
+    }
+
+    public function test_wire_island_calls_method_scoped_to_island()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo')
+                        <div dusk="island-count">Count: {{ $count }}</div>
+                    @endisland
+
+                    <button type="button" x-on:click="$wire.$island('foo').increment()" dusk="island-increment">Increment Island</button>
+
+                    <div dusk="root-count">Root count: {{ $count }}</div>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->assertSeeIn('@root-count', 'Root count: 0')
+            ->waitForLivewire()->click('@island-increment')
+            ->assertSeeIn('@island-count', 'Count: 1')
+            ->assertSeeIn('@root-count', 'Root count: 0')
+            ;
+    }
+
+    public function test_wire_island_refresh_scoped_to_island()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo')
+                        <div dusk="island-count">Count: {{ $count }}</div>
+                    @endisland
+
+                    <button type="button" wire:click="increment" dusk="root-increment">Increment</button>
+
+                    <button type="button" x-on:click="$wire.$island('foo').$refresh()" dusk="island-refresh">Refresh Island</button>
+
+                    <div dusk="root-count">Root count: {{ $count }}</div>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->assertSeeIn('@root-count', 'Root count: 0')
+            ->waitForLivewire()->click('@root-increment')
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->assertSeeIn('@root-count', 'Root count: 1')
+            ->waitForLivewire()->click('@island-refresh')
+            ->assertSeeIn('@island-count', 'Count: 1')
+            ->assertSeeIn('@root-count', 'Root count: 1')
+            ;
+    }
+
+    public function test_wire_island_with_append_mode()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div dusk="foo-island">
+                        @island(name: 'foo')<div>Count: {{ $count }}</div>@endisland
+                    </div>
+
+                    <button type="button" x-on:click="$wire.$island('foo', { mode: 'append' }).increment()" dusk="append-increment">Append</button>
+                    <button type="button" x-on:click="$wire.$island('foo', { mode: 'prepend' }).increment()" dusk="prepend-increment">Prepend</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSourceHas('<div>Count: 0</div>')
+            ->waitForLivewire()->click('@append-increment')
+            ->assertSourceHas('<div>Count: 0</div><div>Count: 1</div>')
+            ->waitForLivewire()->click('@prepend-increment')
+            ->assertSourceHas('<div>Count: 2</div><div>Count: 0</div><div>Count: 1</div>')
+            ;
+    }
+
+    public function test_island_poll_does_not_trigger_named_view_transition_outside_island()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div wire:transition="step">
+                        <div dusk="content">Content</div>
+                    </div>
+
+                    @island
+                        <div wire:poll.1s dusk="island-poll">Poll island</div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@content', 'Content')
+            // Intercept document.startViewTransition to track if it gets called...
+            ->tap(fn ($b) => $b->script("
+                window.__viewTransitionCount = 0;
+                let orig = document.startViewTransition.bind(document);
+                document.startViewTransition = function() {
+                    window.__viewTransitionCount++;
+                    return orig.apply(document, arguments);
+                };
+            "))
+            // Wait for at least one poll cycle to complete...
+            ->pause(1500)
+            // Assert no view transitions were triggered by the island poll...
+            ->assertScript('window.__viewTransitionCount', 0)
+        ;
+    }
+
+    public function test_named_view_transition_inside_island_still_works()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $step = 1;
+
+            public function nextStep()
+            {
+                $this->step = 2;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island
+                        <div wire:transition="step" wire:key="step-{{ $step }}">
+                            <div dusk="step-display">Step {{ $step }}</div>
+                        </div>
+
+                        <button wire:click="nextStep" dusk="next-step">Next</button>
+                    @endisland
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@step-display', 'Step 1')
+            // Intercept document.startViewTransition to track if it gets called...
+            ->tap(fn ($b) => $b->script("
+                window.__viewTransitionCount = 0;
+                let orig = document.startViewTransition.bind(document);
+                document.startViewTransition = function() {
+                    window.__viewTransitionCount++;
+                    return orig.apply(document, arguments);
+                };
+            "))
+            // Click the button to trigger a transition inside the island...
+            ->waitForLivewire()->click('@next-step')
+            // Wait for the transition to complete and content to update...
+            ->waitForTextIn('@step-display', 'Step 2')
+            // Assert a view transition was triggered...
+            ->assertScript('window.__viewTransitionCount', 1)
+        ;
     }
 
     public function test_more_than_ten_islands_using_single_file_component()

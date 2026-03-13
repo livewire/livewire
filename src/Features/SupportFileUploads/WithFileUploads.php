@@ -73,26 +73,27 @@ trait WithFileUploads
     function _uploadErrored($name, $errorsInJson, $isMultiple) {
         $this->dispatch('upload:errored', name: $name)->self();
 
-        if (is_null($errorsInJson)) {
-            // Handle any translations/custom names
-            $translator = app()->make('translator');
+        if (! is_null($errorsInJson)) {
+            $errorsInJson = $isMultiple
+                ? str_ireplace('files', $name, $errorsInJson)
+                : str_ireplace('files.0', $name, $errorsInJson);
 
-            $attribute = $translator->get("validation.attributes.{$name}");
-            if ($attribute === "validation.attributes.{$name}") $attribute = $name;
+            $errors = json_decode($errorsInJson, true)['errors'] ?? null;
 
-            $message = trans('validation.uploaded', ['attribute' => $attribute]);
-            if ($message === 'validation.uploaded') $message = "The {$name} failed to upload.";
-
-            throw ValidationException::withMessages([$name => $message]);
+            if ($errors) {
+                throw ValidationException::withMessages($errors);
+            }
         }
 
-        $errorsInJson = $isMultiple
-            ? str_ireplace('files', $name, $errorsInJson)
-            : str_ireplace('files.0', $name, $errorsInJson);
+        $translator = app()->make('translator');
 
-        $errors = json_decode($errorsInJson, true)['errors'];
+        $attribute = $translator->get("validation.attributes.{$name}");
+        if ($attribute === "validation.attributes.{$name}") $attribute = $name;
 
-        throw (ValidationException::withMessages($errors));
+        $message = trans('validation.uploaded', ['attribute' => $attribute]);
+        if ($message === 'validation.uploaded') $message = "The {$name} failed to upload.";
+
+        throw ValidationException::withMessages([$name => $message]);
     }
 
     function _removeUpload($name, $tmpFilename)

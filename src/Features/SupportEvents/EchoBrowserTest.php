@@ -7,6 +7,7 @@ use Livewire\Livewire;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
 use Livewire\Attributes\On;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 
 class EchoBrowserTest extends BrowserTestCase
@@ -75,46 +76,95 @@ class EchoBrowserTest extends BrowserTestCase
         ->assertSeeIn('@orderId', '1234');
     }
 
-    // This test asserts agains a scenario that fails silently. Therefore I can't easily make a test for it.
-    // I'm leaving it here as a playground for the issue (that has been mostly resolved)...
-    // public function test_echo_listeners_are_torn_down_when_navigating_pages_using_wire_navigate()
-    // {
-    //     Route::get('/dusk/fake-echo', function () {
-    //         return Utils::pretendResponseIsFile(__DIR__.'/fake-echo.js');
-    //     });
+    public function test_echo_presence_channel_is_left_when_navigating_away_with_wire_navigate()
+    {
+        Route::get('/dusk/fake-echo', function () {
+            return Utils::pretendResponseIsFile(__DIR__.'/fake-echo.js');
+        });
 
-    //     Route::get('/second-page', function (){
-    //         return Blade::render(<<<'HTML'
-    //             <x-layouts.app>
-    //                 Second page
+        Route::get('/echo-second-page', function () {
+            return Blade::render(<<<'HTML'
+                <html>
+                <head>
+                    <meta name="csrf-token" content="{{ csrf_token() }}">
+                </head>
+                <body>
+                    <div dusk="second-page">Second page</div>
+                </body>
+                </html>
+            HTML);
+        })->middleware('web');
 
-    //                 @livewireScripts
-    //             </x-layouts.app>
-    //         HTML);
-    //     })->middleware('web');
+        Livewire::visit(new class extends Component {
+            #[On('echo-presence:room,here')]
+            function here($users) {}
 
-    //     Livewire::visit(new class extends Component {
-    //         public $count = 0;
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <a href="/echo-second-page" wire:navigate dusk="link">Go to second page</a>
 
-    //         #[On('echo:orders,OrderShipped')]
-    //         function foo() {
-    //             $this->count++;
-    //         }
+                    <script src="/dusk/fake-echo"></script>
+                </div>
+                HTML;
+            }
+        })
+        ->assertScript('return window.fakeEchoListeners.length', 1)
+        ->assertScript('return window.fakeEchoLeftChannels.length', 0)
+        ->waitForNavigate(function ($b) {
+            $b->click('@link');
+        })
+        ->waitFor('@second-page')
+        ->assertScript('return window.fakeEchoLeftChannels.includes("room")', true)
+        ;
+    }
 
-    //         function render()
-    //         {
-    //             return <<<'HTML'
-    //             <div>
-    //                 <span dusk="count">{{ $count }}</span>
+    public function test_echo_regular_channel_is_left_when_navigating_away_with_wire_navigate()
+    {
+        Route::get('/dusk/fake-echo', function () {
+            return Utils::pretendResponseIsFile(__DIR__.'/fake-echo.js');
+        });
 
-    //                 <a href="/second-page" wire:navigate>yoyoyo</a>
+        Route::get('/echo-second-page-2', function () {
+            return Blade::render(<<<'HTML'
+                <html>
+                <head>
+                    <meta name="csrf-token" content="{{ csrf_token() }}">
+                </head>
+                <body>
+                    <div dusk="second-page">Second page</div>
+                </body>
+                </html>
+            HTML);
+        })->middleware('web');
 
-    //                 <script src="/dusk/fake-echo"></script>
-    //             </div>
-    //             HTML;
-    //         }
-    //     })
-    //     ->tinker()
-    //     ;
-    // }
+        Livewire::visit(new class extends Component {
+            public $count = 0;
+
+            #[On('echo:orders,OrderShipped')]
+            function foo() {
+                $this->count++;
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <span dusk="count">{{ $count }}</span>
+                    <a href="/echo-second-page-2" wire:navigate dusk="link">Go to second page</a>
+
+                    <script src="/dusk/fake-echo"></script>
+                </div>
+                HTML;
+            }
+        })
+        ->assertScript('return window.fakeEchoListeners.length', 1)
+        ->waitForNavigate(function ($b) {
+            $b->click('@link');
+        })
+        ->waitFor('@second-page')
+        ->assertScript('return window.fakeEchoListeners.length', 0)
+        ;
+    }
 }

@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportWireModelingNestedComponents;
 
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
+use Livewire\Exceptions\ModelableRootHasWireModelException;
 use function Livewire\on;
 use function Livewire\store;
 
@@ -69,6 +70,18 @@ class SupportWireModelingNestedComponents extends ComponentHook
             $outer = array_keys($bindings)[0];
             $inner = array_values($bindings)[0];
             $directive = array_values($directives)[0];
+
+            // Throw if the root element already has wire:model, since HTML
+            // doesn't allow duplicate attributes and the parent binding
+            // would silently break. We extract just the opening tag first
+            // to avoid regex backtracking on long attribute lists.
+            $trimmed = ltrim($html);
+            $tagEnd = strpos($trimmed, '>');
+
+            throw_if(
+                $tagEnd !== false && preg_match('/\bwire:model[=.\s>]/', substr($trimmed, 0, $tagEnd)),
+                new ModelableRootHasWireModelException
+            );
 
             // Attach the necessary Alpine directives so that the child and
             // parent's JS, ephemeral, values are bound.

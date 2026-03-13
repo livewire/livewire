@@ -98,7 +98,8 @@ class Test extends TestCase
                     $this->assertNull($b->attribute('@blog.input.ignored', 'readonly'));
                 })
                 ->waitForLivewire(function ($b) {
-                    $b->press('@blog.button');
+                    $b->press('@blog.button')
+                        ->pause(10);
 
                     $this->assertEquals('true', $b->attribute('@blog.button', 'disabled'));
                     $this->assertEquals('true', $b->attribute('@blog.input', 'readonly'));
@@ -113,6 +114,7 @@ class Test extends TestCase
                  * Elements are un-marked as readonly when form errors out.
                  */
                 ->press('@boo.button')
+                ->pause(10)
                 ->tap(function ($b) {
                     $this->assertEquals('true', $b->attribute('@boo.button', 'disabled'));
                 })

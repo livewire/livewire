@@ -44,19 +44,19 @@ The transition type can be targeted in CSS using the `:active-view-transition-ty
 ```css
 html:active-view-transition-type(forward) {
     &::view-transition-old(content) {
-        animation: 300ms ease-out slide-out-left;
+        animation: 300ms ease-out both slide-out-left;
     }
     &::view-transition-new(content) {
-        animation: 300ms ease-in slide-in-right;
+        animation: 300ms ease-in both slide-in-right;
     }
 }
 
 html:active-view-transition-type(backward) {
     &::view-transition-old(content) {
-        animation: 300ms ease-out slide-out-right;
+        animation: 300ms ease-out both slide-out-right;
     }
     &::view-transition-new(content) {
-        animation: 300ms ease-in slide-in-left;
+        animation: 300ms ease-in both slide-in-left;
     }
 }
 

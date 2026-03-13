@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportPageComponents;
 use function Livewire\{on, off, once};
 use Livewire\Drawer\ImplicitRouteBinding;
 use Livewire\ComponentHook;
-use Livewire\Features\SupportRouting\LivewirePageController;
+use Livewire\Mechanisms\HandleRouting\LivewirePageController;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Database\Eloquent\ModelNotFoundException;

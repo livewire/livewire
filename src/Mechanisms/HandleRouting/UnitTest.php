@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportRouting;
+namespace Livewire\Mechanisms\HandleRouting;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as AuthUser;

@@ -21,7 +21,7 @@ class Checksum {
 
         trigger('checksum.verify', $checksum, $snapshot);
 
-        if ($checksum !== $comparitor = self::generate($snapshot)) {
+        if (! hash_equals($comparitor = self::generate($snapshot), $checksum)) {
             trigger('checksum.fail', $checksum, $comparitor, $snapshot);
 
             static::recordFailure();

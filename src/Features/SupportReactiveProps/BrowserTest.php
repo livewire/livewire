@@ -446,4 +446,60 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@child.hook-calls', 0)
         ;
     }
+
+    public function test_reactive_property_is_available_during_booted_lifecycle_hook()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $count = 0;
+
+                public function inc() { $this->count++; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Parent count: <span dusk="parent.count">{{ $count }}</span>
+
+                        <button wire:click="inc" dusk="parent.inc">inc</button>
+
+                        <livewire:child :$count />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[BaseReactive]
+                public $count;
+
+                public $bootedCount = 0;
+
+                public function booted()
+                {
+                    // This should see the updated reactive prop value
+                    $this->bootedCount = $this->count;
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Child count: <span dusk="child.count">{{ $count }}</span>
+                        <h1>Booted count: <span dusk="child.booted-count">{{ $bootedCount }}</span>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertSeeIn('@parent.count', 0)
+            ->assertSeeIn('@child.count', 0)
+            ->assertSeeIn('@child.booted-count', 0)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 1)
+            ->assertSeeIn('@child.count', 1)
+            ->assertSeeIn('@child.booted-count', 1)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 2)
+            ->assertSeeIn('@child.count', 2)
+            ->assertSeeIn('@child.booted-count', 2)
+        ;
+    }
 }

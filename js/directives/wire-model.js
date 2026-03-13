@@ -46,11 +46,10 @@ directive('model', ({ el, directive, component, cleanup }) => {
     }
 
     // Add self/deep modifier for event propagation control
-    if (
-        ! (ephemeralModifiers.includes('self') || networkModifiers.includes('self'))
-        && ! (ephemeralModifiers.includes('deep') || networkModifiers.includes('deep'))
-    ) {
-        ephemeralModifiers.push('self')
+    if (! (ephemeralModifiers.includes('deep') || networkModifiers.includes('deep'))) {
+        if (! ephemeralModifiers.includes('self')) {
+            ephemeralModifiers.push('self')
+        }
     }
 
     // Extract ephemeral trigger modifiers (these control when x-model syncs)

@@ -52,14 +52,16 @@ on('effect', ({ component, effects }) => {
                         dispatchSelf(component, event, [e])
                     })
 
-                    // @todo: add listener cleanup...
+                    component.addCleanup(() => {
+                        window.Echo.leave(channel)
+                    })
                 } else{
                     let handler = e => dispatchSelf(component, event, [e])
 
                     window.Echo.join(channel).listen(event_name, handler)
 
                     component.addCleanup(() => {
-                        window.Echo.leaveChannel(channel)
+                        window.Echo.leave(channel)
                     })
                 }
             } else if (channel_type == 'notification') {
@@ -67,7 +69,9 @@ on('effect', ({ component, effects }) => {
                     dispatchSelf(component, event, [notification])
                 })
 
-                // @todo: add listener cleanup...
+                component.addCleanup(() => {
+                    window.Echo.private(channel).stopListening('.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated')
+                })
             } else {
                 console.warn('Echo channel type not yet supported')
             }

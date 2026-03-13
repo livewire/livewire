@@ -74,16 +74,21 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
     return interceptMessage(({ message, onSend, onSuccess, onFinish }) => {
         if (component !== message.component) return
 
-        let island = closestIsland(el)
+        // When explicit targets are set via wire:target, skip island scope filtering
+        // and let the target matching handle scoping. This allows wire:loading to
+        // respond to any request containing the target, regardless of island boundaries...
+        if (targets.length === 0) {
+            let island = closestIsland(el)
 
-        // If an island is found, see if the message has an action for the island and return if not...
-        if (island && ! message.hasActionForIsland(island)) {
-            return
-        }
+            // If an island is found, see if the message has an action for the island and return if not...
+            if (island && ! message.hasActionForIsland(island)) {
+                return
+            }
 
-        // If no island is found, see if the message has an action for the component and return if not...
-        if (! island && ! message.hasActionForComponent()) {
-            return
+            // If no island is found, see if the message has an action for the component and return if not...
+            if (! island && ! message.hasActionForComponent()) {
+                return
+            }
         }
 
         let matches = true

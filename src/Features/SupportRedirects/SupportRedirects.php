@@ -4,7 +4,7 @@ namespace Livewire\Features\SupportRedirects;
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
-use Livewire\Features\SupportRouting\LivewirePageController;
+use Livewire\Mechanisms\HandleRouting\LivewirePageController;
 use Livewire\ComponentHook;
 use Livewire\Component;
 use function Livewire\on;
@@ -26,6 +26,7 @@ class SupportRedirects extends ComponentHook
 
         on('flush-state', function () {
             static::$atLeastOneMountedComponentHasRedirected = false;
+            static::$redirectorCacheStack = [];
         });
     }
 

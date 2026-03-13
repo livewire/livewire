@@ -19,13 +19,23 @@ class SecurityPolicy
 
         // Known serialization gadgets
         'Illuminate\Broadcasting\PendingBroadcast',
+        'Illuminate\Broadcasting\BroadcastEvent',
         'Illuminate\Foundation\Testing\PendingCommand',
 
         // Queue jobs - could execute arbitrary code
         'Illuminate\Queue\CallQueuedClosure',
+        'Illuminate\Queue\Jobs\Job',
+
+        // Mail - could send arbitrary emails
+        'Illuminate\Mail\Mailable',
 
         // Notifications - could send arbitrary notifications
         'Illuminate\Notifications\Notification',
+
+        // Known exploit chain gadgets (Synacktiv disclosure)
+        'GuzzleHttp\Psr7\FnStream',
+        'League\Flysystem\UrlGeneration\ShardedPrefixPublicUrlGenerator',
+        'Laravel\Prompts\Terminal',
     ];
 
     /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportRouting;
+namespace Livewire\Mechanisms\HandleRouting;
 
 class LivewirePageController
 {

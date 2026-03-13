@@ -12,6 +12,8 @@ class BrowserTest extends \Tests\BrowserTestCase
     public static function tweakApplicationHook()
     {
         return function () {
+            app('livewire.finder')->addNamespace('assets-test', viewPath: __DIR__ . '/fixtures');
+
             Route::get('/non-livewire-asset.js', function () {
                 return Utils::pretendResponseIsFile(__DIR__.'/non-livewire-asset.js');
             });
@@ -370,6 +372,50 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForText('initialized')
             ->assertSeeIn('@output', 'initialized')
             ->assertDontSeeIn('@output', 'evaluated')
+        ;
+    }
+
+    public function test_scripts_with_comments_before_let_declarations_work()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public function render() { return <<<'HTML'
+            <div>
+                <div dusk="output"></div>
+            </div>
+
+            @script
+                <script>
+                    // This comment before let used to cause a syntax error
+                    let message = 'success'
+
+                    document.querySelector('[dusk="output"]').textContent = message
+                </script>
+            @endscript
+            HTML; }
+        })
+            ->waitForText('success')
+            ->assertSeeIn('@output', 'success')
+        ;
+    }
+
+    public function test_remote_assets_can_be_loaded_from_a_lazy_loaded_sfc_component()
+    {
+        // Tests that @assets are loaded before script module runs in lazy-loaded SFC components.
+        // In single-file components, raw <script> tags get compiled into a separate JS module.
+        // For lazy-loaded components, the script module should only run after __lazyLoad,
+        // not during the initial placeholder render, so @assets are available.
+        // Regression test for: https://github.com/livewire/livewire/discussions/9916
+        Livewire::visit([new class extends \Livewire\Component {
+            public function render() { return <<<'HTML'
+            <div>
+                <span dusk="output" x-text="'foo'"></span>
+
+                <livewire:assets-test::lazy-with-assets />
+            </div>
+            HTML; }
+        }])
+        ->waitForTextIn('@output', 'foo')
+        ->waitUntil('!! window.datePicker === true')
         ;
     }
 }

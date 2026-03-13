@@ -92,20 +92,34 @@ new class extends Component {
 <livewire:date-picker wire:model="endDate" />
 ```
 
+> [!warning]
+> Your component's root element cannot be a form control with `wire:model`. Wrap your input in a wrapper element like `<div>`. Livewire injects `wire:model` and `x-modelable` on the root element to wire up the parent binding — a second `wire:model` on the same element creates a conflict.
+
 ## Modifiers
 
-The parent can use wire:model modifiers, and they'll work as expected:
+The parent can use `wire:model` modifiers for timing and network control:
 
 ```blade
 {{-- Live updates on every keystroke --}}
 <livewire:todo-input wire:model.live="todo" />
 
-{{-- Update on blur --}}
-<livewire:todo-input wire:model.live.blur="todo" />
-
 {{-- Debounce updates --}}
 <livewire:todo-input wire:model.live.debounce.500ms="todo" />
+
+{{-- Throttle updates --}}
+<livewire:todo-input wire:model.live.throttle.500ms="todo" />
 ```
+
+> [!note] Event-based modifiers on components
+> Event-based modifiers like `.blur`, `.change`, and `.enter` control DOM events on specific elements, not reactive component bindings. To control sync timing for modelable components, place these modifiers on the actual input element inside the child component:
+>
+> ```blade
+> {{-- Parent --}}
+> <livewire:todo-input wire:model="todo" />
+>
+> {{-- Child component --}}
+> <input wire:model.blur="value" />
+> ```
 
 ## Example: Custom rich text editor
 

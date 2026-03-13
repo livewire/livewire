@@ -26,7 +26,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             function save()
             {
-                $this->photo->storeAs('photos', 'photo.png');
+                $this->photo->storeAs('photos', 'photo.png', 'tmp-for-tests');
             }
 
             function render() { return <<<'HTML'
@@ -82,7 +82,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             function save()
             {
-                $this->photo->storeAs('photos', 'photo.png');
+                $this->photo->storeAs('photos', 'photo.png', 'tmp-for-tests');
             }
 
             function render() { return <<<'HTML'

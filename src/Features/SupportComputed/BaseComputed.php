@@ -3,8 +3,6 @@
 namespace Livewire\Features\SupportComputed;
 
 use function Livewire\invade;
-use function Livewire\on;
-use function Livewire\off;
 
 use Livewire\Features\SupportAttributes\Attribute;
 use Illuminate\Support\Facades\Cache;
@@ -22,15 +20,6 @@ class BaseComputed extends Attribute
         public $tags = null,
     ) {}
 
-    function boot()
-    {
-        off('__get', $this->handleMagicGet(...));
-        on('__get', $this->handleMagicGet(...));
-
-        off('__unset', $this->handleMagicUnset(...));
-        on('__unset', $this->handleMagicUnset(...));
-    }
-
     function call()
     {
         throw new CannotCallComputedDirectlyException(
@@ -39,11 +28,8 @@ class BaseComputed extends Attribute
         );
     }
 
-    protected function handleMagicGet($target, $property, $returnValue)
+    public function handleMagicGet($returnValue)
     {
-        if ($target !== $this->component) return;
-        if ($this->generatePropertyName($property) !== $this->getName()) return;
-
         if ($this->persist) {
             $returnValue($this->handlePersistedGet());
 
@@ -61,11 +47,8 @@ class BaseComputed extends Attribute
         );
     }
 
-    protected function handleMagicUnset($target, $property)
+    public function handleMagicUnset()
     {
-        if ($target !== $this->component) return;
-        if ($property !== $this->getName()) return;
-
         if ($this->persist) {
             $this->handlePersistedUnset();
 

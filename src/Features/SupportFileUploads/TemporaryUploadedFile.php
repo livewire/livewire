@@ -176,13 +176,18 @@ class TemporaryUploadedFile extends UploadedFile
     {
         $options = $this->parseOptions($options);
 
-        $disk = Arr::pull($options, 'disk') ?: $this->disk;
+        $disk = Arr::pull($options, 'disk') ?: config('filesystems.default');
 
         $newPath = trim($path.'/'.$name, '/');
 
-        Storage::disk($disk)->put(
-            $newPath, $this->storage->readStream($this->path), $options
-        );
+        // Same disk and no extra options — move instead of copy for performance.
+        if ($this->disk === $disk && empty($options)) {
+            Storage::disk($disk)->move($this->path, $newPath);
+        } else {
+            Storage::disk($disk)->put(
+                $newPath, $this->storage->readStream($this->path), $options
+            );
+        }
 
         return $newPath;
     }
@@ -235,13 +240,22 @@ class TemporaryUploadedFile extends UploadedFile
         if (is_null($this->metaFileData)) {
             $this->metaFileData = [];
 
-            if ($contents = $this->storage->get($this->path.'.json')) {
+            // S3 uploads don't have a meta file — the original filename is
+            // embedded in the file path instead, so skip the lookup entirely.
+            if (! $this->isActuallyUsingS3() && $contents = $this->storage->get($this->path.'.json')) {
                 $contents = json_decode($contents, true);
 
                 $this->metaFileData = $contents;
             }
         }
         return $this->metaFileData;
+    }
+
+    protected function isActuallyUsingS3(): bool
+    {
+        $diskConfig = config('filesystems.disks.' . $this->disk);
+
+        return is_array($diskConfig) && ($diskConfig['driver'] ?? null) === 's3';
     }
 
     public static function createFromLivewire($filePath)

@@ -19,18 +19,15 @@ class HandleRequests extends Mechanism
 
     function boot()
     {
-        // Only set it if another provider or routes file haven't already set it....
-        app()->booted(function () {
-            // Check both instance state and router to handle cached routes scenario.
-            // When routes are cached and loaded, $this->updateRoute will be null but
-            // the route already exists in the router. This prevents duplicate registration
-            // which Laravel v12.29.0+ treats as an error.
-            if (! $this->updateRoute && ! $this->updateRouteExists()) {
-                app($this::class)->setUpdateRoute(function ($handle) {
-                    return Route::post(EndpointResolver::updatePath(), $handle)->middleware('web');
-                });
-            }
-        });
+        // Register the default route immediately (before routes files load)
+        // so it's positioned before any catch-all routes.
+        if (! $this->updateRoute && ! $this->updateRouteExists()) {
+            app($this::class)->setUpdateRoute(function ($handle) {
+                return Route::post(EndpointResolver::updatePath(), $handle)
+                    ->middleware(['web', RequireLivewireHeaders::class])
+                    ->name('default-livewire.update');
+            });
+        }
 
         $this->skipRequestPayloadTamperingMiddleware();
     }
@@ -52,9 +49,7 @@ class HandleRequests extends Mechanism
         // In this case, find the route from the router.
         $route = $this->updateRoute ?? $this->findUpdateRoute();
 
-        return (string) str(
-            route($route->getName(), [], false)
-        )->start('/');
+        return (string) str(app('url')->toRoute($route, [], false))->start('/');
     }
 
     protected function findUpdateRoute()
@@ -62,13 +57,23 @@ class HandleRequests extends Mechanism
         // Find the route with name ending in 'livewire.update'.
         // Custom routes can have prefixes (e.g., 'tenant.livewire.update')
         // so we check for routes ending with 'livewire.update', not just exact matches.
+        // Prioritise custom routes over the default route.
+        $defaultRoute = null;
+
         foreach (Route::getRoutes()->getRoutes() as $route) {
             if (str($route->getName())->endsWith('livewire.update')) {
+                // If it's the default route, save it but keep looking for a custom one
+                if ($route->getName() === 'default-livewire.update') {
+                    $defaultRoute = $route;
+                    continue;
+                }
+
+                // Found a custom route, return it immediately
                 return $route;
             }
         }
 
-        return null;
+        return $defaultRoute;
     }
 
     function skipRequestPayloadTamperingMiddleware()
@@ -84,7 +89,18 @@ class HandleRequests extends Mechanism
 
     function setUpdateRoute($callback)
     {
-        $route = $callback([self::class, 'handleUpdate']);
+        $route = $callback([self::class, 'handleUpdate'], EndpointResolver::updatePath());
+
+        // Ensure the header guard middleware is always present, even on custom routes.
+        $route->middleware(RequireLivewireHeaders::class);
+
+        // Ensure the route includes the `web` middleware group.
+        // Without it, CSRF protection is lost entirely on the update endpoint.
+        // Note: we use middleware() (not gatherMiddleware()) to avoid polluting
+        // the route's computed middleware cache before it's fully configured.
+        if (! in_array('web', $route->middleware())) {
+            $route->middleware('web');
+        }
 
         // Append `livewire.update` to the existing name, if any.
         if (! str($route->getName())->endsWith('livewire.update')) {
@@ -117,6 +133,14 @@ class HandleRequests extends Mechanism
 
     function handleUpdate()
     {
+        // When a custom update route is registered, reject requests that arrive
+        // via the default route. This prevents attackers from bypassing middleware
+        // (e.g. auth, tenant scoping) added to the custom route.
+        if (request()->route()?->getName() === 'default-livewire.update'
+            && $this->findUpdateRoute()?->getName() !== 'default-livewire.update') {
+            abort(404);
+        }
+
         // Check payload size limit...
         $maxSize = config('livewire.payload.max_size');
 
@@ -128,7 +152,21 @@ class HandleRequests extends Mechanism
             }
         }
 
-        $requestPayload = request(key: 'components', default: []);
+        $requestPayload = request('components');
+
+        if (! is_array($requestPayload) || empty($requestPayload)) {
+            abort(404);
+        }
+
+        foreach ($requestPayload as $component) {
+            if (! is_array($component)
+                || ! is_string($component['snapshot'] ?? null)
+                || ! is_array($component['updates'] ?? null)
+                || ! is_array($component['calls'] ?? null)
+            ) {
+                abort(404);
+            }
+        }
 
         // Check max components limit...
         $maxComponents = config('livewire.payload.max_components');
@@ -148,10 +186,16 @@ class HandleRequests extends Mechanism
             $updates = $componentPayload['updates'];
             $calls = $componentPayload['calls'];
 
-            [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
+            try {
+                [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
+            } catch (\TypeError $e) {
+                if (config('app.debug')) throw $e;
+
+                abort(419);
+            }
 
             $componentResponses[] = [
-                'snapshot' => json_encode($snapshot),
+                'snapshot' => json_encode($snapshot, JSON_THROW_ON_ERROR),
                 'effects' => $effects,
             ];
         }

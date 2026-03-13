@@ -37,6 +37,13 @@ on('effect', ({ component, effects }) => {
             onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
                 let scriptContent = extractScriptTagContent(content)
 
+                // Always wrap @script content in an IIFE since it's multi-statement code.
+                // Alpine's evaluator tries to detect let/const at the start, but doesn't
+                // account for leading comments which causes syntax errors.
+                scriptContent = scriptContent.includes('await')
+                    ? `(async()=>{ ${scriptContent} })()`
+                    : `(()=>{ ${scriptContent} })()`
+
                 Alpine.dontAutoEvaluateFunctions(() => {
                     evaluateExpression(component.el, scriptContent, {
                         context: component.$wire,

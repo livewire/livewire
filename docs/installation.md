@@ -129,18 +129,20 @@ class AppServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        Livewire::setUpdateRoute(function ($handle) {
-            return Route::post('/custom/livewire/update', $handle);
+        Livewire::setUpdateRoute(function ($handle, $path) {
+            return Route::post('/custom' . $path, $handle);
         });
     }
 }
 ```
 
+The `$path` parameter contains the hash-based path (e.g., `/livewire-{hash}/update`), preserving the unique-per-installation endpoint.
+
 You can also add middleware to the update route:
 
 ```php
-Livewire::setUpdateRoute(function ($handle) {
-    return Route::post('/custom/livewire/update', $handle)
+Livewire::setUpdateRoute(function ($handle, $path) {
+    return Route::post('/custom' . $path, $handle)
         ->middleware(['web', 'auth']);
 });
 ```
@@ -160,15 +162,14 @@ class AppServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        Livewire::setScriptRoute(function ($handle) {
-            return Route::get('/custom/livewire/livewire.js', $handle);
+        Livewire::setScriptRoute(function ($handle, $path) {
+            return Route::get('/custom' . $path, $handle);
         });
     }
 }
 ```
 
-> [!note] Setting a custom route uses a static path
-> When you customize the script route, it will use the exact path you specify instead of the hash-based default.
+The `$path` parameter contains the hash-based path (e.g., `/livewire-{hash}/livewire.js`), preserving the unique-per-installation endpoint.
 
 ## Publishing Livewire's assets to public directory
 

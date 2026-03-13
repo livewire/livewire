@@ -22,7 +22,7 @@ class CustomUpdateRouteBrowserTest extends \Tests\BrowserTestCase
             // Doesn't seem to be needed in real applications, but is needed in tests
             app('router')->getRoutes()->refreshNameLookups();
 
-            Route::prefix('/{tenant}')->group(function () {
+            Route::middleware('web')->prefix('/{tenant}')->group(function () {
                 Route::get('/page', function ($tenant) {
                     return (app('livewire')->new('test'))();
                 })->name('tenant.page');

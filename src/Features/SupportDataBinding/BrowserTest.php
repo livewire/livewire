@@ -213,6 +213,142 @@ class BrowserTest extends BrowserTestCase
             ->assertSelected('@child', 'bar');
     }
 
+    function test_wire_data_reflects_key_order_changes()
+    {
+        Livewire::visit(new class extends Component {
+            public $items = [
+                'a' => 1,
+                'b' => 2,
+            ];
+
+            public function reorder()
+            {
+                $this->items = [
+                    'b' => 2,
+                    'a' => 1,
+                ];
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <button wire:click="reorder" dusk="reorder">Reorder</button>
+
+                        <span dusk="output" x-text="Object.keys($wire.items).join(',')"></span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', 'a,b')
+            ->waitForLivewire()->click('@reorder')
+            ->assertSeeIn('@output', 'b,a')
+        ;
+    }
+
+    function test_wire_data_reflects_nested_key_order_changes()
+    {
+        Livewire::visit(new class extends Component {
+            public $data = [
+                'items' => [
+                    'a' => 1,
+                    'b' => 2,
+                ],
+            ];
+
+            public function reorder()
+            {
+                $this->data = [
+                    'items' => [
+                        'b' => 2,
+                        'a' => 1,
+                    ],
+                ];
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <button wire:click="reorder" dusk="reorder">Reorder</button>
+                        <span dusk="output" x-text="Object.keys($wire.data.items).join(',')"></span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', 'a,b')
+            ->waitForLivewire()->click('@reorder')
+            ->assertSeeIn('@output', 'b,a')
+        ;
+    }
+
+    function test_wire_data_reflects_key_order_and_value_changes()
+    {
+        Livewire::visit(new class extends Component {
+            public $items = [
+                'a' => 1,
+                'b' => 2,
+            ];
+
+            public function reorder()
+            {
+                $this->items = [
+                    'b' => 3,
+                    'a' => 1,
+                ];
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <button wire:click="reorder" dusk="reorder">Reorder</button>
+                        <span dusk="keys" x-text="Object.keys($wire.items).join(',')"></span>
+                        <span dusk="values" x-text="Object.values($wire.items).join(',')"></span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@keys', 'a,b')
+            ->assertSeeIn('@values', '1,2')
+            ->waitForLivewire()->click('@reorder')
+            ->assertSeeIn('@keys', 'b,a')
+            ->assertSeeIn('@values', '3,1')
+        ;
+    }
+
+    function test_wire_data_reflects_key_insertion_order()
+    {
+        Livewire::visit(new class extends Component {
+            public $items = [
+                'a' => 'A',
+                'b' => 'B',
+                'c' => 'C',
+            ];
+
+            public function insertBetween()
+            {
+                $before = array_slice($this->items, 0, 1, true);
+                $after = array_slice($this->items, 1, null, true);
+                $this->items = $before + ['new' => 'NEW'] + $after;
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <button wire:click="insertBetween" dusk="insert">Insert</button>
+                        <span dusk="keys" x-text="Object.keys($wire.items).join(',')"></span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@keys', 'a,b,c')
+            ->waitForLivewire()->click('@insert')
+            ->assertSeeIn('@keys', 'a,new,b,c')
+        ;
+    }
+
     public function test_multiple_wire_set_calls_to_empty_string_are_all_sent_to_server()
     {
         Livewire::visit(new class extends Component {
@@ -539,6 +675,271 @@ class BrowserTest extends BrowserTestCase
             ->click('@input')
             ->waitForLivewire()->keys('@input', '{enter}')
             ->assertSeeIn('@server', 'hello')
+        ;
+    }
+
+    function test_wire_model_blur_syncs_value_on_form_submit_via_enter()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public $submitted = false;
+
+            public function submit()
+            {
+                $this->submitted = true;
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <form wire:submit="submit">
+                            <input dusk="input" type="text" wire:model.blur="title" />
+                            <button dusk="submit" type="submit">Submit</button>
+                        </form>
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <span dusk="submitted">{{ $submitted ? 'yes' : 'no' }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->assertSeeIn('@submitted', 'no')
+            ->type('@input', 'hello')
+            ->pause(50)
+            // Value hasn't synced yet (blur hasn't fired)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            // Press Enter to submit the form from inside the input
+            ->waitForLivewire()->keys('@input', '{enter}')
+            // The value should have been synced before the submit payload was built
+            ->assertSeeIn('@submitted', 'yes')
+            ->assertSeeIn('@server', 'hello')
+        ;
+    }
+
+    function test_wire_model_change_syncs_value_on_form_submit_via_enter()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public $submitted = false;
+
+            public function submit()
+            {
+                $this->submitted = true;
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <form wire:submit="submit">
+                            <input dusk="input" type="text" wire:model.change="title" />
+                            <button dusk="submit" type="submit">Submit</button>
+                        </form>
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <span dusk="submitted">{{ $submitted ? 'yes' : 'no' }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->assertSeeIn('@submitted', 'no')
+            ->type('@input', 'hello')
+            ->pause(50)
+            // Value hasn't synced yet (change hasn't fired)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            // Press Enter to submit the form from inside the input
+            ->waitForLivewire()->keys('@input', '{enter}')
+            // The value should have been synced before the submit payload was built
+            ->assertSeeIn('@submitted', 'yes')
+            ->assertSeeIn('@server', 'hello')
+        ;
+    }
+
+    function test_wire_model_enter_syncs_value_on_form_submit_via_enter()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public $submitted = false;
+
+            public function submit()
+            {
+                $this->submitted = true;
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <form wire:submit="submit">
+                            <input dusk="input" type="text" wire:model.enter="title" />
+                            <button dusk="submit" type="submit">Submit</button>
+                        </form>
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <span dusk="submitted">{{ $submitted ? 'yes' : 'no' }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->assertSeeIn('@submitted', 'no')
+            ->type('@input', 'hello')
+            ->pause(50)
+            // Value hasn't synced yet (enter hasn't been pressed)
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            // Press Enter to submit the form from inside the input
+            ->waitForLivewire()->keys('@input', '{enter}')
+            // The value should have been synced before the submit payload was built
+            ->assertSeeIn('@submitted', 'yes')
+            ->assertSeeIn('@server', 'hello')
+        ;
+    }
+
+    function test_wire_model_with_large_numeric_key_does_not_create_massive_array()
+    {
+        Livewire::visit(new class extends Component {
+            public array $data = [];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="checkbox" type="checkbox" wire:model.live="data.1000">
+
+                        <span dusk="output">{{ json_encode($data) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '[]')
+            ->waitForLivewire()->check('@checkbox')
+            // Should be {"1000":true} not an array with 1000 null values
+            ->assertSeeIn('@output', '{"1000":true}')
+        ;
+    }
+
+    function test_wire_model_with_nested_numeric_key_does_not_create_massive_array()
+    {
+        Livewire::visit(new class extends Component {
+            public array $items = [];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live="items.500.name">
+
+                        <span dusk="output">{{ json_encode($items) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '[]')
+            ->waitForLivewire()->type('@input', 'test')
+            // Should be {"500":{"name":"test"}} not an array with 500 null values
+            ->assertSeeIn('@output', '{"500":{"name":"test"}}')
+        ;
+    }
+
+    function test_wire_model_with_sequential_array_still_works()
+    {
+        Livewire::visit(new class extends Component {
+            public array $items = ['first', 'second'];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live="items.1">
+
+                        <span dusk="output">{{ json_encode($items) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '["first","second"]')
+            ->waitForLivewire()->type('@input', 'updated')
+            // Sequential array should remain an array
+            ->assertSeeIn('@output', '["first","updated"]')
+        ;
+    }
+
+    function test_wire_model_sets_value_when_string_array_key_does_not_exist()
+    {
+        Livewire::visit(new class extends Component {
+            public array $items = [
+                [],
+                [],
+                ['name' => ''],
+                ['name' => ''],
+            ];
+
+            public function check()
+            {
+                //
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        @foreach($items as $index => $item)
+                            <div wire:key="{{ $index }}">
+                                <input dusk="input-{{ $index }}" type="text" wire:model="items.{{ $index }}.name">
+                            </div>
+                        @endforeach
+
+                        <button dusk="check" wire:click="check">Check</button>
+
+                        <span dusk="output">{{ json_encode($items) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->type('@input-0', 'Alice')
+            ->type('@input-1', 'Bob')
+            ->type('@input-2', 'Charlie')
+            ->type('@input-3', 'Dave')
+            ->waitForLivewire()->click('@check')
+            ->assertSeeIn('@output', '"Alice"')
+            ->assertSeeIn('@output', '"Bob"')
+            ->assertSeeIn('@output', '"Charlie"')
+            ->assertSeeIn('@output', '"Dave"')
+        ;
+    }
+
+    function test_wire_model_with_large_numeric_key_on_non_empty_array_preserves_data()
+    {
+        Livewire::visit(new class extends Component {
+            public array $data = ['a', 'b'];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="checkbox" type="checkbox" wire:model.live="data.1000">
+
+                        <span dusk="output">{{ json_encode($data) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '["a","b"]')
+            ->waitForLivewire()->check('@checkbox')
+            // Should preserve existing data and add the new key without creating massive array
+            ->assertSeeIn('@output', '{"0":"a","1":"b","1000":true}')
         ;
     }
 }

@@ -56,6 +56,41 @@ class StubsCommand extends Command
             file_get_contents(__DIR__.'/livewire.attribute.stub')
         );
 
+        file_put_contents(
+            $stubsPath.'/livewire.layout.stub',
+            file_get_contents(__DIR__.'/livewire.layout.stub')
+        );
+
+        file_put_contents(
+            $stubsPath.'/livewire-sfc.stub',
+            file_get_contents(__DIR__.'/livewire-sfc.stub')
+        );
+
+        file_put_contents(
+            $stubsPath.'/livewire-mfc-class.stub',
+            file_get_contents(__DIR__.'/livewire-mfc-class.stub')
+        );
+
+        file_put_contents(
+            $stubsPath.'/livewire-mfc-view.stub',
+            file_get_contents(__DIR__.'/livewire-mfc-view.stub')
+        );
+
+        file_put_contents(
+            $stubsPath.'/livewire-mfc-test.stub',
+            file_get_contents(__DIR__.'/livewire-mfc-test.stub')
+        );
+
+        file_put_contents(
+            $stubsPath.'/livewire-mfc-js.stub',
+            file_get_contents(__DIR__.'/livewire-mfc-js.stub')
+        );
+
+        file_put_contents(
+            $stubsPath.'/livewire-mfc-css.stub',
+            file_get_contents(__DIR__.'/livewire-mfc-css.stub')
+        );
+
         $this->info('Stubs published successfully.');
     }
 }

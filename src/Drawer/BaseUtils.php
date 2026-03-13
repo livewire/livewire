@@ -6,6 +6,11 @@ class BaseUtils
 {
     protected static $reflectionCache = [];
 
+    public static function flushReflectionCache()
+    {
+        static::$reflectionCache = [];
+    }
+
     static function isSyntheticTuple($payload) {
         return is_array($payload)
             && count($payload) === 2

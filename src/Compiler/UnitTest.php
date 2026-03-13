@@ -119,6 +119,43 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('{{ $message }}', $viewContents);
     }
 
+    public function test_wont_parse_nested_script_when_no_root_level_script_exists()
+    {
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-only-nested-script.blade.php');
+
+        $classContents = $parser->generateClassContents('view-path.blade.php');
+        $scriptContents = $parser->generateScriptContents();
+        $viewContents = $parser->generateViewContents();
+
+        $this->assertStringContainsString('new class extends Component', $classContents);
+
+        // No script should be extracted — the only script tag is nested inside the root element
+        $this->assertNull($scriptContents);
+
+        // The nested script should remain in the view portion
+        $this->assertStringContainsString("console.log('This should NOT be extracted - it is nested inside div');", $viewContents);
+        $this->assertStringContainsString('<div>', $viewContents);
+        $this->assertStringContainsString('{{ $message }}', $viewContents);
+    }
+
+    public function test_wont_extract_nested_only_style()
+    {
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-only-nested-style.blade.php');
+
+        $styleContents = $parser->generateStyleContents();
+        $viewContents = $parser->generateViewContents();
+
+        // No style should be extracted — the only style tag is nested inside the root element
+        $this->assertNull($styleContents);
+
+        // The nested style should remain in the view portion
+        $this->assertStringContainsString('.nested { color: red; }', $viewContents);
+    }
+
     public function test_wont_parse_scripts_inside_assets_or_script_directives()
     {
         $compiler = new Compiler(new CacheManager($this->cacheDir));

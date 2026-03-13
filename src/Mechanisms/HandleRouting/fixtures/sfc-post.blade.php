@@ -1,7 +1,7 @@
 <?php
 
 new class extends Livewire\Component {
-    public \Livewire\Features\SupportRouting\RoutingPost $post;
+    public \Livewire\Mechanisms\HandleRouting\RoutingPost $post;
 };
 ?>
 

@@ -107,7 +107,13 @@ export function whenTheBackOrForwardButtonIsClicked(
             let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
 
             handleHtml(snapshot.html, snapshot.url, snapshotCache.currentUrl, snapshotCache.currentKey)
+
+            snapshotCache.currentKey = alpine.snapshotIdx
+            snapshotCache.currentUrl = snapshot.url
         } else {
+            snapshotCache.currentKey = null
+            snapshotCache.currentUrl = null
+
             fallback(alpine.url)
         }
     })

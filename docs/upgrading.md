@@ -22,6 +22,18 @@ php artisan optimize:clear
 > [!info] View all changes on GitHub
 > For a complete overview of all code changes between v3 and v4, you can review the full diff on GitHub: [Compare 3.x to main →](https://github.com/livewire/livewire/compare/3.x...main)
 
+## Upgrading to v4.1 from v4.0
+
+### `wire:model` modifier behavior change
+
+Modifiers like `.blur` and `.change` now control when client-side state syncs, not just network timing. If you're using these modifiers and want the previous behavior, add `.live` before them (e.g., `wire:model.live.blur`).
+
+[See full details below →](#wiremodel-modifiers-now-control-client-side-sync-timing)
+
+---
+
+The following changes apply when upgrading from v3 to v4.
+
 ## High-impact changes
 
 These changes are most likely to affect your application and should be reviewed carefully.
@@ -299,6 +311,35 @@ This change adds support for passing slots when mounting components and generall
 ## Low-impact changes
 
 These changes only affect applications using advanced features or customization.
+
+### Livewire Asset and Endpoint URL Changes
+
+All Livewire URLs now include a unique hash derived from your `APP_KEY`. The prefix changed from `/livewire/` to `/livewire-{hash}/`:
+
+```
+# v3                          # v4
+/livewire/update        →     /livewire-{hash}/update
+/livewire/upload-file   →     /livewire-{hash}/upload-file
+/livewire/livewire.js   →     /livewire-{hash}/livewire.js
+```
+
+If your firewall rules, CDN config, or middleware reference `/livewire/` paths, update them to account for the new prefix.
+
+If you're using `setUpdateRoute`, use the `$path` parameter to preserve the hash-based endpoint:
+
+```php
+// Before (v3)
+Livewire::setUpdateRoute(function ($handle) {
+    return Route::post('/livewire/update', $handle);
+});
+
+// After (v4)
+Livewire::setUpdateRoute(function ($handle, $path) {
+    return Route::post($path, $handle);
+});
+```
+
+[Learn more about customizing Livewire's endpoints →](/docs/4.x/installation#customizing-livewires-update-endpoint)
 
 ### JavaScript deprecations
 

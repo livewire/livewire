@@ -55,6 +55,54 @@ class SecurityPolicyUnitTest extends \Tests\TestCase
         SecurityPolicy::validateClass(\DateTimeImmutable::class);
     }
 
+    public function test_rejects_broadcast_event_class()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('is not allowed to be instantiated');
+
+        SecurityPolicy::validateClass(\Illuminate\Broadcasting\BroadcastEvent::class);
+    }
+
+    public function test_rejects_queue_job_class()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('is not allowed to be instantiated');
+
+        SecurityPolicy::validateClass(\Illuminate\Queue\Jobs\Job::class);
+    }
+
+    public function test_rejects_mailable_class()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('is not allowed to be instantiated');
+
+        SecurityPolicy::validateClass(\Illuminate\Mail\Mailable::class);
+    }
+
+    public function test_rejects_guzzle_fn_stream_class()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('is not allowed to be instantiated');
+
+        SecurityPolicy::validateClass('GuzzleHttp\Psr7\FnStream');
+    }
+
+    public function test_rejects_flysystem_sharded_prefix_url_generator_class()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('is not allowed to be instantiated');
+
+        SecurityPolicy::validateClass('League\Flysystem\UrlGeneration\ShardedPrefixPublicUrlGenerator');
+    }
+
+    public function test_rejects_laravel_prompts_terminal_class()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('is not allowed to be instantiated');
+
+        SecurityPolicy::validateClass('Laravel\Prompts\Terminal');
+    }
+
     public function test_get_denied_classes_returns_list()
     {
         $denied = SecurityPolicy::getDeniedClasses();
@@ -62,5 +110,11 @@ class SecurityPolicyUnitTest extends \Tests\TestCase
         $this->assertIsArray($denied);
         $this->assertContains('Illuminate\Console\Command', $denied);
         $this->assertContains('Symfony\Component\Process\Process', $denied);
+        $this->assertContains('Illuminate\Broadcasting\BroadcastEvent', $denied);
+        $this->assertContains('Illuminate\Queue\Jobs\Job', $denied);
+        $this->assertContains('Illuminate\Mail\Mailable', $denied);
+        $this->assertContains('GuzzleHttp\Psr7\FnStream', $denied);
+        $this->assertContains('League\Flysystem\UrlGeneration\ShardedPrefixPublicUrlGenerator', $denied);
+        $this->assertContains('Laravel\Prompts\Terminal', $denied);
     }
 }

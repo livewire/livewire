@@ -186,6 +186,39 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_json_method_rejects_promise_on_non_validation_exception()
+    {
+        Livewire::visit(new class extends Component {
+            public $status = '';
+            public $body = '';
+
+            #[Json]
+            public function forbidden()
+            {
+                abort(403);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button dusk="call" @click="$wire.forbidden().catch(e => { $wire.status = String(e.status); $wire.body = 'rejected' })">Call</button>
+
+                    <span dusk="status" wire:text="status"></span>
+                    <span dusk="body" wire:text="body"></span>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->click('@call')
+        ->waitForTextIn('@body', 'rejected')
+        ->assertSeeIn('@status', '403')
+        ->assertSeeIn('@body', 'rejected')
+        ->assertMissing('#livewire-error')
+        ;
+    }
+
     public function test_json_method_with_try_catch_pattern()
     {
         Livewire::visit(new class extends Component {

@@ -123,4 +123,120 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame($largeNumber, $component->instance()->filters['id']);
         $this->assertSame('active', $component->instance()->filters['status']);
     }
+
+    function test_scientific_notation_strings_are_preserved_from_query_string()
+    {
+        $component = Livewire::withQueryParams([
+            'filter' => '123456e7890',
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string $filter = '';
+        });
+
+        $this->assertSame('123456e7890', $component->instance()->filter);
+    }
+
+    function test_negative_scientific_notation_strings_are_preserved_from_query_string()
+    {
+        $component = Livewire::withQueryParams([
+            'filter' => '-123456e7890',
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string $filter = '';
+        });
+
+        $this->assertSame('-123456e7890', $component->instance()->filter);
+    }
+
+    function test_small_scientific_notation_values_still_decode_correctly()
+    {
+        $component = Livewire::withQueryParams([
+            'value' => '1e2',
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public $value;
+        });
+
+        // Small scientific notation values are valid JSON numbers
+        // and should decode normally (1e2 = 100.0)...
+        $this->assertSame(100.0, $component->instance()->value);
+    }
+
+    function test_array_value_for_string_property_is_silently_ignored()
+    {
+        $component = Livewire::withQueryParams([
+            'search' => ['fake'],
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string $search = '';
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame('', $component->instance()->search);
+    }
+
+    function test_array_value_for_int_property_is_silently_ignored()
+    {
+        $component = Livewire::withQueryParams([
+            'page' => ['fake'],
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public int $page = 1;
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame(1, $component->instance()->page);
+    }
+
+    function test_array_value_for_union_typed_property_without_array_is_silently_ignored()
+    {
+        $component = Livewire::withQueryParams([
+            'test' => ['fake'],
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string|int $test = '';
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame('', $component->instance()->test);
+    }
+
+    function test_array_value_for_array_typed_property_is_allowed()
+    {
+        $component = Livewire::withQueryParams([
+            'filters' => ['status' => 'active'],
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public array $filters = [];
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame(['status' => 'active'], $component->instance()->filters);
+    }
+
+    function test_array_value_for_union_typed_property_with_array_is_allowed()
+    {
+        $component = Livewire::withQueryParams([
+            'test' => ['foo'],
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string|array $test = '';
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame(['foo'], $component->instance()->test);
+    }
+
+    function test_valid_string_value_for_string_property_still_works()
+    {
+        $component = Livewire::withQueryParams([
+            'search' => 'hello',
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string $search = '';
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame('hello', $component->instance()->search);
+    }
 }

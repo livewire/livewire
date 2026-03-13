@@ -125,4 +125,57 @@ class BrowserTest extends \Tests\BrowserTestCase
             })
             ;
     }
+
+    public function test_can_clear_errors_by_field_and_clear_all()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                #[Validate(['min:5'])]
+                public $name;
+
+                #[Validate(['min:5'])]
+                public $email;
+
+                public function save() {
+                    $this->validate();
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="save" dusk="save">Save</button>
+                    <button x-on:click="$wire.$errors.clear()" dusk="clear-all">Clear All</button>
+                    <button x-on:click="$wire.$errors.clear('name')" dusk="clear-name">Clear Name</button>
+
+                    <span dusk="has-any" x-text="$wire.$errors.any()"></span>
+                    <span dusk="has-name" x-text="$wire.$errors.has('name')"></span>
+                    <span dusk="has-email" x-text="$wire.$errors.has('email')"></span>
+                </div>
+                HTML; }
+            }
+        ])
+            // Trigger validation errors...
+            ->waitForLivewire()->click('@save')
+            ->assertSeeIn('@has-any', 'true')
+            ->assertSeeIn('@has-name', 'true')
+            ->assertSeeIn('@has-email', 'true')
+
+            // Clear only the "name" field...
+            ->click('@clear-name')
+            ->pause(100)
+            ->assertSeeIn('@has-any', 'true')
+            ->assertSeeIn('@has-name', 'false')
+            ->assertSeeIn('@has-email', 'true')
+
+            // Trigger errors again...
+            ->waitForLivewire()->click('@save')
+            ->assertSeeIn('@has-any', 'true')
+
+            // Clear all errors...
+            ->click('@clear-all')
+            ->pause(100)
+            ->assertSeeIn('@has-any', 'false')
+            ->assertSeeIn('@has-name', 'false')
+            ->assertSeeIn('@has-email', 'false')
+            ;
+    }
 }

@@ -101,7 +101,23 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
 
     let transitionOptions = component.effects.transition || {}
 
-    await transitionDomMutation(fromContainer, toContainer, () => {
+    // Check if the island's own content has [wire:transition] elements.
+    // Without this, the parent element (which contains everything) would be
+    // passed to transitionDomMutation, causing it to find [wire:transition]
+    // elements outside the island and trigger spurious view transitions...
+    let islandHasTransition = false
+    let node = startNode.nextSibling
+    while (node && node !== endNode) {
+        if (node.nodeType === 1 && (node.hasAttribute?.('wire:transition') || node.querySelector?.('[wire\\:transition]'))) {
+            islandHasTransition = true
+            break
+        }
+        node = node.nextSibling
+    }
+
+    let fromEl = islandHasTransition ? fromContainer : document.createElement('div')
+
+    await transitionDomMutation(fromEl, toContainer, () => {
         Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
     }, transitionOptions)
 
