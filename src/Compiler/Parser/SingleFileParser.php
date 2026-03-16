@@ -67,6 +67,9 @@ class SingleFileParser extends Parser
         // Remove @assets/@endassets blocks (let Livewire handle these normally)
         $viewContents = preg_replace('/@assets\s*.*?@endassets/s', '', $viewContents);
 
+        // Remove @verbatim/@endverbatim blocks (content inside is literal, not extractable)
+        $viewContents = preg_replace('/@verbatim\s*.*?@endverbatim/s', '', $viewContents);
+
         // Only match script tags at column 0 (root-level). Nested scripts are indented and should stay in the view.
         $pattern = '/(?:^|\n)(<script\b[^>]*>.*?<\/script>)/s';
         preg_match_all($pattern, $viewContents, $matches);
@@ -89,6 +92,9 @@ class SingleFileParser extends Parser
         // Get the view portion (everything after the PHP class)
         $viewContents = static::getViewPortion($contents);
 
+        // Remove @verbatim/@endverbatim blocks (content inside is literal, not extractable)
+        $viewContents = preg_replace('/@verbatim\s*.*?@endverbatim/s', '', $viewContents);
+
         // Only match style tags at column 0 (root-level), excluding <style global>
         $pattern = '/(?:^|\n)(<style\b(?![^>]*\bglobal\b)[^>]*>.*?<\/style>)/s';
         preg_match_all($pattern, $viewContents, $matches);
@@ -110,6 +116,9 @@ class SingleFileParser extends Parser
     {
         // Get the view portion (everything after the PHP class)
         $viewContents = static::getViewPortion($contents);
+
+        // Remove @verbatim/@endverbatim blocks (content inside is literal, not extractable)
+        $viewContents = preg_replace('/@verbatim\s*.*?@endverbatim/s', '', $viewContents);
 
         // Only match style tags with "global" attribute at column 0 (root-level)
         $pattern = '/(?:^|\n)(<style\b[^>]*\bglobal\b[^>]*>.*?<\/style>)/s';
