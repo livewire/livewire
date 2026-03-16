@@ -156,6 +156,22 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('.nested { color: red; }', $viewContents);
     }
 
+    public function test_wont_extract_style_inside_verbatim()
+    {
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-style-in-verbatim.blade.php');
+
+        $styleContents = $parser->generateStyleContents();
+        $viewContents = $parser->generateViewContents();
+
+        // No style should be extracted — the only style tag is inside a @verbatim block
+        $this->assertNull($styleContents);
+
+        // The style tag should remain in the view portion
+        $this->assertStringContainsString('.example { color: red; }', $viewContents);
+    }
+
     public function test_wont_parse_scripts_inside_assets_or_script_directives()
     {
         $compiler = new Compiler(new CacheManager($this->cacheDir));
