@@ -189,7 +189,8 @@ class CacheManager
 
     public function invalidateOpCache(string $sourcePath): void
     {
-        if (function_exists('opcache_invalidate')) {
+        // Prevent error in case if `opcache.restrict_api` directive is set
+        if (function_exists('opcache_invalidate') && strlen(ini_get('opcache.restrict_api')) < 1) {
             opcache_invalidate($sourcePath, true);
         }
     }
