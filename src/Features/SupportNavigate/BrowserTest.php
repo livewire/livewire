@@ -81,8 +81,15 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/parent', ParentComponent::class)->middleware('web');
             Route::get('/page-with-link-to-page-without-livewire', PageWithLinkAway::class);
 
-            Route::get('/nonce', fn () => self::renderNoncePage('First Nonce Page', 'ABCD1234'));
-            Route::get('/nonce2', fn () => self::renderNoncePage('Second Nonce Page', 'EFGH5678'));
+            Route::get('/nonce', fn () => self::renderNoncePage('First Nonce Page', 'ABCD1234'))
+                ->middleware('web');
+            Route::get('/nonce2', fn () => self::renderNoncePage('Second Nonce Page', 'EFGH5678'))
+                ->middleware('web');
+
+            Route::get('/csp-nonce', fn () => self::renderCspNoncePage('First CSP Page', 'NonceAAA111'))
+                ->middleware('web');
+            Route::get('/csp-nonce2', fn () => self::renderCspNoncePage('Second CSP Page', 'NonceBBB222', '/csp-nonce'))
+                ->middleware('web');
             Route::get('/page-without-livewire-component', fn () => Blade::render(<<<'HTML'
                 <html>
                     <head>
@@ -125,6 +132,30 @@ class BrowserTest extends \Tests\BrowserTestCase
                     </body>
                 </html>
             HTML, ['name' => $name, 'nonce' => $nonce]);
+    }
+
+    public static function renderCspNoncePage(string $name, string $nonce, string $linkTo = '/csp-nonce2'): string
+    {
+        $html = Blade::render(<<<'HTML'
+                <html>
+                    <head>
+                        <meta name="empty-layout" content>
+                        <style nonce="{{ $nonce }}">body { margin: 0 }</style>
+                    </head>
+                    <body>
+                        <div dusk="csp-page">{{ $name }}</div>
+                        <a href="{{ $linkTo }}" wire:navigate dusk="csp-link">navigate</a>
+                        @livewireScripts(['nonce' => $nonce])
+                    </body>
+                </html>
+            HTML, ['name' => $name, 'nonce' => $nonce, 'linkTo' => $linkTo]);
+
+        // Add a real CSP header enforcing the nonce. This is the key: each page
+        // has a different nonce, but the browser enforces the first page's CSP
+        // throughout wire:navigate SPA navigation.
+        return response($html)->withHeaders([
+            'Content-Security-Policy' => "script-src 'nonce-{$nonce}' 'unsafe-inline'; style-src 'nonce-{$nonce}' 'unsafe-inline'",
+        ]);
     }
 
     public function test_back_button_works_with_teleports()
@@ -415,6 +446,19 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForText('Second Nonce Page')
                 ->assertConsoleLogMissingWarning('Detected multiple instances of Livewire')
                 ->assertConsoleLogMissingWarning('Detected multiple instances of Alpine');
+        });
+    }
+
+    public function test_navigate_does_not_trigger_csp_violations_with_different_nonces(): void
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/csp-nonce')
+                ->assertSee('First CSP Page')
+                ->click('@csp-link')
+                ->waitForText('Second CSP Page')
+                ->assertConsoleLogHasNoErrors()
+                ->assertConsoleLogMissingWarning('Content Security Policy');
         });
     }
 

@@ -6,7 +6,18 @@ let attributesExemptFromScriptTagHashing = [
     'aria-hidden',
 ]
 
+// Capture the current page's CSP nonce on first load, before the browser
+// clears it from the DOM. This nonce must be used for all subsequent
+// wire:navigate page swaps since the browser keeps enforcing the original
+// page's CSP header throughout SPA navigation.
+let currentPageNonce = captureInitialNonce()
+
 export function swapCurrentPageWithNewHtml(html, andThen) {
+    // Replace nonces in the raw HTML string before parsing so that
+    // DOMParser.parseFromString() doesn't trigger CSP violations.
+    // The browser enforces CSP even on inert parsed documents.
+    html = replaceNoncesInHtml(html)
+
     let newDocument = (new DOMParser()).parseFromString(html, "text/html")
     let newHtml = newDocument.documentElement
     let newBody = document.adoptNode(newDocument.body)
@@ -78,7 +89,12 @@ function replaceHtmlAttributes(newHtmlElement) {
 
 function mergeNewHead(newHead) {
     let children = Array.from(document.head.children)
-    let headChildrenHtmlLookup = children.map(i => i.outerHTML)
+
+    // Use nonce-stripped outerHTML for comparisons so that assets with
+    // different CSP nonces (which change on every request) are still
+    // recognised as already-loaded and not re-injected. Re-injecting
+    // them with the wrong nonce triggers CSP violations.
+    let headChildrenHtmlLookup = children.map(i => ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing))
 
     // Only add scripts and styles that aren't already loaded on the page.
     let garbageCollector = document.createDocumentFragment()
@@ -89,7 +105,7 @@ function mergeNewHead(newHead) {
 
     for (let child of Array.from(newHead.children)) {
         if (isAsset(child)) {
-            if (! headChildrenHtmlLookup.includes(child.outerHTML)) {
+            if (! headChildrenHtmlLookup.includes(ignoreAttributes(child.outerHTML, attributesExemptFromScriptTagHashing))) {
                 if (isTracked(child)) {
                     if (ifTheQueryStringChangedSinceLastRequest(child, children)) {
                         setTimeout(() => window.location.reload())
@@ -169,7 +185,13 @@ function cloneScriptTag(el) {
     script.async = el.async
 
     for (let attr of el.attributes) {
-        script.setAttribute(attr.name, attr.value)
+        if (attr.name === 'nonce') {
+            // Use the .nonce IDL property so dynamically inserted scripts
+            // pass CSP nonce checks (setAttribute won't work)...
+            script.nonce = currentPageNonce || el.nonce
+        } else {
+            script.setAttribute(attr.name, attr.value)
+        }
     }
 
     return script
@@ -231,4 +253,37 @@ function ignoreAttributes(subject, attributesToRemove) {
     result = result.replaceAll(' ', '')
 
     return result.trim()
+}
+
+function replaceNoncesInHtml(html) {
+    if (! currentPageNonce) return html
+
+    // Extract the nonce from the fetched HTML (the new page's nonce)...
+    let match = html.match(/nonce="([^"]+)"/)
+
+    if (! match) return html
+
+    let newNonce = match[1]
+
+    // Already the same nonce (shouldn't happen, but guard against it)...
+    if (newNonce === currentPageNonce) return html
+
+    // Replace all occurrences of the new nonce with the current page's nonce
+    // so that DOMParser and subsequent DOM insertion pass CSP checks...
+    return html.replaceAll(newNonce, currentPageNonce)
+}
+
+function captureInitialNonce() {
+    // Capture the CSP nonce on first load while it's still available.
+    // Browsers clear the nonce content attribute after rendering, but the
+    // .nonce IDL property preserves the value...
+    if (window.livewireScriptConfig && window.livewireScriptConfig.nonce) {
+        return window.livewireScriptConfig.nonce
+    }
+
+    let el = document.head.querySelector('script[nonce], style[nonce]')
+
+    if (el) return el.nonce || el.getAttribute('nonce')
+
+    return null
 }
