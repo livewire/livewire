@@ -10,6 +10,7 @@ use function Livewire\trigger;
 class Checksum {
     protected static $maxFailures = 10;
     protected static $decaySeconds = 600; // 10 minutes
+    protected static $rateLimitingEnabledForTesting = false;
 
     static function verify($snapshot) {
         // Check if this IP is already blocked due to too many failures
@@ -30,8 +31,20 @@ class Checksum {
         }
     }
 
+    static function enableRateLimitingForTesting()
+    {
+        static::$rateLimitingEnabledForTesting = true;
+    }
+
+    static function disableRateLimitingForTesting()
+    {
+        static::$rateLimitingEnabledForTesting = false;
+    }
+
     protected static function enforceRateLimit()
     {
+        if (app()->runningUnitTests() && ! static::$rateLimitingEnabledForTesting) return;
+
         $request = request();
 
         // Only check the rate limit once per request (not once per component)
@@ -55,6 +68,8 @@ class Checksum {
 
     protected static function recordFailure()
     {
+        if (app()->runningUnitTests() && ! static::$rateLimitingEnabledForTesting) return;
+
         RateLimiter::hit(static::rateLimitKey(), static::$decaySeconds);
     }
 
