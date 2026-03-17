@@ -335,7 +335,9 @@ let parentMemo = new WeakMap
 wireProperty('$parent', component => {
     if (parentMemo.has(component)) return parentMemo.get(component).$wire
 
-    let parent = component.parent
+    let parent = findComponentByEl(component.el.parentElement, false)
+
+    if (! parent) return
 
     parentMemo.set(component, parent)
 
