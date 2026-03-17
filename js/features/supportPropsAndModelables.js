@@ -68,6 +68,8 @@ function findPoolWithComponent(pools, component) {
 
 function getDeepChildrenWithBindings(component, callback) {
     getDeepChildren(component, child => {
+        if (child.isLazy && ! child.hasBeenLazyLoaded) return
+
         if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
             callback(child)
         }

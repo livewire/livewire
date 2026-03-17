@@ -152,6 +152,14 @@ export class Component {
         return closestComponent(this.el.parentElement)
     }
 
+    get isLazy() {
+        return this.snapshot.memo.lazyLoaded !== undefined
+    }
+
+    get hasBeenLazyLoaded() {
+        return this.snapshot.memo.lazyLoaded === true
+    }
+
     inscribeSnapshotAndEffectsOnElement() {
         let el = this.el
 
