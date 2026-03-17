@@ -112,7 +112,18 @@ directive('model', ({ el, directive, component, cleanup }) => {
     bindings['x-model' + xModelTail] = () => {
         return {
             get() {
-                return dataGet(component.$wire, expression)
+                let value = dataGet(component.$wire, expression)
+
+                // Return a deep clone for non-primitive values so that Alpine's
+                // bindInputValue equality check (el.value === value) doesn't
+                // short-circuit. Without this, surgical reactive updates from
+                // mergeNewSnapshot (e.g., data.0.revenue) go undetected because
+                // the top-level reference never changes...
+                if (typeof value === 'object' && value !== null) {
+                    return JSON.parse(JSON.stringify(value))
+                }
+
+                return value
             },
             set(value) {
                 dataSet(component.$wire, expression, value)

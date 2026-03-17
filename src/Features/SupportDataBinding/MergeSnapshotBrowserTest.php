@@ -246,6 +246,45 @@ class MergeSnapshotBrowserTest extends BrowserTestCase
             ->assertSeeIn('@title-ephemeral', 'TYPED DURING REQUEST');
     }
 
+    function test_wire_model_on_custom_element_updates_when_nested_array_data_changes()
+    {
+        Livewire::visit(new class extends Component {
+            public $data = [
+                ['label' => 'Mon', 'value' => 100],
+                ['label' => 'Tue', 'value' => 200],
+            ];
+
+            public function change()
+            {
+                $this->data[0]['value'] = 999;
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <script>
+                            if (! customElements.get('test-value-display')) {
+                                customElements.define('test-value-display', class extends HTMLElement {
+                                    get value() { return this._value }
+                                    set value(v) {
+                                        this._value = v
+                                        this.textContent = JSON.stringify(v)
+                                    }
+                                })
+                            }
+                        </script>
+                        <test-value-display wire:model="data" dusk="display"></test-value-display>
+                        <button dusk="change" wire:click="change">Change</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@display', '"value":100')
+            ->waitForLivewire()->click('@change')
+            ->assertSeeIn('@display', '"value":999');
+    }
+
     function test_nested_array_removals_at_different_levels()
     {
         Livewire::visit(new class extends Component {
