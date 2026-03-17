@@ -36,6 +36,26 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($this->livewireComponentsPath('⚡foo.blade.php')));
     }
 
+    public function test_emoji_flag_false_overrides_config_emoji_enabled()
+    {
+        $this->app['config']->set('livewire.make_command.emoji', true);
+
+        Artisan::call('make:livewire', ['name' => 'foo', '--emoji' => 'false']);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('foo.blade.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('⚡foo.blade.php')));
+    }
+
+    public function test_emoji_flag_true_overrides_config_emoji_disabled()
+    {
+        $this->app['config']->set('livewire.make_command.emoji', false);
+
+        Artisan::call('make:livewire', ['name' => 'foo', '--emoji' => 'true']);
+
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo.blade.php')));
+        $this->assertFalse(File::exists($this->livewireComponentsPath('foo.blade.php')));
+    }
+
     public function test_single_file_component_with_sfc_flag()
     {
         Artisan::call('make:livewire', ['name' => 'foo', '--sfc' => true]);
