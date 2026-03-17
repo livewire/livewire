@@ -615,6 +615,16 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertSetStrict('colourCookie', 'blue')
             ->assertSetStrict('nameCookie', 'Taylor');
     }
+
+    function test_testing_does_not_create_dynamic_properties_on_test_response()
+    {
+        $this->withoutDeprecationHandling();
+
+        Livewire::test(HasMountArguments::class, ['name' => 'foo'])
+            ->assertSee('foo')
+            ->set('name', 'bar')
+            ->assertSee('bar');
+    }
 }
 
 class HasMountArguments extends Component
