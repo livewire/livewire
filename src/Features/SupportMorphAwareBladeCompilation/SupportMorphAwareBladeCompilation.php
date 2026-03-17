@@ -180,7 +180,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         if (static::$shouldInjectLoopMarkers && static::isLoop($found)) {
             $prefix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?>';
 
-            $suffix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?>';
+            $suffix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?>';
         }
 
         if ($prefix === '' && $suffix === '') {
