@@ -212,6 +212,8 @@ export class Component {
 
     getDeepChildrenWithBindings(callback) {
         this.getDeepChildren(child => {
+            if (child.isLazy && ! child.hasBeenLazyLoaded) return
+
             if (child.hasReactiveProps() || child.hasWireModelableBindings()) {
                 callback(child)
             }
