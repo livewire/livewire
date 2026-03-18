@@ -1,4 +1,5 @@
 import { on } from '@/hooks'
+import { componentsThatAreLazy } from './supportLazyLoading'
 
 // Ensure that all child components with reactive props (even deeply nested)
 // are included in the network request...
@@ -68,6 +69,8 @@ function findPoolWithComponent(pools, component) {
 
 function getDeepChildrenWithBindings(component, callback) {
     getDeepChildren(component, child => {
+        if (componentsThatAreLazy.has(child)) return
+
         if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
             callback(child)
         }

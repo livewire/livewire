@@ -10297,6 +10297,32 @@ function markReadOnly(el) {
   return undo;
 }
 
+// js/features/supportLazyLoading.js
+var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
+var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
+on("component.init", ({ component }) => {
+  let memo = component.snapshot.memo;
+  if (memo.lazyLoaded === void 0)
+    return;
+  componentsThatAreLazy.add(component);
+  if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
+    componentsThatWantToBeBundled.add(component);
+  }
+});
+on("commit.pooling", ({ commits }) => {
+  commits.forEach((commit) => {
+    if (!componentsThatAreLazy.has(commit.component))
+      return;
+    if (componentsThatWantToBeBundled.has(commit.component)) {
+      commit.isolate = false;
+      componentsThatWantToBeBundled.delete(commit.component);
+    } else {
+      commit.isolate = true;
+    }
+    componentsThatAreLazy.delete(commit.component);
+  });
+});
+
 // js/features/supportPropsAndModelables.js
 on("commit.pooling", ({ commits }) => {
   commits.forEach((commit) => {
@@ -10345,6 +10371,8 @@ function findPoolWithComponent(pools, component) {
 }
 function getDeepChildrenWithBindings(component, callback) {
   getDeepChildren(component, (child) => {
+    if (componentsThatAreLazy.has(child))
+      return;
     if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
       callback(child);
     }
@@ -10402,32 +10430,6 @@ function base64toBlob(b64Data, contentType = "", sliceSize = 512) {
   }
   return new Blob(byteArrays, { type: contentType });
 }
-
-// js/features/supportLazyLoading.js
-var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
-var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
-on("component.init", ({ component }) => {
-  let memo = component.snapshot.memo;
-  if (memo.lazyLoaded === void 0)
-    return;
-  componentsThatAreLazy.add(component);
-  if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-    componentsThatWantToBeBundled.add(component);
-  }
-});
-on("commit.pooling", ({ commits }) => {
-  commits.forEach((commit) => {
-    if (!componentsThatAreLazy.has(commit.component))
-      return;
-    if (componentsThatWantToBeBundled.has(commit.component)) {
-      commit.isolate = false;
-      componentsThatWantToBeBundled.delete(commit.component);
-    } else {
-      commit.isolate = true;
-    }
-    componentsThatAreLazy.delete(commit.component);
-  });
-});
 
 // js/features/supportQueryString.js
 var import_alpinejs10 = __toESM(require_module_cjs());

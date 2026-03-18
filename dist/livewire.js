@@ -9426,6 +9426,32 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return undo;
   }
 
+  // js/features/supportLazyLoading.js
+  var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
+  on2("component.init", ({ component }) => {
+    let memo = component.snapshot.memo;
+    if (memo.lazyLoaded === void 0)
+      return;
+    componentsThatAreLazy.add(component);
+    if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
+      componentsThatWantToBeBundled.add(component);
+    }
+  });
+  on2("commit.pooling", ({ commits }) => {
+    commits.forEach((commit) => {
+      if (!componentsThatAreLazy.has(commit.component))
+        return;
+      if (componentsThatWantToBeBundled.has(commit.component)) {
+        commit.isolate = false;
+        componentsThatWantToBeBundled.delete(commit.component);
+      } else {
+        commit.isolate = true;
+      }
+      componentsThatAreLazy.delete(commit.component);
+    });
+  });
+
   // js/features/supportPropsAndModelables.js
   on2("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
@@ -9474,6 +9500,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function getDeepChildrenWithBindings(component, callback) {
     getDeepChildren(component, (child) => {
+      if (componentsThatAreLazy.has(child))
+        return;
       if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
         callback(child);
       }
@@ -9531,32 +9559,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return new Blob(byteArrays, { type: contentType });
   }
-
-  // js/features/supportLazyLoading.js
-  var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
-  var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
-  on2("component.init", ({ component }) => {
-    let memo = component.snapshot.memo;
-    if (memo.lazyLoaded === void 0)
-      return;
-    componentsThatAreLazy.add(component);
-    if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-      componentsThatWantToBeBundled.add(component);
-    }
-  });
-  on2("commit.pooling", ({ commits }) => {
-    commits.forEach((commit) => {
-      if (!componentsThatAreLazy.has(commit.component))
-        return;
-      if (componentsThatWantToBeBundled.has(commit.component)) {
-        commit.isolate = false;
-        componentsThatWantToBeBundled.delete(commit.component);
-      } else {
-        commit.isolate = true;
-      }
-      componentsThatAreLazy.delete(commit.component);
-    });
-  });
 
   // js/features/supportQueryString.js
   on2("effect", ({ component, effects, cleanup: cleanup2 }) => {

@@ -2,7 +2,7 @@ import { on } from '@/hooks'
 
 let componentsThatWantToBeBundled = new WeakSet
 
-let componentsThatAreLazy = new WeakSet
+export let componentsThatAreLazy = new WeakSet
 
 on('component.init', ({ component }) => {
     let memo = component.snapshot.memo
