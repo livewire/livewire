@@ -560,6 +560,51 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertReturned(fn ($data) => $data === 'bar');
     }
 
+    function test_livewire_test_does_not_emit_dynamic_original_deprecation_on_initial_render()
+    {
+        $messages = $this->captureDynamicOriginalDeprecations(function () {
+            Livewire::test(new class extends TestComponent {});
+        });
+
+        $this->assertCount(0, $messages, implode("\n", $messages));
+    }
+
+    function test_livewire_test_does_not_emit_dynamic_original_deprecation_on_subsequent_render()
+    {
+        $messages = $this->captureDynamicOriginalDeprecations(function () {
+            Livewire::test(new class extends TestComponent {})
+                ->call('$refresh');
+        });
+
+        $this->assertCount(0, $messages, implode("\n", $messages));
+    }
+
+    protected function captureDynamicOriginalDeprecations(callable $callback): array
+    {
+        $messages = [];
+
+        set_error_handler(function ($severity, $message, $file, $line) use (&$messages) {
+            if ($severity !== E_DEPRECATED) return false;
+
+            if (! str_contains($message, 'Creation of dynamic property Illuminate\\Testing\\TestResponse::$original is deprecated')) {
+                return false;
+            }
+
+            $messages[] = $message.' at '.$file.':'.$line;
+
+            // Consume this known deprecation so the test can assert on it explicitly.
+            return true;
+        });
+
+        try {
+            $callback();
+        } finally {
+            restore_error_handler();
+        }
+
+        return $messages;
+    }
+
     public function test_can_set_cookies_for_use_with_testing()
     {
         // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
