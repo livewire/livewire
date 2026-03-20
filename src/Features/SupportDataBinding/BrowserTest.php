@@ -120,6 +120,39 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    function test_dollar_dirty_does_not_clear_after_failed_network_request()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model="title" />
+
+                        <button dusk="commit" type="button" wire:click="$commit">Commit</button>
+
+                        <div x-show="$wire.$dirty()" dusk="dirty-indicator">Component is dirty</div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertNotVisible('@dirty-indicator')
+            ->type('@input', 'Hello')
+            ->pause(50)
+            ->assertVisible('@dirty-indicator')
+            ->tap(function ($browser) {
+                $browser->script(<<<'JS'
+                    window.fetch = () => Promise.reject(new Error('Simulated network failure'));
+                JS);
+            })
+            ->waitForLivewire()->click('@commit')
+            ->pause(50)
+            ->assertVisible('@dirty-indicator')
+        ;
+}
+
     function test_can_update_bound_value_from_lifecyle_hook()
     {
         Livewire::visit(new class extends Component {
