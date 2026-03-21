@@ -24,9 +24,15 @@ tests/         → A smattering of PHP tests however, most tests are inside thei
 
 # Development Workflow
 
+## Setup
+
+Run `composer setup` to install all dependencies (PHP, JS, ChromeDriver).
+
 ## Build JS assets
 
 Run `npm run build` to bundle the JS
+
+**IMPORTANT:** Do not commit `dist/` files. They are built in CI.
 
 # Code Patterns
 
