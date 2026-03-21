@@ -54,6 +54,11 @@
     }
   },
   "scripts": {
+    "setup": [
+      "@composer install",
+      "npm install",
+      "@php vendor/bin/dusk-updater detect --auto-update --no-interaction"
+    ],
     "test": "phpunit --configuration phpunit.xml.dist",
     "test:unit": "phpunit --configuration phpunit.xml.dist --testsuite Unit",
     "test:browser": "phpunit --configuration phpunit.xml.dist --testsuite Browser",
