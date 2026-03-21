@@ -53,6 +53,12 @@
       }
     }
   },
+  "scripts": {
+    "test": "phpunit --configuration phpunit.xml.dist",
+    "test:unit": "phpunit --configuration phpunit.xml.dist --testsuite Unit",
+    "test:browser": "phpunit --configuration phpunit.xml.dist --testsuite Browser",
+    "test:browser:headed": "DUSK_HEADLESS_DISABLED=true phpunit --configuration phpunit.xml.dist --testsuite Browser"
+  },
   "minimum-stability": "dev",
   "prefer-stable": true
 }
