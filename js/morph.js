@@ -77,6 +77,9 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement
     let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
 
+    let customEl = customElements.get(fromContainerTag)
+    fromContainerTag = customEl ? customEl.name : fromContainerTag
+
     let toContainer = document.createElement(fromContainerTag)
     toContainer.innerHTML = toHTML
     toContainer.__livewire = component
@@ -84,6 +87,9 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
     // Add the parent component reference to an outer wrapper if it exists...
     let parentElement = component.el.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
+
+    let customParentEl = customElements.get(parentElementTag)
+    parentElementTag = customParentEl ? customParentEl.name : parentElementTag
 
     let parentComponent
 

@@ -1018,4 +1018,89 @@ class BrowserTest extends BrowserTestCase
             ->assertDontSee('ENDISLAND')
             ;
     }
+
+    public function test_island_inside_custom_element_parent()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <script>
+                        class TestElement extends HTMLElement {
+                            constructor() { super(); this.setAttribute('data-initialized', ''); }
+                        }
+                        customElements.define('test-element', TestElement);
+
+                        window.__jsErrors = [];
+                        window.addEventListener('error', e => window.__jsErrors.push(e.message));
+                    </script>
+
+                    <test-element dusk="wrapper">
+                        @island(name: 'foo')<div dusk="island-content">Count: {{ $count }}</div>@endisland
+                    </test-element>
+
+                    <button type="button" wire:click="increment" dusk="increment" wire:island="foo">Increment</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-content', 'Count: 0')
+            ->tap(fn ($b) => $b->script('window.__jsErrors = []'))
+            ->waitForLivewire()->click('@increment')
+            ->assertSeeIn('@island-content', 'Count: 1')
+            ->assertScript('window.__jsErrors.length', 0)
+            ;
+    }
+
+    public function test_append_and_prepend_islands_inside_custom_element_parent()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <script>
+                        class TestElement2 extends HTMLElement {
+                            constructor() { super(); this.setAttribute('data-initialized', ''); }
+                        }
+                        customElements.define('test-element-2', TestElement2);
+
+                        window.__jsErrors = [];
+                        window.addEventListener('error', e => window.__jsErrors.push(e.message));
+                    </script>
+
+                    <test-element-2 dusk="wrapper">
+                        @island(name: 'foo')<div>Count: {{ $count }}</div>@endisland
+                    </test-element-2>
+
+                    <button type="button" wire:click="increment" dusk="append" wire:island.append="foo">Append</button>
+                    <button type="button" wire:click="increment" dusk="prepend" wire:island.prepend="foo">Prepend</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSourceHas('<div>Count: 0</div>')
+            ->tap(fn ($b) => $b->script('window.__jsErrors = []'))
+            ->waitForLivewire()->click('@append')
+            ->assertSourceHas('<div>Count: 0</div><div>Count: 1</div>')
+            ->assertScript('window.__jsErrors.length', 0)
+            ->tap(fn ($b) => $b->script('window.__jsErrors = []'))
+            ->waitForLivewire()->click('@prepend')
+            ->assertSourceHas('<div>Count: 2</div><div>Count: 0</div><div>Count: 1</div>')
+            ->assertScript('window.__jsErrors.length', 0)
+            ;
+    }
 }

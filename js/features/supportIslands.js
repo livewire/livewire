@@ -89,6 +89,9 @@ export async function renderIsland(component, islandHtml) {
     let parentElement = fragment.startMarkerNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
 
+    let customElement = customElements.get(parentElementTag)
+    parentElementTag = customElement ? customElement.name : parentElementTag
+
     let mode = incomingMetadata.mode || 'morph'
 
     if (mode === 'morph') {
