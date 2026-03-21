@@ -7,19 +7,21 @@ export let wireNavigateSelectors = [
     '[wire\\:navigate\\.preserve-scroll]',
     '[wire\\:navigate\\.preserve-scroll\\.hover]',
     '[wire\\:navigate\\.hover\\.preserve-scroll]',
+    '[wire\\:navigate\\.transition]',
+    '[wire\\:navigate\\.hover\\.transition]',
+    '[wire\\:navigate\\.transition\\.hover]',
+    '[wire\\:navigate\\.preserve-scroll\\.transition]',
+    '[wire\\:navigate\\.transition\\.preserve-scroll]',
+    '[wire\\:navigate\\.hover\\.preserve-scroll\\.transition]',
+    '[wire\\:navigate\\.hover\\.transition\\.preserve-scroll]',
+    '[wire\\:navigate\\.preserve-scroll\\.hover\\.transition]',
+    '[wire\\:navigate\\.preserve-scroll\\.transition\\.hover]',
+    '[wire\\:navigate\\.transition\\.hover\\.preserve-scroll]',
+    '[wire\\:navigate\\.transition\\.preserve-scroll\\.hover]',
 ]
 
 // Combined selector for querying all wire:navigate elements
 export let wireNavigateSelector = wireNavigateSelectors.join(', ')
-
-// Attribute to Alpine directive mapping
-let attributeMap = {
-    'wire:navigate': 'x-navigate',
-    'wire:navigate.hover': 'x-navigate.hover',
-    'wire:navigate.preserve-scroll': 'x-navigate.preserve-scroll',
-    'wire:navigate.preserve-scroll.hover': 'x-navigate.preserve-scroll.hover',
-    'wire:navigate.hover.preserve-scroll': 'x-navigate.hover.preserve-scroll',
-}
 
 // Register all selectors with Alpine
 wireNavigateSelectors.forEach(selector => {
@@ -28,13 +30,11 @@ wireNavigateSelectors.forEach(selector => {
 
 Alpine.interceptInit(
     Alpine.skipDuringClone(el => {
-        // Find which wire:navigate attribute this element has
-        for (let [wireAttr, alpineDirective] of Object.entries(attributeMap)) {
-            if (el.hasAttribute(wireAttr)) {
-                Alpine.bind(el, { [alpineDirective]: true })
-                break
-            }
-        }
+        let attr = Array.from(el.getAttributeNames()).find(a => a.startsWith('wire:navigate'))
+
+        if (! attr) return
+
+        Alpine.bind(el, { [attr.replace('wire:', 'x-')]: true })
     })
 )
 

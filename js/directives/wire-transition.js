@@ -22,70 +22,41 @@ function clearTransitionNames(root) {
     })
 }
 
-export async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
-    // Skip transitions entirely if requested...
-    if (options.skip) return callback()
-
-    // Only transition if there is a [wire:transition] element within either the from or to elements...
-    if (! fromEl.querySelector('[wire\\:transition]') && ! toEl.querySelector('[wire\\:transition]')) return callback()
-
-    // Check if View Transitions API is supported...
-    if (typeof document.startViewTransition !== 'function') {
-        return callback()
+let viewTransitionStyles = `
+    @media (prefers-reduced-motion: reduce) {
+        ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+            animation: none !important;
+        }
     }
 
-    // Skip entirely if a modal dialog is already open (transitions behind
-    // a dialog are invisible to the user and the ::view-transition pseudo-
-    // elements would paint above the dialog during animation)...
-    if (document.querySelector('dialog:modal')) return callback()
+    ::view-transition-old(root) {
+        animation: none !important;
+        opacity: 0 !important;
+    }
 
-    // Set transition names right before the transition starts (not permanently)...
-    setTransitionNames(fromEl)
+    ::view-transition-new(root) {
+        animation: none !important;
+        opacity: 1 !important;
+    }
+`
 
-    // Disable root transitions for the page...
+// Handles the view transition ceremony: CSS injection, try/catch for
+// Firefox compat, dialog skip observer, and cleanup...
+export function performViewTransition({ root, update, types }) {
+    setTransitionNames(root)
+
     let style = document.createElement('style')
-
-    style.textContent = `
-        @media (prefers-reduced-motion: reduce) {
-            ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
-                animation: none !important;
-            }
-        }
-
-        ::view-transition-old(root) {
-            animation: none !important;
-            opacity: 0 !important;
-        }
-
-        ::view-transition-new(root) {
-            animation: none !important;
-            opacity: 1 !important;
-        }
-    `
-
+    style.textContent = viewTransitionStyles
     document.head.appendChild(style)
 
-    let update = () => {
-        callback()
-
-        // After a morph, newly added wire:transition elements need their viewTransitionName
-        // set synchronously. Alpine's MutationObserver would normally handle this, but its
-        // internal queueMicrotask batching delays processing by one microtask hop — and the
-        // View Transitions API's "activate" step captures the new DOM state in between,
-        // before Alpine has a chance to initialize the directive...
-        setTransitionNames(fromEl)
-    }
-
-    let transitionConfig = { update }
-
-    // Add transition types if provided...
-    if (options.type) {
-        transitionConfig.types = [options.type]
+    let wrappedUpdate = () => {
+        update()
+        setTransitionNames(root)
     }
 
     let cleanup = () => {
         style.remove()
-        clearTransitionNames(fromEl)
+        clearTransitionNames(root)
     }
 
     // Watch for modal dialogs opening during the transition (e.g., via Alpine x-effect).
@@ -110,6 +81,12 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
         transition.finished.finally(() => observer.disconnect())
     }
 
+    let transitionConfig = { update: wrappedUpdate }
+
+    if (types) {
+        transitionConfig.types = types
+    }
+
     try {
         let transition = document.startViewTransition(transitionConfig)
 
@@ -117,15 +94,41 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
 
         transition.finished.finally(cleanup)
 
-        await transition.updateCallbackDone
+        return transition
     } catch (e) {
-        // Firefox 144+ supports View Transitions but only with a callback, not a config object (no transition types support)
-        let transition = document.startViewTransition(update)
+        // Firefox 144+ supports View Transitions but only with a callback, not a config object...
+        let transition = document.startViewTransition(wrappedUpdate)
 
         skipOnDialog(transition)
 
         transition.finished.finally(cleanup)
 
-        await transition.updateCallbackDone
+        return transition
     }
+}
+
+export async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
+    // Skip transitions entirely if requested...
+    if (options.skip) return callback()
+
+    // Only transition if there is a [wire:transition] element within either the from or to elements...
+    if (! fromEl.querySelector('[wire\\:transition]') && ! toEl.querySelector('[wire\\:transition]')) return callback()
+
+    // Check if View Transitions API is supported...
+    if (typeof document.startViewTransition !== 'function') {
+        return callback()
+    }
+
+    // Skip entirely if a modal dialog is already open (transitions behind
+    // a dialog are invisible to the user and the ::view-transition pseudo-
+    // elements would paint above the dialog during animation)...
+    if (document.querySelector('dialog:modal')) return callback()
+
+    let transition = performViewTransition({
+        root: fromEl,
+        update: callback,
+        types: options.type ? [options.type] : undefined,
+    })
+
+    await transition.updateCallbackDone
 }
