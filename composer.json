@@ -57,7 +57,8 @@
     "setup": [
       "@composer install",
       "npm install",
-      "@php vendor/bin/dusk-updater detect --auto-update --no-interaction"
+      "@php vendor/bin/dusk-updater detect --auto-update --no-interaction",
+      "npm run build"
     ],
     "test": "phpunit --configuration phpunit.xml.dist",
     "test:unit": "phpunit --configuration phpunit.xml.dist --testsuite Unit",
