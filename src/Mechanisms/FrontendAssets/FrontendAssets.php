@@ -245,7 +245,7 @@ class FrontendAssets extends Mechanism
             'uri' => url(app('livewire')->getUpdateUri()),
             'moduleUrl' => url(app('livewire')->getUriPrefix()),
             'progressBar' => $progressBar,
-            'nonce' => isset($options['nonce']) ? $options['nonce'] : '',
+            'nonce' => $options['nonce'] ?? Vite::cspNonce() ?? '',
         ]);
 
         return <<<HTML
