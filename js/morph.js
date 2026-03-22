@@ -65,7 +65,8 @@ export async function morph(component, el, html) {
 }
 
 export async function morphFragment(component, startNode, endNode, toHTML) {
-    let fromContainerTag = getTagName(startNode.parentElement)
+    let fromContainer = startNode.parentElement
+    let fromContainerTag = getTagName(fromContainer)
 
     let toContainer = document.createElement(fromContainerTag)
     toContainer.innerHTML = toHTML
