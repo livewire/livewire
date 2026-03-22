@@ -1036,13 +1036,13 @@ class BrowserTest extends BrowserTestCase
                         class TestElement extends HTMLElement {
                             constructor() { super(); this.setAttribute('data-initialized', ''); }
                         }
-                        customElements.define('test-element', TestElement);
+                        if (! customElements.get('test-element')) customElements.define('test-element', TestElement);
 
                         window.__jsErrors = [];
                         window.addEventListener('error', e => window.__jsErrors.push(e.message));
                     </script>
 
-                    <test-element dusk="wrapper">
+                    <test-element>
                         @island(name: 'foo')<div dusk="island-content">Count: {{ $count }}</div>@endisland
                     </test-element>
 
@@ -1073,18 +1073,18 @@ class BrowserTest extends BrowserTestCase
                 return <<<'HTML'
                 <div>
                     <script>
-                        class TestElement2 extends HTMLElement {
+                        class TestElement extends HTMLElement {
                             constructor() { super(); this.setAttribute('data-initialized', ''); }
                         }
-                        customElements.define('test-element-2', TestElement2);
+                        if (! customElements.get('test-element')) customElements.define('test-element', TestElement);
 
                         window.__jsErrors = [];
                         window.addEventListener('error', e => window.__jsErrors.push(e.message));
                     </script>
 
-                    <test-element-2 dusk="wrapper">
+                    <test-element>
                         @island(name: 'foo')<div>Count: {{ $count }}</div>@endisland
-                    </test-element-2>
+                    </test-element>
 
                     <button type="button" wire:click="increment" dusk="append" wire:island.append="foo">Append</button>
                     <button type="button" wire:click="increment" dusk="prepend" wire:island.prepend="foo">Prepend</button>
