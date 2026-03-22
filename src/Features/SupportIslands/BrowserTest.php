@@ -1033,10 +1033,12 @@ class BrowserTest extends BrowserTestCase
                 return <<<'HTML'
                 <div>
                     <script>
+                        window.__ceConstructorCount = 0;
+
                         class TestElement extends HTMLElement {
-                            constructor() { super(); this.setAttribute('data-initialized', ''); }
+                            constructor() { super(); window.__ceConstructorCount++; }
                         }
-                        
+
                         customElements.define('test-element', TestElement);
                     </script>
 
@@ -1050,8 +1052,10 @@ class BrowserTest extends BrowserTestCase
             }
         }])
             ->assertSeeIn('@island-content', 'Count: 0')
+            ->assertScript('window.__ceConstructorCount', 1)
             ->waitForLivewire()->click('@increment')
             ->assertSeeIn('@island-content', 'Count: 1')
+            ->assertScript('window.__ceConstructorCount', 1)
             ;
     }
 
@@ -1069,10 +1073,12 @@ class BrowserTest extends BrowserTestCase
                 return <<<'HTML'
                 <div>
                     <script>
+                        window.__ceConstructorCount = 0;
+
                         class TestElement extends HTMLElement {
-                            constructor() { super(); this.setAttribute('data-initialized', ''); }
+                            constructor() { super(); window.__ceConstructorCount++; }
                         }
-                        
+
                         customElements.define('test-element', TestElement);
                     </script>
 
@@ -1087,10 +1093,13 @@ class BrowserTest extends BrowserTestCase
             }
         }])
             ->assertSourceHas('<div>Count: 0</div>')
+            ->assertScript('window.__ceConstructorCount', 1)
             ->waitForLivewire()->click('@append')
             ->assertSourceHas('<div>Count: 0</div><div>Count: 1</div>')
+            ->assertScript('window.__ceConstructorCount', 1)
             ->waitForLivewire()->click('@prepend')
             ->assertSourceHas('<div>Count: 2</div><div>Count: 0</div><div>Count: 1</div>')
+            ->assertScript('window.__ceConstructorCount', 1)
             ;
     }
 }
