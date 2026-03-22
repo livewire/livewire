@@ -341,4 +341,38 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@output', 'updated')
         ;
     }
+
+    public function test_parent_alpine_scope_does_not_leak_into_child_wire_click()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function render() {
+                    return <<<'HTML'
+                        <div x-data="{ handleClick() { $el.querySelector('[dusk=output]').textContent = 'alpine' } }">
+                            <livewire:child />
+                        </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends \Livewire\Component {
+                public $result = '';
+
+                public function handleClick() {
+                    $this->result = 'livewire';
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                        <div x-data="{}">
+                            <button wire:click="handleClick" dusk="button">Click</button>
+                            <span dusk="output">{{ $result }}</span>
+                        </div>
+                    HTML;
+                }
+            },
+        ])
+        ->waitForLivewire()->click('@button')
+        ->assertSeeIn('@output', 'livewire')
+        ;
+    }
 }
