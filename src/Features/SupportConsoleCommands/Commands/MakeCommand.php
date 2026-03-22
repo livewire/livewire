@@ -134,6 +134,14 @@ class MakeCommand extends Command
         $this->files->put($paths['class'], $classContent);
         $this->files->put($paths['view'], $viewContent);
 
+        // Create test file if --test flag is present or configured in make_command.with.test
+        if ($this->option('test') || config('livewire.make_command.with.test')) {
+            $testPath = $this->getClassBasedComponentTestPath($name);
+            $this->ensureDirectoryExists(dirname($testPath));
+            $testContent = $this->buildClassBasedComponentTest($name);
+            $this->files->put($testPath, $testContent);
+        }
+
         $this->components->info(sprintf('Livewire component [%s] created successfully.', $paths['class']));
 
         return 0;
