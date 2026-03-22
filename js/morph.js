@@ -77,8 +77,8 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement
     let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
 
-    let customEl = customElements.get(fromContainerTag)
-    fromContainerTag = customEl ? customEl.name : fromContainerTag
+    let customElement = customElements.get(fromContainerTag)
+    fromContainerTag = customElement ? customElement.name : fromContainerTag
 
     let toContainer = document.createElement(fromContainerTag)
     toContainer.innerHTML = toHTML
@@ -88,8 +88,8 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
     let parentElement = component.el.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
 
-    let customParentEl = customElements.get(parentElementTag)
-    parentElementTag = customParentEl ? customParentEl.name : parentElementTag
+    let customElement = customElements.get(parentElementTag)
+    parentElementTag = customElement ? customElement.name : parentElementTag
 
     let parentComponent
 
