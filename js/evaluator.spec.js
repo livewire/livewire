@@ -80,4 +80,50 @@ describe('Contextualize expressions', () => {
         expect(contextualizeExpression("$set('foo', 'bar')", mockEl)).toBe('$wire.$set(\'foo\', \'bar\')')
     })
 
+    it('stops at livewire component root', () => {
+        let rootEl = {
+            _x_dataStack: [{ outsideVar: {} }],
+            hasAttribute: (attr) => attr === 'wire:id',
+            parentElement: {
+                _x_dataStack: [{ aboveComponent: {} }],
+                hasAttribute: () => false,
+                parentElement: null,
+            },
+        }
+
+        let childEl = {
+            _x_dataStack: [{ innerVar: {} }],
+            hasAttribute: () => false,
+            parentElement: rootEl,
+        }
+
+        // innerVar and outsideVar are within the component, so they're skipped
+        expect(contextualizeExpression('innerVar', childEl)).toBe('innerVar')
+        expect(contextualizeExpression('outsideVar', childEl)).toBe('outsideVar')
+        // aboveComponent is above the wire:id root, so it gets prefixed
+        expect(contextualizeExpression('aboveComponent', childEl)).toBe('$wire.aboveComponent')
+    })
+
+    it('parent alpine scope does not leak across livewire component boundary', () => {
+        // Simulate real Alpine behavior: when x-data is on the wire:id element,
+        // Alpine's addScopeToNode sets _x_dataStack = [ownData, ...parentDataStack].
+        // The parent scope should NOT cause identifiers to be skipped.
+        let parentScope = { exampleFunction: () => {} }
+
+        let rootEl = {
+            _x_dataStack: [{ childVar: {} }, parentScope],
+            hasAttribute: (attr) => attr === 'wire:id',
+            parentElement: null,
+        }
+
+        let childEl = {
+            hasAttribute: () => false,
+            parentElement: rootEl,
+        }
+
+        // childVar is the component's own x-data, should be skipped
+        expect(contextualizeExpression('childVar', childEl)).toBe('childVar')
+        // exampleFunction is from parent scope, should be prefixed with $wire
+        expect(contextualizeExpression('exampleFunction', childEl)).toBe('$wire.exampleFunction')
+    })
 })
