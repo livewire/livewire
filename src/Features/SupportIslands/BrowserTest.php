@@ -1018,5 +1018,4 @@ class BrowserTest extends BrowserTestCase
             ->assertDontSee('ENDISLAND')
             ;
     }
-
 }
