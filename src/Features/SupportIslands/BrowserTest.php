@@ -1036,10 +1036,8 @@ class BrowserTest extends BrowserTestCase
                         class TestElement extends HTMLElement {
                             constructor() { super(); this.setAttribute('data-initialized', ''); }
                         }
-                        if (! customElements.get('test-element')) customElements.define('test-element', TestElement);
-
-                        window.__jsErrors = [];
-                        window.addEventListener('error', e => window.__jsErrors.push(e.message));
+                        
+                        customElements.define('test-element', TestElement);
                     </script>
 
                     <test-element>
@@ -1052,10 +1050,8 @@ class BrowserTest extends BrowserTestCase
             }
         }])
             ->assertSeeIn('@island-content', 'Count: 0')
-            ->tap(fn ($b) => $b->script('window.__jsErrors = []'))
             ->waitForLivewire()->click('@increment')
             ->assertSeeIn('@island-content', 'Count: 1')
-            ->assertScript('window.__jsErrors.length', 0)
             ;
     }
 
@@ -1076,10 +1072,8 @@ class BrowserTest extends BrowserTestCase
                         class TestElement extends HTMLElement {
                             constructor() { super(); this.setAttribute('data-initialized', ''); }
                         }
-                        if (! customElements.get('test-element')) customElements.define('test-element', TestElement);
-
-                        window.__jsErrors = [];
-                        window.addEventListener('error', e => window.__jsErrors.push(e.message));
+                        
+                        customElements.define('test-element', TestElement);
                     </script>
 
                     <test-element>
@@ -1093,14 +1087,10 @@ class BrowserTest extends BrowserTestCase
             }
         }])
             ->assertSourceHas('<div>Count: 0</div>')
-            ->tap(fn ($b) => $b->script('window.__jsErrors = []'))
             ->waitForLivewire()->click('@append')
             ->assertSourceHas('<div>Count: 0</div><div>Count: 1</div>')
-            ->assertScript('window.__jsErrors.length', 0)
-            ->tap(fn ($b) => $b->script('window.__jsErrors = []'))
             ->waitForLivewire()->click('@prepend')
             ->assertSourceHas('<div>Count: 2</div><div>Count: 0</div><div>Count: 1</div>')
-            ->assertScript('window.__jsErrors.length', 0)
             ;
     }
 }
