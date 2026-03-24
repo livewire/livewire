@@ -1262,6 +1262,123 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('return window.location.hash', '#default-tab')
         ;
     }
+
+    public function test_url_history_push_mode_forward_button_works_after_back()
+    {
+        Livewire::visit([
+            new class extends Component {
+                #[BaseUrl(history: true)]
+                public $search = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <input type="text" dusk="search" wire:model.live="search" />
+                    <span dusk="output">{{ $search }}</span>
+                </div>
+                HTML; }
+            },
+        ])
+        ->waitForLivewireToLoad()
+        ->assertQueryStringMissing('search')
+
+        // Type "a" — should push a new history entry...
+        ->waitForLivewire()->type('@search', 'a')
+        ->pause(50)
+        ->assertQueryStringHas('search', 'a')
+        ->assertSeeIn('@output', 'a')
+
+        // Type "ab" — should push another history entry...
+        ->waitForLivewire()->type('@search', 'ab')
+        ->pause(50)
+        ->assertQueryStringHas('search', 'ab')
+        ->assertSeeIn('@output', 'ab')
+
+        // Click Back — should go to "a"...
+        ->waitForLivewire()->back()
+        ->pause(50)
+        ->assertQueryStringHas('search', 'a')
+        ->assertSeeIn('@output', 'a')
+
+        // Click Forward — should go back to "ab" (this was the bug)...
+        ->waitForLivewire()->forward()
+        ->pause(50)
+        ->assertQueryStringHas('search', 'ab')
+        ->assertSeeIn('@output', 'ab')
+        ;
+    }
+
+    public function test_url_history_push_mode_multiple_back_forward_navigations()
+    {
+        Livewire::visit([
+            new class extends Component {
+                #[BaseUrl(history: true)]
+                public $page = '1';
+
+                public function setPage($value) {
+                    $this->page = $value;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <button dusk="page2" wire:click="setPage('2')">Page 2</button>
+                    <button dusk="page3" wire:click="setPage('3')">Page 3</button>
+                    <button dusk="page4" wire:click="setPage('4')">Page 4</button>
+                    <span dusk="output">{{ $page }}</span>
+                </div>
+                HTML; }
+            },
+        ])
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@output', '1')
+        ->assertQueryStringMissing('page')
+
+        // Navigate through several pages...
+        ->waitForLivewire()->click('@page2')
+        ->pause(50)
+        ->assertSeeIn('@output', '2')
+        ->assertQueryStringHas('page', '2')
+
+        ->waitForLivewire()->click('@page3')
+        ->pause(50)
+        ->assertSeeIn('@output', '3')
+        ->assertQueryStringHas('page', '3')
+
+        ->waitForLivewire()->click('@page4')
+        ->pause(50)
+        ->assertSeeIn('@output', '4')
+        ->assertQueryStringHas('page', '4')
+
+        // Back to page 3...
+        ->waitForLivewire()->back()
+        ->pause(50)
+        ->assertSeeIn('@output', '3')
+        ->assertQueryStringHas('page', '3')
+
+        // Back to page 2...
+        ->waitForLivewire()->back()
+        ->pause(50)
+        ->assertSeeIn('@output', '2')
+        ->assertQueryStringHas('page', '2')
+
+        // Forward to page 3...
+        ->waitForLivewire()->forward()
+        ->pause(50)
+        ->assertSeeIn('@output', '3')
+        ->assertQueryStringHas('page', '3')
+
+        // Forward to page 4...
+        ->waitForLivewire()->forward()
+        ->pause(50)
+        ->assertSeeIn('@output', '4')
+        ->assertQueryStringHas('page', '4')
+
+        // Back again to page 3 (ensure back still works after forward)...
+        ->waitForLivewire()->back()
+        ->pause(50)
+        ->assertSeeIn('@output', '3')
+        ->assertQueryStringHas('page', '3')
+        ;
+    }
 }
 
 class FormObject extends \Livewire\Form
