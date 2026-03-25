@@ -5204,22 +5204,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isNumeric(subject) {
     return !isNaN(parseInt(subject));
   }
-  function dataDelete(object, key) {
-    let segments = parsePathSegments(key);
-    if (segments.length === 1) {
-      if (Array.isArray(object)) {
-        object.splice(segments[0], 1);
-      } else {
-        delete object[segments[0]];
-      }
-      return;
-    }
-    let firstSegment = segments.shift();
-    let restOfSegments = segments.join(".");
-    if (object[firstSegment] !== void 0) {
-      dataDelete(object[firstSegment], restOfSegments);
-    }
-  }
   function diff(left, right, diffs = {}, path = "") {
     if (left === right)
       return diffs;
@@ -5325,6 +5309,39 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     Object.assign(diffs, childDiffs);
     return { changed: changedCount > 0, consolidated: consolidatedCount > 0 || convertedToObject };
   }
+  function diffAndPatchRecursive(left, right, target) {
+    let leftKeys = new Set(Object.keys(left || {}));
+    let rightKeys = Object.keys(right);
+    if (!isArray(target) && [...leftKeys].some((key, i) => key !== rightKeys[i])) {
+      for (let key of Object.keys(target))
+        delete target[key];
+      for (let key of rightKeys)
+        target[key] = right[key];
+      return;
+    }
+    rightKeys.forEach((key) => {
+      leftKeys.delete(key);
+      if (deeplyEqual(left?.[key], right[key]))
+        return;
+      if (isObjecty(left?.[key]) && isObjecty(right[key]) && isObjecty(target[key]) && isArray(right[key]) === isArray(target[key])) {
+        diffAndPatchRecursive(left[key], right[key], target[key]);
+      } else {
+        target[key] = right[key];
+      }
+    });
+    let removedKeys = [...leftKeys];
+    removedKeys.sort((a, b) => {
+      let aNum = parseInt(a) || 0;
+      let bNum = parseInt(b) || 0;
+      return bNum - aNum;
+    }).forEach((key) => {
+      if (isArray(target)) {
+        target.splice(parseInt(key), 1);
+      } else {
+        delete target[key];
+      }
+    });
+  }
   function extractData(payload) {
     let value = isSynthetic(payload) ? payload[0] : payload;
     let meta = isSynthetic(payload) ? payload[1] : void 0;
@@ -5364,6 +5381,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return nonce;
     }
     return null;
+  }
+  function replaceNoncesInHtml(html) {
+    let nonce2 = getNonce();
+    if (!nonce2)
+      return html;
+    let nonceMatch = html.match(/nonce="([^"]+)"/);
+    if (!nonceMatch)
+      return html;
+    let newNonce = nonceMatch[1];
+    if (newNonce === nonce2)
+      return html;
+    return html.replaceAll(`nonce="${newNonce}"`, `nonce="${nonce2}"`);
+  }
+  function cloneScriptTag(el) {
+    let script = document.createElement("script");
+    script.textContent = el.textContent;
+    script.async = el.async;
+    for (let attr of el.attributes) {
+      if (attr.name === "nonce") {
+        script.nonce = getNonce() || el.nonce;
+      } else {
+        script.setAttribute(attr.name, attr.value);
+      }
+    }
+    return script;
   }
   function getModuleUrl() {
     return document.querySelector("[data-module-url]")?.getAttribute("data-module-url") ?? window.livewireScriptConfig["moduleUrl"] ?? null;
@@ -7365,8 +7407,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire-dirty.js
   var refreshDirtyStatesByComponent = new WeakBag();
-  on("commit", ({ component, respond }) => {
-    respond(() => {
+  on("commit", ({ component, succeed }) => {
+    succeed(() => {
       setTimeout(() => {
         refreshDirtyStatesByComponent.each(component, (i) => i(false));
       });
@@ -7693,7 +7735,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$parent", (component) => {
     if (parentMemo.has(component))
       return parentMemo.get(component).$wire;
-    let parent = component.parent;
+    let parent = findComponentByEl(component.el.parentElement, false);
+    if (!parent)
+      return;
     parentMemo.set(component, parent);
     return parent.$wire;
   });
@@ -7769,25 +7813,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.effects = effects;
       this.canonical = extractData(deepClone(snapshot.data));
       let newData = extractData(deepClone(snapshot.data));
-      let changes = [];
-      let removals = [];
-      Object.entries(dirty).forEach(([key, value]) => {
-        if (value === "__rm__") {
-          removals.push(key);
-        } else {
-          changes.push(key);
-        }
-      });
-      changes.forEach((key) => {
-        dataSet(this.reactive, key, dataGet(newData, key));
-      });
-      removals.sort((a, b) => {
-        let aNum = parseInt(a.split(".").pop()) || 0;
-        let bNum = parseInt(b.split(".").pop()) || 0;
-        return bNum - aNum;
-      }).forEach((key) => {
-        dataDelete(this.reactive, key);
-      });
+      diffAndPatchRecursive(updatedOldCanonical, newData, this.reactive);
       return dirty;
     }
     queueUpdate(propertyName, value) {
@@ -7864,6 +7890,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     getDeepChildrenWithBindings(callback) {
       this.getDeepChildren((child) => {
+        if (child.isLazy && !child.hasBeenLazyLoaded)
+          return;
         if (child.hasReactiveProps() || child.hasWireModelableBindings()) {
           callback(child);
         }
@@ -13560,6 +13588,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "aria-hidden"
   ];
   function swapCurrentPageWithNewHtml(html, andThen) {
+    html = replaceNoncesInHtml(html);
     let newDocument = new DOMParser().parseFromString(html, "text/html");
     let newHtml = newDocument.documentElement;
     let newBody = document.adoptNode(newDocument.body);
@@ -13608,13 +13637,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function mergeNewHead(newHead) {
     let children = Array.from(document.head.children);
-    let headChildrenHtmlLookup = children.map((i) => i.outerHTML);
+    let headChildrenHtmlLookup = children.map(
+      (i) => ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing)
+    );
     let garbageCollector = document.createDocumentFragment();
     let touchedHeadElements = [];
     let remoteScriptsPromises = [];
     for (let child of Array.from(newHead.children)) {
       if (isAsset(child)) {
-        if (!headChildrenHtmlLookup.includes(child.outerHTML)) {
+        let childHtml = ignoreAttributes(child.outerHTML, attributesExemptFromScriptTagHashing);
+        if (!headChildrenHtmlLookup.includes(childHtml)) {
           if (isTracked(child)) {
             if (ifTheQueryStringChangedSinceLastRequest(child, children)) {
               setTimeout(() => window.location.reload());
@@ -13659,15 +13691,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       document.head.appendChild(script);
     });
-  }
-  function cloneScriptTag(el) {
-    let script = document.createElement("script");
-    script.textContent = el.textContent;
-    script.async = el.async;
-    for (let attr of el.attributes) {
-      script.setAttribute(attr.name, attr.value);
-    }
-    return script;
   }
   function isTracked(el) {
     return el.hasAttribute("data-navigate-track");
@@ -14781,12 +14804,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let keys = [];
     let currentEl = el;
     while (currentEl) {
-      if (currentEl._x_dataStack) {
-        for (let scope of currentEl._x_dataStack) {
-          for (let key of Object.keys(scope)) {
-            if (!keys.includes(key) && !key.startsWith("$"))
-              keys.push(key);
-          }
+      if (currentEl._x_dataStack && currentEl._x_dataStack.length > 0) {
+        let ownScope = currentEl._x_dataStack[0];
+        for (let key of Object.keys(ownScope)) {
+          if (!keys.includes(key) && !key.startsWith("$"))
+            keys.push(key);
         }
       }
       if (currentEl.hasAttribute && currentEl.hasAttribute("wire:id"))
@@ -14911,6 +14933,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     await callback();
   }
   async function addAssetsToHeadTagOfPage(rawHtml) {
+    rawHtml = replaceNoncesInHtml(rawHtml);
     let newDocument = new DOMParser().parseFromString(rawHtml, "text/html");
     let newHead = document.adoptNode(newDocument.head);
     for (let child of newHead.children) {
@@ -14923,7 +14946,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   async function runAssetSynchronously(child) {
     return new Promise((resolve, reject) => {
       if (isScript2(child)) {
-        let script = cloneScriptTag2(child);
+        let script = cloneScriptTag(child);
         if (script.src) {
           script.onload = () => resolve();
           script.onerror = () => reject();
@@ -14939,15 +14962,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function isScript2(el) {
     return el.tagName.toLowerCase() === "script";
-  }
-  function cloneScriptTag2(el) {
-    let script = document.createElement("script");
-    script.textContent = el.textContent;
-    script.async = el.async;
-    for (let attr of el.attributes) {
-      script.setAttribute(attr.name, attr.value);
-    }
-    return script;
   }
 
   // js/features/supportJsEvaluation.js
@@ -15064,9 +15078,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/morph.js
   async function morph2(component, el, html) {
-    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-    let customElement = customElements.get(wrapperTag);
-    wrapperTag = customElement ? customElement.name : wrapperTag;
+    let wrapperTag = getTagName(el.parentElement);
     let wrapper = document.createElement(wrapperTag);
     wrapper.innerHTML = html;
     let parentComponent;
@@ -15103,12 +15115,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   async function morphFragment(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement;
-    let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+    let fromContainerTag = getTagName(fromContainer);
     let toContainer = document.createElement(fromContainerTag);
     toContainer.innerHTML = toHTML;
     toContainer.__livewire = component;
     let parentElement = component.el.parentElement;
-    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+    let parentElementTag = getTagName(parentElement);
     let parentComponent;
     try {
       parentComponent = parentElement ? findComponentByEl(parentElement) : null;
@@ -15208,6 +15220,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function isComponentRootEl(el) {
     return el.hasAttribute("wire:id");
+  }
+  function getTagName(el) {
+    let tag = el ? el.tagName.toLowerCase() : "div";
+    let customElement = customElements.get(tag);
+    return customElement ? customElement.name : tag;
   }
 
   // js/features/supportMorphDom.js
@@ -15377,6 +15394,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
         cleanup(() => import_alpinejs12.default.release(effectReference));
       } else if (use === "push") {
+        let popNavigating = false;
         let forgetCommitHandler = on("commit", ({ component: commitComponent, succeed }) => {
           if (component !== commitComponent)
             return;
@@ -15385,14 +15403,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             let afterValue = dataGet(component.canonical, name);
             if (JSON.stringify(beforeValue) === JSON.stringify(afterValue))
               return;
-            push2(afterValue);
+            if (popNavigating) {
+              replace2(afterValue);
+            } else {
+              push2(afterValue);
+            }
           });
         });
         let forgetPopHandler = pop(async (newValue) => {
+          popNavigating = true;
           await component.$wire.set(name, newValue);
           document.querySelectorAll("input").forEach((el) => {
             el._x_forceModelUpdate && el._x_forceModelUpdate(el._x_model.get());
           });
+          requestAnimationFrame(() => popNavigating = false);
         });
         let currentValue = dataGet(component.ephemeral, name);
         if (JSON.stringify(currentValue) !== JSON.stringify(initialValue)) {
@@ -15620,8 +15644,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     let incomingMetadata = extractFragmentMetadataFromHtml(islandHtml);
     let strippedContent = extractInnerHtmlFromFragmentHtml(islandHtml);
-    let parentElement = fragment.startMarkerNode.parentElement;
-    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+    let parentElementTag = getTagName(fragment.startMarkerNode.parentElement);
     let mode = incomingMetadata.mode || "morph";
     if (mode === "morph") {
       await morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent);
@@ -15834,7 +15857,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         import_alpinejs15.default.bind(el, {
           ["x-intersect" + modifierString](e) {
             directive2.eventContext = e;
-            let component = el.closest("[wire\\:id]")?.__livewire;
+            let component = findComponentByEl(el, false);
+            if (!component)
+              return;
             component.addActionContext({
               el,
               directive: directive2
