@@ -180,7 +180,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         if (static::$shouldInjectLoopMarkers && static::isLoop($found)) {
             $prefix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?>';
 
-            $suffix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?>';
+            $suffix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?>';
         }
 
         if ($prefix === '' && $suffix === '') {
@@ -318,8 +318,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         $loopDirectives = [
             'foreach',
             'forelse',
-            // temp disabling because of "missing $loop" error
-            // 'for',
+            'for',
             'while',
         ];
 
@@ -334,7 +333,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
             'endforeach',
             // This `endforelse` should NOT be included here, but it is left here for documentation purposes. The close of a `@forelse` loop is handled by the `@empty` directive...
             // 'endforelse',
-            // 'endfor',
+            'endfor',
             'endwhile',
         ];
 
