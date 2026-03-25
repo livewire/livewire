@@ -36,6 +36,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('second-remote-asset', SecondRemoteAsset::class);
             Livewire::component('first-scroll-page', FirstScrollPage::class);
             Livewire::component('second-scroll-page', SecondScrollPage::class);
+            Livewire::component('first-click-handler-page', FirstClickHandlerPage::class);
+            Livewire::component('second-click-handler-page', SecondClickHandlerPage::class);
             Livewire::component('parent-component', ParentComponent::class);
             Livewire::component('child-component', ChildComponent::class);
             Livewire::component('script-component', ScriptComponent::class);
@@ -67,6 +69,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
             Route::get('/first-scroll', FirstScrollPage::class)->middleware('web');
             Route::get('/second-scroll', SecondScrollPage::class)->middleware('web');
+            Route::get('/first-click-handler', FirstClickHandlerPage::class)->middleware('web');
+            Route::get('/second-click-handler', SecondClickHandlerPage::class)->middleware('web');
             Route::get('/second-remote-asset', SecondRemoteAsset::class)->middleware('web');
 
             Route::get('/first-tracked-asset', FirstTrackedAssetPage::class)->middleware('web');
@@ -1187,6 +1191,20 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_click_handler_runs_on_prefetched_navigate_link()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-click-handler')
+                ->assertSee('On first')
+                ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+                ->waitForNavigate()->click('@link.to.second')
+                ->assertSee('On second')
+                ->assertScript("window.foo_seen_on_second_page === 'baz'")
+            ;
+        });
+    }
+
     public function test_navigating_to_an_error_page_force_a_full_page_refresh_when_the_back_button_is_pressed()
     {
         $this->browse(function ($browser) {
@@ -1508,6 +1526,43 @@ class FirstScrollPage extends Component
             <a href="/second-scroll" x-on:click="$event.preventDefault(); Livewire.navigate($el.href, { preserveScroll: true })"  dusk="link.to.second.with.preserve.scroll.using.javascript">Go to second page with preserve scroll using javascript</a>
 
             <div style="height: 100vh;">spacer</div>
+        </div>
+        HTML;
+    }
+}
+
+class FirstClickHandlerPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first</div>
+
+            <script>window.foo = 'bar'</script>
+
+            <a
+                href="/second-click-handler"
+                wire:navigate.hover
+                x-on:click="window.foo = 'baz'"
+                dusk="link.to.second"
+            >
+                Go to second page
+            </a>
+        </div>
+        HTML;
+    }
+}
+
+class SecondClickHandlerPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On second</div>
+
+            <script>window.foo_seen_on_second_page = window.foo;</script>
         </div>
         HTML;
     }
