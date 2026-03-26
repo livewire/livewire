@@ -443,6 +443,38 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_template_x_for_with_wire_click_does_not_duplicate_items()
+    {
+        // When a Livewire array property controls an x-for template and items are added
+        // via wire:click, each item should only render once - not be duplicated by the morph.
+        Livewire::visit(new class extends Component {
+            public array $items = [];
+
+            public function addItems(): void
+            {
+                $this->items = [
+                    ['id' => 1, 'name' => 'Item 1'],
+                    ['id' => 2, 'name' => 'Item 2'],
+                ];
+            }
+
+            function render() {
+                return <<<'HTML'
+                <div>
+                    <template x-for="item in $wire.items" :key="item.id">
+                        <p x-text="item.name" class="x-for-item"></p>
+                    </template>
+                    <button wire:click="addItems" dusk="add">Add Items</button>
+                </div>
+                HTML;
+            }
+        })
+            ->assertScript('document.querySelectorAll(".x-for-item").length', 0)
+            ->waitForLivewire()->click('@add')
+            ->assertScript('document.querySelectorAll(".x-for-item").length', 2)
+        ;
+    }
+
     public function test_nested_array_property_access_after_removal()
     {
         // This tests deeply nested property access that would fail if effects fire before cleanup

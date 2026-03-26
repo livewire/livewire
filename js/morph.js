@@ -146,15 +146,24 @@ function getMorphConfig(component) {
 
             if (isntElement(el)) return
 
-            // When an x-if template hasn't rendered its content yet (e.g. $wire.show just
-            // changed from false to true), prevent Alpine's cloneNode from evaluating x-if
-            // on the "to" element and injecting duplicate content into the "to" DOM. We strip
-            // the directive from "to" so cloneNode is inert, and use childrenOnly() to skip
-            // attribute patching so the "from" element keeps its original x-if directive...
-            if (el.tagName === 'TEMPLATE' && toEl.tagName === 'TEMPLATE'
-                && ! el._x_currentIfEl && toEl.hasAttribute('x-if')
-            ) {
-                toEl.removeAttribute('x-if')
+            // Alpine directives like x-if and x-for insert sibling DOM nodes after
+            // <template> elements via el.after(). During morphing, Alpine.cloneNode
+            // evaluates these directives on the "to" element using already-updated
+            // reactive state, which can inject content into the "to" DOM that doesn't
+            // exist in "from" yet. The morph adds it, then Alpine's deferred effects
+            // add it again after the transaction commits — causing duplicates.
+            //
+            // When the "from" template hasn't rendered content yet, we stub .after()
+            // on the "to" element so cloneNode can't inject sibling nodes, and use
+            // childrenOnly() to preserve the "from" element's directives...
+            if (el.tagName === 'TEMPLATE' && toEl.tagName === 'TEMPLATE') {
+                let hasRenderedContent = el._x_currentIfEl
+                    || (el._x_prevKeys && el._x_prevKeys.length > 0)
+
+                if (! hasRenderedContent) {
+                    toEl.after = function () {}
+                }
+
                 childrenOnly()
             }
 
