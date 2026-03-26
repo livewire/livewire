@@ -22,7 +22,24 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Handle file uploads differently...
     if (el.type && el.type.toLowerCase() === 'file') {
-        return handleFileUpload(el, expression, component, cleanup)
+        let options = {}
+
+        if (modifiers.includes('chunked')) {
+            options.chunked = true
+
+            let chunkedIndex = modifiers.indexOf('chunked')
+            let nextMod = modifiers[chunkedIndex + 1]
+
+            if (nextMod && /^[0-9]+$/.test(nextMod)) {
+                let chunkSize = parseInt(nextMod, 10) * 1024
+
+                if (chunkSize > 0) {
+                    options.chunkSize = chunkSize
+                }
+            }
+        }
+
+        return handleFileUpload(el, expression, component, cleanup, options)
     }
 
     // Split modifiers at .live boundary

@@ -54,6 +54,14 @@ class EndpointResolver
     }
 
     /**
+     * Get the path for the chunked file upload endpoint.
+     */
+    public static function chunkUploadPath(): string
+    {
+        return static::prefix() . '/upload-chunk';
+    }
+
+    /**
      * Get the path for the file preview endpoint.
      */
     public static function previewPath(): string

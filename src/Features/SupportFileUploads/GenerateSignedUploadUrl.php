@@ -61,6 +61,13 @@ class GenerateSignedUploadUrl
         ];
     }
 
+    public function forLocalChunked($uploadId)
+    {
+        return URL::temporarySignedRoute(
+            'livewire.upload-chunk', now()->addMinutes(FileUploadConfiguration::maxUploadTime()), ['uploadId' => $uploadId]
+        );
+    }
+
     protected function headers($signedRequest, $fileType)
     {
         return array_merge(

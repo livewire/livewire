@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Facade;
  * @internal
  *
  * @method static string forLocal()
+ * @method static string forLocalChunked($uploadId)
  * @method static string forS3($file, $visibility = 'private')
  *
  * @see \Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl

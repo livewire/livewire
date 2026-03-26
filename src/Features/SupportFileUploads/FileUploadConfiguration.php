@@ -125,6 +125,16 @@ class FileUploadConfiguration
         return config('livewire.temporary_file_upload.max_upload_time') ?: 5;
     }
 
+    public static function maxChunkSize()
+    {
+        return config('livewire.temporary_file_upload.max_chunk_size') ?: (3 * 1024 * 1024);
+    }
+
+    public static function chunkMiddleware()
+    {
+        return config('livewire.temporary_file_upload.chunk_middleware') ?: 'throttle:300,1';
+    }
+
     public static function storeTemporaryFile($file, $disk)
     {
         $filename = TemporaryUploadedFile::generateHashName($file);
