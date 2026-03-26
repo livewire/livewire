@@ -9,12 +9,23 @@ class EndpointResolver
      *
      * Uses APP_KEY to generate a unique prefix per installation,
      * making it harder to target Livewire apps with universal scanners.
+     *
+     * If a custom route_prefix is configured, it will be prepended to the
+     * hash-based prefix (e.g., '/legacy/livewire-{hash}').
      */
     public static function prefix(): string
     {
         $hash = substr(hash('sha256', config('app.key') . 'livewire-endpoint'), 0, 8);
 
-        return '/livewire-' . $hash;
+        $livewirePrefix = '/livewire-' . $hash;
+
+        $customPrefix = config('livewire.route_prefix');
+
+        if (! empty($customPrefix)) {
+            return '/' . trim($customPrefix, '/') . $livewirePrefix;
+        }
+
+        return $livewirePrefix;
     }
 
     /**

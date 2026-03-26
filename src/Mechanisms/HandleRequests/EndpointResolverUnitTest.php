@@ -100,4 +100,67 @@ class EndpointResolverUnitTest extends TestCase
         $this->assertStringStartsWith($prefix, EndpointResolver::previewPath());
         $this->assertStringStartsWith($prefix, EndpointResolver::componentJsPath());
     }
+
+    public function test_custom_route_prefix_is_prepended()
+    {
+        config()->set('livewire.route_prefix', 'legacy');
+
+        $prefix = EndpointResolver::prefix();
+
+        $this->assertStringStartsWith('/legacy/livewire-', $prefix);
+        $this->assertMatchesRegularExpression('/^\/legacy\/livewire-[a-f0-9]{8}$/', $prefix);
+    }
+
+    public function test_custom_route_prefix_with_nested_path()
+    {
+        config()->set('livewire.route_prefix', 'api/v1');
+
+        $prefix = EndpointResolver::prefix();
+
+        $this->assertStringStartsWith('/api/v1/livewire-', $prefix);
+        $this->assertMatchesRegularExpression('/^\/api\/v1\/livewire-[a-f0-9]{8}$/', $prefix);
+    }
+
+    public function test_custom_route_prefix_with_leading_trailing_slashes()
+    {
+        config()->set('livewire.route_prefix', '/legacy/');
+
+        $prefix = EndpointResolver::prefix();
+
+        $this->assertStringStartsWith('/legacy/livewire-', $prefix);
+        $this->assertMatchesRegularExpression('/^\/legacy\/livewire-[a-f0-9]{8}$/', $prefix);
+    }
+
+    public function test_empty_custom_route_prefix_returns_default()
+    {
+        config()->set('livewire.route_prefix', '');
+
+        $prefix = EndpointResolver::prefix();
+
+        $this->assertMatchesRegularExpression('/^\/livewire-[a-f0-9]{8}$/', $prefix);
+        $this->assertStringStartsWith('/livewire-', $prefix);
+    }
+
+    public function test_null_custom_route_prefix_returns_default()
+    {
+        config()->set('livewire.route_prefix', null);
+
+        $prefix = EndpointResolver::prefix();
+
+        $this->assertMatchesRegularExpression('/^\/livewire-[a-f0-9]{8}$/', $prefix);
+        $this->assertStringStartsWith('/livewire-', $prefix);
+    }
+
+    public function test_custom_prefix_applies_to_all_paths()
+    {
+        config()->set('livewire.route_prefix', 'legacy');
+
+        $this->assertStringStartsWith('/legacy/livewire-', EndpointResolver::updatePath());
+        $this->assertStringStartsWith('/legacy/livewire-', EndpointResolver::scriptPath());
+        $this->assertStringStartsWith('/legacy/livewire-', EndpointResolver::uploadPath());
+        $this->assertStringStartsWith('/legacy/livewire-', EndpointResolver::previewPath());
+        $this->assertStringStartsWith('/legacy/livewire-', EndpointResolver::componentJsPath());
+        $this->assertStringStartsWith('/legacy/livewire-', EndpointResolver::componentCssPath());
+        $this->assertStringStartsWith('/legacy/livewire-', EndpointResolver::componentGlobalCssPath());
+    }
 }

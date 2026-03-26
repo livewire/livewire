@@ -279,4 +279,20 @@ return [
         'max_calls' => 50,           // Maximum method calls per request
         'max_components' => 20,      // Maximum components per batch request
     ],
+
+    /*
+    |---------------------------------------------------------------------------
+    | Route Prefix
+    |---------------------------------------------------------------------------
+    |
+    | This value sets an optional prefix for all Livewire routes. When set,
+    | all Livewire endpoints (update, upload, assets, etc.) will be prefixed
+    | with this value. This is useful for applications that need to maintain
+    | backward compatibility or have specific routing requirements.
+    |
+    | Example: 'legacy' → /legacy/livewire-{hash}/update
+    |
+    */
+
+    'route_prefix' => null,
 ];
