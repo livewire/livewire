@@ -62,7 +62,11 @@ class ImplicitRouteBinding
             throw $e;
         }
 
-        return new Collection($parameters);
+        return new Collection(array_filter(
+            $parameters,
+            fn ($key) => ! is_int($key),
+            ARRAY_FILTER_USE_KEY
+        ));
     }
 
     public function resolveComponentProps(Route $route, Component $component)
