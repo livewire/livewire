@@ -137,6 +137,27 @@ function getMorphConfig(component) {
 
             if (isntElement(el)) return
 
+            // Alpine directives like x-if and x-for insert sibling DOM nodes after
+            // <template> elements via el.after(). During morphing, Alpine.cloneNode
+            // evaluates these directives on the "to" element using already-updated
+            // reactive state, which can inject content into the "to" DOM that doesn't
+            // exist in "from" yet. The morph adds it, then Alpine's deferred effects
+            // add it again after the transaction commits — causing duplicates.
+            //
+            // When the "from" template hasn't rendered content yet, we stub .after()
+            // on the "to" element so cloneNode can't inject sibling nodes, and use
+            // childrenOnly() to preserve the "from" element's directives...
+            if (el.tagName === 'TEMPLATE' && toEl.tagName === 'TEMPLATE') {
+                let hasRenderedContent = el._x_currentIfEl
+                    || (el._x_prevKeys && el._x_prevKeys.length > 0)
+
+                if (! hasRenderedContent) {
+                    toEl.after = function () {}
+                }
+
+                childrenOnly()
+            }
+
             trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil })
 
             // bypass DOM diffing for children by overwriting the content
