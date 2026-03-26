@@ -28,7 +28,14 @@ class BaseReactive extends LivewireAttribute
                 $this->component->getId(), $this->getName()
             );
 
-            $this->setValue($updatedValue);
+            $currentHash = crc32(json_encode($this->getValue()));
+            $updatedHash = crc32(json_encode($updatedValue));
+
+            if ($currentHash !== $updatedHash) {
+                $this->setValue($updatedValue);
+
+                store($this->component)->set('reactivePropsChanged', true);
+            }
         }
 
         $this->originalValueHash = crc32(json_encode($this->getValue()));
