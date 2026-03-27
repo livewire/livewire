@@ -443,7 +443,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         $this->browse(function ($browser) {
             $browser
                 ->visit('/first-html-attributes')
-                ->assertSee('On first html attributes page')
+                ->waitForText('On first html attributes page')
                 // ->assertAttribute() won't work as it's scoped to the body...
                 ->assertScript('document.documentElement.getAttribute("class")', 'class1')
                 ->assertScript('document.documentElement.getAttribute("attr1")', 'value1')
