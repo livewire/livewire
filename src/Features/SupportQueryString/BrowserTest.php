@@ -80,7 +80,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return decodeURIComponent(window.location.search)', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
+            ->waitUntil('window.location.search === "?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05"', 5);
     }
 
     public function test_does_not_duplicate_url_query_string_for_array_parameters_on_page_load()
@@ -110,7 +110,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return decodeURIComponent(window.location.search)', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
+            ->waitUntil('window.location.search === "?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05"', 5);
     }
 
     public function test_keep_option_does_not_duplicate_url_query_string_for_string_parameter_on_page_load()
@@ -1108,7 +1108,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     }
                 }
             ])
-            ->assertScript('return decodeURIComponent(window.location.search)', '?foo[bar]=baz');
+            ->waitUntil('window.location.search === "?foo[bar]=baz"', 5);
     }
 
     public function test_it_skips_query_string_encoded_keys_not_tracked_by_livewire()
@@ -1132,7 +1132,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     }
                 }
             ])
-            ->assertScript('return decodeURIComponent(window.location.search)', '?foo[bar]=baz&bob[lob]=law');
+            ->waitUntil('window.location.search === "?foo[bar]=baz&bob[lob]=law"', 5);
     }
 
     public function test_except_does_remove_value_from_query_string_when_loaded_with_value_then_changed_to_except_value()
