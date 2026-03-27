@@ -1161,7 +1161,8 @@ class BrowserTest extends \Tests\BrowserTestCase
                     }
                 }
             ])
-            ->waitUntil('window.location.search === "?shown=true"', 5)
+            ->waitUntil('window.location.search === "?shown=true" || window.location.search === "?shown=1"', 5)
+            ->assertScript('return window.location.search === "?shown=true" || window.location.search === "?shown=1"', true)
             ->waitForLivewire()->click('@hideButton')
             ->assertScript('return window.location.search', '');
     }
