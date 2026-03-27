@@ -231,10 +231,12 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
+            ->waitUntil('window.location.search.includes("search=foo")', 5)
             ->assertQueryStringHas('search', 'foo')
             ->waitForLivewire()->type('@input', 'bar')
             ->assertQueryStringHas('search', 'bar')
-            ->waitForLivewire()->type('@input', ' ')
+            ->clear('@input')
+            ->waitForLivewire()->keys('@input', ' ')
             ->waitForLivewire()->keys('@input', '{backspace}')
             ->assertQueryStringMissing('search')
         ;
