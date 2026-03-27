@@ -21,8 +21,8 @@ class AlpineIntersectBrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-            ->assertSeeIn('p', 'in viewport')
+            ->waitForTextIn('p', 'in viewport')
             ->waitForLivewire()->click('@button')
-            ->assertSeeIn('p', 'in viewport');
+            ->waitForTextIn('p', 'in viewport');
     }
 }

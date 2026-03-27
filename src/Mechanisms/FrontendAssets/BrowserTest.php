@@ -17,6 +17,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
 
         Livewire::visit(new class extends TestComponent {})
+            ->waitForDialog()
             ->assertDialogOpened('hi mom')
         ;
     }
