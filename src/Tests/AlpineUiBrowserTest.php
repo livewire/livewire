@@ -56,7 +56,7 @@ class AlpineUiBrowserTest extends \Tests\BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->pause(2000)
+            ->waitUntil('document.querySelector("[dusk=updatesCount]")?.textContent.trim() === "1"', 15)
             ->click('@openListbox')
             ->waitFor('@listboxOption')
             ->assertSeeIn('@updatesCount', '1')
@@ -134,7 +134,7 @@ class AlpineUiBrowserTest extends \Tests\BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->pause(2000)
+            ->waitUntil('document.querySelector("[dusk=updatesCount]")?.textContent.trim() === "1"', 15)
             ->click('@openCombobox')
             ->waitFor('@comboboxOption')
             ->assertSeeIn('@updatesCount', '1')

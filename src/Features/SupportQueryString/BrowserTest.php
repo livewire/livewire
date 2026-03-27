@@ -378,9 +378,9 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringHas('search', 'foo')
             ->waitForLivewire()->type('@input', 'bar')
             ->assertQueryStringHas('search', 'bar')
-            ->waitForLivewire()->type('@input', ' ')
+            ->clear('@input')
+            ->waitForLivewire()->keys('@input', ' ')
             ->waitForLivewire()->keys('@input', '{backspace}')
-            ->pause(100)
             ->assertQueryStringMissing('search')
         ;
     }
@@ -518,7 +518,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->pause(200)
+            ->waitUntil('! window.location.search.includes("foo=bar")', 5)
             ->assertQueryStringHas('foo', '')
             ->assertSee('foo', null)
             ->waitForLivewire()->click('@button')
@@ -562,7 +562,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->pause(200)
+            ->waitUntil('! window.location.search.includes("foo=5")', 5)
             ->assertQueryStringHas('foo', '')
             ->assertSee('foo', null)
             ->waitForLivewire()->click('@button')
@@ -1159,6 +1159,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     }
                 }
             ])
+            ->waitUntil('window.location.search === "?shown=true" || window.location.search === "?shown=1"', 5)
             ->assertScript('return window.location.search === "?shown=true" || window.location.search === "?shown=1"', true)
             ->waitForLivewire()->click('@hideButton')
             ->assertScript('return window.location.search', '');
