@@ -1295,6 +1295,38 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_inline_scripts_with_let_or_const_dont_error_on_navigate()
+    {
+        $this->registerComponentTestRoutes([
+            '/page-b' => new class extends Component {
+                #[Layout('test-views::layout')]
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <a href="/page-b" wire:navigate dusk="link.to.self">Self</a>
+                        <script>let foo = 'bar'</script>
+                    </div>
+                    HTML;
+                }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            #[Layout('test-views::layout')]
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <a href="/page-b" wire:navigate dusk="link">Go</a>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForNavigate()->click('@link')
+        ->waitForNavigate()->click('@link.to.self')
+        ->assertConsoleLogHasNoErrors()
+        ;
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;

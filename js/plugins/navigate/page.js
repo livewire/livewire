@@ -56,7 +56,15 @@ function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes) {
             if (oldBodyScriptTagHashes.includes(hash)) return
         }
 
-        i.replaceWith(cloneScriptTag(i))
+        let cloned = cloneScriptTag(i)
+
+        // Wrap inline scripts in an IIFE to prevent "Identifier has already
+        // been declared" errors when re-executing scripts that use let/const...
+        if (! cloned.src && cloned.textContent) {
+            cloned.textContent = `(() => {${cloned.textContent}})()`
+        }
+
+        i.replaceWith(cloned)
     })
 }
 
