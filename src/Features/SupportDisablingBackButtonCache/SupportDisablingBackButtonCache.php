@@ -27,6 +27,6 @@ class SupportDisablingBackButtonCache extends ComponentHook
 
     public function boot()
     {
-        static::$disableBackButtonCache = true;
+        //
     }
 }

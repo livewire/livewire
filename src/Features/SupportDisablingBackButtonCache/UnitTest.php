@@ -18,6 +18,15 @@ class UnitTest extends \Tests\TestCase
         $this->assertFalse($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
     }
 
+    public function test_back_button_cache_is_allowed_by_default_for_livewire_components()
+    {
+        Route::get('test-route-containing-livewire-component', DefaultBrowserCache::class);
+
+        $response = $this->get('test-route-containing-livewire-component')->assertSuccessful();
+
+        $this->assertFalse($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
+    }
+
     public function test_ensure_browser_cache_middleware_is_applied_to_a_route_that_contains_a_component_with_disable_set_to_true()
     {
         Route::get('test-route-containing-livewire-component', DisableBrowserCache::class);
@@ -46,6 +55,11 @@ class UnitTest extends \Tests\TestCase
         // so just testing for one that isn't normally in a Laravel request
         $this->assertFalse($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
     }
+}
+
+class DefaultBrowserCache extends TestComponent
+{
+    //
 }
 
 class DisableBrowserCache extends TestComponent
