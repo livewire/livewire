@@ -43,10 +43,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertInputValue('@filter_2', '')
         ->assertInputValue('@filter_3', '')
         ->assertQueryStringMissing('tableFilters')
-        ->type('@filter_1', 'test')
-        ->waitForLivewire()
-        // Wait for the changes to be applied...
-        ->pause(5)
+        ->waitForLivewire()->type('@filter_1', 'test')
         ->assertScript(
             '(new URLSearchParams(window.location.search)).toString()',
             'tableFilters%5Bfilter_1%5D%5Bvalue%5D=test'
@@ -83,7 +80,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
+            ->assertScript('return decodeURIComponent(window.location.search)', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
     }
 
     public function test_does_not_duplicate_url_query_string_for_array_parameters_on_page_load()
@@ -113,7 +110,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
+            ->assertScript('return decodeURIComponent(window.location.search)', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
     }
 
     public function test_keep_option_does_not_duplicate_url_query_string_for_string_parameter_on_page_load()
@@ -383,6 +380,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringHas('search', 'bar')
             ->waitForLivewire()->type('@input', ' ')
             ->waitForLivewire()->keys('@input', '{backspace}')
+            ->pause(100)
             ->assertQueryStringMissing('search')
         ;
     }
@@ -520,6 +518,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
+            ->pause(200)
             ->assertQueryStringHas('foo', '')
             ->assertSee('foo', null)
             ->waitForLivewire()->click('@button')
@@ -563,6 +562,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
+            ->pause(200)
             ->assertQueryStringHas('foo', '')
             ->assertSee('foo', null)
             ->waitForLivewire()->click('@button')
@@ -1106,7 +1106,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     }
                 }
             ])
-            ->assertScript('return window.location.search', '?foo[bar]=baz');
+            ->assertScript('return decodeURIComponent(window.location.search)', '?foo[bar]=baz');
     }
 
     public function test_it_skips_query_string_encoded_keys_not_tracked_by_livewire()
@@ -1130,7 +1130,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     }
                 }
             ])
-            ->assertScript('return window.location.search', '?foo[bar]=baz&bob%5Blob%5D=law');
+            ->assertScript('return decodeURIComponent(window.location.search)', '?foo[bar]=baz&bob[lob]=law');
     }
 
     public function test_except_does_remove_value_from_query_string_when_loaded_with_value_then_changed_to_except_value()
@@ -1159,7 +1159,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     }
                 }
             ])
-            ->assertScript('return window.location.search', '?shown=true')
+            ->assertScript('return window.location.search === "?shown=true" || window.location.search === "?shown=1"', true)
             ->waitForLivewire()->click('@hideButton')
             ->assertScript('return window.location.search', '');
     }

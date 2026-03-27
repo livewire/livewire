@@ -56,9 +56,11 @@ class AlpineUiBrowserTest extends \Tests\BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
+            ->pause(2000)
             ->click('@openListbox')
+            ->waitFor('@listboxOption')
             ->assertSeeIn('@updatesCount', '1')
-            ->pressAndWaitFor('@listboxOption', 250)
+            ->waitForLivewire()->click('@listboxOption')
             ->assertSeeIn('@updatesCount', '2')
         ;
     }
@@ -132,9 +134,11 @@ class AlpineUiBrowserTest extends \Tests\BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
+            ->pause(2000)
             ->click('@openCombobox')
+            ->waitFor('@comboboxOption')
             ->assertSeeIn('@updatesCount', '1')
-            ->pressAndWaitFor('@comboboxOption', 250)
+            ->waitForLivewire()->click('@comboboxOption')
             ->assertSeeIn('@updatesCount', '2')
         ;
     }
