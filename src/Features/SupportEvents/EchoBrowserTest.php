@@ -110,6 +110,7 @@ class EchoBrowserTest extends BrowserTestCase
                 HTML;
             }
         })
+        ->waitUntil('window.fakeEchoListeners && window.fakeEchoListeners.length === 1', 5)
         ->assertScript('return window.fakeEchoListeners.length', 1)
         ->assertScript('return window.fakeEchoLeftChannels.length', 0)
         ->waitForNavigate(function ($b) {
@@ -159,6 +160,7 @@ class EchoBrowserTest extends BrowserTestCase
                 HTML;
             }
         })
+        ->waitUntil('window.fakeEchoListeners && window.fakeEchoListeners.length === 1', 5)
         ->assertScript('return window.fakeEchoListeners.length', 1)
         ->waitForNavigate(function ($b) {
             $b->click('@link');
