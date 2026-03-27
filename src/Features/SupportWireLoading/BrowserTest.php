@@ -514,7 +514,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
         ->assertHasClass('@link', 'text-blue-500')
         ->click('@refresh-button')
-        ->pause(5)
+        ->waitUntil('document.querySelector("[dusk=link]").classList.contains("text-red-500")', 5)
         ->assertHasClass('@link', 'text-red-500')
         ;
     }
