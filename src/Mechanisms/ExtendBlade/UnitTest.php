@@ -6,6 +6,7 @@ use ErrorException;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\View;
 use Livewire\Component;
 use Livewire\Exceptions\BypassViewHandler;
@@ -16,6 +17,31 @@ use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function test_compilation_callbacks_dont_resolve_blade_compiler_from_container()
+    {
+        // Get the compiler that has all Livewire hooks registered on it...
+        $compiler = app('blade.compiler');
+
+        // Forget the blade compiler from the container and clear the facade cache.
+        // This simulates the scenario where `php artisan optimize` swaps the app
+        // instance (during config:cache), causing the container to return a different
+        // blade compiler than the one actually doing compilation...
+        app()->forgetInstance('blade.compiler');
+        Facade::clearResolvedInstance('blade.compiler');
+
+        $resolved = false;
+
+        app()->resolving('blade.compiler', function () use (&$resolved) {
+            $resolved = true;
+        });
+
+        // This fixture exercises all Livewire compilation hooks: deterministic
+        // keys precompiler, morph markers precompiler, and @script/@assets directives...
+        $compiler->compile(view('compiler-instance-test')->getPath());
+
+        $this->assertFalse($resolved, 'Blade compiler was resolved from the container during compilation. Compilation callbacks should use the captured compiler instance.');
+    }
+
     public function test_livewire_only_directives_apply_to_livewire_components_and_not_normal_blade()
     {
         Livewire::directive('foo', function ($expression) {
