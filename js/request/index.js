@@ -17,7 +17,7 @@ let actionInterceptors = []
 let partitionInterceptors = []
 let sessionExpired = false
 
-export function isSessionExpired() {
+export function sessionIsExpired() {
     return sessionExpired
 }
 
