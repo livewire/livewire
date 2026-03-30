@@ -18,13 +18,35 @@ class UnitTest extends \Tests\TestCase
         $this->assertFalse($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
     }
 
-    public function test_back_button_cache_is_allowed_by_default_for_livewire_components()
+    public function test_back_button_cache_is_disabled_by_default_for_livewire_components()
     {
         Route::get('test-route-containing-livewire-component', DefaultBrowserCache::class);
 
         $response = $this->get('test-route-containing-livewire-component')->assertSuccessful();
 
+        $this->assertTrue($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
+    }
+
+    public function test_back_button_cache_is_allowed_when_config_is_true()
+    {
+        config()->set('livewire.back_button_cache', true);
+
+        Route::get('test-route-containing-livewire-component', DefaultBrowserCache::class);
+
+        $response = $this->get('test-route-containing-livewire-component')->assertSuccessful();
+
         $this->assertFalse($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
+    }
+
+    public function test_per_component_disable_overrides_config()
+    {
+        config()->set('livewire.back_button_cache', true);
+
+        Route::get('test-route-containing-livewire-component', DisableBrowserCache::class);
+
+        $response = $this->get('test-route-containing-livewire-component')->assertSuccessful();
+
+        $this->assertTrue($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
     }
 
     public function test_ensure_browser_cache_middleware_is_applied_to_a_route_that_contains_a_component_with_disable_set_to_true()
