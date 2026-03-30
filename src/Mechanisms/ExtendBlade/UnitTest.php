@@ -35,8 +35,8 @@ class UnitTest extends \Tests\TestCase
             $resolved = true;
         });
 
-        // This fixture exercises all Livewire compilation hooks: deterministic
-        // keys precompiler, morph markers precompiler, and @script/@assets directives...
+        // This fixture exercises all Livewire compilation hooks: islands
+        // precompiler, deterministic keys precompiler, and @script/@assets directives...
         $compiler->compile(view('compiler-instance-test')->getPath());
 
         $this->assertFalse($resolved, 'Blade compiler was resolved from the container during compilation. Compilation callbacks should use the captured compiler instance.');
