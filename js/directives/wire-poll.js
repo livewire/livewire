@@ -1,5 +1,5 @@
 import { directive, getDirectives } from "@/directives"
-import { setNextActionMetadata, setNextActionOrigin } from '@/request'
+import { setNextActionMetadata, setNextActionOrigin, isSessionExpired } from '@/request'
 import { evaluateActionExpression } from '../evaluator'
 
 directive('poll', ({ el, directive, component }) => {
@@ -15,6 +15,7 @@ directive('poll', ({ el, directive, component }) => {
     pauseWhile(() => theDirectiveHasVisible(directive) && theElementIsNotInTheViewport(el))
     pauseWhile(() => theDirectiveIsOffTheElement(el))
     pauseWhile(() => livewireIsOffline())
+    pauseWhile(() => isSessionExpired())
     stopWhen(() => theElementIsDisconnected(el))
 })
 
