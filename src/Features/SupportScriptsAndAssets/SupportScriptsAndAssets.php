@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportScriptsAndAssets;
 
-use Illuminate\Support\Facades\Blade;
 use function Livewire\store;
 use Livewire\ComponentHook;
 
@@ -42,14 +41,14 @@ class SupportScriptsAndAssets extends ComponentHook
         }
     }
 
-    public static function getUniqueBladeCompileTimeKey()
+    public static function getUniqueBladeCompileTimeKey($compiler)
     {
         // Rather than using random strings as compile-time keys for blade directives,
         // we want something more detereminstic to protect against problems that arise
         // from using load-balancers and such.
         // Therefore, we create a key based on the currently compiling view path and
         // number of already compiled directives here...
-        $viewPath = crc32(app('blade.compiler')->getPath() ?? '');
+        $viewPath = crc32($compiler->getPath() ?? '');
 
         if (! isset(static::$countersByViewPath[$viewPath])) static::$countersByViewPath[$viewPath] = 0;
 
@@ -62,6 +61,8 @@ class SupportScriptsAndAssets extends ComponentHook
 
     static function provide()
     {
+        $compiler = app('blade.compiler');
+
         on('flush-state', function () {
             static::$alreadyRunAssetKeys = [];
             static::$countersByViewPath = [];
@@ -69,8 +70,8 @@ class SupportScriptsAndAssets extends ComponentHook
             static::$nonLivewireAssets = [];
         });
 
-        Blade::directive('script', function () {
-            $key = static::getUniqueBladeCompileTimeKey();
+        $compiler->directive('script', function () use ($compiler) {
+            $key = static::getUniqueBladeCompileTimeKey($compiler);
 
             return <<<PHP
                 <?php
@@ -80,7 +81,7 @@ class SupportScriptsAndAssets extends ComponentHook
             PHP;
         });
 
-        Blade::directive('endscript', function () {
+        $compiler->directive('endscript', function () {
             return <<<PHP
                 <?php
                     \$__output = ob_get_clean();
@@ -90,8 +91,8 @@ class SupportScriptsAndAssets extends ComponentHook
             PHP;
         });
 
-        Blade::directive('assets', function () {
-            $key = static::getUniqueBladeCompileTimeKey();
+        $compiler->directive('assets', function () use ($compiler) {
+            $key = static::getUniqueBladeCompileTimeKey($compiler);
 
             return <<<PHP
                 <?php
@@ -102,7 +103,7 @@ class SupportScriptsAndAssets extends ComponentHook
             PHP;
         });
 
-        Blade::directive('endassets', function () {
+        $compiler->directive('endassets', function () {
             return <<<PHP
                 <?php
                     \$__output = ob_get_clean();
