@@ -18,6 +18,9 @@ The release token is composed of three parts concatenated together:
 
 A mismatch in any of the three parts triggers the expired page dialog.
 
+> [!info] Keep tokens short
+> The release token is included in every Livewire request payload. Keep each part as short as possible — a single letter, short number, or abbreviated hash is ideal.
+
 ## Changing the token on deploy
 
 The most common use case is updating the application-level release token in `config/livewire.php` during a deployment:
