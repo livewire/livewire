@@ -197,11 +197,7 @@ class SupportLifecycleHooks extends ComponentHook
             }
 
             if (static::$methodCache[$cacheKey]) {
-                $keys = array_keys($params);
-                $paramsToSpread = array_filter($keys, 'is_string') && array_filter($keys, 'is_int')
-                    ? array_filter($params, fn ($key) => is_string($key), ARRAY_FILTER_USE_KEY)
-                    : $params;
-                wrap($this->component)->$method(...$paramsToSpread);
+                wrap($this->component)->$method(...$params);
             }
         }
     }
