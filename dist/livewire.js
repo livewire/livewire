@@ -15027,8 +15027,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         module_default.bind(el, {
           [attribute]() {
             setNextActionOrigin({ el, directive: directive3 });
-            let params = [this.$item, this.$position];
-            let scope2 = { $item: this.$item, $position: this.$position };
+            let sortableChildren = Array.from(el.children).filter(
+              (child) => child.hasAttribute("x-sort:item") || child.hasAttribute("wire:sort:item")
+            );
+            let itemPosition = sortableChildren.findIndex((child) => child._x_sort_key === this.$item);
+            let position = itemPosition !== -1 ? itemPosition : this.$position;
+            let params = [this.$item, position];
+            let scope2 = { $item: this.$item, $position: position };
             let sortId = el.getAttribute("wire:sort:group-id");
             if (sortId !== null) {
               params.push(sortId);
