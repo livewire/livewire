@@ -62,12 +62,7 @@ class ImplicitRouteBinding
             throw $e;
         }
 
-        // resolveMethodDependencies() adds default values for optional
-        // parameters with integer keys. Strip them so the array only
-        // contains named route-matched parameters and can be safely
-        // unpacked with `...` downstream (PHP forbids positional args
-        // after named args).
-        return new Collection(array_filter($parameters, 'is_string', ARRAY_FILTER_USE_KEY));
+        return new Collection($parameters);
     }
 
     public function resolveComponentProps(Route $route, Component $component)
