@@ -46,6 +46,22 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
             ->assertSeeText('Book ID: 2');
     }
 
+    public function test_props_are_set_via_scope_binding_when_props_declared_in_reverse_order()
+    {
+        Route::get('/scope-binding-reversed/{store}/{book}', ComponentWithScopeBindingsReversedProps::class)->scopeBindings();
+
+        $this->get('/scope-binding-reversed/1/1')
+            ->assertSeeText('Store ID: 1')
+            ->assertSeeText('Book ID: 1');
+
+        $this->get('/scope-binding-reversed/2/2')
+            ->assertSeeText('Store ID: 2')
+            ->assertSeeText('Book ID: 2');
+
+        $this->get('/scope-binding-reversed/1/2')
+            ->assertNotFound();
+    }
+
     public function test_dependent_props_are_set_via_mount()
     {
         Route::get('/foo/{parent:custom}/bar/{child:custom}', ComponentWithDependentMountBindings::class);
@@ -316,4 +332,20 @@ class Book extends Model
             'name' => 'Foo',
         ],
     ];
+}
+
+class ComponentWithScopeBindingsReversedProps extends Component
+{
+    public Book $book;
+    public Store $store;
+
+    public function render()
+    {
+        return <<<'BLADE'
+            <div>
+                Store ID: {{ $store->id }}
+                Book ID: {{ $book->id }}
+            </div>
+        BLADE;
+    }
 }
