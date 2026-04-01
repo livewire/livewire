@@ -452,4 +452,21 @@ class UnitTest extends TestCase
 
         $this->assertCount(1, $fragments, 'Expected only one island fragment but got ' . count($fragments));
     }
+
+    public function test_island_tokens_are_stable_across_different_base_paths()
+    {
+        $path = '/resources/views/components/foo.blade.php';
+
+        $content = '@island @endisland';
+
+        $islandA = IslandCompiler::compile(base_path($path), $content);
+
+        // Simulate Forge's zero-downtime deployments where each release has its own folder...
+        app()->setBasePath('/home/forge/domain/releases/22222');
+
+        $islandB = IslandCompiler::compile(base_path($path), $content);
+
+        $this->assertSame($islandA, $islandB);
+    }
+
 }
