@@ -443,6 +443,16 @@ class UnitTest extends \Tests\TestCase
 
         $this->get('/route-with-params/123')->assertSeeText('123');
     }
+
+    public function test_full_page_component_with_optional_mount_params_and_trait_hook_does_not_crash()
+    {
+        Route::get('/posts/{postId}', ComponentWithOptionalMountParamAndTrait::class);
+
+        $this->withoutExceptionHandling()
+            ->get('/posts/123')
+            ->assertSeeText('123')
+            ->assertSeeText('overview');
+    }
 }
 
 class ComponentForRouteWithoutMountParametersTest extends Component
@@ -771,6 +781,35 @@ class ComponentWithStacks extends Component
                     @endpush
                 @endonce
             @endforeach
+        HTML;
+    }
+}
+
+trait WithOptionalMountParamTrait
+{
+    public function mountWithOptionalMountParamTrait()
+    {
+        // trait mount hook — its presence triggers the bug
+    }
+}
+
+class ComponentWithOptionalMountParamAndTrait extends Component
+{
+    use WithOptionalMountParamTrait;
+
+    public $postId;
+    public $tab;
+
+    public function mount($postId, $tab = null)
+    {
+        $this->postId = $postId;
+        $this->tab = $tab ?? 'overview';
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>{{ $postId }} {{ $tab }}</div>
         HTML;
     }
 }
