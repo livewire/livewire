@@ -197,6 +197,59 @@ public function posts()
 }
 ```
 
+## Memoizing cached values within a request
+
+When using `cache: true` or `persist: true`, Livewire queries the cache store on every access within a request. For in-process cache drivers like `array`, this is negligible. However, with distributed cache stores like Redis, Memcached, or DynamoDB, each access is a network round-trip — accessing a cached property 5 times in a template means 5 round-trips to the cache service.
+
+The `memo` parameter stores the cache result in memory after the first access, so subsequent accesses within the same request skip the cache store entirely:
+
+```php
+use Livewire\Attributes\Computed;
+use App\Models\Post;
+
+#[Computed(cache: true, memo: true)]
+public function posts()
+{
+    return Post::all();
+}
+```
+
+```blade
+<div>
+    @if ($this->posts->count())              {{-- Hits the cache store --}}
+        @foreach ($this->posts as $post)     {{-- Returns from memory --}}
+            <div wire:key="{{ $post->id }}">
+                {{ $post->title }}
+            </div>
+        @endforeach
+    @endif
+</div>
+```
+
+The `memo` parameter works the same way with `persist: true`:
+
+```php
+#[Computed(persist: true, memo: true)]
+public function user()
+{
+    return User::find($this->userId);
+}
+```
+
+Calling `unset()` on a memoized cached property clears both the in-memory value and the underlying cache entry:
+
+```php
+public function createPost()
+{
+    Auth::user()->posts()->create(...);
+
+    unset($this->posts); // Clears both memo and cache store
+}
+```
+
+> [!tip] When to use `memo`
+> The `memo` parameter is most beneficial when using distributed cache stores (Redis, Memcached, DynamoDB) and accessing the cached property multiple times within a single request. For the `array` cache driver, the performance difference is negligible.
+
 ## When to use computed properties?
 
 In addition to offering performance advantages, there are a few other scenarios where computed properties are helpful.

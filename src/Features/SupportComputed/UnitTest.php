@@ -195,6 +195,64 @@ class UnitTest extends TestCase
         $this->assertTrue(Cache::has('baz'));
     }
 
+    function test_can_memoize_cached_computed_property_within_request()
+    {
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(cache: true, memo: true)]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function render() {
+                $noop = $this->foo;
+                $noop = $this->foo;
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->assertSetStrict('count', 1)
+            ->call('$refresh')
+            ->assertSetStrict('count', 1);
+    }
+
+    function test_can_bust_memoized_cached_computed_using_unset()
+    {
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(cache: true, memo: true)]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function render() {
+                $noop = $this->foo;
+                unset($this->foo);
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->assertSetStrict('count', 2);
+    }
+
     function test_cant_call_a_computed_directly()
     {
         $this->expectException(CannotCallComputedDirectlyException::class);

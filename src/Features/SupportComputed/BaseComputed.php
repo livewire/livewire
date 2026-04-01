@@ -18,6 +18,7 @@ class BaseComputed extends Attribute
         public $cache = false,
         public $key = null,
         public $tags = null,
+        public $memo = false,
     ) {}
 
     function call()
@@ -51,14 +52,8 @@ class BaseComputed extends Attribute
     {
         if ($this->persist) {
             $this->handlePersistedUnset();
-
-            return;
-        }
-
-        if ($this->cache) {
+        } elseif ($this->cache) {
             $this->handleCachedUnset();
-
-            return;
         }
 
         unset($this->requestCachedValue);
@@ -66,26 +61,46 @@ class BaseComputed extends Attribute
 
     protected function handlePersistedGet()
     {
+        if ($this->memo && isset($this->requestCachedValue)) {
+            return $this->requestCachedValue;
+        }
+
         $key = $this->generatePersistedKey();
 
         $closure = fn () => $this->evaluateComputed();
 
-        return match(Cache::supportsTags() && !empty($this->tags)) {
+        $value = match(Cache::supportsTags() && !empty($this->tags)) {
             true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
             default => Cache::remember($key, $this->seconds, $closure)
         };
+
+        if ($this->memo) {
+            $this->requestCachedValue = $value;
+        }
+
+        return $value;
     }
 
     protected function handleCachedGet()
     {
+        if ($this->memo && isset($this->requestCachedValue)) {
+            return $this->requestCachedValue;
+        }
+
         $key = $this->generateCachedKey();
 
         $closure = fn () => $this->evaluateComputed();
 
-        return match(Cache::supportsTags() && !empty($this->tags)) {
+        $value = match(Cache::supportsTags() && !empty($this->tags)) {
             true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
             default => Cache::remember($key, $this->seconds, $closure)
         };
+
+        if ($this->memo) {
+            $this->requestCachedValue = $value;
+        }
+
+        return $value;
     }
 
     protected function handlePersistedUnset()

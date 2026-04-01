@@ -135,6 +135,20 @@ You can optionally set a custom cache key:
 #[Computed(cache: true, key: 'homepage-posts')] // [tl! highlight]
 ```
 
+## Memoizing cached values within a request
+
+With distributed cache stores like Redis, Memcached, or DynamoDB, each access to a cached computed property is a network round-trip. The `memo` parameter stores the result in memory after the first access, so subsequent accesses within the same request skip the cache store entirely:
+
+```php
+#[Computed(cache: true, memo: true)] // [tl! highlight]
+public function posts()
+{
+    return Post::all();
+}
+```
+
+For more details, see [Memoizing cached values](/docs/4.x/computed-properties#memoizing-cached-values-within-a-request).
+
 ## When to use
 
 Computed properties are especially useful when:
@@ -162,6 +176,7 @@ For detailed information about computed properties, caching strategies, and adva
     bool $cache = false,
     ?string $key = null,
     mixed $tags = null,
+    bool $memo = false,
 )]
 ```
 
@@ -172,3 +187,4 @@ For detailed information about computed properties, caching strategies, and adva
 | `$cache` | `bool` | `false` | Cache the value across all component instances |
 | `$key` | `?string` | `null` | Custom cache key (auto-generated if not provided) |
 | `$tags` | `mixed` | `null` | Cache tags (requires a cache driver that supports tags) |
+| `$memo` | `bool` | `false` | Memoize the cached value in memory within the request to avoid redundant cache lookups |
