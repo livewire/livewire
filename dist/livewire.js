@@ -1024,20 +1024,18 @@
   function watch(getter, callback) {
     let firstTime = true;
     let oldValue;
-    let oldValueJSON;
     let effectReference = effect(() => {
       let value = getter();
-      let newJSON = JSON.stringify(value);
+      JSON.stringify(value);
       if (!firstTime) {
         if (typeof value === "object" || value !== oldValue) {
-          let previousValue = typeof oldValue === "object" ? JSON.parse(oldValueJSON) : oldValue;
+          let previousValue = oldValue;
           queueMicrotask(() => {
             callback(value, previousValue);
           });
         }
       }
       oldValue = value;
-      oldValueJSON = newJSON;
       firstTime = false;
     });
     return () => release(effectReference);
@@ -1233,13 +1231,6 @@
   function mergeProxies(objects) {
     return new Proxy({ objects }, mergeProxyTrap);
   }
-  function keyInPrototypeChain(obj, key) {
-    if (obj === null || obj === Object.prototype)
-      return null;
-    if (Object.prototype.hasOwnProperty.call(obj, key))
-      return obj;
-    return keyInPrototypeChain(Object.getPrototypeOf(obj), key);
-  }
   var mergeProxyTrap = {
     ownKeys({ objects }) {
       return Array.from(
@@ -1265,14 +1256,9 @@
       );
     },
     set({ objects }, name, value, thisProxy) {
-      let target;
-      for (const obj of objects) {
-        target = keyInPrototypeChain(obj, name);
-        if (target)
-          break;
-      }
-      if (!target)
-        target = objects[objects.length - 1];
+      const target = objects.find(
+        (obj) => Object.prototype.hasOwnProperty.call(obj, name)
+      ) || objects[objects.length - 1];
       const descriptor = Object.getOwnPropertyDescriptor(target, name);
       if (descriptor?.set && descriptor?.get)
         return descriptor.set.call(thisProxy, value) || true;
@@ -1287,7 +1273,7 @@
     }, {});
   }
   function initInterceptors(data2) {
-    let isObject3 = (val) => typeof val === "object" && !Array.isArray(val) && val !== null;
+    let isObject22 = (val) => typeof val === "object" && !Array.isArray(val) && val !== null;
     let recurse = (obj, basePath = "") => {
       Object.entries(Object.getOwnPropertyDescriptors(obj)).forEach(([key, { value, enumerable }]) => {
         if (enumerable === false || value === void 0)
@@ -1298,7 +1284,7 @@
         if (typeof value === "object" && value !== null && value._x_interceptor) {
           obj[key] = value.initialize(data2, path, key);
         } else {
-          if (isObject3(value) && value !== obj && !(value instanceof Element)) {
+          if (isObject22(value) && value !== obj && !(value instanceof Element)) {
             recurse(value, path);
           }
         }
@@ -1413,8 +1399,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function evaluateLater(...args) {
     return theEvaluatorFunction(...args);
   }
-  var theEvaluatorFunction = () => {
-  };
+  var theEvaluatorFunction = normalEvaluator;
   function setEvaluator(newEvaluator) {
     theEvaluatorFunction = newEvaluator;
   }
@@ -1698,14 +1683,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let typeB = directiveOrder.indexOf(b.type) === -1 ? DEFAULT : b.type;
     return directiveOrder.indexOf(typeA) - directiveOrder.indexOf(typeB);
   }
-  function dispatch2(el, name, detail = {}, options = {}) {
-    return el.dispatchEvent(
+  function dispatch2(el, name, detail = {}) {
+    el.dispatchEvent(
       new CustomEvent(name, {
         detail,
         bubbles: true,
         composed: true,
-        cancelable: true,
-        ...options
+        cancelable: true
       })
     );
   }
@@ -1778,7 +1762,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (callback(el))
       return el;
     if (el._x_teleportBack)
-      return findClosest(el._x_teleportBack, callback);
+      el = el._x_teleportBack;
     if (el.parentNode instanceof ShadowRoot) {
       return findClosest(el.parentNode.host, callback);
     }
@@ -1869,11 +1853,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return setClassesFromString(el, value);
   }
-  function splitClasses(classString) {
-    return classString.split(/\s/).filter(Boolean);
-  }
   function setClassesFromString(el, classString) {
-    let missingClasses = (classString2) => splitClasses(classString2).filter((i) => !el.classList.contains(i)).filter(Boolean);
+    let split = (classString2) => classString2.split(" ").filter(Boolean);
+    let missingClasses = (classString2) => classString2.split(" ").filter((i) => !el.classList.contains(i)).filter(Boolean);
     let addClassesAndReturnUndo = (classes) => {
       el.classList.add(...classes);
       return () => {
@@ -1884,8 +1866,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return addClassesAndReturnUndo(missingClasses(classString));
   }
   function setClassesFromObject(el, classObject) {
-    let forAdd = Object.entries(classObject).flatMap(([classString, bool]) => bool ? splitClasses(classString) : false).filter(Boolean);
-    let forRemove = Object.entries(classObject).flatMap(([classString, bool]) => !bool ? splitClasses(classString) : false).filter(Boolean);
+    let split = (classString) => classString.split(" ").filter(Boolean);
+    let forAdd = Object.entries(classObject).flatMap(([classString, bool]) => bool ? split(classString) : false).filter(Boolean);
+    let forRemove = Object.entries(classObject).flatMap(([classString, bool]) => !bool ? split(classString) : false).filter(Boolean);
     let added = [];
     let removed = [];
     forRemove.forEach((i) => {
@@ -2313,6 +2296,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (el.attributes.value === void 0) {
         el.value = value;
       }
+      if (window.fromModel) {
+        if (typeof value === "boolean") {
+          el.checked = safeParseBoolean(el.value) === value;
+        } else {
+          el.checked = checkedAttrLooseCompare(el.value, value);
+        }
+      }
     } else if (isCheckbox(el)) {
       if (Number.isInteger(value)) {
         el.value = value;
@@ -2614,7 +2604,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get transaction() {
       return transaction;
     },
-    version: "3.15.9",
+    version: "3.15.8",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -3432,7 +3422,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return;
       el._x_removeModelListeners["default"]();
       let outerGet = el._x_model.get;
-      let outerSet = el._x_model.setWithModifiers;
+      let outerSet = el._x_model.set;
       let releaseEntanglement = entangle(
         {
           get() {
@@ -3532,16 +3522,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       event = dotSyntax(event);
     if (modifiers.includes("camel"))
       event = camelCase2(event);
+    if (modifiers.includes("passive"))
+      options.passive = true;
     if (modifiers.includes("capture"))
       options.capture = true;
     if (modifiers.includes("window"))
       listenerTarget = window;
     if (modifiers.includes("document"))
       listenerTarget = document;
-    if (modifiers.includes("passive")) {
-      options.passive = modifiers[modifiers.indexOf("passive") + 1] !== "false";
+    if (modifiers.includes("debounce")) {
+      let nextModifier = modifiers[modifiers.indexOf("debounce") + 1] || "invalid-wait";
+      let wait = isNumeric2(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
+      handler4 = debounce(handler4, wait);
     }
-    handler4 = addDebounceOrThrottle(modifiers, handler4);
+    if (modifiers.includes("throttle")) {
+      let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
+      let wait = isNumeric2(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
+      handler4 = throttle(handler4, wait);
+    }
     if (modifiers.includes("prevent"))
       handler4 = wrapHandler(handler4, (next, e) => {
         e.preventDefault();
@@ -3596,19 +3594,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return () => {
       listenerTarget.removeEventListener(event, handler4, options);
     };
-  }
-  function addDebounceOrThrottle(modifiers, handler4) {
-    if (modifiers.includes("debounce")) {
-      let nextModifier = modifiers[modifiers.indexOf("debounce") + 1] || "invalid-wait";
-      let wait = isNumeric2(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-      handler4 = debounce(handler4, wait);
-    }
-    if (modifiers.includes("throttle")) {
-      let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
-      let wait = isNumeric2(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-      handler4 = throttle(handler4, wait);
-    }
-    return handler4;
   }
   function dotSyntax(subject) {
     return subject.replace(/-/g, ".");
@@ -3696,7 +3681,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive("model", (el, { modifiers, expression }, { effect: effect3, cleanup: cleanup2 }) => {
     let scopeTarget = el;
     if (modifiers.includes("parent")) {
-      scopeTarget = findClosest(el, (element) => element !== el);
+      scopeTarget = el.parentNode;
     }
     let evaluateGet = evaluateLater(scopeTarget, expression);
     let evaluateSet;
@@ -3748,16 +3733,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (hasBlurModifier) {
         listeners2.push(on(el, "blur", modifiers, syncValue));
         if (el.form) {
-          let form = el.form;
           let syncCallback = () => syncValue({ target: el });
-          if (!form._x_pendingModelUpdates)
-            form._x_pendingModelUpdates = [];
-          form._x_pendingModelUpdates.push(syncCallback);
-          cleanup2(() => {
-            if (form._x_pendingModelUpdates) {
-              form._x_pendingModelUpdates.splice(form._x_pendingModelUpdates.indexOf(syncCallback), 1);
-            }
-          });
+          if (!el.form._x_pendingModelUpdates)
+            el.form._x_pendingModelUpdates = [];
+          el.form._x_pendingModelUpdates.push(syncCallback);
+          cleanup2(() => el.form._x_pendingModelUpdates.splice(el.form._x_pendingModelUpdates.indexOf(syncCallback), 1));
         }
       }
       if (hasEnterModifier) {
@@ -3796,29 +3776,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       },
       set(value) {
         setValue(value);
-      },
-      setWithModifiers: addDebounceOrThrottle(modifiers, setValue)
+      }
     };
     el._x_forceModelUpdate = (value) => {
       if (value === void 0 && typeof expression === "string" && expression.match(/\./))
         value = "";
-      mutateDom(() => {
-        if (isCheckbox(el)) {
-          if (Array.isArray(value)) {
-            el.checked = value.some((val) => val == el.value);
-          } else {
-            el.checked = !!value;
-          }
-        } else if (isRadio(el)) {
-          if (typeof value === "boolean") {
-            el.checked = safeParseBoolean(el.value) === value;
-          } else {
-            el.checked = el.value == value;
-          }
-        } else {
-          bind(el, "value", value);
-        }
-      });
+      window.fromModel = true;
+      mutateDom(() => bind(el, "value", value));
+      delete window.fromModel;
     };
     effect3(() => {
       let value = getValue();
@@ -3919,7 +3884,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     effect3(() => {
       evaluate22((value) => {
         mutateDom(() => {
-          el.innerHTML = value ?? "";
+          el.innerHTML = value;
           el._x_ignoreSelf = true;
           initTree(el);
           delete el._x_ignoreSelf;
@@ -4057,90 +4022,137 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el,
       el._x_keyExpression || "index"
     );
-    el._x_lookup = /* @__PURE__ */ new Map();
+    el._x_prevKeys = [];
+    el._x_lookup = {};
     effect3(() => loop(el, iteratorNames, evaluateItems, evaluateKey));
     cleanup2(() => {
-      el._x_lookup.forEach(
-        (el2) => mutateDom(() => {
+      Object.values(el._x_lookup).forEach((el2) => mutateDom(
+        () => {
           destroyTree(el2);
           el2.remove();
-        })
-      );
+        }
+      ));
+      delete el._x_prevKeys;
       delete el._x_lookup;
     });
   });
-  function refreshScope(scope2) {
-    return (newScope) => {
-      Object.entries(newScope).forEach(([key, value]) => {
-        scope2[key] = value;
-      });
-    };
-  }
-  function loop(templateEl, iteratorNames, evaluateItems, evaluateKey) {
+  function loop(el, iteratorNames, evaluateItems, evaluateKey) {
+    let isObject22 = (i) => typeof i === "object" && !Array.isArray(i);
+    let templateEl = el;
     evaluateItems((items) => {
-      if (isNumeric3(items))
-        items = Array.from({ length: items }, (_, i) => i + 1);
+      if (isNumeric3(items) && items >= 0) {
+        items = Array.from(Array(items).keys(), (i) => i + 1);
+      }
       if (items === void 0)
         items = [];
-      if (items instanceof Set)
-        items = Array.from(items);
-      if (items instanceof Map)
-        items = Array.from(items);
-      let oldLookup = templateEl._x_lookup;
-      let lookup = /* @__PURE__ */ new Map();
-      templateEl._x_lookup = lookup;
-      let hasStringKeys = isObject22(items);
-      let scopeEntries = Object.entries(items).map(([index2, item]) => {
-        if (!hasStringKeys)
-          index2 = parseInt(index2);
-        let scope2 = getIterationScopeVariables(iteratorNames, item, index2, items);
-        let key;
-        evaluateKey((innerKey) => {
-          if (typeof innerKey === "object")
-            warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
-          if (oldLookup.has(innerKey)) {
-            lookup.set(innerKey, oldLookup.get(innerKey));
-            oldLookup.delete(innerKey);
-          }
-          key = innerKey;
-        }, { scope: { index: index2, ...scope2 } });
-        return [key, scope2];
-      });
-      mutateDom(() => {
-        oldLookup.forEach((el) => {
-          destroyTree(el);
-          el.remove();
+      let lookup = el._x_lookup;
+      let prevKeys = el._x_prevKeys;
+      let scopes = [];
+      let keys = [];
+      if (isObject22(items)) {
+        items = Object.entries(items).map(([key, value]) => {
+          let scope2 = getIterationScopeVariables(iteratorNames, value, key, items);
+          evaluateKey((value2) => {
+            if (keys.includes(value2))
+              warn("Duplicate key on x-for", el);
+            keys.push(value2);
+          }, { scope: { index: key, ...scope2 } });
+          scopes.push(scope2);
         });
-        let added = /* @__PURE__ */ new Set();
-        let prev = templateEl;
-        scopeEntries.forEach(([key, scope2]) => {
-          if (lookup.has(key)) {
-            let el = lookup.get(key);
-            el._x_refreshXForScope(scope2);
-            if (prev.nextElementSibling !== el) {
-              if (prev.nextElementSibling)
-                el.replaceWith(prev.nextElementSibling);
-              prev.after(el);
-            }
-            prev = el;
-            if (el._x_currentIfEl) {
-              if (el.nextElementSibling !== el._x_currentIfEl)
-                prev.after(el._x_currentIfEl);
-              prev = el._x_currentIfEl;
-            }
-            return;
-          }
-          let clone22 = document.importNode(templateEl.content, true).firstElementChild;
-          let reactiveScope = reactive(scope2);
-          addScopeToNode(clone22, reactiveScope, templateEl);
-          clone22._x_refreshXForScope = refreshScope(reactiveScope);
-          lookup.set(key, clone22);
-          added.add(clone22);
-          prev.after(clone22);
-          prev = clone22;
+      } else {
+        for (let i = 0; i < items.length; i++) {
+          let scope2 = getIterationScopeVariables(iteratorNames, items[i], i, items);
+          evaluateKey((value) => {
+            if (keys.includes(value))
+              warn("Duplicate key on x-for", el);
+            keys.push(value);
+          }, { scope: { index: i, ...scope2 } });
+          scopes.push(scope2);
+        }
+      }
+      let adds = [];
+      let moves = [];
+      let removes = [];
+      let sames = [];
+      for (let i = 0; i < prevKeys.length; i++) {
+        let key = prevKeys[i];
+        if (keys.indexOf(key) === -1)
+          removes.push(key);
+      }
+      prevKeys = prevKeys.filter((key) => !removes.includes(key));
+      let lastKey = "template";
+      for (let i = 0; i < keys.length; i++) {
+        let key = keys[i];
+        let prevIndex = prevKeys.indexOf(key);
+        if (prevIndex === -1) {
+          prevKeys.splice(i, 0, key);
+          adds.push([lastKey, i]);
+        } else if (prevIndex !== i) {
+          let keyInSpot = prevKeys.splice(i, 1)[0];
+          let keyForSpot = prevKeys.splice(prevIndex - 1, 1)[0];
+          prevKeys.splice(i, 0, keyForSpot);
+          prevKeys.splice(prevIndex, 0, keyInSpot);
+          moves.push([keyInSpot, keyForSpot]);
+        } else {
+          sames.push(key);
+        }
+        lastKey = key;
+      }
+      for (let i = 0; i < removes.length; i++) {
+        let key = removes[i];
+        if (!(key in lookup))
+          continue;
+        mutateDom(() => {
+          destroyTree(lookup[key]);
+          lookup[key].remove();
         });
-        skipDuringClone(() => added.forEach((clone22) => initTree(clone22)))();
-      });
+        delete lookup[key];
+      }
+      for (let i = 0; i < moves.length; i++) {
+        let [keyInSpot, keyForSpot] = moves[i];
+        let elInSpot = lookup[keyInSpot];
+        let elForSpot = lookup[keyForSpot];
+        let marker = document.createElement("div");
+        mutateDom(() => {
+          if (!elForSpot)
+            warn(`x-for ":key" is undefined or invalid`, templateEl, keyForSpot, lookup);
+          elForSpot.after(marker);
+          elInSpot.after(elForSpot);
+          elForSpot._x_currentIfEl && elForSpot.after(elForSpot._x_currentIfEl);
+          marker.before(elInSpot);
+          elInSpot._x_currentIfEl && elInSpot.after(elInSpot._x_currentIfEl);
+          marker.remove();
+        });
+        elForSpot._x_refreshXForScope(scopes[keys.indexOf(keyForSpot)]);
+      }
+      for (let i = 0; i < adds.length; i++) {
+        let [lastKey2, index2] = adds[i];
+        let lastEl = lastKey2 === "template" ? templateEl : lookup[lastKey2];
+        if (lastEl._x_currentIfEl)
+          lastEl = lastEl._x_currentIfEl;
+        let scope2 = scopes[index2];
+        let key = keys[index2];
+        let clone22 = document.importNode(templateEl.content, true).firstElementChild;
+        let reactiveScope = reactive(scope2);
+        addScopeToNode(clone22, reactiveScope, templateEl);
+        clone22._x_refreshXForScope = (newScope) => {
+          Object.entries(newScope).forEach(([key2, value]) => {
+            reactiveScope[key2] = value;
+          });
+        };
+        mutateDom(() => {
+          lastEl.after(clone22);
+          skipDuringClone(() => initTree(clone22))();
+        });
+        if (typeof key === "object") {
+          warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
+        }
+        lookup[key] = clone22;
+      }
+      for (let i = 0; i < sames.length; i++) {
+        lookup[sames[i]]._x_refreshXForScope(scopes[keys.indexOf(sames[i])]);
+      }
+      templateEl._x_prevKeys = keys;
     });
   }
   function parseForExpression(expression) {
@@ -4189,18 +4201,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isNumeric3(subject) {
     return !Array.isArray(subject) && !isNaN(subject);
   }
-  function isObject22(subject) {
-    return typeof subject === "object" && !Array.isArray(subject);
-  }
   function handler3() {
   }
-  handler3.inline = skipDuringClone((el, { expression }, { cleanup: cleanup2 }) => {
+  handler3.inline = (el, { expression }, { cleanup: cleanup2 }) => {
     let root = closestRoot(el);
     if (!root._x_refs)
       root._x_refs = {};
     root._x_refs[expression] = el;
     cleanup2(() => delete root._x_refs[expression]);
-  });
+  };
   directive("ref", handler3);
   directive("if", (el, { expression }, { effect: effect3, cleanup: cleanup2 }) => {
     if (el.tagName.toLowerCase() !== "template")
@@ -6881,36 +6890,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var module_default2 = src_default2;
 
   // node_modules/@alpinejs/focus/dist/module.esm.js
-  var candidateSelectors = ["input:not([inert]):not([inert] *)", "select:not([inert]):not([inert] *)", "textarea:not([inert]):not([inert] *)", "a[href]:not([inert]):not([inert] *)", "button:not([inert]):not([inert] *)", "[tabindex]:not(slot):not([inert]):not([inert] *)", "audio[controls]:not([inert]):not([inert] *)", "video[controls]:not([inert]):not([inert] *)", '[contenteditable]:not([contenteditable="false"]):not([inert]):not([inert] *)', "details>summary:first-of-type:not([inert]):not([inert] *)", "details:not([inert]):not([inert] *)"];
+  var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
   var matches = NoElement ? function() {
   } : Element.prototype.matches || Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
   var getRootNode = !NoElement && Element.prototype.getRootNode ? function(element) {
-    var _element$getRootNode;
-    return element === null || element === void 0 ? void 0 : (_element$getRootNode = element.getRootNode) === null || _element$getRootNode === void 0 ? void 0 : _element$getRootNode.call(element);
+    return element.getRootNode();
   } : function(element) {
-    return element === null || element === void 0 ? void 0 : element.ownerDocument;
-  };
-  var _isInert = function isInert(node, lookUp) {
-    var _node$getAttribute;
-    if (lookUp === void 0) {
-      lookUp = true;
-    }
-    var inertAtt = node === null || node === void 0 ? void 0 : (_node$getAttribute = node.getAttribute) === null || _node$getAttribute === void 0 ? void 0 : _node$getAttribute.call(node, "inert");
-    var inert = inertAtt === "" || inertAtt === "true";
-    var result = inert || lookUp && node && (typeof node.closest === "function" ? node.closest("[inert]") : _isInert(node.parentNode));
-    return result;
-  };
-  var isContentEditable = function isContentEditable2(node) {
-    var _node$getAttribute2;
-    var attValue = node === null || node === void 0 ? void 0 : (_node$getAttribute2 = node.getAttribute) === null || _node$getAttribute2 === void 0 ? void 0 : _node$getAttribute2.call(node, "contenteditable");
-    return attValue === "" || attValue === "true";
+    return element.ownerDocument;
   };
   var getCandidates = function getCandidates2(el, includeContainer, filter) {
-    if (_isInert(el)) {
-      return [];
-    }
     var candidates = Array.prototype.slice.apply(el.querySelectorAll(candidateSelector));
     if (includeContainer && matches.call(el, candidateSelector)) {
       candidates.unshift(el);
@@ -6918,23 +6908,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     candidates = candidates.filter(filter);
     return candidates;
   };
-  var _getCandidatesIteratively = function getCandidatesIteratively(elements, includeContainer, options) {
+  var getCandidatesIteratively = function getCandidatesIteratively2(elements, includeContainer, options) {
     var candidates = [];
     var elementsToCheck = Array.from(elements);
     while (elementsToCheck.length) {
       var element = elementsToCheck.shift();
-      if (_isInert(element, false)) {
-        continue;
-      }
       if (element.tagName === "SLOT") {
         var assigned = element.assignedElements();
         var content = assigned.length ? assigned : element.children;
-        var nestedCandidates = _getCandidatesIteratively(content, true, options);
+        var nestedCandidates = getCandidatesIteratively2(content, true, options);
         if (options.flatten) {
           candidates.push.apply(candidates, nestedCandidates);
         } else {
           candidates.push({
-            scopeParent: element,
+            scope: element,
             candidates: nestedCandidates
           });
         }
@@ -6944,14 +6931,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           candidates.push(element);
         }
         var shadowRoot = element.shadowRoot || typeof options.getShadowRoot === "function" && options.getShadowRoot(element);
-        var validShadowRoot = !_isInert(shadowRoot, false) && (!options.shadowRootFilter || options.shadowRootFilter(element));
+        var validShadowRoot = !options.shadowRootFilter || options.shadowRootFilter(element);
         if (shadowRoot && validShadowRoot) {
-          var _nestedCandidates = _getCandidatesIteratively(shadowRoot === true ? element.children : shadowRoot.children, true, options);
+          var _nestedCandidates = getCandidatesIteratively2(shadowRoot === true ? element.children : shadowRoot.children, true, options);
           if (options.flatten) {
             candidates.push.apply(candidates, _nestedCandidates);
           } else {
             candidates.push({
-              scopeParent: element,
+              scope: element,
               candidates: _nestedCandidates
             });
           }
@@ -6962,26 +6949,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return candidates;
   };
-  var hasTabIndex = function hasTabIndex2(node) {
-    return !isNaN(parseInt(node.getAttribute("tabindex"), 10));
-  };
-  var getTabIndex = function getTabIndex2(node) {
-    if (!node) {
-      throw new Error("No node provided");
-    }
+  var getTabindex = function getTabindex2(node, isScope) {
     if (node.tabIndex < 0) {
-      if ((/^(AUDIO|VIDEO|DETAILS)$/.test(node.tagName) || isContentEditable(node)) && !hasTabIndex(node)) {
+      if ((isScope || /^(AUDIO|VIDEO|DETAILS)$/.test(node.tagName) || node.isContentEditable) && isNaN(parseInt(node.getAttribute("tabindex"), 10))) {
         return 0;
       }
     }
     return node.tabIndex;
-  };
-  var getSortOrderTabIndex = function getSortOrderTabIndex2(node, isScope) {
-    var tabIndex = getTabIndex(node);
-    if (tabIndex < 0 && isScope && !hasTabIndex(node)) {
-      return 0;
-    }
-    return tabIndex;
   };
   var sortOrderedTabbables = function sortOrderedTabbables2(a, b) {
     return a.tabIndex === b.tabIndex ? a.documentOrder - b.documentOrder : a.tabIndex - b.tabIndex;
@@ -7033,41 +7007,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var isNonTabbableRadio = function isNonTabbableRadio2(node) {
     return isRadio2(node) && !isTabbableRadio(node);
   };
-  var isNodeAttached = function isNodeAttached2(node) {
-    var _nodeRoot;
-    var nodeRoot = node && getRootNode(node);
-    var nodeRootHost = (_nodeRoot = nodeRoot) === null || _nodeRoot === void 0 ? void 0 : _nodeRoot.host;
-    var attached = false;
-    if (nodeRoot && nodeRoot !== node) {
-      var _nodeRootHost, _nodeRootHost$ownerDo, _node$ownerDocument;
-      attached = !!((_nodeRootHost = nodeRootHost) !== null && _nodeRootHost !== void 0 && (_nodeRootHost$ownerDo = _nodeRootHost.ownerDocument) !== null && _nodeRootHost$ownerDo !== void 0 && _nodeRootHost$ownerDo.contains(nodeRootHost) || node !== null && node !== void 0 && (_node$ownerDocument = node.ownerDocument) !== null && _node$ownerDocument !== void 0 && _node$ownerDocument.contains(node));
-      while (!attached && nodeRootHost) {
-        var _nodeRoot2, _nodeRootHost2, _nodeRootHost2$ownerD;
-        nodeRoot = getRootNode(nodeRootHost);
-        nodeRootHost = (_nodeRoot2 = nodeRoot) === null || _nodeRoot2 === void 0 ? void 0 : _nodeRoot2.host;
-        attached = !!((_nodeRootHost2 = nodeRootHost) !== null && _nodeRootHost2 !== void 0 && (_nodeRootHost2$ownerD = _nodeRootHost2.ownerDocument) !== null && _nodeRootHost2$ownerD !== void 0 && _nodeRootHost2$ownerD.contains(nodeRootHost));
-      }
-    }
-    return attached;
-  };
   var isZeroArea = function isZeroArea2(node) {
     var _node$getBoundingClie = node.getBoundingClientRect(), width = _node$getBoundingClie.width, height = _node$getBoundingClie.height;
     return width === 0 && height === 0;
   };
   var isHidden = function isHidden2(node, _ref) {
     var displayCheck = _ref.displayCheck, getShadowRoot = _ref.getShadowRoot;
-    if (displayCheck === "full-native") {
-      if ("checkVisibility" in node) {
-        var visible = node.checkVisibility({
-          checkOpacity: false,
-          opacityProperty: false,
-          contentVisibilityAuto: true,
-          visibilityProperty: true,
-          checkVisibilityCSS: true
-        });
-        return !visible;
-      }
-    }
     if (getComputedStyle(node).visibility === "hidden") {
       return true;
     }
@@ -7076,7 +7021,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (matches.call(nodeUnderDetails, "details:not([open]) *")) {
       return true;
     }
-    if (!displayCheck || displayCheck === "full" || displayCheck === "full-native" || displayCheck === "legacy-full") {
+    var nodeRootHost = getRootNode(node).host;
+    var nodeIsAttached = (nodeRootHost === null || nodeRootHost === void 0 ? void 0 : nodeRootHost.ownerDocument.contains(nodeRootHost)) || node.ownerDocument.contains(node);
+    if (!displayCheck || displayCheck === "full") {
       if (typeof getShadowRoot === "function") {
         var originalNode = node;
         while (node) {
@@ -7094,11 +7041,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         node = originalNode;
       }
-      if (isNodeAttached(node)) {
+      if (nodeIsAttached) {
         return !node.getClientRects().length;
-      }
-      if (displayCheck !== "legacy-full") {
-        return true;
       }
     } else if (displayCheck === "non-zero-area") {
       return isZeroArea(node);
@@ -7130,26 +7074,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return true;
   };
   var isNodeMatchingSelectorTabbable = function isNodeMatchingSelectorTabbable2(options, node) {
-    if (isNonTabbableRadio(node) || getTabIndex(node) < 0 || !isNodeMatchingSelectorFocusable(options, node)) {
+    if (isNonTabbableRadio(node) || getTabindex(node) < 0 || !isNodeMatchingSelectorFocusable(options, node)) {
       return false;
     }
     return true;
   };
-  var isShadowRootTabbable = function isShadowRootTabbable2(shadowHostNode) {
+  var isValidShadowRootTabbable = function isValidShadowRootTabbable2(shadowHostNode) {
     var tabIndex = parseInt(shadowHostNode.getAttribute("tabindex"), 10);
     if (isNaN(tabIndex) || tabIndex >= 0) {
       return true;
     }
     return false;
   };
-  var _sortByOrder = function sortByOrder(candidates) {
+  var sortByOrder = function sortByOrder2(candidates) {
     var regularTabbables = [];
     var orderedTabbables = [];
     candidates.forEach(function(item, i) {
-      var isScope = !!item.scopeParent;
-      var element = isScope ? item.scopeParent : item;
-      var candidateTabindex = getSortOrderTabIndex(element, isScope);
-      var elements = isScope ? _sortByOrder(item.candidates) : element;
+      var isScope = !!item.scope;
+      var element = isScope ? item.scope : item;
+      var candidateTabindex = getTabindex(element, isScope);
+      var elements = isScope ? sortByOrder2(item.candidates) : element;
       if (candidateTabindex === 0) {
         isScope ? regularTabbables.push.apply(regularTabbables, elements) : regularTabbables.push(element);
       } else {
@@ -7167,32 +7111,32 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return acc;
     }, []).concat(regularTabbables);
   };
-  var tabbable = function tabbable2(container, options) {
+  var tabbable = function tabbable2(el, options) {
     options = options || {};
     var candidates;
     if (options.getShadowRoot) {
-      candidates = _getCandidatesIteratively([container], options.includeContainer, {
+      candidates = getCandidatesIteratively([el], options.includeContainer, {
         filter: isNodeMatchingSelectorTabbable.bind(null, options),
         flatten: false,
         getShadowRoot: options.getShadowRoot,
-        shadowRootFilter: isShadowRootTabbable
+        shadowRootFilter: isValidShadowRootTabbable
       });
     } else {
-      candidates = getCandidates(container, options.includeContainer, isNodeMatchingSelectorTabbable.bind(null, options));
+      candidates = getCandidates(el, options.includeContainer, isNodeMatchingSelectorTabbable.bind(null, options));
     }
-    return _sortByOrder(candidates);
+    return sortByOrder(candidates);
   };
-  var focusable = function focusable2(container, options) {
+  var focusable = function focusable2(el, options) {
     options = options || {};
     var candidates;
     if (options.getShadowRoot) {
-      candidates = _getCandidatesIteratively([container], options.includeContainer, {
+      candidates = getCandidatesIteratively([el], options.includeContainer, {
         filter: isNodeMatchingSelectorFocusable.bind(null, options),
         flatten: true,
         getShadowRoot: options.getShadowRoot
       });
     } else {
-      candidates = getCandidates(container, options.includeContainer, isNodeMatchingSelectorFocusable.bind(null, options));
+      candidates = getCandidates(el, options.includeContainer, isNodeMatchingSelectorFocusable.bind(null, options));
     }
     return candidates;
   };
@@ -7206,7 +7150,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return isNodeMatchingSelectorTabbable(options, node);
   };
-  var focusableCandidateSelector = /* @__PURE__ */ candidateSelectors.concat("iframe:not([inert]):not([inert] *)").join(",");
+  var focusableCandidateSelector = /* @__PURE__ */ candidateSelectors.concat("iframe").join(",");
   var isFocusable = function isFocusable2(node, options) {
     options = options || {};
     if (!node) {
@@ -7217,305 +7161,91 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return isNodeMatchingSelectorFocusable(options, node);
   };
-  function _arrayLikeToArray(r, a) {
-    (null == a || a > r.length) && (a = r.length);
-    for (var e = 0, n = Array(a); e < a; e++)
-      n[e] = r[e];
-    return n;
-  }
-  function _arrayWithoutHoles(r) {
-    if (Array.isArray(r))
-      return _arrayLikeToArray(r);
-  }
-  function asyncGeneratorStep(n, t, e, r, o, a, c) {
-    try {
-      var i = n[a](c), u = i.value;
-    } catch (n2) {
-      return void e(n2);
-    }
-    i.done ? t(u) : Promise.resolve(u).then(r, o);
-  }
-  function _asyncToGenerator(n) {
-    return function() {
-      var t = this, e = arguments;
-      return new Promise(function(r, o) {
-        var a = n.apply(t, e);
-        function _next(n2) {
-          asyncGeneratorStep(a, r, o, _next, _throw, "next", n2);
-        }
-        function _throw(n2) {
-          asyncGeneratorStep(a, r, o, _next, _throw, "throw", n2);
-        }
-        _next(void 0);
-      });
-    };
-  }
-  function _createForOfIteratorHelper(r, e) {
-    var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
-    if (!t) {
-      if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e) {
-        t && (r = t);
-        var n = 0, F = function() {
-        };
-        return {
-          s: F,
-          n: function() {
-            return n >= r.length ? {
-              done: true
-            } : {
-              done: false,
-              value: r[n++]
-            };
-          },
-          e: function(r2) {
-            throw r2;
-          },
-          f: F
-        };
-      }
-      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-    }
-    var o, a = true, u = false;
-    return {
-      s: function() {
-        t = t.call(r);
-      },
-      n: function() {
-        var r2 = t.next();
-        return a = r2.done, r2;
-      },
-      e: function(r2) {
-        u = true, o = r2;
-      },
-      f: function() {
-        try {
-          a || null == t.return || t.return();
-        } finally {
-          if (u)
-            throw o;
-        }
-      }
-    };
-  }
-  function _defineProperty(e, r, t) {
-    return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
-      value: t,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    }) : e[r] = t, e;
-  }
-  function _iterableToArray(r) {
-    if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"])
-      return Array.from(r);
-  }
-  function _nonIterableSpread() {
-    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-  }
-  function ownKeys2(e, r) {
-    var t = Object.keys(e);
+  function ownKeys2(object, enumerableOnly) {
+    var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
-      var o = Object.getOwnPropertySymbols(e);
-      r && (o = o.filter(function(r2) {
-        return Object.getOwnPropertyDescriptor(e, r2).enumerable;
-      })), t.push.apply(t, o);
+      var symbols = Object.getOwnPropertySymbols(object);
+      enumerableOnly && (symbols = symbols.filter(function(sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      })), keys.push.apply(keys, symbols);
     }
-    return t;
+    return keys;
   }
-  function _objectSpread2(e) {
-    for (var r = 1; r < arguments.length; r++) {
-      var t = null != arguments[r] ? arguments[r] : {};
-      r % 2 ? ownKeys2(Object(t), true).forEach(function(r2) {
-        _defineProperty(e, r2, t[r2]);
-      }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys2(Object(t)).forEach(function(r2) {
-        Object.defineProperty(e, r2, Object.getOwnPropertyDescriptor(t, r2));
+  function _objectSpread2(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = null != arguments[i] ? arguments[i] : {};
+      i % 2 ? ownKeys2(Object(source), true).forEach(function(key) {
+        _defineProperty(target, key, source[key]);
+      }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys2(Object(source)).forEach(function(key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
       });
     }
-    return e;
+    return target;
   }
-  function _regenerator() {
-    var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag";
-    function i(r2, n2, o2, i2) {
-      var c2 = n2 && n2.prototype instanceof Generator ? n2 : Generator, u2 = Object.create(c2.prototype);
-      return _regeneratorDefine(u2, "_invoke", function(r3, n3, o3) {
-        var i3, c3, u3, f2 = 0, p = o3 || [], y = false, G = {
-          p: 0,
-          n: 0,
-          v: e,
-          a: d,
-          f: d.bind(e, 4),
-          d: function(t2, r4) {
-            return i3 = t2, c3 = 0, u3 = e, G.n = r4, a;
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+    return obj;
+  }
+  var activeFocusTraps = function() {
+    var trapQueue = [];
+    return {
+      activateTrap: function activateTrap(trap) {
+        if (trapQueue.length > 0) {
+          var activeTrap = trapQueue[trapQueue.length - 1];
+          if (activeTrap !== trap) {
+            activeTrap.pause();
           }
-        };
-        function d(r4, n4) {
-          for (c3 = r4, u3 = n4, t = 0; !y && f2 && !o4 && t < p.length; t++) {
-            var o4, i4 = p[t], d2 = G.p, l = i4[2];
-            r4 > 3 ? (o4 = l === n4) && (u3 = i4[(c3 = i4[4]) ? 5 : (c3 = 3, 3)], i4[4] = i4[5] = e) : i4[0] <= d2 && ((o4 = r4 < 2 && d2 < i4[1]) ? (c3 = 0, G.v = n4, G.n = i4[1]) : d2 < l && (o4 = r4 < 3 || i4[0] > n4 || n4 > l) && (i4[4] = r4, i4[5] = n4, G.n = l, c3 = 0));
-          }
-          if (o4 || r4 > 1)
-            return a;
-          throw y = true, n4;
         }
-        return function(o4, p2, l) {
-          if (f2 > 1)
-            throw TypeError("Generator is already running");
-          for (y && 1 === p2 && d(p2, l), c3 = p2, u3 = l; (t = c3 < 2 ? e : u3) || !y; ) {
-            i3 || (c3 ? c3 < 3 ? (c3 > 1 && (G.n = -1), d(c3, u3)) : G.n = u3 : G.v = u3);
-            try {
-              if (f2 = 2, i3) {
-                if (c3 || (o4 = "next"), t = i3[o4]) {
-                  if (!(t = t.call(i3, u3)))
-                    throw TypeError("iterator result is not an object");
-                  if (!t.done)
-                    return t;
-                  u3 = t.value, c3 < 2 && (c3 = 0);
-                } else
-                  1 === c3 && (t = i3.return) && t.call(i3), c3 < 2 && (u3 = TypeError("The iterator does not provide a '" + o4 + "' method"), c3 = 1);
-                i3 = e;
-              } else if ((t = (y = G.n < 0) ? u3 : r3.call(n3, G)) !== a)
-                break;
-            } catch (t2) {
-              i3 = e, c3 = 1, u3 = t2;
-            } finally {
-              f2 = 1;
-            }
-          }
-          return {
-            value: t,
-            done: y
-          };
-        };
-      }(r2, o2, i2), true), u2;
-    }
-    var a = {};
-    function Generator() {
-    }
-    function GeneratorFunction() {
-    }
-    function GeneratorFunctionPrototype() {
-    }
-    t = Object.getPrototypeOf;
-    var c = [][n] ? t(t([][n]())) : (_regeneratorDefine(t = {}, n, function() {
-      return this;
-    }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c);
-    function f(e2) {
-      return Object.setPrototypeOf ? Object.setPrototypeOf(e2, GeneratorFunctionPrototype) : (e2.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine(e2, o, "GeneratorFunction")), e2.prototype = Object.create(u), e2;
-    }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine(u), _regeneratorDefine(u, o, "Generator"), _regeneratorDefine(u, n, function() {
-      return this;
-    }), _regeneratorDefine(u, "toString", function() {
-      return "[object Generator]";
-    }), (_regenerator = function() {
-      return {
-        w: i,
-        m: f
-      };
-    })();
-  }
-  function _regeneratorDefine(e, r, n, t) {
-    var i = Object.defineProperty;
-    try {
-      i({}, "", {});
-    } catch (e2) {
-      i = 0;
-    }
-    _regeneratorDefine = function(e2, r2, n2, t2) {
-      function o(r3, n3) {
-        _regeneratorDefine(e2, r3, function(e3) {
-          return this._invoke(r3, n3, e3);
-        });
+        var trapIndex = trapQueue.indexOf(trap);
+        if (trapIndex === -1) {
+          trapQueue.push(trap);
+        } else {
+          trapQueue.splice(trapIndex, 1);
+          trapQueue.push(trap);
+        }
+      },
+      deactivateTrap: function deactivateTrap(trap) {
+        var trapIndex = trapQueue.indexOf(trap);
+        if (trapIndex !== -1) {
+          trapQueue.splice(trapIndex, 1);
+        }
+        if (trapQueue.length > 0) {
+          trapQueue[trapQueue.length - 1].unpause();
+        }
       }
-      r2 ? i ? i(e2, r2, {
-        value: n2,
-        enumerable: !t2,
-        configurable: !t2,
-        writable: !t2
-      }) : e2[r2] = n2 : (o("next", 0), o("throw", 1), o("return", 2));
-    }, _regeneratorDefine(e, r, n, t);
-  }
-  function _toConsumableArray(r) {
-    return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread();
-  }
-  function _toPrimitive(t, r) {
-    if ("object" != typeof t || !t)
-      return t;
-    var e = t[Symbol.toPrimitive];
-    if (void 0 !== e) {
-      var i = e.call(t, r);
-      if ("object" != typeof i)
-        return i;
-      throw new TypeError("@@toPrimitive must return a primitive value.");
-    }
-    return ("string" === r ? String : Number)(t);
-  }
-  function _toPropertyKey(t) {
-    var i = _toPrimitive(t, "string");
-    return "symbol" == typeof i ? i : i + "";
-  }
-  function _unsupportedIterableToArray(r, a) {
-    if (r) {
-      if ("string" == typeof r)
-        return _arrayLikeToArray(r, a);
-      var t = {}.toString.call(r).slice(8, -1);
-      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
-    }
-  }
-  var activeFocusTraps = {
-    getActiveTrap: function getActiveTrap(trapStack) {
-      if ((trapStack === null || trapStack === void 0 ? void 0 : trapStack.length) > 0) {
-        return trapStack[trapStack.length - 1];
-      }
-      return null;
-    },
-    activateTrap: function activateTrap(trapStack, trap) {
-      var activeTrap = activeFocusTraps.getActiveTrap(trapStack);
-      if (trap !== activeTrap) {
-        activeFocusTraps.pauseTrap(trapStack);
-      }
-      var trapIndex = trapStack.indexOf(trap);
-      if (trapIndex === -1) {
-        trapStack.push(trap);
-      } else {
-        trapStack.splice(trapIndex, 1);
-        trapStack.push(trap);
-      }
-    },
-    deactivateTrap: function deactivateTrap(trapStack, trap) {
-      var trapIndex = trapStack.indexOf(trap);
-      if (trapIndex !== -1) {
-        trapStack.splice(trapIndex, 1);
-      }
-      activeFocusTraps.unpauseTrap(trapStack);
-    },
-    pauseTrap: function pauseTrap(trapStack) {
-      var activeTrap = activeFocusTraps.getActiveTrap(trapStack);
-      activeTrap === null || activeTrap === void 0 || activeTrap._setPausedState(true);
-    },
-    unpauseTrap: function unpauseTrap(trapStack) {
-      var activeTrap = activeFocusTraps.getActiveTrap(trapStack);
-      if (activeTrap && !activeTrap._isManuallyPaused()) {
-        activeTrap._setPausedState(false);
-      }
-    }
-  };
+    };
+  }();
   var isSelectableInput = function isSelectableInput2(node) {
     return node.tagName && node.tagName.toLowerCase() === "input" && typeof node.select === "function";
   };
   var isEscapeEvent = function isEscapeEvent2(e) {
-    return (e === null || e === void 0 ? void 0 : e.key) === "Escape" || (e === null || e === void 0 ? void 0 : e.key) === "Esc" || (e === null || e === void 0 ? void 0 : e.keyCode) === 27;
+    return e.key === "Escape" || e.key === "Esc" || e.keyCode === 27;
   };
   var isTabEvent = function isTabEvent2(e) {
-    return (e === null || e === void 0 ? void 0 : e.key) === "Tab" || (e === null || e === void 0 ? void 0 : e.keyCode) === 9;
-  };
-  var isKeyForward = function isKeyForward2(e) {
-    return isTabEvent(e) && !e.shiftKey;
-  };
-  var isKeyBackward = function isKeyBackward2(e) {
-    return isTabEvent(e) && e.shiftKey;
+    return e.key === "Tab" || e.keyCode === 9;
   };
   var delay = function delay2(fn) {
     return setTimeout(fn, 0);
+  };
+  var findIndex = function findIndex2(arr, fn) {
+    var idx = -1;
+    arr.every(function(value, i) {
+      if (fn(value)) {
+        idx = i;
+        return false;
+      }
+      return true;
+    });
+    return idx;
   };
   var valueOrHandler = function valueOrHandler2(value) {
     for (var _len = arguments.length, params = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
@@ -7526,50 +7256,42 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var getActualTarget = function getActualTarget2(event) {
     return event.target.shadowRoot && typeof event.composedPath === "function" ? event.composedPath()[0] : event.target;
   };
-  var internalTrapStack = [];
   var createFocusTrap = function createFocusTrap2(elements, userOptions) {
     var doc = (userOptions === null || userOptions === void 0 ? void 0 : userOptions.document) || document;
-    var trapStack = (userOptions === null || userOptions === void 0 ? void 0 : userOptions.trapStack) || internalTrapStack;
     var config = _objectSpread2({
       returnFocusOnDeactivate: true,
       escapeDeactivates: true,
-      delayInitialFocus: true,
-      isolateSubtrees: false,
-      isKeyForward,
-      isKeyBackward
+      delayInitialFocus: true
     }, userOptions);
     var state = {
       containers: [],
       containerGroups: [],
       tabbableGroups: [],
-      adjacentElements: /* @__PURE__ */ new Set(),
-      alreadySilent: /* @__PURE__ */ new Set(),
       nodeFocusedBeforeActivation: null,
       mostRecentlyFocusedNode: null,
       active: false,
       paused: false,
-      manuallyPaused: false,
-      delayInitialFocusTimer: void 0,
-      recentNavEvent: void 0
+      delayInitialFocusTimer: void 0
     };
     var trap;
     var getOption = function getOption2(configOverrideOptions, optionName, configOptionName) {
       return configOverrideOptions && configOverrideOptions[optionName] !== void 0 ? configOverrideOptions[optionName] : config[configOptionName || optionName];
     };
-    var findContainerIndex = function findContainerIndex2(element, event) {
-      var composedPath = typeof (event === null || event === void 0 ? void 0 : event.composedPath) === "function" ? event.composedPath() : void 0;
+    var findContainerIndex = function findContainerIndex2(element) {
       return state.containerGroups.findIndex(function(_ref) {
         var container = _ref.container, tabbableNodes = _ref.tabbableNodes;
-        return container.contains(element) || (composedPath === null || composedPath === void 0 ? void 0 : composedPath.includes(container)) || tabbableNodes.find(function(node) {
+        return container.contains(element) || tabbableNodes.find(function(node) {
           return node === element;
         });
       });
     };
     var getNodeForOption = function getNodeForOption2(optionName) {
-      var _ref2 = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {}, _ref2$hasFallback = _ref2.hasFallback, hasFallback = _ref2$hasFallback === void 0 ? false : _ref2$hasFallback, _ref2$params = _ref2.params, params = _ref2$params === void 0 ? [] : _ref2$params;
       var optionValue = config[optionName];
       if (typeof optionValue === "function") {
-        optionValue = optionValue.apply(void 0, _toConsumableArray(params));
+        for (var _len2 = arguments.length, params = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+          params[_key2 - 1] = arguments[_key2];
+        }
+        optionValue = optionValue.apply(void 0, params);
       }
       if (optionValue === true) {
         optionValue = void 0;
@@ -7582,27 +7304,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       var node = optionValue;
       if (typeof optionValue === "string") {
-        try {
-          node = doc.querySelector(optionValue);
-        } catch (err) {
-          throw new Error("`".concat(optionName, '` appears to be an invalid selector; error="').concat(err.message, '"'));
-        }
+        node = doc.querySelector(optionValue);
         if (!node) {
-          if (!hasFallback) {
-            throw new Error("`".concat(optionName, "` as selector refers to no known node"));
-          }
+          throw new Error("`".concat(optionName, "` as selector refers to no known node"));
         }
       }
       return node;
     };
     var getInitialFocusNode = function getInitialFocusNode2() {
-      var node = getNodeForOption("initialFocus", {
-        hasFallback: true
-      });
+      var node = getNodeForOption("initialFocus");
       if (node === false) {
         return false;
       }
-      if (node === void 0 || node && !isFocusable(node, config.tabbableOptions)) {
+      if (node === void 0) {
         if (findContainerIndex(doc.activeElement) >= 0) {
           node = doc.activeElement;
         } else {
@@ -7610,8 +7324,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           var firstTabbableNode = firstTabbableGroup && firstTabbableGroup.firstTabbableNode;
           node = firstTabbableNode || getNodeForOption("fallbackFocus");
         }
-      } else if (node === null) {
-        node = getNodeForOption("fallbackFocus");
       }
       if (!node) {
         throw new Error("Your focus-trap needs to have at least one focusable element");
@@ -7622,40 +7334,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       state.containerGroups = state.containers.map(function(container) {
         var tabbableNodes = tabbable(container, config.tabbableOptions);
         var focusableNodes = focusable(container, config.tabbableOptions);
-        var firstTabbableNode = tabbableNodes.length > 0 ? tabbableNodes[0] : void 0;
-        var lastTabbableNode = tabbableNodes.length > 0 ? tabbableNodes[tabbableNodes.length - 1] : void 0;
-        var firstDomTabbableNode = focusableNodes.find(function(node) {
-          return isTabbable(node);
-        });
-        var lastDomTabbableNode = focusableNodes.slice().reverse().find(function(node) {
-          return isTabbable(node);
-        });
-        var posTabIndexesFound = !!tabbableNodes.find(function(node) {
-          return getTabIndex(node) > 0;
-        });
         return {
           container,
           tabbableNodes,
           focusableNodes,
-          posTabIndexesFound,
-          firstTabbableNode,
-          lastTabbableNode,
-          firstDomTabbableNode,
-          lastDomTabbableNode,
+          firstTabbableNode: tabbableNodes.length > 0 ? tabbableNodes[0] : null,
+          lastTabbableNode: tabbableNodes.length > 0 ? tabbableNodes[tabbableNodes.length - 1] : null,
           nextTabbableNode: function nextTabbableNode(node) {
             var forward = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : true;
-            var nodeIdx = tabbableNodes.indexOf(node);
+            var nodeIdx = focusableNodes.findIndex(function(n) {
+              return n === node;
+            });
             if (nodeIdx < 0) {
-              if (forward) {
-                return focusableNodes.slice(focusableNodes.indexOf(node) + 1).find(function(el) {
-                  return isTabbable(el);
-                });
-              }
-              return focusableNodes.slice(0, focusableNodes.indexOf(node)).reverse().find(function(el) {
-                return isTabbable(el);
+              return void 0;
+            }
+            if (forward) {
+              return focusableNodes.slice(nodeIdx + 1).find(function(n) {
+                return isTabbable(n, config.tabbableOptions);
               });
             }
-            return tabbableNodes[nodeIdx + (forward ? 1 : -1)];
+            return focusableNodes.slice(0, nodeIdx).reverse().find(function(n) {
+              return isTabbable(n, config.tabbableOptions);
+            });
           }
         };
       });
@@ -7665,31 +7365,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (state.tabbableGroups.length <= 0 && !getNodeForOption("fallbackFocus")) {
         throw new Error("Your focus-trap must have at least one container with at least one tabbable node in it at all times");
       }
-      if (state.containerGroups.find(function(g) {
-        return g.posTabIndexesFound;
-      }) && state.containerGroups.length > 1) {
-        throw new Error("At least one node with a positive tabindex was found in one of your focus-trap's multiple containers. Positive tabindexes are only supported in single-container focus-traps.");
-      }
     };
-    var _getActiveElement = function getActiveElement(el) {
-      var activeElement = el.activeElement;
-      if (!activeElement) {
-        return;
-      }
-      if (activeElement.shadowRoot && activeElement.shadowRoot.activeElement !== null) {
-        return _getActiveElement(activeElement.shadowRoot);
-      }
-      return activeElement;
-    };
-    var _tryFocus = function tryFocus(node) {
+    var tryFocus = function tryFocus2(node) {
       if (node === false) {
         return;
       }
-      if (node === _getActiveElement(document)) {
+      if (node === doc.activeElement) {
         return;
       }
       if (!node || !node.focus) {
-        _tryFocus(getInitialFocusNode());
+        tryFocus2(getInitialFocusNode());
         return;
       }
       node.focus({
@@ -7701,69 +7386,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
     var getReturnFocusNode = function getReturnFocusNode2(previousActiveElement) {
-      var node = getNodeForOption("setReturnFocus", {
-        params: [previousActiveElement]
-      });
+      var node = getNodeForOption("setReturnFocus", previousActiveElement);
       return node ? node : node === false ? false : previousActiveElement;
-    };
-    var findNextNavNode = function findNextNavNode2(_ref3) {
-      var target = _ref3.target, event = _ref3.event, _ref3$isBackward = _ref3.isBackward, isBackward = _ref3$isBackward === void 0 ? false : _ref3$isBackward;
-      target = target || getActualTarget(event);
-      updateTabbableNodes();
-      var destinationNode = null;
-      if (state.tabbableGroups.length > 0) {
-        var containerIndex = findContainerIndex(target, event);
-        var containerGroup = containerIndex >= 0 ? state.containerGroups[containerIndex] : void 0;
-        if (containerIndex < 0) {
-          if (isBackward) {
-            destinationNode = state.tabbableGroups[state.tabbableGroups.length - 1].lastTabbableNode;
-          } else {
-            destinationNode = state.tabbableGroups[0].firstTabbableNode;
-          }
-        } else if (isBackward) {
-          var startOfGroupIndex = state.tabbableGroups.findIndex(function(_ref4) {
-            var firstTabbableNode = _ref4.firstTabbableNode;
-            return target === firstTabbableNode;
-          });
-          if (startOfGroupIndex < 0 && (containerGroup.container === target || isFocusable(target, config.tabbableOptions) && !isTabbable(target, config.tabbableOptions) && !containerGroup.nextTabbableNode(target, false))) {
-            startOfGroupIndex = containerIndex;
-          }
-          if (startOfGroupIndex >= 0) {
-            var destinationGroupIndex = startOfGroupIndex === 0 ? state.tabbableGroups.length - 1 : startOfGroupIndex - 1;
-            var destinationGroup = state.tabbableGroups[destinationGroupIndex];
-            destinationNode = getTabIndex(target) >= 0 ? destinationGroup.lastTabbableNode : destinationGroup.lastDomTabbableNode;
-          } else if (!isTabEvent(event)) {
-            destinationNode = containerGroup.nextTabbableNode(target, false);
-          }
-        } else {
-          var lastOfGroupIndex = state.tabbableGroups.findIndex(function(_ref5) {
-            var lastTabbableNode = _ref5.lastTabbableNode;
-            return target === lastTabbableNode;
-          });
-          if (lastOfGroupIndex < 0 && (containerGroup.container === target || isFocusable(target, config.tabbableOptions) && !isTabbable(target, config.tabbableOptions) && !containerGroup.nextTabbableNode(target))) {
-            lastOfGroupIndex = containerIndex;
-          }
-          if (lastOfGroupIndex >= 0) {
-            var _destinationGroupIndex = lastOfGroupIndex === state.tabbableGroups.length - 1 ? 0 : lastOfGroupIndex + 1;
-            var _destinationGroup = state.tabbableGroups[_destinationGroupIndex];
-            destinationNode = getTabIndex(target) >= 0 ? _destinationGroup.firstTabbableNode : _destinationGroup.firstDomTabbableNode;
-          } else if (!isTabEvent(event)) {
-            destinationNode = containerGroup.nextTabbableNode(target);
-          }
-        }
-      } else {
-        destinationNode = getNodeForOption("fallbackFocus");
-      }
-      return destinationNode;
     };
     var checkPointerDown = function checkPointerDown2(e) {
       var target = getActualTarget(e);
-      if (findContainerIndex(target, e) >= 0) {
+      if (findContainerIndex(target) >= 0) {
         return;
       }
       if (valueOrHandler(config.clickOutsideDeactivates, e)) {
         trap.deactivate({
-          returnFocus: config.returnFocusOnDeactivate
+          returnFocus: config.returnFocusOnDeactivate && !isFocusable(target, config.tabbableOptions)
         });
         return;
       }
@@ -7772,93 +7405,80 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       e.preventDefault();
     };
-    var checkFocusIn = function checkFocusIn2(event) {
-      var target = getActualTarget(event);
-      var targetContained = findContainerIndex(target, event) >= 0;
+    var checkFocusIn = function checkFocusIn2(e) {
+      var target = getActualTarget(e);
+      var targetContained = findContainerIndex(target) >= 0;
       if (targetContained || target instanceof Document) {
         if (targetContained) {
           state.mostRecentlyFocusedNode = target;
         }
       } else {
-        event.stopImmediatePropagation();
-        var nextNode;
-        var navAcrossContainers = true;
-        if (state.mostRecentlyFocusedNode) {
-          if (getTabIndex(state.mostRecentlyFocusedNode) > 0) {
-            var mruContainerIdx = findContainerIndex(state.mostRecentlyFocusedNode);
-            var tabbableNodes = state.containerGroups[mruContainerIdx].tabbableNodes;
-            if (tabbableNodes.length > 0) {
-              var mruTabIdx = tabbableNodes.findIndex(function(node) {
-                return node === state.mostRecentlyFocusedNode;
-              });
-              if (mruTabIdx >= 0) {
-                if (config.isKeyForward(state.recentNavEvent)) {
-                  if (mruTabIdx + 1 < tabbableNodes.length) {
-                    nextNode = tabbableNodes[mruTabIdx + 1];
-                    navAcrossContainers = false;
-                  }
-                } else {
-                  if (mruTabIdx - 1 >= 0) {
-                    nextNode = tabbableNodes[mruTabIdx - 1];
-                    navAcrossContainers = false;
-                  }
-                }
-              }
-            }
+        e.stopImmediatePropagation();
+        tryFocus(state.mostRecentlyFocusedNode || getInitialFocusNode());
+      }
+    };
+    var checkTab = function checkTab2(e) {
+      var target = getActualTarget(e);
+      updateTabbableNodes();
+      var destinationNode = null;
+      if (state.tabbableGroups.length > 0) {
+        var containerIndex = findContainerIndex(target);
+        var containerGroup = containerIndex >= 0 ? state.containerGroups[containerIndex] : void 0;
+        if (containerIndex < 0) {
+          if (e.shiftKey) {
+            destinationNode = state.tabbableGroups[state.tabbableGroups.length - 1].lastTabbableNode;
           } else {
-            if (!state.containerGroups.some(function(g) {
-              return g.tabbableNodes.some(function(n) {
-                return getTabIndex(n) > 0;
-              });
-            })) {
-              navAcrossContainers = false;
-            }
+            destinationNode = state.tabbableGroups[0].firstTabbableNode;
+          }
+        } else if (e.shiftKey) {
+          var startOfGroupIndex = findIndex(state.tabbableGroups, function(_ref2) {
+            var firstTabbableNode = _ref2.firstTabbableNode;
+            return target === firstTabbableNode;
+          });
+          if (startOfGroupIndex < 0 && (containerGroup.container === target || isFocusable(target, config.tabbableOptions) && !isTabbable(target, config.tabbableOptions) && !containerGroup.nextTabbableNode(target, false))) {
+            startOfGroupIndex = containerIndex;
+          }
+          if (startOfGroupIndex >= 0) {
+            var destinationGroupIndex = startOfGroupIndex === 0 ? state.tabbableGroups.length - 1 : startOfGroupIndex - 1;
+            var destinationGroup = state.tabbableGroups[destinationGroupIndex];
+            destinationNode = destinationGroup.lastTabbableNode;
           }
         } else {
-          navAcrossContainers = false;
-        }
-        if (navAcrossContainers) {
-          nextNode = findNextNavNode({
-            target: state.mostRecentlyFocusedNode,
-            isBackward: config.isKeyBackward(state.recentNavEvent)
+          var lastOfGroupIndex = findIndex(state.tabbableGroups, function(_ref3) {
+            var lastTabbableNode = _ref3.lastTabbableNode;
+            return target === lastTabbableNode;
           });
+          if (lastOfGroupIndex < 0 && (containerGroup.container === target || isFocusable(target, config.tabbableOptions) && !isTabbable(target, config.tabbableOptions) && !containerGroup.nextTabbableNode(target))) {
+            lastOfGroupIndex = containerIndex;
+          }
+          if (lastOfGroupIndex >= 0) {
+            var _destinationGroupIndex = lastOfGroupIndex === state.tabbableGroups.length - 1 ? 0 : lastOfGroupIndex + 1;
+            var _destinationGroup = state.tabbableGroups[_destinationGroupIndex];
+            destinationNode = _destinationGroup.firstTabbableNode;
+          }
         }
-        if (nextNode) {
-          _tryFocus(nextNode);
-        } else {
-          _tryFocus(state.mostRecentlyFocusedNode || getInitialFocusNode());
-        }
+      } else {
+        destinationNode = getNodeForOption("fallbackFocus");
       }
-      state.recentNavEvent = void 0;
-    };
-    var checkKeyNav = function checkKeyNav2(event) {
-      var isBackward = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : false;
-      state.recentNavEvent = event;
-      var destinationNode = findNextNavNode({
-        event,
-        isBackward
-      });
       if (destinationNode) {
-        if (isTabEvent(event)) {
-          event.preventDefault();
-        }
-        _tryFocus(destinationNode);
+        e.preventDefault();
+        tryFocus(destinationNode);
       }
     };
-    var checkTabKey = function checkTabKey2(event) {
-      if (config.isKeyForward(event) || config.isKeyBackward(event)) {
-        checkKeyNav(event, config.isKeyBackward(event));
-      }
-    };
-    var checkEscapeKey = function checkEscapeKey2(event) {
-      if (isEscapeEvent(event) && valueOrHandler(config.escapeDeactivates, event) !== false) {
-        event.preventDefault();
+    var checkKey = function checkKey2(e) {
+      if (isEscapeEvent(e) && valueOrHandler(config.escapeDeactivates, e) !== false) {
+        e.preventDefault();
         trap.deactivate();
+        return;
+      }
+      if (isTabEvent(e)) {
+        checkTab(e);
+        return;
       }
     };
     var checkClick = function checkClick2(e) {
       var target = getActualTarget(e);
-      if (findContainerIndex(target, e) >= 0) {
+      if (findContainerIndex(target) >= 0) {
         return;
       }
       if (valueOrHandler(config.clickOutsideDeactivates, e)) {
@@ -7872,21 +7492,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     var addListeners = function addListeners2() {
       if (!state.active) {
-        return Promise.resolve();
+        return;
       }
-      activeFocusTraps.activateTrap(trapStack, trap);
-      var promise;
-      if (config.delayInitialFocus) {
-        promise = new Promise(function(resolve) {
-          state.delayInitialFocusTimer = delay(function() {
-            _tryFocus(getInitialFocusNode());
-            resolve();
-          });
-        });
-      } else {
-        promise = Promise.resolve();
-        _tryFocus(getInitialFocusNode());
-      }
+      activeFocusTraps.activateTrap(trap);
+      state.delayInitialFocusTimer = config.delayInitialFocus ? delay(function() {
+        tryFocus(getInitialFocusNode());
+      }) : tryFocus(getInitialFocusNode());
       doc.addEventListener("focusin", checkFocusIn, true);
       doc.addEventListener("mousedown", checkPointerDown, {
         capture: true,
@@ -7900,62 +7511,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         capture: true,
         passive: false
       });
-      doc.addEventListener("keydown", checkTabKey, {
+      doc.addEventListener("keydown", checkKey, {
         capture: true,
         passive: false
       });
-      doc.addEventListener("keydown", checkEscapeKey);
-      return promise;
-    };
-    var collectAdjacentElements = function collectAdjacentElements2(containers) {
-      if (state.active && !state.paused) {
-        trap._setSubtreeIsolation(false);
-      }
-      state.adjacentElements.clear();
-      state.alreadySilent.clear();
-      var containerAncestors = /* @__PURE__ */ new Set();
-      var adjacentElements = /* @__PURE__ */ new Set();
-      var _iterator = _createForOfIteratorHelper(containers), _step;
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done; ) {
-          var container = _step.value;
-          containerAncestors.add(container);
-          var insideShadowRoot = typeof ShadowRoot !== "undefined" && container.getRootNode() instanceof ShadowRoot;
-          var current = container;
-          while (current) {
-            containerAncestors.add(current);
-            var parent = current.parentElement;
-            var siblings = [];
-            if (parent) {
-              siblings = parent.children;
-            } else if (!parent && insideShadowRoot) {
-              siblings = current.getRootNode().children;
-              parent = current.getRootNode().host;
-              insideShadowRoot = typeof ShadowRoot !== "undefined" && parent.getRootNode() instanceof ShadowRoot;
-            }
-            var _iterator2 = _createForOfIteratorHelper(siblings), _step2;
-            try {
-              for (_iterator2.s(); !(_step2 = _iterator2.n()).done; ) {
-                var child = _step2.value;
-                adjacentElements.add(child);
-              }
-            } catch (err) {
-              _iterator2.e(err);
-            } finally {
-              _iterator2.f();
-            }
-            current = parent;
-          }
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
-      containerAncestors.forEach(function(el) {
-        adjacentElements["delete"](el);
-      });
-      state.adjacentElements = adjacentElements;
+      return trap;
     };
     var removeListeners = function removeListeners2() {
       if (!state.active) {
@@ -7965,35 +7525,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       doc.removeEventListener("mousedown", checkPointerDown, true);
       doc.removeEventListener("touchstart", checkPointerDown, true);
       doc.removeEventListener("click", checkClick, true);
-      doc.removeEventListener("keydown", checkTabKey, true);
-      doc.removeEventListener("keydown", checkEscapeKey);
+      doc.removeEventListener("keydown", checkKey, true);
       return trap;
-    };
-    var checkDomRemoval = function checkDomRemoval2(mutations) {
-      var isFocusedNodeRemoved = mutations.some(function(mutation) {
-        var removedNodes = Array.from(mutation.removedNodes);
-        return removedNodes.some(function(node) {
-          return node === state.mostRecentlyFocusedNode;
-        });
-      });
-      if (isFocusedNodeRemoved) {
-        _tryFocus(getInitialFocusNode());
-      }
-    };
-    var mutationObserver = typeof window !== "undefined" && "MutationObserver" in window ? new MutationObserver(checkDomRemoval) : void 0;
-    var updateObservedNodes = function updateObservedNodes2() {
-      if (!mutationObserver) {
-        return;
-      }
-      mutationObserver.disconnect();
-      if (state.active && !state.paused) {
-        state.containers.map(function(container) {
-          mutationObserver.observe(container, {
-            subtree: true,
-            childList: true
-          });
-        });
-      }
     };
     trap = {
       get active() {
@@ -8009,57 +7542,29 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         var onActivate = getOption(activateOptions, "onActivate");
         var onPostActivate = getOption(activateOptions, "onPostActivate");
         var checkCanFocusTrap = getOption(activateOptions, "checkCanFocusTrap");
-        var preexistingTrap = activeFocusTraps.getActiveTrap(trapStack);
-        var revertState = false;
-        if (preexistingTrap && !preexistingTrap.paused) {
-          var _preexistingTrap$_set;
-          (_preexistingTrap$_set = preexistingTrap._setSubtreeIsolation) === null || _preexistingTrap$_set === void 0 || _preexistingTrap$_set.call(preexistingTrap, false);
-          revertState = true;
+        if (!checkCanFocusTrap) {
+          updateTabbableNodes();
         }
-        try {
-          if (!checkCanFocusTrap) {
+        state.active = true;
+        state.paused = false;
+        state.nodeFocusedBeforeActivation = doc.activeElement;
+        if (onActivate) {
+          onActivate();
+        }
+        var finishActivation = function finishActivation2() {
+          if (checkCanFocusTrap) {
             updateTabbableNodes();
           }
-          state.active = true;
-          state.paused = false;
-          state.nodeFocusedBeforeActivation = _getActiveElement(doc);
-          onActivate === null || onActivate === void 0 || onActivate();
-          var finishActivation = /* @__PURE__ */ function() {
-            var _ref6 = _asyncToGenerator(/* @__PURE__ */ _regenerator().m(function _callee() {
-              return _regenerator().w(function(_context) {
-                while (1)
-                  switch (_context.n) {
-                    case 0:
-                      if (checkCanFocusTrap) {
-                        updateTabbableNodes();
-                      }
-                      _context.n = 1;
-                      return addListeners();
-                    case 1:
-                      trap._setSubtreeIsolation(true);
-                      updateObservedNodes();
-                      onPostActivate === null || onPostActivate === void 0 || onPostActivate();
-                    case 2:
-                      return _context.a(2);
-                  }
-              }, _callee);
-            }));
-            return function finishActivation2() {
-              return _ref6.apply(this, arguments);
-            };
-          }();
-          if (checkCanFocusTrap) {
-            checkCanFocusTrap(state.containers.concat()).then(finishActivation, finishActivation);
-            return this;
+          addListeners();
+          if (onPostActivate) {
+            onPostActivate();
           }
-          finishActivation();
-        } catch (error2) {
-          if (preexistingTrap === activeFocusTraps.getActiveTrap(trapStack) && revertState) {
-            var _preexistingTrap$_set2;
-            (_preexistingTrap$_set2 = preexistingTrap._setSubtreeIsolation) === null || _preexistingTrap$_set2 === void 0 || _preexistingTrap$_set2.call(preexistingTrap, true);
-          }
-          throw error2;
+        };
+        if (checkCanFocusTrap) {
+          checkCanFocusTrap(state.containers.concat()).then(finishActivation, finishActivation);
+          return this;
         }
+        finishActivation();
         return this;
       },
       deactivate: function deactivate(deactivateOptions) {
@@ -8073,26 +7578,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }, deactivateOptions);
         clearTimeout(state.delayInitialFocusTimer);
         state.delayInitialFocusTimer = void 0;
-        if (!state.paused) {
-          trap._setSubtreeIsolation(false);
-        }
-        state.alreadySilent.clear();
         removeListeners();
         state.active = false;
         state.paused = false;
-        updateObservedNodes();
-        activeFocusTraps.deactivateTrap(trapStack, trap);
+        activeFocusTraps.deactivateTrap(trap);
         var onDeactivate = getOption(options, "onDeactivate");
         var onPostDeactivate = getOption(options, "onPostDeactivate");
         var checkCanReturnFocus = getOption(options, "checkCanReturnFocus");
         var returnFocus = getOption(options, "returnFocus", "returnFocusOnDeactivate");
-        onDeactivate === null || onDeactivate === void 0 || onDeactivate();
+        if (onDeactivate) {
+          onDeactivate();
+        }
         var finishDeactivation = function finishDeactivation2() {
           delay(function() {
             if (returnFocus) {
-              _tryFocus(getReturnFocusNode(state.nodeFocusedBeforeActivation));
+              tryFocus(getReturnFocusNode(state.nodeFocusedBeforeActivation));
             }
-            onPostDeactivate === null || onPostDeactivate === void 0 || onPostDeactivate();
+            if (onPostDeactivate) {
+              onPostDeactivate();
+            }
           });
         };
         if (returnFocus && checkCanReturnFocus) {
@@ -8102,131 +7606,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         finishDeactivation();
         return this;
       },
-      pause: function pause(pauseOptions) {
-        if (!state.active) {
+      pause: function pause() {
+        if (state.paused || !state.active) {
           return this;
         }
-        state.manuallyPaused = true;
-        return this._setPausedState(true, pauseOptions);
+        state.paused = true;
+        removeListeners();
+        return this;
       },
-      unpause: function unpause(unpauseOptions) {
-        if (!state.active) {
+      unpause: function unpause() {
+        if (!state.paused || !state.active) {
           return this;
         }
-        state.manuallyPaused = false;
-        if (trapStack[trapStack.length - 1] !== this) {
-          return this;
-        }
-        return this._setPausedState(false, unpauseOptions);
+        state.paused = false;
+        updateTabbableNodes();
+        addListeners();
+        return this;
       },
       updateContainerElements: function updateContainerElements(containerElements) {
         var elementsAsArray = [].concat(containerElements).filter(Boolean);
         state.containers = elementsAsArray.map(function(element) {
           return typeof element === "string" ? doc.querySelector(element) : element;
         });
-        if (config.isolateSubtrees) {
-          collectAdjacentElements(state.containers);
-        }
         if (state.active) {
           updateTabbableNodes();
-          if (!state.paused) {
-            trap._setSubtreeIsolation(true);
-          }
         }
-        updateObservedNodes();
         return this;
       }
     };
-    Object.defineProperties(trap, {
-      _isManuallyPaused: {
-        value: function value() {
-          return state.manuallyPaused;
-        }
-      },
-      _setPausedState: {
-        value: function value(paused, options) {
-          if (state.paused === paused) {
-            return this;
-          }
-          state.paused = paused;
-          if (paused) {
-            var onPause = getOption(options, "onPause");
-            var onPostPause = getOption(options, "onPostPause");
-            onPause === null || onPause === void 0 || onPause();
-            removeListeners();
-            trap._setSubtreeIsolation(false);
-            updateObservedNodes();
-            onPostPause === null || onPostPause === void 0 || onPostPause();
-          } else {
-            var onUnpause = getOption(options, "onUnpause");
-            var onPostUnpause = getOption(options, "onPostUnpause");
-            onUnpause === null || onUnpause === void 0 || onUnpause();
-            var finishUnpause = /* @__PURE__ */ function() {
-              var _ref7 = _asyncToGenerator(/* @__PURE__ */ _regenerator().m(function _callee2() {
-                return _regenerator().w(function(_context2) {
-                  while (1)
-                    switch (_context2.n) {
-                      case 0:
-                        updateTabbableNodes();
-                        _context2.n = 1;
-                        return addListeners();
-                      case 1:
-                        trap._setSubtreeIsolation(true);
-                        updateObservedNodes();
-                        onPostUnpause === null || onPostUnpause === void 0 || onPostUnpause();
-                      case 2:
-                        return _context2.a(2);
-                    }
-                }, _callee2);
-              }));
-              return function finishUnpause2() {
-                return _ref7.apply(this, arguments);
-              };
-            }();
-            finishUnpause();
-          }
-          return this;
-        }
-      },
-      _setSubtreeIsolation: {
-        value: function value(isEnabled) {
-          if (config.isolateSubtrees) {
-            state.adjacentElements.forEach(function(el) {
-              var _el$getAttribute;
-              if (isEnabled) {
-                switch (config.isolateSubtrees) {
-                  case "aria-hidden":
-                    if (el.ariaHidden === "true" || ((_el$getAttribute = el.getAttribute("aria-hidden")) === null || _el$getAttribute === void 0 ? void 0 : _el$getAttribute.toLowerCase()) === "true") {
-                      state.alreadySilent.add(el);
-                    }
-                    el.setAttribute("aria-hidden", "true");
-                    break;
-                  default:
-                    if (el.inert || el.hasAttribute("inert")) {
-                      state.alreadySilent.add(el);
-                    }
-                    el.setAttribute("inert", true);
-                    break;
-                }
-              } else {
-                if (state.alreadySilent.has(el))
-                  ;
-                else {
-                  switch (config.isolateSubtrees) {
-                    case "aria-hidden":
-                      el.removeAttribute("aria-hidden");
-                      break;
-                    default:
-                      el.removeAttribute("inert");
-                      break;
-                  }
-                }
-              }
-            });
-          }
-        }
-      }
-    });
     trap.updateContainerElements(elements);
     return trap;
   };
@@ -12131,41 +11538,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
     Alpine3.directive("anchor", Alpine3.skipDuringClone(
-      (el, { expression, modifiers, value }, { evaluate: evaluate22, effect: effect3, cleanup: cleanup2 }) => {
+      (el, { expression, modifiers, value }, { cleanup: cleanup2, evaluate: evaluate22 }) => {
         let { placement, offsetValue, unstyled } = getOptions(modifiers);
         el._x_anchor = Alpine3.reactive({ x: 0, y: 0 });
-        let previousReference = null;
-        let release2 = null;
-        let effector = effect3(() => {
-          let reference = evaluate22(expression);
-          if (!reference)
-            throw "Alpine: no element provided to x-anchor...";
-          if (previousReference !== reference) {
-            if (release2)
-              release2();
-            previousReference = reference;
-            let compute = () => {
-              let previousValue;
-              computePosition2(reference, el, {
-                placement,
-                middleware: [flip(), shift({ padding: 5 }), offset(offsetValue)]
-              }).then(({ x, y }) => {
-                unstyled || setStyles2(el, x, y);
-                if (JSON.stringify({ x, y }) !== previousValue) {
-                  el._x_anchor.x = x;
-                  el._x_anchor.y = y;
-                }
-                previousValue = JSON.stringify({ x, y });
-              });
-            };
-            release2 = autoUpdate(reference, el, () => compute());
-          }
-        });
-        cleanup2(() => {
-          effector();
-          if (release2)
-            release2();
-        });
+        let reference = evaluate22(expression);
+        if (!reference)
+          throw "Alpine: no element provided to x-anchor...";
+        let compute = () => {
+          let previousValue;
+          computePosition2(reference, el, {
+            placement,
+            middleware: [flip(), shift({ padding: 5 }), offset(offsetValue)]
+          }).then(({ x, y }) => {
+            unstyled || setStyles2(el, x, y);
+            if (JSON.stringify({ x, y }) !== previousValue) {
+              el._x_anchor.x = x;
+              el._x_anchor.y = y;
+            }
+            previousValue = JSON.stringify({ x, y });
+          });
+        };
+        let release2 = autoUpdate(reference, el, () => compute());
+        cleanup2(() => release2());
       },
       (el, { expression, modifiers, value }, { cleanup: cleanup2, evaluate: evaluate22 }) => {
         let { placement, offsetValue, unstyled } = getOptions(modifiers);
@@ -13388,11 +12782,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       for (let i = domAttributes.length - 1; i >= 0; i--) {
         let name = domAttributes[i].name;
         if (!to.hasAttribute(name)) {
-          if (name === "open" && from.nodeName === "DIALOG" && from.open) {
-            from.close();
-          } else {
-            from.removeAttribute(name);
-          }
+          from.removeAttribute(name);
         }
       }
       for (let i = toAttributes.length - 1; i >= 0; i--) {
@@ -13644,8 +13034,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!name.includes("@")) {
         return original.call(this, name, value);
       }
-      let escapedValue = value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-      hostDiv.innerHTML = `<span ${name}="${escapedValue}"></span>`;
+      hostDiv.innerHTML = `<span ${name}="${value}"></span>`;
       let attr = hostDiv.firstElementChild.getAttributeNode(name);
       hostDiv.firstElementChild.removeAttributeNode(attr);
       this.setAttributeNode(attr);
@@ -13693,22 +13082,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           processInputValue(el, false);
         }
         if (el._x_model) {
-          if (el._x_model.get() !== el.value) {
-            if (!(el._x_model.get() === null && el.value === "")) {
-              el._x_model.set(el.value);
-            }
-          }
-          let updater = el._x_forceModelUpdate;
-          el._x_forceModelUpdate = (value2) => {
-            value2 = String(value2);
-            let template = templateFn(value2);
-            if (template && template !== "false") {
-              value2 = formatInput(template, value2);
-            }
-            lastInputValue = value2;
-            updater(value2);
-            el._x_model.set(value2);
-          };
+          if (el._x_model.get() === el.value)
+            return;
+          if (el._x_model.get() === null && el.value === "")
+            return;
+          el._x_model.set(el.value);
         }
       });
       const controller = new AbortController();
@@ -13729,7 +13107,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return lastInputValue = el2.value;
         }
         let setInput = () => {
-          lastInputValue = el2.value = formatInput(template, input);
+          lastInputValue = el2.value = formatInput(input, template);
         };
         if (shouldRestoreCursor) {
           restoreCursorPosition(el2, template, () => {
@@ -13739,6 +13117,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           setInput();
         }
       }
+      function formatInput(input, template) {
+        if (input === "")
+          return "";
+        let strippedDownInput = stripDown(template, input);
+        let rebuiltInput = buildUp(template, strippedDownInput);
+        return rebuiltInput;
+      }
     }).before("model");
   }
   function restoreCursorPosition(el, template, callback) {
@@ -13746,36 +13131,62 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let unformattedValue = el.value;
     callback();
     let beforeLeftOfCursorBeforeFormatting = unformattedValue.slice(0, cursorPosition);
-    let newPosition = formatInput(
+    let newPosition = buildUp(
       template,
-      beforeLeftOfCursorBeforeFormatting
+      stripDown(
+        template,
+        beforeLeftOfCursorBeforeFormatting
+      )
     ).length;
     el.setSelectionRange(newPosition, newPosition);
   }
-  var regexes = {
-    "9": /[0-9]/,
-    "a": /[a-zA-Z]/,
-    "*": /[a-zA-Z0-9]/
-  };
-  function formatInput(template, input) {
-    let templateMark = 0;
-    let inputMark = 0;
+  function stripDown(template, input) {
+    let inputToBeStripped = input;
     let output = "";
-    while (templateMark < template.length && inputMark < input.length) {
-      let templateChar = template[templateMark];
-      let inputChar = input[inputMark];
-      if (templateChar in regexes) {
-        if (regexes[templateChar].test(inputChar)) {
-          output += inputChar;
-          templateMark++;
-        }
-        inputMark++;
-      } else {
-        output += templateChar;
-        templateMark++;
-        if (templateChar === input[inputMark])
-          inputMark++;
+    let regexes = {
+      "9": /[0-9]/,
+      "a": /[a-zA-Z]/,
+      "*": /[a-zA-Z0-9]/
+    };
+    let wildcardTemplate = "";
+    for (let i = 0; i < template.length; i++) {
+      if (["9", "a", "*"].includes(template[i])) {
+        wildcardTemplate += template[i];
+        continue;
       }
+      for (let j = 0; j < inputToBeStripped.length; j++) {
+        if (inputToBeStripped[j] === template[i]) {
+          inputToBeStripped = inputToBeStripped.slice(0, j) + inputToBeStripped.slice(j + 1);
+          break;
+        }
+      }
+    }
+    for (let i = 0; i < wildcardTemplate.length; i++) {
+      let found = false;
+      for (let j = 0; j < inputToBeStripped.length; j++) {
+        if (regexes[wildcardTemplate[i]].test(inputToBeStripped[j])) {
+          output += inputToBeStripped[j];
+          inputToBeStripped = inputToBeStripped.slice(0, j) + inputToBeStripped.slice(j + 1);
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+        break;
+    }
+    return output;
+  }
+  function buildUp(template, input) {
+    let clean = Array.from(input);
+    let output = "";
+    for (let i = 0; i < template.length; i++) {
+      if (!["9", "a", "*"].includes(template[i])) {
+        output += template[i];
+        continue;
+      }
+      if (clean.length === 0)
+        break;
+      output += clean.shift();
     }
     return output;
   }
@@ -15741,14 +15152,13 @@ sortablejs/modular/sortable.esm.js:
 
 tabbable/dist/index.esm.js:
   (*!
-  * tabbable 6.4.0
+  * tabbable 5.3.3
   * @license MIT, https://github.com/focus-trap/tabbable/blob/master/LICENSE
   *)
 
 focus-trap/dist/focus-trap.esm.js:
   (*!
-  * focus-trap 8.0.0
+  * focus-trap 6.9.4
   * @license MIT, https://github.com/focus-trap/focus-trap/blob/master/LICENSE
   *)
-  (*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE *)
 */
