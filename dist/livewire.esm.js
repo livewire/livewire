@@ -2958,7 +2958,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get transaction() {
         return transaction;
       },
-      version: "3.15.9",
+      version: "3.15.10",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -7038,10 +7038,10 @@ var require_module_cjs6 = __commonJS({
         el._x_anchor = Alpine23.reactive({ x: 0, y: 0 });
         let previousReference = null;
         let release = null;
-        let effector = effect(() => {
+        effect(() => {
           let reference = evaluate2(expression);
           if (!reference)
-            throw "Alpine: no element provided to x-anchor...";
+            return;
           if (previousReference !== reference) {
             if (release)
               release();
@@ -7064,7 +7064,6 @@ var require_module_cjs6 = __commonJS({
           }
         });
         cleanup(() => {
-          effector();
           if (release)
             release();
         });
