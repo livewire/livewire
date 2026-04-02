@@ -342,6 +342,66 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_js_action_called_from_wire_click_has_this_bound_to_wire()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $value = 'from wire';
+
+                public function render() {
+                    return <<<'HTML'
+                        <div>
+                            <button wire:click="$js.test" dusk="test">Test</button>
+                        </div>
+
+                        @script
+                        <script>
+                            this.$js('test', function () {
+                                window.test = this.$get('value')
+                            })
+                        </script>
+                        @endscript
+                    HTML;
+                }
+            }
+        )
+        ->click('@test')
+        ->assertScript('window.test === "from wire"')
+        ;
+    }
+
+    public function test_js_action_called_from_php_has_this_bound_to_wire()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $value = 'from wire';
+
+                public function save() {
+                    $this->js('test');
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                        <div>
+                            <button wire:click="save" dusk="save">Save</button>
+                        </div>
+
+                        @script
+                        <script>
+                            this.$js('test', function () {
+                                window.test = this.$get('value')
+                            })
+                        </script>
+                        @endscript
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewire()->click('@save')
+        ->assertScript('window.test === "from wire"')
+        ;
+    }
+
     public function test_parent_alpine_scope_does_not_leak_into_child_wire_click()
     {
         Livewire::visit([
