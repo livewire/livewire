@@ -295,7 +295,11 @@ export class Component {
     }
 
     getJsActions() {
-        return this.jsActions
+        let actions = {}
+        for (let key of Object.keys(this.jsActions)) {
+            actions[key] = this.getJsAction(key)
+        }
+        return actions
     }
 
     // Called by JSON.stringify() on both $wire (via the Proxy) and the

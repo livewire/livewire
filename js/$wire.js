@@ -157,7 +157,7 @@ wireProperty('$js', (component) => {
     let jsActions = component.getJsActions()
 
     Object.keys(jsActions).forEach((name) => {
-        fn[name] = component.getJsAction(name)
+        fn[name] = jsActions[name]
     })
 
     return new Proxy(fn, {

@@ -342,6 +342,37 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_js_action_called_from_php_can_access_refs()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function findRef() {
+                    $this->js('findRef');
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                        <div>
+                            <button wire:click="findRef" dusk="find">Find ref</button>
+                            <div wire:ref="target">Target</div>
+                        </div>
+
+                        @script
+                        <script>
+                            $js('findRef', function () {
+                                window.refFound = this.$refs.target ? this.$refs.target.textContent : 'not found'
+                            })
+                        </script>
+                        @endscript
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewire()->click('@find')
+        ->assertScript('window.refFound === "Target"')
+        ;
+    }
+
     public function test_parent_alpine_scope_does_not_leak_into_child_wire_click()
     {
         Livewire::visit([
