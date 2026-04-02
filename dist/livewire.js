@@ -2384,7 +2384,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get transaction() {
       return transaction;
     },
-    version: "3.15.9",
+    version: "3.15.10",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -8047,10 +8047,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el._x_anchor = Alpine3.reactive({ x: 0, y: 0 });
       let previousReference = null;
       let release2 = null;
-      let effector = effect3(() => {
+      effect3(() => {
         let reference = evaluate22(expression);
         if (!reference)
-          throw "Alpine: no element provided to x-anchor...";
+          return;
         if (previousReference !== reference) {
           if (release2)
             release2();
@@ -8073,7 +8073,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       });
       cleanup2(() => {
-        effector();
         if (release2)
           release2();
       });
