@@ -1,6 +1,11 @@
 let fs = require('fs')
+let path = require('path')
 let brotliSize = require('brotli-size')
 let crypto = require('crypto')
+
+if (! fs.existsSync(path.resolve(__dirname, '../dist'))) {
+    fs.mkdirSync(path.resolve(__dirname, '../dist'))
+}
 
 build({
     entryPoints: [`js/index.js`],
