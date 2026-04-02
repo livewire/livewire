@@ -199,7 +199,7 @@ public function posts()
 
 ## Memoizing cached values within a request
 
-When using `cache` or `persist`, Livewire queries the cache store on every access within a request. With distributed stores like Redis or Memcached, each access is a network round-trip. The `memo` parameter keeps the resolved value in memory for the duration of the request:
+Cached and persisted computed properties hit the cache store every time they are accessed, even within the same request. If your application uses a distributed cache like Redis or Memcached, the `memo` parameter can help by keeping the resolved value in memory for the duration of the request:
 
 ```php
 #[Computed(cache: true, memo: true)]

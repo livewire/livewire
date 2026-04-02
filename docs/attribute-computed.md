@@ -137,7 +137,7 @@ You can optionally set a custom cache key:
 
 ## Memoizing cached values within a request
 
-When using `cache` or `persist` with a distributed store like Redis, each access is a network round-trip. The `memo` parameter keeps the resolved value in memory for the duration of the request:
+Cached and persisted computed properties hit the cache store on every access, even within the same request. If your application uses a distributed cache like Redis, the `memo` parameter can help by keeping the resolved value in memory for the duration of the request:
 
 ```php
 #[Computed(cache: true, memo: true)] // [tl! highlight]
