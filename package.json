@@ -5,7 +5,8 @@
         "build": "node ./scripts/build.js",
         "watch": "node ./scripts/build.js --watch",
         "test": "vitest",
-        "test:run": "vitest run"
+        "test:run": "vitest run",
+        "pre-release": "node scripts/pre-release.js"
     },
     "author": "Caleb Porzio",
     "license": "MIT",
