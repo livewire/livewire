@@ -31,7 +31,7 @@ export function whenThisLinkIsPressed(el, callback) {
             let handler = e => {
                 e.preventDefault()
 
-                setTimeout(() => {
+                requestAnimationFrame(() => {
                     whenReleased()
                 })
 
