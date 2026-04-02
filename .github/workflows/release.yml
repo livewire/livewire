@@ -7,10 +7,6 @@ on:
         description: 'Version number (e.g. 4.3.0)'
         required: true
         type: string
-      alpine_version:
-        description: 'Alpine.js version to update to (e.g. 3.15.11). Leave empty to skip.'
-        required: false
-        type: string
 
 jobs:
   release:
@@ -37,17 +33,14 @@ jobs:
             exit 1
           fi
 
-      - name: Run pre-release
-        run: node scripts/pre-release.js ${{ inputs.version }} ${{ inputs.alpine_version }}
+      - name: Install dependencies
+        run: npm install
 
-      - name: Commit dependency updates to main
-        if: inputs.alpine_version != ''
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json
-          git commit -m "Update Alpine to v${{ inputs.alpine_version }}"
-          git push origin main
+      - name: Build assets
+        run: npm run build
+
+      - name: Run JS tests
+        run: npm run test:run
 
       - name: Create release tag
         run: |
