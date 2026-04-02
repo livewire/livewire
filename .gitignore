@@ -23,3 +23,5 @@ Thumbs.db
 
 # Obsidian files for documentation editin
 docs/.obsidian/workspace.json
+
+/dist/

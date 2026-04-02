@@ -3,7 +3,8 @@
     "name": "laravel-livewire",
     "scripts": {
         "build": "node ./scripts/build.js",
-        "watch": "node ./scripts/build.js --watch"
+        "watch": "node ./scripts/build.js --watch",
+        "bump-alpine": "node scripts/bump-alpine.js"
     },
     "author": "Caleb Porzio",
     "license": "MIT",

@@ -182,8 +182,9 @@ class FrontendAssets extends Mechanism
         $url = (string) str($url)->when(! str($url)->isUrl(), fn($url) => $url->start('/'));
 
         // Add the build manifest hash to it...
-        $manifest = json_decode(file_get_contents(__DIR__.'/../../../dist/manifest.json'), true);
-        $versionHash = $manifest['/livewire.js'];
+        $manifestPath = __DIR__.'/../../../dist/manifest.json';
+        $manifest = file_exists($manifestPath) ? json_decode(file_get_contents($manifestPath), true) : [];
+        $versionHash = $manifest['/livewire.js'] ?? 'dev';
         $url = "{$url}?id={$versionHash}";
 
         $token = app()->has('session.store') ? csrf_token() : '';
