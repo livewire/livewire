@@ -40,9 +40,7 @@ class HandleRequests extends Mechanism
         // In this case, find the route from the router.
         $route = $this->updateRoute ?? $this->findUpdateRoute();
 
-        return (string) str(
-            route($route->getName(), [], false)
-        )->start('/');
+        return (string) str(app('url')->toRoute($route, [], false))->start('/');
     }
 
     protected function findUpdateRoute()
