@@ -13,8 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      VERSION: ${{ inputs.version }}
 
     steps:
+      - name: Normalize version
+        run: echo "VERSION=${VERSION#v}" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -28,8 +32,8 @@ jobs:
 
       - name: Verify tag does not exist
         run: |
-          if git rev-parse "v${{ inputs.version }}" >/dev/null 2>&1; then
-            echo "Error: Tag v${{ inputs.version }} already exists"
+          if git rev-parse "v${{ env.VERSION }}" >/dev/null 2>&1; then
+            echo "Error: Tag v${{ env.VERSION }} already exists"
             exit 1
           fi
 
@@ -47,11 +51,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f dist/
-          git commit -m "Build assets for v${{ inputs.version }}"
-          git tag v${{ inputs.version }}
-          git push origin v${{ inputs.version }}
+          git commit -m "Build assets for v${{ env.VERSION }}"
+          git tag v${{ env.VERSION }}
+          git push origin v${{ env.VERSION }}
 
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create v${{ inputs.version }} --title "v${{ inputs.version }}" --generate-notes
+        run: gh release create v${{ env.VERSION }} --title "v${{ env.VERSION }}" --generate-notes
