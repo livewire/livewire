@@ -38,7 +38,7 @@ jobs:
           fi
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build assets
         run: npm run build
