@@ -132,6 +132,12 @@ jobs:
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
           composer update --prefer-stable --no-interaction
 
+      - name: Download built assets
+        uses: actions/download-artifact@v4
+        with:
+          name: livewire-assets
+          path: dist/
+
       - name: Setup dusk/chrome
         run: vendor/bin/dusk-updater detect --no-interaction
 
