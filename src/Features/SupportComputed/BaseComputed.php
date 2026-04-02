@@ -32,13 +32,19 @@ class BaseComputed extends Attribute
     public function handleMagicGet($returnValue)
     {
         if ($this->persist) {
-            $returnValue($this->handlePersistedGet());
+            $returnValue($this->memo
+                ? $this->requestCachedValue ??= $this->handlePersistedGet()
+                : $this->handlePersistedGet()
+            );
 
             return;
         }
 
         if ($this->cache) {
-            $returnValue($this->handleCachedGet());
+            $returnValue($this->memo
+                ? $this->requestCachedValue ??= $this->handleCachedGet()
+                : $this->handleCachedGet()
+            );
 
             return;
         }
@@ -52,8 +58,16 @@ class BaseComputed extends Attribute
     {
         if ($this->persist) {
             $this->handlePersistedUnset();
-        } elseif ($this->cache) {
+            unset($this->requestCachedValue);
+
+            return;
+        }
+
+        if ($this->cache) {
             $this->handleCachedUnset();
+            unset($this->requestCachedValue);
+
+            return;
         }
 
         unset($this->requestCachedValue);
@@ -61,46 +75,26 @@ class BaseComputed extends Attribute
 
     protected function handlePersistedGet()
     {
-        if ($this->memo && isset($this->requestCachedValue)) {
-            return $this->requestCachedValue;
-        }
-
         $key = $this->generatePersistedKey();
 
         $closure = fn () => $this->evaluateComputed();
 
-        $value = match(Cache::supportsTags() && !empty($this->tags)) {
+        return match(Cache::supportsTags() && !empty($this->tags)) {
             true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
             default => Cache::remember($key, $this->seconds, $closure)
         };
-
-        if ($this->memo) {
-            $this->requestCachedValue = $value;
-        }
-
-        return $value;
     }
 
     protected function handleCachedGet()
     {
-        if ($this->memo && isset($this->requestCachedValue)) {
-            return $this->requestCachedValue;
-        }
-
         $key = $this->generateCachedKey();
 
         $closure = fn () => $this->evaluateComputed();
 
-        $value = match(Cache::supportsTags() && !empty($this->tags)) {
+        return match(Cache::supportsTags() && !empty($this->tags)) {
             true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
             default => Cache::remember($key, $this->seconds, $closure)
         };
-
-        if ($this->memo) {
-            $this->requestCachedValue = $value;
-        }
-
-        return $value;
     }
 
     protected function handlePersistedUnset()

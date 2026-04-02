@@ -253,6 +253,64 @@ class UnitTest extends TestCase
             ->assertSetStrict('count', 2);
     }
 
+    function test_can_memoize_persisted_computed_property_within_request()
+    {
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(persist: true, memo: true)]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function render() {
+                $noop = $this->foo;
+                $noop = $this->foo;
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->assertSetStrict('count', 1)
+            ->call('$refresh')
+            ->assertSetStrict('count', 1);
+    }
+
+    function test_can_bust_memoized_persisted_computed_using_unset()
+    {
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(persist: true, memo: true)]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function render() {
+                $noop = $this->foo;
+                unset($this->foo);
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->assertSetStrict('count', 2);
+    }
+
     function test_cant_call_a_computed_directly()
     {
         $this->expectException(CannotCallComputedDirectlyException::class);

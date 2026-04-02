@@ -137,7 +137,7 @@ You can optionally set a custom cache key:
 
 ## Memoizing cached values within a request
 
-With distributed cache stores like Redis, Memcached, or DynamoDB, each access to a cached computed property is a network round-trip. The `memo` parameter stores the result in memory after the first access, so subsequent accesses within the same request skip the cache store entirely:
+When using `cache` or `persist` with a distributed store like Redis, each access is a network round-trip. The `memo` parameter keeps the resolved value in memory for the duration of the request:
 
 ```php
 #[Computed(cache: true, memo: true)] // [tl! highlight]
@@ -187,4 +187,4 @@ For detailed information about computed properties, caching strategies, and adva
 | `$cache` | `bool` | `false` | Cache the value across all component instances |
 | `$key` | `?string` | `null` | Custom cache key (auto-generated if not provided) |
 | `$tags` | `mixed` | `null` | Cache tags (requires a cache driver that supports tags) |
-| `$memo` | `bool` | `false` | Memoize the cached value in memory within the request to avoid redundant cache lookups |
+| `$memo` | `bool` | `false` | Keep the resolved value in memory for the duration of the request |
