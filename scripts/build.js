@@ -3,6 +3,10 @@ let brotliSize = require('brotli-size')
 let crypto = require('crypto')
 let path = require('path')
 
+if (! fs.existsSync(path.resolve(__dirname, '../dist'))) {
+    fs.mkdirSync(path.resolve(__dirname, '../dist'))
+}
+
 // Plugin to replace 'alpinejs' with '@alpinejs/csp' for CSP builds
 const alpineCSPPlugin = {
     name: 'alpine-csp',
