@@ -8,12 +8,12 @@ use function Livewire\on;
 
 class SupportDisablingBackButtonCache extends ComponentHook
 {
-    public static $disableBackButtonCache = false;
+    public static $disableBackButtonCache = null;
 
     public static function provide()
     {
         on('flush-state', function () {
-            static::$disableBackButtonCache = false;
+            static::$disableBackButtonCache = null;
         });
 
         $kernel = app()->make(\Illuminate\Contracts\Http\Kernel::class);
@@ -27,6 +27,10 @@ class SupportDisablingBackButtonCache extends ComponentHook
 
     public function boot()
     {
+        if (! is_null(static::$disableBackButtonCache)) {
+            return;
+        }
+
         static::$disableBackButtonCache = ! config('livewire.back_button_cache', false);
     }
 }

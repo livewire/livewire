@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportDisablingBackButtonCache;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Tests\TestComponent;
 
@@ -10,7 +11,7 @@ class UnitTest extends \Tests\TestCase
     protected function tearDown(): void
     {
         config()->set('livewire.back_button_cache', false);
-        SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+        SupportDisablingBackButtonCache::$disableBackButtonCache = null;
 
         parent::tearDown();
     }
@@ -58,7 +59,7 @@ class UnitTest extends \Tests\TestCase
     public function test_back_button_cache_can_be_enabled_by_config_for_standard_components()
     {
         config()->set('livewire.back_button_cache', true);
-        SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+        SupportDisablingBackButtonCache::$disableBackButtonCache = null;
 
         Route::get('test-route-containing-livewire-component', DefaultBrowserCache::class);
 
@@ -70,13 +71,47 @@ class UnitTest extends \Tests\TestCase
     public function test_back_button_cache_can_still_be_disabled_per_component_when_config_enables_it()
     {
         config()->set('livewire.back_button_cache', true);
-        SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+        SupportDisablingBackButtonCache::$disableBackButtonCache = null;
 
         Route::get('test-route-containing-livewire-component', DisableBrowserCache::class);
 
         $response = $this->get('test-route-containing-livewire-component')->assertSuccessful();
 
         $this->assertTrue($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
+    }
+
+    public function test_back_button_cache_stays_disabled_when_a_later_component_does_not_opt_in()
+    {
+        config()->set('livewire.back_button_cache', true);
+        SupportDisablingBackButtonCache::$disableBackButtonCache = null;
+
+        Route::get('test-route-containing-livewire-components', function () {
+            return Blade::render(<<<'BLADE'
+                @livewire(\Livewire\Features\SupportDisablingBackButtonCache\DisableBrowserCache::class)
+                @livewire(\Livewire\Features\SupportDisablingBackButtonCache\DefaultBrowserCache::class)
+                BLADE);
+        });
+
+        $response = $this->get('test-route-containing-livewire-components')->assertSuccessful();
+
+        $this->assertTrue($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
+    }
+
+    public function test_back_button_cache_stays_enabled_when_a_later_component_does_not_opt_out()
+    {
+        config()->set('livewire.back_button_cache', false);
+        SupportDisablingBackButtonCache::$disableBackButtonCache = null;
+
+        Route::get('test-route-containing-livewire-components', function () {
+            return Blade::render(<<<'BLADE'
+                @livewire(\Livewire\Features\SupportDisablingBackButtonCache\EnableBrowserCache::class)
+                @livewire(\Livewire\Features\SupportDisablingBackButtonCache\DefaultBrowserCache::class)
+                BLADE);
+        });
+
+        $response = $this->get('test-route-containing-livewire-components')->assertSuccessful();
+
+        $this->assertFalse($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
     }
 }
 
@@ -90,4 +125,12 @@ class DisableBrowserCache extends TestComponent
 
 class DefaultBrowserCache extends TestComponent
 {
+}
+
+class EnableBrowserCache extends TestComponent
+{
+    public function mount()
+    {
+        $this->enableBackButtonCache();
+    }
 }

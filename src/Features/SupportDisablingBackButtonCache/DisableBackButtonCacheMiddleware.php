@@ -27,7 +27,7 @@ class DisableBackButtonCacheMiddleware
 
             // We do flush this in the `SupportDisablingBackButtonCache` hook, but we 
             // need to do it here as well to ensure that unit tests still work...
-            SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+            SupportDisablingBackButtonCache::$disableBackButtonCache = null;
         }
 
         return $response;
