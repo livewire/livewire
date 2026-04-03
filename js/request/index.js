@@ -438,6 +438,9 @@ function sendMessages() {
                                 message.invokeOnSync()
                                 if (message.isCancelled()) return
 
+                                await message.invokeOnPrepare()
+                                if (message.isCancelled()) return
+
                                 // Trigger any side effects from the payload like "morph" and "dispatch event"...
                                 message.component.processEffects(effects, request)
 
