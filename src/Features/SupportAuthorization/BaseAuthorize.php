@@ -34,20 +34,20 @@ class BaseAuthorize extends LivewireAttribute
             return;
         }
 
-        // Action that requires a model, extracted from the component...
-        if (is_string($this->argument) && $model = data_get($this->component, $this->argument))
-        {
-            Gate::authorize($this->ability, $model);
-
-            return;
-        }
-
         $methodArgument = Arr::first(
             (new \ReflectionObject($this->component))->getMethod($this->getName())->getParameters(),
             fn (\ReflectionParameter $parameter) : bool => $parameter->getName() === $this->argument,
         );
 
         // Action that requires a model, extracted from the called method...
-        Gate::authorize($this->ability, app($methodArgument->getType()->getName())->resolveRouteBinding($parameters[$this->argument]));
+        if (is_string($this->argument) && $methodArgument instanceof \ReflectionParameter && isset($parameters[$this->argument]))
+        {
+            Gate::authorize($this->ability, app($methodArgument->getType()->getName())->resolveRouteBinding($parameters[$this->argument]));
+
+            return;
+        }
+
+        // Action that requires a model, extracted from the component...
+        Gate::authorize($this->ability, data_get($this->component, $this->argument));
     }
 }

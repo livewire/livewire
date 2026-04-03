@@ -208,6 +208,47 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_prioritizes_arguments_over_properties()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount() : void
+                {
+                    $this->post = AuthorizationPost::find(2);
+                }
+
+                #[Authorize('edit', 'post')]
+                public function editPost(AuthorizationPost $post) : bool
+                {
+                    return true;
+                }
+            })
+            ->call('editPost', post: 1)
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount() : void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                #[Authorize('edit', 'post')]
+                public function editPost(AuthorizationPost $post) : bool
+                {
+                    return true;
+                }
+            })
+            ->call('editPost', post: 1)
+            ->assertForbidden();
+    }
+
     public function test_can_authorize_multiple_policies()
     {
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);

@@ -76,8 +76,8 @@ The attribute is intelligent about how it resolves the object you want to author
 
 * **No argument** - Checks a simple gate that doesn't require a model (e.g., `#[Authorize('view-dashboard')]`).
 * **Class strings** - Useful for 'create' permissions where no instance exists yet (e.g., `#[Authorize('create', Post::class)]`).
-* **Component properties** - It looks for a property on the component matching the argument name (e.g., `public $post`).
 * **Method parameters** - It resolves the argument from the method's own parameters.
+* **Component properties** - It looks for a property on the component matching the argument name (e.g., `public $post`).
 
 ### Resolving from method parameters
 
