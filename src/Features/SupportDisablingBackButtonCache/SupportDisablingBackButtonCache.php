@@ -27,6 +27,6 @@ class SupportDisablingBackButtonCache extends ComponentHook
 
     public function boot()
     {
-        static::$disableBackButtonCache = true;
+        static::$disableBackButtonCache = ! config('livewire.back_button_cache', false);
     }
 }

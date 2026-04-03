@@ -424,6 +424,18 @@ If you have a `<script>` tag in the body that you only want to be run once, you 
 </script>
 ```
 
+### Browser back-forward cache
+
+Livewire disables the browser back-forward cache on pages that contain Livewire components so users always get a fresh page load when using the browser back and forward buttons.
+
+If you want to opt into the browser's cache instead, set `back_button_cache` to `true` in your Livewire config:
+
+```php
+'back_button_cache' => true,
+```
+
+You can still disable the cache per component with `$this->disableBackButtonCache()`.
+
 ## Customizing the progress bar
 
 When a page takes longer than 150ms to load, Livewire will show a progress bar at the top of the page.

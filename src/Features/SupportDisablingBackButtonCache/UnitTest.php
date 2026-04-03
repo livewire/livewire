@@ -7,6 +7,14 @@ use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
+    protected function tearDown(): void
+    {
+        config()->set('livewire.back_button_cache', false);
+        SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+
+        parent::tearDown();
+    }
+
     public function test_ensure_disable_browser_cache_middleware_is_not_applied_to_a_route_that_does_not_contain_a_component()
     {
         Route::get('test-route-without-livewire-component', function () { return 'ok'; });
@@ -46,6 +54,30 @@ class UnitTest extends \Tests\TestCase
         // so just testing for one that isn't normally in a Laravel request
         $this->assertFalse($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
     }
+
+    public function test_back_button_cache_can_be_enabled_by_config_for_standard_components()
+    {
+        config()->set('livewire.back_button_cache', true);
+        SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+
+        Route::get('test-route-containing-livewire-component', DefaultBrowserCache::class);
+
+        $response = $this->get('test-route-containing-livewire-component')->assertSuccessful();
+
+        $this->assertFalse($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
+    }
+
+    public function test_back_button_cache_can_still_be_disabled_per_component_when_config_enables_it()
+    {
+        config()->set('livewire.back_button_cache', true);
+        SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+
+        Route::get('test-route-containing-livewire-component', DisableBrowserCache::class);
+
+        $response = $this->get('test-route-containing-livewire-component')->assertSuccessful();
+
+        $this->assertTrue($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
+    }
 }
 
 class DisableBrowserCache extends TestComponent
@@ -56,3 +88,6 @@ class DisableBrowserCache extends TestComponent
     }
 }
 
+class DefaultBrowserCache extends TestComponent
+{
+}

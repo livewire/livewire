@@ -19,6 +19,19 @@ return [
     ],
 
     /*
+    |--------------------------------------------------------------------------
+    | Back Button Cache
+    |--------------------------------------------------------------------------
+    |
+    | Livewire normally disables the browser back/forward cache on pages with
+    | components so the browser always performs a full reload. Set this to true
+    | to opt into bfcache by default while still allowing per-component overrides.
+    |
+    */
+
+    'back_button_cache' => false,
+
+    /*
     |---------------------------------------------------------------------------
     | Component Namespaces
     |---------------------------------------------------------------------------
