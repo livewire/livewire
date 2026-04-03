@@ -98,10 +98,12 @@ class Test extends TestCase
                     $this->assertNull($b->attribute('@blog.input.ignored', 'readonly'));
                 })
                 ->waitForLivewire(function ($b) {
-                    $b->press('@blog.button')
-                        ->pause(10);
+                    $b->press('@blog.button');
 
-                    $this->assertEquals('true', $b->attribute('@blog.button', 'disabled'));
+                    $b->waitUsing(6, 25, function () use ($b) {
+                        return $b->attribute('@blog.button', 'disabled') === 'true';
+                    }, 'Button was never disabled after press');
+
                     $this->assertEquals('true', $b->attribute('@blog.input', 'readonly'));
                     $this->assertNull($b->attribute('@blog.input.ignored', 'readonly'));
                 })
@@ -114,9 +116,10 @@ class Test extends TestCase
                  * Elements are un-marked as readonly when form errors out.
                  */
                 ->press('@boo.button')
-                ->pause(10)
                 ->tap(function ($b) {
-                    $this->assertEquals('true', $b->attribute('@boo.button', 'disabled'));
+                    $b->waitUsing(6, 25, function () use ($b) {
+                        return $b->attribute('@boo.button', 'disabled') === 'true';
+                    }, 'Boo button was never disabled after press');
                 })
                 ->tap(function ($b) {
                     $this->assertNull($b->attribute('@blog.button', 'disabled'));
