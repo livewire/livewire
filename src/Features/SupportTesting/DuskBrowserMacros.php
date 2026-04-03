@@ -149,6 +149,40 @@ class DuskBrowserMacros
         };
     }
 
+    public function waitForQueryString()
+    {
+        return function ($key, $expected) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $this->waitUsing(6, 25, function () use ($key, $expected) {
+                $search = $this->driver->executeScript('return window.location.search');
+
+                parse_str(ltrim($search, '?'), $params);
+
+                return ($params[$key] ?? null) === $expected;
+            }, "Query string [{$key}] never had expected value [{$expected}].");
+
+            PHPUnit::assertTrue(true);
+
+            return $this;
+        };
+    }
+
+    public function waitForScript()
+    {
+        return function ($js, $expected = true) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $this->waitUsing(6, 25, function () use ($js, $expected) {
+                return head($this->script(
+                    str($js)->start('return ')
+                )) === $expected;
+            }, "Script [{$js}] never returned expected value.");
+
+            PHPUnit::assertTrue(true);
+
+            return $this;
+        };
+    }
+
     public function waitForLivewireToLoad()
     {
         return function () {

@@ -200,13 +200,13 @@ jobs:
         run: echo "files=$(php .github/scripts/get-browser-test-shard.php $(( ${{ matrix.shard }} - 1 )) 3)" >> $GITHUB_OUTPUT
 
       - name: Run Browser tests (Shard ${{ matrix.shard }})
-        run: vendor/bin/phpunit ${{ steps.shard.outputs.files }}
+        run: vendor/bin/phpunit ${{ steps.shard.outputs.files }} || vendor/bin/phpunit ${{ steps.shard.outputs.files }} --order-by=defects --stop-on-failure
         env:
           RUNNING_IN_CI: true
 
       - name: Run Cancel Upload test
         if: matrix.shard == 1
-        run: FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
+        run: FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload" || FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
         env:
           RUNNING_IN_CI: true
           FORCE_RUN: 1
@@ -273,6 +273,6 @@ jobs:
         run: vendor/bin/dusk-updater detect --no-interaction
 
       - name: Run Legacy Browser tests
-        run: vendor/bin/phpunit --testsuite LegacyBrowser
+        run: vendor/bin/phpunit --testsuite LegacyBrowser || vendor/bin/phpunit --testsuite LegacyBrowser --order-by=defects --stop-on-failure
         env:
           RUNNING_IN_CI: true

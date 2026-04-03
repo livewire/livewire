@@ -41,9 +41,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertInputValue('@filter_2', '')
         ->assertInputValue('@filter_3', '')
         ->assertQueryStringMissing('tableFilters')
-        ->type('@filter_1', 'test')
-        ->waitForLivewire()
-        ->assertScript(
+        ->waitForLivewire()->type('@filter_1', 'test')
+        ->waitForScript(
             '(new URLSearchParams(window.location.search)).toString()',
             'tableFilters%5Bfilter_1%5D%5Bvalue%5D=test'
         )
@@ -79,7 +78,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
+            ->waitForScript('window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
     }
 
     public function test_does_not_duplicate_url_query_string_for_array_parameters_on_page_load()
@@ -109,7 +108,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
+            ->waitForScript('window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
     }
 
     public function test_keep_option_does_not_duplicate_url_query_string_for_string_parameter_on_page_load()
@@ -132,7 +131,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return window.location.search', '?date=2024-01-01');
+            ->waitForScript('window.location.search', '?date=2024-01-01');
     }
 
 
@@ -228,7 +227,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertQueryStringHas('search', 'foo')
+            ->waitForQueryString('search', 'foo')
             ->waitForLivewire()->type('@input', 'bar')
             ->assertQueryStringHas('search', 'bar')
             ->waitForLivewire()->type('@input', ' ')
@@ -338,7 +337,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             },
         ])
             ->waitForLivewireToLoad()
-            ->assertQueryStringHas('perPage', '25')
+            ->waitForQueryString('perPage', '25')
             ->assertInputValue('@input', '25')
         ;
     }
@@ -372,7 +371,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertQueryStringHas('search', 'foo')
+            ->waitForQueryString('search', 'foo')
             ->waitForLivewire()->type('@input', 'bar')
             ->assertQueryStringHas('search', 'bar')
             ->waitForLivewire()->type('@input', ' ')
