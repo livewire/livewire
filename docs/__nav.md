@@ -81,6 +81,7 @@ Advanced:
     Nesting: { uri: /docs/4.x/understanding-nesting, file: /understanding-nesting.md }
     Troubleshooting: { uri: /docs/4.x/troubleshooting, file: /troubleshooting.md }
     Security: { uri: /docs/4.x/security, file: /security.md }
+    Release Tokens: { uri: /docs/4.x/release-tokens, file: /release-tokens.md }
     CSP: { uri: /docs/4.x/csp, file: /csp.md }
     JavaScript: { uri: /docs/4.x/javascript, file: /javascript.md }
     Synthesizers: { uri: /docs/4.x/synthesizers, file: /synthesizers.md }
