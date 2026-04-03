@@ -139,6 +139,8 @@ return [
             'jpg', 'jpeg', 'mpga', 'webp', 'wma',
         ],
         'max_upload_time' => 5, // Max duration (in minutes) before an upload is invalidated...
+        'max_chunk_size' => null,      // Example: 5242880 (5MB)              | Default: 3145728 (3MB)
+        'chunk_middleware' => null,    // Example: 'throttle:500,1'           | Default: 'throttle:300,1'
         'cleanup' => true, // Should cleanup temporary uploads older than 24 hrs...
     ],
 
