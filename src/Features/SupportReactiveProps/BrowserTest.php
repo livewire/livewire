@@ -502,4 +502,174 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@child.booted-count', 2)
         ;
     }
+
+    public function test_rapid_model_live_updates_do_not_throw_cannot_mutate_reactive_prop_exception()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public string $search = '';
+
+                public int $updateCount = 0;
+
+                public array $facets = [
+                    'brand' => [
+                        'label' => 'Brand',
+                        'values' => [
+                            ['value' => 'Brembo', 'count' => 2],
+                            ['value' => 'Bolt', 'count' => 3],
+                        ],
+                    ],
+                    'query' => [
+                        'label' => 'Query',
+                        'values' => [
+                            ['value' => '', 'count' => 1],
+                        ],
+                    ],
+                ];
+
+                public function updatedSearch(): void
+                {
+                    usleep(200 * 1000);
+
+                    $this->updateCount++;
+                    $this->facets['query']['values'][0]['value'] = $this->search;
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <input type="text" wire:model.live.debounce.5ms="search" dusk="parent.search">
+
+                        <span dusk="parent.update-count">{{ $updateCount }}</span>
+
+                        <livewire:child-facets :facets="$facets" />
+
+                        @script
+                        <script>
+                            window.__parentSnapshotUpdateCounts ??= []
+
+                            Livewire.interceptRequest(({ request, onSend }) => {
+                                onSend(() => {
+                                    request.messages.forEach((message) => {
+                                        try {
+                                            let snapshot = JSON.parse(message.snapshot)
+
+                                            if (snapshot.data && Object.prototype.hasOwnProperty.call(snapshot.data, 'updateCount')) {
+                                                window.__parentSnapshotUpdateCounts.push(snapshot.data.updateCount)
+                                            }
+                                        } catch (error) {
+                                            window.__parentSnapshotUpdateCounts.push('parse-error')
+                                        }
+                                    })
+                                })
+                            })
+                        </script>
+                        @endscript
+                    </div>
+                    HTML;
+                }
+            },
+            'child-facets' => new class extends Component {
+                #[BaseReactive]
+                public array $facets = [];
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <span dusk="child.query">{{ $facets['query']['values'][0]['value'] ?? '' }}</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('#livewire-error')
+            ->keys('@parent.search', 'b')
+            ->pause(25)
+            ->keys('@parent.search', 'o')
+            ->pause(1200)
+            ->assertMissing('#livewire-error')
+            ->assertScript('JSON.stringify(window.__parentSnapshotUpdateCounts)', '[0,1]')
+            ->waitForTextIn('@parent.update-count', '2', 3)
+            ->waitForTextIn('@child.query', 'bo', 3)
+            ->assertSeeIn('@parent.update-count', '2')
+            ->assertSeeIn('@child.query', 'bo')
+        ;
+    }
+
+    public function test_overlapping_model_live_requests_send_fresh_parent_snapshots_when_reactive_children_are_bundled()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public string $search = '';
+
+                public int $count = 0;
+
+                public function updatedSearch(): void
+                {
+                    usleep(250 * 1000);
+
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <input type="text" wire:model.live.debounce.5ms="search" dusk="parent.search-order">
+
+                        <span dusk="parent.count-order">{{ $count }}</span>
+
+                        <livewire:child-facets-for-snapshot-order :facets="['query' => ['label' => 'Query', 'values' => [['value' => $search, 'count' => 1]]]]" />
+
+                        @script
+                        <script>
+                            window.__livewireParentSnapshotCounts ??= []
+                            window.__livewireRequestSendCount ??= 0
+
+                            Livewire.interceptRequest(({ request, onSend }) => {
+                                onSend(() => {
+                                    window.__livewireRequestSendCount++
+
+                                    request.messages.forEach((message) => {
+                                        try {
+                                            let snapshot = JSON.parse(message.snapshot)
+
+                                            if (snapshot.data && Object.prototype.hasOwnProperty.call(snapshot.data, 'count')) {
+                                                window.__livewireParentSnapshotCounts.push(snapshot.data.count)
+                                            }
+                                        } catch (error) {
+                                            window.__livewireParentSnapshotCounts.push('parse-error')
+                                        }
+                                    })
+                                })
+                            })
+                        </script>
+                        @endscript
+                    </div>
+                    HTML;
+                }
+            },
+            'child-facets-for-snapshot-order' => new class extends Component {
+                #[BaseReactive]
+                public array $facets = [];
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <span dusk="child.query-order">{{ $facets['query']['values'][0]['value'] ?? '' }}</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->keys('@parent.search-order', 'a')
+            ->pause(25)
+            ->keys('@parent.search-order', 'b')
+            ->pause(1300)
+            ->assertScript('window.__livewireRequestSendCount', 2)
+            ->assertScript('JSON.stringify(window.__livewireParentSnapshotCounts)', '[0,1]')
+            ->waitForTextIn('@parent.count-order', '2', 3)
+            ->waitForTextIn('@child.query-order', 'ab', 3)
+            ->assertSeeIn('@parent.count-order', '2')
+            ->assertSeeIn('@child.query-order', 'ab')
+            ->assertMissing('#livewire-error')
+        ;
+    }
 }
