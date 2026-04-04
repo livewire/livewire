@@ -31,6 +31,12 @@ class SupportReactiveProps extends ComponentHook
             $updates = static::$pendingUpdates[$id] ?? [];
             unset(static::$pendingUpdates[$id]);
 
+            // If this component was sent as a reactive child but no props
+            // actually changed, skip its render to avoid wasted work...
+            if (isset(static::$pendingChildParams[$id]) && empty($updates)) {
+                $component->skipRender();
+            }
+
             foreach ($updates as $update) {
                 ['property' => $property, 'oldValue' => $oldValue, 'value' => $value, 'setValue' => $setValue] = $update;
 

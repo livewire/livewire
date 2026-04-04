@@ -24,6 +24,37 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(5, $child->get('bootedValue'), 'booted() should see the new reactive prop value');
     }
 
+    public function test_child_skips_render_when_reactive_props_unchanged()
+    {
+        Livewire::component('child-with-render-tracking', ChildWithRenderTracking::class);
+
+        $child = Livewire::test(ChildWithRenderTracking::class, ['count' => 5]);
+        $this->assertEquals(1, $child->get('renderCount'));
+
+        // Simulate parent re-render passing the same value
+        SupportReactiveProps::$pendingChildParams[$child->id()] = ['count' => 5];
+        $child->call('$commit');
+
+        // Render should have been skipped since props didn't change
+        $this->assertEquals(1, $child->get('renderCount'));
+    }
+
+    public function test_child_does_render_when_reactive_props_change()
+    {
+        Livewire::component('child-with-render-tracking', ChildWithRenderTracking::class);
+
+        $child = Livewire::test(ChildWithRenderTracking::class, ['count' => 5]);
+        $this->assertEquals(1, $child->get('renderCount'));
+
+        // Simulate parent re-render passing a new value
+        SupportReactiveProps::$pendingChildParams[$child->id()] = ['count' => 10];
+        $child->call('$commit');
+
+        // Render should NOT have been skipped since props changed
+        $this->assertEquals(2, $child->get('renderCount'));
+        $this->assertEquals(10, $child->get('count'));
+    }
+
     public function test_updating_hook_sees_old_value_and_updated_hook_sees_new_value_for_reactive_props()
     {
         Livewire::component('child-with-update-hooks', ChildWithUpdateHooks::class);
@@ -66,6 +97,21 @@ class ChildWithLifecycleHooks extends Component
 
     public function render()
     {
+        return '<div>{{ $count }}</div>';
+    }
+}
+
+class ChildWithRenderTracking extends Component
+{
+    #[BaseReactive]
+    public $count;
+
+    public $renderCount = 0;
+
+    public function render()
+    {
+        $this->renderCount++;
+
         return '<div>{{ $count }}</div>';
     }
 }
