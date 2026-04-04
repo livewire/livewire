@@ -330,6 +330,44 @@ class UnitTest extends TestCase
 
         $this->assertFalse(Session::has('should-never-be-set'));
     }
+
+    public function test_authorize_is_enforced_on_event_listeners()
+    {
+        Gate::define('cannot-open-post', fn () => false);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[\Livewire\Attributes\On('some-event')]
+                #[Authorize('cannot-open-post')]
+                public function handleEvent() : void
+                {
+                    Session::put('should-never-be-set', true);
+                }
+            })
+            ->dispatch('some-event')
+            ->assertForbidden();
+
+        $this->assertFalse(Session::has('should-never-be-set'));
+    }
+
+    public function test_authorize_allows_authorized_event_listeners()
+    {
+        Gate::define('can-open-post', fn () => true);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[\Livewire\Attributes\On('some-event')]
+                #[Authorize('can-open-post')]
+                public function handleEvent() : void
+                {
+                    Session::put('event-was-handled', true);
+                }
+            })
+            ->dispatch('some-event')
+            ->assertOk();
+
+        $this->assertTrue(Session::has('event-was-handled'));
+    }
 }
 
 class AuthorizationUser extends AuthUser

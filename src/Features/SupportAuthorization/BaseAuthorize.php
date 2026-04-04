@@ -19,16 +19,14 @@ class BaseAuthorize extends LivewireAttribute
     public function call(array $parameters) : void
     {
         // Action that does not require a model or class...
-        if (is_null($this->argument))
-        {
+        if (is_null($this->argument)) {
             Gate::authorize($this->ability);
 
             return;
         }
 
         // Action that does not require a model, for example a 'create' action...
-        if (is_string($this->argument) && class_exists($this->argument))
-        {
+        if (is_string($this->argument) && class_exists($this->argument)) {
             Gate::authorize($this->ability, $this->argument);
 
             return;
@@ -40,9 +38,14 @@ class BaseAuthorize extends LivewireAttribute
         );
 
         // Action that requires a model, extracted from the called method...
-        if (is_string($this->argument) && $methodArgument instanceof \ReflectionParameter && isset($parameters[$this->argument]))
-        {
-            Gate::authorize($this->ability, app($methodArgument->getType()->getName())->resolveRouteBinding($parameters[$this->argument]));
+        if ($methodArgument instanceof \ReflectionParameter && isset($parameters[$this->argument])) {
+            $model = app($methodArgument->getType()->getName())->resolveRouteBinding($parameters[$this->argument]);
+
+            if (! $model) {
+                throw (new \Illuminate\Database\Eloquent\ModelNotFoundException)->setModel($methodArgument->getType()->getName());
+            }
+
+            Gate::authorize($this->ability, $model);
 
             return;
         }
