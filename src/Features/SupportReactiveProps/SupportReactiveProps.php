@@ -26,14 +26,18 @@ class SupportReactiveProps extends ComponentHook
 
         // Fire updating*/updated* hooks after all hooks have hydrated
         // Values are already set in BaseReactive::hydrate() so lifecycle hooks see fresh data
-        after('hydrate', function ($component) {
+        after('hydrate', function ($component, $memo) {
             $id = $component->getId();
             $updates = static::$pendingUpdates[$id] ?? [];
             unset(static::$pendingUpdates[$id]);
 
             // If this component was sent as a reactive child but no props
-            // actually changed, skip its render to avoid wasted work...
-            if (isset(static::$pendingChildParams[$id]) && empty($updates)) {
+            // actually changed, skip its render to avoid wasted work.
+            // Check memo['props'] to ensure we only do this for components
+            // with #[Reactive] properties, not wire:model children...
+            $hasReactiveProps = ! empty($memo['props'] ?? []);
+
+            if ($hasReactiveProps && isset(static::$pendingChildParams[$id]) && empty($updates)) {
                 $component->skipRender();
             }
 
