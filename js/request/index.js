@@ -412,6 +412,16 @@ function sendMessages() {
                     messageResponsePayloads.forEach(payload => {
                         if (message.isCancelled()) return
 
+                        // Server skipped this child (unchanged reactive props)...
+                        if (payload.skip) {
+                            if (payload.id === message.component.id) {
+                                message.resolveActionPromises([], [])
+                                message.invokeOnFinish()
+                            }
+
+                            return
+                        }
+
                         let { snapshot: snapshotEncoded, effects } = payload
                         let snapshot = JSON.parse(snapshotEncoded)
 

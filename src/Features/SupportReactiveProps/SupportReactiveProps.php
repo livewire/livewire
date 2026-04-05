@@ -49,6 +49,35 @@ class SupportReactiveProps extends ComponentHook
         });
     }
 
+    static function shouldSkipUpdate($snapshot): bool
+    {
+        $id = $snapshot['memo']['id'] ?? null;
+        $reactiveProps = $snapshot['memo']['props'] ?? [];
+
+        // Only applies to components with #[Reactive] properties...
+        if (empty($reactiveProps)) return false;
+
+        // Only if parent already rendered and stored pending params...
+        if (! isset(static::$pendingChildParams[$id])) return false;
+
+        // Don't skip if component also has wire:model bindings...
+        if (! empty($snapshot['memo']['bindings'] ?? [])) return false;
+
+        // Check each reactive prop for changes...
+        $pendingParams = static::$pendingChildParams[$id];
+
+        foreach ($reactiveProps as $propName) {
+            $currentValue = $snapshot['data'][$propName] ?? null;
+            $newValue = $pendingParams[$propName] ?? null;
+
+            if (crc32(json_encode($currentValue)) !== crc32(json_encode($newValue))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     static function hasPassedInProps($id) {
         return isset(static::$pendingChildParams[$id]);
     }
