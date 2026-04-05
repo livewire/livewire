@@ -5,6 +5,7 @@ namespace Livewire\Mechanisms\HandleRequests;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
+use Livewire\Features\SupportReactiveProps\SupportReactiveProps;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Exceptions\PayloadTooLargeException;
 use Livewire\Exceptions\TooManyComponentsException;
@@ -185,6 +186,17 @@ class HandleRequests extends Mechanism
             $snapshot = json_decode($componentPayload['snapshot'], associative: true);
             $updates = $componentPayload['updates'];
             $calls = $componentPayload['calls'];
+
+            // If this is a reactive child whose props didn't change,
+            // skip its entire lifecycle (hydrate, render, dehydrate)...
+            if (empty($updates) && SupportReactiveProps::shouldSkipUpdate($snapshot)) {
+                $componentResponses[] = [
+                    'skip' => true,
+                    'id' => $snapshot['memo']['id'],
+                ];
+
+                continue;
+            }
 
             try {
                 [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
