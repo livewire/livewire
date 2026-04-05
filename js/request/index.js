@@ -415,6 +415,9 @@ function sendMessages() {
                         // Server skipped this child (unchanged reactive props)...
                         if (payload.skip) {
                             if (payload.id === message.component.id) {
+                                message.responsePayload = { snapshot: message.component.snapshot, effects: {} }
+
+                                message.invokeOnSuccess()
                                 message.resolveActionPromises([], [])
                                 message.invokeOnFinish()
                             }

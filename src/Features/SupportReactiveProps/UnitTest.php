@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportReactiveProps;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use Illuminate\Database\Eloquent\Model;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -33,7 +34,7 @@ class UnitTest extends \Tests\TestCase
         // Simulate parent passing the same value
         SupportReactiveProps::$pendingChildParams[$child->id()] = ['count' => 5];
 
-        $this->assertTrue(SupportReactiveProps::shouldSkipUpdate($child->snapshot));
+        $this->assertTrue(SupportReactiveProps::shouldSkipUpdate($child->snapshot, [['method' => '$commit', 'params' => []]]));
     }
 
     public function test_should_skip_update_returns_false_when_reactive_props_changed()
@@ -45,7 +46,7 @@ class UnitTest extends \Tests\TestCase
         // Simulate parent passing a different value
         SupportReactiveProps::$pendingChildParams[$child->id()] = ['count' => 10];
 
-        $this->assertFalse(SupportReactiveProps::shouldSkipUpdate($child->snapshot));
+        $this->assertFalse(SupportReactiveProps::shouldSkipUpdate($child->snapshot, [['method' => '$commit', 'params' => []]]));
     }
 
     public function test_should_skip_update_returns_false_without_pending_params()
@@ -55,7 +56,7 @@ class UnitTest extends \Tests\TestCase
         $child = Livewire::test(ChildWithLifecycleHooks::class, ['count' => 5]);
 
         // No pending params (component wasn't bundled with a parent)
-        $this->assertFalse(SupportReactiveProps::shouldSkipUpdate($child->snapshot));
+        $this->assertFalse(SupportReactiveProps::shouldSkipUpdate($child->snapshot, [['method' => '$commit', 'params' => []]]));
     }
 
     public function test_should_skip_update_returns_false_for_non_reactive_components()
@@ -68,7 +69,78 @@ class UnitTest extends \Tests\TestCase
         SupportReactiveProps::$pendingChildParams[$child->id()] = ['count' => 5];
 
         // No reactive props in memo, should not skip
-        $this->assertFalse(SupportReactiveProps::shouldSkipUpdate($child->snapshot));
+        $this->assertFalse(SupportReactiveProps::shouldSkipUpdate($child->snapshot, [['method' => '$commit', 'params' => []]]));
+    }
+
+    public function test_should_skip_update_returns_false_when_real_method_calls_present()
+    {
+        Livewire::component('child-with-lifecycle-hooks', ChildWithLifecycleHooks::class);
+
+        $child = Livewire::test(ChildWithLifecycleHooks::class, ['count' => 5]);
+
+        SupportReactiveProps::$pendingChildParams[$child->id()] = ['count' => 5];
+
+        // Has a real method call alongside $commit
+        $calls = [
+            ['method' => '$commit', 'params' => []],
+            ['method' => 'someAction', 'params' => []],
+        ];
+
+        $this->assertFalse(SupportReactiveProps::shouldSkipUpdate($child->snapshot, $calls));
+    }
+
+    public function test_should_skip_update_handles_model_reactive_props()
+    {
+        Livewire::component('child-with-model-prop', ChildWithModelProp::class);
+
+        $user = SkipTestUser::make(['id' => 1, 'name' => 'Taylor']);
+        $user->exists = true;
+        $user->syncOriginal();
+
+        $child = Livewire::test(ChildWithModelProp::class, ['user' => $user]);
+
+        // Simulate parent passing the same model
+        SupportReactiveProps::$pendingChildParams[$child->id()] = ['user' => $user];
+
+        $this->assertTrue(SupportReactiveProps::shouldSkipUpdate($child->snapshot, [['method' => '$commit', 'params' => []]]));
+    }
+
+    public function test_should_skip_update_returns_false_when_model_is_dirty()
+    {
+        Livewire::component('child-with-model-prop', ChildWithModelProp::class);
+
+        $user = SkipTestUser::make(['id' => 1, 'name' => 'Taylor']);
+        $user->exists = true;
+        $user->syncOriginal();
+
+        $child = Livewire::test(ChildWithModelProp::class, ['user' => $user]);
+
+        // Modify the model (make it dirty)
+        $user->name = 'Caleb';
+
+        SupportReactiveProps::$pendingChildParams[$child->id()] = ['user' => $user];
+
+        $this->assertFalse(SupportReactiveProps::shouldSkipUpdate($child->snapshot, [['method' => '$commit', 'params' => []]]));
+    }
+
+    public function test_should_skip_update_returns_false_when_model_key_differs()
+    {
+        Livewire::component('child-with-model-prop', ChildWithModelProp::class);
+
+        $user = SkipTestUser::make(['id' => 1, 'name' => 'Taylor']);
+        $user->exists = true;
+        $user->syncOriginal();
+
+        $child = Livewire::test(ChildWithModelProp::class, ['user' => $user]);
+
+        // Parent passes a different model
+        $differentUser = SkipTestUser::make(['id' => 2, 'name' => 'Caleb']);
+        $differentUser->exists = true;
+        $differentUser->syncOriginal();
+
+        SupportReactiveProps::$pendingChildParams[$child->id()] = ['user' => $differentUser];
+
+        $this->assertFalse(SupportReactiveProps::shouldSkipUpdate($child->snapshot, [['method' => '$commit', 'params' => []]]));
     }
 
     public function test_skip_update_returns_skip_response_from_update_endpoint()
@@ -177,6 +249,23 @@ class SkipTestChild extends Component
     {
         return '<div>{{ $name }}</div>';
     }
+}
+
+class ChildWithModelProp extends Component
+{
+    #[BaseReactive]
+    public $user;
+
+    public function render()
+    {
+        return '<div>{{ $user->name ?? "none" }}</div>';
+    }
+}
+
+class SkipTestUser extends Model
+{
+    protected $guarded = [];
+    protected $table = 'users';
 }
 
 class ChildWithUpdateHooks extends Component

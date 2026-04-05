@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportReactiveProps;
 use function Livewire\on;
 use function Livewire\after;
 use function Livewire\trigger;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\ComponentHook;
 
 class SupportReactiveProps extends ComponentHook
@@ -49,7 +50,7 @@ class SupportReactiveProps extends ComponentHook
         });
     }
 
-    static function shouldSkipUpdate($snapshot): bool
+    static function shouldSkipUpdate($snapshot, $calls): bool
     {
         $id = $snapshot['memo']['id'] ?? null;
         $reactiveProps = $snapshot['memo']['props'] ?? [];
@@ -63,6 +64,11 @@ class SupportReactiveProps extends ComponentHook
         // Don't skip if component also has wire:model bindings...
         if (! empty($snapshot['memo']['bindings'] ?? [])) return false;
 
+        // Don't skip if there are real method calls (not just $commit)...
+        foreach ($calls as $call) {
+            if (($call['method'] ?? '') !== '$commit') return false;
+        }
+
         // Check each reactive prop for changes...
         $pendingParams = static::$pendingChildParams[$id];
 
@@ -70,9 +76,49 @@ class SupportReactiveProps extends ComponentHook
             $currentValue = $snapshot['data'][$propName] ?? null;
             $newValue = $pendingParams[$propName] ?? null;
 
-            if (crc32(json_encode($currentValue)) !== crc32(json_encode($newValue))) {
+            if (! static::valuesMatch($currentValue, $newValue)) {
                 return false;
             }
+        }
+
+        return true;
+    }
+
+    protected static function valuesMatch($snapshotValue, $pendingValue): bool
+    {
+        // Handle Eloquent models: compare class + key identity...
+        if ($pendingValue instanceof Model) {
+            return static::modelMatchesSnapshot($snapshotValue, $pendingValue);
+        }
+
+        // For scalars and arrays, compare via CRC32 hash...
+        return crc32(json_encode($snapshotValue)) === crc32(json_encode($pendingValue));
+    }
+
+    protected static function modelMatchesSnapshot($snapshotValue, Model $model): bool
+    {
+        // Dehydrated model format: [null, {class: '...', key: ..., s: 'mdl'}]
+        if (! is_array($snapshotValue)) return false;
+
+        $meta = $snapshotValue[1] ?? [];
+
+        if (($meta['s'] ?? null) !== 'mdl') return false;
+
+        $snapshotClass = $meta['class'] ?? null;
+
+        // Compare class (handles morph aliases)...
+        if ($snapshotClass !== get_class($model) && $snapshotClass !== $model->getMorphClass()) {
+            return false;
+        }
+
+        // Compare primary key...
+        if (($meta['key'] ?? null) != $model->getKey()) {
+            return false;
+        }
+
+        // If the model has unsaved attribute changes, don't skip...
+        if ($model->isDirty()) {
+            return false;
         }
 
         return true;
