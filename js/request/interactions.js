@@ -69,7 +69,15 @@ export function coordinateNetworkInteractions(messageBus) {
             // - If both incoming and outgoing requests are model.live, let them run in parallel...
             if (Array.from(message.actions).every(action => action.metadata.type === 'model.live')) {
                 if (action.metadata.type === 'model.live') {
-                    return
+                    let incomingHasBoundChildren = componentHasBoundChildren(action.component)
+
+                    let outgoingHasBoundChildren = Array.from(message.actions).some(activeAction => {
+                        return componentHasBoundChildren(activeAction.component)
+                    })
+
+                    if (! incomingHasBoundChildren && ! outgoingHasBoundChildren) {
+                        return
+                    }
                 }
             }
 
@@ -80,4 +88,14 @@ export function coordinateNetworkInteractions(messageBus) {
             })
         }
     })
+}
+
+function componentHasBoundChildren(component) {
+    let hasBoundChildren = false
+
+    component.getDeepChildrenWithBindings(() => {
+        hasBoundChildren = true
+    })
+
+    return hasBoundChildren
 }
