@@ -38,6 +38,37 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(0, $child->get('oldValueDuringUpdating'), 'updatingCount() should see the old value via $this->count');
         $this->assertEquals(5, $child->get('newValueDuringUpdated'), 'updatedCount() should see the new value via $this->count');
     }
+
+    public function test_values_match_returns_false_when_either_value_cannot_be_json_encoded()
+    {
+        // Both NAN — would collide via crc32(false) without the guard...
+        $this->assertFalse(SupportReactiveProps::valuesMatch(NAN, NAN));
+
+        // Both INF — same risk...
+        $this->assertFalse(SupportReactiveProps::valuesMatch(INF, INF));
+
+        // One side encodable, one side not...
+        $this->assertFalse(SupportReactiveProps::valuesMatch('hello', NAN));
+        $this->assertFalse(SupportReactiveProps::valuesMatch(NAN, 'hello'));
+    }
+
+    public function test_values_match_returns_true_for_equal_scalars_and_arrays()
+    {
+        $this->assertTrue(SupportReactiveProps::valuesMatch('hello', 'hello'));
+        $this->assertTrue(SupportReactiveProps::valuesMatch(42, 42));
+        $this->assertTrue(SupportReactiveProps::valuesMatch(true, true));
+        $this->assertTrue(SupportReactiveProps::valuesMatch(null, null));
+        $this->assertTrue(SupportReactiveProps::valuesMatch([1, 2, 3], [1, 2, 3]));
+        $this->assertTrue(SupportReactiveProps::valuesMatch(['a' => 1, 'b' => 2], ['a' => 1, 'b' => 2]));
+    }
+
+    public function test_values_match_returns_false_for_different_scalars_and_arrays()
+    {
+        $this->assertFalse(SupportReactiveProps::valuesMatch('hello', 'world'));
+        $this->assertFalse(SupportReactiveProps::valuesMatch(42, 43));
+        $this->assertFalse(SupportReactiveProps::valuesMatch([1, 2, 3], [1, 2, 4]));
+        $this->assertFalse(SupportReactiveProps::valuesMatch('5', 5));
+    }
 }
 
 class ChildWithLifecycleHooks extends Component

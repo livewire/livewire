@@ -83,13 +83,20 @@ class SupportReactiveProps extends ComponentHook
         return true;
     }
 
-    protected static function valuesMatch($snapshotValue, $pendingValue): bool
+    public static function valuesMatch($snapshotValue, $pendingValue): bool
     {
         if ($pendingValue instanceof Model) {
             return static::modelMatchesSnapshot($snapshotValue, $pendingValue);
         }
 
-        return crc32(json_encode($snapshotValue)) === crc32(json_encode($pendingValue));
+        $snapshotJson = json_encode($snapshotValue);
+        $pendingJson = json_encode($pendingValue);
+
+        // If either side can't be encoded (NAN, INF, recursive refs, etc.),
+        // bail out and treat them as different so we don't accidentally skip.
+        if ($snapshotJson === false || $pendingJson === false) return false;
+
+        return crc32($snapshotJson) === crc32($pendingJson);
     }
 
     protected static function modelMatchesSnapshot($snapshotValue, Model $model): bool
