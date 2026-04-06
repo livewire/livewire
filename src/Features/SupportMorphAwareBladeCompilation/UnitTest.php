@@ -42,7 +42,7 @@ class UnitTest extends \Tests\TestCase
         HTML);
 
         $this->assertStringNotContainsString('SupportCompiledWireKeys::openLoop(', $compiled);
-        $this->assertStringNotContainsString('SupportCompiledWireKeys::startLoop(', $compiled);
+        $this->assertStringNotContainsString('SupportCompiledWireKeys::startLoopIteration(', $compiled);
         $this->assertStringNotContainsString('SupportCompiledWireKeys::endLoop(', $compiled);
         $this->assertStringNotContainsString('SupportCompiledWireKeys::closeLoop(', $compiled);
     }
@@ -107,7 +107,7 @@ class UnitTest extends \Tests\TestCase
         HTML);
 
         $this->assertStringContainsString('SupportCompiledWireKeys::openLoop(', $compiled);
-        $this->assertStringContainsString('SupportCompiledWireKeys::startLoop(', $compiled);
+        $this->assertStringContainsString('SupportCompiledWireKeys::startLoopIteration(', $compiled);
         $this->assertStringContainsString('SupportCompiledWireKeys::endLoop(', $compiled);
         $this->assertStringContainsString('SupportCompiledWireKeys::closeLoop(', $compiled);
     }
@@ -243,8 +243,6 @@ class UnitTest extends \Tests\TestCase
 
     public function test_for_loop_trackers_are_used_when_used_within_a_livewire_context()
     {
-        $this->markTestSkipped('For loops are not supported yet as there is no loop index available...');
-
         Livewire::component('foo', new class extends \Livewire\Component
         {
             public function render()
@@ -261,11 +259,38 @@ class UnitTest extends \Tests\TestCase
 
         $output = $this->render('<livewire:foo />');
 
-        $this->assertStringContainsString('Test', $output);
-        
-        // When the template is rendered, there should be 1 loop in the stack, which will be a count of 0 so we don't have an offset compared to the loop indexes...
+        preg_match_all('/<span>(.*?)<\/span>/', $output, $matches);
+
+        $this->assertEquals(['Test', 'Test', 'Test'], $matches[1]);
         $this->assertEquals(0, SupportCompiledWireKeys::$currentLoop['count']);
     }
+
+    public function test_while_loop_trackers_are_used_when_used_within_a_livewire_context()
+    {
+        Livewire::component('foo', new class extends \Livewire\Component
+        {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <?php $i = 0; ?>
+                    @while ($i < 3)
+                        <span>Test</span>
+                        <?php $i++; ?>
+                    @endwhile
+                </div>
+                HTML;
+            }
+        });
+
+        $output = $this->render('<livewire:foo />');
+
+        preg_match_all('/<span>(.*?)<\/span>/', $output, $matches);
+
+        $this->assertEquals(['Test', 'Test', 'Test'], $matches[1]);
+        $this->assertEquals(0, SupportCompiledWireKeys::$currentLoop['count']);
+    }
+
 
     #[DataProvider('templatesProvider')]
     public function test_foo($occurrences, $template, $expectedCompiled = null)
@@ -599,9 +624,9 @@ class UnitTest extends \Tests\TestCase
                 <<<'HTML'
                 <div>
                     @forelse([1, 2] as $post)
-                        @foreach(range(0, 10) as $i)
+                        @for($i=0; $i < 10; $i++)
                             <span> {{ $i }} </span>
-                        @endforeach
+                        @endfor
                     @empty
                         <span> {{ $someProperty }} </span>
                     @endforelse
@@ -609,10 +634,10 @@ class UnitTest extends \Tests\TestCase
                 HTML,
                 <<<'HTML'
                 <div>
-                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = [1, 2]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $post): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = range(0, 10); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = [1, 2]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $post): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php for($i=0; $i < 10; $i++): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                             <span> <?php echo e($i); ?> </span>
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endfor; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         <span> <?php echo e($someProperty); ?> </span>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
@@ -828,6 +853,44 @@ class UnitTest extends \Tests\TestCase
                     </div>
                 </div>
                 HTML
+            ],
+            // @for loops should have loop tracking markers...
+            45 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @for ($i = 0; $i < 3; $i++)
+                        <span> {{ $i }} </span>
+                    @endfor
+                </div>
+                HTML,
+                <<<'HTML'
+                <div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php for($i = 0; $i < 3; $i++): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                        <span> <?php echo e($i); ?> </span>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endfor; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                </div>
+                HTML,
+            ],
+            // @while loops should have loop tracking markers...
+            46 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @while (true)
+                        <span>Looping</span>
+                        @break
+                    @endwhile
+                </div>
+                HTML,
+                <<<'HTML'
+                <div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php while(true): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                        <span>Looping</span>
+                        <?php break; ?>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endwhile; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                </div>
+                HTML,
             ],
         ];
     }

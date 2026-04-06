@@ -39,7 +39,7 @@ class InitialRender extends Render
         $html = $response->getContent();
 
         // Set "original" to Blade view for assertions like "assertViewIs()"...
-        $response->original = $componentView;
+        $response->baseResponse->original = $componentView;
 
         $snapshot = Utils::extractAttributeDataFromHtml($html, 'wire:snapshot');
         $effects = Utils::extractAttributeDataFromHtml($html, 'wire:effects');

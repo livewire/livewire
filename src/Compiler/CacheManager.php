@@ -3,6 +3,7 @@
 namespace Livewire\Compiler;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class CacheManager
 {
@@ -62,7 +63,7 @@ class CacheManager
 
     public function getHash(string $sourcePath): string
     {
-        return substr(md5($sourcePath), 0, 8);
+        return substr(md5(Str::after($sourcePath, base_path())), 0, 8);
     }
 
     public function getClassPath(string $sourcePath): string
@@ -189,7 +190,8 @@ class CacheManager
 
     public function invalidateOpCache(string $sourcePath): void
     {
-        if (function_exists('opcache_invalidate')) {
+        // Prevent error in case if `opcache.restrict_api` directive is set
+        if (function_exists('opcache_invalidate') && strlen(ini_get('opcache.restrict_api')) < 1) {
             opcache_invalidate($sourcePath, true);
         }
     }

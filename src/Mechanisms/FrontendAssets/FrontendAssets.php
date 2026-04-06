@@ -205,8 +205,9 @@ class FrontendAssets extends Mechanism
         );
 
         // Add the build manifest hash to it...
-        $manifest = json_decode(file_get_contents(__DIR__.'/../../../dist/manifest.json'), true);
-        $versionHash = $manifest['/livewire.js'];
+        $manifestPath = __DIR__.'/../../../dist/manifest.json';
+        $manifest = file_exists($manifestPath) ? json_decode(file_get_contents($manifestPath), true) : [];
+        $versionHash = $manifest['/livewire.js'] ?? 'dev';
         $url = $url . (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . "id={$versionHash}";
 
         $token = app()->has('session.store') ? csrf_token() : '';
@@ -245,7 +246,7 @@ class FrontendAssets extends Mechanism
             'uri' => url(app('livewire')->getUpdateUri()),
             'moduleUrl' => url(app('livewire')->getUriPrefix()),
             'progressBar' => $progressBar,
-            'nonce' => isset($options['nonce']) ? $options['nonce'] : '',
+            'nonce' => $options['nonce'] ?? Vite::cspNonce() ?? '',
         ]);
 
         return <<<HTML

@@ -8,7 +8,7 @@ To get started, the first step is to fork and clone the repositories. The easies
 
 ```shell
 # Fork and clone Livewire
-gh repo fork livewire/livewire --default-branch-only --clone=true --remote=false -- livewire
+gh repo fork livewire/livewire --default-branch-only --clone=true -- livewire
 
 # Switch the working directory to livewire
 cd livewire

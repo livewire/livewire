@@ -26,7 +26,7 @@ on('effect', ({ component, effects }) => {
         xjs.forEach(({ expression, params }) => {
             params = Object.values(params)
 
-            evaluateExpression(component.el, expression, { scope: component.jsActions, params })
+            evaluateExpression(component.el, expression, { scope: component.getJsActions(), params })
         })
     }
 })

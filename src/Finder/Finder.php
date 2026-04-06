@@ -336,7 +336,7 @@ class Finder
             ->merge($this->classLocations)
             ->toArray();
 
-        foreach ($classNamespaces as $classNamespace) {
+        foreach ($classNamespaces as $key => $classNamespace) {
             $namespace = str_replace(
                 ['/', '\\'],
                 '.',
@@ -348,7 +348,9 @@ class Finder
                 ->implode('.');
 
             if ($fullName->startsWith($namespace)) {
-                return (string) $fullName->substr(strlen($namespace) + 1);
+                $name = (string) $fullName->substr(strlen($namespace) + 1);
+
+                return is_string($key) ? $key . '::' . $name : $name;
             }
         }
 
@@ -396,7 +398,7 @@ class Finder
             && file_exists($dir . '/' . $fileBaseName . '.blade.php');
     }
 
-    public function resolveSingleFileComponentPathForCreation(string $name): ?string
+    public function resolveSingleFileComponentPathForCreation(string $name, ?bool $useEmoji = null): ?string
     {
         [$namespace, $componentName] = $this->parseNamespaceAndName($name);
 
@@ -420,15 +422,15 @@ class Finder
         $lastSegment = array_pop($segments);
         $leadingPath = !empty($segments) ? implode('/', $segments) . '/' : '';
 
-        // Determine if emoji should be used (get from config)
-        $useEmoji = config('livewire.make_command.emoji', true);
+        // Determine if emoji should be used (prefer explicit parameter, then config)
+        $useEmoji = $useEmoji ?? config('livewire.make_command.emoji', true);
         $prefix = $useEmoji ? self::ZAP : '';
 
         // Build the file path
         return $location . '/' . $leadingPath . $prefix . $lastSegment . '.blade.php';
     }
 
-    public function resolveMultiFileComponentPathForCreation(string $name): ?string
+    public function resolveMultiFileComponentPathForCreation(string $name, ?bool $useEmoji = null): ?string
     {
         [$namespace, $componentName] = $this->parseNamespaceAndName($name);
 
@@ -452,8 +454,8 @@ class Finder
         $lastSegment = array_pop($segments);
         $leadingPath = !empty($segments) ? implode('/', $segments) . '/' : '';
 
-        // Determine if emoji should be used (get from config)
-        $useEmoji = config('livewire.make_command.emoji', true);
+        // Determine if emoji should be used (prefer explicit parameter, then config)
+        $useEmoji = $useEmoji ?? config('livewire.make_command.emoji', true);
         $prefix = $useEmoji ? self::ZAP : '';
 
         // Build the directory path

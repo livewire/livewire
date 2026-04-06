@@ -5,16 +5,7 @@ import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFrag
 import { transitionDomMutation } from "./directives/wire-transition"
 
 export async function morph(component, el, html) {
-    let wrapperTag = el.parentElement
-        // If the root element is a "tr", we need the wrapper to be a "table"...
-        ? el.parentElement.tagName.toLowerCase()
-        : 'div'
-
-    let customElement = customElements.get(wrapperTag)
-
-    // If the wrapper tag is a custom element, we can't instantiate it using the hyphenated
-    // tag name, so we need to get the name off the custom element instead...
-    wrapperTag = customElement ? customElement.name : wrapperTag
+    let wrapperTag = getTagName(el.parentElement)
 
     let wrapper = document.createElement(wrapperTag)
 
@@ -75,7 +66,7 @@ export async function morph(component, el, html) {
 
 export async function morphFragment(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement
-    let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
+    let fromContainerTag = getTagName(fromContainer)
 
     let toContainer = document.createElement(fromContainerTag)
     toContainer.innerHTML = toHTML
@@ -83,7 +74,7 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
 
     // Add the parent component reference to an outer wrapper if it exists...
     let parentElement = component.el.parentElement
-    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
+    let parentElementTag = getTagName(parentElement)
 
     let parentComponent
 
@@ -217,4 +208,15 @@ function isntElement(el) {
 
 function isComponentRootEl(el) {
     return el.hasAttribute('wire:id')
+}
+
+export function getTagName(el) {
+    // If the root element is a "tr", we need the wrapper to be a "table"...
+    let tag = el ? el.tagName.toLowerCase() : 'div'
+
+    // If the tag is a custom element, we can't instantiate it using the hyphenated
+    // tag name, so we need to get the name off the custom element instead...
+    let customElement = customElements.get(tag)
+
+    return customElement ? customElement.name : tag
 }

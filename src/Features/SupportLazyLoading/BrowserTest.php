@@ -195,6 +195,46 @@ class BrowserTest extends BrowserTestCase
         });
     }
 
+    public function test_can_lazy_load_component_without_mount_using_route()
+    {
+        $this->beforeServingApplication(function() {
+            Livewire::component('page-without-mount', PageWithoutMount::class);
+            Route::get('/', PageWithoutMount::class)->lazy()->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('Loading...')
+                ->assertDontSee('Hello World')
+                ->waitFor('#page')
+                ->assertDontSee('Loading...')
+                ->assertSee('Hello World');
+        });
+    }
+
+    public function test_can_defer_lazy_load_component_without_mount_using_route()
+    {
+        $this->beforeServingApplication(function() {
+            Livewire::component('page-without-mount', PageWithoutMount::class);
+            Route::get('/', PageWithoutMount::class)->defer()->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('Loading...')
+                ->assertDontSee('Hello World')
+                ->waitFor('#page')
+                ->assertDontSee('Loading...')
+                ->assertSee('Hello World');
+        });
+    }
+
     public function test_can_lazy_load_a_component_with_a_placeholder()
     {
         Livewire::visit([new class extends Component {
@@ -300,6 +340,39 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewire()->click('@button')
         ->waitForText('Count: 3')
         ->assertSee('Count: 3')
+        ;
+    }
+
+    public function test_lazy_component_outside_viewport_is_not_loaded_when_reactive_prop_changes()
+    {
+        Livewire::visit([new class extends Component {
+            public $count = 1;
+            public function inc() { $this->count++; }
+            public function render() { return <<<'HTML'
+            <div>
+                <button wire:click="inc" dusk="button">+</button>
+                <div dusk="parent-count">Parent: {{ $count }}</div>
+                <div style="height: 200vh"></div>
+                <livewire:child :$count lazy />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            #[Reactive]
+            public $count;
+            public $config = [];
+            public function mount() { $this->config = ['label' => 'Count']; }
+            public function render() { return <<<'HTML'
+            <div id="child">
+                <div x-data="{ state: $wire.$entangle('config.label') }">
+                    <span dusk="child-label" x-text="state"></span>
+                </div>
+            </div>
+            HTML; }
+        }])
+        ->assertMissing('#child')
+        ->waitForLivewire()->click('@button')
+        ->waitForTextIn('@parent-count', 'Parent: 2')
+        ->assertMissing('#child')
         ;
     }
 
@@ -539,6 +612,24 @@ class BrowserTest extends BrowserTestCase
 class Page extends Component {
     public function mount() {
         sleep(1);
+    }
+
+    public function placeholder() { return <<<HTML
+            <div id="loading">
+                Loading...
+            </div>
+            HTML; }
+
+    public function render() { return <<<HTML
+            <div id="page">
+                Hello World
+            </div>
+            HTML; }
+}
+
+class PageWithoutMount extends Component {
+    public function boot() {
+        usleep(200_000);
     }
 
     public function placeholder() { return <<<HTML

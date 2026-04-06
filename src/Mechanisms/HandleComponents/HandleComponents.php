@@ -11,6 +11,7 @@ use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\MaxNestingDepthExceededException;
 use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Drawer\Utils;
+use Livewire\Features\SupportFormObjects\Form;
 use Illuminate\Support\Facades\View;
 
 class HandleComponents extends Mechanism
@@ -464,6 +465,13 @@ class HandleComponents extends Mechanism
 
     protected function updateProperties($component, $updates, $data, $context)
     {
+        // When the JS diff algorithm detects that all properties of a form object
+        // have changed, it consolidates them into a single update (e.g. {form: {title: '...', status: '...'}}).
+        // Form objects are special — they should never be fully replaced. Instead, decompose
+        // the consolidated update into individual property updates so each goes through
+        // the normal hydration path (which handles type casting for enums, etc.)...
+        $updates = $this->expandConsolidatedFormObjectUpdates($component, $updates);
+
         $finishes = [];
 
         foreach ($updates as $path => $value) {
@@ -478,6 +486,23 @@ class HandleComponents extends Mechanism
         foreach ($finishes as $finish) {
             $finish();
         }
+    }
+
+    protected function expandConsolidatedFormObjectUpdates($component, $updates)
+    {
+        $expanded = [];
+
+        foreach ($updates as $path => $value) {
+            if (is_array($value) && property_exists($component, $path) && $component->$path instanceof Form) {
+                foreach ($value as $key => $child) {
+                    $expanded["{$path}.{$key}"] = $child;
+                }
+            } else {
+                $expanded[$path] = $value;
+            }
+        }
+
+        return $expanded;
     }
 
     public function updateProperty($component, $path, $value, $context)
