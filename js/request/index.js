@@ -15,6 +15,11 @@ let interceptors = new InterceptorRegistry
 let messageBus = new MessageBus()
 let actionInterceptors = []
 let partitionInterceptors = []
+let sessionExpired = false
+
+export function sessionIsExpired() {
+    return sessionExpired
+}
 
 export function setNextActionOrigin(origin) {
     outstandingActionOrigin = origin
@@ -372,6 +377,10 @@ function sendMessages() {
                 if (preventDefault) return
 
                 if (response.status === 419) {
+                    if (sessionExpired) return
+
+                    sessionExpired = true
+
                     confirm(
                         'This page has expired.\nWould you like to refresh the page?'
                     ) && window.location.reload()

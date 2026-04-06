@@ -31,13 +31,17 @@ class BaseComputed extends Attribute
     public function handleMagicGet($returnValue)
     {
         if ($this->persist) {
-            $returnValue($this->handlePersistedGet());
+            $returnValue(
+                $this->requestCachedValue ??= $this->handlePersistedGet()
+            );
 
             return;
         }
 
         if ($this->cache) {
-            $returnValue($this->handleCachedGet());
+            $returnValue(
+                $this->requestCachedValue ??= $this->handleCachedGet()
+            );
 
             return;
         }
@@ -51,12 +55,14 @@ class BaseComputed extends Attribute
     {
         if ($this->persist) {
             $this->handlePersistedUnset();
+            unset($this->requestCachedValue);
 
             return;
         }
 
         if ($this->cache) {
             $this->handleCachedUnset();
+            unset($this->requestCachedValue);
 
             return;
         }

@@ -103,4 +103,27 @@ describe('Contextualize expressions', () => {
         // aboveComponent is above the wire:id root, so it gets prefixed
         expect(contextualizeExpression('aboveComponent', childEl)).toBe('$wire.aboveComponent')
     })
+
+    it('parent alpine scope does not leak across livewire component boundary', () => {
+        // Simulate real Alpine behavior: when x-data is on the wire:id element,
+        // Alpine's addScopeToNode sets _x_dataStack = [ownData, ...parentDataStack].
+        // The parent scope should NOT cause identifiers to be skipped.
+        let parentScope = { exampleFunction: () => {} }
+
+        let rootEl = {
+            _x_dataStack: [{ childVar: {} }, parentScope],
+            hasAttribute: (attr) => attr === 'wire:id',
+            parentElement: null,
+        }
+
+        let childEl = {
+            hasAttribute: () => false,
+            parentElement: rootEl,
+        }
+
+        // childVar is the component's own x-data, should be skipped
+        expect(contextualizeExpression('childVar', childEl)).toBe('childVar')
+        // exampleFunction is from parent scope, should be prefixed with $wire
+        expect(contextualizeExpression('exampleFunction', childEl)).toBe('$wire.exampleFunction')
+    })
 })

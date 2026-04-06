@@ -8,6 +8,7 @@ use function Livewire\invade;
 use Livewire\Features\SupportAttributes\AttributeLevel;
 use Livewire\ComponentHook;
 use Livewire\Exceptions\EventHandlerDoesNotExist;
+use Livewire\Features\SupportAuthorization\BaseAuthorize;
 use Livewire\Mechanisms\HandleComponents\BaseRenderless;
 
 class SupportEvents extends ComponentHook
@@ -24,6 +25,15 @@ class SupportEvents extends ComponentHook
             }
 
             $method = static::getListenerMethodName($this->component, $name);
+
+            // Run any authorization checks on the listener method since
+            // its normal "call" hook doesn't get run when the method
+            // is called as an event listener...
+            $this->component->getAttributes()
+                ->filter(fn ($i) => is_subclass_of($i, BaseAuthorize::class))
+                ->filter(fn ($i) => $i->getName() === $method)
+                ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
+                ->each(fn ($i) => $i->call($params));
 
             $returnEarly(
                 wrap($this->component)->$method(...$params)

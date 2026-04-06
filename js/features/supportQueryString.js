@@ -24,6 +24,8 @@ on('effect', ({ component, effects, cleanup }) => {
 
             cleanup(() => Alpine.release(effectReference))
         } else if (use === 'push') {
+            let popNavigating = false
+
             let forgetCommitHandler = on('commit', ({ component: commitComponent, succeed }) => {
                 if (component !== commitComponent) return
 
@@ -34,17 +36,30 @@ on('effect', ({ component, effects, cleanup }) => {
 
                     if (JSON.stringify(beforeValue) === JSON.stringify(afterValue)) return
 
-                    push(afterValue)
+                    // If we're handling a popstate (back/forward navigation), use
+                    // replaceState instead of pushState so we don't wipe out the
+                    // forward history entries...
+                    if (popNavigating) {
+                        replace(afterValue)
+                    } else {
+                        push(afterValue)
+                    }
                 })
             })
 
             let forgetPopHandler = pop(async newValue => {
+                popNavigating = true
+
                 await component.$wire.set(name, newValue)
 
                 // @todo: this is the absolute worst thing ever I'm so sorry this needs to be refactored stat:
                 document.querySelectorAll('input').forEach(el => {
                     el._x_forceModelUpdate && el._x_forceModelUpdate(el._x_model.get())
                 })
+
+                // Use requestAnimationFrame to ensure the flag stays true through
+                // the succeed callback which fires in a requestAnimationFrame...
+                requestAnimationFrame(() => popNavigating = false)
             })
 
             // If the current property value differs from the initial value

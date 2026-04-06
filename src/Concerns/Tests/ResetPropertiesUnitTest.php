@@ -113,9 +113,37 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
         $component = Livewire::test(ResetPropertiesComponent::class)
             ->set('nestedArrayProp.foo', 'bar')
             ->assertSetStrict('nestedArrayProp.foo', 'bar')
-            ->call('resetKeys', 'nestedArrayProp.foo');
+            ->call('resetKeys', 'nestedArrayProp.foo')
+            ->assertSetStrict('nestedArrayProp.foo', '');
+    }
 
-        $this->assertTrue(!array_key_exists('foo', $component->nestedArrayProp));
+    public function test_can_reset_dynamically_added_nested_array_key()
+    {
+        $component = Livewire::test(ResetPropertiesComponent::class)
+            ->set('nestedArrayProp.newKey', 'dynamic')
+            ->assertSetStrict('nestedArrayProp.newKey', 'dynamic')
+            ->call('resetKeys', 'nestedArrayProp.newKey');
+
+        $this->assertFalse(array_key_exists('newKey', $component->nestedArrayProp));
+    }
+
+    public function test_can_reset_nested_array_property_with_null_default()
+    {
+        Livewire::test(ResetPropertiesComponent::class)
+            ->set('nestedArrayProp.nullValue', 'changed')
+            ->assertSetStrict('nestedArrayProp.nullValue', 'changed')
+            ->call('resetKeys', 'nestedArrayProp.nullValue')
+            ->assertSetStrict('nestedArrayProp.nullValue', null);
+    }
+
+    public function test_can_pull_nested_array_property()
+    {
+        Livewire::test(ResetPropertiesComponent::class)
+            ->set('nestedArrayProp.foo', 'bar')
+            ->assertSetStrict('nestedArrayProp.foo', 'bar')
+            ->call('proxyPull', 'nestedArrayProp.foo')
+            ->assertSetStrict('pullResult', 'bar')
+            ->assertSetStrict('nestedArrayProp.foo', '');
     }
 
     public function test_can_reset_and_return_property_with_pull_method()
@@ -175,6 +203,7 @@ class ResetPropertiesComponent extends TestComponent
 
     public array $nestedArrayProp = [
         'foo' => '',
+        'nullValue' => null,
     ];
 
     public function resetAll()

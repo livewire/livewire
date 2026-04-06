@@ -69,6 +69,9 @@ class ImplicitRouteBinding
     {
         return $this->getPublicPropertyTypes($component)
             ->intersectByKeys($route->parametersWithoutNulls())
+            ->sortBy(function ($className, $propName) use ($route) {
+                return array_search($propName, array_keys($route->parametersWithoutNulls()));
+            })
             ->map(function ($className, $propName) use ($route) {
                 // If typed public property, resolve the class
                 if ($className) {
