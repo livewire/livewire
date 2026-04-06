@@ -7,6 +7,17 @@ export class MessageInterceptor {
     onError = () => {}
     onStream = () => {}
     onSuccess = () => {}
+    // Fired when a message is skipped (e.g. an unchanged reactive child
+    // that the server chose not to process). A skipped message has NO
+    // payload, NO effects, and goes through NO morph or render — it's
+    // structurally similar to a cancel but action promises still resolve
+    // because the action did "succeed" (it just had nothing to do).
+    //
+    // If your interceptor needs to react to every terminal state, prefer
+    // `onFinish`, which fires for success, cancel, failure, and skip.
+    // Use `onSkipped` only when you specifically need to know that the
+    // message was a no-op (e.g. for telemetry or dev tools).
+    onSkipped = () => {}
     onFinish = () => {}
     onSync = () => {}
     onEffect = () => {}
@@ -36,6 +47,7 @@ export class MessageInterceptor {
             onError: (callback) => this.onError = callback,
             onStream: (callback) => this.onStream = callback,
             onSuccess: (callback) => this.onSuccess = callback,
+            onSkipped: (callback) => this.onSkipped = callback,
             onFinish: (callback) => this.onFinish = callback,
         })
     }

@@ -421,12 +421,18 @@ function sendMessages() {
                     messageResponsePayloads.forEach(payload => {
                         if (message.isCancelled()) return
 
-                        // Server skipped this child (unchanged reactive props)...
+                        // The server returned a skip marker for this component
+                        // (e.g. an unchanged reactive child whose entire lifecycle
+                        // was skipped). Drive the message through its skip path:
+                        // no merge, no morph, no render — just resolve the action
+                        // promises and fire `onSkipped` + `onFinish`. This mirrors
+                        // the cancel path structurally; the only difference is that
+                        // promises resolve (it's a no-op success) rather than reject.
                         if (payload.skip) {
                             if (payload.id === message.component.id) {
-                                message.responsePayload = { snapshot: message.component.snapshot, effects: {} }
-
-                                message.invokeOnSuccess()
+                                message.responsePayload = payload
+                                message.markSkipped()
+                                message.invokeOnSkipped()
                                 message.resolveActionPromises([], [])
                                 message.invokeOnFinish()
                             }
