@@ -125,6 +125,31 @@ class FileUploadConfiguration
         return config('livewire.temporary_file_upload.max_upload_time') ?: 5;
     }
 
+    public static function chunkSize()
+    {
+        return config('livewire.temporary_file_upload.chunk_size', 5 * 1024 * 1024);
+    }
+
+    public static function isChunkingEnabled()
+    {
+        return static::chunkSize() !== null;
+    }
+
+    public static function chunkRetries()
+    {
+        return config('livewire.temporary_file_upload.chunk_retries', 3);
+    }
+
+    public static function chunkRetryDelays()
+    {
+        return config('livewire.temporary_file_upload.chunk_retry_delays', [500, 1000, 3000]);
+    }
+
+    public static function isChunkResumable()
+    {
+        return config('livewire.temporary_file_upload.chunk_resumable', true);
+    }
+
     public static function storeTemporaryFile($file, $disk)
     {
         $filename = TemporaryUploadedFile::generateHashName($file);

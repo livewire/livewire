@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Renderless;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 
@@ -22,7 +23,23 @@ trait WithFileUploads
             return;
         }
 
-        $this->dispatch('upload:generatedSignedUrl', name: $name, url: GenerateSignedUploadUrlFacade::forLocal())->self();
+        $totalSize = collect($fileInfo)->sum('size');
+        $chunkConfig = null;
+
+        if (FileUploadConfiguration::isChunkingEnabled()
+            && $totalSize > FileUploadConfiguration::chunkSize()) {
+            $chunkConfig = [
+                'chunkSize' => FileUploadConfiguration::chunkSize(),
+                'retryDelays' => FileUploadConfiguration::chunkRetryDelays(),
+                'resumable' => FileUploadConfiguration::isChunkResumable(),
+                'initUrl' => URL::temporarySignedRoute(
+                    'livewire.chunk-upload-init',
+                    now()->addMinutes(FileUploadConfiguration::maxUploadTime()),
+                ),
+            ];
+        }
+
+        $this->dispatch('upload:generatedSignedUrl', name: $name, url: GenerateSignedUploadUrlFacade::forLocal(), chunkConfig: $chunkConfig)->self();
     }
 
     function _finishUpload($name, $tmpPath, $isMultiple, $append = true)
@@ -134,6 +151,22 @@ trait WithFileUploads
             $yesterdaysStamp = now()->subDay()->timestamp;
             if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
                 $storage->delete($filePathname);
+            }
+        }
+
+        // Clean up stale chunk directories...
+        $chunksDir = FileUploadConfiguration::path('chunks');
+
+        foreach ($storage->directories($chunksDir) as $dir) {
+            $manifestPath = "{$dir}/manifest.json";
+
+            if (! $storage->exists($manifestPath)) {
+                $storage->deleteDirectory($dir);
+                continue;
+            }
+
+            if (now()->subDay()->timestamp > $storage->lastModified($manifestPath)) {
+                $storage->deleteDirectory($dir);
             }
         }
     }

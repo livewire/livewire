@@ -62,6 +62,30 @@ class EndpointResolver
     }
 
     /**
+     * Get the path for the chunked upload init endpoint.
+     */
+    public static function chunkInitPath(): string
+    {
+        return static::prefix() . '/chunk-upload';
+    }
+
+    /**
+     * Get the path for the chunked upload patch endpoint.
+     */
+    public static function chunkPatchPath(): string
+    {
+        return static::prefix() . '/chunk-upload/{transferId}';
+    }
+
+    /**
+     * Get the path for the chunked upload offset check endpoint.
+     */
+    public static function chunkOffsetPath(): string
+    {
+        return static::prefix() . '/chunk-upload/{transferId}/offset';
+    }
+
+    /**
      * Get the path for component JavaScript modules.
      */
     public static function componentJsPath(): string

@@ -140,6 +140,10 @@ return [
         ],
         'max_upload_time' => 5, // Max duration (in minutes) before an upload is invalidated...
         'cleanup' => true, // Should cleanup temporary uploads older than 24 hrs...
+        'chunk_size' => 5 * 1024 * 1024, // 5MB per chunk. Set to `null` to disable chunked uploads.
+        'chunk_retries' => 3, // Number of times to retry a failed chunk before giving up.
+        'chunk_retry_delays' => [500, 1000, 3000], // Backoff delays (in ms) between chunk retries.
+        'chunk_resumable' => true, // Allow resuming uploads across page loads.
     ],
 
     /*
