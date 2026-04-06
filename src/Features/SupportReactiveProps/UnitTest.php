@@ -143,6 +143,52 @@ class UnitTest extends \Tests\TestCase
         $this->assertFalse(SupportReactiveProps::shouldSkipUpdate($child->snapshot, [['method' => '$commit', 'params' => []]]));
     }
 
+    public function test_should_skip_update_returns_false_when_model_was_changed_during_request()
+    {
+        Livewire::component('child-with-model-prop', ChildWithModelProp::class);
+
+        $user = SkipTestUser::make(['id' => 1, 'name' => 'Taylor']);
+        $user->exists = true;
+        $user->syncOriginal();
+
+        $child = Livewire::test(ChildWithModelProp::class, ['user' => $user]);
+
+        // Simulate the parent calling $user->update(['name' => 'Caleb'])
+        // After save, the model is no longer dirty, but wasChanged() is true
+        $user->forceFill(['name' => 'Caleb']);
+        $user->setRawAttributes(['id' => 1, 'name' => 'Caleb'], sync: true);
+        $reflection = new \ReflectionClass($user);
+        $changesProperty = $reflection->getProperty('changes');
+        $changesProperty->setValue($user, ['name' => 'Caleb']);
+
+        $this->assertFalse($user->isDirty());
+        $this->assertTrue($user->wasChanged());
+
+        SupportReactiveProps::$pendingChildParams[$child->id()] = ['user' => $user];
+
+        $this->assertFalse(SupportReactiveProps::shouldSkipUpdate($child->snapshot, [['method' => '$commit', 'params' => []]]));
+    }
+
+    public function test_should_skip_update_returns_false_when_model_was_recently_created()
+    {
+        Livewire::component('child-with-model-prop', ChildWithModelProp::class);
+
+        $user = SkipTestUser::make(['id' => 1, 'name' => 'Taylor']);
+        $user->exists = true;
+        $user->syncOriginal();
+
+        $child = Livewire::test(ChildWithModelProp::class, ['user' => $user]);
+
+        // Simulate the model being freshly created during this request
+        $user->wasRecentlyCreated = true;
+
+        $this->assertFalse($user->isDirty());
+
+        SupportReactiveProps::$pendingChildParams[$child->id()] = ['user' => $user];
+
+        $this->assertFalse(SupportReactiveProps::shouldSkipUpdate($child->snapshot, [['method' => '$commit', 'params' => []]]));
+    }
+
     public function test_skip_update_returns_skip_response_from_update_endpoint()
     {
         Livewire::component('skip-test-parent', SkipTestParent::class);

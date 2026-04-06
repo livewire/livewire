@@ -121,6 +121,16 @@ class SupportReactiveProps extends ComponentHook
             return false;
         }
 
+        // If the model was saved during this request, don't skip...
+        if ($model->wasChanged()) {
+            return false;
+        }
+
+        // If the model was just created during this request, don't skip...
+        if ($model->wasRecentlyCreated) {
+            return false;
+        }
+
         return true;
     }
 
