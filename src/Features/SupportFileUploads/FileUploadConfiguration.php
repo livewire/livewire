@@ -127,17 +127,12 @@ class FileUploadConfiguration
 
     public static function chunkSize()
     {
-        return config('livewire.temporary_file_upload.chunk_size', 5 * 1024 * 1024);
+        return config('livewire.temporary_file_upload.chunk_size');
     }
 
     public static function isChunkingEnabled()
     {
-        return static::chunkSize() !== null;
-    }
-
-    public static function chunkRetries()
-    {
-        return config('livewire.temporary_file_upload.chunk_retries', 3);
+        return static::chunkSize() !== null && ! static::isUsingS3();
     }
 
     public static function chunkRetryDelays()
@@ -145,9 +140,33 @@ class FileUploadConfiguration
         return config('livewire.temporary_file_upload.chunk_retry_delays', [500, 1000, 3000]);
     }
 
-    public static function isChunkResumable()
+    public static function chunkMaxUploadTime()
     {
-        return config('livewire.temporary_file_upload.chunk_resumable', true);
+        return config('livewire.temporary_file_upload.chunk_max_upload_time', 60);
+    }
+
+    public static function chunkMiddleware()
+    {
+        return config('livewire.temporary_file_upload.chunk_middleware') ?: 'throttle:600,1';
+    }
+
+    /**
+     * Extract the maximum upload size in bytes from the configured rules.
+     * Looks for a `max:N` rule (where N is in kilobytes per Laravel convention)
+     * and returns the byte equivalent. Returns null if no max rule found.
+     */
+    public static function maxUploadSizeInBytes()
+    {
+        foreach (static::rules() as $rule) {
+            if (! is_string($rule)) continue;
+
+            if (str_starts_with($rule, 'max:')) {
+                $kb = (int) substr($rule, 4);
+                return $kb * 1024;
+            }
+        }
+
+        return null;
     }
 
     public static function storeTemporaryFile($file, $disk)

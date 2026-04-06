@@ -23,18 +23,21 @@ trait WithFileUploads
             return;
         }
 
-        $totalSize = collect($fileInfo)->sum('size');
-        $chunkConfig = null;
+        // Determine if any of the files in this upload should be chunked.
+        // We chunk if chunking is enabled AND any individual file is larger
+        // than the configured chunk size. We never chunk on S3 (handled by
+        // isChunkingEnabled()).
+        $shouldChunk = FileUploadConfiguration::isChunkingEnabled()
+            && collect($fileInfo)->contains(fn ($info) => $info['size'] > FileUploadConfiguration::chunkSize());
 
-        if (FileUploadConfiguration::isChunkingEnabled()
-            && $totalSize > FileUploadConfiguration::chunkSize()) {
+        $chunkConfig = null;
+        if ($shouldChunk) {
             $chunkConfig = [
                 'chunkSize' => FileUploadConfiguration::chunkSize(),
                 'retryDelays' => FileUploadConfiguration::chunkRetryDelays(),
-                'resumable' => FileUploadConfiguration::isChunkResumable(),
                 'initUrl' => URL::temporarySignedRoute(
                     'livewire.chunk-upload-init',
-                    now()->addMinutes(FileUploadConfiguration::maxUploadTime()),
+                    now()->addMinutes(FileUploadConfiguration::chunkMaxUploadTime()),
                 ),
             ];
         }
@@ -142,31 +145,47 @@ trait WithFileUploads
         if (FileUploadConfiguration::isUsingS3()) return;
 
         $storage = FileUploadConfiguration::storage();
+        $yesterdaysStamp = now()->subDay()->timestamp;
+        $tmpDir = FileUploadConfiguration::path();
 
-        foreach ($storage->allFiles(FileUploadConfiguration::path()) as $filePathname) {
+        foreach ($storage->files($tmpDir) as $filePathname) {
             // On busy websites, this cleanup code can run in multiple threads causing part of the output
-            // of allFiles() to have already been deleted by another thread.
+            // of files() to have already been deleted by another thread.
             if (! $storage->exists($filePathname)) continue;
 
-            $yesterdaysStamp = now()->subDay()->timestamp;
             if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
                 $storage->delete($filePathname);
             }
         }
 
-        // Clean up stale chunk directories...
+        // Clean up stale chunk directories. Each chunk directory contains a
+        // manifest.json that gets updated with each PATCH, so we use the
+        // manifest's mtime to detect abandoned uploads.
         $chunksDir = FileUploadConfiguration::path('chunks');
 
-        foreach ($storage->directories($chunksDir) as $dir) {
-            $manifestPath = "{$dir}/manifest.json";
+        if ($storage->exists($chunksDir)) {
+            foreach ($storage->directories($chunksDir) as $dir) {
+                $manifestPath = "{$dir}/manifest.json";
 
-            if (! $storage->exists($manifestPath)) {
-                $storage->deleteDirectory($dir);
-                continue;
-            }
+                if (! $storage->exists($manifestPath)) {
+                    // Orphaned chunk directory with no manifest. Only delete if
+                    // the directory itself is also stale to avoid racing against
+                    // an in-flight init that hasn't written the manifest yet.
+                    $files = $storage->allFiles($dir);
+                    $allOld = true;
+                    foreach ($files as $f) {
+                        if ($storage->lastModified($f) > $yesterdaysStamp) {
+                            $allOld = false;
+                            break;
+                        }
+                    }
+                    if ($allOld) $storage->deleteDirectory($dir);
+                    continue;
+                }
 
-            if (now()->subDay()->timestamp > $storage->lastModified($manifestPath)) {
-                $storage->deleteDirectory($dir);
+                if ($yesterdaysStamp > $storage->lastModified($manifestPath)) {
+                    $storage->deleteDirectory($dir);
+                }
             }
         }
     }

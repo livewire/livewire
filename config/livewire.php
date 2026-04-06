@@ -140,10 +140,10 @@ return [
         ],
         'max_upload_time' => 5, // Max duration (in minutes) before an upload is invalidated...
         'cleanup' => true, // Should cleanup temporary uploads older than 24 hrs...
-        'chunk_size' => 5 * 1024 * 1024, // 5MB per chunk. Set to `null` to disable chunked uploads.
-        'chunk_retries' => 3, // Number of times to retry a failed chunk before giving up.
-        'chunk_retry_delays' => [500, 1000, 3000], // Backoff delays (in ms) between chunk retries.
-        'chunk_resumable' => true, // Allow resuming uploads across page loads.
+        'chunk_size' => null, // Bytes per chunk. Set to a number (e.g., 5 * 1024 * 1024) to enable chunked uploads for files larger than the chunk size. Local disk only — S3 not yet supported.
+        'chunk_retry_delays' => [500, 1000, 3000], // Backoff delays (in ms) between chunk retries. The number of entries determines the max retries.
+        'chunk_max_upload_time' => 60, // Max duration (in minutes) for an entire chunked upload to complete. Used as the signed-URL expiry for chunk endpoints.
+        'chunk_middleware' => null, // Middleware applied to chunk endpoints. Defaults to 'throttle:600,1' (looser than the global upload throttle since chunked uploads make many requests).
     ],
 
     /*
