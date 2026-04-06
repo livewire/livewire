@@ -205,17 +205,16 @@ class UploadManager {
 
     handleChunkedUpload(name, chunkConfig) {
         let uploadObj = this.uploadBag.first(name)
-        let { chunkSize, retryDelays, initUrl } = chunkConfig
         let component = this.component
-        let manager = this
+        let csrfToken = getCsrfToken()
 
-        // Total size across all files — used to calculate aggregate progress
-        let totalAllFiles = Array.from(uploadObj.files).reduce((sum, f) => sum + f.size, 0)
+        let files = Array.from(uploadObj.files)
+        let totalAllFiles = files.reduce((sum, f) => sum + f.size, 0)
         let bytesAlreadySentForCompletedFiles = 0
         let signedPaths = []
+        let fileIndex = 0
         let aborted = false
         let currentXhr = null
-        let csrfToken = getCsrfToken()
 
         // Wire up abort for cancelUpload(). We share a single abort flag
         // across all files in this upload batch.
@@ -225,9 +224,6 @@ class UploadManager {
                 if (currentXhr) currentXhr.abort()
             },
         }
-
-        let fileIndex = 0
-        let files = Array.from(uploadObj.files)
 
         let processNextFile = () => {
             if (aborted) return
@@ -275,6 +271,7 @@ class UploadManager {
         let initXhr = new XMLHttpRequest()
         setCurrentXhr(initXhr)
         initXhr.open('POST', initUrl)
+        initXhr.setRequestHeader('Accept', 'application/json')
         initXhr.setRequestHeader('Upload-Length', totalSize)
         initXhr.setRequestHeader('Upload-Name', encodeFilename(file.name))
         if (csrfToken) initXhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
@@ -313,6 +310,7 @@ class UploadManager {
             let xhr = new XMLHttpRequest()
             setCurrentXhr(xhr)
             xhr.open('PATCH', patchUrl)
+            xhr.setRequestHeader('Accept', 'application/json')
             xhr.setRequestHeader('Content-Type', 'application/offset+octet-stream')
             xhr.setRequestHeader('Upload-Offset', offset)
             if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
@@ -361,6 +359,7 @@ class UploadManager {
             let xhr = new XMLHttpRequest()
             setCurrentXhr(xhr)
             xhr.open('GET', offsetUrl)
+            xhr.setRequestHeader('Accept', 'application/json')
             if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
 
             xhr.addEventListener('load', () => {

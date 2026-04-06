@@ -9,6 +9,7 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ChunkedUploadController implements HasMiddleware
 {
@@ -44,10 +45,11 @@ class ChunkedUploadController implements HasMiddleware
             abort(400, 'Upload-Length header must be a positive integer.');
         }
 
-        // Reject uploads that exceed the configured max size up front so we
-        // never commit storage for an upload we know we'll reject later.
-        $maxBytes = FileUploadConfiguration::maxUploadSizeInBytes();
-        if ($maxBytes !== null && $totalSize > $maxBytes) {
+        // Always enforce some upper bound — even if the user hasn't set a `max:`
+        // rule we don't want clients claiming arbitrary sizes. Falls back to
+        // chunk_max_size_bytes (5GB by default).
+        $maxBytes = FileUploadConfiguration::maxUploadSizeInBytes() ?? FileUploadConfiguration::chunkAbsoluteMaxBytes();
+        if ($totalSize > $maxBytes) {
             abort(413, "Upload-Length ({$totalSize} bytes) exceeds the maximum allowed size ({$maxBytes} bytes).");
         }
 
@@ -103,10 +105,10 @@ class ChunkedUploadController implements HasMiddleware
             abort(413, "Chunk size ({$bytesIncoming} bytes) exceeds configured chunk_size ({$chunkSize} bytes).");
         }
 
-        // Atomically read manifest, validate offset, write chunk, update manifest.
-        // Holding the lock for the whole operation prevents race conditions on
-        // concurrent PATCHes for the same transfer (which the JS shouldn't do,
-        // but defensive coding matters).
+        // Atomically read manifest, validate offset, write chunk, update manifest,
+        // and (if this is the final chunk) finalize. Holding the lock through
+        // finalization prevents a second concurrent PATCH from racing past the
+        // moved data file and corrupting things.
         $manifestPath = $storage->path($manifestRelative);
         $dataPath = $storage->path($dataRelative);
 
@@ -114,6 +116,8 @@ class ChunkedUploadController implements HasMiddleware
         if ($fp === false) {
             abort(500, 'Could not open upload manifest.');
         }
+
+        $finalizationResult = null;
 
         try {
             if (! flock($fp, LOCK_EX)) {
@@ -159,26 +163,23 @@ class ChunkedUploadController implements HasMiddleware
             fflush($fp);
 
             $newOffset = $manifest['offset'];
-            $isComplete = $newOffset >= $manifest['size'];
+            $signedPath = null;
+
+            if ($newOffset >= $manifest['size']) {
+                // Finalize while still holding the lock so a concurrent PATCH
+                // can't race past the moved data file. May throw ValidationException.
+                $signedPath = $this->finalizeUpload($transferId, $manifest, $storage);
+            }
         } finally {
             flock($fp, LOCK_UN);
             fclose($fp);
         }
 
-        $headers = [
-            'Upload-Offset' => $newOffset,
-        ];
+        $headers = ['Upload-Offset' => $newOffset];
 
-        if ($isComplete) {
-            $result = $this->finalizeUpload($transferId, $manifest, $storage);
-
-            if ($result instanceof \Symfony\Component\HttpFoundation\Response) {
-                // Validation failed — return the response directly
-                return $result;
-            }
-
+        if ($signedPath !== null) {
             $headers['Upload-Complete'] = 'true';
-            $headers['X-Signed-Path'] = $result;
+            $headers['X-Signed-Path'] = $signedPath;
         }
 
         return response('', 204, $headers);
@@ -208,67 +209,59 @@ class ChunkedUploadController implements HasMiddleware
 
     /**
      * Move the assembled chunks to a temporary upload file, validate it
-     * against the configured rules, and return a signed path.
-     *
-     * Returns a Symfony Response on validation failure (so the caller can
-     * return it directly), or a string signed path on success.
+     * against the configured rules, and return a signed path. Throws
+     * ValidationException on validation failure (Laravel renders as 422).
      */
-    protected function finalizeUpload(string $transferId, array $manifest, $storage)
+    protected function finalizeUpload(string $transferId, array $manifest, $storage): string
     {
         $originalName = $manifest['name'] ?? 'unknown';
-        $extension = pathinfo($originalName, PATHINFO_EXTENSION);
 
-        // Match the existing temp filename convention used by FileUploadConfiguration::storeTemporaryFile
+        // Sanitize the extension to alphanumeric only. The original name comes
+        // from the user (Upload-Name header) so we can't trust its characters
+        // to be safe in a filename.
+        $rawExtension = pathinfo($originalName, PATHINFO_EXTENSION);
+        $extension = preg_replace('/[^A-Za-z0-9]/', '', $rawExtension);
+
         $hash = Str::random(40);
         $tmpName = $extension ? "{$hash}.{$extension}" : $hash;
 
-        $sourceRelative = FileUploadConfiguration::path("chunks/{$transferId}/data");
-        $destRelative = FileUploadConfiguration::path($tmpName);
-        $metaRelative = FileUploadConfiguration::path($tmpName . '.json');
-        $chunkDirRelative = FileUploadConfiguration::path("chunks/{$transferId}");
+        $chunkDir = FileUploadConfiguration::path("chunks/{$transferId}");
+        $sourcePath = "{$chunkDir}/data";
+        $destPath = FileUploadConfiguration::path($tmpName);
 
         // Move the assembled file into livewire-tmp
-        $storage->move($sourceRelative, $destRelative);
+        $storage->move($sourcePath, $destPath);
 
-        // Run validation against the configured rules. We construct an
-        // UploadedFile pointing at the assembled file so Laravel can apply
-        // mime/size rules just like a normal upload would.
-        $assembledPath = $storage->path($destRelative);
+        // Validate the assembled file against the configured rules. We use the
+        // same `files.0` key as FileUploadController so _uploadErrored's
+        // str_replace('files.0', $name, ...) translation works.
         $uploadedFile = new UploadedFile(
-            $assembledPath,
+            $storage->path($destPath),
             $originalName,
-            null, // mime — let Laravel detect from contents
-            null, // error
-            true, // test mode — bypass is_uploaded_file() check
+            null, null,
+            test: true,
         );
 
         $validator = Validator::make(
-            ['file' => $uploadedFile],
-            ['file' => FileUploadConfiguration::rules()],
+            ['files' => [$uploadedFile]],
+            ['files.0' => FileUploadConfiguration::rules()],
         );
 
         if ($validator->fails()) {
-            // Clean up everything we created so we don't leak storage on failed validation
-            $storage->delete($destRelative);
-            $storage->deleteDirectory($chunkDirRelative);
+            $storage->delete($destPath);
+            $storage->deleteDirectory($chunkDir);
 
-            return response()->json([
-                'message' => 'The given data was invalid.',
-                'errors' => collect($validator->errors()->toArray())
-                    ->mapWithKeys(fn ($messages, $key) => ['files.0' => $messages])
-                    ->all(),
-            ], 422);
+            throw new ValidationException($validator);
         }
 
-        // Validation passed — write the meta file and clean up the chunks dir
-        $storage->put($metaRelative, json_encode([
+        $storage->put(FileUploadConfiguration::path($tmpName . '.json'), json_encode([
             'name' => $originalName,
             'type' => $uploadedFile->getMimeType(),
             'size' => $uploadedFile->getSize(),
             'hash' => $tmpName,
         ]));
 
-        $storage->deleteDirectory($chunkDirRelative);
+        $storage->deleteDirectory($chunkDir);
 
         return TemporaryUploadedFile::signPath($tmpName);
     }

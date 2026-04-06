@@ -48,6 +48,7 @@ class ChunkedUploadTest extends \Tests\TestCase
     protected function initUpload(int $size, string $name = 'test.txt'): array
     {
         $response = $this->post($this->signedInitUrl(), [], [
+            'Accept' => 'application/json',
             'Upload-Length' => $size,
             'Upload-Name' => base64_encode($name),
         ]);
@@ -60,14 +61,17 @@ class ChunkedUploadTest extends \Tests\TestCase
     /** Helper: send a chunk */
     protected function sendChunk(string $patchUrl, int $offset, string $content)
     {
-        // The HTTP test framework needs the body sent as raw content.
         return $this->call(
             'PATCH',
             $patchUrl,
             [],
             [],
             [],
-            ['HTTP_UPLOAD_OFFSET' => $offset, 'CONTENT_TYPE' => 'application/offset+octet-stream'],
+            [
+                'HTTP_ACCEPT' => 'application/json',
+                'HTTP_UPLOAD_OFFSET' => $offset,
+                'CONTENT_TYPE' => 'application/offset+octet-stream',
+            ],
             $content,
         );
     }
@@ -391,6 +395,71 @@ class ChunkedUploadTest extends \Tests\TestCase
 
         config()->set('livewire.temporary_file_upload.rules', ['file']);
         $this->assertNull(FileUploadConfiguration::maxUploadSizeInBytes());
+    }
+
+    public function test_init_enforces_absolute_max_when_no_rule_max_is_set()
+    {
+        // No max rule — falls back to chunk_absolute_max_bytes
+        config()->set('livewire.temporary_file_upload.rules', ['file']);
+        config()->set('livewire.temporary_file_upload.chunk_absolute_max_bytes', 1024);
+
+        $response = $this->post($this->signedInitUrl(), [], [
+            'Upload-Length' => 2048,
+        ]);
+        $response->assertStatus(413);
+    }
+
+    public function test_init_allows_uploads_under_absolute_max()
+    {
+        config()->set('livewire.temporary_file_upload.rules', ['file']);
+        config()->set('livewire.temporary_file_upload.chunk_absolute_max_bytes', 10 * 1024);
+
+        $response = $this->post($this->signedInitUrl(), [], [
+            'Upload-Length' => 2048,
+        ]);
+        $response->assertOk();
+    }
+
+    public function test_chunked_upload_ends_up_as_temporary_uploaded_file_on_component()
+    {
+        // This is the closed-loop test: walk the chunks through real HTTP
+        // endpoints, then hand the resulting signed path to _finishUpload
+        // (the same way the JS client would) and verify the component property
+        // ends up holding a real TemporaryUploadedFile that .store()s correctly.
+        Storage::fake('avatars');
+
+        $body = $this->initUpload(1024, 'real-photo.jpg');
+        $response = $this->sendChunk($body['patchUrl'], 0, str_repeat('A', 1024));
+        $response->assertNoContent();
+        $signedPath = $response->headers->get('X-Signed-Path');
+
+        $component = \Livewire\Livewire::test(ChunkedUploadComponent::class)
+            ->call('_finishUpload', 'photo', [$signedPath], false);
+
+        $tmpFile = $component->viewData('photo');
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $tmpFile);
+        $this->assertEquals('real-photo.jpg', $tmpFile->getClientOriginalName());
+        $this->assertEquals(1024, $tmpFile->getSize());
+
+        // Storing the file should work end-to-end
+        $tmpFile->storeAs('/', 'final.jpg', $disk = 'avatars');
+        Storage::disk('avatars')->assertExists('final.jpg');
+    }
+
+    public function test_finalize_sanitizes_filename_extension()
+    {
+        // A nasty filename. The extension after pathinfo is "php\x00.txt" or
+        // similar weirdness — we should strip everything that's not alphanumeric.
+        $weirdName = "evil.p\$h\$p"; // dollar signs in extension
+        $body = $this->initUpload(1024, $weirdName);
+        $response = $this->sendChunk($body['patchUrl'], 0, str_repeat('A', 1024));
+
+        $response->assertNoContent();
+        $signedPath = $response->headers->get('X-Signed-Path');
+        $tmpFilename = TemporaryUploadedFile::extractPathFromSignedPath($signedPath);
+
+        // The extension should be only alphanumeric characters
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{40}(\.[A-Za-z0-9]+)?$/', $tmpFilename);
     }
 
     public function test_multiple_concurrent_uploads_dont_interfere()

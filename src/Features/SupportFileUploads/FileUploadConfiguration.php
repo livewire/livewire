@@ -151,6 +151,16 @@ class FileUploadConfiguration
     }
 
     /**
+     * The absolute maximum upload size in bytes for chunked uploads when no
+     * `max:` rule is configured. Acts as a hard ceiling so a missing rule
+     * can never become an unbounded upload claim.
+     */
+    public static function chunkAbsoluteMaxBytes()
+    {
+        return config('livewire.temporary_file_upload.chunk_absolute_max_bytes', 5 * 1024 * 1024 * 1024);
+    }
+
+    /**
      * Extract the maximum upload size in bytes from the configured rules.
      * Looks for a `max:N` rule (where N is in kilobytes per Laravel convention)
      * and returns the byte equivalent. Returns null if no max rule found.
