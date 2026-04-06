@@ -184,7 +184,7 @@ public function reset()
 
 ## Respecting reduced motion
 
-Livewire automatically respects the user's `prefers-reduced-motion` setting. When enabled, transitions are disabled to avoid causing discomfort for users who are sensitive to motion.
+Livewire automatically respects the user's [prefers-reduced-motion](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion#user_preferences) setting. When enabled, transitions are disabled to avoid causing discomfort for users who are sensitive to motion.
 
 ## Browser support
 
