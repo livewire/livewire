@@ -11,11 +11,6 @@ export default class Message {
     pendingReturnsMeta = {}
     interceptors = []
     cancelled = false
-    // A "skipped" message is one the server intentionally chose not to
-    // process — for example, a reactive child whose props didn't change.
-    // It's the third terminal state alongside success and cancellation:
-    // no payload, no morph, no render, but action promises still resolve
-    // (it's a "happy no-op", not a failure). See `markSkipped()`.
     skipped = false
     request = null
     _scope = null
@@ -116,14 +111,6 @@ export default class Message {
         return this.cancelled
     }
 
-    /**
-     * Mark this message as skipped. Used when the server returns a skip
-     * payload (e.g. for an unchanged reactive child) — or, in the future,
-     * when the JS side decides client-side that nothing needs to be sent
-     * for this component. After marking, the caller is responsible for
-     * firing `invokeOnSkipped()` and `invokeOnFinish()` to drive the
-     * lifecycle to completion.
-     */
     markSkipped() {
         this.skipped = true
     }
@@ -241,23 +228,9 @@ export default class Message {
         this.interceptors.forEach(interceptor => interceptor.onFinish())
     }
 
-    /**
-     * Fired when the server returns a skip payload for this message
-     * (or, eventually, when JS marks the message skipped client-side).
-     * Mirrors `invokeOnCancel()` in shape — no payload, no morph, no
-     * render. Consumers that need to know specifically about skips can
-     * register `onSkipped` callbacks via the message interceptor.
-     *
-     * Action promises are resolved (not rejected) — a skip is a "happy
-     * no-op", not a failure — but that resolution is driven by the
-     * caller via `resolveActionPromises([], [])` rather than here so
-     * callers can supply any return values if a future skip flavor
-     * needs to.
-     */
     invokeOnSkipped() {
         this.interceptors.forEach(interceptor => interceptor.onSkipped())
 
-        // Action-level onFinish callbacks fire here (mirrors invokeOnCancel).
         Array.from(this.actions).forEach(action => action.invokeOnFinish())
     }
 

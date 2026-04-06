@@ -69,7 +69,6 @@ class SupportReactiveProps extends ComponentHook
             if (($call['method'] ?? '') !== '$commit') return false;
         }
 
-        // Check each reactive prop for changes...
         $pendingParams = static::$pendingChildParams[$id];
 
         foreach ($reactiveProps as $propName) {
@@ -86,12 +85,10 @@ class SupportReactiveProps extends ComponentHook
 
     protected static function valuesMatch($snapshotValue, $pendingValue): bool
     {
-        // Handle Eloquent models: compare class + key identity...
         if ($pendingValue instanceof Model) {
             return static::modelMatchesSnapshot($snapshotValue, $pendingValue);
         }
 
-        // For scalars and arrays, compare via CRC32 hash...
         return crc32(json_encode($snapshotValue)) === crc32(json_encode($pendingValue));
     }
 
@@ -106,30 +103,18 @@ class SupportReactiveProps extends ComponentHook
 
         $snapshotClass = $meta['class'] ?? null;
 
-        // Compare class (handles morph aliases)...
+        // Class may be stored under either the FQCN or the morph alias...
         if ($snapshotClass !== get_class($model) && $snapshotClass !== $model->getMorphClass()) {
             return false;
         }
 
-        // Compare primary key...
-        if (($meta['key'] ?? null) != $model->getKey()) {
-            return false;
-        }
+        if (($meta['key'] ?? null) != $model->getKey()) return false;
 
-        // If the model has unsaved attribute changes, don't skip...
-        if ($model->isDirty()) {
-            return false;
-        }
-
-        // If the model was saved during this request, don't skip...
-        if ($model->wasChanged()) {
-            return false;
-        }
-
-        // If the model was just created during this request, don't skip...
-        if ($model->wasRecentlyCreated) {
-            return false;
-        }
+        // Catch all the ways the parent could have mutated the model this request:
+        // local attribute changes (isDirty), saves (wasChanged), and creates (wasRecentlyCreated).
+        if ($model->isDirty()) return false;
+        if ($model->wasChanged()) return false;
+        if ($model->wasRecentlyCreated) return false;
 
         return true;
     }
