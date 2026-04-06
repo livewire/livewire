@@ -754,6 +754,71 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@child.renders', 2)
         ;
     }
+
+    public function test_on_skipped_message_lifecycle_hook_fires_for_skipped_children()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $count = 0;
+                public $name = 'Taylor';
+
+                public function inc() { $this->count++; }
+                public function changeName() { $this->name = 'Caleb'; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <button wire:click="inc" dusk="parent.inc">inc</button>
+                        <button wire:click="changeName" dusk="parent.change-name">change name</button>
+
+                        <livewire:child :name="$name" />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[BaseReactive]
+                public $name;
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <span dusk="child.name">{{ $name }}</span>
+
+                        @script
+                        <script>
+                            window.skipCount = 0
+                            window.successCount = 0
+
+                            this.interceptMessage(({ onSkipped, onSuccess }) => {
+                                onSkipped(() => window.skipCount++)
+                                onSuccess(() => window.successCount++)
+                            })
+                        </script>
+                        @endscript
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertScript('window.skipCount', 0)
+            ->assertScript('window.successCount', 0)
+
+            // Parent action that doesn't change the reactive prop — onSkipped fires, onSuccess does not
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertScript('window.skipCount', 1)
+            ->assertScript('window.successCount', 0)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertScript('window.skipCount', 2)
+            ->assertScript('window.successCount', 0)
+
+            // Parent action that DOES change the reactive prop — onSuccess fires, onSkipped does not
+            ->waitForLivewire()->click('@parent.change-name')
+            ->assertSeeIn('@child.name', 'Caleb')
+            ->assertScript('window.skipCount', 2)
+            ->assertScript('window.successCount', 1)
+        ;
+    }
 }
 
 class ReactivePropsBrowserTestPost extends Model
