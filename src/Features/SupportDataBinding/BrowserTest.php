@@ -232,4 +232,48 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@values', '3,1')
         ;
     }
+
+    public function test_x_mask_does_not_recreate_deleted_array_entries()
+    {
+        Livewire::visit(new class extends Component {
+            public int $count = 2;
+            public array $items = [
+                ['phone' => ''],
+                ['phone' => ''],
+            ];
+
+            public function updatedCount(): void
+            {
+                $this->items = array_slice($this->items, 0, $this->count);
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <select wire:model.live="count" dusk="count">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select>
+
+                        <div dusk="item-count">{{ count($items) }}</div>
+
+                        @foreach ($items as $index => $item)
+                            <div wire:key="item-{{ $index }}">
+                                <input wire:model="items.{{ $index }}.phone" x-mask="9999999999" dusk="phone-{{ $index }}" />
+                            </div>
+                        @endforeach
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@item-count', '2')
+            ->type('@phone-1', '1234567890')
+            ->waitForLivewire()->select('@count', '1')
+            ->assertSeeIn('@item-count', '1')
+            ->assertMissing('@phone-1')
+            ->waitForLivewire()->select('@count', '2')
+            ->assertSeeIn('@item-count', '1')
+        ;
+    }
 }
