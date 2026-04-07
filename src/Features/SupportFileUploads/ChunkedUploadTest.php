@@ -370,13 +370,29 @@ class ChunkedUploadTest extends \Tests\TestCase
         $this->assertFalse(FileUploadConfiguration::isChunkingEnabled());
     }
 
-    public function test_chunking_disabled_when_using_s3()
+    public function test_chunked_upload_with_s3_disk_throws_loudly()
     {
         config()->set('livewire.temporary_file_upload.chunk_size', 1024);
         config()->set('livewire.temporary_file_upload.disk', 's3');
         config()->set('filesystems.disks.s3.driver', 's3');
 
-        $this->assertFalse(FileUploadConfiguration::isChunkingEnabled());
+        $this->expectException(S3DoesntSupportChunkedUploads::class);
+
+        \Livewire\Livewire::test(ChunkedUploadComponent::class)
+            ->call('_startUpload', 'photo', [['name' => 'big.bin', 'size' => 5 * 1024, 'type' => 'application/octet-stream']], false);
+    }
+
+    public function test_s3_disk_without_chunking_works_as_normal()
+    {
+        // No chunk_size — S3 path should work fine
+        config()->set('livewire.temporary_file_upload.chunk_size', null);
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+        config()->set('filesystems.disks.s3.driver', 's3');
+
+        $component = \Livewire\Livewire::test(ChunkedUploadComponent::class);
+        $component->call('_startUpload', 'photo', [['name' => 'photo.jpg', 'size' => 100, 'type' => 'image/jpeg']], false);
+
+        $component->assertDispatched('upload:generatedSignedUrlForS3');
     }
 
     public function test_chunk_routes_use_chunk_middleware()

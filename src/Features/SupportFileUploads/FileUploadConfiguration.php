@@ -132,7 +132,7 @@ class FileUploadConfiguration
 
     public static function isChunkingEnabled()
     {
-        return static::chunkSize() !== null && ! static::isUsingS3();
+        return static::chunkSize() !== null;
     }
 
     public static function chunkRetryDelays()

@@ -15,6 +15,7 @@ trait WithFileUploads
     {
         if (FileUploadConfiguration::isUsingS3()) {
             throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
+            throw_if(FileUploadConfiguration::isChunkingEnabled(), S3DoesntSupportChunkedUploads::class);
 
             $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
 
@@ -25,8 +26,7 @@ trait WithFileUploads
 
         // Determine if any of the files in this upload should be chunked.
         // We chunk if chunking is enabled AND any individual file is larger
-        // than the configured chunk size. We never chunk on S3 (handled by
-        // isChunkingEnabled()).
+        // than the configured chunk size.
         $shouldChunk = FileUploadConfiguration::isChunkingEnabled()
             && collect($fileInfo)->contains(fn ($info) => $info['size'] > FileUploadConfiguration::chunkSize());
 
