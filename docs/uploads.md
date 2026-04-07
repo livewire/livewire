@@ -475,11 +475,15 @@ new class extends Component {
     // ...
     'chunk_size' => 5 * 1024 * 1024,           // Bytes per chunk. `null` to disable.
     'chunk_retry_delays' => [500, 1000, 3000], // Backoff between failed chunk retries (ms).
-    'chunk_max_upload_time' => 60,             // Max minutes for an entire chunked upload to complete.
+    'chunk_max_upload_time' => 60 * 24,        // Max minutes for an entire chunked upload to complete (24h default).
     'chunk_middleware' => null,                // Middleware applied to chunk endpoints. Defaults to throttle:600,1.
-    'chunk_absolute_max_bytes' => 5 * 1024 * 1024 * 1024, // Hard ceiling on Upload-Length when no `max:` rule is set.
+    'chunk_absolute_max_bytes' => 5 * 1024 * 1024 * 1024, // Hard ceiling on Upload-Length when no `max:` rule is set (defaults to 5GB).
 ],
 ```
+
+`chunk_max_upload_time` controls how long the signed chunk URLs stay valid. If an upload takes longer than this, the URLs expire and in-flight chunks start failing. The default of 24 hours comfortably handles multi-GB uploads on slow connections (e.g. 10GB at 5Mbps takes about 4.5 hours), and aligns with Livewire's existing 24-hour temporary-file cleanup window.
+
+`chunk_absolute_max_bytes` only matters when there is no `max:` rule in `temporary_file_upload.rules`. In that case it acts as a hard ceiling so a missing rule can't become an unbounded upload claim. If you set a `max:` rule (recommended), Livewire enforces that instead and `chunk_absolute_max_bytes` is unused.
 
 ### How it works
 

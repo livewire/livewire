@@ -142,7 +142,10 @@ class FileUploadConfiguration
 
     public static function chunkMaxUploadTime()
     {
-        return config('livewire.temporary_file_upload.chunk_max_upload_time', 60);
+        // 24 hours by default — aligns with Livewire's existing 24-hour
+        // temporary-upload cleanup window, and comfortably handles realistic
+        // multi-GB uploads on slow connections (e.g. 10GB at 5Mbps ≈ 4.5h).
+        return config('livewire.temporary_file_upload.chunk_max_upload_time', 60 * 24);
     }
 
     public static function chunkMiddleware()
