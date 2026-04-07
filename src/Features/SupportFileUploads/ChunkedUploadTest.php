@@ -462,20 +462,52 @@ class ChunkedUploadTest extends \Tests\TestCase
         Storage::disk('avatars')->assertExists('final.jpg');
     }
 
-    public function test_finalize_sanitizes_filename_extension()
+    public function test_finalize_drops_tampered_extension_entirely()
     {
-        // A nasty filename. The extension after pathinfo is "php\x00.txt" or
-        // similar weirdness — we should strip everything that's not alphanumeric.
-        $weirdName = "evil.p\$h\$p"; // dollar signs in extension
-        $body = $this->initUpload(1024, $weirdName);
+        // A tampered extension like `p$h$p` must be DROPPED entirely, not
+        // collapsed into the alphanumeric chars (`php`). Otherwise the chunked
+        // path would silently turn a frontend-blocked `.p$h$p` upload into a
+        // `.php` file on disk — strictly more permissive than the legacy
+        // single-request path and a frontend-filter bypass.
+        $body = $this->initUpload(1024, "evil.p\$h\$p");
         $response = $this->sendChunk($body['patchUrl'], 0, str_repeat('A', 1024));
 
         $response->assertNoContent();
         $signedPath = $response->headers->get('X-Signed-Path');
         $tmpFilename = TemporaryUploadedFile::extractPathFromSignedPath($signedPath);
 
-        // The extension should be only alphanumeric characters
-        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{40}(\.[A-Za-z0-9]+)?$/', $tmpFilename);
+        // No extension at all — just the 40-char hash.
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{40}$/', $tmpFilename);
+    }
+
+    public function test_finalize_preserves_safe_alphanumeric_extension()
+    {
+        // The complement to the test above: a clean alphanumeric extension
+        // passes through unchanged so downstream `->store()` calls produce
+        // a file with the expected extension. Documents the rule:
+        // alphanumeric → kept, anything else → dropped.
+        $body = $this->initUpload(1024, 'photo.JPG');
+        $response = $this->sendChunk($body['patchUrl'], 0, str_repeat('A', 1024));
+
+        $response->assertNoContent();
+        $signedPath = $response->headers->get('X-Signed-Path');
+        $tmpFilename = TemporaryUploadedFile::extractPathFromSignedPath($signedPath);
+
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{40}\.JPG$/', $tmpFilename);
+    }
+
+    public function test_finalize_drops_extension_containing_unicode()
+    {
+        // Non-ASCII extensions also fall outside the [A-Za-z0-9] allow-list
+        // and should be dropped entirely rather than partially preserved.
+        $body = $this->initUpload(1024, 'photo.café');
+        $response = $this->sendChunk($body['patchUrl'], 0, str_repeat('A', 1024));
+
+        $response->assertNoContent();
+        $signedPath = $response->headers->get('X-Signed-Path');
+        $tmpFilename = TemporaryUploadedFile::extractPathFromSignedPath($signedPath);
+
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{40}$/', $tmpFilename);
     }
 
     public function test_multiple_concurrent_uploads_dont_interfere()

@@ -216,11 +216,15 @@ class ChunkedUploadController implements HasMiddleware
     {
         $originalName = $manifest['name'] ?? 'unknown';
 
-        // Sanitize the extension to alphanumeric only. The original name comes
-        // from the user (Upload-Name header) so we can't trust its characters
-        // to be safe in a filename.
+        // The extension comes from the user (Upload-Name header) so we can't
+        // trust it. Use it only if it's already a "boring" alphanumeric string;
+        // otherwise drop it entirely. We deliberately do NOT strip individual
+        // bad characters because that can collapse a tampered extension like
+        // `p$h$p` into a real one like `php`, which would be more permissive
+        // than the legacy single-request path and could surprise frontend
+        // filters that allow/deny based on the literal client extension.
         $rawExtension = pathinfo($originalName, PATHINFO_EXTENSION);
-        $extension = preg_replace('/[^A-Za-z0-9]/', '', $rawExtension);
+        $extension = preg_match('/^[A-Za-z0-9]+$/', $rawExtension) ? $rawExtension : '';
 
         $hash = Str::random(40);
         $tmpName = $extension ? "{$hash}.{$extension}" : $hash;
