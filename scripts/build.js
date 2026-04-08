@@ -55,6 +55,7 @@ build({
     plugins: [alpineCSPPlugin]
 })
 
+fs.copyFileSync(__dirname+'/../js/types.d.ts', __dirname+'/../dist/livewire.esm.d.ts')
 
 let hash = crypto.randomBytes(4).toString('hex');
 
