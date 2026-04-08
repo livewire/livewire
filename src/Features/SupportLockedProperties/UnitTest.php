@@ -61,6 +61,25 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.foo', 'bar')
             ->assertOk();
     }
+
+    function test_updating_locked_property_returns_419_in_production()
+    {
+        config()->set('app.debug', false);
+
+        $testable = Livewire::test(new class extends TestComponent {
+            #[BaseLocked]
+            public $count = 1;
+        });
+
+        $snapshotJson = json_encode($testable->snapshot);
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson('/livewire/update', ['components' => [
+                ['snapshot' => $snapshotJson, 'updates' => ['count' => 2], 'calls' => []],
+            ]]);
+
+        $response->assertStatus(419);
+    }
 }
 
 class SomeForm extends Form {
