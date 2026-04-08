@@ -52,71 +52,70 @@ trait WithFileUploads
         // the component. Mirrors how validateOnly() defers to form objects.
         $target = $this;
         $localName = $name;
+        $formPrefix = null;
 
         if (str_contains($name, '.')) {
             [$head, $rest] = explode('.', $name, 2);
 
-            $value = $this->{$head} ?? null;
-
-            if ($value instanceof Form) {
+            if (($value = $this->{$head} ?? null) instanceof Form) {
                 $target = $value;
                 $localName = $rest;
+                $formPrefix = $head;
             }
         }
 
         $rules = $target->getRules();
 
-        $applicable = [];
-        if (isset($rules[$localName])) {
-            $applicable[$localName] = $this->filterRulesForPreUploadValidation($rules[$localName]);
-        }
-        if ($isMultiple && isset($rules[$localName.'.*'])) {
-            $applicable[$localName.'.*'] = $this->filterRulesForPreUploadValidation($rules[$localName.'.*']);
-        }
-
-        // Drop empty rule sets so the validator doesn't choke on []...
-        $applicable = array_filter($applicable, fn ($r) => ! empty($r));
+        $applicable = array_filter([
+            $localName => isset($rules[$localName])
+                ? $this->filterRulesForPreUploadValidation($rules[$localName])
+                : [],
+            $localName.'.*' => $isMultiple && isset($rules[$localName.'.*'])
+                ? $this->filterRulesForPreUploadValidation($rules[$localName.'.*'])
+                : [],
+        ]);
 
         if (empty($applicable)) return;
 
         $files = array_map(
-            fn ($info) => UploadedFile::fake()->create($info['name'], (int) ($info['size'] / 1024), $info['type']),
+            fn ($info) => UploadedFile::fake()->create(
+                (string) ($info['name'] ?? ''),
+                (int) ((is_numeric($info['size'] ?? null) ? $info['size'] : 0) / 1024),
+                (string) ($info['type'] ?? ''),
+            ),
             $fileInfo
         );
 
-        $data = [$localName => $isMultiple ? $files : $files[0]];
-
         $validator = Validator::make(
-            $data,
+            [$localName => $isMultiple ? $files : $files[0]],
             $applicable,
             invade($target)->getMessages(),
             invade($target)->getValidationAttributes(),
         );
 
-        if ($validator->fails()) {
-            // _startUpload is marked Renderless for the happy path, but on failure
-            // we need the component to re-render so the error message shows up.
-            store($this)->set('skipRender', false);
+        if ($validator->passes()) return;
 
-            $this->dispatch('upload:errored', name: $name)->self();
+        // _startUpload is marked Renderless for the happy path, but on failure
+        // we need the component to re-render so the error message shows up.
+        store($this)->set('skipRender', false);
 
-            // For form-object uploads, prefix the error keys with the form
-            // property name so they surface under the dot-path the developer
-            // wrote on the input (e.g. `form.photo`). Mirrors the prefixing
-            // Form::validateOnly() does on its own ValidationException.
-            if ($target !== $this) {
-                $messages = invade($validator)->messages ?: $validator->errors();
-                invade($validator)->messages = new \Illuminate\Support\MessageBag(
-                    \Illuminate\Support\Arr::prependKeysWith($messages->toArray(), $head.'.')
-                );
-                invade($validator)->failedRules = \Illuminate\Support\Arr::prependKeysWith(
-                    invade($validator)->failedRules,
-                    $head.'.'
-                );
-            }
+        $this->dispatch('upload:errored', name: $name)->self();
 
-            throw new ValidationException($validator);
+        // For form-object uploads, prefix the error keys with the form property
+        // name so they surface under the dot-path the developer wrote on the
+        // input (e.g. `form.photo`). Mirrors what Form::validateOnly() does to
+        // its own ValidationException.
+        if ($formPrefix !== null) {
+            invade($validator)->messages = new \Illuminate\Support\MessageBag(
+                \Illuminate\Support\Arr::prependKeysWith(invade($validator)->messages->toArray(), $formPrefix.'.')
+            );
+            invade($validator)->failedRules = \Illuminate\Support\Arr::prependKeysWith(
+                invade($validator)->failedRules,
+                $formPrefix.'.'
+            );
         }
+
+        throw new ValidationException($validator);
     }
 
     /**
