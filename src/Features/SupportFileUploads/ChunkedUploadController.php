@@ -102,7 +102,7 @@ class ChunkedUploadController implements HasMiddleware
         // Reject obviously bad chunk sizes up front
         $chunkSize = FileUploadConfiguration::chunkSize();
         if ($chunkSize !== null && $bytesIncoming > $chunkSize) {
-            abort(413, "Chunk size ({$bytesIncoming} bytes) exceeds configured chunk_size ({$chunkSize} bytes).");
+            abort(413, "Chunk size ({$bytesIncoming} bytes) exceeds configured chunk.size ({$chunkSize} bytes).");
         }
 
         // Atomically read manifest, validate offset, write chunk, update manifest,

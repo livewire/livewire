@@ -437,16 +437,18 @@ Temporary files are uploaded to the specified disk's `livewire-tmp/` directory. 
 
 For large files, Livewire can split uploads into smaller chunks that are sent sequentially. This avoids hitting PHP's `upload_max_filesize` and `post_max_size` limits (as well as third-party limits like Cloudflare's 100MB request body cap), reduces memory usage, and lets failed chunks retry without restarting the whole upload.
 
-Chunked uploads are **opt-in** and disabled by default. Enable them by setting `chunk_size` in your config:
+Chunked uploads are **opt-in** and disabled by default. Enable them by setting `chunk.size` in your config:
 
 ```php
 'temporary_file_upload' => [
     // ...
-    'chunk_size' => 5 * 1024 * 1024, // 5MB per chunk
+    'chunk' => [
+        'size' => 5 * 1024 * 1024, // 5MB per chunk
+    ],
 ],
 ```
 
-Once enabled, Livewire automatically chunks any uploaded file larger than `chunk_size`. Smaller files continue to use the normal single-request upload path. From your component's perspective, nothing changes — you still get a `TemporaryUploadedFile` on your property:
+Once enabled, Livewire automatically chunks any uploaded file larger than `chunk.size`. Smaller files continue to use the normal single-request upload path. From your component's perspective, nothing changes — you still get a `TemporaryUploadedFile` on your property:
 
 ```php
 new class extends Component {
@@ -463,7 +465,7 @@ new class extends Component {
 ```
 
 > [!warning] Local disk only
-> Chunked uploads currently only work when `temporary_file_upload.disk` is a local filesystem. If you set `chunk_size` while using the S3 disk, Livewire will throw an `S3DoesntSupportChunkedUploads` exception when an upload is attempted — set `chunk_size` to `null` or switch to a local disk. Native S3 multipart upload support is planned for a future release.
+> Chunked uploads currently only work when `temporary_file_upload.disk` is a local filesystem. If you set `chunk.size` while using the S3 disk, Livewire will throw an `S3DoesntSupportChunkedUploads` exception when an upload is attempted — set `chunk.size` to `null` or switch to a local disk. Native S3 multipart upload support is planned for a future release.
 
 > [!info] Bump your global validation rule
 > Remember that the global `temporary_file_upload.rules` validation still applies to the assembled file. The default `max:12288` (12MB) will reject anything larger. If you're enabling chunked uploads to support large files, bump `max` accordingly.
@@ -476,39 +478,44 @@ new class extends Component {
 ```php
 'temporary_file_upload' => [
     // ...
-    'chunk_size' => 5 * 1024 * 1024,           // Bytes per chunk. `null` to disable.
-    'chunk_retry_delays' => [500, 1000, 3000], // Backoff between failed chunk retries (ms).
-    'chunk_max_upload_time' => 60 * 24,        // Max minutes for an entire chunked upload to complete (24h default).
-    'chunk_middleware' => null,                // Middleware applied to chunk endpoints. Defaults to throttle:600,1.
-    'chunk_absolute_max_bytes' => 5 * 1024 * 1024 * 1024, // Hard ceiling on Upload-Length when no `max:` rule is set (defaults to 5GB).
+    'chunk' => [
+        'size' => 5 * 1024 * 1024,                // Bytes per chunk. `null` to disable.
+        'retry_delays' => [500, 1000, 3000],      // Backoff between failed chunk retries (ms).
+        'max_upload_time' => 60 * 24,             // Max minutes for an entire chunked upload to complete (24h default).
+        'middleware' => null,                     // Middleware applied to chunk endpoints. Defaults to throttle:600,1.
+        'absolute_max_bytes' => 5 * 1024 * 1024 * 1024, // Hard ceiling on Upload-Length when no `max:` rule is set (defaults to 5GB).
+    ],
 ],
 ```
 
-`chunk_max_upload_time` controls how long the signed chunk URLs stay valid. If an upload takes longer than this, the URLs expire and in-flight chunks start failing. The default of 24 hours comfortably handles multi-GB uploads on slow connections (e.g. 10GB at 5Mbps takes about 4.5 hours), and aligns with Livewire's existing 24-hour temporary-file cleanup window.
+`chunk.max_upload_time` controls how long the signed chunk URLs stay valid. If an upload takes longer than this, the URLs expire and in-flight chunks start failing. The default of 24 hours comfortably handles multi-GB uploads on slow connections (e.g. 10GB at 5Mbps takes about 4.5 hours), and aligns with Livewire's existing 24-hour temporary-file cleanup window.
 
-`chunk_absolute_max_bytes` only matters when there is no `max:` rule in `temporary_file_upload.rules`. In that case it acts as a hard ceiling so a missing rule can't become an unbounded upload claim. If you set a `max:` rule (recommended), Livewire enforces that instead and `chunk_absolute_max_bytes` is unused.
+`chunk.absolute_max_bytes` only matters when there is no `max:` rule in `temporary_file_upload.rules`. In that case it acts as a hard ceiling so a missing rule can't become an unbounded upload claim. If you set a `max:` rule (recommended), Livewire enforces that instead and `chunk.absolute_max_bytes` is unused.
 
-`chunk_middleware` defaults to `throttle:600,1` — looser than the legacy `throttle:60,1` for single-request uploads, because chunking inherently makes many small requests per file. **If your upload component is reachable by anonymous or unauthenticated visitors, tighten this** to limit how quickly an attacker can fill the disk with abandoned chunks:
+`chunk.middleware` defaults to `throttle:600,1` — looser than the legacy `throttle:60,1` for single-request uploads, because chunking inherently makes many small requests per file. **If your upload component is reachable by anonymous or unauthenticated visitors, tighten this** to limit how quickly an attacker can fill the disk with abandoned chunks:
 
 ```php
-'chunk_middleware' => 'throttle:60,1',
+'chunk' => [
+    // ...
+    'middleware' => 'throttle:60,1',
+],
 ```
 
 The throttle counter is per-IP per-minute, so an attacker uploading 5MB chunks at the default `600/1` could write up to ~3GB/minute of trash data per IP before being blocked. The cleanup logic only removes abandoned chunks after 24 hours, so the disk pressure persists. For public-facing apps, tightening to `60/1` (~300MB/min/IP) is much safer.
 
 ### How it works
 
-When the user selects a file larger than `chunk_size`, Livewire's JavaScript:
+When the user selects a file larger than `chunk.size`, Livewire's JavaScript:
 
 1. POSTs to a chunk-init endpoint with the total file size, getting back a transfer ID and signed URLs for the chunk endpoints.
-2. Slices the file into `chunk_size` pieces and PATCHes each one to the chunk endpoint with an `Upload-Offset` header.
+2. Slices the file into `chunk.size` pieces and PATCHes each one to the chunk endpoint with an `Upload-Offset` header.
 3. On the final chunk, the server assembles the file, validates it against the configured rules, and returns a signed path.
 4. Livewire's JavaScript hands that signed path to the same `_finishUpload` flow used by non-chunked uploads, and your component property is set to a `TemporaryUploadedFile`.
 
 If a chunk fails, the client retries with backoff, querying the server for the authoritative offset before resuming. Validation errors at finalize time (e.g. mime mismatch) bubble up the same way they would for a non-chunked upload, so `@error('photo')` works as expected.
 
 > [!info] PATCH method support
-> Chunked uploads use HTTP PATCH requests. If your infrastructure (WAF, reverse proxy, etc.) blocks PATCH by default, either configure it to allow PATCH on the chunk endpoint, or leave `chunk_size` at `null`.
+> Chunked uploads use HTTP PATCH requests. If your infrastructure (WAF, reverse proxy, etc.) blocks PATCH by default, either configure it to allow PATCH on the chunk endpoint, or leave `chunk.size` at `null`.
 
 ## See also
 

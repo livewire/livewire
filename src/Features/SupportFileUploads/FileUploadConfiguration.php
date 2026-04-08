@@ -127,7 +127,7 @@ class FileUploadConfiguration
 
     public static function chunkSize()
     {
-        return config('livewire.temporary_file_upload.chunk_size');
+        return config('livewire.temporary_file_upload.chunk.size');
     }
 
     public static function isChunkingEnabled()
@@ -137,7 +137,7 @@ class FileUploadConfiguration
 
     public static function chunkRetryDelays()
     {
-        return config('livewire.temporary_file_upload.chunk_retry_delays', [500, 1000, 3000]);
+        return config('livewire.temporary_file_upload.chunk.retry_delays', [500, 1000, 3000]);
     }
 
     public static function chunkMaxUploadTime()
@@ -145,7 +145,7 @@ class FileUploadConfiguration
         // 24 hours by default — aligns with Livewire's existing 24-hour
         // temporary-upload cleanup window, and comfortably handles realistic
         // multi-GB uploads on slow connections (e.g. 10GB at 5Mbps ≈ 4.5h).
-        return config('livewire.temporary_file_upload.chunk_max_upload_time', 60 * 24);
+        return config('livewire.temporary_file_upload.chunk.max_upload_time', 60 * 24);
     }
 
     public static function chunkMiddleware()
@@ -154,7 +154,7 @@ class FileUploadConfiguration
         // (which is 60/minute) because chunked uploads inherently make many
         // small requests for a single large file. Sites that expose uploads
         // to anonymous visitors should tighten this — see uploads.md.
-        return config('livewire.temporary_file_upload.chunk_middleware') ?: 'throttle:600,1';
+        return config('livewire.temporary_file_upload.chunk.middleware') ?: 'throttle:600,1';
     }
 
     /**
@@ -164,7 +164,7 @@ class FileUploadConfiguration
      */
     public static function chunkAbsoluteMaxBytes()
     {
-        return config('livewire.temporary_file_upload.chunk_absolute_max_bytes', 5 * 1024 * 1024 * 1024);
+        return config('livewire.temporary_file_upload.chunk.absolute_max_bytes', 5 * 1024 * 1024 * 1024);
     }
 
     /**

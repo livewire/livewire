@@ -13,7 +13,7 @@ class S3DoesntSupportChunkedUploads extends Exception
     {
         parent::__construct(
             'Chunked file uploads are not supported on the S3 temporary file upload disk. '
-            . 'Either set [livewire.temporary_file_upload.chunk_size] to null, or use a local disk.'
+            . 'Either set [livewire.temporary_file_upload.chunk.size] to null, or use a local disk.'
         );
     }
 }

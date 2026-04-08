@@ -19,8 +19,8 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
         // file paths still resolve to a real local directory).
         Storage::fake('tmp-for-tests');
 
-        config()->set('livewire.temporary_file_upload.chunk_size', 1024); // 1KB for fast tests
-        config()->set('livewire.temporary_file_upload.chunk_max_upload_time', 60);
+        config()->set('livewire.temporary_file_upload.chunk.size', 1024); // 1KB for fast tests
+        config()->set('livewire.temporary_file_upload.chunk.max_upload_time', 60);
         config()->set('livewire.temporary_file_upload.rules', ['required', 'file', 'max:100']); // 100KB max
 
         // Override the chunked-upload throttle to a NAMED rate limiter with
@@ -31,7 +31,7 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
         // A named limiter gets its own bucket key (`<sig>:test-chunk-uploads`),
         // so it can't collide with the legacy throttle bucket.
         RateLimiter::for('test-chunk-uploads', fn () => Limit::none());
-        config()->set('livewire.temporary_file_upload.chunk_middleware', 'throttle:test-chunk-uploads');
+        config()->set('livewire.temporary_file_upload.chunk.middleware', 'throttle:test-chunk-uploads');
     }
 
     /** Helper: get a signed init URL */
@@ -280,7 +280,7 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
         // Require the file to be a JPEG image. The assembled file is plain text,
         // so it will pass the size check but fail the mime check at finalize time.
         config()->set('livewire.temporary_file_upload.rules', ['required', 'file', 'mimes:jpg', 'max:100']);
-        config()->set('livewire.temporary_file_upload.chunk_size', 1024);
+        config()->set('livewire.temporary_file_upload.chunk.size', 1024);
 
         $body = $this->initUpload(2048, 'big.txt');
 
@@ -299,7 +299,7 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
     public function test_finalized_file_validation_failure_cleans_up_assembled_file()
     {
         config()->set('livewire.temporary_file_upload.rules', ['required', 'file', 'mimes:jpg', 'max:100']);
-        config()->set('livewire.temporary_file_upload.chunk_size', 1024);
+        config()->set('livewire.temporary_file_upload.chunk.size', 1024);
 
         $body = $this->initUpload(1024, 'fake.txt');
         $response = $this->sendChunk($body['patchUrl'], 0, str_repeat('X', 1024));
@@ -364,14 +364,14 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
 
     public function test_chunking_disabled_when_chunk_size_is_null()
     {
-        config()->set('livewire.temporary_file_upload.chunk_size', null);
+        config()->set('livewire.temporary_file_upload.chunk.size', null);
 
         $this->assertFalse(FileUploadConfiguration::isChunkingEnabled());
     }
 
     public function test_chunked_upload_with_s3_disk_throws_loudly()
     {
-        config()->set('livewire.temporary_file_upload.chunk_size', 1024);
+        config()->set('livewire.temporary_file_upload.chunk.size', 1024);
         config()->set('livewire.temporary_file_upload.disk', 's3');
         config()->set('filesystems.disks.s3.driver', 's3');
 
@@ -384,7 +384,7 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
     public function test_s3_disk_without_chunking_works_as_normal()
     {
         // No chunk_size — S3 path should work fine
-        config()->set('livewire.temporary_file_upload.chunk_size', null);
+        config()->set('livewire.temporary_file_upload.chunk.size', null);
         config()->set('livewire.temporary_file_upload.disk', 's3');
         config()->set('filesystems.disks.s3.driver', 's3');
 
@@ -396,7 +396,7 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
 
     public function test_chunk_routes_use_chunk_middleware()
     {
-        config()->set('livewire.temporary_file_upload.chunk_middleware', 'throttle:custom-name');
+        config()->set('livewire.temporary_file_upload.chunk.middleware', 'throttle:custom-name');
 
         $middleware = collect(ChunkedUploadController::middleware())->map->middleware->all();
 
@@ -416,7 +416,7 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
     {
         // No max rule — falls back to chunk_absolute_max_bytes
         config()->set('livewire.temporary_file_upload.rules', ['file']);
-        config()->set('livewire.temporary_file_upload.chunk_absolute_max_bytes', 1024);
+        config()->set('livewire.temporary_file_upload.chunk.absolute_max_bytes', 1024);
 
         $response = $this->post($this->signedInitUrl(), [], [
             'Upload-Length' => 2048,
@@ -427,7 +427,7 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
     public function test_init_allows_uploads_under_absolute_max()
     {
         config()->set('livewire.temporary_file_upload.rules', ['file']);
-        config()->set('livewire.temporary_file_upload.chunk_absolute_max_bytes', 10 * 1024);
+        config()->set('livewire.temporary_file_upload.chunk.absolute_max_bytes', 10 * 1024);
 
         $response = $this->post($this->signedInitUrl(), [], [
             'Upload-Length' => 2048,
@@ -550,7 +550,7 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
 
     public function test_start_upload_does_not_pass_chunk_config_for_small_files()
     {
-        config()->set('livewire.temporary_file_upload.chunk_size', 10 * 1024 * 1024); // 10MB
+        config()->set('livewire.temporary_file_upload.chunk.size', 10 * 1024 * 1024); // 10MB
 
         $component = \Livewire\Livewire::test(ChunkedUploadComponent::class);
 
@@ -564,7 +564,7 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
 
     public function test_start_upload_passes_chunk_config_for_large_files()
     {
-        config()->set('livewire.temporary_file_upload.chunk_size', 1024); // 1KB
+        config()->set('livewire.temporary_file_upload.chunk.size', 1024); // 1KB
 
         $component = \Livewire\Livewire::test(ChunkedUploadComponent::class);
 
@@ -580,7 +580,7 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
 
     public function test_start_upload_skips_chunking_when_disabled()
     {
-        config()->set('livewire.temporary_file_upload.chunk_size', null);
+        config()->set('livewire.temporary_file_upload.chunk.size', null);
 
         $component = \Livewire\Livewire::test(ChunkedUploadComponent::class);
 
