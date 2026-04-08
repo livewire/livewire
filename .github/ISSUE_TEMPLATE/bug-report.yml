@@ -35,23 +35,26 @@ body:
     validations:
       required: true
 
-  - type: dropdown
+  - type: input
     id: php-version
     attributes:
-      label: Which PHP version are you using?
-      options:
-        - PHP 8.4
-        - PHP 8.3
-        - PHP 8.2
-        - PHP 8.1
+      label: PHP version
+      description: Which version of PHP are you using? Please provide the full version, e.g. 8.5.5.
+      placeholder: "8.5.5"
     validations:
       required: true
 
   - type: textarea
     attributes:
       label: Describe the issue you're experiencing
-      description: |
-        Please provide a clear description of the issue you're experiencing, along with code snippets (ideally a single-file Livewire component) we can copy and paste to reproduce the issue. Include screenshots or screen recordings if they help illustrate the problem.
+      description: Please provide a clear description of the issue you're experiencing.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Code snippets to reproduce the issue
+      description: Please include a code snippet (ideally a single-file Livewire component) we can copy and paste into our own apps with steps to reproduce. Be sure to include any Blade variable definitions that are used and use as little code as possible to reproduce the issue.
     validations:
       required: true
 
@@ -67,6 +70,13 @@ body:
         \```php
         // Your code here
         \```
+
+  - type: textarea
+    attributes:
+      label: Screenshots/screen recordings
+      description: Please provide screenshots or screen recordings if they help illustrate the problem.
+    validations:
+      required: false
 
   - type: textarea
     attributes:
