@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportJsModules;
 
+use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -10,6 +11,12 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         return function () {
             app('livewire.finder')->addNamespace('testns', viewPath: __DIR__ . '/fixtures');
+
+            Route::get('/test-module.js', function () {
+                return response("export let greeting = 'js-import-loaded'", 200, [
+                    'Content-Type' => 'application/javascript',
+                ]);
+            });
         };
     }
 
@@ -24,5 +31,28 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->pause(100)
             // If the JS loaded correctly, it will have set the text to 'js-loaded'
             ->assertSeeIn('@target', 'js-loaded');
+    }
+
+    public function test_single_file_component_js_supports_es_imports()
+    {
+        // This tests that ES module import statements work in single-file
+        // component <script> blocks. The imports should be hoisted above the
+        // export function run() wrapper so they remain at the module top level.
+        Livewire::visit('testns::sfc-with-imports')
+            ->waitForLivewireToLoad()
+            ->pause(100)
+            ->assertSeeIn('@target', 'js-import-loaded');
+    }
+
+    public function test_multi_file_component_js_supports_es_imports()
+    {
+        // This tests that ES module import statements work in multi-file
+        // component .js files. The imports should be hoisted above the
+        // export function run() wrapper so they remain at the module top level.
+        // Regression test for: https://github.com/livewire/livewire/discussions/10163
+        Livewire::visit('testns::mfc-with-imports')
+            ->waitForLivewireToLoad()
+            ->pause(100)
+            ->assertSeeIn('@target', 'js-import-loaded');
     }
 }
