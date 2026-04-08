@@ -63,7 +63,7 @@ body:
   - type: textarea
     attributes:
       label: Code snippets to reproduce the issue
-      description: Please include a code snippet (ideally a single-file Livewire component) we can copy and paste into our own apps with steps to reproduce. Be sure to include any Blade variable definitions that are used and use as little code as possible to reproduce the issue.
+      description: Please include a code snippet (ideally a Livewire single-file component) we can copy and paste into our own apps with steps to reproduce. Be sure to include any Blade variable definitions that are used and use as little code as possible to reproduce the issue.
     validations:
       required: true
 
