@@ -49,9 +49,9 @@ body:
 
   - type: textarea
     attributes:
-      label: Describe the bug
+      label: Describe the issue you're experiencing
       description: |
-        Please provide a clear description of the bug, along with code snippets (ideally a single-file Livewire component) we can copy and paste to reproduce the issue. Include screenshots or screen recordings if they help illustrate the problem.
+        Please provide a clear description of the issue you're experiencing, along with code snippets (ideally a single-file Livewire component) we can copy and paste to reproduce the issue. Include screenshots or screen recordings if they help illustrate the problem.
     validations:
       required: true
 
