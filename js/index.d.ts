@@ -1,4 +1,3 @@
-import type { Directive } from './directives'
 
 export interface Livewire {
     // Register a custom Livewire directive
@@ -113,6 +112,21 @@ export interface Component {
     get children(): Component[]
 
     get parent(): Component | undefined
+}
+
+export interface Directive {
+    rawName: string
+    raw: string
+    el: HTMLElement
+    eventContext: any
+    wire: any
+    value: string
+    modifiers: string[]
+    expression: string | null
+
+    readonly method: string
+    readonly methods: Array<{ method: string; params: any[] }>
+    readonly params: any[]
 }
 
 export interface LivewireHooks {
