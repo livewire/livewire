@@ -1,20 +1,4 @@
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Hi there! 👋
-
-        Thank you for using Livewire!
-
-        Many of the people who help resolve issues here are enthusiastic Livewire users like yourself who volunteer their time to support fellow community members.
-
-        **To respect everyone's valuable time and help you resolve your issue as quickly as possible, before posting an issue, please**
-
-        * Update to the latest version of Livewire by running `composer update livewire/livewire`
-        * Before opening a help request, please search the existing discussions.
-
-        To address this help request, we need the following information.
-
   - type: input
     id: livewire-version
     attributes:
@@ -31,7 +15,7 @@ body:
       description: Which version of Laravel are you using? Please provide the full version, e.g. v13.0.0.
       placeholder: v13.0.0
     validations:
-      required: true      
+      required: true
 
   - type: input
     id: php-version
@@ -42,17 +26,26 @@ body:
     validations:
       required: true
 
+  - type: input
+    id: browser-os
+    attributes:
+      label: Browser and operating system
+      description: Which browser and operating system are you using?
+      placeholder: Chrome on macOS
+    validations:
+      required: true
+
   - type: textarea
     attributes:
-      label: What is the problem?
-      description: Please provide a clear and concise description of what the problem is and include screenshots.
+      label: What do you need help with?
+      description: Please provide a clear description of what you need help with.
     validations:
       required: true
 
   - type: textarea
     attributes:
       label: Code snippets
-      description: Please include a code snippet (ideally a Livewire single-file component) we can copy and paste into our own apps with steps to reproduce. Be sure to **include any Blade variable definitions** that are used and use as little code as possible to reproduce the issue.
+      description: Please include a code snippet (ideally a Livewire single-file component) so we can understand your issue. Use as little code as possible.
     validations:
       required: true
 
@@ -69,13 +62,12 @@ body:
         // Your code here
         \```
 
-  - type: input
-    id: example-repository
+  - type: textarea
     attributes:
-      label: Wirebox URL
-      description: Please provide the URL of a public [Wirebox](https://wirebox.app) that only contains the code that reproduces the bug. **Make sure your Wirebox is set to public**.
+      label: Screenshots/screen recordings
+      description: Include screenshots or screen recordings if they help illustrate your issue.
     validations:
-      required: true
+      required: false
 
   - type: textarea
     attributes:
@@ -84,26 +76,11 @@ body:
     validations:
       required: true
 
-  - type: markdown
-    attributes:
-      value: |
-        **We will close this issue for any of the following reasons**
-
-        * The code snippets contain unrelated code such as left-over Blade variables
-        * We cannot reproduce the issue with the provided code snippets
-        * The issue is a duplicate
-
   - type: checkboxes
     attributes:
-      label: Please confirm (incomplete submissions will not be addressed)
+      label: Please confirm
       options:
-        - label: I have provided easy and step-by-step instructions to reproduce the bug.
+        - label: I have searched existing discussions to check this hasn't already been answered.
           required: true
         - label: I have provided code samples as text and NOT images.
           required: true
-        - label: I understand my help request will be removed if I haven't met the criteria above.
-          required: true
-
-  - type: markdown
-    attributes:
-      value: Thank you!
