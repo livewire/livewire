@@ -986,6 +986,161 @@ class UnitTest extends \Tests\TestCase
         Storage::disk('avatars')->assertExists('avatar.jpg');
         Storage::disk('tmp-for-tests')->assertExists($tmpPath);
     }
+
+    public function test_oversized_files_are_rejected_before_being_uploaded_when_a_max_rule_is_present()
+    {
+        Storage::fake('avatars');
+
+        // 2MB file, but the component's #[Validate] rule says max:1024 (1MB).
+        $file = UploadedFile::fake()->create('big.bin', 2048);
+
+        Livewire::test(PreUploadValidationComponent::class)
+            ->upload('photo', [$file])
+            ->assertSet('photo', null)
+            ->assertHasErrors(['photo' => 'max'])
+            ->assertDispatched('upload:errored', name: 'photo')
+            ->assertNotDispatched('upload:generatedSignedUrl')
+            ->assertNotDispatched('upload:generatedSignedUrlForS3');
+    }
+
+    public function test_oversized_files_are_rejected_before_upload_when_a_max_rule_is_present_for_s3()
+    {
+        config()->set('filesystems.disks.s3', [
+            'driver' => 's3',
+            'key' => 'test',
+            'secret' => 'test',
+            'region' => 'us-east-1',
+            'bucket' => 'test',
+        ]);
+        config()->set('filesystems.default', 's3');
+
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->create('big.bin', 2048);
+
+        Livewire::test(PreUploadValidationComponent::class)
+            ->upload('photo', [$file])
+            ->assertSet('photo', null)
+            ->assertHasErrors(['photo' => 'max'])
+            ->assertDispatched('upload:errored', name: 'photo')
+            ->assertNotDispatched('upload:generatedSignedUrlForS3');
+    }
+
+    public function test_files_within_the_max_rule_still_upload_normally()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->create('small.bin', 500); // 500KB, under the 1MB rule
+
+        Livewire::test(PreUploadValidationComponent::class)
+            ->upload('photo', [$file])
+            ->assertHasNoErrors()
+            ->assertNotDispatched('upload:errored')
+            ->tap(function ($component) {
+                $this->assertNotNull($component->viewData('photo'));
+            });
+    }
+
+    public function test_extensions_rule_is_evaluated_before_upload()
+    {
+        Storage::fake('avatars');
+
+        // .bin extension, but the rule allows only jpg/png.
+        $file = UploadedFile::fake()->create('file.bin', 100);
+
+        Livewire::test(PreUploadValidationExtensionComponent::class)
+            ->upload('photo', [$file])
+            ->assertSet('photo', null)
+            ->assertHasErrors(['photo' => 'extensions'])
+            ->assertDispatched('upload:errored', name: 'photo')
+            ->assertNotDispatched('upload:generatedSignedUrl');
+    }
+
+    public function test_rules_that_need_real_file_content_are_skipped_during_pre_upload_validation()
+    {
+        // The component's only rule is `image`, which requires real file content.
+        // A pre-upload check on a fake file with no real image data would always
+        // fail; we want it to fall through and let the post-upload validator
+        // (which sees the actual content) decide.
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg', 50, 50); // real fake image
+
+        Livewire::test(PreUploadValidationImageOnlyComponent::class)
+            ->upload('photo', [$file])
+            ->assertHasNoErrors()
+            ->assertNotDispatched('upload:errored')
+            ->tap(function ($component) {
+                $this->assertNotNull($component->viewData('photo'));
+            });
+    }
+
+    public function test_pre_upload_validation_does_nothing_when_property_has_no_rules()
+    {
+        Storage::fake('avatars');
+
+        // FileUploadComponent declares no #[Validate] attribute on $photo, so there
+        // are no rules to check at pre-upload time. The upload should proceed
+        // normally and only the global controller-level rules apply.
+        $file = UploadedFile::fake()->image('avatar.jpg')->size(50);
+
+        Livewire::test(FileUploadComponent::class)
+            ->upload('photo', [$file])
+            ->assertHasNoErrors()
+            ->assertNotDispatched('upload:errored');
+    }
+
+    public function test_multiple_uploads_pre_validate_against_array_rules()
+    {
+        Storage::fake('avatars');
+
+        $small = UploadedFile::fake()->create('one.bin', 200);
+        $big = UploadedFile::fake()->create('two.bin', 2048); // exceeds photos.* max:1024
+
+        Livewire::test(PreUploadValidationMultipleComponent::class)
+            ->upload('photos', [$small, $big], isMultiple: true)
+            ->assertHasErrors(['photos.1' => 'max'])
+            ->assertDispatched('upload:errored', name: 'photos')
+            ->assertNotDispatched('upload:generatedSignedUrl');
+    }
+}
+
+class PreUploadValidationComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[\Livewire\Attributes\Validate(['file', 'max:1024'])]
+    public $photo;
+}
+
+class PreUploadValidationExtensionComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[\Livewire\Attributes\Validate(['file', 'extensions:jpg,png'])]
+    public $photo;
+}
+
+class PreUploadValidationImageOnlyComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[\Livewire\Attributes\Validate(['image'])]
+    public $photo;
+}
+
+class PreUploadValidationMultipleComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    public $photos;
+
+    public function rules()
+    {
+        return [
+            'photos.*' => ['file', 'max:1024'],
+        ];
+    }
 }
 
 class FileUploadToDefaultDiskComponent extends TestComponent

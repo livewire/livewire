@@ -127,6 +127,19 @@ Like we've discussed, validating file uploads with Livewire is the same as handl
 
 For more information on file validation, consult [Laravel's file validation documentation](https://laravel.com/docs/validation#available-validation-rules).
 
+### Pre-upload validation
+
+When you declare a rule on a file property, Livewire will evaluate the rules that can be checked against the browser-supplied file metadata (size, name, extension) **before** the file is actually transferred to the server. If a 1GB file violates a `max:1024` rule, the user sees the error immediately and the bytes are never sent.
+
+```php
+#[Validate(['file', 'max:1024'])] // 1MB Max
+public $photo;
+```
+
+The pre-upload check covers `max`, `min`, `size`, `between`, `extensions`, `file`, `required`, `nullable`, `sometimes`, `present`, `filled`, and `bail`. Rules that need access to the actual file contents — `image`, `dimensions`, `mimes`, `mimetypes`, custom `Rule` objects, and closures — are skipped at pre-upload time and run as normal after the file lands in temporary storage.
+
+Pre-upload validation is purely a UX optimization. The browser-supplied size and name are not trusted as a security boundary — Livewire still re-validates the real file after it's uploaded.
+
 ## Temporary preview URLs
 
 After a user chooses a file, you should typically show them a preview of that file before they submit the form and store the file.

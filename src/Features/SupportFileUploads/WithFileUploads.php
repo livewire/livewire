@@ -3,15 +3,20 @@
 namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\UploadedFile;
 use Livewire\Attributes\Renderless;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
+
+use function Livewire\store;
 
 trait WithFileUploads
 {
     #[Renderless]
     function _startUpload($name, $fileInfo, $isMultiple)
     {
+        $this->validateUploadBeforeTransfer($name, $fileInfo, $isMultiple);
+
         if (FileUploadConfiguration::isUsingS3()) {
             throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
 
@@ -23,6 +28,80 @@ trait WithFileUploads
         }
 
         $this->dispatch('upload:generatedSignedUrl', name: $name, url: GenerateSignedUploadUrlFacade::forLocal())->self();
+    }
+
+    /**
+     * Run any of the component's validation rules that can be evaluated against
+     * file metadata (size, name, extension) BEFORE the file is actually transferred.
+     *
+     * This is a UX optimization — it lets us reject obviously-invalid uploads (e.g.
+     * a 1GB file when the rule is `max:1024`) without first eating the bandwidth and
+     * temp-storage cost of the full transfer. Rules that need real file contents
+     * (image, dimensions, mimes, mimetypes, custom Rule objects, closures) are
+     * skipped here and still run post-upload via the existing validation pass.
+     *
+     * The browser-supplied size/name/type are NOT trusted — server-side validation
+     * still runs after the upload completes. This is purely an early-exit hint.
+     */
+    protected function validateUploadBeforeTransfer($name, $fileInfo, $isMultiple)
+    {
+        $rules = $this->getRules();
+
+        $applicable = [];
+        if (isset($rules[$name])) {
+            $applicable[$name] = $this->filterRulesForPreUploadValidation($rules[$name]);
+        }
+        if ($isMultiple && isset($rules[$name.'.*'])) {
+            $applicable[$name.'.*'] = $this->filterRulesForPreUploadValidation($rules[$name.'.*']);
+        }
+
+        // Drop empty rule sets so the validator doesn't choke on []...
+        $applicable = array_filter($applicable, fn ($r) => ! empty($r));
+
+        if (empty($applicable)) return;
+
+        $files = array_map(
+            fn ($info) => UploadedFile::fake()->create($info['name'], (int) ($info['size'] / 1024), $info['type']),
+            $fileInfo
+        );
+
+        $data = [$name => $isMultiple ? $files : $files[0]];
+
+        $validator = Validator::make($data, $applicable, $this->getMessages(), $this->getValidationAttributes());
+
+        if ($validator->fails()) {
+            // _startUpload is marked Renderless for the happy path, but on failure
+            // we need the component to re-render so the error message shows up.
+            store($this)->set('skipRender', false);
+
+            $this->dispatch('upload:errored', name: $name)->self();
+
+            throw new ValidationException($validator);
+        }
+    }
+
+    /**
+     * Keep only the rules that are safe to evaluate against a fake UploadedFile
+     * built from browser-supplied metadata. Anything else (rules that need real
+     * file contents like `image`/`dimensions`/`mimes`, custom Rule objects, or
+     * closures) is skipped here and falls through to the post-upload validation
+     * pass on the real file contents.
+     */
+    protected function filterRulesForPreUploadValidation($rules)
+    {
+        static $safe = [
+            'required', 'nullable', 'sometimes', 'present', 'filled', 'bail',
+            'file', 'max', 'min', 'size', 'between', 'extensions',
+        ];
+
+        if (is_string($rules)) $rules = explode('|', $rules);
+        if (! is_array($rules)) $rules = [$rules];
+
+        return array_values(array_filter($rules, function ($rule) use ($safe) {
+            if (! is_string($rule)) return false;
+
+            return in_array(explode(':', $rule)[0], $safe, true);
+        }));
     }
 
     function _finishUpload($name, $tmpPath, $isMultiple, $append = true)
