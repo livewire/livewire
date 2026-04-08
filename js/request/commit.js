@@ -1,5 +1,6 @@
 import { diff } from '@/utils'
 import { on, trigger } from '@/hooks'
+import Alpine from 'alpinejs'
 
 /**
  * A commit represents an individual component updating itself server-side...
@@ -105,11 +106,18 @@ export class Commit {
 
             respond()
 
-            // Take the new snapshot and merge it into the existing one...
-            this.component.mergeNewSnapshot(snapshot, effects, updates)
+            // Wrap in Alpine.transaction() to defer reactive effects until
+            // after the morph completes. Without this, Alpine plugins like
+            // x-mask can fire synthetic input events during the reactive
+            // update, which trigger x-model setters that recreate deleted
+            // array entries via dataSet() before the morph removes them...
+            Alpine.transaction(() => {
+                // Take the new snapshot and merge it into the existing one...
+                this.component.mergeNewSnapshot(snapshot, effects, updates)
 
-            // Trigger any side effects from the payload like "morph" and "dispatch event"...
-            this.component.processEffects(this.component.effects)
+                // Trigger any side effects from the payload like "morph" and "dispatch event"...
+                this.component.processEffects(this.component.effects)
+            })
 
             if (effects['returns']) {
                 let returns = effects['returns']
