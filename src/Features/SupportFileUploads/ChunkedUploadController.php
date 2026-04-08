@@ -223,8 +223,14 @@ class ChunkedUploadController implements HasMiddleware
         // `p$h$p` into a real one like `php`, which would be more permissive
         // than the legacy single-request path and could surprise frontend
         // filters that allow/deny based on the literal client extension.
+        // Also drop any extension long enough that `{40-char hash}.{extension}`
+        // would exceed the 255-byte filename limit on common filesystems —
+        // otherwise the rename below fails noisily with a 500 and leaves an
+        // orphan chunks/<id>/data file behind.
         $rawExtension = pathinfo($originalName, PATHINFO_EXTENSION);
-        $extension = preg_match('/^[A-Za-z0-9]+$/', $rawExtension) ? $rawExtension : '';
+        $extension = (preg_match('/^[A-Za-z0-9]+$/', $rawExtension) && strlen($rawExtension) <= 200)
+            ? $rawExtension
+            : '';
 
         $hash = Str::random(40);
         $tmpName = $extension ? "{$hash}.{$extension}" : $hash;

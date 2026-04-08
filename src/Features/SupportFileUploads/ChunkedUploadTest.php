@@ -510,6 +510,25 @@ class ChunkedUploadTest extends \Tests\TestCase
         $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{40}$/', $tmpFilename);
     }
 
+    public function test_finalize_drops_pathologically_long_extension()
+    {
+        // A 40-char hash plus a 240-char extension exceeds the 255-byte
+        // filename limit on common filesystems (ext4, APFS, NTFS). Without
+        // a length cap the move() call fails silently and the next line
+        // throws FileNotFoundException → 500, leaving an orphan
+        // chunks/<id>/data file behind. Drop the extension to prevent that.
+        $longExtension = str_repeat('p', 240);
+        $body = $this->initUpload(1024, "evil.{$longExtension}");
+        $response = $this->sendChunk($body['patchUrl'], 0, str_repeat('A', 1024));
+
+        $response->assertNoContent();
+        $signedPath = $response->headers->get('X-Signed-Path');
+        $tmpFilename = TemporaryUploadedFile::extractPathFromSignedPath($signedPath);
+
+        // Extension dropped — just the hash.
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{40}$/', $tmpFilename);
+    }
+
     public function test_multiple_concurrent_uploads_dont_interfere()
     {
         $body1 = $this->initUpload(1024, 'file1.txt');

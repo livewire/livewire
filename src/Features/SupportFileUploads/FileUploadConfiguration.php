@@ -150,6 +150,10 @@ class FileUploadConfiguration
 
     public static function chunkMiddleware()
     {
+        // Default is looser than the legacy single-request upload throttle
+        // (which is 60/minute) because chunked uploads inherently make many
+        // small requests for a single large file. Sites that expose uploads
+        // to anonymous visitors should tighten this — see uploads.md.
         return config('livewire.temporary_file_upload.chunk_middleware') ?: 'throttle:600,1';
     }
 

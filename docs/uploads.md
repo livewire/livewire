@@ -468,6 +468,9 @@ new class extends Component {
 > [!info] Bump your global validation rule
 > Remember that the global `temporary_file_upload.rules` validation still applies to the assembled file. The default `max:12288` (12MB) will reject anything larger. If you're enabling chunked uploads to support large files, bump `max` accordingly.
 
+> [!warning] Don't point the temp upload disk at a publicly served directory
+> The `temporary_file_upload.disk` setting (and the `LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK` env var) controls where in-flight chunks and assembled tmp files live. **Never set this to a disk whose root is under your web document root** (the `public` disk in a default Laravel app, or any custom disk that maps to `public_path()`). Doing so makes the assembled tmp files reachable via HTTP, and in some configurations the web server will execute them as scripts. The default `local` disk (root: `storage/app/private`) is safe and is what you should be using.
+
 ### Chunked upload configuration
 
 ```php
@@ -484,6 +487,14 @@ new class extends Component {
 `chunk_max_upload_time` controls how long the signed chunk URLs stay valid. If an upload takes longer than this, the URLs expire and in-flight chunks start failing. The default of 24 hours comfortably handles multi-GB uploads on slow connections (e.g. 10GB at 5Mbps takes about 4.5 hours), and aligns with Livewire's existing 24-hour temporary-file cleanup window.
 
 `chunk_absolute_max_bytes` only matters when there is no `max:` rule in `temporary_file_upload.rules`. In that case it acts as a hard ceiling so a missing rule can't become an unbounded upload claim. If you set a `max:` rule (recommended), Livewire enforces that instead and `chunk_absolute_max_bytes` is unused.
+
+`chunk_middleware` defaults to `throttle:600,1` — looser than the legacy `throttle:60,1` for single-request uploads, because chunking inherently makes many small requests per file. **If your upload component is reachable by anonymous or unauthenticated visitors, tighten this** to limit how quickly an attacker can fill the disk with abandoned chunks:
+
+```php
+'chunk_middleware' => 'throttle:60,1',
+```
+
+The throttle counter is per-IP per-minute, so an attacker uploading 5MB chunks at the default `600/1` could write up to ~3GB/minute of trash data per IP before being blocked. The cleanup logic only removes abandoned chunks after 24 hours, so the disk pressure persists. For public-facing apps, tightening to `60/1` (~300MB/min/IP) is much safer.
 
 ### How it works
 
