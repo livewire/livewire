@@ -1103,6 +1103,46 @@ class UnitTest extends \Tests\TestCase
             ->assertDispatched('upload:errored', name: 'photos')
             ->assertNotDispatched('upload:generatedSignedUrl');
     }
+
+    public function test_pre_upload_validation_walks_into_form_objects()
+    {
+        Storage::fake('avatars');
+
+        // The rule lives on the Form class, not on the component.
+        // Pre-upload validation should defer to the form just like validateOnly() does.
+        $file = UploadedFile::fake()->create('big.bin', 2048);
+
+        Livewire::test(PreUploadFormObjectComponent::class)
+            ->upload('form.photo', [$file])
+            ->assertHasErrors(['form.photo' => 'max'])
+            ->assertDispatched('upload:errored', name: 'form.photo')
+            ->assertNotDispatched('upload:generatedSignedUrl');
+    }
+
+    public function test_form_object_uploads_within_the_max_rule_still_upload_normally()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->create('small.bin', 500);
+
+        Livewire::test(PreUploadFormObjectComponent::class)
+            ->upload('form.photo', [$file])
+            ->assertHasNoErrors()
+            ->assertNotDispatched('upload:errored');
+    }
+}
+
+class PreUploadFormObjectForm extends \Livewire\Form
+{
+    #[\Livewire\Attributes\Validate(['file', 'max:1024'])]
+    public $photo;
+}
+
+class PreUploadFormObjectComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    public PreUploadFormObjectForm $form;
 }
 
 class PreUploadValidationComponent extends TestComponent

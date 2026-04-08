@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\UploadedFile;
 use Livewire\Attributes\Renderless;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
+use Livewire\Features\SupportFormObjects\Form;
 
+use function Livewire\invade;
 use function Livewire\store;
 
 trait WithFileUploads
@@ -45,14 +47,31 @@ trait WithFileUploads
      */
     protected function validateUploadBeforeTransfer($name, $fileInfo, $isMultiple)
     {
-        $rules = $this->getRules();
+        // If the upload property lives on a form object (e.g. wire:model="form.photo"),
+        // walk into the form so we look up rules and messages from there instead of
+        // the component. Mirrors how validateOnly() defers to form objects.
+        $target = $this;
+        $localName = $name;
+
+        if (str_contains($name, '.')) {
+            [$head, $rest] = explode('.', $name, 2);
+
+            $value = $this->{$head} ?? null;
+
+            if ($value instanceof Form) {
+                $target = $value;
+                $localName = $rest;
+            }
+        }
+
+        $rules = $target->getRules();
 
         $applicable = [];
-        if (isset($rules[$name])) {
-            $applicable[$name] = $this->filterRulesForPreUploadValidation($rules[$name]);
+        if (isset($rules[$localName])) {
+            $applicable[$localName] = $this->filterRulesForPreUploadValidation($rules[$localName]);
         }
-        if ($isMultiple && isset($rules[$name.'.*'])) {
-            $applicable[$name.'.*'] = $this->filterRulesForPreUploadValidation($rules[$name.'.*']);
+        if ($isMultiple && isset($rules[$localName.'.*'])) {
+            $applicable[$localName.'.*'] = $this->filterRulesForPreUploadValidation($rules[$localName.'.*']);
         }
 
         // Drop empty rule sets so the validator doesn't choke on []...
@@ -65,9 +84,14 @@ trait WithFileUploads
             $fileInfo
         );
 
-        $data = [$name => $isMultiple ? $files : $files[0]];
+        $data = [$localName => $isMultiple ? $files : $files[0]];
 
-        $validator = Validator::make($data, $applicable, $this->getMessages(), $this->getValidationAttributes());
+        $validator = Validator::make(
+            $data,
+            $applicable,
+            invade($target)->getMessages(),
+            invade($target)->getValidationAttributes(),
+        );
 
         if ($validator->fails()) {
             // _startUpload is marked Renderless for the happy path, but on failure
@@ -75,6 +99,21 @@ trait WithFileUploads
             store($this)->set('skipRender', false);
 
             $this->dispatch('upload:errored', name: $name)->self();
+
+            // For form-object uploads, prefix the error keys with the form
+            // property name so they surface under the dot-path the developer
+            // wrote on the input (e.g. `form.photo`). Mirrors the prefixing
+            // Form::validateOnly() does on its own ValidationException.
+            if ($target !== $this) {
+                $messages = invade($validator)->messages ?: $validator->errors();
+                invade($validator)->messages = new \Illuminate\Support\MessageBag(
+                    \Illuminate\Support\Arr::prependKeysWith($messages->toArray(), $head.'.')
+                );
+                invade($validator)->failedRules = \Illuminate\Support\Arr::prependKeysWith(
+                    invade($validator)->failedRules,
+                    $head.'.'
+                );
+            }
 
             throw new ValidationException($validator);
         }
