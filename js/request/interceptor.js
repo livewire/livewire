@@ -10,6 +10,7 @@ export class MessageInterceptor {
     onSkipped = () => {}
     onFinish = () => {}
     onSync = () => {}
+    onPrepare = async () => {}
     onEffect = () => {}
     onMorph = async () => {}
     onRender = () => {}

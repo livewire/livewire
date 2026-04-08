@@ -1,6 +1,7 @@
 import { findComponentByEl, destroyComponent, initComponent, hasComponent } from './store'
 import { matchesForLivewireDirective, extractDirective } from './directives'
 import { trigger } from './hooks'
+import { preloadInitialModules } from './features/supportJsModules'
 import collapse from '@alpinejs/collapse'
 import focus from '@alpinejs/focus'
 import persist from '@alpinejs/persist'
@@ -15,7 +16,7 @@ import mask from '@alpinejs/mask'
 import Alpine from 'alpinejs'
 import { dispatch } from './utils'
 
-export function start() {
+export async function start() {
     setTimeout(() => ensureLivewireScriptIsntMisplaced())
 
     dispatch(document, 'livewire:init')
@@ -108,6 +109,8 @@ export function start() {
             })
         })
     )
+
+    await preloadInitialModules()
 
     Alpine.start()
 
