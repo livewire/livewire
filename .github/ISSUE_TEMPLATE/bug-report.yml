@@ -1,0 +1,100 @@
+name: Bug Report
+description: Submit a bug report
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Hi there!
+
+        Thank you for using Livewire!
+
+        Many of the people who help resolve issues here are enthusiastic Livewire users like yourself who volunteer their time to support fellow community members.
+
+        **To respect everyone's valuable time and help you resolve your issue as quickly as possible, before posting an issue, please**
+
+        * Update to the latest version of Livewire by running `composer update livewire/livewire`
+        * Before opening a bug report, please search the existing issues.
+
+        To address this bug as fast as possible, we need the following information.
+
+  - type: input
+    id: livewire-version
+    attributes:
+      label: Livewire version
+      description: Which version of Livewire are you using? Please provide the full version, e.g. v4.2.4.
+      placeholder: v4.2.4
+    validations:
+      required: true
+
+  - type: input
+    id: laravel-version
+    attributes:
+      label: Laravel version
+      description: Which version of Laravel are you using? Please provide the full version, e.g. v13.0.0.
+      placeholder: v13.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: php-version
+    attributes:
+      label: Which PHP version are you using?
+      options:
+        - PHP 8.4
+        - PHP 8.3
+        - PHP 8.2
+        - PHP 8.1
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: |
+        Please provide a clear description of the bug, along with code snippets (ideally a single-file Livewire component) we can copy and paste to reproduce the issue. Include screenshots or screen recordings if they help illustrate the problem.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        Include code snippets in triple backticks (\```) with "blade" or "php" for better readability. Here's an example:
+
+        \```blade
+        // Your code here
+        \```
+
+        \```php
+        // Your code here
+        \```
+
+  - type: textarea
+    attributes:
+      label: How do you expect it to work?
+      description: Please describe how you expect it to work.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        **We will close this issue for any of the following reasons**
+
+        * The code snippets contain unrelated code such as left-over Blade variables
+        * We cannot reproduce the issue with the provided code snippets
+        * The issue is a duplicate
+
+  - type: checkboxes
+    attributes:
+      label: Please confirm (incomplete submissions will not be addressed)
+      options:
+        - label: I have provided easy and step-by-step instructions to reproduce the bug.
+          required: true
+        - label: I have provided code samples as text and NOT images.
+          required: true
+        - label: I understand my bug report will be removed if I haven't met the criteria above.
+          required: true
+
+  - type: markdown
+    attributes:
+      value: Thank you!
