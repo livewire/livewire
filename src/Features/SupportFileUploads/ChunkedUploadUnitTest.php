@@ -2,12 +2,13 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
-class ChunkedUploadTest extends \Tests\TestCase
+class ChunkedUploadUnitTest extends \Tests\TestCase
 {
     public function setUp(): void
     {
@@ -21,18 +22,16 @@ class ChunkedUploadTest extends \Tests\TestCase
         config()->set('livewire.temporary_file_upload.chunk_size', 1024); // 1KB for fast tests
         config()->set('livewire.temporary_file_upload.chunk_max_upload_time', 60);
         config()->set('livewire.temporary_file_upload.rules', ['required', 'file', 'max:100']); // 100KB max
-    }
 
-    public function tearDown(): void
-    {
-        // Each test runs many requests against the chunk endpoints. Without
-        // clearing the rate limiter we'd pollute the global throttle:600,1
-        // bucket and break other test files (like UnitTest's middleware tests)
-        // when running the full suite.
-        RateLimiter::clear('600|1|127.0.0.1');
-        RateLimiter::clear('60|1|127.0.0.1');
-
-        parent::tearDown();
+        // Override the chunked-upload throttle to a NAMED rate limiter with
+        // no cap. The default `throttle:600,1` would pollute the same bucket
+        // as the legacy `throttle:60,1` upload tests in UnitTest.php — Laravel
+        // keys unnamed throttles by request signature alone (ignoring the max
+        // value), so chunked tests would fill the legacy 60-per-minute bucket.
+        // A named limiter gets its own bucket key (`<sig>:test-chunk-uploads`),
+        // so it can't collide with the legacy throttle bucket.
+        RateLimiter::for('test-chunk-uploads', fn () => Limit::none());
+        config()->set('livewire.temporary_file_upload.chunk_middleware', 'throttle:test-chunk-uploads');
     }
 
     /** Helper: get a signed init URL */

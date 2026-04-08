@@ -144,6 +144,7 @@ return [
         'chunk_retry_delays' => [500, 1000, 3000], // Backoff delays (in ms) between chunk retries. The number of entries determines the max retries.
         'chunk_max_upload_time' => 60 * 24, // Max duration (in minutes) for an entire chunked upload to complete. Used as the signed-URL expiry for chunk endpoints. Defaults to 24 hours to handle large uploads on slow connections.
         'chunk_middleware' => null, // Middleware applied to chunk endpoints. Defaults to 'throttle:600,1' (looser than the global upload throttle since chunked uploads make many requests). Sites that expose uploads to anonymous visitors should tighten this — see the security note in uploads.md.
+        'chunk_absolute_max_bytes' => 5 * 1024 * 1024 * 1024, // Hard ceiling on the declared upload size when no `max:` rule is set in `rules` above. Defaults to 5GB so a missing `max:` rule can never be exploited as an unbounded upload claim. If you set a `max:` rule, that wins and this is unused.
     ],
 
     /*
