@@ -123,10 +123,10 @@ class UploadManager {
             this.handleSignedUrl(name, url)
         })
 
-        this.component.$wire.$on('upload:generatedSignedUrlForS3', ({ name, payload }) => {
+        this.component.$wire.$on('upload:generatedSignedUrlForS3', ({ name, payloads }) => {
             setUploadLoading(this.component, name)
 
-            this.handleS3PreSignedUrl(name, payload)
+            this.handleS3PreSignedUrls(name, payloads)
         })
 
         this.component.$wire.$on('upload:finished', ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames))
@@ -191,16 +191,90 @@ class UploadManager {
         })
     }
 
-    handleS3PreSignedUrl(name, payload) {
-        let formData = this.uploadBag.first(name).files[0]
+    handleS3PreSignedUrls(name, payloads) {
+        let uploadObj = this.uploadBag.first(name)
+        let component = this.component
 
-        let headers = payload.headers
-        if ('Host' in headers) delete headers.Host
-        let url = payload.url
+        let files = Array.from(uploadObj.files)
 
-        this.makeRequest(name, formData, 'put', url, headers, response => {
-            return [payload.path]
-        })
+        // The server mints one presigned PUT URL per file — if the two
+        // counts disagree something is very wrong and we shouldn't send
+        // any bytes anywhere. Surface it as an upload error.
+        if (files.length !== payloads.length) {
+            component.$wire.call('_uploadErrored', name, null, uploadObj.multiple)
+            return
+        }
+
+        let totalAllFiles = files.reduce((sum, f) => sum + f.size, 0)
+        let bytesAlreadySentForCompletedFiles = 0
+        let signedPaths = []
+        let fileIndex = 0
+        let aborted = false
+        let currentXhr = null
+
+        // Wire up abort for cancelUpload(). We share a single abort flag
+        // across every file in this upload batch so a cancel mid-PUT takes
+        // down the whole thing cleanly.
+        uploadObj.request = {
+            abort: () => {
+                aborted = true
+                if (currentXhr) currentXhr.abort()
+            },
+        }
+
+        let processNextFile = () => {
+            if (aborted) return
+
+            if (fileIndex >= files.length) {
+                // All files uploaded — hand off to the existing _finishUpload flow
+                component.$wire.call('_finishUpload', name, signedPaths, uploadObj.multiple, uploadObj.append)
+                return
+            }
+
+            let file = files[fileIndex]
+            let payload = payloads[fileIndex]
+
+            let headers = { ...payload.headers }
+            if ('Host' in headers) delete headers.Host
+
+            let xhr = new XMLHttpRequest()
+            currentXhr = xhr
+            xhr.open('PUT', payload.url)
+
+            Object.entries(headers).forEach(([key, value]) => {
+                xhr.setRequestHeader(key, value)
+            })
+
+            xhr.upload.addEventListener('progress', (e) => {
+                if (!e.lengthComputable) return
+                let totalSent = bytesAlreadySentForCompletedFiles + e.loaded
+                uploadObj.progressCallback({ loaded: totalSent, total: totalAllFiles })
+            })
+
+            xhr.addEventListener('load', () => {
+                if (aborted) return
+
+                if ((xhr.status + '')[0] === '2') {
+                    signedPaths.push(payload.path)
+                    bytesAlreadySentForCompletedFiles += file.size
+                    fileIndex++
+                    processNextFile()
+                    return
+                }
+
+                let errors = xhr.status === 422 ? xhr.response : null
+                component.$wire.call('_uploadErrored', name, errors, uploadObj.multiple)
+            })
+
+            xhr.addEventListener('error', () => {
+                if (aborted) return
+                component.$wire.call('_uploadErrored', name, null, uploadObj.multiple)
+            })
+
+            xhr.send(file)
+        }
+
+        processNextFile()
     }
 
     handleChunkedUpload(name, chunkConfig) {

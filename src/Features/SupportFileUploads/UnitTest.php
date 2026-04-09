@@ -27,14 +27,76 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
     }
 
-    public function test_s3_driver_only_supports_single_file_uploads()
+    public function test_s3_driver_supports_multi_file_uploads()
     {
         config()->set('livewire.temporary_file_upload.disk', 's3');
 
-        $this->expectException(S3DoesntSupportMultipleFileUploads::class);
+        Storage::fake('avatars');
+
+        $file1 = UploadedFile::fake()->image('avatar1.jpg');
+        $file2 = UploadedFile::fake()->image('avatar2.jpg');
 
         Livewire::test(FileUploadComponent::class)
-            ->set('photos', [UploadedFile::fake()->image('avatar.jpg')]);
+            ->set('photos', [$file1, $file2])
+            ->call('uploadMultiple', 'uploaded-avatar');
+
+        Storage::disk('avatars')->assertExists('uploaded-avatar1.png');
+        Storage::disk('avatars')->assertExists('uploaded-avatar2.png');
+    }
+
+    public function test_s3_single_file_dispatches_signed_url_event_with_payloads_array()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
+        Livewire::test(FileUploadComponent::class)
+            ->call('_startUpload', 'photo', [
+                ['name' => 'a.jpg', 'size' => 100, 'type' => 'image/jpeg'],
+            ], false)
+            ->assertDispatched('upload:generatedSignedUrlForS3', function ($event, $params) {
+                return $params['name'] === 'photo'
+                    && is_array($params['payloads'])
+                    && count($params['payloads']) === 1;
+            });
+    }
+
+    public function test_s3_multi_file_dispatches_signed_url_event_with_one_payload_per_file()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
+        Livewire::test(FileUploadComponent::class)
+            ->call('_startUpload', 'photos', [
+                ['name' => 'a.jpg', 'size' => 100, 'type' => 'image/jpeg'],
+                ['name' => 'b.jpg', 'size' => 150, 'type' => 'image/jpeg'],
+                ['name' => 'c.jpg', 'size' => 200, 'type' => 'image/jpeg'],
+            ], true)
+            ->assertDispatched('upload:generatedSignedUrlForS3', function ($event, $params) {
+                return $params['name'] === 'photos'
+                    && is_array($params['payloads'])
+                    && count($params['payloads']) === 3;
+            });
+    }
+
+    public function test_s3_multi_file_pre_upload_validation_runs_against_per_file_rules()
+    {
+        config()->set('filesystems.disks.s3', [
+            'driver' => 's3',
+            'key' => 'test',
+            'secret' => 'test',
+            'region' => 'us-east-1',
+            'bucket' => 'test',
+        ]);
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
+        Storage::fake('avatars');
+
+        $small = UploadedFile::fake()->create('small.bin', 200);
+        $big = UploadedFile::fake()->create('big.bin', 2048); // exceeds photos.* max:1024
+
+        Livewire::test(PreUploadValidationMultipleComponent::class)
+            ->upload('photos', [$small, $big], isMultiple: true)
+            ->assertHasErrors(['photos.1' => 'max'])
+            ->assertDispatched('upload:errored', name: 'photos')
+            ->assertNotDispatched('upload:generatedSignedUrlForS3');
     }
 
     public function test_can_set_a_file_as_a_property_and_store_it()

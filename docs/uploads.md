@@ -263,6 +263,8 @@ LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK=s3
 
 Now, when a user uploads a file, the file will never actually be stored on your server. Instead, it will be uploaded directly to your S3 bucket within the `livewire-tmp/` sub-directory.
 
+Both single-file (`public $photo`) and [multi-file](#handling-multiple-files) (`public $photos = []`) uploads are supported — each file is uploaded directly to S3 via its own presigned URL.
+
 > [!tip]
 > Alternatively, you can publish Livewire's configuration file with `php artisan livewire:config` for full control over the `temporary_file_upload` config.
 
