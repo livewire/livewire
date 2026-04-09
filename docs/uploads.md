@@ -444,12 +444,11 @@ Chunked uploads are **opt-in** and disabled by default. Enable them by setting `
     // ...
     'chunk' => [
         'enabled' => true,
-        'size' => 5 * 1024 * 1024, // 5MB per chunk (default)
     ],
 ],
 ```
 
-Once enabled, Livewire automatically chunks any uploaded file larger than `chunk.size`. Smaller files continue to use the normal single-request upload path. From your component's perspective, nothing changes — you still get a `TemporaryUploadedFile` on your property:
+Once enabled, Livewire automatically chunks any uploaded file larger than `chunk.size` (1 MB by default). Smaller files continue to use the normal single-request upload path. From your component's perspective, nothing changes — you still get a `TemporaryUploadedFile` on your property:
 
 ```php
 new class extends Component {
@@ -481,7 +480,7 @@ new class extends Component {
     // ...
     'chunk' => [
         'enabled' => false,                       // Set to true to enable chunked uploads.
-        'size' => 5 * 1024 * 1024,                // Bytes per chunk. Defaults to 5MB.
+        'size' => 1024 * 1024,                    // Bytes per chunk. Defaults to 1MB — see tuning notes below.
         'retry_delays' => [500, 1000, 3000],      // Backoff between failed chunk retries (ms).
         'max_upload_time' => 60 * 24,             // Max minutes for an entire chunked upload to complete (24h default).
         'middleware' => null,                     // Middleware applied to chunk endpoints. Defaults to throttle:600,1.
@@ -489,6 +488,26 @@ new class extends Component {
     ],
 ],
 ```
+
+#### Tuning `chunk.size`
+
+The default chunk size is 1 MB because that matches the default `client_max_body_size` in nginx, which is what Laravel Forge and Laravel Cloud both ship with out of the box. Leaving the default means chunked uploads work immediately on a fresh deploy — no server tweaks required.
+
+**For better throughput on large files, you can bump the chunk size** — but you need to bump the server's body limit to match.
+
+| Chunk size | Requests per 1 GB file | Server tweak required? |
+|---|---|---|
+| 1 MB (default) | ~1,024 | none |
+| 5 MB | ~205 | nginx `client_max_body_size 6M` |
+| 10 MB | ~103 | nginx `client_max_body_size 11M` |
+
+**On Laravel Forge**, the easiest way is the "Max File Upload Size" field in the site's "Meta" tab — it sets nginx's `client_max_body_size` and PHP's `post_max_size`/`upload_max_filesize` together. Set it to a value slightly larger than your chunk size (e.g. `6` for 5MB chunks).
+
+**On Laravel Cloud**, edit your site's nginx configuration via the dashboard to set `client_max_body_size` higher than your chunk size, and adjust `post_max_size` in your PHP config.
+
+**On a custom nginx**, add `client_max_body_size 6M;` to the relevant `server { ... }` block and reload nginx.
+
+Don't forget to set `chunk.size` in your Livewire config to match after bumping the server limit.
 
 `chunk.max_upload_time` controls how long the signed chunk URLs stay valid. If an upload takes longer than this, the URLs expire and in-flight chunks start failing. The default of 24 hours comfortably handles multi-GB uploads on slow connections (e.g. 10GB at 5Mbps takes about 4.5 hours), and aligns with Livewire's existing 24-hour temporary-file cleanup window.
 

@@ -127,7 +127,10 @@ class FileUploadConfiguration
 
     public static function chunkSize()
     {
-        return config('livewire.temporary_file_upload.chunk.size', 5 * 1024 * 1024);
+        // Default to exactly 1 MiB to match nginx's compiled-in default
+        // `client_max_body_size`. Both Forge and Laravel Cloud use the
+        // nginx default, so a larger chunk would 413 out of the box.
+        return config('livewire.temporary_file_upload.chunk.size', 1024 * 1024);
     }
 
     public static function isChunkingEnabled()
