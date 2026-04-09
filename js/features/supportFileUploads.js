@@ -1,5 +1,29 @@
 import { getCsrfToken } from '@/utils';
 
+// Base64 encode a filename so it's safe to send as an HTTP header value.
+// XHR's setRequestHeader throws InvalidCharacterError on non-ASCII characters,
+// and the tus protocol uses base64 for similar metadata for the same reason.
+function encodeFilename(filename) {
+    // Encode as UTF-8 bytes first (otherwise btoa breaks on multi-byte chars),
+    // then base64. unescape(encodeURIComponent(...)) is the well-known idiom.
+    return btoa(unescape(encodeURIComponent(filename)))
+}
+
+// Extract a JSON error body from an XHR response, if present.
+// Returns the raw JSON string (matching the existing _uploadErrored API),
+// or null if the response wasn't a structured error.
+function extractErrorBody(xhr) {
+    if (! xhr.responseText) return null
+
+    try {
+        // Validate it's actually JSON before passing it through
+        JSON.parse(xhr.responseText)
+        return xhr.responseText
+    } catch (e) {
+        return null
+    }
+}
+
 let uploadManagers = new WeakMap
 
 function getUploadManager(component) {
@@ -85,11 +109,16 @@ class UploadManager {
     }
 
     registerListeners() {
-        this.component.$wire.$on('upload:generatedSignedUrl', ({ name, url }) => {
+        this.component.$wire.$on('upload:generatedSignedUrl', ({ name, url, chunkConfig }) => {
             // We have to add reduntant "setLoading" calls because the dom-patch
             // from the first response will clear the setUploadLoading call
             // from the first upload call.
             setUploadLoading(this.component, name)
+
+            if (chunkConfig) {
+                this.handleChunkedUpload(name, chunkConfig)
+                return
+            }
 
             this.handleSignedUrl(name, url)
         })
@@ -172,6 +201,201 @@ class UploadManager {
         this.makeRequest(name, formData, 'put', url, headers, response => {
             return [payload.path]
         })
+    }
+
+    handleChunkedUpload(name, chunkConfig) {
+        let uploadObj = this.uploadBag.first(name)
+        let component = this.component
+        let csrfToken = getCsrfToken()
+
+        let files = Array.from(uploadObj.files)
+        let totalAllFiles = files.reduce((sum, f) => sum + f.size, 0)
+        let bytesAlreadySentForCompletedFiles = 0
+        let signedPaths = []
+        let fileIndex = 0
+        let aborted = false
+        let currentXhr = null
+
+        // Wire up abort for cancelUpload(). We share a single abort flag
+        // across all files in this upload batch.
+        uploadObj.request = {
+            abort: () => {
+                aborted = true
+                if (currentXhr) currentXhr.abort()
+            },
+        }
+
+        let processNextFile = () => {
+            if (aborted) return
+
+            if (fileIndex >= files.length) {
+                // All files uploaded — hand off to the existing _finishUpload flow
+                component.$wire.call('_finishUpload', name, signedPaths, uploadObj.multiple, uploadObj.append)
+                return
+            }
+
+            let file = files[fileIndex]
+            this.uploadSingleChunked(file, name, chunkConfig, csrfToken, {
+                onProgress: (bytesForThisFile) => {
+                    let totalSent = bytesAlreadySentForCompletedFiles + bytesForThisFile
+                    uploadObj.progressCallback({ loaded: totalSent, total: totalAllFiles })
+                },
+                onComplete: (signedPath) => {
+                    signedPaths.push(signedPath)
+                    bytesAlreadySentForCompletedFiles += file.size
+                    fileIndex++
+                    processNextFile()
+                },
+                onError: (errorBody) => {
+                    component.$wire.call('_uploadErrored', name, errorBody, uploadObj.multiple)
+                },
+                isAborted: () => aborted,
+                setCurrentXhr: (xhr) => { currentXhr = xhr },
+            })
+        }
+
+        processNextFile()
+    }
+
+    uploadSingleChunked(file, name, chunkConfig, csrfToken, callbacks) {
+        let { chunkSize, retryDelays, initUrl } = chunkConfig
+        let { onProgress, onComplete, onError, isAborted, setCurrentXhr } = callbacks
+
+        let totalSize = file.size
+        let offset = 0
+        let patchUrl = null
+        let offsetUrl = null
+        let retryCount = 0
+
+        // Step 1: POST to init endpoint to get transfer ID and signed URLs
+        let initXhr = new XMLHttpRequest()
+        setCurrentXhr(initXhr)
+        initXhr.open('POST', initUrl)
+        initXhr.setRequestHeader('Accept', 'application/json')
+        initXhr.setRequestHeader('Upload-Length', totalSize)
+        initXhr.setRequestHeader('Upload-Name', encodeFilename(file.name))
+        if (csrfToken) initXhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
+
+        initXhr.addEventListener('load', () => {
+            if (isAborted()) return
+
+            if (initXhr.status !== 200) {
+                onError(extractErrorBody(initXhr))
+                return
+            }
+
+            try {
+                let response = JSON.parse(initXhr.responseText)
+                patchUrl = response.patchUrl
+                offsetUrl = response.offsetUrl
+                sendNextChunk()
+            } catch (e) {
+                onError(null)
+            }
+        })
+
+        initXhr.addEventListener('error', () => {
+            if (!isAborted()) onError(null)
+        })
+
+        initXhr.send()
+
+        let sendNextChunk = () => {
+            if (isAborted()) return
+            if (offset >= totalSize) return
+
+            let end = Math.min(offset + chunkSize, totalSize)
+            let chunk = file.slice(offset, end)
+
+            let xhr = new XMLHttpRequest()
+            setCurrentXhr(xhr)
+            xhr.open('PATCH', patchUrl)
+            xhr.setRequestHeader('Accept', 'application/json')
+            xhr.setRequestHeader('Content-Type', 'application/offset+octet-stream')
+            xhr.setRequestHeader('Upload-Offset', offset)
+            if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
+
+            // Per-chunk XHR progress → overall progress for this file
+            xhr.upload.addEventListener('progress', (e) => {
+                if (!e.lengthComputable) return
+                onProgress(offset + e.loaded)
+            })
+
+            xhr.addEventListener('load', () => {
+                if (isAborted()) return
+
+                if (xhr.status === 204) {
+                    let newOffset = parseInt(xhr.getResponseHeader('Upload-Offset'))
+                    offset = newOffset
+                    retryCount = 0
+
+                    if (xhr.getResponseHeader('Upload-Complete') === 'true') {
+                        let signedPath = xhr.getResponseHeader('X-Signed-Path')
+                        onProgress(totalSize)
+                        onComplete(signedPath)
+                        return
+                    }
+
+                    sendNextChunk()
+                } else if (xhr.status === 409) {
+                    // Offset mismatch — fetch the authoritative offset and retry
+                    checkOffset(() => sendNextChunk(), () => onError(null))
+                } else if (xhr.status === 422 || xhr.status === 413) {
+                    // Validation failure or size limit — these are not retryable
+                    onError(extractErrorBody(xhr))
+                } else {
+                    retryOrFail()
+                }
+            })
+
+            xhr.addEventListener('error', () => {
+                if (!isAborted()) retryOrFail()
+            })
+
+            xhr.send(chunk)
+        }
+
+        let checkOffset = (onSuccess, onFail) => {
+            let xhr = new XMLHttpRequest()
+            setCurrentXhr(xhr)
+            xhr.open('GET', offsetUrl)
+            xhr.setRequestHeader('Accept', 'application/json')
+            if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
+
+            xhr.addEventListener('load', () => {
+                if (isAborted()) return
+
+                if (xhr.status === 200) {
+                    try {
+                        let response = JSON.parse(xhr.responseText)
+                        offset = response.offset
+                        onSuccess()
+                    } catch (e) {
+                        onFail()
+                    }
+                } else {
+                    onFail()
+                }
+            })
+
+            xhr.addEventListener('error', () => {
+                if (!isAborted()) onFail()
+            })
+
+            xhr.send()
+        }
+
+        let retryOrFail = () => {
+            if (retryCount < retryDelays.length) {
+                let delay = retryDelays[retryCount++]
+                setTimeout(() => {
+                    if (isAborted()) return
+                    checkOffset(() => sendNextChunk(), () => onError(null))
+                }, delay)
+            } else {
+                onError(null)
+            }
+        }
     }
 
     makeRequest(name, formData, method, url, headers, retrievePaths) {
