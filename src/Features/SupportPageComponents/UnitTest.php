@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Livewire\Component;
 use Livewire\Livewire;
 
@@ -453,6 +454,30 @@ class UnitTest extends \Tests\TestCase
             ->assertSeeText('123')
             ->assertSeeText('overview');
     }
+
+    public function test_unmatched_route_params_do_not_bleed_into_child_blade_components()
+    {
+        Blade::component('child-with-team-param', ChildBladeComponentWithTeamParam::class);
+
+        Route::get('/teams/{team}/projects/{project}', ComponentThatOnlyAcceptsProject::class);
+
+        $this->withoutExceptionHandling()
+            ->get('/teams/99/projects/42')
+            ->assertSee('project:42')
+            ->assertSee('team:none');
+    }
+
+    public function test_unmatched_route_params_do_not_bleed_when_component_uses_public_property_instead_of_mount()
+    {
+        Blade::component('child-with-team-param', ChildBladeComponentWithTeamParam::class);
+
+        Route::get('/teams/{team}/projects/{project}', ComponentWithProjectPropertyOnly::class);
+
+        $this->withoutExceptionHandling()
+            ->get('/teams/99/projects/42')
+            ->assertSee('project:42')
+            ->assertSee('team:none');
+    }
 }
 
 class ComponentForRouteWithoutMountParametersTest extends Component
@@ -781,6 +806,54 @@ class ComponentWithStacks extends Component
                     @endpush
                 @endonce
             @endforeach
+        HTML;
+    }
+}
+
+class ComponentThatOnlyAcceptsProject extends Component
+{
+    public $project;
+
+    public function mount($project)
+    {
+        $this->project = $project;
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <x-child-with-team-param :project="$project" />
+        </div>
+        HTML;
+    }
+}
+
+class ComponentWithProjectPropertyOnly extends Component
+{
+    public $project;
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <x-child-with-team-param :project="$project" />
+        </div>
+        HTML;
+    }
+}
+
+class ChildBladeComponentWithTeamParam extends \Illuminate\View\Component
+{
+    public function __construct(
+        public string $project,
+        public ?string $team = null,
+    ) {}
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>project:{{ $project }} team:{{ $team ?? 'none' }}</div>
         HTML;
     }
 }
