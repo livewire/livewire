@@ -3,15 +3,22 @@
 namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\UploadedFile;
 use Livewire\Attributes\Renderless;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
+use Livewire\Features\SupportFormObjects\Form;
+
+use function Livewire\invade;
+use function Livewire\store;
 
 trait WithFileUploads
 {
     #[Renderless]
     function _startUpload($name, $fileInfo, $isMultiple)
     {
+        $this->validateUploadBeforeTransfer($name, $fileInfo, $isMultiple);
+
         if (FileUploadConfiguration::isUsingS3()) {
             throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
 
@@ -23,6 +30,116 @@ trait WithFileUploads
         }
 
         $this->dispatch('upload:generatedSignedUrl', name: $name, url: GenerateSignedUploadUrlFacade::forLocal())->self();
+    }
+
+    /**
+     * Run any of the component's validation rules that can be evaluated against
+     * file metadata (size, name, extension) BEFORE the file is actually transferred.
+     *
+     * This is a UX optimization — it lets us reject obviously-invalid uploads (e.g.
+     * a 1GB file when the rule is `max:1024`) without first eating the bandwidth and
+     * temp-storage cost of the full transfer. Rules that need real file contents
+     * (image, dimensions, mimes, mimetypes, custom Rule objects, closures) are
+     * skipped here and still run post-upload via the existing validation pass.
+     *
+     * The browser-supplied size/name/type are NOT trusted — server-side validation
+     * still runs after the upload completes. This is purely an early-exit hint.
+     */
+    protected function validateUploadBeforeTransfer($name, $fileInfo, $isMultiple)
+    {
+        // If the upload property lives on a form object (e.g. wire:model="form.photo"),
+        // walk into the form so we look up rules and messages from there instead of
+        // the component. Mirrors how validateOnly() defers to form objects.
+        $target = $this;
+        $localName = $name;
+        $formPrefix = null;
+
+        if (str_contains($name, '.')) {
+            [$head, $rest] = explode('.', $name, 2);
+
+            if (($value = $this->{$head} ?? null) instanceof Form) {
+                $target = $value;
+                $localName = $rest;
+                $formPrefix = $head;
+            }
+        }
+
+        $rules = $target->getRules();
+
+        $applicable = array_filter([
+            $localName => isset($rules[$localName])
+                ? $this->filterRulesForPreUploadValidation($rules[$localName])
+                : [],
+            $localName.'.*' => $isMultiple && isset($rules[$localName.'.*'])
+                ? $this->filterRulesForPreUploadValidation($rules[$localName.'.*'])
+                : [],
+        ]);
+
+        if (empty($applicable)) return;
+
+        $files = array_map(
+            fn ($info) => UploadedFile::fake()->create(
+                (string) ($info['name'] ?? ''),
+                (int) ((is_numeric($info['size'] ?? null) ? $info['size'] : 0) / 1024),
+                (string) ($info['type'] ?? ''),
+            ),
+            $fileInfo
+        );
+
+        $validator = Validator::make(
+            [$localName => $isMultiple ? $files : $files[0]],
+            $applicable,
+            invade($target)->getMessages(),
+            invade($target)->getValidationAttributes(),
+        );
+
+        if ($validator->passes()) return;
+
+        // _startUpload is marked Renderless for the happy path, but on failure
+        // we need the component to re-render so the error message shows up.
+        store($this)->set('skipRender', false);
+
+        $this->dispatch('upload:errored', name: $name)->self();
+
+        // For form-object uploads, prefix the error keys with the form property
+        // name so they surface under the dot-path the developer wrote on the
+        // input (e.g. `form.photo`). Mirrors what Form::validateOnly() does to
+        // its own ValidationException.
+        if ($formPrefix !== null) {
+            invade($validator)->messages = new \Illuminate\Support\MessageBag(
+                \Illuminate\Support\Arr::prependKeysWith(invade($validator)->messages->toArray(), $formPrefix.'.')
+            );
+            invade($validator)->failedRules = \Illuminate\Support\Arr::prependKeysWith(
+                invade($validator)->failedRules,
+                $formPrefix.'.'
+            );
+        }
+
+        throw new ValidationException($validator);
+    }
+
+    /**
+     * Keep only the rules that are safe to evaluate against a fake UploadedFile
+     * built from browser-supplied metadata. Anything else (rules that need real
+     * file contents like `image`/`dimensions`/`mimes`, custom Rule objects, or
+     * closures) is skipped here and falls through to the post-upload validation
+     * pass on the real file contents.
+     */
+    protected function filterRulesForPreUploadValidation($rules)
+    {
+        static $safe = [
+            'required', 'nullable', 'sometimes', 'present', 'filled', 'bail',
+            'file', 'max', 'min', 'size', 'between', 'extensions',
+        ];
+
+        if (is_string($rules)) $rules = explode('|', $rules);
+        if (! is_array($rules)) $rules = [$rules];
+
+        return array_values(array_filter($rules, function ($rule) use ($safe) {
+            if (! is_string($rule)) return false;
+
+            return in_array(explode(':', $rule)[0], $safe, true);
+        }));
     }
 
     function _finishUpload($name, $tmpPath, $isMultiple, $append = true)

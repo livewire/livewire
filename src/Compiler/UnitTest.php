@@ -290,6 +290,50 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringNotContainsString('<div>{{ $message }}</div>', $scriptContents);
     }
 
+    public function test_mfc_script_wraps_in_export_function_even_without_imports()
+    {
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = MultiFileParser::parse($compiler, __DIR__ . '/Fixtures/mfc-component');
+
+        $scriptContents = $parser->generateScriptContents();
+
+        // Check that the script is wrapped in export function run() even without imports
+        $this->assertMatchesRegularExpression('/export function run\([^)]*\) \{/', $scriptContents);
+        $this->assertStringContainsString("console.log('Hello from script');", $scriptContents);
+
+        // Ensure no import statements are present
+        $this->assertStringNotContainsString('import', $scriptContents);
+    }
+
+    public function test_mfc_script_hoists_imports_and_wraps_in_export_function()
+    {
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = MultiFileParser::parse($compiler, __DIR__ . '/Fixtures/mfc-component-with-imports');
+
+        $scriptContents = $parser->generateScriptContents();
+
+        // Check that imports are hoisted to the top
+        $this->assertStringContainsString("import { Alpine } from 'alpinejs'", $scriptContents);
+        $this->assertStringContainsString("import { debounce } from './utils'", $scriptContents);
+
+        // Check that the script is wrapped in export function run()
+        $this->assertMatchesRegularExpression('/export function run\([^)]*\) \{/', $scriptContents);
+        $this->assertStringContainsString("console.log('Component initialized');", $scriptContents);
+
+        // Ensure imports appear before the export function
+        $importPos = strpos($scriptContents, 'import');
+        $exportPos = strpos($scriptContents, 'export function run');
+        $this->assertLessThan($exportPos, $importPos, 'Imports should appear before export function');
+
+        // Ensure the function body contains the actual logic (not the imports)
+        preg_match('/export function run\([^)]*\) \{(.+)\}/s', $scriptContents, $matches);
+        $functionBody = $matches[1] ?? '';
+        $this->assertStringNotContainsString('import', $functionBody, 'Import statements should not be in function body');
+        $this->assertStringContainsString("console.log('Component initialized');", $functionBody);
+    }
+
     public function test_can_parse_placeholder_directive()
     {
         $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
