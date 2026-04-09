@@ -437,13 +437,14 @@ Temporary files are uploaded to the specified disk's `livewire-tmp/` directory. 
 
 For large files, Livewire can split uploads into smaller chunks that are sent sequentially. This avoids hitting PHP's `upload_max_filesize` and `post_max_size` limits (as well as third-party limits like Cloudflare's 100MB request body cap), reduces memory usage, and lets failed chunks retry without restarting the whole upload.
 
-Chunked uploads are **opt-in** and disabled by default. Enable them by setting `chunk.size` in your config:
+Chunked uploads are **opt-in** and disabled by default. Enable them by setting `chunk.enabled` to `true` in your config:
 
 ```php
 'temporary_file_upload' => [
     // ...
     'chunk' => [
-        'size' => 5 * 1024 * 1024, // 5MB per chunk
+        'enabled' => true,
+        'size' => 5 * 1024 * 1024, // 5MB per chunk (default)
     ],
 ],
 ```
@@ -465,7 +466,7 @@ new class extends Component {
 ```
 
 > [!warning] Local disk only
-> Chunked uploads currently only work when `temporary_file_upload.disk` is a local filesystem. If you set `chunk.size` while using the S3 disk, Livewire will throw an `S3DoesntSupportChunkedUploads` exception when an upload is attempted — set `chunk.size` to `null` or switch to a local disk. Native S3 multipart upload support is planned for a future release.
+> Chunked uploads currently only work when `temporary_file_upload.disk` is a local filesystem. If you enable chunking while using the S3 disk, Livewire will throw an `S3DoesntSupportChunkedUploads` exception when an upload is attempted — set `chunk.enabled` to `false` or switch to a local disk. Native S3 multipart upload support is planned for a future release.
 
 > [!info] Bump your global validation rule
 > Remember that the global `temporary_file_upload.rules` validation still applies to the assembled file. The default `max:12288` (12MB) will reject anything larger. If you're enabling chunked uploads to support large files, bump `max` accordingly.
@@ -479,7 +480,8 @@ new class extends Component {
 'temporary_file_upload' => [
     // ...
     'chunk' => [
-        'size' => 5 * 1024 * 1024,                // Bytes per chunk. `null` to disable.
+        'enabled' => false,                       // Set to true to enable chunked uploads.
+        'size' => 5 * 1024 * 1024,                // Bytes per chunk. Defaults to 5MB.
         'retry_delays' => [500, 1000, 3000],      // Backoff between failed chunk retries (ms).
         'max_upload_time' => 60 * 24,             // Max minutes for an entire chunked upload to complete (24h default).
         'middleware' => null,                     // Middleware applied to chunk endpoints. Defaults to throttle:600,1.
@@ -515,7 +517,7 @@ When the user selects a file larger than `chunk.size`, Livewire's JavaScript:
 If a chunk fails, the client retries with backoff, querying the server for the authoritative offset before resuming. Validation errors at finalize time (e.g. mime mismatch) bubble up the same way they would for a non-chunked upload, so `@error('photo')` works as expected.
 
 > [!info] PATCH method support
-> Chunked uploads use HTTP PATCH requests. If your infrastructure (WAF, reverse proxy, etc.) blocks PATCH by default, either configure it to allow PATCH on the chunk endpoint, or leave `chunk.size` at `null`.
+> Chunked uploads use HTTP PATCH requests. If your infrastructure (WAF, reverse proxy, etc.) blocks PATCH by default, either configure it to allow PATCH on the chunk endpoint, or leave `chunk.enabled` at `false`.
 
 ## See also
 

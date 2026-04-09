@@ -127,12 +127,12 @@ class FileUploadConfiguration
 
     public static function chunkSize()
     {
-        return config('livewire.temporary_file_upload.chunk.size');
+        return config('livewire.temporary_file_upload.chunk.size', 5 * 1024 * 1024);
     }
 
     public static function isChunkingEnabled()
     {
-        return static::chunkSize() !== null;
+        return (bool) config('livewire.temporary_file_upload.chunk.enabled', false);
     }
 
     public static function chunkRetryDelays()

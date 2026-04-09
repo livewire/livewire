@@ -19,6 +19,7 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
         // file paths still resolve to a real local directory).
         Storage::fake('tmp-for-tests');
 
+        config()->set('livewire.temporary_file_upload.chunk.enabled', true);
         config()->set('livewire.temporary_file_upload.chunk.size', 1024); // 1KB for fast tests
         config()->set('livewire.temporary_file_upload.chunk.max_upload_time', 60);
         config()->set('livewire.temporary_file_upload.rules', ['required', 'file', 'max:100']); // 100KB max
@@ -362,9 +363,9 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
         $this->assertEquals($unicodeName, $manifest['name']);
     }
 
-    public function test_chunking_disabled_when_chunk_size_is_null()
+    public function test_chunking_disabled_when_chunk_enabled_is_false()
     {
-        config()->set('livewire.temporary_file_upload.chunk.size', null);
+        config()->set('livewire.temporary_file_upload.chunk.enabled', false);
 
         $this->assertFalse(FileUploadConfiguration::isChunkingEnabled());
     }
@@ -383,8 +384,8 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
 
     public function test_s3_disk_without_chunking_works_as_normal()
     {
-        // No chunk_size — S3 path should work fine
-        config()->set('livewire.temporary_file_upload.chunk.size', null);
+        // Chunking disabled — S3 path should work fine
+        config()->set('livewire.temporary_file_upload.chunk.enabled', false);
         config()->set('livewire.temporary_file_upload.disk', 's3');
         config()->set('filesystems.disks.s3.driver', 's3');
 
@@ -580,7 +581,7 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
 
     public function test_start_upload_skips_chunking_when_disabled()
     {
-        config()->set('livewire.temporary_file_upload.chunk.size', null);
+        config()->set('livewire.temporary_file_upload.chunk.enabled', false);
 
         $component = \Livewire\Livewire::test(ChunkedUploadComponent::class);
 
