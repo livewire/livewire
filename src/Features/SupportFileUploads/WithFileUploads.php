@@ -23,10 +23,8 @@ trait WithFileUploads
         if (FileUploadConfiguration::isUsingS3()) {
             throw_if(FileUploadConfiguration::isChunkingEnabled(), S3DoesntSupportChunkedUploads::class);
 
-            // Mint one presigned PUT URL per file — the JS client will PUT
-            // them sequentially and then call _finishUpload with the collected
-            // signed paths. Multi-file S3 uploads share the exact same
-            // direct-to-S3 path as single-file; there's no separate transport.
+            // Mint one presigned PUT URL per file. Multi-file S3 uploads share
+            // the single-PUT transport — there is no separate batched path.
             $payloads = array_map(function ($info) {
                 $file = UploadedFile::fake()->create($info['name'], $info['size'] / 1024, $info['type']);
 

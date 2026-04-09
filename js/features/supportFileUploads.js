@@ -126,7 +126,7 @@ class UploadManager {
         this.component.$wire.$on('upload:generatedSignedUrlForS3', ({ name, payloads }) => {
             setUploadLoading(this.component, name)
 
-            this.handleS3PreSignedUrls(name, payloads)
+            this.handleS3Upload(name, payloads)
         })
 
         this.component.$wire.$on('upload:finished', ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames))
@@ -191,15 +191,14 @@ class UploadManager {
         })
     }
 
-    handleS3PreSignedUrls(name, payloads) {
+    handleS3Upload(name, payloads) {
         let uploadObj = this.uploadBag.first(name)
         let component = this.component
 
         let files = Array.from(uploadObj.files)
 
-        // The server mints one presigned PUT URL per file — if the two
-        // counts disagree something is very wrong and we shouldn't send
-        // any bytes anywhere. Surface it as an upload error.
+        // The server mints one presigned PUT URL per file. If the counts
+        // disagree we bail out before sending any bytes.
         if (files.length !== payloads.length) {
             component.$wire.call('_uploadErrored', name, null, uploadObj.multiple)
             return
@@ -212,9 +211,8 @@ class UploadManager {
         let aborted = false
         let currentXhr = null
 
-        // Wire up abort for cancelUpload(). We share a single abort flag
-        // across every file in this upload batch so a cancel mid-PUT takes
-        // down the whole thing cleanly.
+        // Share a single abort flag across every file in this batch so a
+        // cancel mid-PUT takes down the whole thing cleanly.
         uploadObj.request = {
             abort: () => {
                 aborted = true
