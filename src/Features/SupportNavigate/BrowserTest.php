@@ -698,9 +698,11 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertScript('window.foo', 'bar')
                 ->assertSee('On fourth')
                 ->click('@link.to.first') // first attempt bar -> baz
+                ->pause(100) // Wait for requestAnimationFrame in link handler
                 ->assertScript('window.foo', 'baz')
                 ->assertSee('On fourth')
                 ->click('@link.to.first') // second attempt baz -> bat
+                ->pause(100) // Wait for requestAnimationFrame in link handler
                 ->assertScript('window.foo', 'bat')
                 ->assertSee('On fourth')
                 ->waitForNavigate()->click('@link.to.first') // finally navigate
