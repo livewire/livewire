@@ -190,10 +190,10 @@ export interface LivewireHooks {
 }
 
 export const Livewire: Livewire
-export { default as Alpine } from 'alpinejs'
+export { Alpine } from 'alpinejs'
 
 declare global {
     const Livewire: Livewire
-    const Alpine: typeof import('alpinejs').default
+    const Alpine: import('alpinejs').Alpine
 }
 
