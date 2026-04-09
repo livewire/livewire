@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportFileUploads;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Renderless;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 use Livewire\Features\SupportFormObjects\Form;
@@ -187,6 +188,50 @@ trait WithFileUploads
         app('livewire')->updateProperty($this, $name, $file);
     }
 
+    #[Renderless]
+    function _startChunkedUpload($name, $fileInfo, $isMultiple)
+    {
+        if (FileUploadConfiguration::isUsingS3()) {
+            throw new \Exception('Chunked uploads are not supported with S3 storage.');
+        }
+
+        $uploadId = (string) Str::uuid();
+
+        $chunkedUploads = session()->get('livewire_chunked_uploads', []);
+        $chunkedUploads[$uploadId] = [
+            'fileName' => $fileInfo[0]['name'],
+            'fileSize' => $fileInfo[0]['size'],
+            'fileMimeType' => $fileInfo[0]['type'],
+        ];
+        session()->put('livewire_chunked_uploads', $chunkedUploads);
+
+        $this->dispatch('upload:generatedSignedChunkUrl', name: $name, url: GenerateSignedUploadUrlFacade::forLocalChunked($uploadId), uploadId: $uploadId)->self();
+    }
+
+    #[Renderless]
+    function _cancelChunkedUpload($uploadId)
+    {
+        if (! Str::isUuid($uploadId)) {
+            return;
+        }
+
+        $uploads = session()->get('livewire_chunked_uploads', []);
+
+        if (! array_key_exists($uploadId, $uploads)) {
+            return;
+        }
+
+        $storage = FileUploadConfiguration::storage();
+        $chunkDir = FileUploadConfiguration::path('chunks/' . $uploadId);
+
+        if ($storage->exists($chunkDir)) {
+            $storage->deleteDirectory($chunkDir);
+        }
+
+        unset($uploads[$uploadId]);
+        session()->put('livewire_chunked_uploads', $uploads);
+    }
+
     function _uploadErrored($name, $errorsInJson, $isMultiple) {
         $this->dispatch('upload:errored', name: $name)->self();
 
@@ -243,14 +288,37 @@ trait WithFileUploads
 
         $storage = FileUploadConfiguration::storage();
 
+        $yesterdaysStamp = now()->subDay()->timestamp;
+
         foreach ($storage->allFiles(FileUploadConfiguration::path()) as $filePathname) {
             // On busy websites, this cleanup code can run in multiple threads causing part of the output
             // of allFiles() to have already been deleted by another thread.
             if (! $storage->exists($filePathname)) continue;
 
-            $yesterdaysStamp = now()->subDay()->timestamp;
             if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
                 $storage->delete($filePathname);
+            }
+        }
+
+        // Also clean up stale chunk directories from abandoned chunked uploads.
+        $chunksPath = FileUploadConfiguration::path('chunks');
+
+        if ($storage->exists($chunksPath)) {
+            foreach ($storage->directories($chunksPath) as $chunkDir) {
+                $files = $storage->files($chunkDir);
+
+                if (empty($files)) {
+                    $storage->deleteDirectory($chunkDir);
+                    continue;
+                }
+
+                $oldestModified = collect($files)
+                    ->map(fn($f) => $storage->lastModified($f))
+                    ->min();
+
+                if ($yesterdaysStamp > $oldestModified) {
+                    $storage->deleteDirectory($chunkDir);
+                }
             }
         }
     }
