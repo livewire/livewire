@@ -633,9 +633,14 @@ class HandleComponents extends Mechanism
             // If a value is being set to "null", do the same...
             if ($value === '' || $value === null) {
                 unset($component->$property);
-            } else {
-                throw $e;
+
+                return;
             }
+
+            // This is almost certainly a bot/scanner probing typed properties
+            // with wrong-type values. Abort with 419 directly so it never
+            // reaches the top-level catch (which would report it as a real bug).
+            abort(419);
         }
     }
 
