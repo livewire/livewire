@@ -16,34 +16,34 @@ class SupportLegacyComputedPropertySyntax extends ComponentHook
     static function provide()
     {
         on('__get', function ($target, $property, $returnValue) {
-            // Handle legacy computed properties (getXxxProperty pattern)...
-            if (static::hasComputedProperty($target, $property)) {
-                $returnValue(static::getComputedProperty($target, $property));
-
-                return;
-            }
-
-            // Handle #[Computed] attribute properties...
+            // Handle #[Computed] attribute properties (takes priority over legacy)...
             $attribute = static::findComputedAttribute($target, $property);
 
             if ($attribute) {
                 $attribute->handleMagicGet($returnValue);
-            }
-        });
-
-        on('__unset', function ($target, $property) {
-            // Handle legacy computed properties (getXxxProperty pattern)...
-            if (static::hasComputedProperty($target, $property)) {
-                store($target)->unset('computedProperties', $property);
 
                 return;
             }
 
-            // Handle #[Computed] attribute properties...
+            // Handle legacy computed properties (getXxxProperty pattern)...
+            if (static::hasComputedProperty($target, $property)) {
+                $returnValue(static::getComputedProperty($target, $property));
+            }
+        });
+
+        on('__unset', function ($target, $property) {
+            // Handle #[Computed] attribute properties (takes priority over legacy)...
             $attribute = static::findComputedAttribute($target, $property);
 
             if ($attribute) {
                 $attribute->handleMagicUnset();
+
+                return;
+            }
+
+            // Handle legacy computed properties (getXxxProperty pattern)...
+            if (static::hasComputedProperty($target, $property)) {
+                store($target)->unset('computedProperties', $property);
             }
         });
 
