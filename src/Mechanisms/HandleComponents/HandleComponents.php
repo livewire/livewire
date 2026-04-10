@@ -640,6 +640,8 @@ class HandleComponents extends Mechanism
             // This is almost certainly a bot/scanner probing typed properties
             // with wrong-type values. Abort with 419 directly so it never
             // reaches the top-level catch (which would report it as a real bug).
+            if (config('app.debug')) throw $e;
+
             abort(419);
         }
     }
