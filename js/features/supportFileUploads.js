@@ -192,51 +192,22 @@ class UploadManager {
     }
 
     handleS3Upload(name, payloads) {
-        let uploadObj = this.uploadBag.first(name)
-        let component = this.component
-
-        let files = Array.from(uploadObj.files)
+        let files = Array.from(this.uploadBag.first(name).files)
 
         // The server mints one presigned PUT URL per file. If the counts
         // disagree we bail out before sending any bytes.
         if (files.length !== payloads.length) {
-            component.$wire.call('_uploadErrored', name, null, uploadObj.multiple)
+            this.component.$wire.call('_uploadErrored', name, null, this.uploadBag.first(name).multiple)
             return
         }
 
-        let totalAllFiles = files.reduce((sum, f) => sum + f.size, 0)
-        let bytesAlreadySentForCompletedFiles = 0
-        let signedPaths = []
-        let fileIndex = 0
-        let aborted = false
-        let currentXhr = null
-
-        // Share a single abort flag across every file in this batch so a
-        // cancel mid-PUT takes down the whole thing cleanly.
-        uploadObj.request = {
-            abort: () => {
-                aborted = true
-                if (currentXhr) currentXhr.abort()
-            },
-        }
-
-        let processNextFile = () => {
-            if (aborted) return
-
-            if (fileIndex >= files.length) {
-                // All files uploaded — hand off to the existing _finishUpload flow
-                component.$wire.call('_finishUpload', name, signedPaths, uploadObj.multiple, uploadObj.append)
-                return
-            }
-
-            let file = files[fileIndex]
-            let payload = payloads[fileIndex]
-
+        this.processFilesSequentially(name, (file, index, { onProgress, onComplete, onError, isAborted, setCurrentXhr }) => {
+            let payload = payloads[index]
             let headers = { ...payload.headers }
             if ('Host' in headers) delete headers.Host
 
             let xhr = new XMLHttpRequest()
-            currentXhr = xhr
+            setCurrentXhr(xhr)
             xhr.open('PUT', payload.url)
 
             Object.entries(headers).forEach(([key, value]) => {
@@ -245,41 +216,44 @@ class UploadManager {
 
             xhr.upload.addEventListener('progress', (e) => {
                 if (!e.lengthComputable) return
-                let totalSent = bytesAlreadySentForCompletedFiles + e.loaded
-                uploadObj.progressCallback({ loaded: totalSent, total: totalAllFiles })
+                onProgress(e.loaded)
             })
 
             xhr.addEventListener('load', () => {
-                if (aborted) return
+                if (isAborted()) return
 
                 if ((xhr.status + '')[0] === '2') {
-                    signedPaths.push(payload.path)
-                    bytesAlreadySentForCompletedFiles += file.size
-                    fileIndex++
-                    processNextFile()
+                    onComplete(payload.path)
                     return
                 }
 
-                let errors = xhr.status === 422 ? xhr.response : null
-                component.$wire.call('_uploadErrored', name, errors, uploadObj.multiple)
+                onError(xhr.status === 422 ? xhr.response : null)
             })
 
             xhr.addEventListener('error', () => {
-                if (aborted) return
-                component.$wire.call('_uploadErrored', name, null, uploadObj.multiple)
+                if (isAborted()) return
+                onError(null)
             })
 
             xhr.send(file)
-        }
-
-        processNextFile()
+        })
     }
 
     handleChunkedUpload(name, chunkConfig) {
-        let uploadObj = this.uploadBag.first(name)
-        let component = this.component
         let csrfToken = getCsrfToken()
 
+        this.processFilesSequentially(name, (file, index, callbacks) => {
+            this.uploadSingleChunked(file, name, chunkConfig, csrfToken, callbacks)
+        })
+    }
+
+    // Shared sequential-upload loop used by both the S3 direct-PUT and
+    // local-chunked handlers. Each handler supplies an `uploadFile`
+    // callback that knows how to send one file; this method owns the
+    // iteration, progress aggregation, abort flag, and _finishUpload call.
+    processFilesSequentially(name, uploadFile) {
+        let uploadObj = this.uploadBag.first(name)
+        let component = this.component
         let files = Array.from(uploadObj.files)
         let totalAllFiles = files.reduce((sum, f) => sum + f.size, 0)
         let bytesAlreadySentForCompletedFiles = 0
@@ -288,8 +262,6 @@ class UploadManager {
         let aborted = false
         let currentXhr = null
 
-        // Wire up abort for cancelUpload(). We share a single abort flag
-        // across all files in this upload batch.
         uploadObj.request = {
             abort: () => {
                 aborted = true
@@ -301,13 +273,13 @@ class UploadManager {
             if (aborted) return
 
             if (fileIndex >= files.length) {
-                // All files uploaded — hand off to the existing _finishUpload flow
                 component.$wire.call('_finishUpload', name, signedPaths, uploadObj.multiple, uploadObj.append)
                 return
             }
 
             let file = files[fileIndex]
-            this.uploadSingleChunked(file, name, chunkConfig, csrfToken, {
+
+            uploadFile(file, fileIndex, {
                 onProgress: (bytesForThisFile) => {
                     let totalSent = bytesAlreadySentForCompletedFiles + bytesForThisFile
                     uploadObj.progressCallback({ loaded: totalSent, total: totalAllFiles })
