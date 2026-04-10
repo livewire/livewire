@@ -274,7 +274,6 @@ class UploadManager {
         let { onProgress, onComplete, onError, isAborted, setCurrentXhr } = callbacks
         let csrfToken = getCsrfToken()
 
-        // Step 1: POST to init — get uploadId + per-part signing URL + complete URL
         let initXhr = new XMLHttpRequest()
         setCurrentXhr(initXhr)
         initXhr.open('POST', initUrl)
@@ -288,18 +287,9 @@ class UploadManager {
             if (isAborted()) return
             if (initXhr.status !== 200) return onError(extractErrorBody(initXhr))
 
-            let { uploadId, partSize, numParts, signPartUrl, completeUrl, abortUrl } = JSON.parse(initXhr.responseText)
+            let { partSize, numParts, signPartUrl, completeUrl, abortUrl } = JSON.parse(initXhr.responseText)
             abortUrls.add(abortUrl)
 
-            // Plan the chunks
-            let plan = []
-            for (let n = 1; n <= numParts; n++) {
-                let start = (n - 1) * partSize
-                let end = Math.min(start + partSize, file.size)
-                plan.push({ partNumber: n, start, end })
-            }
-
-            let etagsByPart = new Map()
             let bytesUploaded = 0
             let partIndex = 0
             let retryCount = 0
@@ -307,20 +297,16 @@ class UploadManager {
             let signAndUploadNext = () => {
                 if (isAborted()) return
 
-                if (partIndex >= plan.length) {
-                    // All parts done — call complete
-                    let parts = plan.map(p => ({
-                        partNumber: p.partNumber,
-                        etag: etagsByPart.get(p.partNumber),
-                    }))
-                    completeUpload(parts)
+                if (partIndex >= numParts) {
+                    completeUpload()
                     return
                 }
 
-                let { partNumber, start, end } = plan[partIndex]
+                let partNumber = partIndex + 1
+                let start = partIndex * partSize
+                let end = Math.min(start + partSize, file.size)
                 let body = file.slice(start, end)
 
-                // Sign this part
                 let signXhr = new XMLHttpRequest()
                 setCurrentXhr(signXhr)
                 signXhr.open('GET', signPartUrl + (signPartUrl.includes('?') ? '&' : '?') + 'partNumber=' + partNumber)
@@ -332,13 +318,13 @@ class UploadManager {
                     if (signXhr.status !== 200) return retryOrFail()
 
                     let { url } = JSON.parse(signXhr.responseText)
-                    putPart(url, body, partNumber)
+                    putPart(url, body)
                 })
                 signXhr.addEventListener('error', () => isAborted() || retryOrFail())
                 signXhr.send()
             }
 
-            let putPart = (signedUrl, body, partNumber) => {
+            let putPart = (signedUrl, body) => {
                 let putXhr = new XMLHttpRequest()
                 setCurrentXhr(putXhr)
                 putXhr.open('PUT', signedUrl)
@@ -352,21 +338,11 @@ class UploadManager {
                     if (isAborted()) return
 
                     if (putXhr.status === 200) {
-                        let etag = putXhr.getResponseHeader('ETag')
-
-                        if (!etag) {
-                            return onError(JSON.stringify({
-                                errors: { upload: ['S3 returned an empty ETag. Verify your bucket CORS configuration exposes the ETag header.'] }
-                            }))
-                        }
-
-                        etagsByPart.set(partNumber, etag)
                         bytesUploaded += body.size
                         partIndex++
                         retryCount = 0
                         signAndUploadNext()
                     } else if (putXhr.status === 403) {
-                        // Likely expired signature — re-sign and retry once
                         if (retryCount < 1) { retryCount++; signAndUploadNext() }
                         else onError(extractErrorBody(putXhr))
                     } else {
@@ -378,12 +354,11 @@ class UploadManager {
                 putXhr.send(body)
             }
 
-            let completeUpload = (parts) => {
+            let completeUpload = () => {
                 let xhr = new XMLHttpRequest()
                 setCurrentXhr(xhr)
                 xhr.open('POST', completeUrl)
                 xhr.setRequestHeader('Accept', 'application/json')
-                xhr.setRequestHeader('Content-Type', 'application/json')
                 if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
 
                 xhr.addEventListener('load', () => {
@@ -394,7 +369,7 @@ class UploadManager {
                     onComplete(path)
                 })
                 xhr.addEventListener('error', () => isAborted() || onError(null))
-                xhr.send(JSON.stringify({ parts }))
+                xhr.send()
             }
 
             let retryOrFail = () => {

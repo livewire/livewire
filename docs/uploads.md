@@ -283,44 +283,6 @@ Now, any temporary files older than 24 hours will be cleaned up by S3 automatica
 > [!info]
 > If you are not using S3 for file storage, Livewire will handle file cleanup automatically and there is no need to run the command above.
 
-### CORS configuration for S3 multipart uploads
-
-When uploading large files directly to S3 via multipart, the browser must read the `ETag` response header from each part upload to pass it to the `CompleteMultipartUpload` call. Without the proper CORS configuration, uploads will fail silently.
-
-Apply this CORS rule to your S3 bucket:
-
-```json
-[
-    {
-        "AllowedOrigins": ["https://your-app.com"],
-        "AllowedMethods": ["PUT", "POST", "GET", "DELETE", "HEAD"],
-        "AllowedHeaders": ["*"],
-        "ExposeHeaders": ["ETag"],
-        "MaxAgeSeconds": 3000
-    }
-]
-```
-
-In the AWS console: **S3 → Bucket → Permissions → Cross-origin resource sharing (CORS) → Edit → paste → Save.**
-
-> [!warning]
-> If you see an error like "S3 returned an empty ETag", your CORS configuration is missing `ExposeHeaders: ["ETag"]`. This is the most common setup issue with S3 multipart uploads.
-
-Additionally, configure a lifecycle rule to automatically abort incomplete multipart uploads. Without this, abandoned uploads accrue storage costs even though they don't appear in `ListObjects`:
-
-```xml
-<LifecycleConfiguration>
-    <Rule>
-        <ID>livewire-abort-incomplete</ID>
-        <Status>Enabled</Status>
-        <Filter><Prefix>livewire-tmp/</Prefix></Filter>
-        <AbortIncompleteMultipartUpload>
-            <DaysAfterInitiation>1</DaysAfterInitiation>
-        </AbortIncompleteMultipartUpload>
-    </Rule>
-</LifecycleConfiguration>
-```
-
 ## Loading indicators
 
 Although `wire:model` for file uploads works differently than other `wire:model` input types under the hood, the interface for showing loading indicators remains the same.
@@ -516,10 +478,7 @@ new class extends Component {
 ```
 
 > [!info] S3 multipart uploads
-> When `temporary_file_upload.disk` is set to S3 and chunking is enabled, Livewire automatically uses native S3 multipart uploads (`CreateMultipartUpload` → presigned `UploadPart` → `CompleteMultipartUpload`). The minimum part size is 5 MiB (S3 protocol requirement) — if your `chunk.size` is smaller, Livewire floors it at 5 MiB for S3 uploads automatically. You can set a custom S3 part size with `chunk.s3_size`.
-
-> [!warning] S3 CORS configuration required for multipart uploads
-> When uploading large files directly to S3 via multipart, the browser must read the `ETag` response header from each part upload. Your bucket CORS configuration must include `ExposeHeaders: ["ETag"]`, otherwise uploads will fail. See the [CORS configuration](#cors-configuration-for-s3-multipart-uploads) section below.
+> When `temporary_file_upload.disk` is set to S3 and chunking is enabled, Livewire automatically uses native S3 multipart uploads. The minimum part size is 5 MiB (S3 protocol requirement) — if your `chunk.size` is smaller, Livewire floors it at 5 MiB for S3 automatically. You can override this with `chunk.s3_size`.
 
 > [!info] Bump your global validation rule
 > Remember that the global `temporary_file_upload.rules` validation still applies to the assembled file. The default `max:12288` (12MB) will reject anything larger. If you're enabling chunked uploads to support large files, bump `max` accordingly.

@@ -139,8 +139,21 @@ class S3MultipartUploadController implements HasMiddleware
 
         $manifest = $this->loadManifest($uploadId);
 
-        $parts = collect($request->input('parts', []))
-            ->map(fn ($p) => ['PartNumber' => (int) $p['partNumber'], 'ETag' => $p['etag']])
+        $client = FileUploadConfiguration::s3Client();
+        $bucket = FileUploadConfiguration::s3Bucket();
+
+        // Fetch ETags server-side via ListParts so the browser never needs
+        // to read S3 response headers — eliminates the CORS ExposeHeaders
+        // requirement that would otherwise force users to configure ETag
+        // exposure on their bucket.
+        $listed = $client->listParts([
+            'Bucket' => $bucket,
+            'Key' => $manifest['key'],
+            'UploadId' => $uploadId,
+        ]);
+
+        $parts = collect($listed['Parts'] ?? [])
+            ->map(fn ($p) => ['PartNumber' => (int) $p['PartNumber'], 'ETag' => $p['ETag']])
             ->sortBy('PartNumber')
             ->values()
             ->all();
@@ -150,8 +163,8 @@ class S3MultipartUploadController implements HasMiddleware
         }
 
         try {
-            FileUploadConfiguration::s3Client()->completeMultipartUpload([
-                'Bucket' => FileUploadConfiguration::s3Bucket(),
+            $client->completeMultipartUpload([
+                'Bucket' => $bucket,
                 'Key' => $manifest['key'],
                 'UploadId' => $uploadId,
                 'MultipartUpload' => ['Parts' => $parts],
