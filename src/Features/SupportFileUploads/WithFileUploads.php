@@ -21,10 +21,29 @@ trait WithFileUploads
         $this->validateUploadBeforeTransfer($name, $fileInfo, $isMultiple);
 
         if (FileUploadConfiguration::isUsingS3()) {
-            throw_if(FileUploadConfiguration::isChunkingEnabled(), S3DoesntSupportChunkedUploads::class);
+            $shouldMultipart = FileUploadConfiguration::isChunkingEnabled()
+                && collect($fileInfo)->contains(
+                    fn ($info) => $info['size'] > FileUploadConfiguration::chunkSizeForS3()
+                );
 
-            // Mint one presigned PUT URL per file. Multi-file S3 uploads share
-            // the single-PUT transport — there is no separate batched path.
+            if ($shouldMultipart) {
+                $this->dispatch('upload:generatedSignedUrlForS3Multipart',
+                    name: $name,
+                    files: $fileInfo,
+                    config: [
+                        'chunkSize' => FileUploadConfiguration::chunkSizeForS3(),
+                        'retryDelays' => FileUploadConfiguration::chunkRetryDelays(),
+                        'initUrl' => URL::temporarySignedRoute(
+                            'livewire.s3-multipart-init',
+                            now()->addMinutes(FileUploadConfiguration::chunkMaxUploadTime()),
+                        ),
+                    ],
+                )->self();
+
+                return;
+            }
+
+            // Single-PUT path: one presigned putObject URL per file.
             $payloads = array_map(function ($info) {
                 $file = UploadedFile::fake()->create($info['name'], $info['size'] / 1024, $info['type']);
 
@@ -264,7 +283,10 @@ trait WithFileUploads
 
     protected function cleanupOldUploads()
     {
-        if (FileUploadConfiguration::isUsingS3()) return;
+        if (FileUploadConfiguration::isUsingS3()) {
+            $this->cleanupStaleMultipartManifests();
+            return;
+        }
 
         $storage = FileUploadConfiguration::storage();
         $yesterdaysStamp = now()->subDay()->timestamp;
@@ -309,6 +331,36 @@ trait WithFileUploads
                     $storage->deleteDirectory($dir);
                 }
             }
+        }
+    }
+
+    protected function cleanupStaleMultipartManifests()
+    {
+        $storage = FileUploadConfiguration::storage();
+        $yesterdaysStamp = now()->subDay()->timestamp;
+        $manifestsDir = FileUploadConfiguration::path('multipart-manifests');
+
+        if (! $storage->exists($manifestsDir)) return;
+
+        foreach ($storage->files($manifestsDir) as $manifestFile) {
+            if (! $storage->exists($manifestFile)) continue;
+            if ($storage->lastModified($manifestFile) >= $yesterdaysStamp) continue;
+
+            $manifest = json_decode($storage->get($manifestFile), true);
+
+            if (is_array($manifest) && isset($manifest['uploadId'], $manifest['key'])) {
+                try {
+                    FileUploadConfiguration::s3Client()->abortMultipartUpload([
+                        'Bucket' => FileUploadConfiguration::s3Bucket(),
+                        'Key' => $manifest['key'],
+                        'UploadId' => $manifest['uploadId'],
+                    ]);
+                } catch (\Exception $e) {
+                    // Already aborted/completed/expired — fine
+                }
+            }
+
+            $storage->delete($manifestFile);
         }
     }
 }
