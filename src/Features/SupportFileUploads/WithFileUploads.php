@@ -29,7 +29,6 @@ trait WithFileUploads
             if ($shouldMultipart) {
                 $this->dispatch('upload:generatedSignedUrlForS3Multipart',
                     name: $name,
-                    files: $fileInfo,
                     config: [
                         'chunkSize' => FileUploadConfiguration::chunkSizeForS3(),
                         'retryDelays' => FileUploadConfiguration::chunkRetryDelays(),

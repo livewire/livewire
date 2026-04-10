@@ -129,7 +129,7 @@ class UploadManager {
             this.handleS3Upload(name, payloads)
         })
 
-        this.component.$wire.$on('upload:generatedSignedUrlForS3Multipart', ({ name, files, config }) => {
+        this.component.$wire.$on('upload:generatedSignedUrlForS3Multipart', ({ name, config }) => {
             setUploadLoading(this.component, name)
 
             this.handleS3Multipart(name, config)

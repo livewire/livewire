@@ -202,16 +202,17 @@ class FileUploadConfiguration
 
     public static function s3Client()
     {
-        $adapter = invade(static::storage()->getDriver())->adapter;
-
-        return invade($adapter)->client;
+        return invade(static::s3Adapter())->client;
     }
 
     public static function s3Bucket()
     {
-        $adapter = invade(static::storage()->getDriver())->adapter;
+        return invade(static::s3Adapter())->bucket;
+    }
 
-        return invade($adapter)->bucket;
+    protected static function s3Adapter()
+    {
+        return invade(static::storage()->getDriver())->adapter;
     }
 
     public static function storeTemporaryFile($file, $disk)
