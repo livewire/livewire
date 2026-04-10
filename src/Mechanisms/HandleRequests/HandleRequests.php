@@ -201,6 +201,8 @@ class HandleRequests extends Mechanism
             try {
                 [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
             } catch (\TypeError $e) {
+                report($e);
+
                 if (config('app.debug')) throw $e;
 
                 abort(419);
