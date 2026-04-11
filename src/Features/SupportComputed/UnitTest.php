@@ -483,6 +483,20 @@ class UnitTest extends TestCase
             ->assertSee('false');
     }
 
+    public function test_computed_attribute_takes_priority_over_legacy_get_property_syntax()
+    {
+        Livewire::test(new class extends TestComponent {
+            use HasLegacyComputedProperty;
+
+            #[Computed]
+            public function foo(): string
+            {
+                return 'computed';
+            }
+        })
+            ->assertSetStrict('foo', 'computed');
+    }
+
     public function test_it_supports_legacy_computed_properties()
     {
         Livewire::test(new class extends TestComponent {
@@ -638,6 +652,14 @@ class FalseIssetComputedPropertyStub extends Component{
             {{ var_dump(isset($this->foo)) }}
         </div>
         HTML;
+    }
+}
+
+trait HasLegacyComputedProperty
+{
+    public function getFooProperty(): string
+    {
+        return 'legacy';
     }
 }
 
