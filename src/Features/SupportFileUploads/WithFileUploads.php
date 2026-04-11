@@ -21,10 +21,28 @@ trait WithFileUploads
         $this->validateUploadBeforeTransfer($name, $fileInfo, $isMultiple);
 
         if (FileUploadConfiguration::isUsingS3()) {
-            throw_if(FileUploadConfiguration::isChunkingEnabled(), S3DoesntSupportChunkedUploads::class);
+            $shouldMultipart = FileUploadConfiguration::isChunkingEnabled()
+                && collect($fileInfo)->contains(
+                    fn ($info) => $info['size'] > FileUploadConfiguration::chunkSizeForS3()
+                );
 
-            // Mint one presigned PUT URL per file. Multi-file S3 uploads share
-            // the single-PUT transport — there is no separate batched path.
+            if ($shouldMultipart) {
+                $this->dispatch('upload:generatedSignedUrlForS3Multipart',
+                    name: $name,
+                    config: [
+                        'chunkSize' => FileUploadConfiguration::chunkSizeForS3(),
+                        'retryDelays' => FileUploadConfiguration::chunkRetryDelays(),
+                        'initUrl' => URL::temporarySignedRoute(
+                            'livewire.s3-multipart-init',
+                            now()->addMinutes(FileUploadConfiguration::chunkMaxUploadTime()),
+                        ),
+                    ],
+                )->self();
+
+                return;
+            }
+
+            // Single-PUT path: one presigned putObject URL per file.
             $payloads = array_map(function ($info) {
                 $file = UploadedFile::fake()->create($info['name'], $info['size'] / 1024, $info['type']);
 
@@ -311,4 +329,5 @@ trait WithFileUploads
             }
         }
     }
+
 }

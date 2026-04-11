@@ -141,8 +141,8 @@ return [
         'max_upload_time' => 5, // Max duration (in minutes) before an upload is invalidated...
         'cleanup' => true, // Should cleanup temporary uploads older than 24 hrs...
         'chunk' => [
-            'enabled' => false,                                   // Opt in to chunked uploads. When true, files larger than `size` are uploaded in chunks instead of a single request. Local disk only — S3 not yet supported.
-            'size' => 1024 * 1024,                                // Bytes per chunk. Defaults to 1MB to fit under nginx's default `client_max_body_size` on both Forge and Laravel Cloud — works out of the box. Bump alongside your server's body limit for better throughput on larger files.
+            'enabled' => false,                                   // Opt in to chunked uploads. When true, files larger than `size` are uploaded in chunks instead of a single request. Works on both local and S3 disks — S3 uses native multipart uploads automatically.
+            'size' => 1024 * 1024,                                // Bytes per chunk. Defaults to 1MB to fit under nginx's default `client_max_body_size` on both Forge and Laravel Cloud — works out of the box. For S3, the minimum part size is 5MB — values below that are floored automatically.
             'retry_delays' => [500, 1000, 3000],                  // Backoff delays (in ms) between chunk retries. The number of entries determines the max retries.
             'max_upload_time' => 60 * 24,                         // Max duration (in minutes) for an entire chunked upload to complete. Used as the signed-URL expiry for chunk endpoints. Defaults to 24 hours to handle large uploads on slow connections.
             'middleware' => null,                                 // Middleware applied to chunk endpoints. Defaults to 'throttle:600,1' (looser than the global upload throttle since chunked uploads make many requests). Sites that expose uploads to anonymous visitors should tighten this — see the security note in uploads.md.
