@@ -58,49 +58,32 @@ class S3MultipartUploadController implements HasMiddleware
             abort(413, 'File requires more than 10,000 parts.');
         }
 
-        $client = FileUploadConfiguration::s3Client();
-        $bucket = FileUploadConfiguration::s3Bucket();
-
-        $created = $client->createMultipartUpload([
-            'Bucket' => $bucket,
+        $created = FileUploadConfiguration::s3Client()->createMultipartUpload([
+            'Bucket' => FileUploadConfiguration::s3Bucket(),
             'Key' => $key,
             'ContentType' => $type ?: 'application/octet-stream',
         ]);
 
         $uploadId = $created['UploadId'];
-
-        // Persist a server-side manifest so the client can't lie about
-        // which S3 key the parts belong to or how many parts there are.
-        $manifestKey = FileUploadConfiguration::path("multipart-manifests/{$uploadId}.json");
-        FileUploadConfiguration::storage()->put($manifestKey, json_encode([
-            'uploadId' => $uploadId,
-            'key' => $key,
-            'hash' => $hash,
-            'name' => $name,
-            'size' => $totalSize,
-            'type' => $type,
-            'partSize' => $partSize,
-            'numParts' => $numParts,
-            'created_at' => now()->timestamp,
-        ]));
-
         $expiry = now()->addMinutes(FileUploadConfiguration::chunkMaxUploadTime());
+
+        // All upload state is embedded in the signed URLs — no server-side
+        // manifest needed. The signature prevents the client from tampering
+        // with key, hash, or numParts.
+        $params = compact('uploadId', 'key', 'hash', 'numParts');
 
         return response()->json([
             'uploadId' => $uploadId,
             'partSize' => $partSize,
             'numParts' => $numParts,
             'signPartUrl' => URL::temporarySignedRoute(
-                'livewire.s3-multipart-sign-part', $expiry,
-                ['uploadId' => $uploadId],
+                'livewire.s3-multipart-sign-part', $expiry, $params,
             ),
             'completeUrl' => URL::temporarySignedRoute(
-                'livewire.s3-multipart-complete', $expiry,
-                ['uploadId' => $uploadId],
+                'livewire.s3-multipart-complete', $expiry, $params,
             ),
             'abortUrl' => URL::temporarySignedRoute(
-                'livewire.s3-multipart-abort', $expiry,
-                ['uploadId' => $uploadId],
+                'livewire.s3-multipart-abort', $expiry, $params,
             ),
         ]);
     }
@@ -109,16 +92,17 @@ class S3MultipartUploadController implements HasMiddleware
     {
         abort_unless($request->hasValidSignatureWhileIgnoring(['partNumber']), 401);
 
-        $manifest = $this->loadManifest($uploadId);
+        $key = $request->query('key');
+        $numParts = (int) $request->query('numParts');
         $partNumber = (int) $request->query('partNumber');
 
-        if ($partNumber < 1 || $partNumber > $manifest['numParts']) {
-            abort(400, "Part number {$partNumber} is out of range (1–{$manifest['numParts']}).");
+        if ($partNumber < 1 || $partNumber > $numParts) {
+            abort(400, "Part number {$partNumber} is out of range (1–{$numParts}).");
         }
 
         $cmd = FileUploadConfiguration::s3Client()->getCommand('UploadPart', [
             'Bucket' => FileUploadConfiguration::s3Bucket(),
-            'Key' => $manifest['key'],
+            'Key' => $key,
             'UploadId' => $uploadId,
             'PartNumber' => $partNumber,
         ]);
@@ -137,18 +121,18 @@ class S3MultipartUploadController implements HasMiddleware
     {
         abort_unless($request->hasValidSignature(), 401);
 
-        $manifest = $this->loadManifest($uploadId);
+        $key = $request->query('key');
+        $hash = $request->query('hash');
+        $numParts = (int) $request->query('numParts');
 
         $client = FileUploadConfiguration::s3Client();
         $bucket = FileUploadConfiguration::s3Bucket();
 
         // Fetch ETags server-side via ListParts so the browser never needs
-        // to read S3 response headers — eliminates the CORS ExposeHeaders
-        // requirement that would otherwise force users to configure ETag
-        // exposure on their bucket.
+        // to read S3 response headers — no CORS ExposeHeaders required.
         $listed = $client->listParts([
             'Bucket' => $bucket,
-            'Key' => $manifest['key'],
+            'Key' => $key,
             'UploadId' => $uploadId,
         ]);
 
@@ -158,26 +142,23 @@ class S3MultipartUploadController implements HasMiddleware
             ->values()
             ->all();
 
-        if (count($parts) !== $manifest['numParts']) {
-            abort(400, 'Part count mismatch: expected ' . $manifest['numParts'] . ', got ' . count($parts) . '.');
+        if (count($parts) !== $numParts) {
+            abort(400, 'Part count mismatch: expected ' . $numParts . ', got ' . count($parts) . '.');
         }
 
         try {
             $client->completeMultipartUpload([
                 'Bucket' => $bucket,
-                'Key' => $manifest['key'],
+                'Key' => $key,
                 'UploadId' => $uploadId,
                 'MultipartUpload' => ['Parts' => $parts],
             ]);
         } catch (S3Exception $e) {
-            $this->cleanupManifest($uploadId);
             throw new HttpException(422, 'Multipart completion failed: ' . $e->getAwsErrorCode());
         }
 
-        $this->cleanupManifest($uploadId);
-
         return response()->json([
-            'path' => TemporaryUploadedFile::signPath($manifest['hash']),
+            'path' => TemporaryUploadedFile::signPath($hash),
         ]);
     }
 
@@ -185,19 +166,15 @@ class S3MultipartUploadController implements HasMiddleware
     {
         abort_unless($request->hasValidSignature(), 401);
 
-        $manifest = $this->loadManifest($uploadId);
-
         try {
             FileUploadConfiguration::s3Client()->abortMultipartUpload([
                 'Bucket' => FileUploadConfiguration::s3Bucket(),
-                'Key' => $manifest['key'],
+                'Key' => $request->query('key'),
                 'UploadId' => $uploadId,
             ]);
         } catch (S3Exception $e) {
             // Already aborted or never existed — fine
         }
-
-        $this->cleanupManifest($uploadId);
 
         return response('', 204);
     }
@@ -206,11 +183,9 @@ class S3MultipartUploadController implements HasMiddleware
     {
         abort_unless($request->hasValidSignature(), 401);
 
-        $manifest = $this->loadManifest($uploadId);
-
         $result = FileUploadConfiguration::s3Client()->listParts([
             'Bucket' => FileUploadConfiguration::s3Bucket(),
-            'Key' => $manifest['key'],
+            'Key' => $request->query('key'),
             'UploadId' => $uploadId,
         ]);
 
@@ -222,26 +197,6 @@ class S3MultipartUploadController implements HasMiddleware
                     'etag' => $p['ETag'],
                 ])->values()->all(),
         ]);
-    }
-
-    protected function loadManifest(string $uploadId): array
-    {
-        $manifestKey = FileUploadConfiguration::path("multipart-manifests/{$uploadId}.json");
-
-        $storage = FileUploadConfiguration::storage();
-
-        if (! $storage->exists($manifestKey)) {
-            abort(404, 'Upload session not found.');
-        }
-
-        return json_decode($storage->get($manifestKey), true);
-    }
-
-    protected function cleanupManifest(string $uploadId): void
-    {
-        $manifestKey = FileUploadConfiguration::path("multipart-manifests/{$uploadId}.json");
-
-        FileUploadConfiguration::storage()->delete($manifestKey);
     }
 
     protected function decodeUploadName(string $encoded): string

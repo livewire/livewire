@@ -282,10 +282,7 @@ trait WithFileUploads
 
     protected function cleanupOldUploads()
     {
-        if (FileUploadConfiguration::isUsingS3()) {
-            $this->cleanupStaleMultipartManifests();
-            return;
-        }
+        if (FileUploadConfiguration::isUsingS3()) return;
 
         $storage = FileUploadConfiguration::storage();
         $yesterdaysStamp = now()->subDay()->timestamp;
@@ -333,33 +330,4 @@ trait WithFileUploads
         }
     }
 
-    protected function cleanupStaleMultipartManifests()
-    {
-        $storage = FileUploadConfiguration::storage();
-        $yesterdaysStamp = now()->subDay()->timestamp;
-        $manifestsDir = FileUploadConfiguration::path('multipart-manifests');
-
-        if (! $storage->exists($manifestsDir)) return;
-
-        foreach ($storage->files($manifestsDir) as $manifestFile) {
-            if (! $storage->exists($manifestFile)) continue;
-            if ($storage->lastModified($manifestFile) >= $yesterdaysStamp) continue;
-
-            $manifest = json_decode($storage->get($manifestFile), true);
-
-            if (is_array($manifest) && isset($manifest['uploadId'], $manifest['key'])) {
-                try {
-                    FileUploadConfiguration::s3Client()->abortMultipartUpload([
-                        'Bucket' => FileUploadConfiguration::s3Bucket(),
-                        'Key' => $manifest['key'],
-                        'UploadId' => $manifest['uploadId'],
-                    ]);
-                } catch (\Exception $e) {
-                    // Already aborted/completed/expired — fine
-                }
-            }
-
-            $storage->delete($manifestFile);
-        }
-    }
 }
