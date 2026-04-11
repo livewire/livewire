@@ -193,10 +193,6 @@ class FileUploadConfiguration
 
     public static function chunkSizeForS3(): int
     {
-        $explicit = config('livewire.temporary_file_upload.chunk.s3_size');
-
-        if ($explicit !== null) return max((int) $explicit, 5 * 1024 * 1024);
-
         return max(static::chunkSize(), 5 * 1024 * 1024);
     }
 

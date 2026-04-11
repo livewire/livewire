@@ -416,25 +416,15 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
     public function test_chunkSizeForS3_floors_at_5MiB()
     {
         config()->set('livewire.temporary_file_upload.chunk.size', 1024);
-        config()->set('livewire.temporary_file_upload.chunk.s3_size', null);
 
-        // chunk.size = 1KB, but S3 minimum is 5 MiB
         $this->assertEquals(5 * 1024 * 1024, FileUploadConfiguration::chunkSizeForS3());
     }
 
-    public function test_chunkSizeForS3_respects_explicit_s3_size()
+    public function test_chunkSizeForS3_uses_chunk_size_when_above_5MiB()
     {
-        config()->set('livewire.temporary_file_upload.chunk.s3_size', 10 * 1024 * 1024);
+        config()->set('livewire.temporary_file_upload.chunk.size', 10 * 1024 * 1024);
 
         $this->assertEquals(10 * 1024 * 1024, FileUploadConfiguration::chunkSizeForS3());
-    }
-
-    public function test_chunkSizeForS3_floors_explicit_value_at_5MiB()
-    {
-        config()->set('livewire.temporary_file_upload.chunk.s3_size', 1024);
-
-        // Even explicit value can't go below 5 MiB
-        $this->assertEquals(5 * 1024 * 1024, FileUploadConfiguration::chunkSizeForS3());
     }
 
     public function test_s3_multipart_routes_use_chunk_middleware()
