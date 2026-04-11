@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Reactive;
 
 class BrowserTest extends BrowserTestCase
@@ -604,6 +605,131 @@ class BrowserTest extends BrowserTestCase
 
         // All three defer components should be bundled into a single request
         ->assertScript('window.requestCount', 1)
+        ;
+    }
+
+    public function test_lazy_component_outside_viewport_ignores_global_dispatch()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$dispatch('refresh-child')" dusk="button">Refresh</button>
+                        <div dusk="parent">Parent</div>
+                        <div style="height: 200vh"></div>
+                        <livewire:child lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $title = '';
+
+                public function mount()
+                {
+                    $this->title = 'Mounted';
+                }
+
+                #[On('refresh-child')]
+                public function refresh() {}
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div id="child">
+                        Title: {{ $title }}
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+        ->assertMissing('#child')
+        ->click('@button')
+        ->pause(500)
+        ->assertMissing('#child')
+        ;
+    }
+
+    public function test_lazy_component_outside_viewport_ignores_dispatch_to()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button @click="window.Livewire.dispatchTo('child', 'refresh-child')" dusk="button">Refresh</button>
+                        <div dusk="parent">Parent</div>
+                        <div style="height: 200vh"></div>
+                        <livewire:child lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $title = '';
+
+                public function mount()
+                {
+                    $this->title = 'Mounted';
+                }
+
+                #[On('refresh-child')]
+                public function refresh() {}
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div id="child">
+                        Title: {{ $title }}
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+        ->assertMissing('#child')
+        ->click('@button')
+        ->pause(500)
+        ->assertMissing('#child')
+        ;
+    }
+
+    public function test_lazy_component_receives_events_after_being_loaded()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$dispatch('refresh-child')" dusk="button">Refresh</button>
+                        <livewire:child lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $count = 0;
+
+                #[On('refresh-child')]
+                public function refresh()
+                {
+                    $this->count++;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div id="child">
+                        <span dusk="count">{{ $count }}</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+        ->waitFor('#child')
+        ->assertSeeIn('@count', '0')
+        ->waitForLivewire()->click('@button')
+        ->assertSeeIn('@count', '1')
         ;
     }
 
