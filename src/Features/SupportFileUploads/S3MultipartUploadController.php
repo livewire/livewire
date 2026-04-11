@@ -70,7 +70,7 @@ class S3MultipartUploadController implements HasMiddleware
         // All upload state is embedded in the signed URLs — no server-side
         // manifest needed. The signature prevents the client from tampering
         // with key, hash, or numParts.
-        $params = compact('uploadId', 'key', 'hash', 'numParts');
+        $params = compact('uploadId', 'key', 'hash', 'numParts', 'totalSize');
 
         return response()->json([
             'uploadId' => $uploadId,
@@ -124,6 +124,7 @@ class S3MultipartUploadController implements HasMiddleware
         $key = $request->query('key');
         $hash = $request->query('hash');
         $numParts = (int) $request->query('numParts');
+        $claimedSize = (int) $request->query('totalSize');
 
         $client = FileUploadConfiguration::s3Client();
         $bucket = FileUploadConfiguration::s3Bucket();
@@ -155,6 +156,17 @@ class S3MultipartUploadController implements HasMiddleware
             ]);
         } catch (S3Exception $e) {
             throw new HttpException(422, 'Multipart completion failed: ' . $e->getAwsErrorCode());
+        }
+
+        // Verify the assembled object's actual size matches the claimed size
+        // from init. This catches a malicious client that lies about file size
+        // to bypass pre-transfer max: validation then uploads different bytes.
+        $head = $client->headObject(['Bucket' => $bucket, 'Key' => $key]);
+        $actualSize = (int) $head['ContentLength'];
+
+        if ($actualSize !== $claimedSize) {
+            $client->deleteObject(['Bucket' => $bucket, 'Key' => $key]);
+            abort(422, "Uploaded size ({$actualSize} bytes) does not match claimed size ({$claimedSize} bytes).");
         }
 
         return response()->json([
