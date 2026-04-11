@@ -202,6 +202,31 @@ trait WithFileUploads
             return $path;
         })->toArray();
 
+        // For S3 uploads, verify actual file sizes against the configured
+        // max rule. Catches a client that lies about size to pass pre-transfer
+        // validation, then uploads larger bytes via the presigned URL.
+        if (FileUploadConfiguration::isUsingS3() && ! app()->runningUnitTests()) {
+            $maxBytes = FileUploadConfiguration::maxUploadSizeInBytes();
+
+            if ($maxBytes) {
+                $client = FileUploadConfiguration::s3Client();
+                $bucket = FileUploadConfiguration::s3Bucket();
+
+                foreach ($tmpPath as $path) {
+                    $key = FileUploadConfiguration::path($path);
+                    $head = $client->headObject(['Bucket' => $bucket, 'Key' => $key]);
+
+                    if ((int) $head['ContentLength'] > $maxBytes) {
+                        $client->deleteObject(['Bucket' => $bucket, 'Key' => $key]);
+
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            $name => 'The uploaded file exceeds the maximum allowed size.',
+                        ]);
+                    }
+                }
+            }
+        }
+
         if ($isMultiple) {
             $file = collect($tmpPath)->map(function ($i) {
                 return TemporaryUploadedFile::createFromLivewire($i);
