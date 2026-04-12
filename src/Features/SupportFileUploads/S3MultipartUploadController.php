@@ -85,6 +85,9 @@ class S3MultipartUploadController implements HasMiddleware
             'abortUrl' => URL::temporarySignedRoute(
                 'livewire.s3-multipart-abort', $expiry, $params,
             ),
+            'listPartsUrl' => URL::temporarySignedRoute(
+                'livewire.s3-multipart-list-parts', $expiry, $params,
+            ),
         ]);
     }
 

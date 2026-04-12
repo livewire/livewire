@@ -24,6 +24,31 @@ function extractErrorBody(xhr) {
     }
 }
 
+let RESUME_KEY = 'livewire:s3-multipart-resume'
+
+function getResumeData(fingerprint) {
+    try {
+        let all = JSON.parse(localStorage.getItem(RESUME_KEY) || '{}')
+        return all[fingerprint] || null
+    } catch { return null }
+}
+
+function saveResumeData(fingerprint, session) {
+    try {
+        let all = JSON.parse(localStorage.getItem(RESUME_KEY) || '{}')
+        all[fingerprint] = session
+        localStorage.setItem(RESUME_KEY, JSON.stringify(all))
+    } catch {}
+}
+
+function clearResumeData(fingerprint) {
+    try {
+        let all = JSON.parse(localStorage.getItem(RESUME_KEY) || '{}')
+        delete all[fingerprint]
+        localStorage.setItem(RESUME_KEY, JSON.stringify(all))
+    } catch {}
+}
+
 let uploadManagers = new WeakMap
 
 function getUploadManager(component) {
@@ -270,8 +295,47 @@ class UploadManager {
     }
 
     uploadSingleS3Multipart(file, config, callbacks, abortUrls) {
-        let { chunkSize, retryDelays, initUrl } = config
-        let { onProgress, onComplete, onError, isAborted, setCurrentXhr } = callbacks
+        let { onError, isAborted, setCurrentXhr } = callbacks
+        let csrfToken = getCsrfToken()
+        let fingerprint = file.name + '-' + file.size + '-' + file.lastModified
+        let saved = getResumeData(fingerprint)
+
+        if (saved) {
+            // Verify the saved session is still alive via listParts.
+            let checkXhr = new XMLHttpRequest()
+            setCurrentXhr(checkXhr)
+            checkXhr.open('GET', saved.listPartsUrl)
+            checkXhr.setRequestHeader('Accept', 'application/json')
+            if (csrfToken) checkXhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
+
+            checkXhr.addEventListener('load', () => {
+                if (isAborted()) return
+
+                if (checkXhr.status === 200) {
+                    let { parts } = JSON.parse(checkXhr.responseText)
+                    let doneParts = new Set(parts.map(p => p.partNumber))
+                    let doneBytes = parts.reduce((sum, p) => sum + p.size, 0)
+                    abortUrls.add(saved.abortUrl)
+                    this.uploadRemainingParts(file, saved, doneParts, doneBytes, callbacks, fingerprint)
+                } else {
+                    clearResumeData(fingerprint)
+                    this.initS3Multipart(file, config, callbacks, abortUrls, fingerprint)
+                }
+            })
+            checkXhr.addEventListener('error', () => {
+                if (isAborted()) return
+                clearResumeData(fingerprint)
+                this.initS3Multipart(file, config, callbacks, abortUrls, fingerprint)
+            })
+            checkXhr.send()
+        } else {
+            this.initS3Multipart(file, config, callbacks, abortUrls, fingerprint)
+        }
+    }
+
+    initS3Multipart(file, config, callbacks, abortUrls, fingerprint) {
+        let { initUrl } = config
+        let { onError, isAborted, setCurrentXhr } = callbacks
         let csrfToken = getCsrfToken()
 
         let initXhr = new XMLHttpRequest()
@@ -287,105 +351,123 @@ class UploadManager {
             if (isAborted()) return
             if (initXhr.status !== 200) return onError(extractErrorBody(initXhr))
 
-            let { partSize, numParts, signPartUrl, completeUrl, abortUrl } = JSON.parse(initXhr.responseText)
-            abortUrls.add(abortUrl)
+            let session = JSON.parse(initXhr.responseText)
+            session.retryDelays = config.retryDelays
+            abortUrls.add(session.abortUrl)
+            saveResumeData(fingerprint, session)
 
-            let bytesUploaded = 0
-            let partIndex = 0
-            let retryCount = 0
-
-            let signAndUploadNext = () => {
-                if (isAborted()) return
-
-                if (partIndex >= numParts) {
-                    completeUpload()
-                    return
-                }
-
-                let partNumber = partIndex + 1
-                let start = partIndex * partSize
-                let end = Math.min(start + partSize, file.size)
-                let body = file.slice(start, end)
-
-                let signXhr = new XMLHttpRequest()
-                setCurrentXhr(signXhr)
-                signXhr.open('GET', signPartUrl + (signPartUrl.includes('?') ? '&' : '?') + 'partNumber=' + partNumber)
-                signXhr.setRequestHeader('Accept', 'application/json')
-                if (csrfToken) signXhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
-
-                signXhr.addEventListener('load', () => {
-                    if (isAborted()) return
-                    if (signXhr.status !== 200) return retryOrFail()
-
-                    let { url } = JSON.parse(signXhr.responseText)
-                    putPart(url, body)
-                })
-                signXhr.addEventListener('error', () => isAborted() || retryOrFail())
-                signXhr.send()
-            }
-
-            let putPart = (signedUrl, body) => {
-                let putXhr = new XMLHttpRequest()
-                setCurrentXhr(putXhr)
-                putXhr.open('PUT', signedUrl)
-
-                putXhr.upload.addEventListener('progress', (e) => {
-                    if (!e.lengthComputable) return
-                    onProgress(bytesUploaded + e.loaded)
-                })
-
-                putXhr.addEventListener('load', () => {
-                    if (isAborted()) return
-
-                    if (putXhr.status === 200) {
-                        bytesUploaded += body.size
-                        partIndex++
-                        retryCount = 0
-                        signAndUploadNext()
-                    } else if (putXhr.status === 403) {
-                        if (retryCount < 1) { retryCount++; signAndUploadNext() }
-                        else onError(extractErrorBody(putXhr))
-                    } else {
-                        retryOrFail()
-                    }
-                })
-
-                putXhr.addEventListener('error', () => isAborted() || retryOrFail())
-                putXhr.send(body)
-            }
-
-            let completeUpload = () => {
-                let xhr = new XMLHttpRequest()
-                setCurrentXhr(xhr)
-                xhr.open('POST', completeUrl)
-                xhr.setRequestHeader('Accept', 'application/json')
-                if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
-
-                xhr.addEventListener('load', () => {
-                    if (xhr.status !== 200) return onError(extractErrorBody(xhr))
-
-                    let { path } = JSON.parse(xhr.responseText)
-                    onProgress(file.size)
-                    onComplete(path)
-                })
-                xhr.addEventListener('error', () => isAborted() || onError(null))
-                xhr.send()
-            }
-
-            let retryOrFail = () => {
-                if (retryCount < retryDelays.length) {
-                    let delay = retryDelays[retryCount++]
-                    setTimeout(() => isAborted() || signAndUploadNext(), delay)
-                } else {
-                    onError(null)
-                }
-            }
-
-            signAndUploadNext()
+            this.uploadRemainingParts(file, session, new Set(), 0, callbacks, fingerprint)
         })
 
         initXhr.addEventListener('error', () => isAborted() || onError(null))
         initXhr.send()
+    }
+
+    uploadRemainingParts(file, session, doneParts, doneBytes, callbacks, fingerprint) {
+        let { retryDelays } = session
+        let { partSize, numParts, signPartUrl, completeUrl } = session
+        let { onProgress, onComplete, onError, isAborted, setCurrentXhr } = callbacks
+        let csrfToken = getCsrfToken()
+
+        let bytesUploaded = doneBytes
+        let partIndex = 0
+        let retryCount = 0
+
+        if (bytesUploaded > 0) onProgress(bytesUploaded)
+
+        let signAndUploadNext = () => {
+            if (isAborted()) return
+
+            // Skip parts that were already uploaded in a previous session.
+            while (partIndex < numParts && doneParts.has(partIndex + 1)) partIndex++
+
+            if (partIndex >= numParts) {
+                completeUpload()
+                return
+            }
+
+            let partNumber = partIndex + 1
+            let start = partIndex * partSize
+            let end = Math.min(start + partSize, file.size)
+            let body = file.slice(start, end)
+
+            let signXhr = new XMLHttpRequest()
+            setCurrentXhr(signXhr)
+            signXhr.open('GET', signPartUrl + (signPartUrl.includes('?') ? '&' : '?') + 'partNumber=' + partNumber)
+            signXhr.setRequestHeader('Accept', 'application/json')
+            if (csrfToken) signXhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
+
+            signXhr.addEventListener('load', () => {
+                if (isAborted()) return
+                if (signXhr.status !== 200) return retryOrFail()
+
+                let { url } = JSON.parse(signXhr.responseText)
+                putPart(url, body)
+            })
+            signXhr.addEventListener('error', () => isAborted() || retryOrFail())
+            signXhr.send()
+        }
+
+        let putPart = (signedUrl, body) => {
+            let putXhr = new XMLHttpRequest()
+            setCurrentXhr(putXhr)
+            putXhr.open('PUT', signedUrl)
+
+            putXhr.upload.addEventListener('progress', (e) => {
+                if (!e.lengthComputable) return
+                onProgress(bytesUploaded + e.loaded)
+            })
+
+            putXhr.addEventListener('load', () => {
+                if (isAborted()) return
+
+                if (putXhr.status === 200) {
+                    bytesUploaded += body.size
+                    partIndex++
+                    retryCount = 0
+                    signAndUploadNext()
+                } else if (putXhr.status === 403) {
+                    if (retryCount < 1) { retryCount++; signAndUploadNext() }
+                    else onError(extractErrorBody(putXhr))
+                } else {
+                    retryOrFail()
+                }
+            })
+
+            putXhr.addEventListener('error', () => isAborted() || retryOrFail())
+            putXhr.send(body)
+        }
+
+        let completeUpload = () => {
+            let xhr = new XMLHttpRequest()
+            setCurrentXhr(xhr)
+            xhr.open('POST', completeUrl)
+            xhr.setRequestHeader('Accept', 'application/json')
+            if (csrfToken) xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
+
+            xhr.addEventListener('load', () => {
+                clearResumeData(fingerprint)
+                if (xhr.status !== 200) return onError(extractErrorBody(xhr))
+
+                let { path } = JSON.parse(xhr.responseText)
+                onProgress(file.size)
+                onComplete(path)
+            })
+            xhr.addEventListener('error', () => isAborted() || onError(null))
+            xhr.send()
+        }
+
+        let retryOrFail = () => {
+            if (retryCount < retryDelays.length) {
+                let delay = retryDelays[retryCount++]
+                setTimeout(() => isAborted() || signAndUploadNext(), delay)
+            } else {
+                clearResumeData(fingerprint)
+                onError(null)
+            }
+        }
+
+        signAndUploadNext()
     }
 
     // Shared sequential-upload loop used by both the S3 direct-PUT,
