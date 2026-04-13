@@ -8,8 +8,6 @@ function registerListeners(component, listeners) {
     listeners.forEach(name => {
         // Register a global listener...
         let handler = (e) => {
-            if (component.isLazy && ! component.hasBeenLazyLoaded) return
-
             if (e.__livewire) e.__livewire.receivedBy.push(component)
 
             component.$wire.call('__dispatch', name, e.detail || {})
@@ -21,8 +19,6 @@ function registerListeners(component, listeners) {
 
         // Register a listener for when "to" or "self"
         component.el.addEventListener(name, (e) => {
-            if (component.isLazy && ! component.hasBeenLazyLoaded) return
-
             // We don't care about non-Livewire dispatches...
             if (! e.__livewire) return
 
@@ -35,5 +31,4 @@ function registerListeners(component, listeners) {
         })
     })
 }
-
 
