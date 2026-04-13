@@ -1,23 +1,28 @@
 // This errors object has the most common methods from \Illuminate\Support\MessageBag class on the backend...
 import Alpine from 'alpinejs'
+import { interceptComponentMessage } from '@/request'
 
 export function getErrorsObject(component) {
     let state = component.__errorsState ??= Alpine.reactive({
         clientErrors: null,
+        serverErrors: component.snapshot.memo.errors,
     })
 
-    // Store lastSnapshot outside reactive state to avoid Proxy wrapping breaking identity comparison...
-    component.__lastErrorsSnapshot ??= component.snapshot
+    component.__errorsCleanup ??= interceptComponentMessage(component, ({ onFinish }) => {
+        onFinish(() => {
+            state.clientErrors = null
+            state.serverErrors = component.snapshot.memo.errors
+        })
+    })
+
+    if (! component.__errorsCleanupRegistered) {
+        component.addCleanup(component.__errorsCleanup)
+        component.__errorsCleanupRegistered = true
+    }
 
     return {
         messages() {
-            // If the snapshot changed (server responded), reset client overrides...
-            if (component.__lastErrorsSnapshot !== component.snapshot) {
-                state.clientErrors = null
-                component.__lastErrorsSnapshot = component.snapshot
-            }
-
-            return state.clientErrors ?? component.snapshot.memo.errors
+            return state.clientErrors ?? state.serverErrors
         },
 
         keys() {
@@ -94,7 +99,7 @@ export function getErrorsObject(component) {
             if (field === null) {
                 state.clientErrors = {}
             } else {
-                let errors = { ...(state.clientErrors ?? component.snapshot.memo.errors) }
+                let errors = { ...(state.clientErrors ?? state.serverErrors) }
                 delete errors[field]
                 state.clientErrors = errors
             }
