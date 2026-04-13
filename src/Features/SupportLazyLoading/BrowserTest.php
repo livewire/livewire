@@ -740,7 +740,7 @@ class BrowserTest extends BrowserTestCase
                 public function render() {
                     return <<<'HTML'
                     <div>
-                        <button @click="window.Livewire.dispatch('refresh-child:' + document.getElementById('child').dataset.parentId)" dusk="button">Refresh</button>
+                        <button wire:click="$dispatch('refresh-child:abc123')" dusk="button">Refresh</button>
                         <livewire:child lazy />
                     </div>
                     HTML;
@@ -752,7 +752,7 @@ class BrowserTest extends BrowserTestCase
 
                 public function mount(): void
                 {
-                    $this->parentId = 'parent-'.bin2hex(random_bytes(4));
+                    $this->parentId = 'abc123';
                 }
 
                 #[On('refresh-child:{parentId}')]
@@ -764,7 +764,7 @@ class BrowserTest extends BrowserTestCase
                 public function render()
                 {
                     return <<<'HTML'
-                    <div id="child" data-parent-id="{{ $parentId }}">
+                    <div id="child">
                         <span dusk="count">{{ $count }}</span>
                     </div>
                     HTML;
