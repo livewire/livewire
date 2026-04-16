@@ -11,6 +11,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
     component = findComponentByEl(el)
 
     let { expression, modifiers } = directive
+    let getCurrentExpression = () => el.getAttribute(directive.raw) ?? expression
 
     if (! expression) {
         return console.warn('Livewire: [wire:model] is missing a value.', el)
@@ -68,13 +69,15 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Trigger a network request
     let update = () => {
+        let currentExpression = getCurrentExpression()
+
         setNextActionOrigin({ el, directive })
 
         if (isLive || isDebounced) {
             setNextActionMetadata({ type: 'model.live' })
         }
 
-        expression.startsWith('$parent')
+        currentExpression.startsWith('$parent')
             ? component.$wire.$parent.$commit()
             : component.$wire.$commit()
     }
@@ -112,10 +115,10 @@ directive('model', ({ el, directive, component, cleanup }) => {
     bindings['x-model' + xModelTail] = () => {
         return {
             get() {
-                return dataGet(component.$wire, expression)
+                return dataGet(component.$wire, getCurrentExpression())
             },
             set(value) {
-                dataSet(component.$wire, expression, value)
+                dataSet(component.$wire, getCurrentExpression(), value)
 
                 // If .live is present and no specific network triggers, fire on every ephemeral sync
                 if (shouldSendNetwork && ! hasNetworkTriggers) {

@@ -246,6 +246,48 @@ class BrowserTest extends BrowserTestCase
             ->assertSelected('@child', 'bar');
     }
 
+    public function test_wire_model_rebinds_when_a_conditional_input_switches_to_a_different_property()
+    {
+        Livewire::visit(new class extends Component {
+            public string $current = 'first';
+
+            public string $firstEmail = '';
+
+            public string $secondName = '';
+
+            public function nextStep()
+            {
+                $this->current = 'second';
+            }
+
+            public function render(): string
+            {
+                return <<<'blade'
+                    <div>
+                        <button wire:click="nextStep" dusk="next">Next</button>
+
+                        @if ($current === 'first')
+                            <input type="email" wire:model.live.debounce.100ms="firstEmail" dusk="step-input" />
+                        @else
+                            <input type="text" wire:model.live.debounce.100ms="secondName" dusk="step-input" />
+                        @endif
+
+                        <div dusk="first-email">{{ $firstEmail }}</div>
+                        <div dusk="second-name">{{ $secondName }}</div>
+                    </div>
+                blade;
+            }
+        })
+            ->type('@step-input', 'alice@example.com')
+            ->waitForTextIn('@first-email', 'alice@example.com')
+            ->assertSeeIn('@second-name', '')
+            ->waitForLivewire()->click('@next')
+            ->type('@step-input', 'Acme')
+            ->waitForTextIn('@second-name', 'Acme')
+            ->assertSeeIn('@first-email', 'alice@example.com')
+            ->assertSeeIn('@second-name', 'Acme');
+    }
+
     function test_wire_data_reflects_key_order_changes()
     {
         Livewire::visit(new class extends Component {
