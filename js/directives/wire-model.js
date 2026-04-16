@@ -11,7 +11,13 @@ directive('model', ({ el, directive, component, cleanup }) => {
     component = findComponentByEl(el)
 
     let { expression, modifiers } = directive
-    let getCurrentExpression = () => el.getAttribute(directive.raw) ?? expression
+    let getCurrentExpression = () => {
+        let currentExpression = el.getAttribute(directive.raw) ?? expression
+
+        return componentIsMissingProperty(component, currentExpression)
+            ? expression
+            : currentExpression
+    }
 
     if (! expression) {
         return console.warn('Livewire: [wire:model] is missing a value.', el)
