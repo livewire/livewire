@@ -469,4 +469,41 @@ class UnitTest extends TestCase
         $this->assertSame($islandA, $islandB);
     }
 
+    public function test_livewire_compiler_uses_configured_compiled_path()
+    {
+        $compiledPath = sys_get_temp_dir() . '/livewire-custom-compiled-' . uniqid();
+
+        config()->set('livewire.compiled_path', $compiledPath);
+        app()->forgetInstance('livewire.compiler');
+        app()->forgetInstance('livewire.factory');
+
+        $this->assertSame($compiledPath, app('livewire.compiler')->cacheManager->cacheDirectory);
+
+        File::deleteDirectory($compiledPath);
+    }
+
+    public function test_island_compiler_writes_cached_islands_to_configured_compiled_path()
+    {
+        $compiledPath = sys_get_temp_dir() . '/livewire-custom-islands-' . uniqid();
+
+        config()->set('livewire.compiled_path', $compiledPath);
+        app()->forgetInstance('livewire.compiler');
+        app()->forgetInstance('livewire.factory');
+
+        IslandCompiler::compile(__FILE__, <<<'HTML'
+        <div>
+            @island(name: 'counter')
+                <div>count: {{ $count }}</div>
+            @endisland
+        </div>
+        HTML);
+
+        $token = app('livewire.compiler')->cacheManager->getHash(__FILE__) . '-1';
+        $cachedPath = IslandCompiler::getCachedPathFromToken($token);
+
+        $this->assertSame($compiledPath . '/islands/' . $token . '.blade.php', $cachedPath);
+        $this->assertFileExists($cachedPath);
+
+        File::deleteDirectory($compiledPath);
+    }
 }

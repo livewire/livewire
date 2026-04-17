@@ -119,6 +119,19 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Compiled Path
+    |---------------------------------------------------------------------------
+    |
+    | This value determines where Livewire stores compiled view-based component
+    | artifacts such as generated classes, extracted Blade views, placeholders,
+    | scripts, styles, and island templates.
+    |
+    */
+
+    'compiled_path' => env('LIVEWIRE_COMPILED_PATH', realpath(storage_path('framework/views/livewire'))),
+
+    /*
+    |---------------------------------------------------------------------------
     | Temporary File Uploads
     |---------------------------------------------------------------------------
     |
