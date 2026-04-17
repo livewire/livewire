@@ -18,7 +18,7 @@ There are lots of reasons why you may encounter these messages, but the most com
 
 ### Adding `wire:key`
 
-Any time you have a loop in your Blade templates using something like `@foreach`, you need to add `wire:key` to the opening tag of the first element within the loop:
+Any time you have a loop or a conditional in your Blade templates using something like `@foreach`, `@if`/`@else`, or `@switch`/`@case`, you need to add `wire:key` to the opening tag of the first element:
 
 ```blade
 @foreach($posts as $post)
@@ -28,7 +28,7 @@ Any time you have a loop in your Blade templates using something like `@foreach`
 @endforeach
 ```
 
-This ensures that Livewire can keep track of different elements in the loop when the loop changes.
+This ensures that Livewire can keep track of different elements in the loop or conditional when it changes.
 
 The same applies to Livewire components within a loop:
 
