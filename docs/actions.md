@@ -611,6 +611,14 @@ The `$set` magic action allows you to update a property in your Livewire compone
 
 In this example, when the button is clicked, a network request is dispatched that sets the `$query` property in the component to `''`.
 
+`$set` action accepts a third boolean parameter that determines whether the update should trigger a network request:
+
+```blade
+<button wire:click="$set('query', '', false)">Reset Search (no request)</button>
+```
+- `true` (default): Sends a network request and updates the property on the server.
+- `false`: Updates the property without making a network request.
+
 ### `$refresh`
 
 The `$refresh` action triggers a re-render of your Livewire component. This can be useful when updating the component's view without changing any property values:
@@ -627,11 +635,20 @@ The `$toggle` action is used to toggle the value of a boolean property in your L
 
 ```blade
 <button wire:click="$toggle('sortAsc')">
-    Sort {{ $sortAsc ? 'Descending' : 'Ascending' }}
+    Sort {{ $sortAsc ? 'Ascending' : 'Descending' }}
 </button>
 ```
 
 In this example, when the button is clicked, the `$sortAsc` property in the component will toggle between `true` and `false`.
+
+`$toggle` action accepts a third boolean parameter that determines whether the update should trigger a network request:
+
+```blade
+<button wire:click="$toggle('sortAsc', false)" wire:text="sortAsc ? 'Sort Ascending' : 'Sort Descending'">
+</button>
+```
+- `true` (default): Sends a network request and updates the property on the server.
+- `false`: Updates the property without making a network request.
 
 ### `$dispatch`
 
