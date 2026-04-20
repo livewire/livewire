@@ -311,7 +311,12 @@ class HandleComponents extends Mechanism
 
     protected function dehydrate($target, $context, $path)
     {
-        if (Utils::isAPrimitive($target)) return $target;
+        if (Utils::isAPrimitive($target)) {
+            // Normalize negative zero (-0.0) to 0 to prevent checksum mismatches
+            if ($target === -0.0) return 0;
+
+            return $target;
+        }
 
         $synth = $this->propertySynth($target, $context, $path);
 
