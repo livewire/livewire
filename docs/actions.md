@@ -644,8 +644,13 @@ In this example, when the button is clicked, the `$sortAsc` property in the comp
 `$toggle` action accepts a third boolean parameter that determines whether the update should trigger a network request:
 
 ```blade
-<button wire:click="$toggle('sortAsc', false)" wire:text="sortAsc ? 'Sort Ascending' : 'Sort Descending'">
+<button wire:click="$toggle('showForm', false)">
+    Show Form
 </button>
+
+<form wire:show="showForm">
+    ...
+</form>
 ```
 - `true` (default): Sends a network request and updates the property on the server.
 - `false`: Updates the property without making a network request.
