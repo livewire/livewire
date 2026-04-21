@@ -178,7 +178,7 @@ PHP;
     {
         $instance = new class (
             app('files'),
-            storage_path('framework/views/livewire'),
+            rtrim(config('view.compiled'), '/\\') . '/livewire',
         ) extends \Illuminate\View\Compilers\BladeCompiler {
             /**
              * Make this method public...
