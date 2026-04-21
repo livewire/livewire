@@ -96,7 +96,7 @@ $wire.$el.querySelector('.modal')
 ```
 
 > [!tip] Complete $wire reference
-> For a comprehensive list of all `$wire` methods and properties, see the [$wire reference](#the-wire-object) at the bottom of this page.
+> For a comprehensive list of all `$wire` methods and properties, see the [$wire reference](#the-wire-object-1) at the bottom of this page.
 
 ## Loading assets
 
