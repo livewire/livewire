@@ -191,6 +191,19 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Back-Button Cache
+    |---------------------------------------------------------------------------
+    |
+    | By default, Livewire sends cache headers that prevent browsers from using
+    | back-forward cache (bfcache) on pages containing Livewire components.
+    | Set this to true to allow bfcache, improving back/forward navigation.
+    |
+    */
+
+    'back_button_cache' => false,
+
+    /*
+    |---------------------------------------------------------------------------
     | Navigate (SPA mode)
     |---------------------------------------------------------------------------
     |
