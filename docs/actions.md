@@ -611,14 +611,6 @@ The `$set` magic action allows you to update a property in your Livewire compone
 
 In this example, when the button is clicked, a network request is dispatched that sets the `$query` property in the component to `''`.
 
-`$set` action accepts a third boolean parameter that determines whether the update should trigger a network request:
-
-```blade
-<button wire:click="$set('query', '', false)">Reset Search (no request)</button>
-```
-- `true` (default): Sends a network request and updates the property on the server.
-- `false`: Updates the property without making a network request.
-
 ### `$refresh`
 
 The `$refresh` action triggers a re-render of your Livewire component. This can be useful when updating the component's view without changing any property values:
@@ -641,20 +633,6 @@ The `$toggle` action is used to toggle the value of a boolean property in your L
 
 In this example, when the button is clicked, the `$sortAsc` property in the component will toggle between `true` and `false`.
 
-`$toggle` action accepts a third boolean parameter that determines whether the update should trigger a network request:
-
-```blade
-<button wire:click="$toggle('showForm', false)">
-    Show Form
-</button>
-
-<form wire:show="showForm">
-    ...
-</form>
-```
-- `true` (default): Sends a network request and updates the property on the server.
-- `false`: Updates the property without making a network request.
-
 ### `$dispatch`
 
 The `$dispatch` action allows you to dispatch a Livewire event directly in the browser. Below is an example of a button that, when clicked, will dispatch the `post-deleted` event:
@@ -672,6 +650,8 @@ The `$event` action may be used within event listeners like `wire:click`. This a
 ```
 
 When the enter key is pressed while a user is typing in the input above, the contents of the input will be passed as a parameter to the `search()` action.
+
+> For more information about magic actions, see [Javascript reference](/docs/4.x/javascript#the-wire-object)
 
 ### Using magic actions from Alpine
 
