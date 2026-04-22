@@ -424,6 +424,54 @@ If you wish to customize these rules, you can do so inside your application's `c
 ],
 ```
 
+### Hardening temporary file upload rules
+
+By default, Livewire accepts any file up to 12MB in temporary uploads:
+
+```php
+// config/livewire.php
+'temporary_file_upload' => [
+    'rules' => null, // Default: ['required', 'file', 'max:12288']
+],
+```
+
+This default is intentionally permissive so the package works out of the box. For production applications, you should restrict this to the file types your app actually accepts.
+
+#### Example: image-only uploads
+
+```php
+'rules' => ['file', 'mimes:png,jpg,jpeg,webp', 'max:5120'], // 5MB
+```
+
+#### Example: images and media
+
+```php
+'rules' => ['file', 'mimes:png,jpg,jpeg,webp,mp3,mp4', 'max:12288'], // 12MB
+```
+
+#### Why this matters
+
+Without restrictive global rules, a malicious user can upload:
+
+- Executable files (`.php`, `.exe`, `.sh`) — usually mitigated by server config, but defense in depth helps
+- Oversized files that consume temp storage (local disk or S3)
+- Unexpected file types that bypass component-level validation if a developer forgets to validate
+
+Global rules in `config/livewire.php` apply to every Livewire upload across your app, acting as a safety net even if an individual component's `rules()` method is missing or incomplete.
+
+#### Per-component validation still matters
+
+Global rules don't replace component-level validation — they complement it. Always validate uploads in your component too:
+
+```php
+public function save()
+{
+    $this->validate([
+        'photo' => ['required', 'image', 'max:2048'],
+    ]);
+}
+```
+
 ### Global middleware
 
 The temporary file upload endpoint is assigned a throttling middleware by default. You can customize exactly what middleware this endpoint uses via the following configuration option:
