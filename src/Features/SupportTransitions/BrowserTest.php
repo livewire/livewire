@@ -327,4 +327,112 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertScript('window.__transitionNameSetSynchronously', true)
         ;
     }
+
+    public function test_unnamed_wire_transition_rides_with_parent_during_typed_transition()
+    {
+        $animationsRunning = 'document.getAnimations().some(a => a.playState === "running")';
+
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $current = 'first-child';
+
+                #[Transition(type: 'forward')]
+                public function showSecond()
+                {
+                    $this->current = 'second-child';
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <livewire:is :component="$current" :wire:key="$current" />
+                </div>
+                HTML; }
+            },
+            'first-child' => new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                <div wire:transition="slide">
+                    <button wire:click="$parent.showSecond" dusk="show-second">Show Second</button>
+                </div>
+                HTML; }
+            },
+            'second-child' => new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                <div wire:transition="slide">
+                    <p dusk="second-text">Second Child</p>
+
+                    <div wire:transition dusk="inner">
+                        <p>Inner content</p>
+                    </div>
+                </div>
+                HTML; }
+            },
+        ])
+        ->assertSee('Show Second')
+
+        ->waitForLivewire()->click('@show-second')
+        ->waitUntil($animationsRunning)
+
+        // The named outer wire:transition is still given its explicit name so it
+        // animates as an independent group with the user's "slide" CSS...
+        ->assertScript(
+            "document.querySelector('[wire\\\\:transition=\"slide\"]').style.viewTransitionName",
+            'slide'
+        )
+
+        // The unnamed inner wire:transition is intentionally NOT given a
+        // view-transition-name during a typed transition. This lets the browser
+        // capture it as part of its parent's snapshot so it rides along with the
+        // orchestrated transition instead of popping with a default UA fade...
+        ->assertScript(
+            "document.querySelector('[dusk=\"inner\"]').style.viewTransitionName",
+            ''
+        )
+
+        ->waitUntil("!$animationsRunning")
+        ->assertSee('Second Child')
+        ;
+    }
+
+    public function test_unnamed_wire_transition_still_animates_independently_during_regular_morph()
+    {
+        $animationsRunning = 'document.getAnimations().some(a => a.playState === "running")';
+
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public bool $expanded = false;
+
+                public function toggle()
+                {
+                    $this->expanded = ! $this->expanded;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="toggle" dusk="toggle">Toggle</button>
+
+                    @if ($expanded)
+                        <p dusk="extra">Extra content</p>
+                    @endif
+
+                    <div wire:transition dusk="target">
+                        Footer
+                    </div>
+                </div>
+                HTML; }
+            }
+        )
+        ->waitForLivewire()->click('@toggle')
+        ->waitUntil($animationsRunning)
+
+        // No transition type is active, so unnamed wire:transition elements should
+        // still get an auto-generated view-transition-name and animate independently
+        // for in-place layout shifts...
+        ->assertScript(
+            "document.querySelector('[dusk=\"target\"]').style.viewTransitionName !== ''",
+            true
+        )
+
+        ->waitUntil("!$animationsRunning")
+        ;
+    }
 }

@@ -8,11 +8,19 @@ globalDirective('transition', ({ el, directive, cleanup }) => {
     //
 })
 
-function setTransitionNames(root) {
+function setTransitionNames(root, options = {}) {
     root.querySelectorAll('[wire\\:transition]').forEach(el => {
-        if (! el.style.viewTransitionName) {
-            el.style.viewTransitionName = el.getAttribute('wire:transition') || defaultName
-        }
+        if (el.style.viewTransitionName) return
+
+        let name = el.getAttribute('wire:transition')
+
+        // When an explicit transition type is active (e.g. via #[Transition('forward')]),
+        // the developer is orchestrating the swap as a single visual unit. Unnamed
+        // wire:transition elements should ride along with their parent's snapshot
+        // rather than animate independently and pop with the browser's default fade...
+        if (! name && ! options.type) name = defaultName
+
+        if (name) el.style.viewTransitionName = name
     })
 }
 
@@ -40,7 +48,7 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
     if (document.querySelector('dialog:modal')) return callback()
 
     // Set transition names right before the transition starts (not permanently)...
-    setTransitionNames(fromEl)
+    setTransitionNames(fromEl, options)
 
     // Disable root transitions for the page...
     let style = document.createElement('style')
@@ -73,7 +81,7 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
         // internal queueMicrotask batching delays processing by one microtask hop — and the
         // View Transitions API's "activate" step captures the new DOM state in between,
         // before Alpine has a chance to initialize the directive...
-        setTransitionNames(fromEl)
+        setTransitionNames(fromEl, options)
     }
 
     let transitionConfig = { update }
