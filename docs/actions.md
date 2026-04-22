@@ -627,7 +627,7 @@ The `$toggle` action is used to toggle the value of a boolean property in your L
 
 ```blade
 <button wire:click="$toggle('sortAsc')">
-    Sort {{ $sortAsc ? 'Descending' : 'Ascending' }}
+    Sort {{ $sortAsc ? 'Ascending' : 'Descending' }}
 </button>
 ```
 
@@ -650,6 +650,8 @@ The `$event` action may be used within event listeners like `wire:click`. This a
 ```
 
 When the enter key is pressed while a user is typing in the input above, the contents of the input will be passed as a parameter to the `search()` action.
+
+> For more information about magic actions, see [Javascript reference](/docs/4.x/javascript#the-wire-object-1)
 
 ### Using magic actions from Alpine
 
