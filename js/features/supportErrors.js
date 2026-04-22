@@ -17,7 +17,8 @@ export function getErrorsObject(component) {
                 component.__lastErrorsSnapshot = component.snapshot
             }
 
-            return state.clientErrors ?? component.snapshot.memo.errors
+            // Assign into reactive state so Alpine can track changes...
+            return state.clientErrors ??= component.snapshot.memo.errors
         },
 
         keys() {
