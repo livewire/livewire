@@ -54,7 +54,14 @@ class SupportEvents extends ComponentHook
 
     function dehydrate($context)
     {
-        if ($context->mounting) {
+        // Don't resolve dynamic listener placeholders during lazy-loading
+        // placeholder mount. The component's mount() method hasn't run yet.
+        if (store($this->component)->get('isLazyLoadMounting') === true) return;
+
+        $isNormalMount = $context->isMounting();
+        $isLazyLoadHydration = store($this->component)->get('isLazyLoadHydrating') === true;
+
+        if ($isNormalMount || $isLazyLoadHydration) {
             $listeners = static::getListenerEventNames($this->component);
 
             $listeners && $context->addEffect('listeners', $listeners);
