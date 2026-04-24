@@ -1,7 +1,7 @@
 import { directive } from '@/directives'
 import { handleFileUpload } from '@/features/supportFileUploads'
 import { findComponentByEl } from '@/store'
-import { dataGet, dataSet } from '@/utils'
+import { dataGet, dataSet, diffAndConsolidate } from '@/utils'
 import { setNextActionMetadata, setNextActionOrigin } from '@/request'
 import Alpine from 'alpinejs'
 
@@ -68,6 +68,8 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Trigger a network request
     let update = () => {
+        if (! hasDirtyUpdates(component, expression)) return
+
         setNextActionOrigin({ el, directive })
 
         if (isLive || isDebounced) {
@@ -166,12 +168,17 @@ function isRealtimeInput(el) {
         || el.tagName.toUpperCase() === 'UI-COMPOSER' // Flux UI
 }
 
-function isDirty(subject, dirty) {
-    // Check for exact match: wire:model="bob" in ['bob']
-    if (dirty.includes(subject)) return true
+function hasDirtyUpdates(component, property) {
+    if (property.startsWith('$parent')) {
+        let parent = findComponentByEl(component.el.parentElement, false)
 
-    // Check case of parent: wire:model="bob.1" in ['bob']
-    return dirty.some(i => subject.startsWith(i))
+        if (! parent) return false
+
+        return hasDirtyUpdates(parent, property.slice(7).replace(/^\./, ''))
+    }
+
+    return Object.keys(component.queuedUpdates).length > 0
+        || Object.keys(diffAndConsolidate(component.canonical, component.ephemeral)).length > 0
 }
 
 function componentIsMissingProperty(component, property) {

@@ -619,6 +619,45 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_wire_model_live_blur_does_not_send_network_request_when_value_has_not_changed()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div x-init="window.requests = 0">
+                        <input dusk="input" type="text" wire:model.live.blur="title" />
+                        <span dusk="server">{{ $title }}</span>
+                        <button dusk="blur-target">Blur Target</button>
+                    </div>
+
+                    @script
+                    <script>
+                        this.intercept(({ onSend }) => {
+                            onSend(() => {
+                                window.requests++
+                            })
+                        })
+                    </script>
+                    @endscript
+                BLADE;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->assertScript('window.requests', 0)
+            ->typeSlowly('@input', 'hello', 50)
+            ->waitForLivewire()->click('@blur-target')
+            ->assertSeeIn('@server', 'hello')
+            ->assertScript('window.requests', 1)
+            ->click('@input')
+            ->click('@blur-target')
+            ->pause(200)
+            ->assertScript('window.requests', 1)
+        ;
+    }
+
     public function test_wire_model_blur_live_ephemeral_on_blur_network_on_blur()
     {
         Livewire::visit(new class extends Component {
