@@ -535,7 +535,6 @@ async function sendRequest(request, handlers) {
      * render the dump in a modal and allow Livewire to continue with the
      * request.
      */
-    
     if (contentIsFromDump(responseBody)) {
         let dump
 
