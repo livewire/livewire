@@ -273,7 +273,6 @@ class UploadManager {
         let { chunkSize, retryDelays, initUrl } = config
         let { onProgress, onComplete, onError, isAborted, setCurrentXhr } = callbacks
         let csrfToken = getCsrfToken()
-        let concurrency = 3
 
         let initXhr = new XMLHttpRequest()
         setCurrentXhr(initXhr)
@@ -291,28 +290,20 @@ class UploadManager {
             let { partSize, numParts, signPartUrl, completeUrl, abortUrl } = JSON.parse(initXhr.responseText)
             abortUrls.add(abortUrl)
 
-            let completedParts = 0
-            let nextPart = 0
-            let inFlight = 0
-            let failed = false
-            let completedBytes = 0
-            let partProgress = new Array(numParts).fill(0)
+            let bytesUploaded = 0
+            let partIndex = 0
+            let retryCount = 0
 
-            let reportProgress = () => {
-                let inFlightBytes = partProgress.reduce((sum, b) => sum + b, 0)
-                onProgress(completedBytes + inFlightBytes)
-            }
+            let signAndUploadNext = () => {
+                if (isAborted()) return
 
-            let launchParts = () => {
-                while (nextPart < numParts && inFlight < concurrency && !failed && !isAborted()) {
-                    signAndUpload(nextPart++)
-                    inFlight++
+                if (partIndex >= numParts) {
+                    completeUpload()
+                    return
                 }
-            }
 
-            let signAndUpload = (idx) => {
-                let partNumber = idx + 1
-                let start = idx * partSize
+                let partNumber = partIndex + 1
+                let start = partIndex * partSize
                 let end = Math.min(start + partSize, file.size)
                 let body = file.slice(start, end)
 
@@ -323,50 +314,43 @@ class UploadManager {
                 if (csrfToken) signXhr.setRequestHeader('X-CSRF-TOKEN', csrfToken)
 
                 signXhr.addEventListener('load', () => {
-                    if (isAborted() || failed) return
-                    if (signXhr.status !== 200) { fail(); return }
+                    if (isAborted()) return
+                    if (signXhr.status !== 200) return retryOrFail()
 
                     let { url } = JSON.parse(signXhr.responseText)
-                    putPart(url, body, idx)
+                    putPart(url, body)
                 })
-                signXhr.addEventListener('error', () => { if (!isAborted() && !failed) fail() })
+                signXhr.addEventListener('error', () => isAborted() || retryOrFail())
                 signXhr.send()
             }
 
-            let putPart = (signedUrl, body, idx) => {
+            let putPart = (signedUrl, body) => {
                 let putXhr = new XMLHttpRequest()
                 setCurrentXhr(putXhr)
                 putXhr.open('PUT', signedUrl)
 
                 putXhr.upload.addEventListener('progress', (e) => {
                     if (!e.lengthComputable) return
-                    partProgress[idx] = e.loaded
-                    reportProgress()
+                    onProgress(bytesUploaded + e.loaded)
                 })
 
                 putXhr.addEventListener('load', () => {
-                    if (isAborted() || failed) return
+                    if (isAborted()) return
 
                     if (putXhr.status === 200) {
-                        partProgress[idx] = 0
-                        completedBytes += body.size
-                        completedParts++
-                        inFlight--
-
-                        if (completedParts === numParts) {
-                            completeUpload()
-                        } else {
-                            launchParts()
-                        }
+                        bytesUploaded += body.size
+                        partIndex++
+                        retryCount = 0
+                        signAndUploadNext()
                     } else if (putXhr.status === 403) {
-                        // Expired signature — re-sign this part
-                        signAndUpload(idx)
+                        if (retryCount < 1) { retryCount++; signAndUploadNext() }
+                        else onError(extractErrorBody(putXhr))
                     } else {
-                        fail()
+                        retryOrFail()
                     }
                 })
 
-                putXhr.addEventListener('error', () => { if (!isAborted() && !failed) fail() })
+                putXhr.addEventListener('error', () => isAborted() || retryOrFail())
                 putXhr.send(body)
             }
 
@@ -388,13 +372,16 @@ class UploadManager {
                 xhr.send()
             }
 
-            let fail = () => {
-                if (failed) return
-                failed = true
-                onError(null)
+            let retryOrFail = () => {
+                if (retryCount < retryDelays.length) {
+                    let delay = retryDelays[retryCount++]
+                    setTimeout(() => isAborted() || signAndUploadNext(), delay)
+                } else {
+                    onError(null)
+                }
             }
 
-            launchParts()
+            signAndUploadNext()
         })
 
         initXhr.addEventListener('error', () => isAborted() || onError(null))
