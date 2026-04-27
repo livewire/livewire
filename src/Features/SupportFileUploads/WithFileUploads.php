@@ -5,7 +5,6 @@ namespace Livewire\Features\SupportFileUploads;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Renderless;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 use Livewire\Features\SupportFormObjects\Form;
@@ -22,7 +21,6 @@ trait WithFileUploads
 
         if (FileUploadConfiguration::isUsingS3()) {
             throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
-            throw_if(FileUploadConfiguration::isChunkingEnabled(), S3DoesntSupportChunkedUploads::class);
 
             $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
 
@@ -31,25 +29,7 @@ trait WithFileUploads
             return;
         }
 
-        // Determine if any of the files in this upload should be chunked.
-        // We chunk if chunking is enabled AND any individual file is larger
-        // than the configured chunk size.
-        $shouldChunk = FileUploadConfiguration::isChunkingEnabled()
-            && collect($fileInfo)->contains(fn ($info) => $info['size'] > FileUploadConfiguration::chunkSize());
-
-        $chunkConfig = null;
-        if ($shouldChunk) {
-            $chunkConfig = [
-                'chunkSize' => FileUploadConfiguration::chunkSize(),
-                'retryDelays' => FileUploadConfiguration::chunkRetryDelays(),
-                'initUrl' => URL::temporarySignedRoute(
-                    'livewire.chunk-upload-init',
-                    now()->addMinutes(FileUploadConfiguration::chunkMaxUploadTime()),
-                ),
-            ];
-        }
-
-        $this->dispatch('upload:generatedSignedUrl', name: $name, url: GenerateSignedUploadUrlFacade::forLocal(), chunkConfig: $chunkConfig)->self();
+        $this->dispatch('upload:generatedSignedUrl', name: $name, url: GenerateSignedUploadUrlFacade::forLocal())->self();
     }
 
     /**
@@ -262,47 +242,15 @@ trait WithFileUploads
         if (FileUploadConfiguration::isUsingS3()) return;
 
         $storage = FileUploadConfiguration::storage();
-        $yesterdaysStamp = now()->subDay()->timestamp;
-        $tmpDir = FileUploadConfiguration::path();
 
-        foreach ($storage->files($tmpDir) as $filePathname) {
+        foreach ($storage->allFiles(FileUploadConfiguration::path()) as $filePathname) {
             // On busy websites, this cleanup code can run in multiple threads causing part of the output
-            // of files() to have already been deleted by another thread.
+            // of allFiles() to have already been deleted by another thread.
             if (! $storage->exists($filePathname)) continue;
 
+            $yesterdaysStamp = now()->subDay()->timestamp;
             if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
                 $storage->delete($filePathname);
-            }
-        }
-
-        // Clean up stale chunk directories. Each chunk directory contains a
-        // manifest.json that gets updated with each PATCH, so we use the
-        // manifest's mtime to detect abandoned uploads.
-        $chunksDir = FileUploadConfiguration::path('chunks');
-
-        if ($storage->exists($chunksDir)) {
-            foreach ($storage->directories($chunksDir) as $dir) {
-                $manifestPath = "{$dir}/manifest.json";
-
-                if (! $storage->exists($manifestPath)) {
-                    // Orphaned chunk directory with no manifest. Only delete if
-                    // the directory itself is also stale to avoid racing against
-                    // an in-flight init that hasn't written the manifest yet.
-                    $files = $storage->allFiles($dir);
-                    $allOld = true;
-                    foreach ($files as $f) {
-                        if ($storage->lastModified($f) > $yesterdaysStamp) {
-                            $allOld = false;
-                            break;
-                        }
-                    }
-                    if ($allOld) $storage->deleteDirectory($dir);
-                    continue;
-                }
-
-                if ($yesterdaysStamp > $storage->lastModified($manifestPath)) {
-                    $storage->deleteDirectory($dir);
-                }
             }
         }
     }

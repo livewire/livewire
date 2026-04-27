@@ -36,14 +36,5 @@ class SupportFileUploads extends ComponentHook
 
         Route::get(EndpointResolver::previewPath(), [FilePreviewController::class, 'handle'])
             ->name('livewire.preview-file');
-
-        Route::post(EndpointResolver::chunkInitPath(), [ChunkedUploadController::class, 'init'])
-            ->name('livewire.chunk-upload-init');
-
-        Route::patch(EndpointResolver::chunkPatchPath(), [ChunkedUploadController::class, 'patch'])
-            ->name('livewire.chunk-upload-patch');
-
-        Route::get(EndpointResolver::chunkOffsetPath(), [ChunkedUploadController::class, 'offset'])
-            ->name('livewire.chunk-upload-offset');
     }
 }
