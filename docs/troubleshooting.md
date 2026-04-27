@@ -18,7 +18,7 @@ There are lots of reasons why you may encounter these messages, but the most com
 
 ### Adding `wire:key`
 
-Any time you have a loop or a conditional in your Blade templates using something like `@foreach`, `@if`/`@else`, or `@switch`/`@case`, you need to add `wire:key` to the opening tag of the first element:
+Any time you have a loop or switch case in your Blade templates using something like `@foreach`, or `@switch`/`@case`, you need to add `wire:key` to the opening tag of the first element:
 
 ```blade
 @foreach($posts as $post)
