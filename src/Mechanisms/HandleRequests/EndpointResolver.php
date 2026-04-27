@@ -62,55 +62,6 @@ class EndpointResolver
     }
 
     /**
-     * Get the path for the chunked upload init endpoint.
-     */
-    public static function chunkInitPath(): string
-    {
-        return static::prefix() . '/chunk-upload';
-    }
-
-    /**
-     * Get the path for the chunked upload patch endpoint.
-     */
-    public static function chunkPatchPath(): string
-    {
-        return static::prefix() . '/chunk-upload/{transferId}';
-    }
-
-    /**
-     * Get the path for the chunked upload offset check endpoint.
-     */
-    public static function chunkOffsetPath(): string
-    {
-        return static::prefix() . '/chunk-upload/{transferId}/offset';
-    }
-
-    public static function s3MultipartInitPath(): string
-    {
-        return static::prefix() . '/s3-multipart';
-    }
-
-    public static function s3MultipartSignPartPath(): string
-    {
-        return static::prefix() . '/s3-multipart/{uploadId}/sign-part';
-    }
-
-    public static function s3MultipartCompletePath(): string
-    {
-        return static::prefix() . '/s3-multipart/{uploadId}/complete';
-    }
-
-    public static function s3MultipartAbortPath(): string
-    {
-        return static::prefix() . '/s3-multipart/{uploadId}/abort';
-    }
-
-    public static function s3MultipartListPartsPath(): string
-    {
-        return static::prefix() . '/s3-multipart/{uploadId}/list-parts';
-    }
-
-    /**
      * Get the path for component JavaScript modules.
      */
     public static function componentJsPath(): string
