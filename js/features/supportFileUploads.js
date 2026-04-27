@@ -123,10 +123,10 @@ class UploadManager {
             this.handleSignedUrl(name, url)
         })
 
-        this.component.$wire.$on('upload:generatedSignedUrlForS3', ({ name, payloads }) => {
+        this.component.$wire.$on('upload:generatedSignedUrlForS3', ({ name, payload }) => {
             setUploadLoading(this.component, name)
 
-            this.handleS3Upload(name, payloads)
+            this.handleS3PreSignedUrl(name, payload)
         })
 
         this.component.$wire.$on('upload:finished', ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames))
@@ -191,69 +191,23 @@ class UploadManager {
         })
     }
 
-    handleS3Upload(name, payloads) {
-        let files = Array.from(this.uploadBag.first(name).files)
+    handleS3PreSignedUrl(name, payload) {
+        let formData = this.uploadBag.first(name).files[0]
 
-        // The server mints one presigned PUT URL per file. If the counts
-        // disagree we bail out before sending any bytes.
-        if (files.length !== payloads.length) {
-            this.component.$wire.call('_uploadErrored', name, null, this.uploadBag.first(name).multiple)
-            return
-        }
+        let headers = payload.headers
+        if ('Host' in headers) delete headers.Host
+        let url = payload.url
 
-        this.processFilesSequentially(name, (file, index, { onProgress, onComplete, onError, isAborted, setCurrentXhr }) => {
-            let payload = payloads[index]
-            let headers = { ...payload.headers }
-            if ('Host' in headers) delete headers.Host
-
-            let xhr = new XMLHttpRequest()
-            setCurrentXhr(xhr)
-            xhr.open('PUT', payload.url)
-
-            Object.entries(headers).forEach(([key, value]) => {
-                xhr.setRequestHeader(key, value)
-            })
-
-            xhr.upload.addEventListener('progress', (e) => {
-                if (!e.lengthComputable) return
-                onProgress(e.loaded)
-            })
-
-            xhr.addEventListener('load', () => {
-                if (isAborted()) return
-
-                if ((xhr.status + '')[0] === '2') {
-                    onComplete(payload.path)
-                    return
-                }
-
-                onError(xhr.status === 422 ? xhr.response : null)
-            })
-
-            xhr.addEventListener('error', () => {
-                if (isAborted()) return
-                onError(null)
-            })
-
-            xhr.send(file)
+        this.makeRequest(name, formData, 'put', url, headers, response => {
+            return [payload.path]
         })
     }
 
     handleChunkedUpload(name, chunkConfig) {
-        let csrfToken = getCsrfToken()
-
-        this.processFilesSequentially(name, (file, index, callbacks) => {
-            this.uploadSingleChunked(file, name, chunkConfig, csrfToken, callbacks)
-        })
-    }
-
-    // Shared sequential-upload loop used by both the S3 direct-PUT and
-    // local-chunked handlers. Each handler supplies an `uploadFile`
-    // callback that knows how to send one file; this method owns the
-    // iteration, progress aggregation, abort flag, and _finishUpload call.
-    processFilesSequentially(name, uploadFile) {
         let uploadObj = this.uploadBag.first(name)
         let component = this.component
+        let csrfToken = getCsrfToken()
+
         let files = Array.from(uploadObj.files)
         let totalAllFiles = files.reduce((sum, f) => sum + f.size, 0)
         let bytesAlreadySentForCompletedFiles = 0
@@ -262,6 +216,8 @@ class UploadManager {
         let aborted = false
         let currentXhr = null
 
+        // Wire up abort for cancelUpload(). We share a single abort flag
+        // across all files in this upload batch.
         uploadObj.request = {
             abort: () => {
                 aborted = true
@@ -273,13 +229,13 @@ class UploadManager {
             if (aborted) return
 
             if (fileIndex >= files.length) {
+                // All files uploaded — hand off to the existing _finishUpload flow
                 component.$wire.call('_finishUpload', name, signedPaths, uploadObj.multiple, uploadObj.append)
                 return
             }
 
             let file = files[fileIndex]
-
-            uploadFile(file, fileIndex, {
+            this.uploadSingleChunked(file, name, chunkConfig, csrfToken, {
                 onProgress: (bytesForThisFile) => {
                     let totalSent = bytesAlreadySentForCompletedFiles + bytesForThisFile
                     uploadObj.progressCallback({ loaded: totalSent, total: totalAllFiles })

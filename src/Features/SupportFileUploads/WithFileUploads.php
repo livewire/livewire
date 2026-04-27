@@ -21,17 +21,12 @@ trait WithFileUploads
         $this->validateUploadBeforeTransfer($name, $fileInfo, $isMultiple);
 
         if (FileUploadConfiguration::isUsingS3()) {
+            throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
             throw_if(FileUploadConfiguration::isChunkingEnabled(), S3DoesntSupportChunkedUploads::class);
 
-            // Mint one presigned PUT URL per file. Multi-file S3 uploads share
-            // the single-PUT transport — there is no separate batched path.
-            $payloads = array_map(function ($info) {
-                $file = UploadedFile::fake()->create($info['name'], $info['size'] / 1024, $info['type']);
+            $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
 
-                return GenerateSignedUploadUrlFacade::forS3($file);
-            }, $fileInfo);
-
-            $this->dispatch('upload:generatedSignedUrlForS3', name: $name, payloads: $payloads)->self();
+            $this->dispatch('upload:generatedSignedUrlForS3', name: $name, payload: GenerateSignedUploadUrlFacade::forS3($file))->self();
 
             return;
         }
