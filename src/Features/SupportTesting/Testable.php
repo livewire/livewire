@@ -296,18 +296,6 @@ class Testable
             $isMultiple,
         );
 
-        // If pre-upload validation rejected the file, _startUpload will have
-        // dispatched 'upload:errored' instead of a signed-url event. The real
-        // JavaScript client short-circuits on that signal and never makes the
-        // upload-file request, so the test helper has to mirror that behavior.
-        $dispatched = collect(data_get($this->effects, 'dispatches', []))->pluck('name')->all();
-        if (in_array('upload:errored', $dispatched, true)
-            && ! in_array('upload:generatedSignedUrl', $dispatched, true)
-            && ! in_array('upload:generatedSignedUrlForS3', $dispatched, true)
-        ) {
-            return $this;
-        }
-
         // This is where either the pre-signed S3 url or the regular Livewire signed
         // upload url would do its thing and return a hashed version of the uploaded
         // file in a tmp directory.
