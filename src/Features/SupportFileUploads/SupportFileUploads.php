@@ -45,20 +45,5 @@ class SupportFileUploads extends ComponentHook
 
         Route::get(EndpointResolver::chunkOffsetPath(), [ChunkedUploadController::class, 'offset'])
             ->name('livewire.chunk-upload-offset');
-
-        Route::post(EndpointResolver::s3MultipartInitPath(), [S3MultipartUploadController::class, 'init'])
-            ->name('livewire.s3-multipart-init');
-
-        Route::get(EndpointResolver::s3MultipartSignPartPath(), [S3MultipartUploadController::class, 'signPart'])
-            ->name('livewire.s3-multipart-sign-part');
-
-        Route::post(EndpointResolver::s3MultipartCompletePath(), [S3MultipartUploadController::class, 'complete'])
-            ->name('livewire.s3-multipart-complete');
-
-        Route::post(EndpointResolver::s3MultipartAbortPath(), [S3MultipartUploadController::class, 'abort'])
-            ->name('livewire.s3-multipart-abort');
-
-        Route::get(EndpointResolver::s3MultipartListPartsPath(), [S3MultipartUploadController::class, 'listParts'])
-            ->name('livewire.s3-multipart-list-parts');
     }
 }

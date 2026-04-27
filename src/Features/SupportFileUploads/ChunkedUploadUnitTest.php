@@ -370,34 +370,16 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
         $this->assertFalse(FileUploadConfiguration::isChunkingEnabled());
     }
 
-    public function test_s3_chunked_upload_dispatches_multipart_event()
+    public function test_chunked_upload_with_s3_disk_throws_loudly()
     {
         config()->set('livewire.temporary_file_upload.chunk.size', 1024);
         config()->set('livewire.temporary_file_upload.disk', 's3');
         config()->set('filesystems.disks.s3.driver', 's3');
 
-        // 6 MiB file — exceeds the 5 MiB S3 chunk floor, so should trigger multipart
-        \Livewire\Livewire::test(ChunkedUploadComponent::class)
-            ->call('_startUpload', 'photo', [['name' => 'big.bin', 'size' => 6 * 1024 * 1024, 'type' => 'application/octet-stream']], false)
-            ->assertDispatched('upload:generatedSignedUrlForS3Multipart', function ($event, $params) {
-                return $params['name'] === 'photo'
-                    && is_array($params['config'])
-                    && isset($params['config']['initUrl'])
-                    && $params['config']['chunkSize'] === 5 * 1024 * 1024;
-            });
-    }
+        $this->expectException(S3DoesntSupportChunkedUploads::class);
 
-    public function test_s3_small_file_uses_single_put_even_with_chunking_enabled()
-    {
-        config()->set('livewire.temporary_file_upload.chunk.size', 1024);
-        config()->set('livewire.temporary_file_upload.disk', 's3');
-        config()->set('filesystems.disks.s3.driver', 's3');
-
-        // 100 bytes — under the 5 MiB S3 chunk floor, so should use single-PUT path
         \Livewire\Livewire::test(ChunkedUploadComponent::class)
-            ->call('_startUpload', 'photo', [['name' => 'tiny.txt', 'size' => 100, 'type' => 'text/plain']], false)
-            ->assertDispatched('upload:generatedSignedUrlForS3')
-            ->assertNotDispatched('upload:generatedSignedUrlForS3Multipart');
+            ->call('_startUpload', 'photo', [['name' => 'big.bin', 'size' => 5 * 1024, 'type' => 'application/octet-stream']], false);
     }
 
     public function test_s3_disk_without_chunking_works_as_normal()
@@ -411,29 +393,6 @@ class ChunkedUploadUnitTest extends \Tests\TestCase
         $component->call('_startUpload', 'photo', [['name' => 'photo.jpg', 'size' => 100, 'type' => 'image/jpeg']], false);
 
         $component->assertDispatched('upload:generatedSignedUrlForS3');
-    }
-
-    public function test_chunkSizeForS3_floors_at_5MiB()
-    {
-        config()->set('livewire.temporary_file_upload.chunk.size', 1024);
-
-        $this->assertEquals(5 * 1024 * 1024, FileUploadConfiguration::chunkSizeForS3());
-    }
-
-    public function test_chunkSizeForS3_uses_chunk_size_when_above_5MiB()
-    {
-        config()->set('livewire.temporary_file_upload.chunk.size', 10 * 1024 * 1024);
-
-        $this->assertEquals(10 * 1024 * 1024, FileUploadConfiguration::chunkSizeForS3());
-    }
-
-    public function test_s3_multipart_routes_use_chunk_middleware()
-    {
-        config()->set('livewire.temporary_file_upload.chunk.middleware', 'throttle:custom-name');
-
-        $middleware = collect(S3MultipartUploadController::middleware())->map->middleware->all();
-
-        $this->assertContains('throttle:custom-name', $middleware);
     }
 
     public function test_chunk_routes_use_chunk_middleware()

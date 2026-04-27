@@ -5,8 +5,6 @@ namespace Livewire\Features\SupportFileUploads;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\WhitespacePathNormalizer;
 
-use function Livewire\invade;
-
 class FileUploadConfiguration
 {
     public static function storage()
@@ -189,26 +187,6 @@ class FileUploadConfiguration
         }
 
         return null;
-    }
-
-    public static function chunkSizeForS3(): int
-    {
-        return max(static::chunkSize(), 5 * 1024 * 1024);
-    }
-
-    public static function s3Client()
-    {
-        return invade(static::s3Adapter())->client;
-    }
-
-    public static function s3Bucket()
-    {
-        return invade(static::s3Adapter())->bucket;
-    }
-
-    protected static function s3Adapter()
-    {
-        return invade(static::storage()->getDriver())->adapter;
     }
 
     public static function storeTemporaryFile($file, $disk)

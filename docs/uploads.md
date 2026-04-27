@@ -477,8 +477,8 @@ new class extends Component {
 };
 ```
 
-> [!info] S3 multipart uploads
-> When `temporary_file_upload.disk` is set to S3 and chunking is enabled, Livewire automatically uses native S3 multipart uploads. The minimum part size is 5 MiB (S3 protocol requirement) — if your `chunk.size` is smaller, Livewire floors it at 5 MiB for S3 automatically.
+> [!warning] Local disk only
+> Chunked uploads currently only work when `temporary_file_upload.disk` is a local filesystem. If you enable chunking while using the S3 disk, Livewire will throw an `S3DoesntSupportChunkedUploads` exception when an upload is attempted — set `chunk.enabled` to `false` or switch to a local disk. Native S3 multipart upload support is planned for a future release.
 
 > [!info] Bump your global validation rule
 > Remember that the global `temporary_file_upload.rules` validation still applies to the assembled file. The default `max:12288` (12MB) will reject anything larger. If you're enabling chunked uploads to support large files, bump `max` accordingly.

@@ -85,31 +85,6 @@ class EndpointResolver
         return static::prefix() . '/chunk-upload/{transferId}/offset';
     }
 
-    public static function s3MultipartInitPath(): string
-    {
-        return static::prefix() . '/s3-multipart';
-    }
-
-    public static function s3MultipartSignPartPath(): string
-    {
-        return static::prefix() . '/s3-multipart/{uploadId}/sign-part';
-    }
-
-    public static function s3MultipartCompletePath(): string
-    {
-        return static::prefix() . '/s3-multipart/{uploadId}/complete';
-    }
-
-    public static function s3MultipartAbortPath(): string
-    {
-        return static::prefix() . '/s3-multipart/{uploadId}/abort';
-    }
-
-    public static function s3MultipartListPartsPath(): string
-    {
-        return static::prefix() . '/s3-multipart/{uploadId}/list-parts';
-    }
-
     /**
      * Get the path for component JavaScript modules.
      */
