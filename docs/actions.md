@@ -627,7 +627,7 @@ The `$toggle` action is used to toggle the value of a boolean property in your L
 
 ```blade
 <button wire:click="$toggle('sortAsc')">
-    Sort {{ $sortAsc ? 'Ascending' : 'Descending' }}
+    Sort {{ $sortAsc ? 'Descending' : 'Ascending' }}
 </button>
 ```
 
