@@ -14,13 +14,12 @@ function setTransitionNames(root, options = {}) {
 
         let name = el.getAttribute('wire:transition')
 
-        // When an explicit transition type is active (e.g. via #[Transition('forward')]),
-        // the developer is orchestrating the swap as a single visual unit. Unnamed
-        // wire:transition elements should ride along with their parent's snapshot
-        // rather than animate independently and pop with the browser's default fade...
-        if (! name && ! options.type) name = defaultName
+        // When the developer orchestrates a typed swap (e.g. #[Transition('forward')]),
+        // unnamed wire:transition elements stay unnamed so they ride with the parent's
+        // snapshot instead of becoming independent groups with the browser's default fade...
+        if (! name && options.type) return
 
-        if (name) el.style.viewTransitionName = name
+        el.style.viewTransitionName = name || defaultName
     })
 }
 
