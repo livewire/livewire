@@ -514,7 +514,14 @@ class HandleComponents extends Mechanism
     {
         $segments = explode('.', $path);
 
-        $maxDepth = config('livewire.payload.max_nesting_depth');
+        $attribute = $component->getAttributes()->whereInstanceOf(\Livewire\Attributes\MaxNestingDepth::class)->first();
+
+        $maxDepth = $attribute
+            ? $attribute->maxDepth
+            : (property_exists($component, 'maxNestingDepth')
+                ? \Livewire\invade($component)->maxNestingDepth
+                : config('livewire.payload.max_nesting_depth'));
+
         if ($maxDepth !== null && count($segments) > $maxDepth) {
             throw new MaxNestingDepthExceededException($path, $maxDepth);
         }

@@ -115,10 +115,51 @@ class NestingDepthUnitTest extends TestCase
         // Should fail fast (< 1 second), not hang for 20 seconds
         $this->assertLessThan(1, $elapsed, "Attack took {$elapsed} seconds - should be blocked instantly");
     }
+    public function test_component_can_override_max_depth_via_attribute()
+    {
+        config()->set('livewire.payload.max_nesting_depth', 3);
+
+        $component = Livewire::test(CustomAttributeNestingDepthComponent::class)
+            ->set('data.a.b.c.d.e', 'value'); // 6 levels, allowed because attribute allows 10
+
+        $this->assertEquals('value', $component->get('data.a.b.c.d.e'));
+    }
+
+    public function test_component_can_override_max_depth_via_property()
+    {
+        config()->set('livewire.payload.max_nesting_depth', 3);
+
+        $component = Livewire::test(CustomPropertyNestingDepthComponent::class)
+            ->set('data.a.b.c.d.e', 'value'); // 6 levels, allowed because property allows 10
+
+        $this->assertEquals('value', $component->get('data.a.b.c.d.e'));
+    }
 }
 
 class NestingDepthComponent extends Component
 {
+    public $data = [];
+
+    public function render()
+    {
+        return '<div></div>';
+    }
+}
+
+#[\Livewire\Attributes\MaxNestingDepth(10)]
+class CustomAttributeNestingDepthComponent extends Component
+{
+    public $data = [];
+
+    public function render()
+    {
+        return '<div></div>';
+    }
+}
+
+class CustomPropertyNestingDepthComponent extends Component
+{
+    protected $maxNestingDepth = 10;
     public $data = [];
 
     public function render()
