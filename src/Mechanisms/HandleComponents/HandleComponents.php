@@ -660,7 +660,13 @@ class HandleComponents extends Mechanism
 
     protected function callMethods($root, $calls, $componentContext)
     {
-        $maxCalls = config('livewire.payload.max_calls');
+        $attribute = $root->getAttributes()->whereInstanceOf(\Livewire\Attributes\MaxCalls::class)->first();
+
+        $maxCalls = $attribute
+            ? $attribute->maxCalls
+            : (property_exists($root, 'maxCalls')
+                ? \Livewire\invade($root)->maxCalls
+                : config('livewire.payload.max_calls'));
 
         if ($maxCalls !== null && count($calls) > $maxCalls) {
             throw new TooManyCallsException(count($calls), $maxCalls);

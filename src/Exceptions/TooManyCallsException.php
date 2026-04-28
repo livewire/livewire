@@ -8,7 +8,7 @@ class TooManyCallsException extends \Exception
     {
         $message = "Too many method calls in a single request ({$count}). "
             . "Maximum allowed is {$maxCalls}. "
-            . "You can configure this limit in config/livewire.php under 'payload.max_calls'.";
+            . "You can configure this limit in config/livewire.php under 'payload.max_calls' or inside the component as \$maxCalls or #[MaxCalls(...)].";
 
         parent::__construct($message);
     }

@@ -178,6 +178,36 @@ class PayloadGuardsUnitTest extends TestCase
         $this->assertEquals(3, $component->get('count'));
     }
 
+    public function test_component_can_override_max_calls_via_attribute()
+    {
+        config()->set('livewire.payload.max_calls', 2);
+
+        $component = Livewire::test(PayloadCallsGuardAttributeComponent::class);
+
+        // Component attribute allows 5 calls
+        $component->call('increment')
+            ->call('increment')
+            ->call('increment')
+            ->call('increment');
+
+        $this->assertEquals(4, $component->get('count'));
+    }
+
+    public function test_component_can_override_max_calls_via_property()
+    {
+        config()->set('livewire.payload.max_calls', 2);
+
+        $component = Livewire::test(PayloadCallsGuardPropertyComponent::class);
+
+        // Component property allows 5 calls
+        $component->call('increment')
+            ->call('increment')
+            ->call('increment')
+            ->call('increment');
+
+        $this->assertEquals(4, $component->get('count'));
+    }
+
     public function test_exception_messages_include_config_keys()
     {
         $payloadException = new PayloadTooLargeException(2048, 1024);
