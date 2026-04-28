@@ -298,16 +298,6 @@ class HandleComponents extends Mechanism
         return $snapshot;
     }
 
-    public function dehydrateValue($component, $value)
-    {
-        return $this->dehydrate($value, new ComponentContext($component), '');
-    }
-
-    public function hydrateValue($component, $valueOrTuple)
-    {
-        return $this->hydrate($valueOrTuple, new ComponentContext($component), '');
-    }
-
     protected function dehydrateProperties($component, $context)
     {
         $data = Utils::getPublicPropertiesDefinedOnSubclass($component);
@@ -319,7 +309,7 @@ class HandleComponents extends Mechanism
         return $data;
     }
 
-    protected function dehydrate($target, $context, $path)
+    public function dehydrate($target, $context, $path)
     {
         if (Utils::isAPrimitive($target)) {
             // Normalize negative zero (-0.0) to 0 to prevent checksum mismatches
@@ -353,7 +343,7 @@ class HandleComponents extends Mechanism
         }
     }
 
-    protected function hydrate($valueOrTuple, $context, $path)
+    public function hydrate($valueOrTuple, $context, $path)
     {
         if (! Utils::isSyntheticTuple($value = $tuple = $valueOrTuple)) return $value;
 

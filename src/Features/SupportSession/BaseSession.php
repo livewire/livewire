@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportSession;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use Illuminate\Support\Facades\Session;
 use Attribute;
@@ -37,14 +38,22 @@ class BaseSession extends LivewireAttribute
     {
         // Hydrate via Livewire's synth pipeline so non-primitive types
         // (Collection, Carbon, models) survive JSON-serialised sessions...
-        return app(HandleComponents::class)->hydrateValue($this->component, Session::get($this->key()));
+        return app(HandleComponents::class)->hydrate(
+            Session::get($this->key()),
+            new ComponentContext($this->component),
+            '',
+        );
     }
 
     protected function write()
     {
         // Dehydrate to a JSON-safe tuple so the original type is restored
         // on read regardless of the session driver's serialisation format...
-        $value = app(HandleComponents::class)->dehydrateValue($this->component, $this->getValue());
+        $value = app(HandleComponents::class)->dehydrate(
+            $this->getValue(),
+            new ComponentContext($this->component),
+            '',
+        );
 
         Session::put($this->key(), $value);
     }
