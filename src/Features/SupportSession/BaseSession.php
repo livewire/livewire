@@ -47,7 +47,9 @@ class BaseSession extends LivewireAttribute
     {
         // Dehydrate to a JSON-safe tuple so the original type is restored
         // on read regardless of the session driver's serialisation format...
-        Session::put($this->key(), app(HandleComponents::class)->dehydrate($this->getValue(), new ComponentContext($this->component), ''));
+        $value = app(HandleComponents::class)->dehydrate($this->getValue(), new ComponentContext($this->component), '');
+
+        Session::put($this->key(), $value);
     }
 
     protected function key()
