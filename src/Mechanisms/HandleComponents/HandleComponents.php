@@ -298,6 +298,16 @@ class HandleComponents extends Mechanism
         return $snapshot;
     }
 
+    public function dehydrateValue($component, $value)
+    {
+        return $this->dehydrate($value, new ComponentContext($component), '');
+    }
+
+    public function hydrateValue($component, $valueOrTuple)
+    {
+        return $this->hydrate($valueOrTuple, new ComponentContext($component), '');
+    }
+
     protected function dehydrateProperties($component, $context)
     {
         $data = Utils::getPublicPropertiesDefinedOnSubclass($component);
