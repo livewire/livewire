@@ -372,6 +372,22 @@ class UnitTest extends \Tests\TestCase
         $this->assertInstanceOf(Component::class, new $class);
     }
 
+    public function test_generated_blade_view_does_not_render_stale_contents_after_being_rewritten_within_same_second()
+    {
+        $cacheManager = new CacheManager($this->cacheDir);
+
+        $sourcePath = $this->tempPath . '/component.blade.php';
+        $viewPath = $cacheManager->getViewPath($sourcePath);
+
+        $cacheManager->writeViewFile($sourcePath, '<div>First version</div>');
+
+        $this->assertSame('<div>First version</div>', view()->file($viewPath)->render());
+
+        $cacheManager->writeViewFile($sourcePath, '<div>Second version</div>');
+
+        $this->assertSame('<div>Second version</div>', view()->file($viewPath)->render());
+    }
+
     public function test_compiler_will_recompile_if_source_file_is_older_than_compiled_file()
     {
         $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));

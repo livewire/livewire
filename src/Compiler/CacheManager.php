@@ -131,7 +131,7 @@ class CacheManager
 
         File::replace($viewPath, $contents);
 
-        $this->mutateFileModificationTime($viewPath);
+        $this->prepareGeneratedFileForCompilation($viewPath);
     }
 
     public function writeScriptFile(string $sourcePath, string $contents): void
@@ -173,7 +173,7 @@ class CacheManager
 
         File::replace($placeholderPath, $contents);
 
-        $this->mutateFileModificationTime($placeholderPath);
+        $this->prepareGeneratedFileForCompilation($placeholderPath);
     }
 
     public function writeIslandFile(string $sourcePath, string $contents): void
@@ -185,7 +185,7 @@ class CacheManager
 
         File::replace($viewPath, $contents);
 
-        $this->mutateFileModificationTime($viewPath);
+        $this->prepareGeneratedFileForCompilation($viewPath);
     }
 
     public function invalidateOpCache(string $sourcePath): void
@@ -211,7 +211,7 @@ class CacheManager
         }
     }
 
-    public function mutateFileModificationTime(string $path): void
+    public function prepareGeneratedFileForCompilation(string $path): void
     {
         // This is a fix for a gnarly issue: blade's compiler uses filemtimes to determine if a compiled view has become expired.
         // AND it's comparison includes equals like this: $path >= $cachedPath
@@ -222,6 +222,12 @@ class CacheManager
         // view file is one second ahead. Phew. this one took a minute to find lol.
         $original = filemtime($path);
         touch($path, $original - 1);
+
+        // But because of this, if a file is compiled and then saved again within the same second,
+        // it will not get recompiled because it will look like the source was created 1 second
+        // before the compiled file, not passing the $path >= $cachedPath check and skipping
+        // compilation. To force recompilation we need to delete the compiled file first.
+        File::delete(app('blade.compiler')->getCompiledPath($path));
     }
 
     public function clearCompiledFiles($output = null): void
