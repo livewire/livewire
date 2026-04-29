@@ -459,12 +459,14 @@ class UnitTest extends TestCase
 
         $content = '@island @endisland';
 
-        $islandA = IslandCompiler::compile(base_path($path), $content);
+        $compiler = app('livewire.compiler');
+
+        $islandA = IslandCompiler::compile($compiler, base_path($path), $content);
 
         // Simulate Forge's zero-downtime deployments where each release has its own folder...
         app()->setBasePath('/home/forge/domain/releases/22222');
 
-        $islandB = IslandCompiler::compile(base_path($path), $content);
+        $islandB = IslandCompiler::compile($compiler, base_path($path), $content);
 
         $this->assertSame($islandA, $islandB);
     }
@@ -490,7 +492,9 @@ class UnitTest extends TestCase
         app()->forgetInstance('livewire.compiler');
         app()->forgetInstance('livewire.factory');
 
-        IslandCompiler::compile(__FILE__, <<<'HTML'
+        $compiler = app('livewire.compiler');
+
+        IslandCompiler::compile($compiler, __FILE__, <<<'HTML'
         <div>
             @island(name: 'counter')
                 <div>count: {{ $count }}</div>
@@ -498,7 +502,7 @@ class UnitTest extends TestCase
         </div>
         HTML);
 
-        $token = app('livewire.compiler')->cacheManager->getHash(__FILE__) . '-1';
+        $token = $compiler->cacheManager->getHash(__FILE__) . '-1';
         $cachedPath = IslandCompiler::getCachedPathFromToken($token);
 
         $this->assertSame($compiledPath . '/livewire/islands/' . $token . '.blade.php', $cachedPath);

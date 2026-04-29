@@ -37,7 +37,7 @@ class UnitTest extends \Tests\TestCase
     public function test_can_create_simple_class_based_component()
     {
         $finder = new Finder();
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
         $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
@@ -52,7 +52,7 @@ class UnitTest extends \Tests\TestCase
     public function test_can_create_simple_class_based_component_with_custom_id()
     {
         $finder = new Finder();
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
         $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
@@ -68,7 +68,7 @@ class UnitTest extends \Tests\TestCase
     public function test_can_create_component_from_class_name()
     {
         $finder = new Finder();
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
         $finder->addComponent(SimpleComponent::class);
@@ -81,7 +81,7 @@ class UnitTest extends \Tests\TestCase
     public function test_can_create_component_from_class_instance()
     {
         $finder = new Finder();
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
         $finder->addComponent(SimpleComponent::class);
@@ -96,7 +96,7 @@ class UnitTest extends \Tests\TestCase
     public function test_can_create_and_render_single_file_component()
     {
         $finder = new Finder();
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
         $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
@@ -111,7 +111,7 @@ class UnitTest extends \Tests\TestCase
     public function test_can_create_multi_file_component()
     {
         $finder = new Finder();
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
         $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
@@ -126,7 +126,7 @@ class UnitTest extends \Tests\TestCase
     public function test_can_resolve_missing_component()
     {
         $finder = new Finder();
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
         $finder->addComponent(SimpleComponent::class);
@@ -149,7 +149,7 @@ class UnitTest extends \Tests\TestCase
     public function test_can_determine_if_component_exists()
     {
         $finder = new Finder();
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
         $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
@@ -161,7 +161,7 @@ class UnitTest extends \Tests\TestCase
     public function test_can_resolve_component_class()
     {
         $finder = new Finder();
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
         $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
@@ -176,7 +176,7 @@ class UnitTest extends \Tests\TestCase
     public function test_can_resolve_component_name()
     {
         $finder = new Finder();
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
         $finder->addLocation(classNamespace: 'Livewire\Factory\Fixtures');
@@ -191,7 +191,7 @@ class UnitTest extends \Tests\TestCase
     public function test_resolved_missing_component_is_cached_in_finder()
     {
         $finder = new Finder();
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
         $factory = new Factory($finder, $compiler);
 
         $factory->resolveMissingComponent(function ($name) {

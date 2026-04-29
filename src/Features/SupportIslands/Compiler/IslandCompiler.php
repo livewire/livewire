@@ -4,23 +4,23 @@ namespace Livewire\Features\SupportIslands\Compiler;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Arr;
+use Livewire\Compiler\Compiler;
 
 class IslandCompiler
 {
     protected string $mutableContents;
 
     public function __construct(
+        public Compiler $compiler,
         public string $pathSignature,
         public string $contents,
     ) {
         $this->mutableContents = $contents;
     }
 
-    public static function compile(string $pathSignature, string $contents): string
+    public static function compile(Compiler $compiler, string $pathSignature, string $contents): string
     {
-        $compiler = new self($pathSignature, $contents);
-
-        return $compiler->process();
+        return (new self($compiler, $pathSignature, $contents))->process();
     }
 
     public function process(): string
@@ -104,7 +104,7 @@ class IslandCompiler
         // Write the cached island to the file system...
         file_put_contents($cachedPath, $innerContent);
 
-        app('livewire.compiler')->cacheManager->prepareGeneratedFileForCompilation($cachedPath);
+        $this->compiler->cacheManager->prepareGeneratedFileForCompilation($cachedPath);
 
         return $output;
     }
@@ -149,7 +149,7 @@ PHP;
 
     public function getPathBasedHash(string $path): string
     {
-        return app('livewire.compiler')->cacheManager->getHash(
+        return $this->compiler->cacheManager->getHash(
             $this->pathSignature,
         );
     }

@@ -37,7 +37,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_compile_sfc_component()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $class = $compiler->compile(__DIR__ . '/Fixtures/sfc-component.blade.php');
 
@@ -46,7 +46,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_parse_sfc_component()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component.blade.php');
 
@@ -71,7 +71,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_wont_parse_blade_script()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-blade-script.blade.php');
 
@@ -96,7 +96,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_wont_parse_nested_script()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-nested-script.blade.php');
 
@@ -121,7 +121,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_wont_parse_nested_script_when_no_root_level_script_exists()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-only-nested-script.blade.php');
 
@@ -142,7 +142,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_wont_extract_nested_only_style()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-only-nested-style.blade.php');
 
@@ -158,7 +158,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_wont_extract_style_inside_verbatim()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-style-in-verbatim.blade.php');
 
@@ -174,7 +174,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_wont_parse_scripts_inside_assets_or_script_directives()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-assets-and-script-directives.blade.php');
 
@@ -203,7 +203,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_script_hoists_imports_and_wraps_in_export_function()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-imports.blade.php');
 
@@ -231,7 +231,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_script_wraps_in_export_function_even_without_imports()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component.blade.php');
 
@@ -247,7 +247,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_parser_adds_trailing_semicolon_to_class_contents()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-without-trailing-semicolon.blade.php');
 
@@ -258,7 +258,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_compile_mfc_component()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $class = $compiler->compile(__DIR__ . '/Fixtures/mfc-component');
 
@@ -267,7 +267,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_parse_mfc_component()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = MultiFileParser::parse($compiler, __DIR__ . '/Fixtures/mfc-component');
 
@@ -292,7 +292,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_mfc_script_wraps_in_export_function_even_without_imports()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = MultiFileParser::parse($compiler, __DIR__ . '/Fixtures/mfc-component');
 
@@ -308,7 +308,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_mfc_script_hoists_imports_and_wraps_in_export_function()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $parser = MultiFileParser::parse($compiler, __DIR__ . '/Fixtures/mfc-component-with-imports');
 
@@ -336,7 +336,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_parse_placeholder_directive()
     {
-        $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
+        $compiler = new Compiler($cacheManager = new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $class = $compiler->compile(__DIR__ . '/Fixtures/sfc-component-with-placeholder.blade.php');
 
@@ -351,7 +351,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_ignores_placeholders_in_islands()
     {
-        $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
+        $compiler = new Compiler($cacheManager = new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $class = $compiler->compile(__DIR__ . '/Fixtures/sfc-component-with-placeholder-in-island.blade.php');
 
@@ -364,7 +364,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_re_compile_simple_sfc_component()
     {
-        $compiler = new Compiler(new CacheManager($this->cacheDir));
+        $compiler = new Compiler(new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $class = $compiler->compile(__DIR__ . '/Fixtures/sfc-component.blade.php');
         $class = $compiler->compile(__DIR__ . '/Fixtures/sfc-component.blade.php');
@@ -374,7 +374,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_generated_blade_view_does_not_render_stale_contents_after_being_rewritten_within_same_second()
     {
-        $cacheManager = new CacheManager($this->cacheDir);
+        $cacheManager = new CacheManager(app('blade.compiler'), $this->cacheDir);
 
         $sourcePath = $this->tempPath . '/component.blade.php';
         $viewPath = $cacheManager->getViewPath($sourcePath);
@@ -390,7 +390,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_compiler_will_recompile_if_source_file_is_older_than_compiled_file()
     {
-        $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
+        $compiler = new Compiler($cacheManager = new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         // First compilation
         $compiler->compile($sourcePath = __DIR__ . '/Fixtures/sfc-component.blade.php');
@@ -422,7 +422,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_hook_into_sfc_compilation()
     {
-        $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
+        $compiler = new Compiler($cacheManager = new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $compiler->prepareViewsForCompilationUsing(function ($contents) {
             return str_replace('div', 'span', $contents);
@@ -437,7 +437,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_hook_into_mfc_compilation()
     {
-        $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
+        $compiler = new Compiler($cacheManager = new CacheManager(app('blade.compiler'), $this->cacheDir));
 
         $compiler->prepareViewsForCompilationUsing(function ($contents) {
             return str_replace('div', 'span', $contents);
@@ -452,7 +452,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_clear_compiled_files_deletes_cache_directory()
     {
-        $cacheManager = new CacheManager($this->cacheDir);
+        $cacheManager = new CacheManager(app('blade.compiler'), $this->cacheDir);
         $compiler = new Compiler($cacheManager);
 
         // Compile a component to create the cache directories
@@ -471,7 +471,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_directories_are_lazily_recreated_after_clearing()
     {
-        $cacheManager = new CacheManager($this->cacheDir);
+        $cacheManager = new CacheManager(app('blade.compiler'), $this->cacheDir);
         $compiler = new Compiler($cacheManager);
 
         // Compile a component to create the cache directories
@@ -496,7 +496,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_gitignore_is_created_when_cache_directory_is_lazily_recreated()
     {
-        $cacheManager = new CacheManager($this->cacheDir);
+        $cacheManager = new CacheManager(app('blade.compiler'), $this->cacheDir);
         $compiler = new Compiler($cacheManager);
 
         // Compile a component to create the cache directories
