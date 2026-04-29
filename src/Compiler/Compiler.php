@@ -73,11 +73,9 @@ class Compiler
 
         $this->cacheManager->writeViewFile($path, $parser->generateViewContents());
 
-        // The class file is written last so its presence on disk implies every
-        // file it references (view, placeholder, script, styles) is already
-        // there. `CacheManager::hasBeenCompiled()` checks only the class file,
-        // so a concurrent reader that observes the class is guaranteed to see
-        // a complete cache rather than a half-written one.
+        // Ensure the class file is the last write, as it's used
+        // in the hasBeenCompiled() check, so its presence on
+        // disk means everything has been compiled...
         $this->cacheManager->writeClassFile($path, $parser->generateClassContents(
             $viewFileName,
             $placeholderFileName,
