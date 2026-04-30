@@ -7,6 +7,7 @@ use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Livewire\Component;
 use Livewire\Exceptions\BypassViewHandler;
@@ -17,29 +18,38 @@ use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
-    public function test_compilation_callbacks_dont_resolve_blade_compiler_from_container()
+    public function test_compilation_callbacks_use_the_currently_compiling_blade_path()
     {
         // Get the compiler that has all Livewire hooks registered on it...
         $compiler = app('blade.compiler');
 
         // Forget the blade compiler from the container and clear the facade cache.
-        // This simulates the scenario where `php artisan optimize` swaps the app
-        // instance (during config:cache), causing the container to return a different
+        // This simulates the scenario where php artisan optimize swaps the app
+        // during config:cache, causing the container to return a different
         // blade compiler than the one actually doing compilation...
         app()->forgetInstance('blade.compiler');
         Facade::clearResolvedInstance('blade.compiler');
 
-        $resolved = false;
-
-        app()->resolving('blade.compiler', function () use (&$resolved) {
-            $resolved = true;
+        app()->resolving('blade.compiler', function ($compiler) {
+            // If we resolve the blade compiler from the container we would get a different path...
+            $compiler->setPath(base_path('wrong-path.blade.php'));
         });
 
-        // This fixture exercises all Livewire compilation hooks: islands
-        // precompiler, deterministic keys precompiler, and @script/@assets directives...
-        $compiler->compile(view('compiler-instance-test')->getPath());
+        $compiler->compile(
+            // This fixture exercises islands precompiler,
+            // keys precompiler, and @script/@assets directives...
+            $path = view('compiler-instance-test')->getPath()
+        );
 
-        $this->assertFalse($resolved, 'Blade compiler was resolved from the container during compilation. Compilation callbacks should use the captured compiler instance.');
+        $compiled = File::get($compiler->getCompiledPath($path));
+
+        $expectedPathHash = crc32($path);
+        $expectedIslandToken = app('livewire.compiler')->cacheManager->getHash($path) . '-1';
+
+        $this->assertStringContainsString("lw-{$expectedPathHash}-0", $compiled);
+        $this->assertStringContainsString("\$__scriptKey = '{$expectedPathHash}-0';", $compiled);
+        $this->assertStringContainsString("\$__assetKey = '{$expectedPathHash}-1';", $compiled);
+        $this->assertStringContainsString("token: '{$expectedIslandToken}'", $compiled);
     }
 
     public function test_livewire_only_directives_apply_to_livewire_components_and_not_normal_blade()

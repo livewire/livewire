@@ -4,12 +4,10 @@ namespace Livewire\Compiler;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use Illuminate\View\Compilers\BladeCompiler;
 
 class CacheManager
 {
     public function __construct(
-        public BladeCompiler $blade,
         public string $cacheDirectory,
     ) {}
 
@@ -229,7 +227,7 @@ class CacheManager
         // it will not get recompiled because it will look like the source was created 1 second
         // before the compiled file, not passing the $path >= $cachedPath check and skipping
         // compilation. To force recompilation we need to delete the compiled file first.
-        File::delete($this->blade->getCompiledPath($path));
+        File::delete(app('blade.compiler')->getCompiledPath($path));
     }
 
     public function clearCompiledFiles($output = null): void

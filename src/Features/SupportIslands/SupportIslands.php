@@ -23,16 +23,15 @@ class SupportIslands extends ComponentHook
 
     public static function registerInlineIslandPrecompiler()
     {
-        $bladeCompiler = app('blade.compiler');
-        $livewireCompiler = app('livewire.compiler');
+        $compiler = app('blade.compiler');
 
-        $bladeCompiler->prepareStringsForCompilationUsing(function ($content) use ($bladeCompiler, $livewireCompiler) {
+        $compiler->prepareStringsForCompilationUsing(function ($content) use ($compiler) {
             // Shortcut out if there are no islands in the content...
             if (! str_contains($content, '@endisland')) return $content;
 
-            $pathSignature = $bladeCompiler->getPath() ?: crc32($content);
+            $pathSignature = $compiler->getPath() ?: crc32($content);
 
-            return IslandCompiler::compile($livewireCompiler, $pathSignature, $content);
+            return IslandCompiler::compile($pathSignature, $content);
         });
     }
 
