@@ -3,8 +3,6 @@
         <span>island</span>
     @endisland
 
-    <livewire:compiler-instance-test-component />
-
     @script
         <script></script>
     @endscript
@@ -12,4 +10,6 @@
     @assets
         <link>
     @endassets
+
+    <livewire:compiler-instance-test-component />
 </div>
