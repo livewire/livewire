@@ -518,7 +518,7 @@ class HandleComponents extends Mechanism
 
         $maxDepth = $attribute
             ? $attribute->maxDepth
-            : (property_exists($component, 'maxNestingDepth')
+            : (property_exists($component, 'maxNestingDepth') && ! (new \ReflectionProperty($component, 'maxNestingDepth'))->isPublic()
                 ? \Livewire\invade($component)->maxNestingDepth
                 : config('livewire.payload.max_nesting_depth'));
 
@@ -664,7 +664,7 @@ class HandleComponents extends Mechanism
 
         $maxCalls = $attribute
             ? $attribute->maxCalls
-            : (property_exists($root, 'maxCalls')
+            : (property_exists($root, 'maxCalls') && ! (new \ReflectionProperty($root, 'maxCalls'))->isPublic()
                 ? \Livewire\invade($root)->maxCalls
                 : config('livewire.payload.max_calls'));
 
