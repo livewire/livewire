@@ -9,6 +9,7 @@ use Livewire\Exceptions\TooManyComponentsException;
 use Livewire\Exceptions\TooManyCallsException;
 use Tests\TestCase;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+use Livewire\Attributes\MaxCalls;
 
 class PayloadGuardsUnitTest extends TestCase
 {
@@ -229,6 +230,39 @@ class PayloadGuardsUnitTest extends TestCase
 
 class PayloadGuardComponent extends Component
 {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+
+    public function render()
+    {
+        return '<div>{{ $count }}</div>';
+    }
+}
+
+#[MaxCalls(5)]
+class PayloadCallsGuardAttributeComponent extends Component
+{
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+
+    public function render()
+    {
+        return '<div>{{ $count }}</div>';
+    }
+}
+
+class PayloadCallsGuardPropertyComponent extends Component
+{
+    protected $maxCalls = 5;
+
     public $count = 0;
 
     public function increment()
