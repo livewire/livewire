@@ -211,8 +211,11 @@ PHP
         if (preg_match('/\<\?php(.*?)new/s', $classPortion, $matches)) {
             $preamble = $matches[1];
 
+            // Use (*SKIP)(*FAIL) to ignore "use" statements inside comments...
+            $skipComments = '(?:\/\/[^\n]*|\/\*.*?\*\/)(*SKIP)(*FAIL)';
+
             // Extract all use statements
-            if (preg_match_all('/use\s+[^;]+;/s', $preamble, $useMatches)) {
+            if (preg_match_all('/' . $skipComments . '|use\s+[^;]+;/s', $preamble, $useMatches)) {
                 $useStatements = implode("\n", $useMatches[0]);
             }
         }
