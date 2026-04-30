@@ -71,6 +71,11 @@ class Compiler
             $this->cacheManager->writeGlobalStyleFile($path, $globalStyleContents);
         }
 
+        $this->cacheManager->writeViewFile($path, $parser->generateViewContents());
+
+        // Ensure the class file is the last write, as it's used
+        // in the hasBeenCompiled() check, so its presence on
+        // disk means everything has been compiled...
         $this->cacheManager->writeClassFile($path, $parser->generateClassContents(
             $viewFileName,
             $placeholderFileName,
@@ -78,8 +83,6 @@ class Compiler
             $styleFileName,
             $globalStyleFileName,
         ));
-
-        $this->cacheManager->writeViewFile($path, $parser->generateViewContents());
     }
 
     public function clearCompiled($output = null)
