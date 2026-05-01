@@ -1,0 +1,120 @@
+name: Symbols Update
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  update:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install OpenCode
+        run: npm install -g opencode-ai
+
+      - name: Update symbols.json
+        id: symbols
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+
+          changed_files="$(gh pr diff "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --name-only)"
+          pr_diff="$(gh pr diff "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --patch)"
+
+          prompt="$(
+              printf 'You are updating Livewire'"'"'s public symbols catalog after a PR was merged into `main`.\n\n'
+              printf 'Merged PR: #%s - %s\n\n' "$PR_NUMBER" "$PR_TITLE"
+              cat <<'PROMPT'
+          Goal:
+          Update the repository root `symbols.json` file only when the merged PR added, removed, renamed, or changed public Livewire symbols that are not already accurately represented there.
+
+          Use these inputs:
+          - `symbols.json`: the current catalog of public symbols on `main`.
+          - Changed files: included below.
+          - PR diff: included below.
+
+          Public symbols include, but are not limited to:
+          - PHP attributes, traits, component methods, lifecycle hooks, and public APIs intended for Livewire users.
+          - Blade directives.
+          - `wire:*` HTML directives and modifiers.
+          - JavaScript `$wire` APIs, magic properties, and global `Livewire.*` APIs.
+
+          Rules:
+          - Edit only `symbols.json`.
+          - Keep the JSON format and existing style intact.
+          - Only update symbols directly affected by this merged PR.
+          - Do not rewrite, reorder, or improve unrelated sections.
+          - Do not make speculative changes based on nearby code or unrelated public APIs.
+          - If the PR does not require `symbols.json` changes, leave `symbols.json` unchanged.
+          - If a changed public symbol is already accurately reflected in `symbols.json`, leave it unchanged.
+          - If the diff is ambiguous, inspect relevant files in the checked-out repository, but still only update entries directly tied to the merged PR.
+
+          When you are done, output a pull request description between these exact markers:
+
+          <!-- SYMBOLS_PR_BODY_START -->
+          ## Summary
+          - <one or two bullets describing only the `symbols.json` updates you made>
+
+          ## Source PR
+          - Follow-up to #<source PR number>.
+          - Scope: only public symbols directly affected by the source PR.
+          <!-- SYMBOLS_PR_BODY_END -->
+
+          If `symbols.json` did not need changes, say that in the summary. Do not mention unrelated symbols.
+          PROMPT
+              printf '\nChanged files:\n\n```text\n%s\n```\n\n' "$changed_files"
+              printf 'PR diff:\n\n```diff\n%s\n```\n' "$pr_diff"
+          )"
+
+          opencode_output="$(env -u GH_TOKEN -u GITHUB_TOKEN \
+              OPENCODE_PERMISSION='{"edit":{"*":"deny","*symbols.json":"allow"},"bash":"deny","read":"allow","glob":"allow","grep":"allow","webfetch":"deny","task":"deny"}' \
+              opencode run \
+              --file symbols.json \
+              "$prompt")"
+
+          printf '%s\n' "$opencode_output"
+
+          jq empty symbols.json
+
+          pr_body="$opencode_output"
+          pr_body="${pr_body#*<!-- SYMBOLS_PR_BODY_START -->}"
+          pr_body="${pr_body%%<!-- SYMBOLS_PR_BODY_END -->*}"
+
+          if [ "$pr_body" = "$opencode_output" ]; then
+              pr_body="$(printf '## Summary\n- Updates `symbols.json` for public symbol changes introduced by #%s.\n\n## Source PR\n- Follow-up to #%s.\n- Scope: only public symbols directly affected by the source PR.' "$PR_NUMBER" "$PR_NUMBER")"
+          fi
+
+          {
+              printf 'pr_body<<SYMBOLS_PR_BODY\n'
+              printf '%s\n' "$pr_body"
+              printf 'SYMBOLS_PR_BODY\n'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open symbols update PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          add-paths: symbols.json
+          branch: automation/update-symbols-json-${{ github.event.pull_request.number }}
+          delete-branch: true
+          title: Update symbols.json for #${{ github.event.pull_request.number }}
+          commit-message: Update symbols.json for #${{ github.event.pull_request.number }}
+          body: ${{ steps.symbols.outputs.pr_body }}
