@@ -88,8 +88,8 @@ jobs:
           opencode_output="$(env -u GH_TOKEN -u GITHUB_TOKEN \
               OPENCODE_PERMISSION='{"edit":{"*":"deny","*symbols.json":"allow"},"bash":"deny","read":"allow","glob":"allow","grep":"allow","webfetch":"deny","task":"deny"}' \
               opencode run \
-              --file symbols.json \
-              "$prompt")"
+              "$prompt" \
+              --file symbols.json)"
 
           printf '%s\n' "$opencode_output"
 
