@@ -32,36 +32,47 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Get PR number based on event type
+          set -euo pipefail
+
+          PR_DATA=""
+
           if [[ "${{ github.event_name }}" == "issue_comment" ]]; then
-            PR_NUMBER="${{ github.event.issue.number }}"
+            # Use the PR API URL provided by GitHub for issue_comment events on PRs
+            PR_URL="${{ github.event.issue.pull_request.url }}"
+            if [[ -n "$PR_URL" ]]; then
+              PR_DATA=$(gh api "$PR_URL")
+            fi
           elif [[ "${{ github.event_name }}" == "pull_request_review_comment" ]]; then
             PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_DATA=$(gh api "repos/${{ github.repository }}/pulls/$PR_NUMBER")
           elif [[ "${{ github.event_name }}" == "pull_request_review" ]]; then
             PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_DATA=$(gh api "repos/${{ github.repository }}/pulls/$PR_NUMBER")
           fi
 
-          if [[ -n "$PR_NUMBER" ]]; then
-            PR_DATA=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER)
+          if [[ -n "${PR_DATA}" ]]; then
             IS_FORK=$(echo "$PR_DATA" | jq -r '.head.repo.fork // false')
             FORK_OWNER=$(echo "$PR_DATA" | jq -r '.head.repo.owner.login')
             FORK_REPO=$(echo "$PR_DATA" | jq -r '.head.repo.name')
             HEAD_REF=$(echo "$PR_DATA" | jq -r '.head.ref')
+            HEAD_SHA=$(echo "$PR_DATA" | jq -r '.head.sha')
+            PR_NUMBER=$(echo "$PR_DATA" | jq -r '.number')
 
-            echo "is_fork=$IS_FORK" >> $GITHUB_OUTPUT
-            echo "fork_owner=$FORK_OWNER" >> $GITHUB_OUTPUT
-            echo "fork_repo=$FORK_REPO" >> $GITHUB_OUTPUT
-            echo "head_ref=$HEAD_REF" >> $GITHUB_OUTPUT
-            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            echo "is_fork=$IS_FORK" >> "$GITHUB_OUTPUT"
+            echo "fork_owner=$FORK_OWNER" >> "$GITHUB_OUTPUT"
+            echo "fork_repo=$FORK_REPO" >> "$GITHUB_OUTPUT"
+            echo "head_ref=$HEAD_REF" >> "$GITHUB_OUTPUT"
+            echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+            echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           else
-            echo "is_fork=false" >> $GITHUB_OUTPUT
+            echo "is_fork=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           repository: ${{ steps.pr-info.outputs.is_fork == 'true' && format('{0}/{1}', steps.pr-info.outputs.fork_owner, steps.pr-info.outputs.fork_repo) || github.repository }}
-          ref: ${{ steps.pr-info.outputs.is_fork == 'true' && steps.pr-info.outputs.head_ref || '' }}
+          ref: ${{ steps.pr-info.outputs.is_fork == 'true' && steps.pr-info.outputs.head_sha || '' }}
           fetch-depth: 1
 
       - name: Run Claude Code
