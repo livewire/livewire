@@ -10,4 +10,6 @@
     @assets
         <link>
     @endassets
+
+    <livewire:compiler-instance-test-component />
 </div>

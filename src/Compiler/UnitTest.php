@@ -372,6 +372,22 @@ class UnitTest extends \Tests\TestCase
         $this->assertInstanceOf(Component::class, new $class);
     }
 
+    public function test_generated_blade_view_does_not_render_stale_contents_after_being_rewritten_within_same_second()
+    {
+        $cacheManager = new CacheManager($this->cacheDir);
+
+        $sourcePath = $this->tempPath . '/component.blade.php';
+        $viewPath = $cacheManager->getViewPath($sourcePath);
+
+        $cacheManager->writeViewFile($sourcePath, '<div>First version</div>');
+
+        $this->assertSame('<div>First version</div>', view()->file($viewPath)->render());
+
+        $cacheManager->writeViewFile($sourcePath, '<div>Second version</div>');
+
+        $this->assertSame('<div>Second version</div>', view()->file($viewPath)->render());
+    }
+
     public function test_compiler_will_recompile_if_source_file_is_older_than_compiled_file()
     {
         $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
@@ -521,6 +537,98 @@ class UnitTest extends \Tests\TestCase
         $generatedClassContents = $parser->generateClassContents();
 
         $this->assertEquals($expectedOutput, $generatedClassContents);
+    }
+
+    #[DataProvider('commentedUseStatementProvider')]
+    public function test_commented_use_statements_are_not_injected_into_view_contents($classPortion, $shouldNotContain, $shouldContain)
+    {
+        $parser = new SingleFileParser(
+            path: '',
+            contents: '',
+            scriptPortion: null,
+            stylePortion: null,
+            globalStylePortion: null,
+            classPortion: $classPortion,
+            placeholderPortion: null,
+            viewPortion: '<div></div>',
+        );
+
+        $viewContents = $parser->generateViewContents();
+
+        foreach ($shouldNotContain as $needle) {
+            $this->assertStringNotContainsString($needle, $viewContents);
+        }
+
+        foreach ($shouldContain as $needle) {
+            $this->assertStringContainsString($needle, $viewContents);
+        }
+    }
+
+    public static function commentedUseStatementProvider()
+    {
+        return [
+            'single-line // comment with use statement' => [
+                <<<'EOT'
+                <?php
+                // use App\Actions\One\MyAction;
+                use App\Actions\Two\MyAction;
+                use Livewire\Component;
+
+                new class extends Component {
+                };
+                ?>
+                EOT,
+                ['use App\Actions\One\MyAction;'],
+                ['use App\Actions\Two\MyAction;', 'use Livewire\Component;'],
+            ],
+            'multi-line /* */ comment with use statement' => [
+                <<<'EOT'
+                <?php
+                /* use App\Actions\One\MyAction; */
+                use App\Actions\Two\MyAction;
+                use Livewire\Component;
+
+                new class extends Component {
+                };
+                ?>
+                EOT,
+                ['use App\Actions\One\MyAction;'],
+                ['use App\Actions\Two\MyAction;', 'use Livewire\Component;'],
+            ],
+            'docblock /** */ comment with use statement' => [
+                <<<'EOT'
+                <?php
+                /**
+                 * use App\Actions\One\MyAction;
+                 */
+                use App\Actions\Two\MyAction;
+                use Livewire\Component;
+
+                new class extends Component {
+                };
+                ?>
+                EOT,
+                ['use App\Actions\One\MyAction;'],
+                ['use App\Actions\Two\MyAction;', 'use Livewire\Component;'],
+            ],
+            'multi-line block comment spanning multiple use statements' => [
+                <<<'EOT'
+                <?php
+                /*
+                use App\Actions\One\MyAction;
+                use App\Actions\Three\AnotherAction;
+                */
+                use App\Actions\Two\MyAction;
+                use Livewire\Component;
+
+                new class extends Component {
+                };
+                ?>
+                EOT,
+                ['use App\Actions\One\MyAction;', 'use App\Actions\Three\AnotherAction;'],
+                ['use App\Actions\Two\MyAction;', 'use Livewire\Component;'],
+            ],
+        ];
     }
 
     public static function classReturnProvider()
