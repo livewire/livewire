@@ -17,18 +17,18 @@
         "vitest": "^3.2.4"
     },
     "dependencies": {
-        "@alpinejs/anchor": "^3.15.11",
-        "@alpinejs/collapse": "^3.15.11",
-        "@alpinejs/csp": "^3.15.11",
-        "@alpinejs/focus": "^3.15.11",
-        "@alpinejs/intersect": "^3.15.11",
-        "@alpinejs/mask": "^3.15.11",
-        "@alpinejs/morph": "^3.15.11",
-        "@alpinejs/persist": "^3.15.11",
-        "@alpinejs/resize": "^3.15.11",
-        "@alpinejs/sort": "^3.15.11",
+        "@alpinejs/anchor": "^3.15.12",
+        "@alpinejs/collapse": "^3.15.12",
+        "@alpinejs/csp": "^3.15.12",
+        "@alpinejs/focus": "^3.15.12",
+        "@alpinejs/intersect": "^3.15.12",
+        "@alpinejs/mask": "^3.15.12",
+        "@alpinejs/morph": "^3.15.12",
+        "@alpinejs/persist": "^3.15.12",
+        "@alpinejs/resize": "^3.15.12",
+        "@alpinejs/sort": "^3.15.12",
         "@vue/reactivity": "^3.2.45",
-        "alpinejs": "^3.15.11",
+        "alpinejs": "^3.15.12",
         "nprogress": "^0.2.0"
     }
 }
