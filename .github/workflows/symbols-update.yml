@@ -115,6 +115,6 @@ jobs:
           add-paths: symbols.json
           branch: automation/update-symbols-json-${{ github.event.pull_request.number }}
           delete-branch: true
-          title: Update symbols.json for #${{ github.event.pull_request.number }}
-          commit-message: Update symbols.json for #${{ github.event.pull_request.number }}
+          title: "Update symbols.json for #${{ github.event.pull_request.number }}"
+          commit-message: "Update symbols.json for #${{ github.event.pull_request.number }}"
           body: ${{ steps.symbols.outputs.pr_body }}
