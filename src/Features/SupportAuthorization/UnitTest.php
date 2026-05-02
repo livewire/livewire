@@ -368,6 +368,60 @@ class UnitTest extends TestCase
 
         $this->assertTrue(Session::has('event-was-handled'));
     }
+
+    public function test_can_authorize_with_array_as_argument()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Gate::define('create-comment', function (AuthorizationUser $user, string $commentClass, AuthorizationPost $post) {
+            return (int) $user->id === 1 && $post->user_id === 1;
+        });
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                #[Authorize('create-comment', [AuthorizationComment::class, 'post'])]
+                public function createComment(AuthorizationPost $post)
+                {
+                    return true;
+                }
+            })
+            ->call('createComment', post: 1)
+            ->assertOk();
+    }
+
+    public function test_can_authorize_with_array_using_component_property()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Gate::define('create-comment', function (AuthorizationUser $user, string $commentClass, AuthorizationPost $post) {
+            return (int) $user->id === 1 && $post->user_id === 1;
+        });
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                #[Authorize('create-comment', [AuthorizationComment::class, 'post'])]
+                public function createComment()
+                {
+                    return true;
+                }
+            })
+            ->call('createComment')
+            ->assertOk();
+    }
 }
 
 class AuthorizationUser extends AuthUser
@@ -387,6 +441,15 @@ class AuthorizationPost extends Model
     protected $rows = [
         ['id' => 1, 'title' => 'First', 'user_id' => 1],
         ['id' => 2, 'title' => 'Second', 'user_id' => 2],
+    ];
+}
+
+class AuthorizationComment extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'post_id' => 1, 'content' => 'Test comment'],
     ];
 }
 
