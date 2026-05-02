@@ -437,6 +437,17 @@ class UnitTest extends TestCase
             })
             ->call('createComment', post: 1)
             ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[Authorize('create', [AuthorizationComment::class, 'post'])]
+                public function createComment(AuthorizationPost $post)
+                {
+                    return true;
+                }
+            })
+            ->call('createComment', post: 1)
+            ->assertForbidden();
     }
 
     public function test_can_authorize_policy_with_array_of_models()
