@@ -11,9 +11,12 @@ use UnitEnum;
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class BaseAuthorize extends LivewireAttribute
 {
+    /**
+     * @param  array<string>|string|null  $argument
+     */
     public function __construct(
         public UnitEnum|string $ability,
-        public string|null $argument = null,
+        public array|string|null $argument = null,
     ) {}
 
     public function call(array $parameters) : void
@@ -25,32 +28,44 @@ class BaseAuthorize extends LivewireAttribute
             return;
         }
 
-        // Action that does not require a model, for example a 'create' action...
-        if (is_string($this->argument) && class_exists($this->argument)) {
-            Gate::authorize($this->ability, $this->argument);
+        $arguments = Arr::wrap($this->argument);
 
-            return;
+        // Resolve each argument (prioritize method parameters first, then component properties)
+        $resolved = [];
+        foreach ($arguments as $arg) {
+            $resolved[] = $this->resolveArgument($arg, $parameters);
         }
 
+        Gate::authorize($this->ability, $resolved);
+    }
+
+    /**
+     * Resolve a single argument.
+     */
+    protected function resolveArgument(string $arg, array $parameters): mixed
+    {
+        // Action that does not require a model, for example a 'create' action...
+        if (class_exists($arg)) {
+            return $arg;
+        }
+
+        // Try method parameter first (prioritized per rules)
         $methodArgument = Arr::first(
             (new \ReflectionObject($this->component))->getMethod($this->getName())->getParameters(),
-            fn (\ReflectionParameter $parameter) : bool => $parameter->getName() === $this->argument,
+            fn (\ReflectionParameter $parameter) : bool => $parameter->getName() === $arg,
         );
 
-        // Action that requires a model, extracted from the called method...
-        if ($methodArgument instanceof \ReflectionParameter && isset($parameters[$this->argument])) {
-            $model = app($methodArgument->getType()->getName())->resolveRouteBinding($parameters[$this->argument]);
+        if ($methodArgument instanceof \ReflectionParameter && isset($parameters[$arg])) {
+            $model = app($methodArgument->getType()->getName())->resolveRouteBinding($parameters[$arg]);
 
             if (! $model) {
                 throw (new \Illuminate\Database\Eloquent\ModelNotFoundException)->setModel($methodArgument->getType()->getName());
             }
 
-            Gate::authorize($this->ability, $model);
-
-            return;
+            return $model;
         }
 
-        // Action that requires a model, extracted from the component...
-        Gate::authorize($this->ability, data_get($this->component, $this->argument));
+        // Fall back to component property
+        return data_get($this->component, $arg);
     }
 }
