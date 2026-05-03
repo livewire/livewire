@@ -375,6 +375,7 @@ class UnitTest extends TestCase
             return (int) $user->id === 1 && $post->id === 1;
         });
 
+        // AssertOk using class name and method argument
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 #[Authorize('create-comment', [AuthorizationComment::class, 'post'])]
@@ -386,6 +387,7 @@ class UnitTest extends TestCase
             ->call('createComment', post: 1)
             ->assertOk();
 
+        // AssertOk using class name and component property
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 public AuthorizationPost $post;
@@ -404,6 +406,26 @@ class UnitTest extends TestCase
             ->call('createComment')
             ->assertOk();
 
+        // AssertOk using class name and method argument prioritized first
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->post = AuthorizationPost::find(2);
+                }
+
+                #[Authorize('create-comment', [AuthorizationComment::class, 'post'])]
+                public function createComment(AuthorizationPost $post)
+                {
+                    return true;
+                }
+            })
+            ->call('createComment', post: 1)
+            ->assertOk();
+
+        // AssertForbidden using class name and method argument
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 #[Authorize('create-comment', [AuthorizationComment::class, 'post'])]
@@ -415,6 +437,7 @@ class UnitTest extends TestCase
             ->call('createComment', post: 2)
             ->assertForbidden();
 
+        // AssertForbidden using class name and component property
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 public AuthorizationPost $post;
@@ -432,14 +455,8 @@ class UnitTest extends TestCase
             })
             ->call('createComment')
             ->assertForbidden();
-    }
-
-    public function test_can_authorize_defined_gates_with_array_using_component_property()
-    {
-        Gate::define('create-comment', function (AuthorizationUser $user, string $commentClass, AuthorizationPost $post) {
-            return (int) $user->id === 1 && $post->id === 1;
-        });
-
+        
+        // AssertForbidden using class name and method argument prioritized first
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 public AuthorizationPost $post;
@@ -450,30 +467,12 @@ class UnitTest extends TestCase
                 }
 
                 #[Authorize('create-comment', [AuthorizationComment::class, 'post'])]
-                public function createComment()
+                public function createComment(AuthorizationPost $post)
                 {
                     return true;
                 }
             })
-            ->call('createComment')
-            ->assertOk();
-
-        Livewire::actingAs(AuthorizationUser::find(1))
-            ->test(new class extends TestComponent {
-                public AuthorizationPost $post;
-
-                public function mount(): void
-                {
-                    $this->post = AuthorizationPost::find(2);
-                }
-
-                #[Authorize('create-comment', [AuthorizationComment::class, 'post'])]
-                public function createComment()
-                {
-                    return true;
-                }
-            })
-            ->call('createComment')
+            ->call('createComment', post: 2)
             ->assertForbidden();
     }
 
@@ -481,6 +480,7 @@ class UnitTest extends TestCase
     {
         Gate::policy(AuthorizationComment::class, AuthorizationCommentPolicy::class);
 
+        // AssertOk using class name and method argument
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 #[Authorize('create', [AuthorizationComment::class, 'post'])]
@@ -492,6 +492,7 @@ class UnitTest extends TestCase
             ->call('createComment', post: 1)
             ->assertOk();
 
+        // AssertOk using class name and component property
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 public AuthorizationPost $post;
@@ -510,6 +511,26 @@ class UnitTest extends TestCase
             ->call('createComment')
             ->assertOk();
 
+        // AssertOk using class name and method argument prioritized first
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->post = AuthorizationPost::find(2);
+                }
+
+                #[Authorize('create', [AuthorizationComment::class, 'post'])]
+                public function createComment(AuthorizationPost $post)
+                {
+                    return true;
+                }
+            })
+            ->call('createComment', post: 1)
+            ->assertOk();
+
+        // AssertForbidden using class name and method argument
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 #[Authorize('create', [AuthorizationComment::class, 'post'])]
@@ -521,6 +542,7 @@ class UnitTest extends TestCase
             ->call('createComment', post: 2)
             ->assertForbidden();
 
+        // AssertForbidden using class name and component property
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 public AuthorizationPost $post;
@@ -538,12 +560,32 @@ class UnitTest extends TestCase
             })
             ->call('createComment')
             ->assertForbidden();
+        
+        // AssertForbidden using class name and method argument prioritized first
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                #[Authorize('create', [AuthorizationComment::class, 'post'])]
+                public function createComment(AuthorizationPost $post)
+                {
+                    return true;
+                }
+            })
+            ->call('createComment', post: 2)
+            ->assertForbidden();
     }
 
     public function test_can_authorize_policy_with_array_of_models()
     {
         Gate::policy(AuthorizationComment::class, AuthorizationCommentPolicy::class);
 
+        // AssertOk using method arguments
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 #[Authorize('edit', ['comment', 'post'])]
@@ -555,6 +597,7 @@ class UnitTest extends TestCase
             ->call('editComment', comment: 1, post: 1)
             ->assertOk();
 
+        // AssertOk using component properties
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 public AuthorizationComment $comment;
@@ -576,6 +619,29 @@ class UnitTest extends TestCase
             ->call('editComment')
             ->assertOk();
 
+        // AssertOk using method arguments prioritized first
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationComment $comment;
+
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->comment = AuthorizationComment::find(1);
+                    $this->post = AuthorizationPost::find(2);
+                }
+
+                #[Authorize('edit', ['comment', 'post'])]
+                public function editComment(AuthorizationComment $comment, AuthorizationPost $post)
+                {
+                    return true;
+                }
+            })
+            ->call('editComment', comment: 1, post: 1)
+            ->assertOk();
+
+        // AssertForbidden using method arguments
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 #[Authorize('edit', ['comment', 'post'])]
@@ -587,6 +653,7 @@ class UnitTest extends TestCase
             ->call('editComment', comment: 1, post: 2)
             ->assertForbidden();
 
+        // AssertForbidden using component properties
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
                 public AuthorizationComment $comment;
@@ -606,6 +673,28 @@ class UnitTest extends TestCase
                 }
             })
             ->call('editComment')
+            ->assertForbidden();
+        
+        // AssertForbidden using method arguments prioritized first
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationComment $comment;
+
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->comment = AuthorizationComment::find(1);
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                #[Authorize('edit', ['comment', 'post'])]
+                public function editComment(AuthorizationComment $comment, AuthorizationPost $post)
+                {
+                    return true;
+                }
+            })
+            ->call('editComment', comment: 1, post: 2)
             ->assertForbidden();
     }
 }
