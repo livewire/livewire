@@ -11,9 +11,6 @@ use UnitEnum;
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class BaseAuthorize extends LivewireAttribute
 {
-    /**
-     * @param  array<string>|string|null  $argument
-     */
     public function __construct(
         public UnitEnum|string $ability,
         public array|string|null $argument = null,
