@@ -75,19 +75,19 @@
   },
   "blade": {
     "directives": [
-      { "label": "@livewire", "description": "Renders a Livewire component from a Blade view.", "value": true },
-      { "label": "@this", "description": "Outputs the JavaScript component object for the current Livewire component.", "value": false },
-      { "label": "@script", "description": "Wraps JavaScript that should run with the Livewire component instance available.", "value": true },
-      { "label": "@endscript", "description": "Ends a Livewire `@script` block.", "value": false },
-      { "label": "@assets", "description": "Wraps scripts or styles that should be loaded once for a component.", "value": true },
-      { "label": "@endassets", "description": "Ends a Livewire `@assets` block.", "value": false },
-      { "label": "@persist", "description": "Persists a DOM fragment across `wire:navigate` page visits.", "value": true },
-      { "label": "@endpersist", "description": "Ends a Livewire `@persist` block.", "value": false },
-      { "label": "@island", "description": "Defines a named Livewire island block inside a component.", "value": true, "note": "Actions inside the island only re-render that island. Pass `with: [...]` to provide scoped data." },
-      { "label": "@endisland", "description": "Ends a Livewire `@island` block.", "value": false },
-      { "label": "@livewireScripts", "description": "Outputs Livewire's browser scripts.", "value": false },
-      { "label": "@livewireScriptConfig", "description": "Outputs Livewire's script configuration for manually bundled assets.", "value": false },
-      { "label": "@livewireStyles", "description": "Outputs Livewire's styles when needed by features such as file uploads or navigation.", "value": false }
+      { "label": "@livewire", "description": "Renders a Livewire component from a Blade view.", "parameters": "$component, $params = [], $key = null, $slots = []" },
+      { "label": "@this", "description": "Outputs the JavaScript component object for the current Livewire component.", "parameters": "" },
+      { "label": "@script", "description": "Wraps JavaScript that should run with the Livewire component instance available.", "parameters": "" },
+      { "label": "@endscript", "description": "Ends a Livewire `@script` block.", "parameters": "" },
+      { "label": "@assets", "description": "Wraps scripts or styles that should be loaded once for a component.", "parameters": "" },
+      { "label": "@endassets", "description": "Ends a Livewire `@assets` block.", "parameters": "" },
+      { "label": "@persist", "description": "Persists a DOM fragment across `wire:navigate` page visits.", "parameters": "$key" },
+      { "label": "@endpersist", "description": "Ends a Livewire `@persist` block.", "parameters": "" },
+      { "label": "@island", "description": "Defines a named Livewire island block inside a component.", "parameters": "$name, $with = []", "note": "Actions inside the island only re-render that island. Pass `with: [...]` to provide scoped data." },
+      { "label": "@endisland", "description": "Ends a Livewire `@island` block.", "parameters": "" },
+      { "label": "@livewireScripts", "description": "Outputs Livewire's browser scripts.", "parameters": "$options = []" },
+      { "label": "@livewireScriptConfig", "description": "Outputs Livewire's script configuration for manually bundled assets.", "parameters": "$options = []" },
+      { "label": "@livewireStyles", "description": "Outputs Livewire's styles when needed by features such as file uploads or navigation.", "parameters": "$options = []" }
     ]
   },
   "html": {
@@ -158,15 +158,15 @@
       { "label": "$js", "description": "Registers or calls client-side JavaScript actions for the component.", "parameters": "name, action", "note": "Define actions with `$wire.$js('name', callback)` or `$wire.$js.name = callback`, then call them as `$js.name()` from Livewire expressions." },
       { "label": "$refs", "description": "Looks up elements by `wire:ref` name.", "parameters": "name", "note": "Use either `$wire.$refs('name')` or `$wire.$refs.name`." },
       { "label": "$dirty", "description": "Returns whether a property or the component has dirty state.", "parameters": "property", "note": "Call without arguments for the whole component or with a property path like `$wire.$dirty('title')`." },
-      { "label": "$errors", "description": "Exposes validation errors for the component in JavaScript.", "parameters": "" },
-      { "label": "$el", "description": "The component root DOM element.", "parameters": "" },
-      { "label": "$id", "description": "The current Livewire component id.", "parameters": "" },
-      { "label": "$parent", "description": "The nearest parent Livewire component's `$wire` object.", "parameters": "", "note": "Use from a child component, for example `$wire.$parent.save()` or `wire:click=\"$parent.save\"`." },
+      { "label": "$errors", "description": "Exposes validation errors for the component in JavaScript.", "parameters": false },
+      { "label": "$el", "description": "The component root DOM element.", "parameters": false },
+      { "label": "$id", "description": "The current Livewire component id.", "parameters": false },
+      { "label": "$parent", "description": "The nearest parent Livewire component's `$wire` object.", "parameters": false, "note": "Use from a child component, for example `$wire.$parent.save()` or `wire:click=\"$parent.save\"`." },
       { "label": "$island", "description": "Targets a named island for the next action.", "parameters": "name, options = {}", "note": "Chain the action after the island name, for example `$wire.$island('feed').loadMore()` or `$wire.$island('feed').$refresh()`." }
     ],
     "magicProperties": [
-      { "label": "$wire", "description": "Accesses the nearest Livewire component's JavaScript API from Alpine expressions.", "parameters": "" },
-      { "label": "$js", "description": "Accesses Livewire JavaScript actions from Alpine expressions.", "parameters": "" },
+      { "label": "$wire", "description": "Accesses the nearest Livewire component's JavaScript API from Alpine expressions.", "parameters": false },
+      { "label": "$js", "description": "Accesses Livewire JavaScript actions from Alpine expressions.", "parameters": false },
       { "label": "$queryString", "description": "Tracks Alpine state in the URL query string through Livewire's history plugin.", "parameters": "initialSeedValue", "note": "Use in Alpine state like `search: $queryString('')`; chain `.as('q')`, `.alwaysShow()`, or `.usePush()`." }
     ],
     "globalLivewire": [
