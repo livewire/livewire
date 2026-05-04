@@ -170,23 +170,23 @@
       { "label": "$queryString", "description": "Tracks Alpine state in the URL query string through Livewire's history plugin.", "parameters": "initialSeedValue", "note": "Use in Alpine state like `search: $queryString('')`; chain `.as('q')`, `.alwaysShow()`, or `.usePush()`." }
     ],
     "globalLivewire": [
-      { "label": "Livewire.directive", "description": "Registers a custom Livewire directive.", "parameters": "name, callback", "note": "Use `Livewire.directive('name', ({ el, directive, component, $wire, cleanup }) => {})`." },
-      { "label": "Livewire.dispatch", "description": "Dispatches a global Livewire event.", "parameters": "name, params" },
-      { "label": "Livewire.dispatchTo", "description": "Dispatches an event to components by name.", "parameters": "componentName, name, params" },
-      { "label": "Livewire.on", "description": "Listens for a global Livewire event.", "parameters": "eventName, callback" },
-      { "label": "Livewire.find", "description": "Finds a Livewire component by id and returns its `$wire` object.", "parameters": "id" },
-      { "label": "Livewire.first", "description": "Returns the first Livewire component's `$wire` object on the page.", "parameters": "" },
-      { "label": "Livewire.getByName", "description": "Returns Livewire components matching a component name.", "parameters": "name" },
-      { "label": "Livewire.all", "description": "Returns all Livewire components on the page.", "parameters": "" },
-      { "label": "Livewire.hook", "description": "Registers a Livewire JavaScript lifecycle hook.", "parameters": "name, callback" },
-      { "label": "Livewire.trigger", "description": "Triggers a Livewire JavaScript hook synchronously.", "parameters": "name, ...params" },
-      { "label": "Livewire.triggerAsync", "description": "Triggers a Livewire JavaScript hook asynchronously.", "parameters": "name, ...params" },
-      { "label": "Livewire.interceptAction", "description": "Intercepts Livewire actions globally.", "parameters": "callback" },
-      { "label": "Livewire.interceptMessage", "description": "Intercepts Livewire messages globally.", "parameters": "callback" },
-      { "label": "Livewire.interceptRequest", "description": "Intercepts Livewire requests globally.", "parameters": "callback" },
-      { "label": "Livewire.fireAction", "description": "Fires a component action from JavaScript.", "parameters": "component, method, params = [], metadata = {}", "note": "Use `Livewire.fireAction(componentOrWire, 'method', [params], metadata)`." },
-      { "label": "Livewire.start", "description": "Starts Livewire manually when auto-start is disabled.", "parameters": "" },
-      { "label": "Livewire.navigate", "description": "Exposes Livewire's SPA-like navigation function.", "parameters": "url, options = {}" }
+      { "label": "directive", "description": "Registers a custom Livewire directive.", "parameters": "name, callback", "note": "Use `Livewire.directive('name', ({ el, directive, component, $wire, cleanup }) => {})`." },
+      { "label": "dispatch", "description": "Dispatches a global Livewire event.", "parameters": "name, params" },
+      { "label": "dispatchTo", "description": "Dispatches an event to components by name.", "parameters": "componentName, name, params" },
+      { "label": "on", "description": "Listens for a global Livewire event.", "parameters": "eventName, callback" },
+      { "label": "find", "description": "Finds a Livewire component by id and returns its `$wire` object.", "parameters": "id" },
+      { "label": "first", "description": "Returns the first Livewire component's `$wire` object on the page.", "parameters": "" },
+      { "label": "getByName", "description": "Returns Livewire components matching a component name.", "parameters": "name" },
+      { "label": "all", "description": "Returns all Livewire components on the page.", "parameters": "" },
+      { "label": "hook", "description": "Registers a Livewire JavaScript lifecycle hook.", "parameters": "name, callback" },
+      { "label": "trigger", "description": "Triggers a Livewire JavaScript hook synchronously.", "parameters": "name, ...params" },
+      { "label": "triggerAsync", "description": "Triggers a Livewire JavaScript hook asynchronously.", "parameters": "name, ...params" },
+      { "label": "interceptAction", "description": "Intercepts Livewire actions globally.", "parameters": "callback" },
+      { "label": "interceptMessage", "description": "Intercepts Livewire messages globally.", "parameters": "callback" },
+      { "label": "interceptRequest", "description": "Intercepts Livewire requests globally.", "parameters": "callback" },
+      { "label": "fireAction", "description": "Fires a component action from JavaScript.", "parameters": "component, method, params = [], metadata = {}", "note": "Use `Livewire.fireAction(componentOrWire, 'method', [params], metadata)`." },
+      { "label": "start", "description": "Starts Livewire manually when auto-start is disabled.", "parameters": "" },
+      { "label": "navigate", "description": "Exposes Livewire's SPA-like navigation function.", "parameters": "url, options = {}" }
     ]
   }
 }
