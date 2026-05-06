@@ -131,6 +131,11 @@ export class Component {
         return this.mergeQueuedUpdates(propertiesDiff)
     }
 
+    hasUpdates() {
+        return Object.keys(this.queuedUpdates).length > 0
+            || Object.keys(diffAndConsolidate(this.canonical, this.ephemeral)).length > 0
+    }
+
     applyUpdates(object, updates) {
         for (let key in updates) {
             dataSet(object, key, updates[key])

@@ -189,8 +189,20 @@ export function createOrAddToOutstandingMessage(action) {
 
 function sendMessages() {
     let requests = new Set()
+    let skippedMessages = new Set()
 
     messageBus.eachPendingMessage(message => {
+        if (! messageIsSkippableModelLiveCommit(message)) return
+
+        if (message.component.hasUpdates()) return
+
+        skippedMessages.add(message)
+        message.resolveActionPromises([], [])
+    })
+
+    messageBus.eachPendingMessage(message => {
+        if (skippedMessages.has(message)) return
+
         partitionInterceptors.forEach(callback => {
             callback({
                 message,
@@ -230,7 +242,7 @@ function sendMessages() {
         })
     })
 
-    let messages = messageBus.getPendingMessages()
+    let messages = messageBus.getPendingMessages().filter(message => ! skippedMessages.has(message))
 
     messageBus.clearPendingMessages()
 
@@ -480,6 +492,13 @@ function sendMessages() {
             },
         })
     })
+}
+
+function messageIsSkippableModelLiveCommit(message) {
+    let actions = message.getActions()
+
+    return actions.length > 0
+        && actions.every(action => action.name === '$commit' && action.metadata.type === 'model.live')
 }
 
 async function sendRequest(request, handlers) {
