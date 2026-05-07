@@ -30,6 +30,8 @@ class SupportTesting extends ComponentHook
         // writing islands to it. Mirror what Laravel does for `blade.compiler`
         // and patch the cache directory whenever the worker's compiled view path
         // changes. See https://github.com/livewire/livewire/issues/10262.
+        if (! class_exists(\Illuminate\Support\Facades\ParallelTesting::class)) return;
+
         \Illuminate\Support\Facades\ParallelTesting::setUpTestCase(function () {
             if (! app()->resolved('livewire.compiler')) return;
 

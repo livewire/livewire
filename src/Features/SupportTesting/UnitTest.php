@@ -628,6 +628,9 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     function test_compiler_cache_directory_is_synced_during_parallel_test_set_up()
     {
         // Regression test for https://github.com/livewire/livewire/issues/10262.
+        // Resolve the singleton at one path (freezing it), then change config
+        // and confirm the SupportTesting hook patches the cache directory back
+        // in line with the new config when ParallelTesting fires its callbacks.
         $oldPath = sys_get_temp_dir() . '/before-parallel-' . uniqid();
         config()->set('view.compiled', $oldPath);
 
@@ -635,8 +638,11 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
         $this->assertSame($oldPath . '/livewire', $compiler->cacheManager->cacheDirectory);
 
-        // ParallelTesting only runs setUpTestCase callbacks when actually running
-        // in parallel, so fake the env vars that signal parallel mode.
+        $newPath = sys_get_temp_dir() . '/test_5-' . uniqid();
+        config()->set('view.compiled', $newPath);
+
+        // ParallelTesting only fires setUpTestCase callbacks when actually
+        // running in parallel, so fake the env vars that signal parallel mode.
         $_SERVER['LARAVEL_PARALLEL_TESTING'] = 1;
         $_SERVER['TEST_TOKEN'] = 5;
 
@@ -646,8 +652,9 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             unset($_SERVER['LARAVEL_PARALLEL_TESTING'], $_SERVER['TEST_TOKEN']);
         }
 
-        // After the callbacks run, the compiler's cache directory should follow
-        // whatever path Laravel ended up with for this worker.
+        // Follows whatever config('view.compiled') ended up as; on Laravel 12+
+        // the `TestViews` trait appends another `/test_<token>` segment, but we
+        // only care that the cache directory was synced to current config.
         $this->assertSame(
             rtrim(config('view.compiled'), '/\\') . '/livewire',
             $compiler->cacheManager->cacheDirectory,
