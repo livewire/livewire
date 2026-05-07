@@ -38,6 +38,105 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_default_slot_renders_on_lazy_loaded_component()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<'HTML'
+            <div>
+                <livewire:child lazy>
+                    Lazy slot content
+                </livewire:child>
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public function mount() {
+                sleep(1);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div id="child">
+                    Child!
+                    {{ $slot }}
+                </div>
+                HTML;
+            }
+        }])
+            ->assertDontSee('Child!')
+            ->assertDontSee('Lazy slot content')
+            ->waitFor('#child')
+            ->assertSee('Child!')
+            ->assertSee('Lazy slot content')
+        ;
+    }
+
+    public function test_default_slot_renders_on_deferred_component()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<'HTML'
+            <div>
+                <livewire:child defer>
+                    Deferred slot content
+                </livewire:child>
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public function mount() {
+                sleep(1);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div id="child">
+                    Child!
+                    {{ $slot }}
+                </div>
+                HTML;
+            }
+        }])
+            ->assertDontSee('Child!')
+            ->assertDontSee('Deferred slot content')
+            ->waitFor('#child')
+            ->assertSee('Child!')
+            ->assertSee('Deferred slot content')
+        ;
+    }
+
+    public function test_named_slots_render_on_lazy_loaded_component()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<'HTML'
+            <div>
+                <livewire:child lazy>
+                    <livewire:slot name="header">
+                        Header content
+                    </livewire:slot>
+                    Default content
+                </livewire:child>
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public function mount() {
+                sleep(1);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div id="child">
+                    <div>{{ $slot('header') }}</div>
+                    <div>{{ $slot }}</div>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertDontSee('Header content')
+            ->assertDontSee('Default content')
+            ->waitFor('#child')
+            ->assertSee('Header content')
+            ->assertSee('Default content')
+        ;
+    }
+
     public function test_can_defer_lazy_load_a_component()
     {
         Livewire::visit([new class extends Component {

@@ -44,7 +44,7 @@ class SupportLazyLoading extends ComponentHook
         });
     }
 
-    public function mount($params)
+    public function mount($params, $parent = null)
     {
         $shouldBeLazy = false;
         $isDeferred = false;
@@ -94,6 +94,12 @@ class SupportLazyLoading extends ComponentHook
             if ($attribute->isolate !== null) $isolate = $attribute->isolate;
         }
 
+        // Hand any slots passed into the lazy component up to the parent so
+        // the parent's response delivers them as `slotFragments` effects;
+        // the JS side stashes them until the lazy load completes and the
+        // matching slot markers appear in the DOM...
+        $this->forwardSlotsToParent($parent);
+
         $this->component->skipMount();
 
         store($this->component)->set('isLazyLoadMounting', true);
@@ -102,6 +108,23 @@ class SupportLazyLoading extends ComponentHook
         $this->component->skipRender(
             $this->generatePlaceholderHtml($params, $isDeferred)
         );
+    }
+
+    protected function forwardSlotsToParent($parent)
+    {
+        if (! $parent) return;
+
+        $slots = $this->component->getSlots();
+
+        if (empty($slots)) return;
+
+        $slotsByName = [];
+
+        foreach ($slots as $slot) {
+            $slotsByName[$slot->getName()] = $slot->content;
+        }
+
+        $parent->withChildSlots($slotsByName, $this->component->getId());
     }
 
     public function hydrate($memo)

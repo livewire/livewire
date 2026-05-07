@@ -72,6 +72,35 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('Loading...')
             ->assertDontSee('Hello world!');
     }
+
+    public function test_lazy_components_forward_slot_content_to_parent_as_slot_fragments()
+    {
+        $component = Livewire::test([
+            new class extends Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        <livewire:child lazy>
+                            Lazy slot content
+                        </livewire:child>
+                    </div>
+                HTML; }
+            },
+            'child' => new class extends Component {
+                public function placeholder() { return '<div>Loading...</div>'; }
+                public function render() { return '<div>{{ $slot }}</div>'; }
+            },
+        ]);
+
+        $component->assertSee('Loading...');
+
+        $effects = $component->effects;
+
+        $this->assertArrayHasKey('slotFragments', $effects, 'Expected parent effects to contain slotFragments for the lazy child');
+
+        $this->assertCount(1, $effects['slotFragments']);
+
+        $this->assertStringContainsString('Lazy slot content', $effects['slotFragments'][0]);
+    }
 }
 
 #[Lazy]
