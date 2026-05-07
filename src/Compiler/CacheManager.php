@@ -8,8 +8,23 @@ use Illuminate\Support\Str;
 class CacheManager
 {
     public function __construct(
-        public string $cacheDirectory,
+        protected ?string $cacheDirectoryOverride = null,
     ) {}
+
+    public function __get($name)
+    {
+        if ($name === 'cacheDirectory') {
+            return $this->cacheDirectoryOverride
+                ?? rtrim(config('view.compiled'), '/\\') . '/livewire';
+        }
+    }
+
+    public function __set($name, $value): void
+    {
+        if ($name === 'cacheDirectory') {
+            $this->cacheDirectoryOverride = $value;
+        }
+    }
 
     public function hasBeenCompiled(string $sourcePath): bool
     {

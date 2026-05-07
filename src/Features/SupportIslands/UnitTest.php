@@ -506,4 +506,28 @@ class UnitTest extends TestCase
 
         File::deleteDirectory($compiledPath);
     }
+
+    public function test_livewire_compiler_cache_directory_follows_view_compiled_config_after_singleton_resolution()
+    {
+        // Regression test for https://github.com/livewire/livewire/issues/10262.
+        //
+        // Laravel's parallel testing changes config('view.compiled') per worker
+        // (e.g. storage/framework/views/test_5) AFTER the application has booted.
+        // If anything has resolved livewire.compiler before that change, the
+        // singleton's cacheDirectory must still follow the new path. Otherwise
+        // parallel-test workers all share a single stale cache directory and
+        // race when writing islands to it.
+        $oldPath = sys_get_temp_dir() . '/before-parallel-' . uniqid();
+        $newPath = sys_get_temp_dir() . '/test_5-' . uniqid();
+
+        config()->set('view.compiled', $oldPath);
+
+        $compiler = app('livewire.compiler');
+
+        $this->assertSame($oldPath . '/livewire', $compiler->cacheManager->cacheDirectory);
+
+        config()->set('view.compiled', $newPath);
+
+        $this->assertSame($newPath . '/livewire', $compiler->cacheManager->cacheDirectory);
+    }
 }
