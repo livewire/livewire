@@ -7,23 +7,17 @@ use Illuminate\Support\Str;
 
 class CacheManager
 {
-    public function __construct(
-        protected ?string $cacheDirectoryOverride = null,
-    ) {}
+    protected ?string $cacheDirectoryOverride = null;
 
-    public function __get($name)
+    public function __construct(?string $cacheDirectory = null)
     {
-        if ($name === 'cacheDirectory') {
-            return $this->cacheDirectoryOverride
-                ?? rtrim(config('view.compiled'), '/\\') . '/livewire';
-        }
+        $this->cacheDirectoryOverride = $cacheDirectory;
     }
 
-    public function __set($name, $value): void
+    public function cacheDirectory(): string
     {
-        if ($name === 'cacheDirectory') {
-            $this->cacheDirectoryOverride = $value;
-        }
+        return $this->cacheDirectoryOverride
+            ?? rtrim(config('view.compiled'), '/\\') . '/livewire';
     }
 
     public function hasBeenCompiled(string $sourcePath): bool
@@ -85,42 +79,42 @@ class CacheManager
     {
         $hash = $this->getHash($sourcePath);
 
-        return $this->cacheDirectory . '/classes/' . $hash . '.php';
+        return $this->cacheDirectory() . '/classes/' . $hash . '.php';
     }
 
     public function getViewPath(string $sourcePath): string
     {
         $hash = $this->getHash($sourcePath);
 
-        return $this->cacheDirectory . '/views/' . $hash . '.blade.php';
+        return $this->cacheDirectory() . '/views/' . $hash . '.blade.php';
     }
 
     public function getScriptPath(string $sourcePath): string
     {
         $hash = $this->getHash($sourcePath);
 
-        return $this->cacheDirectory . '/scripts/' . $hash . '.js';
+        return $this->cacheDirectory() . '/scripts/' . $hash . '.js';
     }
 
     public function getStylePath(string $sourcePath): string
     {
         $hash = $this->getHash($sourcePath);
 
-        return $this->cacheDirectory . '/styles/' . $hash . '.css';
+        return $this->cacheDirectory() . '/styles/' . $hash . '.css';
     }
 
     public function getGlobalStylePath(string $sourcePath): string
     {
         $hash = $this->getHash($sourcePath);
 
-        return $this->cacheDirectory . '/styles/' . $hash . '.global.css';
+        return $this->cacheDirectory() . '/styles/' . $hash . '.global.css';
     }
 
     public function getPlaceholderPath(string $sourcePath): string
     {
         $hash = $this->getHash($sourcePath);
 
-        return $this->cacheDirectory . '/placeholders/' . $hash . '.blade.php';
+        return $this->cacheDirectory() . '/placeholders/' . $hash . '.blade.php';
     }
 
     public function writeClassFile(string $sourcePath, string $contents): void
@@ -130,7 +124,7 @@ class CacheManager
         $classPath = $this->getClassPath($sourcePath);
 
         $this->ensureCacheDirectoryExists();
-        File::makeDirectory($this->cacheDirectory . '/classes', 0777, true, true);
+        File::makeDirectory($this->cacheDirectory() . '/classes', 0777, true, true);
 
         // Use atomic write to prevent race conditions when multiple
         // concurrent requests try to compile the same component.
@@ -142,7 +136,7 @@ class CacheManager
         $viewPath = $this->getViewPath($sourcePath);
 
         $this->ensureCacheDirectoryExists();
-        File::makeDirectory($this->cacheDirectory . '/views', 0777, true, true);
+        File::makeDirectory($this->cacheDirectory() . '/views', 0777, true, true);
 
         File::replace($viewPath, $contents);
 
@@ -154,7 +148,7 @@ class CacheManager
         $scriptPath = $this->getScriptPath($sourcePath);
 
         $this->ensureCacheDirectoryExists();
-        File::makeDirectory($this->cacheDirectory . '/scripts', 0777, true, true);
+        File::makeDirectory($this->cacheDirectory() . '/scripts', 0777, true, true);
 
         File::replace($scriptPath, $contents);
     }
@@ -164,7 +158,7 @@ class CacheManager
         $stylePath = $this->getStylePath($sourcePath);
 
         $this->ensureCacheDirectoryExists();
-        File::makeDirectory($this->cacheDirectory . '/styles', 0777, true, true);
+        File::makeDirectory($this->cacheDirectory() . '/styles', 0777, true, true);
 
         File::replace($stylePath, $contents);
     }
@@ -174,7 +168,7 @@ class CacheManager
         $stylePath = $this->getGlobalStylePath($sourcePath);
 
         $this->ensureCacheDirectoryExists();
-        File::makeDirectory($this->cacheDirectory . '/styles', 0777, true, true);
+        File::makeDirectory($this->cacheDirectory() . '/styles', 0777, true, true);
 
         File::replace($stylePath, $contents);
     }
@@ -184,7 +178,7 @@ class CacheManager
         $placeholderPath = $this->getPlaceholderPath($sourcePath);
 
         $this->ensureCacheDirectoryExists();
-        File::makeDirectory($this->cacheDirectory . '/placeholders', 0777, true, true);
+        File::makeDirectory($this->cacheDirectory() . '/placeholders', 0777, true, true);
 
         File::replace($placeholderPath, $contents);
 
@@ -196,7 +190,7 @@ class CacheManager
         $viewPath = $this->getViewPath($sourcePath);
 
         $this->ensureCacheDirectoryExists();
-        File::makeDirectory($this->cacheDirectory . '/views', 0777, true, true);
+        File::makeDirectory($this->cacheDirectory() . '/views', 0777, true, true);
 
         File::replace($viewPath, $contents);
 
@@ -213,9 +207,9 @@ class CacheManager
 
     protected function ensureCacheDirectoryExists(): void
     {
-        File::makeDirectory($this->cacheDirectory, 0777, true, true);
+        File::makeDirectory($this->cacheDirectory(), 0777, true, true);
 
-        $gitignorePath = $this->cacheDirectory . '/.gitignore';
+        $gitignorePath = $this->cacheDirectory() . '/.gitignore';
 
         if (! file_exists($gitignorePath)) {
             try {
@@ -248,8 +242,8 @@ class CacheManager
     public function clearCompiledFiles($output = null): void
     {
         try {
-            if (is_dir($this->cacheDirectory)) {
-                File::deleteDirectory($this->cacheDirectory);
+            if (is_dir($this->cacheDirectory())) {
+                File::deleteDirectory($this->cacheDirectory());
             }
         } catch (\Exception $e) {
             // Silently fail to avoid breaking view:clear if there's an issue

@@ -58,7 +58,7 @@ class UnitTest extends TestCase
     public function test_sfc_island_recovers_when_cached_file_is_deleted_between_requests()
     {
         // Create a temporary view file to simulate an SFC's compiled view...
-        $viewPath = app('livewire.compiler')->cacheManager->cacheDirectory . '/test-sfc-island.blade.php';
+        $viewPath = app('livewire.compiler')->cacheManager->cacheDirectory() . '/test-sfc-island.blade.php';
         File::ensureDirectoryExists(dirname($viewPath));
         File::put($viewPath, <<<'HTML'
         <div>
@@ -477,7 +477,7 @@ class UnitTest extends TestCase
         app()->forgetInstance('livewire.compiler');
         app()->forgetInstance('livewire.factory');
 
-        $this->assertSame($compiledPath . '/livewire', app('livewire.compiler')->cacheManager->cacheDirectory);
+        $this->assertSame($compiledPath . '/livewire', app('livewire.compiler')->cacheManager->cacheDirectory());
 
         File::deleteDirectory($compiledPath);
     }
@@ -524,10 +524,10 @@ class UnitTest extends TestCase
 
         $compiler = app('livewire.compiler');
 
-        $this->assertSame($oldPath . '/livewire', $compiler->cacheManager->cacheDirectory);
+        $this->assertSame($oldPath . '/livewire', $compiler->cacheManager->cacheDirectory());
 
         config()->set('view.compiled', $newPath);
 
-        $this->assertSame($newPath . '/livewire', $compiler->cacheManager->cacheDirectory);
+        $this->assertSame($newPath . '/livewire', $compiler->cacheManager->cacheDirectory());
     }
 }

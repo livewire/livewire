@@ -142,7 +142,7 @@ PHP;
 
     public static function getCachedPathFromToken(string $token): string
     {
-        $cachedDirectory = app('livewire.compiler')->cacheManager->cacheDirectory;
+        $cachedDirectory = app('livewire.compiler')->cacheManager->cacheDirectory();
 
         return $cachedDirectory . '/islands/' . $token . '.blade.php';
     }
