@@ -17,6 +17,25 @@ class SupportTesting extends ComponentHook
         }
 
         static::registerTestingMacros();
+        static::syncCompilerCacheDirectoryDuringParallelTesting();
+    }
+
+    protected static function syncCompilerCacheDirectoryDuringParallelTesting()
+    {
+        // Laravel's `ParallelTesting::setUpTestCase` changes `config('view.compiled')`
+        // to a worker-specific path after the application has booted. If the
+        // `livewire.compiler` singleton was already resolved by that point, its
+        // `CacheManager::$cacheDirectory` retains the original path, which causes
+        // every parallel worker to share the same cache directory and race when
+        // writing islands to it. Mirror what Laravel does for `blade.compiler`
+        // and patch the cache directory whenever the worker's compiled view path
+        // changes. See https://github.com/livewire/livewire/issues/10262.
+        \Illuminate\Support\Facades\ParallelTesting::setUpTestCase(function () {
+            if (! app()->resolved('livewire.compiler')) return;
+
+            app('livewire.compiler')->cacheManager->cacheDirectory =
+                rtrim(config('view.compiled'), '/\\') . '/livewire';
+        });
     }
 
     function dehydrate($context)

@@ -58,7 +58,7 @@ class UnitTest extends TestCase
     public function test_sfc_island_recovers_when_cached_file_is_deleted_between_requests()
     {
         // Create a temporary view file to simulate an SFC's compiled view...
-        $viewPath = app('livewire.compiler')->cacheManager->cacheDirectory() . '/test-sfc-island.blade.php';
+        $viewPath = app('livewire.compiler')->cacheManager->cacheDirectory . '/test-sfc-island.blade.php';
         File::ensureDirectoryExists(dirname($viewPath));
         File::put($viewPath, <<<'HTML'
         <div>
@@ -477,7 +477,7 @@ class UnitTest extends TestCase
         app()->forgetInstance('livewire.compiler');
         app()->forgetInstance('livewire.factory');
 
-        $this->assertSame($compiledPath . '/livewire', app('livewire.compiler')->cacheManager->cacheDirectory());
+        $this->assertSame($compiledPath . '/livewire', app('livewire.compiler')->cacheManager->cacheDirectory);
 
         File::deleteDirectory($compiledPath);
     }
@@ -505,29 +505,5 @@ class UnitTest extends TestCase
         $this->assertFileExists($cachedPath);
 
         File::deleteDirectory($compiledPath);
-    }
-
-    public function test_livewire_compiler_cache_directory_follows_view_compiled_config_after_singleton_resolution()
-    {
-        // Regression test for https://github.com/livewire/livewire/issues/10262.
-        //
-        // Laravel's parallel testing changes config('view.compiled') per worker
-        // (e.g. storage/framework/views/test_5) AFTER the application has booted.
-        // If anything has resolved livewire.compiler before that change, the
-        // singleton's cacheDirectory must still follow the new path. Otherwise
-        // parallel-test workers all share a single stale cache directory and
-        // race when writing islands to it.
-        $oldPath = sys_get_temp_dir() . '/before-parallel-' . uniqid();
-        $newPath = sys_get_temp_dir() . '/test_5-' . uniqid();
-
-        config()->set('view.compiled', $oldPath);
-
-        $compiler = app('livewire.compiler');
-
-        $this->assertSame($oldPath . '/livewire', $compiler->cacheManager->cacheDirectory());
-
-        config()->set('view.compiled', $newPath);
-
-        $this->assertSame($newPath . '/livewire', $compiler->cacheManager->cacheDirectory());
     }
 }

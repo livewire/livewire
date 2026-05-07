@@ -624,6 +624,36 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->set('name', 'bar')
             ->assertSee('bar');
     }
+
+    function test_compiler_cache_directory_is_synced_during_parallel_test_set_up()
+    {
+        // Regression test for https://github.com/livewire/livewire/issues/10262.
+        $oldPath = sys_get_temp_dir() . '/before-parallel-' . uniqid();
+        config()->set('view.compiled', $oldPath);
+
+        $compiler = app('livewire.compiler');
+
+        $this->assertSame($oldPath . '/livewire', $compiler->cacheManager->cacheDirectory);
+
+        // ParallelTesting only runs setUpTestCase callbacks when actually running
+        // in parallel, so fake the env vars that signal parallel mode.
+        $_SERVER['LARAVEL_PARALLEL_TESTING'] = 1;
+        $_SERVER['TEST_TOKEN'] = 5;
+
+        try {
+            \Illuminate\Support\Facades\ParallelTesting::callSetUpTestCaseCallbacks($this);
+        } finally {
+            unset($_SERVER['LARAVEL_PARALLEL_TESTING'], $_SERVER['TEST_TOKEN']);
+        }
+
+        // After the callbacks run, the compiler's cache directory should follow
+        // whatever path Laravel ended up with for this worker.
+        $this->assertSame(
+            rtrim(config('view.compiled'), '/\\') . '/livewire',
+            $compiler->cacheManager->cacheDirectory,
+        );
+        $this->assertNotSame($oldPath . '/livewire', $compiler->cacheManager->cacheDirectory);
+    }
 }
 
 class HasMountArguments extends Component

@@ -41,7 +41,11 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         });
 
         $this->app->singleton('livewire.compiler', function () {
-            return new Compiler(new CacheManager);
+            return new Compiler(
+                new CacheManager(
+                    rtrim(config('view.compiled'), '/\\') . '/livewire'
+                )
+            );
         });
 
         $this->app->singleton('livewire.factory', function ($app) {
