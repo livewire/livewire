@@ -1,5 +1,16 @@
 // This errors object has the most common methods from \Illuminate\Support\MessageBag class on the backend...
 import Alpine from 'alpinejs'
+import { on } from '@/hooks'
+
+// After every server response, invalidate the cached errors so any Alpine
+// effects depending on $wire.$errors (like wire:show / wire:text) re-read
+// the fresh errors from the new snapshot. Without this, components that
+// skip rendering would never trigger that re-read...
+on('effect', ({ component }) => {
+    if (! component.__errorsState) return
+
+    component.__errorsState.clientErrors = null
+})
 
 export function getErrorsObject(component) {
     let state = component.__errorsState ??= Alpine.reactive({
