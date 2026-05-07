@@ -6,7 +6,13 @@ import { on } from '@/hooks'
 
 let pending = {}
 
-on('effect', ({ effects }) => (effects.slotFragments || []).forEach(f => renderSlot(null, f)))
+on('effect', ({ effects }) => {
+    let fragments = effects.slotFragments || []
+
+    fragments.forEach(async fragmentHtml => {
+        await renderSlot(null, fragmentHtml)
+    })
+})
 
 interceptMessage(({ message, onSuccess, onStream }) => {
     onSuccess(({ payload, onMorph }) => {
@@ -17,7 +23,12 @@ interceptMessage(({ message, onSuccess, onStream }) => {
                 await renderSlot(message.component, fragmentHtml)
             })
 
-            for (let f of pending[message.component.id] || []) await renderSlot(null, f)
+            let pendingFragments = pending[message.component.id] || []
+
+            pendingFragments.forEach(async fragmentHtml => {
+                await renderSlot(null, fragmentHtml)
+            })
+
             delete pending[message.component.id]
         })
     })
