@@ -779,6 +779,29 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_slot_content_is_preserved_on_lazy_component()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<'HTML'
+            <div>
+                <livewire:child lazy>
+                    <span id="slot-content">Slot works!</span>
+                </livewire:child>
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public function render() { return <<<'HTML'
+            <div id="child">
+                {{ $slot }}
+            </div>
+            HTML; }
+        }])
+        ->waitFor('#child')
+        ->waitFor('#slot-content')
+        ->assertSee('Slot works!')
+        ;
+    }
+
 }
 
 class Page extends Component {
