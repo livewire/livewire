@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportSlots;
 use Livewire\ComponentHook;
 
 use function Livewire\on;
+use function Livewire\store;
 
 class SupportSlots extends ComponentHook
 {
@@ -44,11 +45,17 @@ class SupportSlots extends ComponentHook
 
     function hydrate($memo)
     {
-        // When a child component re-renders, we will need to stub out the known slots
-        // with placeholders so that they can be rendered and morph'd correctly...
         $slots = $memo['slots'] ?? [];
 
-        if (! empty($slots)) {
+        if (empty($slots)) return;
+
+        // If slot content was persisted (e.g. from a lazy component that skipped its
+        // initial render), restore full Slots so {{ $slot }} renders the content...
+        $hasContent = collect($slots)->contains(fn ($s) => isset($s['content']));
+
+        if ($hasContent) {
+            $this->component->withHydratedSlots($slots);
+        } else {
             $this->component->withPlaceholderSlots($slots);
         }
     }
@@ -77,11 +84,19 @@ class SupportSlots extends ComponentHook
         $slotMemo = [];
 
         foreach ($slots as $slot) {
-            $slotMemo[] = [
+            $entry = [
                 'name' => $slot->getName(),
                 'componentId' => $slot->getComponentId(),
                 'parentId' => $slot->getParentId(),
             ];
+
+            // If the slot has content and the render was skipped (e.g. lazy loading),
+            // persist the content so it survives the dehydrate → hydrate cycle...
+            if ($slot instanceof Slot && store($this->component)->get('skipRender', false)) {
+                $entry['content'] = $slot->content;
+            }
+
+            $slotMemo[] = $entry;
         }
 
         if (! empty($slotMemo)) {

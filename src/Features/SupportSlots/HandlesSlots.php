@@ -55,5 +55,18 @@ trait HandlesSlots
         return $this;
     }
 
+    public function withHydratedSlots(array $slots): self
+    {
+        foreach ($slots as $slot) {
+            if (isset($slot['content'])) {
+                $this->slots[] = new Slot($slot['name'], $slot['content'], $slot['componentId'], $slot['parentId']);
+            } else {
+                $this->slots[] = new PlaceholderSlot($slot['name'], $slot['componentId'], $slot['parentId']);
+            }
+        }
+
+        return $this;
+    }
+
 
 }
