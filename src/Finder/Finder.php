@@ -79,36 +79,39 @@ class Finder
             $nameComponentOrClass = get_class($nameComponentOrClass);
         }
 
-        $name = $nameComponentOrClass;
+        $class = null;
 
         if (is_subclass_of($class = $nameComponentOrClass, Component::class)) {
             if (is_object($class)) {
                 $class = get_class($class);
             }
 
-            $registeredName = array_search($class, $this->classComponents);
+            $name = array_search($class, $this->classComponents);
 
-            if ($registeredName !== false) {
-                $name = $registeredName;
-            } else {
-                $hashOfClass = $this->generateHashName($class);
-                $registeredName = $this->classComponents[$hashOfClass] ?? false;
-
-                $name = $registeredName !== false
-                    ? $registeredName
-                    : $this->generateNameFromClass($class);
+            if ($name !== false) {
+                return $name;
             }
+
+            $hashOfClass = $this->generateHashName($class);
+
+            $name = $this->classComponents[$hashOfClass] ?? false;
+
+            if ($name !== false) {
+                return $name;
+            }
+
+            $result = $this->generateNameFromClass($class);
+
+            return $result;
         }
 
-        if ($name === null) return null;
+        // Rewrite slash-style nested paths to canonical dot-notation and
+        // strip ⚡ markers so the same component is referenced by a
+        // single canonical name regardless of how it was written.
+        $nameComponentOrClass = preg_replace('/' . self::ZAP . '[\x{FE0E}\x{FE0F}]?/u', '', $nameComponentOrClass);
+        $nameComponentOrClass = str_replace('/', '.', $nameComponentOrClass);
 
-        // Rewrite slash-style nested paths to canonical dot-notation, and
-        // strip ⚡ markers (with their optional variation selectors), so the
-        // same component is referenced by a single canonical name regardless
-        // of how the developer wrote it.
-        $name = preg_replace('/' . self::ZAP . '[\x{FE0E}\x{FE0F}]?/u', '', $name);
-
-        return str_replace('/', '.', $name);
+        return $nameComponentOrClass;
     }
 
     public function parseNamespaceAndName($name): array
