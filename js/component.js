@@ -38,6 +38,8 @@ export class Component {
         // "reactive" is just ephemeral, except when you mutate it, front-ends like Vue react.
         this.reactive = Alpine.reactive(this.ephemeral)
 
+        this.errors = Alpine.reactive({ messages: this.snapshot.memo.errors ?? {} })
+
         this.queuedUpdates = {}
 
         this.jsActions = {}
@@ -84,6 +86,8 @@ export class Component {
         this.snapshotEncoded = snapshotEncoded
 
         this.snapshot = snapshot
+
+        this.errors.messages = snapshot.memo.errors ?? {}
 
         this.effects = effects
 
