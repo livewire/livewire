@@ -74,6 +74,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         return [
             Mechanisms\PersistentMiddleware\PersistentMiddleware::class,
+            Mechanisms\HandleSynths\HandleSynths::class,
             Mechanisms\HandleComponents\HandleComponents::class,
             Mechanisms\HandleRequests\HandleRequests::class,
             Mechanisms\HandleRouting\HandleRouting::class,
