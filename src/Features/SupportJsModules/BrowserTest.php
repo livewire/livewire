@@ -55,5 +55,4 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->pause(100)
             ->assertSeeIn('@target', 'js-import-loaded');
     }
-
 }

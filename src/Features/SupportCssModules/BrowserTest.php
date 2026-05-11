@@ -25,5 +25,4 @@ class BrowserTest extends \Tests\BrowserTestCase
             // If the CSS loaded correctly, the element will have red text
             ->assertScript("getComputedStyle(document.querySelector('[dusk=\"target\"]')).color === 'rgb(255, 0, 0)'");
     }
-
 }
