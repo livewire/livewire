@@ -73,56 +73,42 @@ class Finder
         return $this->classNamespaces[$namespace] ?? null;
     }
 
-    public function normalizeComponentName(?string $name): ?string
-    {
-        if ($name === null) return null;
-
-        // Rewrite slash-style nested paths to canonical dot-notation, and
-        // strip ⚡ markers (with their optional variation selectors), so the
-        // same component is referenced by a single canonical name regardless
-        // of how the developer wrote it.
-        $name = preg_replace(
-            '/' . self::ZAP . '[\x{FE0E}\x{FE0F}]?/u',
-            '',
-            $name,
-        );
-
-        return str_replace('/', '.', $name);
-    }
-
     public function normalizeName($nameComponentOrClass): ?string
     {
         if (is_object($nameComponentOrClass)) {
             $nameComponentOrClass = get_class($nameComponentOrClass);
         }
 
-        $class = null;
+        $name = $nameComponentOrClass;
 
         if (is_subclass_of($class = $nameComponentOrClass, Component::class)) {
             if (is_object($class)) {
                 $class = get_class($class);
             }
 
-            $name = array_search($class, $this->classComponents);
+            $registeredName = array_search($class, $this->classComponents);
 
-            if ($name !== false) {
-                return $name;
+            if ($registeredName !== false) {
+                $name = $registeredName;
+            } else {
+                $hashOfClass = $this->generateHashName($class);
+                $registeredName = $this->classComponents[$hashOfClass] ?? false;
+
+                $name = $registeredName !== false
+                    ? $registeredName
+                    : $this->generateNameFromClass($class);
             }
-
-            $hashOfClass = $this->generateHashName($class);
-
-            $name = $this->classComponents[$hashOfClass] ?? false;
-
-            if ($name !== false) {
-                return $name;
-            }
-
-            $result = $this->generateNameFromClass($class);
-
-            return $result;
         }
 
-        return $nameComponentOrClass;
+        if ($name === null) return null;
+
+        // Rewrite slash-style nested paths to canonical dot-notation, and
+        // strip ⚡ markers (with their optional variation selectors), so the
+        // same component is referenced by a single canonical name regardless
+        // of how the developer wrote it.
+        $name = preg_replace('/' . self::ZAP . '[\x{FE0E}\x{FE0F}]?/u', '', $name);
+
+        return str_replace('/', '.', $name);
     }
 
     public function parseNamespaceAndName($name): array
