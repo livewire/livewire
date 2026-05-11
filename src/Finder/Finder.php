@@ -73,6 +73,23 @@ class Finder
         return $this->classNamespaces[$namespace] ?? null;
     }
 
+    public function normalizeComponentName(?string $name): ?string
+    {
+        if ($name === null) return null;
+
+        // Rewrite slash-style nested paths to canonical dot-notation, and
+        // strip ⚡ markers (with their optional variation selectors), so the
+        // same component is referenced by a single canonical name regardless
+        // of how the developer wrote it.
+        $name = preg_replace(
+            '/' . self::ZAP . '[\x{FE0E}\x{FE0F}]?/u',
+            '',
+            $name,
+        );
+
+        return str_replace('/', '.', $name);
+    }
+
     public function normalizeName($nameComponentOrClass): ?string
     {
         if (is_object($nameComponentOrClass)) {

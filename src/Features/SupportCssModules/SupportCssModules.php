@@ -42,7 +42,7 @@ class SupportCssModules extends ComponentHook
                 $component.'.css',
                 'text/css; charset=utf-8',
             );
-        })->where('component', '.+');
+        });
 
         // Route for global styles
         Route::get(EndpointResolver::componentGlobalCssPath(), function ($component) {
@@ -72,7 +72,7 @@ class SupportCssModules extends ComponentHook
                 $component.'.global.css',
                 'text/css; charset=utf-8',
             );
-        })->where('component', '.+');
+        });
     }
 
     public function dehydrate($context)

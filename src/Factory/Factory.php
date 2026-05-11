@@ -39,6 +39,7 @@ class Factory
     public function resolveComponentNameAndClass($name): array
     {
         $name = $this->finder->normalizeName($name);
+        $name = $this->finder->normalizeComponentName($name);
 
         $class = null;
 

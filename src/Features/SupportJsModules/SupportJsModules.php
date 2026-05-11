@@ -39,7 +39,7 @@ class SupportJsModules extends ComponentHook
                 $filemtime,
                 $component.'.js',
             );
-        })->where('component', '.+');
+        });
     }
 
     public function dehydrate($context)
