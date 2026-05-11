@@ -155,6 +155,29 @@ class Wizard extends Component
 }
 ```
 
+### Unnamed transitions during a typed swap
+
+When a typed transition is active, Livewire treats the swap as a single orchestrated unit. Any *unnamed* `wire:transition` element inside that swap stays unnamed and rides along with its parent's snapshot, instead of becoming an independent group with the browser's default fade.
+
+```blade
+<div wire:transition="slide">
+    <p>Step content</p>
+
+    {{-- Unnamed: rides along with the parent's "slide" during a typed swap --}}
+    <div wire:transition>
+        <button>Save</button>
+    </div>
+</div>
+```
+
+If you need an inner element to animate independently during a typed swap, give it an explicit name:
+
+```blade
+<div wire:transition="badge">...</div>
+```
+
+Outside of a typed transition (a regular morph, like a validation error appearing), unnamed `wire:transition` elements continue to use `match-element` and animate independently as before.
+
 ## Skipping transitions
 
 Sometimes you may want to disable transitions for specific actions—for example, a "reset" button that should instantly jump to the first step without animation.
@@ -184,7 +207,7 @@ public function reset()
 
 ## Respecting reduced motion
 
-Livewire automatically respects the user's `prefers-reduced-motion` setting. When enabled, transitions are disabled to avoid causing discomfort for users who are sensitive to motion.
+Livewire automatically respects the user's [prefers-reduced-motion](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion#user_preferences) setting. When enabled, transitions are disabled to avoid causing discomfort for users who are sensitive to motion.
 
 ## Browser support
 

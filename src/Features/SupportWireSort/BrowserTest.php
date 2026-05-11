@@ -61,6 +61,61 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@result', 'item:item-2,position:0,group:column-3');
     }
 
+    public function test_wire_sort_position_is_correct_when_non_sortable_siblings_are_present()
+    {
+        Livewire::visit(new class extends Component {
+            public $result = '';
+
+            public function sortItem($item, $position)
+            {
+                $this->result = "item:{$item},position:{$position}";
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <ul dusk="sortable" wire:sort="sortItem">
+                        <li wire:sort:item="item-1">Item 1</li>
+                        <li wire:sort:ignore>Non-sortable A</li>
+                        <li wire:sort:item="item-2">Item 2</li>
+                        <li wire:sort:ignore>Non-sortable B</li>
+                        <li wire:sort:item="item-3">Item 3</li>
+                    </ul>
+
+                    <div dusk="result">{{ $result }}</div>
+                </div>
+                HTML;
+            }
+        })
+        ->tap(function ($b) {
+            $b->script(<<<'JS'
+                let el = document.querySelector('[dusk="sortable"]')
+                let item = el.querySelector('[wire\\:sort\\:item="item-1"]')
+
+                // Move item-1 to the end (after all other children)
+                // Resulting DOM: [ignored-a, item-2, ignored-b, item-3, item-1]
+                el.appendChild(item)
+
+                let key = Object.keys(el).find(k => k.startsWith('Sortable'))
+                let instance = el[key]
+
+                // newIndex is 4 (raw DOM index), but the correct sortable-item
+                // position should be 2 (item-1 is the 3rd sortable item: [item-2, item-3, item-1])
+                instance.options.onSort({
+                    item: item,
+                    from: el,
+                    to: el,
+                    target: el,
+                    newIndex: 4,
+                    oldIndex: 0,
+                })
+            JS);
+        })
+        ->waitForTextIn('@result', 'item:item-1,position:2')
+        ->assertSeeIn('@result', 'item:item-1,position:2');
+    }
+
     public function test_wire_sort_works_without_sort_id()
     {
         Livewire::visit(new class extends Component {

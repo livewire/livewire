@@ -1,6 +1,6 @@
 import { closestFragment, extractFragmentMetadataFromHtml, extractInnerHtmlFromFragmentHtml, findFragment } from '@/fragment'
 import { interceptAction, interceptMessage } from '@/request'
-import { morphFragment } from '@/morph'
+import { morphFragment, getTagName } from '@/morph'
 
 interceptAction(({ action }) => {
     let origin = action.origin
@@ -86,8 +86,7 @@ export async function renderIsland(component, islandHtml) {
     let incomingMetadata = extractFragmentMetadataFromHtml(islandHtml)
     let strippedContent = extractInnerHtmlFromFragmentHtml(islandHtml)
 
-    let parentElement = fragment.startMarkerNode.parentElement
-    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
+    let parentElementTag = getTagName(fragment.startMarkerNode.parentElement)
 
     let mode = incomingMetadata.mode || 'morph'
 

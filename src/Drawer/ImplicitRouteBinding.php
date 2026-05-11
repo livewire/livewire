@@ -51,7 +51,15 @@ class ImplicitRouteBinding
             // because that middleware has already ran, we need to run them again.
             $this->container['router']->substituteImplicitBindings($route);
 
-            $parameters = $route->resolveMethodDependencies($route->parameters(), new ReflectionMethod($component, 'mount'));
+            $mountMethod = new ReflectionMethod($component, 'mount');
+
+            // Only pass route parameters that match the mount method's signature.
+            // Without this, unmatched route parameters would be classified as
+            // HTML attributes and bleed into child Blade component constructors.
+            $mountParamNames = array_map(fn ($p) => $p->getName(), $mountMethod->getParameters());
+            $routeParams = array_intersect_key($route->parameters(), array_flip($mountParamNames));
+
+            $parameters = $route->resolveMethodDependencies($routeParams, $mountMethod);
 
             // Restore the original route action...
             $route->setAction($cache);
@@ -69,6 +77,9 @@ class ImplicitRouteBinding
     {
         return $this->getPublicPropertyTypes($component)
             ->intersectByKeys($route->parametersWithoutNulls())
+            ->sortBy(function ($className, $propName) use ($route) {
+                return array_search($propName, array_keys($route->parametersWithoutNulls()));
+            })
             ->map(function ($className, $propName) use ($route) {
                 // If typed public property, resolve the class
                 if ($className) {

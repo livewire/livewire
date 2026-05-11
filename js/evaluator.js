@@ -2,15 +2,19 @@ import Alpine from 'alpinejs'
 
 function getAlpineScopeKeys(el) {
     let keys = []
-
     let currentEl = el
 
     while (currentEl) {
-        if (currentEl._x_dataStack) {
-            for (let scope of currentEl._x_dataStack) {
-                for (let key of Object.keys(scope)) {
-                    if (! keys.includes(key)) keys.push(key)
-                }
+        if (currentEl._x_dataStack && currentEl._x_dataStack.length > 0) {
+            // Only read the first scope object -- this is the element's OWN
+            // data, not inherited parent scopes. Alpine's addScopeToNode()
+            // always puts the element's own data at index 0, followed by
+            // the parent chain. Reading all entries would leak parent Alpine
+            // scope keys across the Livewire component boundary.
+            let ownScope = currentEl._x_dataStack[0]
+
+            for (let key of Object.keys(ownScope)) {
+                if (! keys.includes(key) && ! key.startsWith('$')) keys.push(key)
             }
         }
 

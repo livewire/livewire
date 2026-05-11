@@ -15,7 +15,7 @@ class SupportMagicActions extends ComponentHook
         '$commit',
     ];
 
-    public function boot()
+    public static function provide()
     {
         on('call', function ($component, $method, $params, $componentContext, $returnEarly, $context) {
             if (! in_array($method, self::$magicActions)) {

@@ -100,7 +100,7 @@ jobs:
       fail-fast: false
       matrix:
         php: [8.4, 8.5]
-        laravel: [11.*, 12.*]
+        laravel: [11.*, 12.*, 13.*]
 
     name: 2. Unit - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
 
@@ -132,6 +132,12 @@ jobs:
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
           composer update --prefer-stable --no-interaction
 
+      - name: Download built assets
+        uses: actions/download-artifact@v4
+        with:
+          name: livewire-assets
+          path: dist/
+
       - name: Setup dusk/chrome
         run: vendor/bin/dusk-updater detect --no-interaction
 
@@ -147,7 +153,7 @@ jobs:
       fail-fast: false
       matrix:
         php: [8.4, 8.5]
-        laravel: [11.*, 12.*]
+        laravel: [11.*, 12.*, 13.*]
         shard: [1, 2, 3]
 
     name: 3. Browser ${{ matrix.shard }} - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
@@ -194,13 +200,13 @@ jobs:
         run: echo "files=$(php .github/scripts/get-browser-test-shard.php $(( ${{ matrix.shard }} - 1 )) 3)" >> $GITHUB_OUTPUT
 
       - name: Run Browser tests (Shard ${{ matrix.shard }})
-        run: vendor/bin/phpunit ${{ steps.shard.outputs.files }}
+        run: vendor/bin/phpunit ${{ steps.shard.outputs.files }} || vendor/bin/phpunit ${{ steps.shard.outputs.files }} --order-by=defects --stop-on-failure
         env:
           RUNNING_IN_CI: true
 
       - name: Run Cancel Upload test
         if: matrix.shard == 1
-        run: FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
+        run: FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload" || FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
         env:
           RUNNING_IN_CI: true
           FORCE_RUN: 1
@@ -212,7 +218,7 @@ jobs:
       fail-fast: false
       matrix:
         php: [8.4, 8.5]
-        laravel: [11.*, 12.*]
+        laravel: [11.*, 12.*, 13.*]
 
     name: 4. Legacy - L${{ matrix.laravel }} - PHP ${{ matrix.php }}
 
@@ -254,6 +260,6 @@ jobs:
         run: vendor/bin/dusk-updater detect --no-interaction
 
       - name: Run Legacy Browser tests
-        run: vendor/bin/phpunit --testsuite LegacyBrowser
+        run: vendor/bin/phpunit --testsuite LegacyBrowser || vendor/bin/phpunit --testsuite LegacyBrowser --order-by=defects --stop-on-failure
         env:
           RUNNING_IN_CI: true

@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportReactiveProps;
 use function Livewire\on;
 use function Livewire\after;
 use function Livewire\trigger;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\ComponentHook;
 
 class SupportReactiveProps extends ComponentHook
@@ -24,26 +25,105 @@ class SupportReactiveProps extends ComponentHook
             static::$pendingChildParams[$id] = $params;
         });
 
-        // Process queued reactive prop updates AFTER all hooks have hydrated
-        // This ensures SupportLifecycleHooks is initialized before we trigger updates
+        // Fire updating*/updated* hooks after all hooks have hydrated
+        // Values are already set in BaseReactive::hydrate() so lifecycle hooks see fresh data
         after('hydrate', function ($component) {
             $id = $component->getId();
             $updates = static::$pendingUpdates[$id] ?? [];
             unset(static::$pendingUpdates[$id]);
 
             foreach ($updates as $update) {
-                ['property' => $property, 'value' => $value, 'setValue' => $setValue] = $update;
+                ['property' => $property, 'oldValue' => $oldValue, 'value' => $value, 'setValue' => $setValue] = $update;
 
-                // Trigger updating* hooks (they see the old value)
+                // Temporarily restore old value so updating* hooks see the previous state
+                $setValue($oldValue);
+
+                // Trigger updating* hooks (they see the old value via $this->property)
                 $finish = trigger('update', $component, $property, $value);
 
-                // Set the new value on the component
+                // Restore the new value for updated* hooks
                 $setValue($value);
 
                 // Trigger updated* hooks (they see the new value)
                 $finish();
             }
         });
+    }
+
+    static function shouldSkipUpdate($snapshot, $calls): bool
+    {
+        $id = $snapshot['memo']['id'] ?? null;
+        $reactiveProps = $snapshot['memo']['props'] ?? [];
+
+        // Only applies to components with #[Reactive] properties...
+        if (empty($reactiveProps)) return false;
+
+        // Only if parent already rendered and stored pending params...
+        if (! isset(static::$pendingChildParams[$id])) return false;
+
+        // Don't skip if component also has wire:model bindings...
+        if (! empty($snapshot['memo']['bindings'] ?? [])) return false;
+
+        // Don't skip if there are real method calls (not just $commit)...
+        foreach ($calls as $call) {
+            if (($call['method'] ?? '') !== '$commit') return false;
+        }
+
+        $pendingParams = static::$pendingChildParams[$id];
+
+        foreach ($reactiveProps as $propName) {
+            $currentValue = $snapshot['data'][$propName] ?? null;
+            $newValue = $pendingParams[$propName] ?? null;
+
+            if (! static::valuesMatch($currentValue, $newValue)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static function valuesMatch($snapshotValue, $pendingValue): bool
+    {
+        if ($pendingValue instanceof Model) {
+            return static::modelMatchesSnapshot($snapshotValue, $pendingValue);
+        }
+
+        $snapshotJson = json_encode($snapshotValue);
+        $pendingJson = json_encode($pendingValue);
+
+        // If either side can't be encoded (NAN, INF, recursive refs, etc.),
+        // bail out and treat them as different so we don't accidentally skip.
+        if ($snapshotJson === false || $pendingJson === false) return false;
+
+        return crc32($snapshotJson) === crc32($pendingJson);
+    }
+
+    protected static function modelMatchesSnapshot($snapshotValue, Model $model): bool
+    {
+        // Dehydrated model format: [null, {class: '...', key: ..., s: 'mdl'}]
+        if (! is_array($snapshotValue)) return false;
+
+        $meta = $snapshotValue[1] ?? [];
+
+        if (($meta['s'] ?? null) !== 'mdl') return false;
+
+        $snapshotClass = $meta['class'] ?? null;
+
+        // Class may be stored under either the FQCN or the morph alias...
+        if ($snapshotClass !== get_class($model) && $snapshotClass !== $model->getMorphClass()) {
+            return false;
+        }
+
+        if (($meta['key'] ?? null) != $model->getKey()) return false;
+
+        // Catch all the ways the parent could have mutated the model this request:
+        // local attribute changes (isDirty), saves (wasChanged), and creates (wasRecentlyCreated).
+        if ($model->isDirty()) return false;
+        if ($model->wasChanged()) return false;
+        if ($model->wasRecentlyCreated) return false;
+
+        return true;
     }
 
     static function hasPassedInProps($id) {
@@ -56,9 +136,10 @@ class SupportReactiveProps extends ComponentHook
         return $params[$name] ?? null;
     }
 
-    static function queueUpdate($id, $property, $value, $setValue) {
+    static function queueUpdate($id, $property, $oldValue, $value, $setValue) {
         static::$pendingUpdates[$id][] = [
             'property' => $property,
+            'oldValue' => $oldValue,
             'value' => $value,
             'setValue' => $setValue,
         ];

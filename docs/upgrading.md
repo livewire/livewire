@@ -312,6 +312,20 @@ This change adds support for passing slots when mounting components and generall
 
 These changes only affect applications using advanced features or customization.
 
+### `wire:model` now supports bracket notation
+
+`wire:model` expressions now support bracket notation for accessing nested properties:
+
+```blade
+<input type="text" wire:model="foo['bar']['baz']">
+
+<input type="text" wire:model="items[0].name">
+```
+
+This means square brackets (`[` and `]`) in `wire:model` values are now interpreted as property accessors. In v3, they were treated as literal characters. If your property keys contain square brackets, rename them to avoid conflicts.
+
+[Learn more about wire:model →](/docs/4.x/wire-model#accessing-nested-properties)
+
 ### Livewire Asset and Endpoint URL Changes
 
 All Livewire URLs now include a unique hash derived from your `APP_KEY`. The prefix changed from `/livewire/` to `/livewire-{hash}/`:

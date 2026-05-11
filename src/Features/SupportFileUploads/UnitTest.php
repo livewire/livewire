@@ -812,7 +812,7 @@ class UnitTest extends \Tests\TestCase
     {
         Storage::fake('avatars');
 
-        $file = UploadedFile::fake()->image('avatar.jpg');
+        $file = UploadedFile::fake()->createWithContent('test.txt', 'file content here');
 
         Livewire::test(FileReadContentComponent::class)
             ->set('file', $file)

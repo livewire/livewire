@@ -7,6 +7,7 @@ export class MessageInterceptor {
     onError = () => {}
     onStream = () => {}
     onSuccess = () => {}
+    onSkipped = () => {}
     onFinish = () => {}
     onSync = () => {}
     onEffect = () => {}
@@ -36,6 +37,7 @@ export class MessageInterceptor {
             onError: (callback) => this.onError = callback,
             onStream: (callback) => this.onStream = callback,
             onSuccess: (callback) => this.onSuccess = callback,
+            onSkipped: (callback) => this.onSkipped = callback,
             onFinish: (callback) => this.onFinish = callback,
         })
     }

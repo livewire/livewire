@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Reactive;
 
 class BrowserTest extends BrowserTestCase
@@ -195,6 +196,46 @@ class BrowserTest extends BrowserTestCase
         });
     }
 
+    public function test_can_lazy_load_component_without_mount_using_route()
+    {
+        $this->beforeServingApplication(function() {
+            Livewire::component('page-without-mount', PageWithoutMount::class);
+            Route::get('/', PageWithoutMount::class)->lazy()->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('Loading...')
+                ->assertDontSee('Hello World')
+                ->waitFor('#page')
+                ->assertDontSee('Loading...')
+                ->assertSee('Hello World');
+        });
+    }
+
+    public function test_can_defer_lazy_load_component_without_mount_using_route()
+    {
+        $this->beforeServingApplication(function() {
+            Livewire::component('page-without-mount', PageWithoutMount::class);
+            Route::get('/', PageWithoutMount::class)->defer()->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('Loading...')
+                ->assertDontSee('Hello World')
+                ->waitFor('#page')
+                ->assertDontSee('Loading...')
+                ->assertSee('Hello World');
+        });
+    }
+
     public function test_can_lazy_load_a_component_with_a_placeholder()
     {
         Livewire::visit([new class extends Component {
@@ -300,6 +341,39 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewire()->click('@button')
         ->waitForText('Count: 3')
         ->assertSee('Count: 3')
+        ;
+    }
+
+    public function test_lazy_component_outside_viewport_is_not_loaded_when_reactive_prop_changes()
+    {
+        Livewire::visit([new class extends Component {
+            public $count = 1;
+            public function inc() { $this->count++; }
+            public function render() { return <<<'HTML'
+            <div>
+                <button wire:click="inc" dusk="button">+</button>
+                <div dusk="parent-count">Parent: {{ $count }}</div>
+                <div style="height: 200vh"></div>
+                <livewire:child :$count lazy />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            #[Reactive]
+            public $count;
+            public $config = [];
+            public function mount() { $this->config = ['label' => 'Count']; }
+            public function render() { return <<<'HTML'
+            <div id="child">
+                <div x-data="{ state: $wire.$entangle('config.label') }">
+                    <span dusk="child-label" x-text="state"></span>
+                </div>
+            </div>
+            HTML; }
+        }])
+        ->assertMissing('#child')
+        ->waitForLivewire()->click('@button')
+        ->waitForTextIn('@parent-count', 'Parent: 2')
+        ->assertMissing('#child')
         ;
     }
 
@@ -534,11 +608,200 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_lazy_component_outside_viewport_ignores_global_dispatch()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$dispatch('refresh-child')" dusk="button">Refresh</button>
+                        <div dusk="parent">Parent</div>
+                        <div style="height: 200vh"></div>
+                        <livewire:child lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $title = '';
+
+                public function mount()
+                {
+                    $this->title = 'Mounted';
+                }
+
+                #[On('refresh-child')]
+                public function refresh() {}
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div id="child">
+                        Title: {{ $title }}
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+        ->assertMissing('#child')
+        ->click('@button')
+        ->pause(500)
+        ->assertMissing('#child')
+        ;
+    }
+
+    public function test_lazy_component_outside_viewport_ignores_dispatch_to()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button @click="window.Livewire.dispatchTo('child', 'refresh-child')" dusk="button">Refresh</button>
+                        <div dusk="parent">Parent</div>
+                        <div style="height: 200vh"></div>
+                        <livewire:child lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $title = '';
+
+                public function mount()
+                {
+                    $this->title = 'Mounted';
+                }
+
+                #[On('refresh-child')]
+                public function refresh() {}
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div id="child">
+                        Title: {{ $title }}
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+        ->assertMissing('#child')
+        ->click('@button')
+        ->pause(500)
+        ->assertMissing('#child')
+        ;
+    }
+
+    public function test_lazy_component_receives_events_after_being_loaded()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$dispatch('refresh-child')" dusk="button">Refresh</button>
+                        <livewire:child lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $count = 0;
+
+                #[On('refresh-child')]
+                public function refresh()
+                {
+                    $this->count++;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div id="child">
+                        <span dusk="count">{{ $count }}</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+        ->waitFor('#child')
+        ->assertSeeIn('@count', '0')
+        ->waitForLivewire()->click('@button')
+        ->assertSeeIn('@count', '1')
+        ;
+    }
+
+    public function test_lazy_component_can_use_dynamic_event_listeners_with_placeholders_set_in_mount()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$dispatch('refresh-child:abc123')" dusk="button">Refresh</button>
+                        <livewire:child lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public string $parentId = '';
+                public int $count = 0;
+
+                public function mount(): void
+                {
+                    $this->parentId = 'abc123';
+                }
+
+                #[On('refresh-child:{parentId}')]
+                public function refresh(): void
+                {
+                    $this->count++;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div id="child">
+                        <span dusk="count">{{ $count }}</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+        ->waitFor('#child')
+        ->assertSeeIn('@count', '0')
+        ->waitForLivewire()->click('@button')
+        ->assertSeeIn('@count', '1')
+        ->assertConsoleLogHasNoErrors()
+        ;
+    }
+
 }
 
 class Page extends Component {
     public function mount() {
         sleep(1);
+    }
+
+    public function placeholder() { return <<<HTML
+            <div id="loading">
+                Loading...
+            </div>
+            HTML; }
+
+    public function render() { return <<<HTML
+            <div id="page">
+                Hello World
+            </div>
+            HTML; }
+}
+
+class PageWithoutMount extends Component {
+    public function boot() {
+        usleep(200_000);
     }
 
     public function placeholder() { return <<<HTML

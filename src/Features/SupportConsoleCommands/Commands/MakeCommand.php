@@ -134,6 +134,14 @@ class MakeCommand extends Command
         $this->files->put($paths['class'], $classContent);
         $this->files->put($paths['view'], $viewContent);
 
+        // Create test file if --test flag is present or configured in make_command.with.test
+        if ($this->option('test') || config('livewire.make_command.with.test')) {
+            $testPath = $this->getClassBasedComponentTestPath($name);
+            $this->ensureDirectoryExists(dirname($testPath));
+            $testContent = $this->buildClassBasedComponentTest($name);
+            $this->files->put($testPath, $testContent);
+        }
+
         $this->components->info(sprintf('Livewire component [%s] created successfully.', $paths['class']));
 
         return 0;
@@ -141,7 +149,7 @@ class MakeCommand extends Command
 
     protected function createSingleFileComponent(string $name): int
     {
-        $path = $this->finder->resolveSingleFileComponentPathForCreation($name);
+        $path = $this->finder->resolveSingleFileComponentPathForCreation($name, $this->shouldUseEmoji());
 
         if ($path === null) {
             [$namespace] = $this->finder->parseNamespaceAndName($name);
@@ -208,7 +216,7 @@ class MakeCommand extends Command
 
     protected function createMultiFileComponent(string $name): int
     {
-        $directory = $this->finder->resolveMultiFileComponentPathForCreation($name);
+        $directory = $this->finder->resolveMultiFileComponentPathForCreation($name, $this->shouldUseEmoji());
 
         if ($directory === null) {
             [$namespace] = $this->finder->parseNamespaceAndName($name);
@@ -233,7 +241,7 @@ class MakeCommand extends Command
         $cssPath = $directory . '/' . $componentName . '.css';
 
         // Check if we're upgrading from a single-file component
-        $sfcPath = $this->finder->resolveSingleFileComponentPathForCreation($name);
+        $sfcPath = $this->finder->resolveSingleFileComponentPathForCreation($name, $this->shouldUseEmoji());
         if ($this->files->exists($sfcPath)) {
             // Skip interactive prompts in testing environment
             if (app()->runningUnitTests()) {
@@ -490,7 +498,7 @@ class MakeCommand extends Command
         }
 
         // Check for single-file component
-        $sfcPath = $finder->resolveSingleFileComponentPathForCreation($name);
+        $sfcPath = $finder->resolveSingleFileComponentPathForCreation($name, $this->shouldUseEmoji());
         if ($sfcPath !== null && $this->files->exists($sfcPath)) {
             return true;
         }
@@ -532,7 +540,7 @@ class MakeCommand extends Command
         }
 
         // Check for single-file component
-        $sfcPath = $finder->resolveSingleFileComponentPathForCreation($name);
+        $sfcPath = $finder->resolveSingleFileComponentPathForCreation($name, $this->shouldUseEmoji());
         if ($sfcPath !== null && $this->files->exists($sfcPath)) {
             $testPath = $this->getSingleFileComponentTestPath($sfcPath);
 

@@ -84,6 +84,21 @@ class SupportCompiledWireKeys extends ComponentHook
         ];
     }
 
+    // Increment the loop index for the current iteration. This mirrors how
+    // Laravel's Blade `$__env->incrementLoopIndices()` works for `@foreach`,
+    // but without depending on the `$loop` variable (which doesn't exist
+    // for `@for` and `@while` loops)...
+    public static function startLoopIteration() {
+        if (static::$currentLoop['index'] === null) {
+            static::$currentLoop['index'] = 0;
+        } else {
+            static::$currentLoop['index']++;
+        }
+    }
+
+    /**
+     * @deprecated Use startLoopIteration() instead. Kept for cached compiled views.
+     */
     public static function startLoop($index) {
         static::$currentLoop['index'] = $index;
     }
@@ -91,7 +106,7 @@ class SupportCompiledWireKeys extends ComponentHook
     public static function endLoop() {
         static::$currentLoop = [
             'count' => null,
-            'index' => null,
+            'index' => static::$currentLoop['index'] ?? null,
             'key' => null,
         ];
     }
@@ -123,6 +138,23 @@ class SupportCompiledWireKeys extends ComponentHook
         $value = str_replace('; ?'.'>', ".'", $value);
 
         return "'".$value."'";
+    }
+
+    /**
+     * Backward-compatibility shim for cached compiled Blade views that still
+     * reference this method from before the smart keys optimisation in v4.2.
+     *
+     * TODO: Remove in v5.
+     */
+    public static function processElementKey($keyString, $data)
+    {
+        if (view()->exists($keyString)) {
+            $key = $keyString;
+        } else {
+            $key = Blade::render($keyString, $data);
+        }
+
+        static::$currentLoop['key'] = $key;
     }
 
     public static function processComponentKey($component)

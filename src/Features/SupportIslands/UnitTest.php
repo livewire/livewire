@@ -58,7 +58,7 @@ class UnitTest extends TestCase
     public function test_sfc_island_recovers_when_cached_file_is_deleted_between_requests()
     {
         // Create a temporary view file to simulate an SFC's compiled view...
-        $viewPath = storage_path('framework/views/livewire/test-sfc-island.blade.php');
+        $viewPath = app('livewire.compiler')->cacheManager->cacheDirectory . '/test-sfc-island.blade.php';
         File::ensureDirectoryExists(dirname($viewPath));
         File::put($viewPath, <<<'HTML'
         <div>
@@ -451,5 +451,59 @@ class UnitTest extends TestCase
         $fragments = $component->effects['islandFragments'] ?? [];
 
         $this->assertCount(1, $fragments, 'Expected only one island fragment but got ' . count($fragments));
+    }
+
+    public function test_island_tokens_are_stable_across_different_base_paths()
+    {
+        $path = '/resources/views/components/foo.blade.php';
+
+        $content = '@island @endisland';
+
+        $islandA = IslandCompiler::compile(base_path($path), $content);
+
+        // Simulate Forge's zero-downtime deployments where each release has its own folder...
+        app()->setBasePath('/home/forge/domain/releases/22222');
+
+        $islandB = IslandCompiler::compile(base_path($path), $content);
+
+        $this->assertSame($islandA, $islandB);
+    }
+
+    public function test_livewire_compiler_uses_laravels_configured_compiled_view_path()
+    {
+        $compiledPath = sys_get_temp_dir() . '/laravel-custom-compiled-' . uniqid();
+
+        config()->set('view.compiled', $compiledPath);
+        app()->forgetInstance('livewire.compiler');
+        app()->forgetInstance('livewire.factory');
+
+        $this->assertSame($compiledPath . '/livewire', app('livewire.compiler')->cacheManager->cacheDirectory);
+
+        File::deleteDirectory($compiledPath);
+    }
+
+    public function test_island_compiler_writes_cached_islands_inside_laravels_configured_compiled_view_path()
+    {
+        $compiledPath = sys_get_temp_dir() . '/laravel-custom-islands-' . uniqid();
+
+        config()->set('view.compiled', $compiledPath);
+        app()->forgetInstance('livewire.compiler');
+        app()->forgetInstance('livewire.factory');
+
+        IslandCompiler::compile(__FILE__, <<<'HTML'
+        <div>
+            @island(name: 'counter')
+                <div>count: {{ $count }}</div>
+            @endisland
+        </div>
+        HTML);
+
+        $token = app('livewire.compiler')->cacheManager->getHash(__FILE__) . '-1';
+        $cachedPath = IslandCompiler::getCachedPathFromToken($token);
+
+        $this->assertSame($compiledPath . '/livewire/islands/' . $token . '.blade.php', $cachedPath);
+        $this->assertFileExists($cachedPath);
+
+        File::deleteDirectory($compiledPath);
     }
 }

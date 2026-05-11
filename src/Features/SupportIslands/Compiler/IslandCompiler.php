@@ -104,7 +104,7 @@ class IslandCompiler
         // Write the cached island to the file system...
         file_put_contents($cachedPath, $innerContent);
 
-        app('livewire.compiler')->cacheManager->mutateFileModificationTime($cachedPath);
+        app('livewire.compiler')->cacheManager->prepareGeneratedFileForCompilation($cachedPath);
 
         return $output;
     }
@@ -178,7 +178,7 @@ PHP;
     {
         $instance = new class (
             app('files'),
-            storage_path('framework/views/livewire'),
+            rtrim(config('view.compiled'), '/\\') . '/livewire',
         ) extends \Illuminate\View\Compilers\BladeCompiler {
             /**
              * Make this method public...

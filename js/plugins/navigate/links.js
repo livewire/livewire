@@ -31,7 +31,9 @@ export function whenThisLinkIsPressed(el, callback) {
             let handler = e => {
                 e.preventDefault()
 
-                whenReleased()
+                requestAnimationFrame(() => {
+                    whenReleased()
+                })
 
                 el.removeEventListener('mouseup', handler)
             }

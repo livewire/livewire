@@ -9,8 +9,8 @@ Here's a list of all the available component lifecycle hooks:
 | `boot()`         | Called at the beginning of every request. Both initial, and subsequent          |
 | `updating()`     | Called before updating a component property                                     |
 | `updated()`      | Called after updating a property                                                |
-| `rendering()`    | Called before `render()` is called                                              |
-| `rendered()`     | Called after `render()` is called                                               |
+| `rendering()`    | Called before the component's view is rendered                                  |
+| `rendered()`     | Called after the component's view is rendered                                   |
 | `dehydrate()`    | Called at the end of every component request                                    |
 | `exception($e, $stopPropagation)` | Called when an exception is thrown                     |                    |
 

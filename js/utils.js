@@ -179,6 +179,13 @@ export function diff(left, right, diffs = {}, path = '') {
 
     // We now know both are objects...
     let leftKeys = Object.keys(left)
+    let rightKeys = Object.keys(right)
+
+    // Did the key order change? (includes insertions that shift existing keys)
+    if (isObject(left) && leftKeys.some((key, i) => key !== rightKeys[i])) {
+        diffs[path] = right
+        return diffs
+    }
 
     // Recursively diff the object's properties...
     Object.entries(right).forEach(([key, value]) => {
@@ -334,6 +341,54 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
 }
 
 /**
+ * Diff two object trees (left = old, right = new) and patch the differences
+ * onto a target object. Walks the trees directly via object key access,
+ * avoiding dot-notated path strings which break when object keys contain dots.
+ */
+export function diffAndPatchRecursive(left, right, target) {
+    let leftKeys = new Set(Object.keys(left || {}))
+    let rightKeys = Object.keys(right)
+
+    // If existing keys shifted position in an object (e.g. a key was inserted
+    // in the middle), we can't patch key-by-key because new keys would be
+    // appended at the end. Replace all keys on the target to preserve order.
+    if (!isArray(target) && [...leftKeys].some((key, i) => key !== rightKeys[i])) {
+        for (let key of Object.keys(target)) delete target[key]
+        for (let key of rightKeys) target[key] = right[key]
+        return
+    }
+
+    rightKeys.forEach(key => {
+        leftKeys.delete(key)
+
+        if (deeplyEqual(left?.[key], right[key])) return
+
+        if (isObjecty(left?.[key]) && isObjecty(right[key]) && isObjecty(target[key])
+            && isArray(right[key]) === isArray(target[key])) {
+            diffAndPatchRecursive(left[key], right[key], target[key])
+        } else {
+            target[key] = right[key]
+        }
+    })
+
+    // Handle removals — keys present in left but not in right.
+    // Sort in reverse numeric order so array splice indices stay valid.
+    let removedKeys = [...leftKeys]
+
+    removedKeys.sort((a, b) => {
+        let aNum = parseInt(a) || 0
+        let bNum = parseInt(b) || 0
+        return bNum - aNum
+    }).forEach(key => {
+        if (isArray(target)) {
+            target.splice(parseInt(key), 1)
+        } else {
+            delete target[key]
+        }
+    })
+}
+
+/**
  * The data that's passed between the browser and server is in the form of
  * nested tuples consisting of the schema: [rawValue, metadata]. In this
  * method we're extracting the plain JS object of only the raw values.
@@ -406,6 +461,38 @@ export function getNonce() {
     }
 
     return null
+}
+
+export function replaceNoncesInHtml(html) {
+    let nonce = getNonce()
+    if (! nonce) return html
+
+    let nonceMatch = html.match(/nonce="([^"]+)"/)
+    if (! nonceMatch) return html
+
+    let newNonce = nonceMatch[1]
+    if (newNonce === nonce) return html
+
+    return html.replaceAll(`nonce="${newNonce}"`, `nonce="${nonce}"`)
+}
+
+export function cloneScriptTag(el) {
+    let script = document.createElement('script')
+
+    script.textContent = el.textContent
+    script.async = el.async
+
+    for (let attr of el.attributes) {
+        if (attr.name === 'nonce') {
+            // Browsers clear .nonce from DOMParser-parsed elements,
+            // so fall back to the page's original nonce...
+            script.nonce = getNonce() || el.nonce
+        } else {
+            script.setAttribute(attr.name, attr.value)
+        }
+    }
+
+    return script
 }
 
 /**

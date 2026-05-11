@@ -5,7 +5,9 @@ namespace Livewire\Features\SupportQueryString;
 use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Session;
 use Livewire\Features\SupportTesting\DuskTestable;
+use Illuminate\Support\Facades\Route;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -41,11 +43,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertInputValue('@filter_2', '')
         ->assertInputValue('@filter_3', '')
         ->assertQueryStringMissing('tableFilters')
-        ->type('@filter_1', 'test')
-        ->waitForLivewire()
-        // Wait for the changes to be applied...
-        ->pause(5)
-        ->assertScript(
+        ->waitForLivewire()->type('@filter_1', 'test')
+        ->waitForScript(
             '(new URLSearchParams(window.location.search)).toString()',
             'tableFilters%5Bfilter_1%5D%5Bvalue%5D=test'
         )
@@ -81,7 +80,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
+            ->waitForScript('window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
     }
 
     public function test_does_not_duplicate_url_query_string_for_array_parameters_on_page_load()
@@ -111,7 +110,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
+            ->waitForScript('window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
     }
 
     public function test_keep_option_does_not_duplicate_url_query_string_for_string_parameter_on_page_load()
@@ -134,7 +133,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return window.location.search', '?date=2024-01-01');
+            ->waitForScript('window.location.search', '?date=2024-01-01');
     }
 
 
@@ -232,7 +231,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertQueryStringHas('search', 'foo')
+            ->waitForQueryString('search', 'foo')
             ->waitForLivewire()->type('@input', 'bar')
             ->assertQueryStringHas('search', 'bar')
             ->waitForLivewire()->type('@input', ' ')
@@ -342,7 +341,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             },
         ])
             ->waitForLivewireToLoad()
-            ->assertQueryStringHas('perPage', '25')
+            ->waitForQueryString('perPage', '25')
             ->assertInputValue('@input', '25')
         ;
     }
@@ -376,7 +375,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertQueryStringHas('search', 'foo')
+            ->waitForQueryString('search', 'foo')
             ->waitForLivewire()->type('@input', 'bar')
             ->assertQueryStringHas('search', 'bar')
             ->waitForLivewire()->type('@input', ' ')
@@ -1209,6 +1208,174 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('return countOfReplaceStateCalls', 1)
         ;
     }
+
+    public function test_push_mode_syncs_url_on_initial_load_when_value_restored_from_session()
+    {
+        $this->beforeServingApplication(function () {
+            app('livewire')->component('session-url-push', SessionUrlPushComponent::class);
+
+            Route::get('/session-url-push', function () {
+                return app('livewire')->new('session-url-push')();
+            })->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/session-url-push')
+                ->waitForLivewireToLoad()
+                ->assertQueryStringMissing('search')
+                ->assertInputValue('@search', '')
+
+                // Type a value — it should update the query string and store in session...
+                ->waitForLivewire()->type('@search', 'hello')
+                ->assertQueryStringHas('search', 'hello')
+
+                // Revisit the page with a clean URL — session should restore
+                // the value AND the query string should reflect it...
+                ->visit('/session-url-push')
+                ->waitForLivewireToLoad()
+                ->assertInputValue('@search', 'hello')
+                ->assertQueryStringHas('search', 'hello')
+            ;
+        });
+    }
+
+    public function test_window_location_hash_set_during_alpine_init_is_preserved()
+    {
+        Livewire::visit([
+            new class extends Component {
+                #[BaseUrl]
+                public $foo = 'bar';
+
+                public function render() { return <<<'HTML'
+                <div x-init="if (! window.location.hash) window.location.hash = '#default-tab'">
+                    <span dusk="output" x-text="window.location.hash"></span>
+                </div>
+                HTML; }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->pause(100)
+            ->assertScript('return window.location.hash', '#default-tab')
+        ;
+    }
+
+    public function test_url_history_push_mode_forward_button_works_after_back()
+    {
+        Livewire::visit([
+            new class extends Component {
+                #[BaseUrl(history: true)]
+                public $search = '';
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <input type="text" dusk="search" wire:model.live="search" />
+                    <span dusk="output">{{ $search }}</span>
+                </div>
+                HTML; }
+            },
+        ])
+        ->waitForLivewireToLoad()
+        ->assertQueryStringMissing('search')
+
+        // Type "a" — should push a new history entry...
+        ->waitForLivewire()->type('@search', 'a')
+        ->pause(50)
+        ->assertQueryStringHas('search', 'a')
+        ->assertSeeIn('@output', 'a')
+
+        // Type "ab" — should push another history entry...
+        ->waitForLivewire()->type('@search', 'ab')
+        ->pause(50)
+        ->assertQueryStringHas('search', 'ab')
+        ->assertSeeIn('@output', 'ab')
+
+        // Click Back — should go to "a"...
+        ->waitForLivewire()->back()
+        ->pause(50)
+        ->assertQueryStringHas('search', 'a')
+        ->assertSeeIn('@output', 'a')
+
+        // Click Forward — should go back to "ab" (this was the bug)...
+        ->waitForLivewire()->forward()
+        ->pause(50)
+        ->assertQueryStringHas('search', 'ab')
+        ->assertSeeIn('@output', 'ab')
+        ;
+    }
+
+    public function test_url_history_push_mode_multiple_back_forward_navigations()
+    {
+        Livewire::visit([
+            new class extends Component {
+                #[BaseUrl(history: true)]
+                public $page = '1';
+
+                public function setPage($value) {
+                    $this->page = $value;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <button dusk="page2" wire:click="setPage('2')">Page 2</button>
+                    <button dusk="page3" wire:click="setPage('3')">Page 3</button>
+                    <button dusk="page4" wire:click="setPage('4')">Page 4</button>
+                    <span dusk="output">{{ $page }}</span>
+                </div>
+                HTML; }
+            },
+        ])
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@output', '1')
+        ->assertQueryStringMissing('page')
+
+        // Navigate through several pages...
+        ->waitForLivewire()->click('@page2')
+        ->pause(50)
+        ->assertSeeIn('@output', '2')
+        ->assertQueryStringHas('page', '2')
+
+        ->waitForLivewire()->click('@page3')
+        ->pause(50)
+        ->assertSeeIn('@output', '3')
+        ->assertQueryStringHas('page', '3')
+
+        ->waitForLivewire()->click('@page4')
+        ->pause(50)
+        ->assertSeeIn('@output', '4')
+        ->assertQueryStringHas('page', '4')
+
+        // Back to page 3...
+        ->waitForLivewire()->back()
+        ->pause(50)
+        ->assertSeeIn('@output', '3')
+        ->assertQueryStringHas('page', '3')
+
+        // Back to page 2...
+        ->waitForLivewire()->back()
+        ->pause(50)
+        ->assertSeeIn('@output', '2')
+        ->assertQueryStringHas('page', '2')
+
+        // Forward to page 3...
+        ->waitForLivewire()->forward()
+        ->pause(50)
+        ->assertSeeIn('@output', '3')
+        ->assertQueryStringHas('page', '3')
+
+        // Forward to page 4...
+        ->waitForLivewire()->forward()
+        ->pause(50)
+        ->assertSeeIn('@output', '4')
+        ->assertQueryStringHas('page', '4')
+
+        // Back again to page 3 (ensure back still works after forward)...
+        ->waitForLivewire()->back()
+        ->pause(50)
+        ->assertSeeIn('@output', '3')
+        ->assertQueryStringHas('page', '3')
+        ;
+    }
 }
 
 class FormObject extends \Livewire\Form
@@ -1230,4 +1397,21 @@ enum IntegerBackedEnumForUrlTesting: int
 {
     case First = 1;
     case Second = 2;
+}
+
+class SessionUrlPushComponent extends Component
+{
+    #[Session]
+    #[BaseUrl(history: true, except: '')]
+    public string $search = '';
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <input type="text" dusk="search" wire:model.live="search" />
+            <span dusk="output">{{ $search }}</span>
+        </div>
+        HTML;
+    }
 }

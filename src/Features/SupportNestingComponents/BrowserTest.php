@@ -394,6 +394,38 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@refresh-parent')
         ->assertConsoleLogHasNoErrors();
     }
+
+    public function test_concatenated_child_key_does_not_overwrite_foreach_variable()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $items = ['foo', 'bar'];
+
+                public function render()
+                {
+                    return <<<'BLADE'
+                    <div>
+                        @foreach ($items as $key => $item)
+                            <div wire:key="item-{{ $key }}">
+                                <livewire:child :key="$key . '-child'" />
+                                <span dusk="key-{{ $key }}">{{ $key }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                    BLADE;
+                }
+            },
+            'child' => new class extends Component {
+                public function render()
+                {
+                    return '<div>child</div>';
+                }
+            },
+        ])
+            ->assertSeeIn('[dusk="key-0"]', '0')
+            ->assertSeeIn('[dusk="key-1"]', '1')
+        ;
+    }
 }
 
 class Page extends Component

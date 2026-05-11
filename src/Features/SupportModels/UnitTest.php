@@ -233,6 +233,40 @@ class UnitTest extends \Tests\TestCase
         Relation::requireMorphMap(false);
     }
 
+    public function test_it_dehydrates_models_with_overridden_getMorphClass_using_actual_class()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public $article;
+
+            public function mount() {
+                $this->article = ExtendedArticle::first();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ $article->title }}</div>
+            HTML; }
+        });
+
+        $this->assertEquals(ExtendedArticle::class, $component->snapshot['data']['article'][1]['class']);
+    }
+
+    public function test_it_hydrates_models_with_overridden_getMorphClass_using_actual_class()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public $article;
+
+            public function mount() {
+                $this->article = ExtendedArticle::first();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ $article->title }}</div>
+            HTML; }
+        })
+        ->call('$refresh')
+        ->assertSet('article', ExtendedArticle::first());
+    }
+
     public function test_model_synth_rejects_non_model_classes()
     {
         $this->expectException(\Exception::class);
@@ -320,6 +354,19 @@ class Article extends Model
         ['title' => 'First'],
         ['title' => 'Second'],
     ];
+}
+
+// Simulates tightenco/parental's HasParent trait, which overrides
+// getTable() and getMorphClass() to return the parent's values so
+// that polymorphic relations use the parent's table.
+class ExtendedArticle extends Article
+{
+    protected $table = 'articles';
+
+    public function getMorphClass()
+    {
+        return (new Article)->getMorphClass();
+    }
 }
 
 class RouteModelBindingComponent extends \Livewire\Component

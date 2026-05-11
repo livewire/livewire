@@ -96,7 +96,7 @@ $wire.$el.querySelector('.modal')
 ```
 
 > [!tip] Complete $wire reference
-> For a comprehensive list of all `$wire` methods and properties, see the [$wire reference](#the-wire-object) at the bottom of this page.
+> For a comprehensive list of all `$wire` methods and properties, see the [$wire reference](#the-wire-object-1) at the bottom of this page.
 
 ## Loading assets
 
@@ -189,9 +189,10 @@ $wire.intercept(({ action, onSend, onCancel, onSuccess, onError, onFailure, onFi
 Message interceptors fire for each component update. A message contains one or more actions.
 
 ```js
-$wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onError, onFailure, onStream, onFinish }) => {
+$wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onSkipped, onError, onFailure, onStream, onFinish }) => {
     // message.component  - Component instance
     // message.actions    - Set of actions in this message
+    // message.isSkipped() - True if the server skipped this message
     // cancel()           - Cancel this message
 
     onSend(({ payload }) => {
@@ -209,6 +210,12 @@ $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onError,
         onRender(() => {})  // After render complete
     })
 
+    onSkipped(() => {
+        // Server intentionally skipped this message (e.g. an unchanged
+        // reactive child). No payload, no morph, no render — but action
+        // promises still resolve. Use for telemetry or dev tools.
+    })
+
     onError(({ response, body, preventDefault }) => {
         preventDefault() // Prevent error modal
     })
@@ -220,7 +227,7 @@ $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onError,
     })
 
     onFinish(() => {
-        // Runs after DOM morph completes (or on error/cancel)
+        // Runs after DOM morph completes (or on error/cancel/skip)
     })
 })
 ```
@@ -236,7 +243,9 @@ Hook execution order for successful requests:
 5. `onFinish` - After morph completes
 6. `onRender` - In `requestAnimationFrame` (post-paint)
 
-Action promises (`.then()`) resolve at the same time as `onFinish` (after morph).
+For skipped messages (e.g. an unchanged reactive child) `onSkipped` fires instead of `onSuccess`, then `onFinish`. None of the morph/render hooks fire since there's nothing to apply.
+
+Action promises (`.then()`) resolve at the same time as `onFinish` (after morph, or immediately on skip).
 
 ### Request interceptors
 
@@ -851,7 +860,7 @@ let $wire = {
     interceptAction(actionOrCallback, callback) { ... },
 
     // Register a message interceptor for this component instance
-    // Usage: $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onError, onFailure, onFinish }) => { ... })
+    // Usage: $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onSkipped, onError, onFailure, onFinish }) => { ... })
     // Or scope to specific action: $wire.interceptMessage('save', callback)
     interceptMessage(actionOrCallback, callback) { ... },
 

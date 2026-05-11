@@ -16,12 +16,32 @@ class SupportLegacyComputedPropertySyntax extends ComponentHook
     static function provide()
     {
         on('__get', function ($target, $property, $returnValue) {
+            // Handle #[Computed] attribute properties (takes priority over legacy)...
+            $attribute = static::findComputedAttribute($target, $property);
+
+            if ($attribute) {
+                $attribute->handleMagicGet($returnValue);
+
+                return;
+            }
+
+            // Handle legacy computed properties (getXxxProperty pattern)...
             if (static::hasComputedProperty($target, $property)) {
                 $returnValue(static::getComputedProperty($target, $property));
             }
         });
 
         on('__unset', function ($target, $property) {
+            // Handle #[Computed] attribute properties (takes priority over legacy)...
+            $attribute = static::findComputedAttribute($target, $property);
+
+            if ($attribute) {
+                $attribute->handleMagicUnset();
+
+                return;
+            }
+
+            // Handle legacy computed properties (getXxxProperty pattern)...
             if (static::hasComputedProperty($target, $property)) {
                 store($target)->unset('computedProperties', $property);
             }
@@ -30,6 +50,15 @@ class SupportLegacyComputedPropertySyntax extends ComponentHook
         on('flush-state', function () {
             static::$computedPropertyNamesCache = [];
         });
+    }
+
+    public static function findComputedAttribute($target, $property)
+    {
+        $propertyName = (string) str($property)->camel();
+
+        return $target->getAttributes()
+            ->whereInstanceOf(BaseComputed::class)
+            ->first(fn ($attr) => $attr->getName() === $propertyName);
     }
 
     public static function getComputedProperties($target)

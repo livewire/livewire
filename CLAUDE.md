@@ -24,9 +24,15 @@ tests/         → A smattering of PHP tests however, most tests are inside thei
 
 # Development Workflow
 
+## Setup
+
+Run `composer setup` to install all dependencies (PHP, JS, ChromeDriver).
+
 ## Build JS assets
 
 Run `npm run build` to bundle the JS
+
+**IMPORTANT:** Do not commit `dist/` files. They are built in CI.
 
 # Code Patterns
 
@@ -40,13 +46,30 @@ Most browser and unit tests live inside of feature directories for example:
 
 src/Features/SupportSlots/[UnitTest.php|BrowserTest.php]
 
-Unit: Run `phpunit --testsuite="Unit" [optional test file] [optional test name]`
-Browser: Run `phpunit --testsuite="Browser" [optional test file] [optional test name]`
-
-When running browser tests, use `DUSK_HEADLESS_DISABLED=false` to run Chrome in headless mode so the browser window doesn't pop up:
-
 ```bash
-DUSK_HEADLESS_DISABLED=false phpunit --testsuite="Browser" path/to/BrowserTest.php
+composer test                                        # all tests
+composer test:unit                                   # unit tests only
+composer test:browser                                # browser tests (headless)
+composer test:browser:headed                         # browser tests (opens Chrome)
+composer test:browser -- --filter="SupportCSP"       # specific browser tests
 ```
 
 **IMPORTANT:** Never run the full Livewire browser test suite — it takes too long. Always use `--filter` to run only the specific tests relevant to your changes. The full suite runs in CI.
+
+# Releasing
+
+## Bumping Alpine (optional)
+
+If you need to update the Alpine.js dependency before a release:
+
+```bash
+npm run bump-alpine
+```
+
+Then commit the updated `package.json` and `package-lock.json`.
+
+## Creating a release
+
+1. Go to **Actions → "Release" → "Run workflow"**
+2. Enter the version number (e.g. `4.3.0` — the `v` prefix is added automatically)
+3. The workflow installs deps, builds assets, runs JS tests, creates a tag with the built `dist/` files, and creates a GitHub Release with auto-generated notes

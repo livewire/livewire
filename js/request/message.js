@@ -11,6 +11,7 @@ export default class Message {
     pendingReturnsMeta = {}
     interceptors = []
     cancelled = false
+    skipped = false
     request = null
     _scope = null
 
@@ -108,6 +109,14 @@ export default class Message {
 
     isCancelled() {
         return this.cancelled
+    }
+
+    markSkipped() {
+        this.skipped = true
+    }
+
+    isSkipped() {
+        return this.skipped
     }
 
     isAsync() {
@@ -219,6 +228,12 @@ export default class Message {
         this.interceptors.forEach(interceptor => interceptor.onFinish())
     }
 
+    invokeOnSkipped() {
+        this.interceptors.forEach(interceptor => interceptor.onSkipped())
+
+        Array.from(this.actions).forEach(action => action.invokeOnFinish())
+    }
+
     rejectActionPromises({ status, body, json, errors }) {
         Array.from(this.actions).forEach(action => {
             action.rejectPromise({ status, body, json, errors })
@@ -233,10 +248,17 @@ export default class Message {
 
             if (! action) return;
 
-            // Check for validation errors in returnsMeta
+            // Check for errors in returnsMeta
             let meta = returnsMeta[index]
             if (meta?.errors) {
                 action.rejectPromise({ status: 422, body: null, json: null, errors: meta.errors })
+                action.invokeOnFinish()
+                resolvedActions.add(action)
+                return
+            }
+
+            if (meta?.status) {
+                action.rejectPromise({ status: meta.status, body: null, json: null, errors: null })
                 action.invokeOnFinish()
                 resolvedActions.add(action)
                 return
