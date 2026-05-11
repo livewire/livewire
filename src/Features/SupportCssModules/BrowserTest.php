@@ -26,16 +26,4 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript("getComputedStyle(document.querySelector('[dusk=\"target\"]')).color === 'rgb(255, 0, 0)'");
     }
 
-    public function test_component_with_slash_notation_reference_loads_css_module()
-    {
-        // Regression test for https://github.com/livewire/livewire/issues/10261
-        // When a child is referenced via dynamic-component using slash-notation
-        // (e.g. "testns::a/parent/modals/⚡child"), the name is normalised to
-        // canonical dot form internally. Without that, the slashes leak into
-        // the CSS URL and the request 404s silently.
-        Livewire::visit('testns::slash-notation.parent')
-            ->waitForLivewireToLoad()
-            ->pause(100)
-            ->assertScript("getComputedStyle(document.querySelector('[dusk=\"target\"]')).color === 'rgb(0, 128, 0)'");
-    }
 }

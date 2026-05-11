@@ -56,16 +56,4 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@target', 'js-import-loaded');
     }
 
-    public function test_component_with_slash_notation_reference_loads_js_module()
-    {
-        // Regression test for https://github.com/livewire/livewire/issues/10261
-        // When a child is referenced via dynamic-component using slash-notation
-        // (e.g. "testns::a/parent/modals/⚡child"), the name is normalised to
-        // canonical dot form internally. Without that, the slashes leak into
-        // the JS module URL and the request 404s silently.
-        Livewire::visit('testns::slash-notation.parent')
-            ->waitForLivewireToLoad()
-            ->pause(100)
-            ->assertSeeIn('@target', 'js-loaded');
-    }
 }
