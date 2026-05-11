@@ -779,6 +779,31 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_can_defer_a_component_with_non_div_root()
+    {
+        Livewire::visit(new #[\Livewire\Attributes\Defer] class extends Component {
+            public function boot() { usleep(200_000); }
+
+            public function placeholder() { return <<<HTML
+                <div id="loading">
+                    Loading...
+                </div>
+                HTML; }
+
+            public function render() { return <<<HTML
+                <section id="page">
+                    Hello World
+                </section>
+                HTML; }
+        })
+        ->assertSee('Loading...')
+        ->assertDontSee('Hello World')
+        ->waitFor('#page')
+        ->assertDontSee('Loading...')
+        ->assertSee('Hello World')
+        ->assertConsoleLogHasNoErrors();
+    }
+
 }
 
 class Page extends Component {
@@ -816,3 +841,4 @@ class PageWithoutMount extends Component {
             </div>
             HTML; }
 }
+

@@ -664,6 +664,22 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals('Livewire\Finder\Fixtures\Nested\NestedComponent', $class);
     }
+
+    public function test_normalize_name_canonicalises_slashes_and_bolts()
+    {
+        $finder = new Finder();
+
+        // Slashes are rewritten to dot notation.
+        $this->assertEquals('pages::a.b.c', $finder->normalizeName('pages::a/b/c'));
+
+        // ⚡ markers (with optional variation selectors) are stripped.
+        $this->assertEquals('pages::a.b.c', $finder->normalizeName('pages::a/⚡b/⚡c'));
+        $this->assertEquals('pages::a.b.c', $finder->normalizeName('pages::a/⚡︎b/⚡︎c'));
+        $this->assertEquals('pages::a.b.c', $finder->normalizeName('pages::a/⚡️b/⚡️c'));
+
+        // Already-canonical names pass through unchanged.
+        $this->assertEquals('pages::a.b.c', $finder->normalizeName('pages::a.b.c'));
+    }
 }
 
 class SingleSegmentComponent extends Component
