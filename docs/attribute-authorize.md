@@ -62,6 +62,31 @@ new class extends Component {
 > [!important]
 > If you resolve a model via a method parameter, a type-hint (e.g., `Comment $comment`) is required. Without it, Livewire cannot determine which model to resolve and the authorization check will fail.
 
+## Additional context
+
+When authorizing actions using policies, you may pass an array as the second argument. The first element in the array will be used to determine which policy should be invoked, while the rest of the array elements are passed as parameters to the policy method.
+
+```php
+<?php
+
+use Livewire\Attributes\Authorize;
+use Livewire\Component;
+use App\Models\Comment;
+use App\Models\Post;
+
+new class extends Component {
+    public Post $post;
+
+    #[Authorize('create', [Comment::class, 'post'])] // [tl! highlight]
+    public function createComment()
+    {
+        $this->post->comments()->create([
+            'body' => 'New comment'
+        ]);
+    }
+};
+```
+
 ## Stacking multiple checks
 
 The attribute is repeatable, so you can stack multiple authorization checks on a single method:
