@@ -78,7 +78,7 @@ new class extends Component {
     public Post $post;
 
     #[Authorize('create', [Comment::class, 'post'])] // [tl! highlight]
-    public function createComment() // [tl! highlight]
+    public function createComment()
     {
         $this->post->comments()->create([
             'body' => 'New comment'
