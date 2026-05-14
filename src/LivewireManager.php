@@ -4,6 +4,7 @@ namespace Livewire;
 
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
+use Livewire\Mechanisms\HandleSynths\HandleSynths;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
@@ -56,7 +57,7 @@ class LivewireManager
 
     function propertySynthesizer($synth)
     {
-        app(HandleComponents::class)->registerPropertySynthesizer($synth);
+        app(HandleSynths::class)->registerSynth($synth);
     }
 
     function directive($name, $callback)
@@ -123,7 +124,7 @@ class LivewireManager
 
     function findSynth($keyOrTarget, $component)
     {
-        return app(HandleComponents::class)->findSynth($keyOrTarget, $component);
+        return app(HandleSynths::class)->find($keyOrTarget, $component);
     }
 
     function update($snapshot, $diff, $calls)
