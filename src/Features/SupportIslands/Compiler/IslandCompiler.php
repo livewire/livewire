@@ -53,7 +53,7 @@ class IslandCompiler
         $result = $this->restoreBladeComments($result, $comments);
 
         for ($i=$maxNestingLevel; $i >= $currentNestingLevel; $i--) {
-            $result = preg_replace_callback('/(\[STARTISLAND:([0-9]+):' . $i . '\])\((.*?)\)(.*?)(\[ENDISLAND:' . $i . '\])/s', function ($matches) use ($i) {
+            $result = preg_replace_callback('/(\[STARTISLAND:([0-9]+):' . $i . '\])\(((?:[^()]++|\((?3)\))*)\)(.*?)(\[ENDISLAND:' . $i . '\])/s', function ($matches) use ($i) {
                 $occurrence = $matches[2];
                 $innerContent = $matches[4];
                 $expression = $matches[3];

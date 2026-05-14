@@ -453,6 +453,22 @@ class UnitTest extends TestCase
         $this->assertCount(1, $fragments, 'Expected only one island fragment but got ' . count($fragments));
     }
 
+    public function test_island_directive_supports_nested_parentheses_in_expression()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(with: ['value' => strtoupper(trim('  hello  '))])
+                        <div>value: {{ $value ?? 'not set' }}</div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        })
+            ->assertSee('value: HELLO');
+    }
+
     public function test_island_tokens_are_stable_across_different_base_paths()
     {
         $path = '/resources/views/components/foo.blade.php';
