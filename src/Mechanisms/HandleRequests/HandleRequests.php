@@ -25,7 +25,7 @@ class HandleRequests extends Mechanism
         if (! $this->updateRoute && ! $this->updateRouteExists()) {
             app($this::class)->setUpdateRoute(function ($handle) {
                 return Route::post(EndpointResolver::updatePath(), $handle)
-                    ->middleware(['web', RequireLivewireHeaders::class])
+                    ->middleware('web')
                     ->name('default-livewire.update');
             });
         }

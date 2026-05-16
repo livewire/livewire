@@ -22,6 +22,7 @@ class PersistentMiddleware extends Mechanism
         \Illuminate\Auth\Middleware\Authenticate::class,
         \Illuminate\Auth\Middleware\Authorize::class,
         \App\Http\Middleware\Authenticate::class,
+        \Livewire\Mechanisms\HandleRequests\RequireLivewireHeaders::class
     ];
 
     protected $path;
