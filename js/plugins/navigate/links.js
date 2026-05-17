@@ -1,10 +1,12 @@
 
-export function whenThisLinkIsPressed(el, callback) {
+export function whenThisLinkIsPressed(el, callback, shouldIntercept = () => true) {
     let isProgrammaticClick = e => ! e.isTrusted
     let isNotPlainLeftClick = e => (e.which > 1) || (e.altKey) || (e.ctrlKey) || (e.metaKey) || (e.shiftKey)
     let isNotPlainEnterKey = (e) => (e.which !== 13) || (e.altKey) || (e.ctrlKey) || (e.metaKey) || (e.shiftKey)
 
     el.addEventListener('click', e => {
+        if (! shouldIntercept(e)) return
+
         // This allows programmatic clicking of links via: `$0.click()`...
         if (isProgrammaticClick(e)) {
             e.preventDefault()
@@ -22,6 +24,8 @@ export function whenThisLinkIsPressed(el, callback) {
     })
 
     el.addEventListener('mousedown', e => {
+        if (! shouldIntercept(e)) return
+
         // We only care about left clicks for wire:navigate...
         if (isNotPlainLeftClick(e)) return;
 
@@ -43,6 +47,8 @@ export function whenThisLinkIsPressed(el, callback) {
     })
 
     el.addEventListener("keydown", e => {
+        if (! shouldIntercept(e)) return
+
         // We only care about the enter key...
         if (isNotPlainEnterKey(e)) return;
 
@@ -73,6 +79,19 @@ export function extractDestinationFromLink(linkEl) {
 
 export function createUrlObjectFromString(urlString) {
     return urlString !== null && new URL(urlString, document.baseURI)
+}
+
+export function shouldHandleLinkWithNavigate(linkEl, destination = extractDestinationFromLink(linkEl)) {
+    if (! destination) return false
+    if (! ['http:', 'https:'].includes(destination.protocol)) return false
+    if (destination.origin !== window.location.origin) return false
+    if (linkEl.hasAttribute('download')) return false
+
+    let target = linkEl.getAttribute('target')?.trim().toLowerCase()
+
+    if (target && target !== '_self') return false
+
+    return true
 }
 
 export function getUriStringFromUrlObject(urlObject) {
