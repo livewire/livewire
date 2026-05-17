@@ -3,10 +3,15 @@
 namespace Livewire\Features\SupportAuthorization;
 
 use Attribute;
+use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use UnitEnum;
+
+use function Livewire\str;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class BaseAuthorize extends LivewireAttribute
@@ -26,6 +31,15 @@ class BaseAuthorize extends LivewireAttribute
         }
 
         $arguments = Arr::wrap($this->argument);
+        
+        // Check if authorization already applied on route level
+        $abilityModel = app(PersistentMiddleware::class)->getAuthorizeMiddleware();
+        
+        if ($abilityModel !== []) {
+            [$ability, $model] = $abilityModel;
+            
+            if ($this->ability === $ability && in_array($model, $arguments)) return;
+        }
 
         // Resolve each argument (prioritize method parameters first, then component properties)
         $resolved = [];

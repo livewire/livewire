@@ -2,8 +2,10 @@
 
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
+use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Arr;
 use Livewire\Mechanisms\Mechanism;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use function Livewire\on;
@@ -27,6 +29,7 @@ class PersistentMiddleware extends Mechanism
     protected $path;
     protected $method;
     protected $middlewareAppliedFor = [];
+    protected $applicableMiddleware = [];
     protected $resolvedRouteModels = [];
 
     function boot()
@@ -52,6 +55,7 @@ class PersistentMiddleware extends Mechanism
             $this->path = null;
             $this->method = null;
             $this->middlewareAppliedFor = [];
+            $this->applicableMiddleware = [];
             $this->resolvedRouteModels = [];
         });
     }
@@ -69,6 +73,38 @@ class PersistentMiddleware extends Mechanism
     function getPersistentMiddleware()
     {
         return static::$persistentMiddleware;
+    }
+
+    function getAuthorizeMiddleware()
+    {
+        $middleware = $this->applicableMiddleware;
+
+        if ($middleware === []) {
+            return [];
+        }
+
+        $authorizeMiddleware = Arr::first($middleware, function ($m) {
+            return Str::startsWith($m, Authorize::class);
+        });
+        
+        if (is_null($authorizeMiddleware)) {
+            return [];
+        }
+
+        $classArguments = explode(':', $authorizeMiddleware, 2);
+
+        if (count($classArguments) !== 2) {
+            return [];
+        }
+
+        $abilityModel = explode(',', $classArguments[1], 2);
+
+        if (count($abilityModel) !== 2) {
+            return [];
+        }
+
+        // returns `[$ability, $model]`
+        return $abilityModel;
     }
 
     function getResolvedRouteModel($class, $key)
@@ -112,12 +148,12 @@ class PersistentMiddleware extends Mechanism
 
         $request = $this->makeFakeRequest();
 
-        $middleware = $this->getApplicablePersistentMiddleware($request);
+        $this->applicableMiddleware = $this->getApplicablePersistentMiddleware($request);
 
         // Only send through pipeline if there are middleware found
-        if (is_null($middleware)) return;
+        if ($this->applicableMiddleware === []) return;
 
-        Utils::applyMiddleware($request, $middleware);
+        Utils::applyMiddleware($request, $this->applicableMiddleware);
 
         $this->middlewareAppliedFor[$routeKey] = true;
 
