@@ -34,13 +34,7 @@ class BaseAuthorize extends LivewireAttribute
         $arguments = Arr::wrap($this->argument);
         
         // Check if authorization already applied on route level
-        $abilityModel = app(PersistentMiddleware::class)->getAuthorizeMiddleware();
-        
-        if ($abilityModel !== []) {
-            [$ability, $model] = $abilityModel;
-            
-            if (enum_value($this->ability) === $ability && in_array($model, $arguments)) return;
-        }
+        if ($this->isAlreadyAuthorizedByMiddleware($arguments)) return;
 
         // Resolve each argument (prioritize method parameters first, then component properties)
         $resolved = [];
@@ -51,9 +45,6 @@ class BaseAuthorize extends LivewireAttribute
         Gate::authorize($this->ability, $resolved);
     }
 
-    /**
-     * Resolve a single argument.
-     */
     protected function resolveArgument(string $arg, array $parameters): mixed
     {
         // Action that does not require a model, for example a 'create' action...
@@ -79,5 +70,41 @@ class BaseAuthorize extends LivewireAttribute
 
         // Fall back to component property
         return data_get($this->component, $arg);
+    }
+
+    protected function isAlreadyAuthorizedByMiddleware($arguments): bool
+    {
+        $middleware = app(PersistentMiddleware::class)->getAuthorizeMiddleware();
+
+        if ($middleware === []) {
+            return false;
+        }
+
+        return collect($middleware)
+            ->map(fn (string $m) => $this->parseMiddlewareArgument($m))
+            ->filter()
+            ->contains(fn (array $item) =>
+                $item['ability'] === enum_value($this->ability) 
+                && in_array($item['model'], $arguments, true)
+            );
+    }
+
+    protected function parseMiddlewareArgument(string $middleware): ?array
+    {
+        $parts = explode(':', $middleware, 2);
+        if (count($parts) !== 2) {
+            return null;
+        }
+
+        $abilityAndModel = explode(',', $parts[1], 2);
+
+        if (count($abilityAndModel) !== 2) {
+            return null;
+        }
+
+        return [
+            'ability' => trim($abilityAndModel[0]),
+            'model'   => trim($abilityAndModel[1]),
+        ];
     }
 }

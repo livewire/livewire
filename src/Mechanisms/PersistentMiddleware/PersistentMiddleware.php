@@ -5,7 +5,6 @@ namespace Livewire\Mechanisms\PersistentMiddleware;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Router;
-use Illuminate\Support\Arr;
 use Livewire\Mechanisms\Mechanism;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use function Livewire\on;
@@ -83,28 +82,15 @@ class PersistentMiddleware extends Mechanism
             return [];
         }
 
-        $authorizeMiddleware = Arr::first($middleware, function ($m) {
+        $authorizeMiddleware = collect($middleware)->filter(function ($m) {
             return Str::startsWith($m, Authorize::class);
         });
-        
-        if (is_null($authorizeMiddleware)) {
+
+        if ($authorizeMiddleware->isEmpty()) {
             return [];
         }
 
-        $classArguments = explode(':', $authorizeMiddleware, 2);
-
-        if (count($classArguments) !== 2) {
-            return [];
-        }
-
-        $abilityModel = explode(',', $classArguments[1], 2);
-
-        if (count($abilityModel) !== 2) {
-            return [];
-        }
-
-        // returns `[$ability, $model]`
-        return $abilityModel;
+        return $authorizeMiddleware->all();
     }
 
     function getResolvedRouteModel($class, $key)
