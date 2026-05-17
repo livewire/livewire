@@ -10,7 +10,6 @@ use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use UnitEnum;
 
 use function Illuminate\Support\enum_value;
-use function Livewire\str;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class BaseAuthorize extends LivewireAttribute
