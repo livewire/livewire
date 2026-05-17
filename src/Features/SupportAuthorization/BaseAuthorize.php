@@ -11,6 +11,7 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use UnitEnum;
 
+use function Illuminate\Support\enum_value;
 use function Livewire\str;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
@@ -38,7 +39,7 @@ class BaseAuthorize extends LivewireAttribute
         if ($abilityModel !== []) {
             [$ability, $model] = $abilityModel;
             
-            if ($this->ability === $ability && in_array($model, $arguments)) return;
+            if (enum_value($this->ability) === $ability && in_array($model, $arguments)) return;
         }
 
         // Resolve each argument (prioritize method parameters first, then component properties)
