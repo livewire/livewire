@@ -40,6 +40,23 @@ Below is a breakdown of what happens when a `wire:navigate` link is clicked:
 
 This technique results in much faster page load times — often twice as fast — and makes the application "feel" like a JavaScript powered single page application.
 
+## Browser-native links still use the browser
+
+`wire:navigate` is intended for same-origin page visits within your application. Livewire automatically falls back to the browser's default behavior for links it should not intercept, including:
+
+* External URLs
+* Links with `target="_blank"` or any other non-`_self` target
+* Links with the `download` attribute
+* `mailto:`, `tel:`, and `javascript:` URLs
+
+For example, only the first link below will use Livewire navigation:
+
+```blade
+<a href="/posts" wire:navigate>Posts</a>
+<a href="https://github.com/livewire/livewire" target="_blank" wire:navigate>Source code</a>
+<a href="mailto:team@example.com" wire:navigate>Email us</a>
+```
+
 ## Redirects
 
 When one of your Livewire components redirects users to another URL within your application, you can also instruct Livewire to use its `wire:navigate` functionality to load the new page. To accomplish this, provide the `navigate` argument to the `redirect()` method:
