@@ -115,7 +115,7 @@ class PersistentMiddleware extends Mechanism
         $middleware = $this->getApplicablePersistentMiddleware($request);
 
         // Only send through pipeline if there are middleware found
-        if (is_null($middleware)) return;
+        if ($middleware === []) return;
 
         Utils::applyMiddleware($request, $middleware);
 
