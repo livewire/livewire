@@ -5,8 +5,11 @@ namespace Livewire\Features\SupportAuthorization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Authorize;
+use Livewire\Component;
+use Livewire\Drawer\Utils;
 use Livewire\Livewire;
 use Sushi\Sushi;
 use Tests\TestCase;
@@ -697,6 +700,102 @@ class UnitTest extends TestCase
             ->call('editComment', comment: 1, post: 2)
             ->assertForbidden();
     }
+
+    public function test_deduplicates_authorization_from_route_and_component_using_class()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        $count = 0;
+
+        Gate::before(function (AuthorizationUser $user) use (&$count) {
+            if (app('livewire')->isLivewireRequest()) {
+                $count++;
+            }
+            return null;
+        });
+
+        Route::livewire('/posts/create', CreatePost::class)
+            ->can('create', AuthorizationPost::class)
+            ->middleware('web');
+
+        // GET the page to mount the component and get a valid snapshot
+        $response = $this->actingAs(AuthorizationUser::find(1))
+            ->withoutExceptionHandling()
+            ->get('/posts/create');
+
+        $response->assertOk();
+        $response->assertSee('Create');
+
+        // Extract snapshot from the rendered HTML
+        $html = $response->getContent();
+        $snapshot = Utils::extractAttributeDataFromHtml($html, 'wire:snapshot');
+        $encodedSnapshot = json_encode($snapshot);
+
+        // Flush state from the initial render
+        app('livewire')->flushState();
+
+        // POST to the update endpoint to trigger an update request
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(app('livewire')->getUpdateUri(), [
+                'components' => [
+                    [
+                        'snapshot' => $encodedSnapshot,
+                        'calls' => [['method' => 'createPost', 'params' => [], 'path' => '']],
+                        'updates' => [],
+                    ],
+                ],
+            ])->assertOk();
+
+        $this->assertEquals(1, $count);
+    }
+
+    public function test_deduplicates_authorization_from_route_and_component_using_route_model_binding()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        $count = 0;
+
+        Gate::before(function (AuthorizationUser $user, string $ability) use (&$count) {
+            if (app('livewire')->isLivewireRequest()) {
+                $count++;
+            }
+            return null;
+        });
+
+        Route::livewire('/posts/{post}', EditPost::class)
+            ->can('edit', 'post')
+            ->middleware('web');
+
+        // GET the page to mount the component and get a valid snapshot
+        $response = $this->actingAs(AuthorizationUser::find(1))
+            ->withoutExceptionHandling()
+            ->get('/posts/1');
+
+        $response->assertOk();
+        $response->assertSee('Save');
+
+        // Extract snapshot from the rendered HTML
+        $html = $response->getContent();
+        $snapshot = Utils::extractAttributeDataFromHtml($html, 'wire:snapshot');
+        $encodedSnapshot = json_encode($snapshot);
+
+        // Flush state from the initial render
+        app('livewire')->flushState();
+
+        // POST to the update endpoint to trigger an update request
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(app('livewire')->getUpdateUri(), [
+                'components' => [
+                    [
+                        'snapshot' => $encodedSnapshot,
+                        'calls' => [['method' => 'saveChanges', 'params' => [], 'path' => '']],
+                        'updates' => [],
+                    ],
+                ],
+            ])->assertOk();
+
+        $this->assertEquals(1, $count);
+    }
 }
 
 class AuthorizationUser extends AuthUser
@@ -751,5 +850,35 @@ class AuthorizationCommentPolicy
     public function edit(AuthorizationUser $user, AuthorizationComment $comment, AuthorizationPost $post) : bool
     {
         return (int) $comment->post_id === (int) $post->id && (int) $comment->user_id === (int) $user->id;
+    }
+}
+
+class CreatePost extends Component
+{
+    #[Authorize('create', AuthorizationPost::class)]
+    public function createPost()
+    {
+        //
+    }
+
+    public function render()
+    {
+        return '<div>Create</div>';
+    }
+}
+
+class EditPost extends Component
+{
+    public AuthorizationPost $post;
+
+    #[Authorize('edit', 'post')]
+    public function saveChanges()
+    {
+        //
+    }
+
+    public function render()
+    {
+        return '<div>Save</div>';
     }
 }
