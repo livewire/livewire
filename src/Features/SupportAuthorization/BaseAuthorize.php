@@ -3,10 +3,8 @@
 namespace Livewire\Features\SupportAuthorization;
 
 use Attribute;
-use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use UnitEnum;
