@@ -76,21 +76,9 @@ class PersistentMiddleware extends Mechanism
 
     function getAuthorizeMiddleware()
     {
-        $middleware = $this->applicableMiddleware;
-
-        if ($middleware === []) {
-            return [];
-        }
-
-        $authorizeMiddleware = array_filter($middleware, function ($m) {
+        return array_filter($this->applicableMiddleware, function ($m) {
             return Str::startsWith($m, Authorize::class);
         });
-
-        if ($authorizeMiddleware === []) {
-            return [];
-        }
-
-        return $authorizeMiddleware;
     }
 
     function getResolvedRouteModel($class, $key)
