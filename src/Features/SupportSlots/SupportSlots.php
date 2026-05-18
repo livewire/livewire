@@ -48,11 +48,11 @@ class SupportSlots extends ComponentHook
         // that they can be rendered and morph'd correctly. Full Slots are restored when
         // content was persisted from a skipped render (e.g. lazy components); otherwise
         // placeholders are used...
-        $slots = $memo['slots'] ?? [];
+        [$hydrated, $placeholders] = collect($memo['slots'] ?? [])
+            ->partition(fn ($s) => isset($s['content']));
 
-        if (! empty($slots)) {
-            $this->component->withHydratedSlots($slots);
-        }
+        if ($hydrated->isNotEmpty()) $this->component->withHydratedSlots($hydrated->all());
+        if ($placeholders->isNotEmpty()) $this->component->withPlaceholderSlots($placeholders->all());
     }
 
     public function dehydrate($context)
