@@ -104,7 +104,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_alpine_data_works_in_lazy_loaded_component()
     {
         Livewire::visit('testns::lazy-with-alpine-data')
-            ->waitFor('@target')
+            ->waitForText('alpine-data-loaded')
             ->assertSeeIn('@target', 'alpine-data-loaded')
             ->assertConsoleLogHasNoErrors();
     }
