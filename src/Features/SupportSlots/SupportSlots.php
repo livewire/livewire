@@ -5,7 +5,6 @@ namespace Livewire\Features\SupportSlots;
 use Livewire\ComponentHook;
 
 use function Livewire\on;
-use function Livewire\store;
 
 class SupportSlots extends ComponentHook
 {
@@ -88,7 +87,7 @@ class SupportSlots extends ComponentHook
 
             // If the slot has content and the render was skipped (e.g. lazy loading),
             // persist the content so it survives the dehydrate → hydrate cycle...
-            if ($slot instanceof Slot && store($this->component)->get('skipRender', false)) {
+            if ($slot instanceof Slot && $this->storeGet('skipRender', false)) {
                 $entry['content'] = $slot->content;
             }
 
