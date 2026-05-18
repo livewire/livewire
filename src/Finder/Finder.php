@@ -105,6 +105,12 @@ class Finder
             return $result;
         }
 
+        // Rewrite slash-style nested paths to canonical dot-notation and
+        // strip ⚡ markers so the same component is referenced by a
+        // single canonical name regardless of how it was written.
+        $nameComponentOrClass = preg_replace('/' . self::ZAP . '[\x{FE0E}\x{FE0F}]?/u', '', $nameComponentOrClass);
+        $nameComponentOrClass = str_replace('/', '.', $nameComponentOrClass);
+
         return $nameComponentOrClass;
     }
 

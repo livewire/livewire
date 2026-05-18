@@ -182,8 +182,6 @@ function getMorphConfig(component) {
         added: (el) => {
             if (isntElement(el)) return
 
-            const findComponentByElId = findComponentByEl(el).id
-
             trigger('morph.added', { el })
         },
 
