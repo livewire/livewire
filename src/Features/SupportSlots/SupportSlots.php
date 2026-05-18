@@ -45,18 +45,14 @@ class SupportSlots extends ComponentHook
 
     function hydrate($memo)
     {
+        // When a child component re-renders, we will need to restore the known slots so
+        // that they can be rendered and morph'd correctly. Full Slots are restored when
+        // content was persisted from a skipped render (e.g. lazy components); otherwise
+        // placeholders are used...
         $slots = $memo['slots'] ?? [];
 
-        if (empty($slots)) return;
-
-        // If slot content was persisted (e.g. from a lazy component that skipped its
-        // initial render), restore full Slots so {{ $slot }} renders the content...
-        $hasContent = collect($slots)->contains(fn ($s) => isset($s['content']));
-
-        if ($hasContent) {
+        if (! empty($slots)) {
             $this->component->withHydratedSlots($slots);
-        } else {
-            $this->component->withPlaceholderSlots($slots);
         }
     }
 
