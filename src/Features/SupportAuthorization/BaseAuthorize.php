@@ -91,13 +91,15 @@ class BaseAuthorize extends LivewireAttribute
     {
         $middlewareArgument = Str::after($middleware, ':');
 
-        $ability = Str::before($middlewareArgument, ',');
+        $abilityAndModel = explode(',', $middlewareArgument, 2);
 
-        $model = Str::after($middlewareArgument, ',');
+        if (count($abilityAndModel) !== 2) {
+            return null;
+        }
 
         return [
-            'ability' => trim($ability),
-            'model'   => trim($model),
+            'ability' => trim($abilityAndModel[0]),
+            'model'   => trim($abilityAndModel[1]),
         ];
     }
 }
