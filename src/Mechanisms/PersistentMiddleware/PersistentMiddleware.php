@@ -77,7 +77,7 @@ class PersistentMiddleware extends Mechanism
     function getAuthorizeMiddleware()
     {
         return array_filter($this->applicableMiddleware, function ($m) {
-            return Str::startsWith($m, Authorize::class);
+            return Str::before($m, ':') == Authorize::class;
         });
     }
 
