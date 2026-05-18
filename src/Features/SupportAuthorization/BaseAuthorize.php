@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportAuthorization;
 use Attribute;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use UnitEnum;
@@ -88,12 +89,9 @@ class BaseAuthorize extends LivewireAttribute
 
     protected function parseMiddlewareArgument(string $middleware): ?array
     {
-        $parts = explode(':', $middleware, 2);
-        if (count($parts) !== 2) {
-            return null;
-        }
+        $middlewareArgument = Str::after($middleware, ':');
 
-        $abilityAndModel = explode(',', $parts[1], 2);
+        $abilityAndModel = explode(',', $middlewareArgument, 2);
 
         if (count($abilityAndModel) !== 2) {
             return null;
