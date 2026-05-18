@@ -119,17 +119,13 @@ export default function (Alpine) {
                     !preserveScroll && restoreScrollPositionOrScrollToTop()
 
                     // Invoke any callbacks registered via onSwap during the navigating event
-                    let swapResults = swapCallbacks.map(callback => callback())
+                    swapCallbacks.forEach(callback => callback())
 
                     afterNewScriptsAreDoneLoading(() => {
-                        andAfterAllThis(async () => {
+                        andAfterAllThis(() => {
                             setTimeout(() => {
                                 autofocus && autofocusElementsWithTheAutofocusAttribute()
                             })
-
-                            // Await any promises returned by onSwap callbacks
-                            // (e.g. to pre-load script modules before Alpine re-initialises)
-                            await Promise.all(swapResults)
 
                             nowInitializeAlpineOnTheNewPage(Alpine)
 
@@ -202,14 +198,10 @@ export default function (Alpine) {
                     restoreScrollPositionOrScrollToTop()
 
                     // Invoke any callbacks registered via onSwap during the navigating event
-                    let swapResults = swapCallbacks.map(callback => callback())
+                    swapCallbacks.forEach(callback => callback())
 
-                    andAfterAllThis(async () => {
+                    andAfterAllThis(() => {
                         autofocus && autofocusElementsWithTheAutofocusAttribute()
-
-                        // Await any promises returned by onSwap callbacks
-                        // (e.g. to pre-load script modules before Alpine re-initialises)
-                        await Promise.all(swapResults)
 
                         nowInitializeAlpineOnTheNewPage(Alpine)
 

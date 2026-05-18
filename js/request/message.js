@@ -11,6 +11,7 @@ export default class Message {
     pendingReturnsMeta = {}
     interceptors = []
     cancelled = false
+    skipped = false
     request = null
     _scope = null
 
@@ -110,6 +111,14 @@ export default class Message {
         return this.cancelled
     }
 
+    markSkipped() {
+        this.skipped = true
+    }
+
+    isSkipped() {
+        return this.skipped
+    }
+
     isAsync() {
         return Array.from(this.actions).every(action => action.isAsync())
     }
@@ -186,7 +195,6 @@ export default class Message {
             interceptor.onSuccess({
                 payload: this.responsePayload,
                 onSync: callback => interceptor.onSync = callback,
-                onPrepare: callback => interceptor.onPrepare = callback,
                 onEffect: callback => interceptor.onEffect = callback,
                 onMorph: callback => interceptor.onMorph = callback,
                 onRender: callback => interceptor.onRender = callback
@@ -200,12 +208,6 @@ export default class Message {
 
     invokeOnSync() {
         this.interceptors.forEach(interceptor => interceptor.onSync())
-    }
-
-    async invokeOnPrepare() {
-        await Promise.all(
-            this.interceptors.map(interceptor => interceptor.onPrepare())
-        )
     }
 
     invokeOnEffect() {
@@ -224,6 +226,12 @@ export default class Message {
 
     invokeOnFinish() {
         this.interceptors.forEach(interceptor => interceptor.onFinish())
+    }
+
+    invokeOnSkipped() {
+        this.interceptors.forEach(interceptor => interceptor.onSkipped())
+
+        Array.from(this.actions).forEach(action => action.invokeOnFinish())
     }
 
     rejectActionPromises({ status, body, json, errors }) {
