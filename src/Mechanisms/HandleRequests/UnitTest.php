@@ -134,6 +134,62 @@ class UnitTest extends TestCase
         $response->assertStatus(419);
     }
 
+    public function test_tampered_property_type_is_not_reported(): void
+    {
+        config()->set('app.debug', false);
+
+        $reported = [];
+        app(\Illuminate\Contracts\Debug\ExceptionHandler::class)
+            ->reportable(function (\Throwable $e) use (&$reported) {
+                $reported[] = $e;
+                return false;
+            });
+
+        $testable = Livewire::test(new class extends TestComponent {
+            public array $items = [];
+        });
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => json_encode($testable->snapshot), 'updates' => ['items' => 'not_an_array'], 'calls' => []],
+            ]]);
+
+        $response->assertStatus(419);
+        $this->assertEmpty($reported, 'Scanner-tampered property assignment should not be reported.');
+    }
+
+    public function test_legitimate_typeerror_is_reported(): void
+    {
+        config()->set('app.debug', false);
+
+        $reported = [];
+        app(\Illuminate\Contracts\Debug\ExceptionHandler::class)
+            ->reportable(function (\Throwable $e) use (&$reported) {
+                $reported[] = $e;
+                return false;
+            });
+
+        $testable = Livewire::test(new class extends TestComponent {
+            public function bug(): int
+            {
+                return 'not_an_int';
+            }
+        });
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                [
+                    'snapshot' => json_encode($testable->snapshot),
+                    'updates' => [],
+                    'calls' => [['method' => 'bug', 'params' => [], 'metadata' => []]],
+                ],
+            ]]);
+
+        $response->assertStatus(419);
+        $this->assertNotEmpty($reported, 'Legitimate TypeError from component method body should be reported.');
+        $this->assertInstanceOf(\TypeError::class, $reported[0]);
+    }
+
     public function test_valid_request_returns_200(): void
     {
         // Disable debug mode to test production HTTP responses (404/419)...

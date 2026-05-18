@@ -651,6 +651,8 @@ The `$event` action may be used within event listeners like `wire:click`. This a
 
 When the enter key is pressed while a user is typing in the input above, the contents of the input will be passed as a parameter to the `search()` action.
 
+> For more information about magic actions, see [Javascript reference](/docs/4.x/javascript#the-wire-object-1)
+
 ### Using magic actions from Alpine
 
 You can also call magic actions from Alpine using the `$wire` object. For example, you may use the `$wire` object to invoke the `$refresh` magic action:

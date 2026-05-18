@@ -101,7 +101,25 @@ class MultiFileParser extends Parser
 
         $scriptContents = trim($this->scriptPortion);
 
+        // Hoist imports to the top
+        $imports = [];
+        $scriptContents = preg_replace_callback(
+            '/^import\s+.+?;?\s*$/m',
+            function ($matches) use (&$imports) {
+                $imports[] = trim($matches[0]);
+                return '';
+            },
+            $scriptContents
+        );
+
+        // Clean up any extra whitespace left by removed imports
+        $scriptContents = trim($scriptContents);
+
+        // Build the final script with hoisted imports and export function
+        $hoistedImports = empty($imports) ? '' : implode("\n", $imports) . "\n";
+
         return <<<JS
+        {$hoistedImports}
         export function run(\$wire, \$js) {
             {$scriptContents}
         }

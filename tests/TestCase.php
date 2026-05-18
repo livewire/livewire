@@ -17,7 +17,7 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
         $this->afterApplicationCreated(function () {
             $this->makeACleanSlate();
 
-            if (env('DUSK_HEADLESS_DISABLED', true) == false) {
+            if (env('DUSK_HEADLESS_DISABLED', false) == false) {
                 DuskOptions::withoutUI();
             }
         });

@@ -282,6 +282,28 @@ In rare cases where you want `wire:model` to also respond to events bubbling up 
 > [!warning] Use `.deep` sparingly
 > Most use cases don't require listening to child events. Only use `.deep` when you specifically need to capture events from descendant elements.
 
+## Accessing nested properties
+
+`wire:model` supports dot notation for binding to nested properties, array elements, and form object fields:
+
+```blade
+<input type="text" wire:model="address.city">
+
+<input type="text" wire:model="items.0.name">
+
+<input type="text" wire:model="form.title">
+```
+
+Bracket notation is also supported as an alternative:
+
+```blade
+<input type="text" wire:model="address['city']">
+
+<input type="text" wire:model="items[0].name">
+```
+
+Both notations are equivalent — `address['city']` resolves the same path as `address.city`. Bracket and dot notation can be mixed freely within a single expression.
+
 ## Going deeper
 
 For a more complete documentation on using `wire:model` in the context of HTML forms, visit the [Livewire forms documentation page](/docs/4.x/forms).
@@ -297,6 +319,9 @@ For a more complete documentation on using `wire:model` in the context of HTML f
 
 ```blade
 wire:model="propertyName"
+wire:model="property.nested"
+wire:model="property['nested']"
+wire:model="property[0]"
 ```
 
 ### Modifiers

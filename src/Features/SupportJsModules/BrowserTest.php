@@ -13,6 +13,12 @@ class BrowserTest extends \Tests\BrowserTestCase
         return function () {
             app('livewire.finder')->addNamespace('testns', viewPath: __DIR__ . '/fixtures');
 
+            Route::get('/test-module.js', function () {
+                return response("export let greeting = 'js-import-loaded'", 200, [
+                    'Content-Type' => 'application/javascript',
+                ]);
+            });
+
             Route::get('/alpine-data-page', function () {
                 return app('livewire')->new('testns::alpine-data.index')();
             })->middleware('web');
@@ -37,11 +43,31 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertConsoleLogHasNoErrors();
     }
 
+    public function test_single_file_component_js_supports_es_imports()
+    {
+        // This tests that ES module import statements work in single-file
+        // component <script> blocks. The imports should be hoisted above the
+        // export function run() wrapper so they remain at the module top level.
+        Livewire::visit('testns::sfc-with-imports')
+            ->waitForLivewireToLoad()
+            ->pause(100)
+            ->assertSeeIn('@target', 'js-import-loaded');
+    }
+
+    public function test_multi_file_component_js_supports_es_imports()
+    {
+        // This tests that ES module import statements work in multi-file
+        // component .js files. The imports should be hoisted above the
+        // export function run() wrapper so they remain at the module top level.
+        // Regression test for: https://github.com/livewire/livewire/discussions/10163
+        Livewire::visit('testns::mfc-with-imports')
+            ->waitForLivewireToLoad()
+            ->pause(100)
+            ->assertSeeIn('@target', 'js-import-loaded');
+    }
+
     public function test_alpine_data_works_in_single_file_component_script()
     {
-        // This tests that Alpine.data() registrations inside SFC <script> tags
-        // work correctly. The script module is pre-loaded before Alpine starts,
-        // so Alpine.data() is registered before x-data attributes are evaluated.
         // Regression test for: https://github.com/livewire/livewire/discussions/9591
         Livewire::visit('testns::alpine-data.index')
             ->waitForLivewireToLoad()
@@ -119,7 +145,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_alpine_data_module_persists_across_wire_navigate()
     {
         // The alpine-data component is on both pages. The module should be cached
-        // from the first page and reused on the second without re-importing.
+        // by the browser and reused on the second page without re-importing.
         Livewire::visit('testns::navigate-with-alpine-data')
             ->waitForLivewireToLoad()
             ->assertSeeIn('@first-page', 'First page')

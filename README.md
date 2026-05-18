@@ -20,6 +20,24 @@ Livewire is a full-stack framework for Laravel that allows you to build dynamic 
 
 You can read the official documentation on the [Livewire website](https://livewire.laravel.com/docs).
 
+## Local Development
+
+```bash
+git clone git@github.com:livewire/livewire.git && cd livewire
+composer setup
+```
+
+This installs PHP and JS dependencies and sets up ChromeDriver for browser tests.
+
+```bash
+composer test:unit                                   # unit tests
+composer test:browser                                # browser tests (headless)
+composer test:browser:headed                         # browser tests (opens Chrome)
+composer test:browser -- --filter="SupportCSP"       # specific tests
+```
+
+To build the JS assets after making changes: `npm run build`
+
 ## Contributing
 <a name="contributing"></a>
 

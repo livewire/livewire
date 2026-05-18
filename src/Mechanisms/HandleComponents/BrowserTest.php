@@ -12,7 +12,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(new class extends \Livewire\Component {
             public $subsequentRequest = false;
 
-            public $negativeZero = -0;
+            public $negativeZero = -0.0;
 
             public $associativeArrayWithStringAndNumericKeys = [
                 '2' => 'two',

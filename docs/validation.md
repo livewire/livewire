@@ -665,6 +665,7 @@ Livewire provides a `$errors` magic property for client-side access to validatio
 ### Available methods
 
 - `$errors.has('field')` - Check if a field has errors
+- `$errors.missing('field')` - Check if a field doesn't have errors
 - `$errors.first('field')` - Get the first error message for a field
 - `$errors.get('field')` - Get all error messages for a field
 - `$errors.all()` - Get all errors for all fields

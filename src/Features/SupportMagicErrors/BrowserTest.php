@@ -178,4 +178,44 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@has-email', 'false')
             ;
     }
+
+    public function test_wire_show_reacts_to_validation_errors_appearing_and_clearing()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            #[Validate('required|email')]
+            public string $email = '';
+
+            public function save()
+            {
+                $this->validate();
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <form wire:submit="save">
+                    <input type="email" wire:model="email" dusk="email">
+
+                    <div wire:show="$errors.has('email')" dusk="email-error">
+                        <span wire:text="$errors.first('email')" dusk="email-error-text"></span>
+                    </div>
+
+                    <button type="submit" dusk="save">Save</button>
+                </form>
+            </div>
+            HTML; }
+        })
+            // Initially hidden...
+            ->assertAttributeContains('@email-error', 'style', 'display: none')
+
+            // Submit empty: error appears...
+            ->waitForLivewire()->click('@save')
+            ->assertVisible('@email-error')
+            ->assertSeeIn('@email-error-text', 'The email field is required.')
+
+            // Fix the input, resubmit: error hides again...
+            ->type('@email', 'foo@bar.test')
+            ->waitForLivewire()->click('@save')
+            ->assertAttributeContains('@email-error', 'style', 'display: none')
+            ;
+    }
 }

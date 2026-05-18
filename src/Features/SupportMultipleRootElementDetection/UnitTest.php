@@ -149,6 +149,28 @@ class UnitTest extends TestCase
         });
     }
 
+    function test_parsing_html_does_not_trigger_warnings()
+    {
+        config()->set('app.debug', true);
+
+        // HTML that triggers libxml errors (e.g. block elements nested inside
+        // inline elements, or SVG tags on older libxml2 versions)...
+        $html = '<div><p><div>nested</div></p></div>';
+
+        // Convert warnings to exceptions so the test fails if any are emitted...
+        set_error_handler(function ($severity, $message) {
+            throw new \ErrorException($message, 0, $severity);
+        }, E_WARNING);
+
+        try {
+            (new SupportMultipleRootElementDetection)->getRootElementCount($html);
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertTrue(true);
+    }
+
     function test_dont_throw_error_in_production_so_that_there_is_no_perf_penalty()
     {
         config()->set('app.debug', false);

@@ -1,6 +1,7 @@
 import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 import { evaluateExpression } from '../evaluator'
+import { replaceNoncesInHtml, cloneScriptTag } from '../utils'
 
 let executedScripts = new WeakMap
 
@@ -93,6 +94,11 @@ async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
 }
 
 async function addAssetsToHeadTagOfPage(rawHtml) {
+    // Rewrite nonces in the asset HTML to match the initial page's nonce.
+    // Assets from Livewire update requests have a new nonce, but the browser
+    // still enforces the original page's CSP header...
+    rawHtml = replaceNoncesInHtml(rawHtml)
+
     let newDocument = (new DOMParser()).parseFromString(rawHtml, "text/html")
     let newHead = document.adoptNode(newDocument.head)
 
@@ -135,15 +141,3 @@ function isScript(el)   {
     return el.tagName.toLowerCase() === 'script'
 }
 
-function cloneScriptTag(el) {
-    let script = document.createElement('script')
-
-    script.textContent = el.textContent
-    script.async = el.async
-
-    for (let attr of el.attributes) {
-        script.setAttribute(attr.name, attr.value)
-    }
-
-    return script
-}
