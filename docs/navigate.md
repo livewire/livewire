@@ -39,6 +39,7 @@ Below is a breakdown of what happens when a `wire:navigate` link is clicked:
 * When the HTML for the new page has been received, Livewire replaces the current page's URL, `<title>` tag and `<body>` contents with the elements from the new page
 
 This technique results in much faster page load times — often twice as fast — and makes the application "feel" like a JavaScript powered single page application.
+
 ## Redirects
 
 When one of your Livewire components redirects users to another URL within your application, you can also instruct Livewire to use its `wire:navigate` functionality to load the new page. To accomplish this, provide the `navigate` argument to the `redirect()` method:
