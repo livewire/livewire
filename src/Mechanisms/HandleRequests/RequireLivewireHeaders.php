@@ -18,7 +18,7 @@ class RequireLivewireHeaders
 
         // Remove duplicate middleware from middleware stack
         // Without this, `RequireLivewireHeaders` will be applied twice
-        if (($route = request()->route()) && isset($route->action['middleware'])) {
+        if (($route = $request->route()) && isset($route->action['middleware'])) {
             $route->action['middleware'] = array_unique(array_values(
                 array_filter($route->getAction('middleware'), fn ($m) => is_string($m))
             ));
