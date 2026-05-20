@@ -324,6 +324,16 @@ class UnitTest extends TestCase
 
     public function test_require_livewire_headers_middleware_is_not_duplicated_on_update(): void
     {
+        $beforeActionRoute = collect(Route::getRoutes()->getRoutes())->first(function ($route) {
+            return $route->getName() === 'default-livewire.update';
+        });
+
+        $beforeActionCount = count(
+            array_filter($beforeActionRoute->middleware(), fn ($m) => $m === RequireLivewireHeaders::class)
+        );
+
+        $this->assertEquals(1, $beforeActionCount);
+        
         $testable = Livewire::test(new class extends TestComponent {});
         $encodedSnapshot = json_encode($testable->snapshot);
 
@@ -335,15 +345,15 @@ class UnitTest extends TestCase
 
         $response->assertOk();
 
-        $route = collect(Route::getRoutes()->getRoutes())->first(function ($route) {
+        $afterActionRoute = collect(Route::getRoutes()->getRoutes())->first(function ($route) {
             return $route->getName() === 'default-livewire.update';
         });
 
-        $middlewareCount = count(
-            array_filter($route->middleware(), fn ($m) => $m === RequireLivewireHeaders::class)
+        $afterActionCount = count(
+            array_filter($afterActionRoute->middleware(), fn ($m) => $m === RequireLivewireHeaders::class)
         );
 
-        $this->assertEquals(1, $middlewareCount);
+        $this->assertEquals(1, $afterActionCount);
     }
 
     public function test_get_update_uri_works_when_update_route_property_is_null(): void
