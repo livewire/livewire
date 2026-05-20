@@ -1,12 +1,10 @@
 
-export function whenThisLinkIsPressed(el, callback, shouldIntercept = () => true) {
+export function whenThisLinkIsPressed(el, callback) {
     let isProgrammaticClick = e => ! e.isTrusted
     let isNotPlainLeftClick = e => (e.which > 1) || (e.altKey) || (e.ctrlKey) || (e.metaKey) || (e.shiftKey)
     let isNotPlainEnterKey = (e) => (e.which !== 13) || (e.altKey) || (e.ctrlKey) || (e.metaKey) || (e.shiftKey)
 
     el.addEventListener('click', e => {
-        if (! shouldIntercept(e)) return
-
         // This allows programmatic clicking of links via: `$0.click()`...
         if (isProgrammaticClick(e)) {
             e.preventDefault()
@@ -24,8 +22,6 @@ export function whenThisLinkIsPressed(el, callback, shouldIntercept = () => true
     })
 
     el.addEventListener('mousedown', e => {
-        if (! shouldIntercept(e)) return
-
         // We only care about left clicks for wire:navigate...
         if (isNotPlainLeftClick(e)) return;
 
@@ -47,8 +43,6 @@ export function whenThisLinkIsPressed(el, callback, shouldIntercept = () => true
     })
 
     el.addEventListener("keydown", e => {
-        if (! shouldIntercept(e)) return
-
         // We only care about the enter key...
         if (isNotPlainEnterKey(e)) return;
 
@@ -82,6 +76,7 @@ export function createUrlObjectFromString(urlString) {
 }
 
 export function shouldHandleLinkWithNavigate(linkEl, destination = extractDestinationFromLink(linkEl)) {
+    // Only allow same-origin HTTP(S) links; everything else should use native browser behavior.
     if (! destination) return false
     if (! ['http:', 'https:'].includes(destination.protocol)) return false
     if (destination.origin !== window.location.origin) return false

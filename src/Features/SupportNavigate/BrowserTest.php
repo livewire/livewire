@@ -319,7 +319,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    public function test_navigate_is_not_triggered_for_external_links_with_a_target()
+    public function test_navigate_falls_back_to_browser_for_native_links()
     {
         $this->browse(function (Browser $browser) {
             $currentWindowHandles = count($browser->driver->getWindowHandles());
@@ -335,7 +335,12 @@ class BrowserTest extends \Tests\BrowserTestCase
                 JS))
                 ->assertSee('On first')
                 ->click('@link.to.external')
-                ->pause(500)
+                ->pause(300)
+                ->assertScript('return window.navigateEventCount', 0)
+                ->click('@link.to.download')
+                ->click('@link.to.mailto')
+                ->click('@link.to.tel')
+                ->pause(300)
                 ->assertPathIs('/first')
                 ->assertSee('On first')
                 ->assertScript('return window.navigateEventCount', 0);
@@ -1378,6 +1383,9 @@ class FirstPage extends Component
 
             <a :href="window.location.pathname + '#foo'" wire:navigate dusk="link.to.hashtag">Go to same page with hashtag</a>
             <a href="https://example.com/pinkary" target="_blank" wire:navigate dusk="link.to.external">Go to external page</a>
+            <a href="/first" download wire:navigate dusk="link.to.download">Download first page</a>
+            <a href="mailto:team@example.com" wire:navigate dusk="link.to.mailto">Email team</a>
+            <a href="tel:+123456789" wire:navigate dusk="link.to.tel">Call team</a>
             <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
             <a href="/third" wire:navigate.hover dusk="link.to.third">Go to slow third page</a>
             <a href="/second-remote-asset" wire:navigate.hover dusk="link.to.asset">Go to asset page</a>
