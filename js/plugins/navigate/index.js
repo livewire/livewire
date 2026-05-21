@@ -41,11 +41,11 @@ export default function (Alpine) {
 
         let preserveScroll = modifiers.includes('preserve-scroll')
 
-        let destination = extractDestinationFromLink(el)
-
-        if (! shouldHandleLinkWithNavigate(el, destination)) return
-
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
+            let destination = extractDestinationFromLink(el)
+
+            if (! shouldHandleLinkWithNavigate(el, destination)) return
+
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
             }, () => {
@@ -54,6 +54,8 @@ export default function (Alpine) {
         })
 
         whenThisLinkIsPressed(el, (whenItIsReleased) => {
+            let destination = extractDestinationFromLink(el)
+
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
             }, () => {

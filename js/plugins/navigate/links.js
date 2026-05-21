@@ -17,6 +17,8 @@ export function whenThisLinkIsPressed(el, callback) {
         // This allows cmd+click and such to still work as expected...
         if (isNotPlainLeftClick(e)) return;
 
+        if (! shouldHandleLinkWithNavigate(el)) return;
+
         // If it's a plain left click, we want to prevent "click" and let "mouseup" do its thing...
         e.preventDefault()
     })
@@ -24,6 +26,8 @@ export function whenThisLinkIsPressed(el, callback) {
     el.addEventListener('mousedown', e => {
         // We only care about left clicks for wire:navigate...
         if (isNotPlainLeftClick(e)) return;
+
+        if (! shouldHandleLinkWithNavigate(el)) return;
 
         e.preventDefault()
 
@@ -45,6 +49,8 @@ export function whenThisLinkIsPressed(el, callback) {
     el.addEventListener("keydown", e => {
         // We only care about the enter key...
         if (isNotPlainEnterKey(e)) return;
+
+        if (! shouldHandleLinkWithNavigate(el)) return;
 
         e.preventDefault()
 
