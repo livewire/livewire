@@ -18,7 +18,11 @@ class SupportValidation extends ComponentHook
 
     function render($view, $data)
     {
-        $errors = (new ViewErrorBag)->put('default', $this->component->getErrorBag());
+        $errors = request()->hasSession()
+            ? session()->get('errors', new ViewErrorBag)
+            : new ViewErrorBag;
+
+        $errors->put('default', $this->component->getErrorBag());
 
         $revert = Utils::shareWithViews('errors', $errors);
 
@@ -31,7 +35,13 @@ class SupportValidation extends ComponentHook
 
     function renderIsland($name, $view, $data)
     {
-        $errors = (new ViewErrorBag)->put('default', $this->component->getErrorBag());
+        // Lazy islands will not be able to forward the session, this is a
+        // known issue...
+        $errors = request()->hasSession()
+            ? session()->get('errors', new ViewErrorBag)
+            : new ViewErrorBag;
+
+        $errors->put('default', $this->component->getErrorBag());
 
         $revert = Utils::shareWithViews('errors', $errors);
 

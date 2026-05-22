@@ -724,6 +724,22 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('sharedError:The bar field is required');
     }
 
+    public function test_validation_errors_supports_existing_named_error_bags()
+    {
+        Route::get('/full-page-component', NamedErrorBag::class)->middleware('web');
+        Route::post('/non-livewire-form', function () {
+            Validator::make(
+                ['bar' => ''],
+                ['bar' => 'required'],
+            )->validateWithBag('foo');
+        });
+
+        $this->from('/full-page-component')
+            ->followingRedirects()
+            ->post(url('/non-livewire-form'))
+            ->assertSee('The bar field is required.');
+    }
+
     public function test_multi_word_validation_rules_failing_are_assertable()
     {
         $component = Livewire::test(ForValidation::class);
@@ -1435,5 +1451,22 @@ class AddErrorInMount extends Component
     public function render()
     {
         return view('show-errors');
+    }
+}
+
+class NamedErrorBag extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+            <div>
+                <h1>Named errors</h1>
+
+                @foreach ($errors->foo->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </div>
+        HTML;
+
     }
 }
