@@ -292,7 +292,7 @@ class FrontendAssets extends Mechanism
         if ($manifest !== $publishedManifest) {
             $assetWarning = <<<HTML
             <script {$nonce}>
-                console.warn('Livewire: The published Livewire assets are out of date\\n See: https://livewire.laravel.com/docs/installation#publishing-livewires-frontend-assets')
+                console.warn('Livewire: The published Livewire assets are out of date\\n See: https://livewire.laravel.com/docs/installation#publishing-livewires-assets-to-public-directory')
             </script>\n
             HTML;
         }
