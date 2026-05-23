@@ -26,6 +26,7 @@ export function whenThisLinkIsPressed(el, callback) {
     })
 
     el.addEventListener('mousedown', e => {
+        // We only care about left clicks for wire:navigate...
         if (isNotPlainLeftClick(e)) return;
 
         if (linkShouldBeHandledNatively(el)) return;
@@ -48,6 +49,7 @@ export function whenThisLinkIsPressed(el, callback) {
     })
 
     el.addEventListener("keydown", e => {
+        // We only care about the enter key...
         if (isNotPlainEnterKey(e)) return;
 
         if (linkShouldBeHandledNatively(el)) return;
