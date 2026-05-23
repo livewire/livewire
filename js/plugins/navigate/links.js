@@ -7,6 +7,8 @@ export function whenThisLinkIsPressed(el, callback) {
     el.addEventListener('click', e => {
         // This allows programmatic clicking of links via: `$0.click()`...
         if (isProgrammaticClick(e)) {
+            if (linkShouldBeHandledNatively(el)) return;
+
             e.preventDefault()
 
             callback(whenReleased => whenReleased())
@@ -17,17 +19,16 @@ export function whenThisLinkIsPressed(el, callback) {
         // This allows cmd+click and such to still work as expected...
         if (isNotPlainLeftClick(e)) return;
 
-        if (! shouldHandleLinkWithNavigate(el)) return;
+        if (linkShouldBeHandledNatively(el)) return;
 
         // If it's a plain left click, we want to prevent "click" and let "mouseup" do its thing...
         e.preventDefault()
     })
 
     el.addEventListener('mousedown', e => {
-        // We only care about left clicks for wire:navigate...
         if (isNotPlainLeftClick(e)) return;
 
-        if (! shouldHandleLinkWithNavigate(el)) return;
+        if (linkShouldBeHandledNatively(el)) return;
 
         e.preventDefault()
 
@@ -47,10 +48,9 @@ export function whenThisLinkIsPressed(el, callback) {
     })
 
     el.addEventListener("keydown", e => {
-        // We only care about the enter key...
         if (isNotPlainEnterKey(e)) return;
 
-        if (! shouldHandleLinkWithNavigate(el)) return;
+        if (linkShouldBeHandledNatively(el)) return;
 
         e.preventDefault()
 
@@ -81,18 +81,17 @@ export function createUrlObjectFromString(urlString) {
     return urlString !== null && new URL(urlString, document.baseURI)
 }
 
-export function shouldHandleLinkWithNavigate(linkEl, destination = extractDestinationFromLink(linkEl)) {
-    // Only allow same-origin HTTP(S) links; everything else should use native browser behavior.
-    if (! destination) return false
-    if (! ['http:', 'https:'].includes(destination.protocol)) return false
-    if (destination.origin !== window.location.origin) return false
-    if (linkEl.hasAttribute('download')) return false
+export function linkShouldBeHandledNatively(linkEl, destination = extractDestinationFromLink(linkEl)) {
+    if (! destination) return true
+    if (! ['http:', 'https:'].includes(destination.protocol)) return true
+    if (destination.origin !== window.location.origin) return true
+    if (linkEl.hasAttribute('download')) return true
 
     let target = linkEl.getAttribute('target')?.trim().toLowerCase()
 
-    if (target && target !== '_self') return false
+    if (target && target !== '_self') return true
 
-    return true
+    return false
 }
 
 export function getUriStringFromUrlObject(urlObject) {

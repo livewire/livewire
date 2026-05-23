@@ -322,6 +322,8 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_navigate_falls_back_to_browser_for_native_links()
     {
         $this->browse(function (Browser $browser) {
+            $currentWindowHandles = count($browser->driver->getWindowHandles());
+
             $browser
                 ->visit('/first')
                 ->tap(fn ($b) => $b->script(<<<'JS'
@@ -330,19 +332,11 @@ class BrowserTest extends \Tests\BrowserTestCase
                     document.addEventListener('livewire:navigate', () => {
                         window.navigateEventCount++
                     })
-
-                    // Spy: verify wire:navigate does not call preventDefault on the external link.
-                    // We call it ourselves after checking so the tab stays on /first.
-                    document.querySelector('[dusk="link.to.external"]').addEventListener('click', e => {
-                        window.externalLinkDefaultPrevented = e.defaultPrevented
-                        e.preventDefault()
-                    })
                 JS))
                 ->assertSee('On first')
                 ->click('@link.to.external')
-                ->pause(100)
+                ->pause(300)
                 ->assertScript('return window.navigateEventCount', 0)
-                ->assertScript('return window.externalLinkDefaultPrevented', false)
                 ->click('@link.to.download')
                 ->click('@link.to.mailto')
                 ->click('@link.to.tel')
@@ -350,6 +344,8 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertPathIs('/first')
                 ->assertSee('On first')
                 ->assertScript('return window.navigateEventCount', 0);
+
+            $this->assertCount($currentWindowHandles + 1, $browser->driver->getWindowHandles());
         });
     }
 
