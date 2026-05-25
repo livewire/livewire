@@ -122,12 +122,14 @@ class PersistentMiddleware extends Mechanism
 
         $request = $this->makeFakeRequest();
 
-        $this->applicableMiddleware = $this->getApplicablePersistentMiddleware($request);
+        $middleware = $this->getApplicablePersistentMiddleware($request);
+
+        $this->applicableMiddleware = $middleware;
 
         // Only send through pipeline if there are middleware found
-        if (is_null($this->applicableMiddleware)) return;
+        if (is_null($middleware)) return;
 
-        Utils::applyMiddleware($request, $this->applicableMiddleware);
+        Utils::applyMiddleware($request, $middleware);
 
         $this->middlewareAppliedFor[$routeKey] = true;
 
