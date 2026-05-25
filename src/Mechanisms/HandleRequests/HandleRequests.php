@@ -101,7 +101,10 @@ class HandleRequests extends Mechanism
         }
 
         // Ensure the header guard middleware is always present, even on custom routes.
-        $route->middleware(RequireLivewireHeaders::class);
+        // Only append if its not exists on current middleware stack
+        if (! in_array(RequireLivewireHeaders::class, $route->middleware())) {
+            $route->middleware(RequireLivewireHeaders::class);
+        }
 
         // Append `livewire.update` to the existing name, if any.
         if (! str($route->getName())->endsWith('livewire.update')) {
