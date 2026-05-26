@@ -33,7 +33,7 @@ class BaseAuthorize extends LivewireAttribute
         $arguments = Arr::wrap($this->argument);
         
         // Check if authorization already applied on route level
-        if ($this->isAuthorizedByMiddleware($arguments)) return;
+        if ($this->isAuthorizedByMiddleware($this->ability, $arguments)) return;
 
         // Resolve each argument (prioritize method parameters first, then component properties)
         $resolved = [];
@@ -71,7 +71,7 @@ class BaseAuthorize extends LivewireAttribute
         return data_get($this->component, $arg);
     }
 
-    protected function isAuthorizedByMiddleware($arguments): bool
+    protected function isAuthorizedByMiddleware($ability, $arguments): bool
     {
         $middleware = app(PersistentMiddleware::class)->getAuthorizeMiddleware();
 
@@ -80,7 +80,7 @@ class BaseAuthorize extends LivewireAttribute
         }
 
         // Using Laravel's Authorize middleware to parse the ability and arguments for comparison
-        $authorizeMiddleware = AuthorizeMiddleware::using($this->ability, ...$arguments);
+        $authorizeMiddleware = AuthorizeMiddleware::using($ability, ...$arguments);
 
         return in_array($authorizeMiddleware, $middleware, true);
     }
