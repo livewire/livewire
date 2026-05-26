@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
+use Livewire\Mechanisms\HandleRequests\RequireLivewireHeaders;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 use Tests\TestComponent;
@@ -319,6 +320,40 @@ class UnitTest extends TestCase
                     ['method' => 'loadItems', 'params' => []],
                 ]],
             ]]);
+    }
+
+    public function test_require_livewire_headers_middleware_is_not_duplicated_on_update(): void
+    {
+        $beforeActionRoute = collect(Route::getRoutes()->getRoutes())->first(function ($route) {
+            return $route->getName() === 'default-livewire.update';
+        });
+
+        $beforeActionCount = count(
+            array_filter($beforeActionRoute->middleware(), fn ($m) => $m === RequireLivewireHeaders::class)
+        );
+
+        $this->assertEquals(1, $beforeActionCount);
+        
+        $testable = Livewire::test(new class extends TestComponent {});
+        $encodedSnapshot = json_encode($testable->snapshot);
+
+        // Livewire's update route should still be matched, not the catch-all
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $encodedSnapshot, 'updates' => [], 'calls' => []],
+            ]]);
+
+        $response->assertOk();
+
+        $afterActionRoute = collect(Route::getRoutes()->getRoutes())->first(function ($route) {
+            return $route->getName() === 'default-livewire.update';
+        });
+
+        $afterActionCount = count(
+            array_filter($afterActionRoute->middleware(), fn ($m) => $m === RequireLivewireHeaders::class)
+        );
+
+        $this->assertEquals(1, $afterActionCount);
     }
 
     public function test_get_update_uri_works_when_update_route_property_is_null(): void
