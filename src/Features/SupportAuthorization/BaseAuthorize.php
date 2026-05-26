@@ -73,15 +73,15 @@ class BaseAuthorize extends LivewireAttribute
 
     protected function isAuthorizedByMiddleware($ability, $arguments): bool
     {
-        $routeAuthorizeMiddleware = app(PersistentMiddleware::class)->getAuthorizeMiddleware();
+        $authorizeMiddleware = app(PersistentMiddleware::class)->getAuthorizeMiddleware();
 
-        if ($routeAuthorizeMiddleware === []) {
+        if ($authorizeMiddleware === []) {
             return false;
         }
 
         // Using Laravel's Authorize middleware to parse the ability and arguments for comparison
-        $authorizeMiddleware = AuthorizeMiddleware::using($ability, ...Arr::wrap($arguments));
+        $middleware = AuthorizeMiddleware::using($ability, ...Arr::wrap($arguments));
 
-        return in_array($authorizeMiddleware, $routeAuthorizeMiddleware, true);
+        return in_array($middleware, $authorizeMiddleware, true);
     }
 }
