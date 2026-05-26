@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportAuthorization;
 
 use Attribute;
+use Illuminate\Auth\Middleware\Authorize as AuthorizeMiddleware;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -32,7 +33,7 @@ class BaseAuthorize extends LivewireAttribute
         $arguments = Arr::wrap($this->argument);
         
         // Check if authorization already applied on route level
-        if ($this->isAlreadyAuthorizedByMiddleware($arguments)) return;
+        if ($this->isAuthorizedByMiddleware($arguments)) return;
 
         // Resolve each argument (prioritize method parameters first, then component properties)
         $resolved = [];
@@ -70,7 +71,7 @@ class BaseAuthorize extends LivewireAttribute
         return data_get($this->component, $arg);
     }
 
-    protected function isAlreadyAuthorizedByMiddleware($arguments): bool
+    protected function isAuthorizedByMiddleware($arguments): bool
     {
         $middleware = app(PersistentMiddleware::class)->getAuthorizeMiddleware();
 
@@ -78,28 +79,9 @@ class BaseAuthorize extends LivewireAttribute
             return false;
         }
 
-        return collect($middleware)
-            ->map(fn (string $m) => $this->parseMiddlewareArgument($m))
-            ->filter()
-            ->contains(fn (array $item) =>
-                $item['ability'] === enum_value($this->ability) 
-                && in_array($item['model'], $arguments, true)
-            );
-    }
+        // Using Laravel's Authorize middleware to parse the ability and arguments for comparison
+        $authorizeMiddleware = AuthorizeMiddleware::using($this->ability, ...$arguments);
 
-    protected function parseMiddlewareArgument(string $middleware): ?array
-    {
-        $middlewareArgument = Str::after($middleware, ':');
-
-        $abilityAndModel = explode(',', $middlewareArgument, 2);
-
-        if (count($abilityAndModel) !== 2) {
-            return null;
-        }
-
-        return [
-            'ability' => trim($abilityAndModel[0]),
-            'model'   => trim($abilityAndModel[1]),
-        ];
+        return in_array($authorizeMiddleware, $middleware, true);
     }
 }
