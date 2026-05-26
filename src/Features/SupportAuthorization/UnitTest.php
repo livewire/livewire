@@ -701,6 +701,56 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_deduplicates_authorization_from_route_and_component_without_argument()
+    {
+        Gate::define('interact', function (AuthorizationUser $user) {
+            return (int) $user->id === 1;
+        });
+
+        $count = 0;
+
+        Gate::before(function (AuthorizationUser $user) use (&$count) {
+            if (app('livewire')->isLivewireRequest()) {
+                $count++;
+            }
+            return null;
+        });
+
+        Route::livewire('/posts/create', CreatePost::class)
+            ->can('interact')
+            ->middleware('web');
+
+        // GET the page to mount the component and get a valid snapshot
+        $response = $this->actingAs(AuthorizationUser::find(1))
+            ->withoutExceptionHandling()
+            ->get('/posts/create');
+
+        $response->assertOk();
+        $response->assertSee('Create');
+
+        // Extract snapshot from the rendered HTML
+        $html = $response->getContent();
+        $snapshot = Utils::extractAttributeDataFromHtml($html, 'wire:snapshot');
+        $encodedSnapshot = json_encode($snapshot);
+
+        // Flush state from the initial render
+        app('livewire')->flushState();
+
+        // POST to the update endpoint to trigger an update request
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(app('livewire')->getUpdateUri(), [
+                'components' => [
+                    [
+                        'snapshot' => $encodedSnapshot,
+                        'calls' => [['method' => 'interactWithPost', 'params' => [], 'path' => '']],
+                        'updates' => [],
+                    ],
+                ],
+            ])->assertOk();
+
+        $this->assertEquals(1, $count);
+    }
+
     public function test_deduplicates_authorization_from_route_and_component_using_class()
     {
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
@@ -857,6 +907,12 @@ class CreatePost extends Component
 {
     #[Authorize('create', AuthorizationPost::class)]
     public function createPost()
+    {
+        //
+    }
+
+    #[Authorize('interact')]
+    public function interactWithPost()
     {
         //
     }
