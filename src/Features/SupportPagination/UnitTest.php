@@ -108,6 +108,29 @@ class UnitTest extends \Tests\TestCase
         })->assertSee('Custom simple pagination theme');
     }
 
+    public function test_invalid_page_query_string_falls_back_to_first_page()
+    {
+        $cases = [
+            '12123123123213123123213', // overflows PHP_INT_MAX, would throw on PHP 8.4 cast
+            'not-a-number',
+            '0',
+            '-3',
+        ];
+
+        foreach ($cases as $value) {
+            Livewire::withQueryParams(['page' => $value])
+                ->test(ComponentExposingResolvedPageStub::class)
+                ->assertSetStrict('resolvedPage', 1);
+        }
+    }
+
+    public function test_valid_page_query_string_resolves_to_int()
+    {
+        Livewire::withQueryParams(['page' => '3'])
+            ->test(ComponentExposingResolvedPageStub::class)
+            ->assertSetStrict('resolvedPage', 3);
+    }
+
     public function test_calling_pagination_getPage_before_paginate_method_resolve_the_correct_page_number_in_first_visit_or_after_reload()
     {
         Livewire::withQueryParams(['page' => 5])->test(new class extends Component {
@@ -145,6 +168,31 @@ class UnitTest extends \Tests\TestCase
 class ComponentWithPaginationStub extends TestComponent
 {
     use WithPagination;
+}
+
+class ComponentExposingResolvedPageStub extends Component
+{
+    use WithPagination;
+
+    public int $resolvedPage = 0;
+
+    #[Computed]
+    function posts()
+    {
+        $paginator = PaginatorPostTestModel::paginate();
+        $this->resolvedPage = $paginator->currentPage();
+        return $paginator;
+    }
+
+    function render()
+    {
+        return <<<'HTML'
+        <div>
+            @foreach ($this->posts as $post)
+            @endforeach
+        </div>
+        HTML;
+    }
 }
 
 class PaginatorPostTestModel extends Model
