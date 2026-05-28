@@ -15,7 +15,9 @@ use Livewire\Concerns\InteractsWithProperties;
 
 class Form implements Arrayable
 {
-    use InteractsWithProperties;
+    use InteractsWithProperties {
+        resetExcept as public;
+    }
 
     use HandlesValidation {
         validate as parentValidate;
