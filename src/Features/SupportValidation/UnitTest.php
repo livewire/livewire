@@ -925,6 +925,29 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('second error')
             ->assertHasErrors(['first', 'second']);
     }
+
+    public function test_named_error_bags_are_preserved_when_rendering()
+    {
+        $sharedErrors = new ViewErrorBag;
+        $sharedErrors->put('foo', new \Illuminate\Support\MessageBag(['title' => 'named error']));
+
+        app('view')->share('errors', $sharedErrors);
+
+        $component = Livewire::test(new class extends TestComponent {
+            public function mount()
+            {
+                $this->addError('bar', 'default error');
+            }
+
+            public function render()
+            {
+                return '<div>foo:{{ $errors->getBag("foo")->first("title") }} default:{{ $errors->first("bar") }}</div>';
+            }
+        });
+
+        $component->assertSee('foo:named error')
+            ->assertSee('default:default error');
+    }
 }
 
 class ComponentWithRulesProperty extends TestComponent

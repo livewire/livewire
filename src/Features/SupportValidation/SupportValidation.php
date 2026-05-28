@@ -18,7 +18,17 @@ class SupportValidation extends ComponentHook
 
     function render($view, $data)
     {
-        $errors = (new ViewErrorBag)->put('default', $this->component->getErrorBag());
+        $errors = new ViewErrorBag;
+
+        $previouslySharedErrors = app('view')->getShared()['errors'] ?? null;
+
+        if ($previouslySharedErrors instanceof ViewErrorBag) {
+            foreach ($previouslySharedErrors->getBags() as $key => $bag) {
+                $errors->put($key, $bag);
+            }
+        }
+
+        $errors->put('default', $this->component->getErrorBag());
 
         $revert = Utils::shareWithViews('errors', $errors);
 
@@ -31,7 +41,17 @@ class SupportValidation extends ComponentHook
 
     function renderIsland($name, $view, $data)
     {
-        $errors = (new ViewErrorBag)->put('default', $this->component->getErrorBag());
+        $errors = new ViewErrorBag;
+
+        $previouslySharedErrors = app('view')->getShared()['errors'] ?? null;
+
+        if ($previouslySharedErrors instanceof ViewErrorBag) {
+            foreach ($previouslySharedErrors->getBags() as $key => $bag) {
+                $errors->put($key, $bag);
+            }
+        }
+
+        $errors->put('default', $this->component->getErrorBag());
 
         $revert = Utils::shareWithViews('errors', $errors);
 
