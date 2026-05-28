@@ -11,9 +11,12 @@ use function Livewire\invade;
 use Illuminate\Support\Arr;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
+use Livewire\Concerns\InteractsWithProperties;
 
 class Form implements Arrayable
 {
+    use InteractsWithProperties;
+
     use HandlesValidation {
         validate as parentValidate;
         validateOnly as parentValidateOnly;
@@ -95,55 +98,6 @@ class Form implements Arrayable
         return $this->toArray();
     }
 
-    public function only($properties)
-    {
-        $results = [];
-
-        foreach (is_array($properties) ? $properties : func_get_args() as $property) {
-            $results[$property] = $this->hasProperty($property) ? $this->getPropertyValue($property) : null;
-        }
-
-        return $results;
-    }
-
-    public function except($properties)
-    {
-        $properties = is_array($properties) ? $properties : func_get_args();
-
-        return array_diff_key($this->all(), array_flip($properties));
-    }
-
-    public function hasProperty($prop)
-    {
-        return property_exists($this, Utils::beforeFirstDot($prop));
-    }
-
-    public function getPropertyValue($name)
-    {
-        $value = $this->{Utils::beforeFirstDot($name)};
-
-        if (Utils::containsDots($name)) {
-            return data_get($value, Utils::afterFirstDot($name));
-        }
-
-        return $value;
-    }
-
-    public function fill($values)
-    {
-        $publicProperties = array_keys($this->all());
-
-        if ($values instanceof Model) {
-            $values = $values->toArray();
-        }
-
-        foreach ($values as $key => $value) {
-            if (in_array(Utils::beforeFirstDot($key), $publicProperties)) {
-                data_set($this, $key, $value);
-            }
-        }
-    }
-
     public function reset(...$properties)
     {
         $properties = count($properties) && is_array($properties[0])
@@ -172,23 +126,6 @@ class Form implements Arrayable
         }
 
         $this->reset($keysToReset);
-    }
-
-    public function pull($properties = null)
-    {
-        $wantsASingleValue = is_string($properties);
-
-        $properties = is_array($properties) ? $properties : func_get_args();
-
-        $beforeReset = match (true) {
-            empty($properties) => $this->all(),
-            $wantsASingleValue => $this->getPropertyValue($properties[0]),
-            default => $this->only($properties),
-        };
-
-        $this->reset($properties);
-
-        return $beforeReset;
     }
 
     public function toArray()
