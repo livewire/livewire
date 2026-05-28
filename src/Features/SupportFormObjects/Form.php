@@ -113,21 +113,6 @@ class Form implements Arrayable
         }
     }
 
-    public function resetExcept(...$properties)
-    {
-        if (count($properties) && is_array($properties[0])) {
-            $properties = $properties[0];
-        }
-
-        $keysToReset = array_diff(array_keys($this->all()), $properties);
-
-        if($keysToReset === []) {
-            return;
-        }
-
-        $this->reset($keysToReset);
-    }
-
     public function toArray()
     {
         return Utils::getPublicProperties($this);
