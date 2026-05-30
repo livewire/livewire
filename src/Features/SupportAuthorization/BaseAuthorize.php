@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportAuthorization;
 
 use Attribute;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Gate;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use UnitEnum;
 
@@ -20,7 +19,7 @@ class BaseAuthorize extends LivewireAttribute
     {
         // Action that does not require a model or class...
         if (is_null($this->argument)) {
-            Gate::authorize($this->ability);
+            $this->component->authorize($this->ability);
 
             return;
         }
@@ -33,7 +32,7 @@ class BaseAuthorize extends LivewireAttribute
             $resolved[] = $this->resolveArgument($arg, $parameters);
         }
 
-        Gate::authorize($this->ability, $resolved);
+        $this->component->authorize($this->ability, $resolved);
     }
 
     /**
