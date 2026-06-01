@@ -15,14 +15,12 @@ use Livewire\Concerns\InteractsWithProperties;
 
 class Form implements Arrayable
 {
-    use InteractsWithProperties {
-        resetExcept as public;
-    }
-
     use HandlesValidation {
         validate as parentValidate;
         validateOnly as parentValidateOnly;
     }
+
+    use InteractsWithProperties;
 
     function __construct(
         protected Component $component,
