@@ -5,7 +5,6 @@ namespace Livewire\Features\SupportFormObjects;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\MessageBag;
 use function Livewire\invade;
 use Illuminate\Support\Arr;
