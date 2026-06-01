@@ -1,4 +1,4 @@
-import { isObjecty } from "@/utils"
+import { dataDelete, dataGet, dataSet, isObjecty } from "@/utils"
 import historyCoordinator from "./coordinator"
 import { unwrap } from "./utils"
 
@@ -155,7 +155,7 @@ function queryStringUtils() {
 
             let data = fromQueryString(search, key)
 
-            return Object.keys(data).includes(key)
+            return dataGet(data, key) !== undefined
         },
         get(url, key) {
             let search = url.search
@@ -164,12 +164,12 @@ function queryStringUtils() {
 
             let data = fromQueryString(search, key)
 
-            return data[key]
+            return dataGet(data, key)
         },
         set(url, key, value) {
             let data = fromQueryString(url.search, key)
 
-            data[key] = stripNulls(unwrap(value))
+            dataSet(data, key, stripNulls(unwrap(value)))
 
             url.search = toQueryString(data)
 
@@ -178,7 +178,7 @@ function queryStringUtils() {
         remove(url, key) {
             let data = fromQueryString(url.search, key)
 
-            delete data[key]
+            dataDelete(data, key)
 
             url.search = toQueryString(data)
 
@@ -263,14 +263,13 @@ function fromQueryString(search, queryKey) {
 
         let decodedKey = decodeURIComponent(key)
 
-        let shouldBeHandledAsArray = decodedKey.includes('[') && decodedKey.startsWith(queryKey)
+        let dotNotatedKey = decodedKey.replaceAll('[', '.').replaceAll(']', '')
+
+        let shouldBeHandledAsArray = decodedKey.includes('[') && (dotNotatedKey === queryKey || dotNotatedKey.startsWith(`${queryKey}.`))
 
         if (!shouldBeHandledAsArray) {
             data[key] = value
         } else {
-            // Convert to dot notation because it's easier...
-            let dotNotatedKey = decodedKey.replaceAll('[', '.').replaceAll(']', '')
-
             insertDotNotatedValueIntoData(dotNotatedKey, value, data)
         }
     })
