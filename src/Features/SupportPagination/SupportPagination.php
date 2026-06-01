@@ -83,8 +83,12 @@ class SupportPagination extends ComponentHook
             $page = $this->component->paginators[$pageName];
 
             if (filter_var($page, FILTER_VALIDATE_INT) !== false && (int) $page >= 1) {
-                return (int) $page;
+                $this->component->paginators[$pageName] = (int) $page;
+
+                return $this->component->paginators[$pageName];
             }
+
+            $this->component->paginators[$pageName] = 1;
 
             return 1;
         });
