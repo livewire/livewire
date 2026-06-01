@@ -926,27 +926,20 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['first', 'second']);
     }
 
-    public function test_named_error_bags_are_preserved_when_rendering()
+    public function test_validation_errors_supports_existing_named_error_bags()
     {
-        $sharedErrors = new ViewErrorBag;
-        $sharedErrors->put('foo', new \Illuminate\Support\MessageBag(['title' => 'named error']));
-
-        app('view')->share('errors', $sharedErrors);
-
-        $component = Livewire::test(new class extends TestComponent {
-            public function mount()
-            {
-                $this->addError('bar', 'default error');
-            }
-
-            public function render()
-            {
-                return '<div>foo:{{ $errors->getBag("foo")->first("title") }} default:{{ $errors->first("bar") }}</div>';
-            }
+        Route::get('/full-page-component', NamedErrorBag::class)->middleware('web');
+        Route::post('/non-livewire-form', function () {
+            Validator::make(
+                ['bar' => ''],
+                ['bar' => 'required'],
+            )->validateWithBag('foo');
         });
 
-        $component->assertSee('foo:named error')
-            ->assertSee('default:default error');
+        $this->from('/full-page-component')
+            ->followingRedirects()
+            ->post(url('/non-livewire-form'))
+            ->assertSee('The bar field is required.');
     }
 }
 
@@ -1458,5 +1451,22 @@ class AddErrorInMount extends Component
     public function render()
     {
         return view('show-errors');
+    }
+}
+
+class NamedErrorBag extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+            <div>
+                <h1>Named errors</h1>
+
+                @foreach ($errors->foo->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </div>
+        HTML;
+
     }
 }
