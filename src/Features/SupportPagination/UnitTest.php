@@ -108,10 +108,10 @@ class UnitTest extends \Tests\TestCase
         })->assertSee('Custom simple pagination theme');
     }
 
-    public function test_invalid_page_query_string_falls_back_to_first_page_and_normalizes_paginator_state()
+    public function test_invalid_page_query_string_falls_back_to_first_page()
     {
         $cases = [
-            '12123123123213123123213',
+            '12123123123213123123213', // overflows PHP_INT_MAX, would throw on PHP 8.4 cast
             'not-a-number',
             '0',
             '-3',
