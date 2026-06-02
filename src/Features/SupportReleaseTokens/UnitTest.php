@@ -102,6 +102,20 @@ class UnitTest extends \Tests\TestCase
         // NOT CorruptComponentPayloadException from the checksum mismatch...
         Checksum::verify($snapshot);
     }
+
+    public function test_unknown_component_in_snapshot_is_treated_as_release_token_mismatch()
+    {
+        $this->expectException(LivewireReleaseTokenMismatchException::class);
+
+        Checksum::verify([
+            'memo' => [
+                'name' => 'page.component',
+                'id' => 'test-id',
+            ],
+            'data' => [],
+            'checksum' => str_repeat('0', 64),
+        ]);
+    }
 }
 
 class ComponentWithReleaseToken extends Component
