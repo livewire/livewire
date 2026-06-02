@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportReleaseTokens;
 
+use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Exceptions\LivewireReleaseTokenMismatchException;
 
 class ReleaseToken {
@@ -12,7 +13,11 @@ class ReleaseToken {
 
     static function verify($snapshot): void
     {
-        $componentClass = app('livewire.factory')->resolveComponentClass($snapshot['memo']['name']);
+        try {
+            $componentClass = app('livewire.factory')->resolveComponentClass($snapshot['memo']['name']);
+        } catch (ComponentNotFoundException) {
+            throw new LivewireReleaseTokenMismatchException;
+        }
 
         if (!isset($snapshot['memo']['release']) || $snapshot['memo']['release'] !== static::generate($componentClass)) {
             throw new LivewireReleaseTokenMismatchException;
