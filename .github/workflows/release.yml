@@ -7,6 +7,10 @@ on:
         description: 'Version number (e.g. 4.3.0)'
         required: true
         type: string
+      previous_tag:
+        description: 'Previous tag for generated release notes (e.g. v4.2.4)'
+        required: false
+        type: string
 
 jobs:
   release:
@@ -15,10 +19,16 @@ jobs:
       contents: write
     env:
       VERSION: ${{ inputs.version }}
+      PREVIOUS_TAG: ${{ inputs.previous_tag }}
 
     steps:
       - name: Normalize version
         run: echo "VERSION=${VERSION#v}" >> $GITHUB_ENV
+
+      - name: Normalize previous tag
+        if: env.PREVIOUS_TAG != ''
+        run: echo "PREVIOUS_TAG=v${PREVIOUS_TAG#v}" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -56,6 +66,14 @@ jobs:
           git push origin v${{ env.VERSION }}
 
       - name: Create GitHub release
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create v${{ env.VERSION }} --title "v${{ env.VERSION }}" --generate-notes
+        run: |
+          args=(v${{ env.VERSION }} --title "v${{ env.VERSION }}" --generate-notes)
+
+          if [ -n "${{ env.PREVIOUS_TAG }}" ]; then
+            args+=(--notes-start-tag "${{ env.PREVIOUS_TAG }}")
+          fi
+
+          gh release create "${args[@]}"
