@@ -9,6 +9,15 @@ use Illuminate\Support\Facades\File;
 
 class UnitTest extends TestCase
 {
+    public function test_sfc_island_carries_imports_from_the_component()
+    {
+        app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');
+
+        Livewire::test('sfc-island-with-import')
+            ->assertSee('Outside island:')
+            ->assertSee('Inside island:');
+    }
+
     public function test_class_component_island_recovers_when_cached_file_is_deleted_between_requests()
     {
         $component = Livewire::test(new class extends \Livewire\Component {
