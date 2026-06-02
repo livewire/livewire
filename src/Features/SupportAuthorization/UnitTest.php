@@ -697,6 +697,22 @@ class UnitTest extends TestCase
             ->call('editComment', comment: 1, post: 2)
             ->assertForbidden();
     }
+
+    public function test_can_authorize_with_only_class_name_and_no_arguments()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[Authorize(AuthorizationPost::class)]
+                public function create() : bool
+                {
+                    return true;
+                }
+            })
+            ->call('create')
+            ->assertOk();
+    }
 }
 
 class AuthorizationUser extends AuthUser
