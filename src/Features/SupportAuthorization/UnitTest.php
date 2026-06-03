@@ -698,7 +698,26 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_can_authorize_with_only_class_name_and_no_arguments()
+    public function test_can_authorize_using_defined_gate_with_only_class_name_as_argument()
+    {
+        Gate::define('create', function (AuthorizationUser $user) : bool
+        {
+            return (int) $user->id === 1;
+        });
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[Authorize(AuthorizationPost::class)]
+                public function create() : bool
+                {
+                    return true;
+                }
+            })
+            ->call('create')
+            ->assertOk();
+    }
+
+    public function test_can_authorize_using_policy_with_only_class_name_and_no_arguments()
     {
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
 
