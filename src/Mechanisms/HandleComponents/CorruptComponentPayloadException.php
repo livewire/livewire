@@ -2,9 +2,10 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use Illuminate\Contracts\Debug\ShouldntReport;
 use Livewire\Exceptions\BypassViewHandler;
 
-class CorruptComponentPayloadException extends \Exception
+class CorruptComponentPayloadException extends \Exception implements ShouldntReport
 {
     use BypassViewHandler;
 

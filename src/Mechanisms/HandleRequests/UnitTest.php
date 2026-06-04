@@ -112,6 +112,37 @@ class UnitTest extends TestCase
         $response->assertStatus(419);
     }
 
+    public function test_bad_checksum_is_not_reported(): void
+    {
+        config()->set('app.debug', false);
+
+        $reported = [];
+        app(\Illuminate\Contracts\Debug\ExceptionHandler::class)
+            ->reportable(function (\Throwable $e) use (&$reported) {
+                $reported[] = $e;
+                return false;
+            });
+
+        $testable = Livewire::test(new class extends TestComponent {});
+
+        $snapshot = json_encode([
+            'data' => [],
+            'memo' => [
+                'id' => 'abc',
+                'name' => $testable->snapshot['memo']['name'],
+            ],
+            'checksum' => 'invalid-checksum-value',
+        ]);
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson('/livewire/update', ['components' => [
+                ['snapshot' => $snapshot, 'updates' => [], 'calls' => []],
+            ]]);
+
+        $response->assertStatus(419);
+        $this->assertEmpty($reported);
+    }
+
     public function test_type_mismatched_update_value_returns_419(): void
     {
         // Disable debug mode to test production HTTP responses (404/419)...
