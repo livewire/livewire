@@ -2,6 +2,23 @@ import { setNextActionOrigin } from '@/request'
 import { evaluateActionExpression } from '../evaluator'
 import Alpine from 'alpinejs'
 import { extractDirective } from '@/directives'
+import { on } from '@/hooks'
+
+on('directive.init', ({ el, directive }) => {
+    if (! directive.rawName.startsWith('wire:sort:item')) return
+
+    if (el._x_sort_key !== undefined) return
+
+    let modifierString = directive.modifiers.join('.')
+
+    let expression = directive.expression
+
+    Alpine.bind(el, {
+        ['x-sort:item' + modifierString]() {
+            return expression
+        }
+    })
+})
 
 Alpine.interceptInit(el => {
     for (let i = 0; i < el.attributes.length; i++) {
