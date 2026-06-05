@@ -939,7 +939,7 @@ class UnitTest extends \Tests\TestCase
         $this->from('/full-page-component')
             ->followingRedirects()
             ->post(url('/non-livewire-form'))
-            ->assertSee('The bar field is required.');
+            ->assertSee('The bar field is required');
     }
 }
 
