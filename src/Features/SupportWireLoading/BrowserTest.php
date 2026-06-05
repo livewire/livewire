@@ -1119,6 +1119,45 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertMissing('@island-loading')
             ;
     }
+
+    public function test_wire_loading_attr_restores_alpine_x_bind_after_renderless_action()
+    {
+        Livewire::visit(new class extends Component {
+            public $isDisabled = true;
+
+            #[\Livewire\Attributes\Renderless]
+            public function doSomethingRenderless()
+            {
+                usleep(500 * 1000); // 500ms
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button dusk="trigger" wire:click="doSomethingRenderless">Trigger</button>
+                        <button
+                            dusk="target"
+                            wire:loading.attr="disabled"
+                            x-bind:disabled="$wire.isDisabled"
+                        >
+                            Submit
+                        </button>
+                        <span wire:loading>Loading...</span>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertDisabled('@target')
+        ->click('@trigger')
+        ->waitForText('Loading...')
+        ->assertDisabled('@target')
+        ->waitUntilMissingText('Loading...')
+        // x-bind should restore 'disabled' after renderless skips Alpine morph
+        ->assertDisabled('@target')
+        ;
+    }
 }
 
 class PostFormStub extends Form
