@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -112,35 +114,38 @@ class UnitTest extends TestCase
         $response->assertStatus(419);
     }
 
-    public function test_bad_checksum_is_not_reported(): void
+    public function test_bad_checksum_exception_is_not_reported_when_debug_is_disabled(): void
     {
         config()->set('app.debug', false);
 
         $reported = [];
-        app(\Illuminate\Contracts\Debug\ExceptionHandler::class)
-            ->reportable(function (\Throwable $e) use (&$reported) {
+        app(ExceptionHandler::class)
+            ->reportable(function (CorruptComponentPayloadException $e) use (&$reported) {
                 $reported[] = $e;
+
                 return false;
             });
 
-        $testable = Livewire::test(new class extends TestComponent {});
+        app(ExceptionHandler::class)->report(new CorruptComponentPayloadException);
 
-        $snapshot = json_encode([
-            'data' => [],
-            'memo' => [
-                'id' => 'abc',
-                'name' => $testable->snapshot['memo']['name'],
-            ],
-            'checksum' => 'invalid-checksum-value',
-        ]);
-
-        $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson('/livewire/update', ['components' => [
-                ['snapshot' => $snapshot, 'updates' => [], 'calls' => []],
-            ]]);
-
-        $response->assertStatus(419);
         $this->assertEmpty($reported);
+    }
+
+    public function test_bad_checksum_exception_is_reported_when_debug_is_enabled(): void
+    {
+        config()->set('app.debug', true);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (CorruptComponentPayloadException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new CorruptComponentPayloadException);
+
+        $this->assertCount(1, $reported);
     }
 
     public function test_type_mismatched_update_value_returns_419(): void

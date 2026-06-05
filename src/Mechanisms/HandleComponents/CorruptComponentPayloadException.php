@@ -2,10 +2,9 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use Illuminate\Contracts\Debug\ShouldntReport;
 use Livewire\Exceptions\BypassViewHandler;
 
-class CorruptComponentPayloadException extends \Exception implements ShouldntReport
+class CorruptComponentPayloadException extends \Exception
 {
     use BypassViewHandler;
 
@@ -15,6 +14,11 @@ class CorruptComponentPayloadException extends \Exception implements ShouldntRep
             "Livewire encountered corrupt data when trying to hydrate a component. \n".
             "Ensure that the [name, id, data] of the Livewire component wasn't tampered with between requests."
         );
+    }
+
+    public function report(): bool
+    {
+        return ! config('app.debug');
     }
 
     // In debug mode, let Laravel render the full error page.
