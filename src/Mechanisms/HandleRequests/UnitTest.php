@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleRequests\RequireLivewireHeaders;
@@ -113,6 +115,40 @@ class UnitTest extends TestCase
             ]]);
 
         $response->assertStatus(419);
+    }
+
+    public function test_bad_checksum_exception_is_not_reported_when_debug_is_disabled(): void
+    {
+        config()->set('app.debug', false);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (CorruptComponentPayloadException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new CorruptComponentPayloadException);
+
+        $this->assertEmpty($reported);
+    }
+
+    public function test_bad_checksum_exception_is_reported_when_debug_is_enabled(): void
+    {
+        config()->set('app.debug', true);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (CorruptComponentPayloadException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new CorruptComponentPayloadException);
+
+        $this->assertCount(1, $reported);
     }
 
     public function test_type_mismatched_update_value_returns_419(): void
