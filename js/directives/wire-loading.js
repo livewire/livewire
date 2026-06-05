@@ -103,11 +103,15 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
         })
 
         // Clear loading before morph on success
-        onSuccess(({ onEffect }) => {
+        onSuccess(({ payload, onEffect }) => {
             onEffect(() => {
                 if (matches && ! cleared) {
                     endLoading()
                     cleared = true
+
+                    // Renderless responses skip Alpine's morph cycle, so reactive x-bind
+                    // effects won't re-run to restore attributes removed by loading state...
+                    if (! payload.effects.html) el._x_runEffects?.()
                 }
             })
         })
