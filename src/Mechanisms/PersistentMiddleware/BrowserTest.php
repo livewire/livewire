@@ -192,10 +192,12 @@ JS;
                 $script = <<<'JS'
                     let unDecoratedFetch = window.fetch
                     let decoratedFetch = (...args) => {
-                        window.localStorage.setItem(
-                            'lastFetchArgs',
-                            JSON.stringify(args),
-                        )
+                        setTimeout(() => {
+                            window.localStorage.setItem(
+                                'lastFetchArgs',
+                                JSON.stringify(args),
+                            )
+                        }, 500)
 
                         return unDecoratedFetch(...args)
                     }
@@ -207,6 +209,11 @@ JS;
             ->waitForLivewire()->click('@changeProtected')
             ->assertDontSee('Protected Content')
             ->assertSee('Still Secure Content')
+            ->tap(function ($b) {
+                // Wait until the fetch args have been stored, otherwise we might try and replay the request before the args are stored
+                // to prevent race conditions in the test.
+                $b->waitUntil("!!localStorage.getItem('lastFetchArgs')", 5);
+            })
             ->visit('/force-login/2')
             ->tap(function ($b) {
                 $script = <<<'JS'
