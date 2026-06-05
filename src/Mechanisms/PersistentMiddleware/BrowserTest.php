@@ -207,6 +207,11 @@ JS;
             ->waitForLivewire()->click('@changeProtected')
             ->assertDontSee('Protected Content')
             ->assertSee('Still Secure Content')
+            ->tap(function ($b) {
+                // Wait until the fetch args have been stored in localStorage
+                // to prevent race conditions in the test.
+                $b->waitUntil("!!localStorage.getItem('lastFetchArgs')", 5);
+            })
             ->visit('/force-login/2')
             ->tap(function ($b) {
                 $script = <<<'JS'
