@@ -192,12 +192,10 @@ JS;
                 $script = <<<'JS'
                     let unDecoratedFetch = window.fetch
                     let decoratedFetch = (...args) => {
-                        setTimeout(() => {
-                            window.localStorage.setItem(
-                                'lastFetchArgs',
-                                JSON.stringify(args),
-                            )
-                        }, 500)
+                        window.localStorage.setItem(
+                            'lastFetchArgs',
+                            JSON.stringify(args),
+                        )
 
                         return unDecoratedFetch(...args)
                     }
@@ -210,7 +208,7 @@ JS;
             ->assertDontSee('Protected Content')
             ->assertSee('Still Secure Content')
             ->tap(function ($b) {
-                // Wait until the fetch args have been stored, otherwise we might try and replay the request before the args are stored
+                // Wait until the fetch args have been stored in localStorage
                 // to prevent race conditions in the test.
                 $b->waitUntil("!!localStorage.getItem('lastFetchArgs')", 5);
             })
