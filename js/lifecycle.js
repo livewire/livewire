@@ -1,5 +1,6 @@
 import { findComponentByEl, destroyComponent, initComponent, hasComponent } from './store'
 import { matchesForLivewireDirective, extractDirective } from './directives'
+import { assetIsPendingFor, runAfterAssetIsLoadedFor } from './features/supportJsModules'
 import { trigger } from './hooks'
 import collapse from '@alpinejs/collapse'
 import focus from '@alpinejs/focus'
@@ -67,6 +68,22 @@ export function start() {
                 Alpine.onAttributeRemoved(el, 'wire:id', () => {
                     destroyComponent(component.id)
                 })
+
+                // If the component's script module is still loading, defer Alpine
+                // processing on this element until it resolves. Otherwise expressions
+                // like `x-data="myComponent"` will fail because `Alpine.data()`
+                // hasn't been registered yet.
+                if (assetIsPendingFor(component)) {
+                    el._x_ignore = true
+
+                    runAfterAssetIsLoadedFor(component, () => {
+                        if (! el.isConnected) return
+                        delete el._x_ignore
+                        Alpine.initTree(el)
+                    })
+
+                    return
+                }
             }
 
             let directives = Array.from(el.getAttributeNames())

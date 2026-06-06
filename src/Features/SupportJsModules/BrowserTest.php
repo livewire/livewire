@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportJsModules;
 
 use Illuminate\Support\Facades\Route;
+use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -17,6 +18,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                     'Content-Type' => 'application/javascript',
                 ]);
             });
+
+            Route::get('/alpine-data-page', function () {
+                return app('livewire')->new('testns::alpine-data.index')();
+            })->middleware('web');
+
+            Route::get('/alpine-data-page-2', function () {
+                return app('livewire')->new('testns::alpine-data.index')();
+            })->middleware('web');
         };
     }
 
@@ -30,7 +39,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             // Pause for a moment to allow the script to be loaded...
             ->pause(100)
             // If the JS loaded correctly, it will have set the text to 'js-loaded'
-            ->assertSeeIn('@target', 'js-loaded');
+            ->assertSeeIn('@target', 'js-loaded')
+            ->assertConsoleLogHasNoErrors();
     }
 
     public function test_single_file_component_js_supports_es_imports()
@@ -54,5 +64,97 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
             ->pause(100)
             ->assertSeeIn('@target', 'js-import-loaded');
+    }
+
+    public function test_alpine_data_works_in_single_file_component_script()
+    {
+        // Regression test for: https://github.com/livewire/livewire/discussions/9591
+        Livewire::visit('testns::alpine-data.index')
+            ->waitForLivewireToLoad()
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_works_in_dynamically_added_component()
+    {
+        Livewire::visit([new class extends Component {
+            public $show = false;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="$toggle('show')" dusk="toggle">Toggle</button>
+
+                    @if ($show)
+                        <livewire:testns::alpine-data.index />
+                    @endif
+                </div>
+                HTML;
+            }
+        }])
+            ->assertConsoleLogHasNoErrors()
+            ->assertDontSee('alpine-data-loaded')
+            ->waitForLivewire()->click('@toggle')
+            ->waitFor('@target')
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_works_in_lazy_loaded_component()
+    {
+        Livewire::visit('testns::lazy-with-alpine-data')
+            ->waitForText('alpine-data-loaded')
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_works_in_component_inside_island()
+    {
+        Livewire::visit('testns::island-with-alpine-data')
+            ->assertConsoleLogHasNoErrors()
+            ->assertSeeIn('@placeholder', 'No child yet')
+            ->assertDontSee('alpine-data-loaded')
+            ->waitForLivewire()->click('@toggle')
+            ->waitFor('@target')
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_works_after_wire_navigate()
+    {
+        Livewire::visit([new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div dusk="source-page">Source page</div>
+                    <a href="/alpine-data-page" wire:navigate dusk="link">Go to alpine data page</a>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@source-page', 'Source page')
+            ->assertConsoleLogHasNoErrors()
+            ->click('@link')
+            ->waitFor('@target')
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_module_persists_across_wire_navigate()
+    {
+        // The alpine-data component is on both pages. The module should be cached
+        // by the browser and reused on the second page without re-importing.
+        Livewire::visit('testns::navigate-with-alpine-data')
+            ->waitForLivewireToLoad()
+            ->assertSeeIn('@first-page', 'First page')
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors()
+            ->click('@link')
+            ->waitUntilMissing('@first-page')
+            ->waitFor('@target')
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
     }
 }
