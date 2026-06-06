@@ -5,12 +5,12 @@ namespace Livewire\Features\SupportFormObjects;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\MessageBag;
 use function Livewire\invade;
 use Illuminate\Support\Arr;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
+use Livewire\Concerns\InteractsWithProperties;
 
 class Form implements Arrayable
 {
@@ -18,6 +18,8 @@ class Form implements Arrayable
         validate as parentValidate;
         validateOnly as parentValidateOnly;
     }
+
+    use InteractsWithProperties;
 
     function __construct(
         protected Component $component,
@@ -95,55 +97,6 @@ class Form implements Arrayable
         return $this->toArray();
     }
 
-    public function only($properties)
-    {
-        $results = [];
-
-        foreach (is_array($properties) ? $properties : func_get_args() as $property) {
-            $results[$property] = $this->hasProperty($property) ? $this->getPropertyValue($property) : null;
-        }
-
-        return $results;
-    }
-
-    public function except($properties)
-    {
-        $properties = is_array($properties) ? $properties : func_get_args();
-
-        return array_diff_key($this->all(), array_flip($properties));
-    }
-
-    public function hasProperty($prop)
-    {
-        return property_exists($this, Utils::beforeFirstDot($prop));
-    }
-
-    public function getPropertyValue($name)
-    {
-        $value = $this->{Utils::beforeFirstDot($name)};
-
-        if (Utils::containsDots($name)) {
-            return data_get($value, Utils::afterFirstDot($name));
-        }
-
-        return $value;
-    }
-
-    public function fill($values)
-    {
-        $publicProperties = array_keys($this->all());
-
-        if ($values instanceof Model) {
-            $values = $values->toArray();
-        }
-
-        foreach ($values as $key => $value) {
-            if (in_array(Utils::beforeFirstDot($key), $publicProperties)) {
-                data_set($this, $key, $value);
-            }
-        }
-    }
-
     public function reset(...$properties)
     {
         $properties = count($properties) && is_array($properties[0])
@@ -157,38 +110,6 @@ class Form implements Arrayable
         foreach ($properties as $property) {
             data_set($this, $property, data_get($freshInstance, $property));
         }
-    }
-
-    public function resetExcept(...$properties)
-    {
-        if (count($properties) && is_array($properties[0])) {
-            $properties = $properties[0];
-        }
-
-        $keysToReset = array_diff(array_keys($this->all()), $properties);
-
-        if($keysToReset === []) {
-            return;
-        }
-
-        $this->reset($keysToReset);
-    }
-
-    public function pull($properties = null)
-    {
-        $wantsASingleValue = is_string($properties);
-
-        $properties = is_array($properties) ? $properties : func_get_args();
-
-        $beforeReset = match (true) {
-            empty($properties) => $this->all(),
-            $wantsASingleValue => $this->getPropertyValue($properties[0]),
-            default => $this->only($properties),
-        };
-
-        $this->reset($properties);
-
-        return $beforeReset;
     }
 
     public function toArray()
