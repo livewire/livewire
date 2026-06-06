@@ -218,4 +218,39 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertAttributeContains('@email-error', 'style', 'display: none')
             ;
     }
+
+    public function test_wire_show_reacts_to_validation_errors_when_skip_render_is_used()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            #[Validate(['required', 'min:5'])]
+            public $title = '';
+
+            public function updated()
+            {
+                $this->skipRender();
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <input type="text" wire:model.live="title" dusk="title">
+
+                <div wire:show="$errors.has('title')" dusk="title-error">
+                    <span wire:text="$errors.first('title')" dusk="title-error-text"></span>
+                </div>
+            </div>
+            HTML; }
+        })
+            // Initially hidden...
+            ->assertAttributeContains('@title-error', 'style', 'display: none')
+
+            // Type something too short: error should appear...
+            ->waitForLivewire()->type('@title', 'a')
+            ->assertVisible('@title-error')
+            ->assertSeeIn('@title-error-text', 'The title field must be at least 5 characters.')
+
+            // Type a valid value: error should hide again...
+            ->waitForLivewire()->type('@title', 'abcdef')
+            ->assertAttributeContains('@title-error', 'style', 'display: none')
+            ;
+    }
 }
