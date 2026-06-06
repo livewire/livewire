@@ -3,9 +3,11 @@
 namespace Livewire\Features\SupportAuthorization;
 
 use Attribute;
+use Illuminate\Auth\Middleware\Authorize as AuthorizeMiddleware;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use UnitEnum;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
@@ -18,6 +20,9 @@ class BaseAuthorize extends LivewireAttribute
 
     public function call(array $parameters) : void
     {
+        // Check if authorization already applied on route level
+        if ($this->isAuthorizedByMiddleware($this->ability, $this->argument)) return;
+
         // Action that does not require a model or class...
         if (is_null($this->argument)) {
             Gate::authorize($this->ability);
@@ -26,7 +31,7 @@ class BaseAuthorize extends LivewireAttribute
         }
 
         $arguments = Arr::wrap($this->argument);
-
+        
         // Resolve each argument (prioritize method parameters first, then component properties)
         $resolved = [];
         foreach ($arguments as $arg) {
@@ -36,9 +41,6 @@ class BaseAuthorize extends LivewireAttribute
         Gate::authorize($this->ability, $resolved);
     }
 
-    /**
-     * Resolve a single argument.
-     */
     protected function resolveArgument(string $arg, array $parameters): mixed
     {
         // Action that does not require a model, for example a 'create' action...
@@ -64,5 +66,19 @@ class BaseAuthorize extends LivewireAttribute
 
         // Fall back to component property
         return data_get($this->component, $arg);
+    }
+
+    protected function isAuthorizedByMiddleware($ability, $arguments): bool
+    {
+        $authorizeMiddleware = app(PersistentMiddleware::class)->getAuthorizeMiddleware();
+
+        if ($authorizeMiddleware === []) {
+            return false;
+        }
+
+        // Using Laravel's Authorize middleware to parse the ability and arguments for comparison
+        $middleware = AuthorizeMiddleware::using($ability, ...Arr::wrap($arguments));
+
+        return in_array($middleware, $authorizeMiddleware, true);
     }
 }
