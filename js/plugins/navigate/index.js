@@ -163,9 +163,11 @@ export default function (Alpine) {
 
             if (prevented) return
 
-            // @todo: see if there's a way to update the current HTML BEFORE
-            // the back button is hit, and not AFTER:
             storeScrollInformationInHtmlBeforeNavigatingAway()
+
+            // Clean up Alpine x-if/x-for output before caching the page we're leaving.
+            // Without this, back/forward navigation restores duplicate DOM nodes.
+            cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement()
 
             // Fire the navigating event, allowing listeners to register onSwap callbacks
             let swapCallbacks = []

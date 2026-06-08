@@ -101,6 +101,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             HTML));
 
             Route::get('/page-with-alpine-for-loop', PageWithAlpineForLoop::class);
+            Route::get('/page-with-alpine-if', PageWithAlpineIf::class);
             Route::get('/page-with-redirect-to-internal-which-has-external-link', PageWithRedirectToInternalWhichHasExternalLinkPage::class)->middleware('web');
             Route::get('/page-with-redirect-to-external-page', PageWithRedirectToExternalPage::class)->middleware('web');
             Route::get('/script-component', ScriptComponent::class);
@@ -797,6 +798,39 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSeeIn('@text', 'a,b,c')
                 ->assertScript('document.getElementById(\'alpine-for-loop\').querySelectorAll(\'p\').length', 3)
                 ->assertConsoleLogMissingWarning('value is not defined')
+            ;
+        });
+    }
+
+    public function test_alpine_if_does_not_duplicate_elements_after_back_and_forward_navigation()
+    {
+        $this->browse(function (Browser $browser) {
+            $assertSinglePasskeyButton = fn (Browser $browser) => $browser
+                ->waitFor('@add-button')
+                ->assertScript('document.getElementById(\'alpine-if-container\').querySelectorAll(\'button\').length', 1)
+                ->assertConsoleLogMissingWarning('is not defined');
+
+            $browser
+                ->visit('/page-with-alpine-if')
+                ->tap(fn (Browser $browser) => $assertSinglePasskeyButton($browser))
+
+                ->waitForNavigate()->click('@link.to.second')
+                ->assertSee('On second')
+
+                ->waitForNoNavigateRequest()->back()
+                ->tap(fn (Browser $browser) => $assertSinglePasskeyButton($browser))
+
+                ->forward()
+                ->assertSee('On second')
+
+                ->waitForNoNavigateRequest()->back()
+                ->tap(fn (Browser $browser) => $assertSinglePasskeyButton($browser))
+
+                ->forward()
+                ->assertSee('On second')
+
+                ->waitForNoNavigateRequest()->back()
+                ->tap(fn (Browser $browser) => $assertSinglePasskeyButton($browser))
             ;
         });
     }
@@ -1763,6 +1797,24 @@ class PageWithAlpineForLoop extends Component
             <div id="alpine-for-loop">
                 <template x-for="(value, index) in items" :key="index">
                     <p x-text="value"></p>
+                </template>
+            </div>
+        </div>
+        HTML;
+    }
+}
+
+class PageWithAlpineIf extends Component
+{
+    #[Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-alpine-if" x-data="{ supported: true, showForm: false }">
+            <a href="/second" wire:navigate dusk="link.to.second">Go to second page</a>
+            <div id="alpine-if-container">
+                <template x-if="supported && !showForm">
+                    <button type="button" dusk="add-button">Add passkey</button>
                 </template>
             </div>
         </div>
