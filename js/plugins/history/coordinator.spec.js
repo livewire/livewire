@@ -1,7 +1,13 @@
-import { describe, it, vi, expect } from 'vitest'
+import { afterEach, describe, it, vi, expect } from 'vitest'
 import coordinator from './coordinator'
 
 describe('History Coordinator', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+
+        window.history.replaceState(null, '', '/')
+    })
+
     it('should replace state', async () => {
         let replaceSpy = vi.spyOn(window.history, 'replaceState')
 
@@ -57,6 +63,27 @@ describe('History Coordinator', () => {
         )
 
         expect(window.history.state).toEqual({ alpine: { foo: 'baz' }, other: 'bob' })
+    })
+
+    it('should not mutate the current history state before calling replaceState', async () => {
+        window.history.replaceState({ alpine: { foo: 'bar' } }, '', '/home')
+
+        let originalReplaceState = window.history.replaceState
+        let stateWhenReplaceStateWasCalled
+
+        let replaceSpy = vi.spyOn(window.history, 'replaceState').mockImplementation((state, unused, url) => {
+            stateWhenReplaceStateWasCalled = window.history.state
+
+            originalReplaceState.call(window.history, state, unused, url)
+        })
+
+        coordinator.replaceState('/home', { foo: 'baz' })
+
+        await new Promise(queueMicrotask)
+
+        expect(replaceSpy).toHaveBeenCalledOnce()
+        expect(stateWhenReplaceStateWasCalled).toEqual({ alpine: { foo: 'bar' } })
+        expect(window.history.state).toEqual({ alpine: { foo: 'baz' } })
     })
 
     it('should push state', async () => {
@@ -126,6 +153,9 @@ describe('History Coordinator', () => {
     it('can have a custom error handler', async () => {
         let error = new Error('test')
         let url = '/home'
+        window.history.replaceState({ alpine: { foo: 'before' } }, '', url)
+        let consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
         vi.spyOn(window.history, 'replaceState').mockImplementation(() => {
           throw error
         })
@@ -140,7 +170,8 @@ describe('History Coordinator', () => {
 
         expect(errorHandler).toHaveBeenCalledOnce()
         expect(errorHandler).toHaveBeenCalledWith(error, url)
+        expect(consoleErrorSpy).toHaveBeenCalledWith(error)
 
-        expect(window.history.state).toEqual({ alpine: { foo: 'bar' } })
+        expect(window.history.state).toEqual({ alpine: { foo: 'before' } })
     })
 })
