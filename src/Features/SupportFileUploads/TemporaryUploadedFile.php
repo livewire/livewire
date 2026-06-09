@@ -46,11 +46,11 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getSize(): int
     {
-        if (app()->runningUnitTests()) {
-            if (isset($this->metaFileData()['size'])) {
-                return $this->metaFileData()['size'];
-            }
+        if (isset($this->metaFileData()['size'])) {
+            return $this->metaFileData()['size'];
+        }
 
+        if (app()->runningUnitTests()) {
             // This is for backwards compatibility when test file meta data was stored in the filename...
             if (str($this->getFilename())->contains('-size=')) {
                 return (int) str($this->getFilename())->between('-size=', '.')->__toString();
