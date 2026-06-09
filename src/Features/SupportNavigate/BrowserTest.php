@@ -101,6 +101,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             HTML));
 
             Route::get('/page-with-alpine-for-loop', PageWithAlpineForLoop::class);
+            Route::get('/page-with-conditional-alpine-button', PageWithConditionalAlpineButton::class);
             Route::get('/page-with-redirect-to-internal-which-has-external-link', PageWithRedirectToInternalWhichHasExternalLinkPage::class)->middleware('web');
             Route::get('/page-with-redirect-to-external-page', PageWithRedirectToExternalPage::class)->middleware('web');
             Route::get('/script-component', ScriptComponent::class);
@@ -797,6 +798,27 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSeeIn('@text', 'a,b,c')
                 ->assertScript('document.getElementById(\'alpine-for-loop\').querySelectorAll(\'p\').length', 3)
                 ->assertConsoleLogMissingWarning('value is not defined')
+            ;
+        });
+    }
+
+    public function test_browser_history_navigation_does_not_recapture_alpine_if_output()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/page-with-conditional-alpine-button')
+                ->waitFor('@add-button')
+                ->assertCount('@add-button', 1)
+                ->waitForNavigate()->click('@link.to.second')
+                ->assertSee('On second')
+                ->waitForNavigate()->back()
+                ->waitFor('@add-button')
+                ->assertCount('@add-button', 1)
+                ->waitForNavigate()->forward()
+                ->assertSee('On second')
+                ->waitForNavigate()->back()
+                ->waitFor('@add-button')
+                ->assertCount('@add-button', 1)
             ;
         });
     }
@@ -1763,6 +1785,24 @@ class PageWithAlpineForLoop extends Component
             <div id="alpine-for-loop">
                 <template x-for="(value, index) in items" :key="index">
                     <p x-text="value"></p>
+                </template>
+            </div>
+        </div>
+        HTML;
+    }
+}
+
+class PageWithConditionalAlpineButton extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div x-data="{ canAdd: true }">
+            <a href="/second" wire:navigate dusk="link.to.second">Go to second page</a>
+
+            <div>
+                <template x-if="canAdd">
+                    <button type="button" dusk="add-button">Add passkey</button>
                 </template>
             </div>
         </div>
