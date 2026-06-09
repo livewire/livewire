@@ -98,6 +98,9 @@ class IslandCompiler
         $scopeProviderCode = $this->generateScopeProviderCode($expression);
         $innerContent = $scopeProviderCode . $innerContent;
 
+        // Carry SFC import aliases into separately compiled island views...
+        $innerContent = $this->injectUseStatementsFromCompiledView($innerContent);
+
         // Ensure the cached directory exists...
         File::ensureDirectoryExists(dirname($cachedPath));
 
@@ -107,6 +110,33 @@ class IslandCompiler
         app('livewire.compiler')->cacheManager->prepareGeneratedFileForCompilation($cachedPath);
 
         return $output;
+    }
+
+    protected function injectUseStatementsFromCompiledView(string $contents): string
+    {
+        $useStatements = $this->extractUseStatementsFromCompiledView();
+
+        if (! $useStatements) {
+            return $contents;
+        }
+
+        return "<?php\n" . $useStatements . "\n?>\n\n" . $contents;
+    }
+
+    protected function extractUseStatementsFromCompiledView(): string
+    {
+        if (! preg_match('/\A\s*<\?php(.*?)\?>/s', $this->contents, $matches)) {
+            return '';
+        }
+
+        $preamble = $matches[1];
+        $skipComments = '(?:\/\/[^\n]*|\/\*.*?\*\/)(*SKIP)(*FAIL)';
+
+        if (! preg_match_all('/' . $skipComments . '|\buse\s+(?:function\s+|const\s+)?[^;]+;/s', $preamble, $useMatches)) {
+            return '';
+        }
+
+        return implode("\n", array_map('trim', $useMatches[0]));
     }
 
     protected function generateScopeProviderCode(string $expression): string
