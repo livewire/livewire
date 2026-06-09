@@ -104,6 +104,41 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    function test_wire_loading_attr_restores_pre_loading_attribute_state_after_renderless_action()
+    {
+        Livewire::visit(new class extends Component {
+            public bool $disabled = true;
+
+            #[\Livewire\Attributes\Renderless]
+            public function renderlessAction() {
+                usleep(250000);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <button type="button" wire:click="renderlessAction" dusk="renderless">
+                            Renderless action
+                        </button>
+
+                        <button
+                            type="button"
+                            x-bind:disabled="$wire.$get('disabled')"
+                            wire:loading.attr="disabled"
+                            dusk="some-action">
+                            Some action
+                        </button>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitUntil('document.querySelector(\'[dusk="some-action"]\').disabled === true')
+        ->assertScript('document.querySelector(\'[dusk="some-action"]\').disabled', true)
+        ->waitForLivewire()->click('@renderless')
+        ->assertScript('document.querySelector(\'[dusk="some-action"]\').disabled', true)
+        ;
+    }
+
     function test_wire_loading_attr_doesnt_conflict_with_exist_one()
     {
         Livewire::visit(new class extends Component {
