@@ -102,6 +102,39 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->get('/foo/1')
             ->assertSeeText('prop:John');
     }
+
+    public function test_mount_param_honors_scope_binding()
+    {
+        Route::get('/scoped-mount/{store:name}/{book:name}', ComponentWithScopedMountBinding::class)->scopeBindings();
+
+        $this->get('/scoped-mount/First/Foo')
+            ->assertSeeText('Book ID: 1');
+
+        $this->get('/scoped-mount/Second/Foo')
+            ->assertSeeText('Book ID: 2');
+    }
+
+    public function test_mount_param_and_prop_resolve_the_same_scoped_model()
+    {
+        Route::get('/scoped-mount-and-prop/{store:name}/{book:name}', ComponentWithScopedMountBindingAndProp::class)->scopeBindings();
+
+        $this->get('/scoped-mount-and-prop/Second/Foo')
+            ->assertSeeText('Mount Book ID: 2')
+            ->assertSeeText('Prop Book ID: 2');
+    }
+
+    public function test_scope_binding_is_honored_when_parent_and_child_are_both_mount_params()
+    {
+        Route::get('/scoped-mount-only/{store:name}/{book:name}', ComponentWithParentAndChildMountBindings::class)->scopeBindings();
+
+        $this->get('/scoped-mount-only/First/Foo')
+            ->assertSeeText('Store ID: 1')
+            ->assertSeeText('Book ID: 1');
+
+        $this->get('/scoped-mount-only/Second/Foo')
+            ->assertSeeText('Store ID: 2')
+            ->assertSeeText('Book ID: 2');
+    }
 }
 
 class PropBoundModel extends Model
@@ -332,6 +365,70 @@ class Book extends Model
             'name' => 'Foo',
         ],
     ];
+}
+
+class ComponentWithScopedMountBinding extends Component
+{
+    public Store $store;
+    public $bookId;
+
+    public function mount(Book $book)
+    {
+        $this->bookId = $book->id;
+    }
+
+    public function render()
+    {
+        return <<<'BLADE'
+            <div>
+                Book ID: {{ $bookId }}
+            </div>
+        BLADE;
+    }
+}
+
+class ComponentWithScopedMountBindingAndProp extends Component
+{
+    public Store $store;
+    public Book $book;
+    public $mountBookId;
+
+    public function mount(Book $book)
+    {
+        $this->mountBookId = $book->id;
+    }
+
+    public function render()
+    {
+        return <<<'BLADE'
+            <div>
+                Mount Book ID: {{ $mountBookId }}
+                Prop Book ID: {{ $book->id }}
+            </div>
+        BLADE;
+    }
+}
+
+class ComponentWithParentAndChildMountBindings extends Component
+{
+    public $storeId;
+    public $bookId;
+
+    public function mount(Store $store, Book $book)
+    {
+        $this->storeId = $store->id;
+        $this->bookId = $book->id;
+    }
+
+    public function render()
+    {
+        return <<<'BLADE'
+            <div>
+                Store ID: {{ $storeId }}
+                Book ID: {{ $bookId }}
+            </div>
+        BLADE;
+    }
 }
 
 class ComponentWithScopeBindingsReversedProps extends Component
