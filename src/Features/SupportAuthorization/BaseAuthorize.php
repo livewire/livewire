@@ -18,6 +18,17 @@ class BaseAuthorize extends LivewireAttribute
 
     public function call(array $parameters) : void
     {
+        // If ability is a class name (contains backslash) and no argument was
+        // provided, guess the ability from the component method name — matching
+        // the behavior of Laravel's AuthorizesRequests::authorize(Model::class).
+        if (is_null($this->argument) && is_string($this->ability) && str_contains($this->ability, '\\')) {
+            $ability = $this->normalizeGuessedAbilityName($this->getName());
+
+            Gate::authorize($ability, [$this->ability]);
+
+            return;
+        }
+
         // Action that does not require a model or class...
         if (is_null($this->argument)) {
             Gate::authorize($this->ability);
@@ -34,6 +45,34 @@ class BaseAuthorize extends LivewireAttribute
         }
 
         Gate::authorize($this->ability, $resolved);
+    }
+
+    /**
+     * Normalize the ability name guessed from the method name.
+     * Mirrors AuthorizesRequests::normalizeGuessedAbilityName().
+     */
+    protected function normalizeGuessedAbilityName(string $ability) : string
+    {
+        $map = $this->resourceAbilityMap();
+
+        return $map[$ability] ?? $ability;
+    }
+
+    /**
+     * Get the map of resource method names to ability names.
+     * Mirrors AuthorizesRequests::resourceAbilityMap().
+     */
+    protected function resourceAbilityMap() : array
+    {
+        return [
+            'index' => 'viewAny',
+            'show' => 'view',
+            'create' => 'create',
+            'store' => 'create',
+            'edit' => 'update',
+            'update' => 'update',
+            'destroy' => 'delete',
+        ];
     }
 
     /**

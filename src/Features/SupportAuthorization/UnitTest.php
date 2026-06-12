@@ -113,6 +113,57 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_can_authorize_policy_by_guessing_ability_from_method_name_when_only_class_provided()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        // Ability is guessed from method name "createPost" -> "createPost" (no resource map match)
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[Authorize(AuthorizationPost::class)]
+                public function createPost() : bool
+                {
+                    return true;
+                }
+            })
+            ->call('createPost')
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[Authorize(AuthorizationPost::class)]
+                public function createPost() : bool
+                {
+                    return true;
+                }
+            })
+            ->call('createPost')
+            ->assertForbidden();
+
+        // Ability guessed from method name "store" -> "create" (resource map match)
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[Authorize(AuthorizationPost::class)]
+                public function store() : bool
+                {
+                    return true;
+                }
+            })
+            ->call('store')
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[Authorize(AuthorizationPost::class)]
+                public function store() : bool
+                {
+                    return true;
+                }
+            })
+            ->call('store')
+            ->assertForbidden();
+    }
+
     public function test_can_authorize_policy_with_class()
     {
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
@@ -731,6 +782,11 @@ class AuthorizationComment extends Model
 class AuthorizationPostPolicy
 {
     public function create(AuthorizationUser $user) : bool
+    {
+        return (int) $user->id === 1;
+    }
+
+    public function createPost(AuthorizationUser $user) : bool
     {
         return (int) $user->id === 1;
     }
