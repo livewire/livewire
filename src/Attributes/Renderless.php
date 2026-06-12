@@ -2,7 +2,7 @@
 
 namespace Livewire\Attributes;
 
-use Livewire\Mechanisms\HandleComponents\BaseRenderless;
+use Livewire\Features\SupportRenderless\BaseRenderless;
 
 #[\Attribute]
 class Renderless extends BaseRenderless
