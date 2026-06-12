@@ -1,4 +1,5 @@
-import { getCsrfToken } from '@/utils';
+import { dataGet, getCsrfToken } from '@/utils';
+import Alpine from 'alpinejs'
 
 let uploadManagers = new WeakMap
 
@@ -46,10 +47,14 @@ export function handleFileUpload(el, property, component, cleanup) {
     el.addEventListener('change', eventHandler)
 
     // If the Livewire property has changed to null or an empty string, then reset the input...
-    component.$wire.$watch(property, (value) => {
-        // This watch will only be released when the component is removed. However, the
-        // actual file-upload element may be removed from the DOM withou the entire
-        // component being removed. In this case, let's just bail early on this.
+    // This watch is registered through Alpine directly instead of $wire.$watch so it can be
+    // released by the element-scoped cleanup below. $wire.$watch registers a component-lifetime
+    // cleanup whose callback closes over `el`, which would strand the input (and the entire
+    // detached subtree it lived in) every time a conditionally rendered file input is removed
+    // from a long-lived component...
+    let unwatchValueReset = Alpine.watch(() => dataGet(component.reactive, property), (value) => {
+        // The element may be removed from the DOM before this watch fires. In this case,
+        // let's just bail early on this.
         if (! el.isConnected) return
 
         if (value === null || value === '') {
@@ -74,6 +79,9 @@ export function handleFileUpload(el, property, component, cleanup) {
     cleanup(() => {
         el.removeEventListener('change', eventHandler)
         el.removeEventListener('click', clearFileInputValue)
+        el.removeEventListener('livewire-upload-cancel', clearFileInputValue)
+
+        unwatchValueReset()
     })
 }
 
