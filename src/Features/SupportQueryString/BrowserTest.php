@@ -1245,9 +1245,9 @@ class BrowserTest extends \Tests\BrowserTestCase
             },
         ])
             ->waitForLivewireToLoad()
-            ->assertScript('return window.location.search', '')
+            ->assertQueryStringMissing('search')
             ->waitForLivewire()->type('@search', 'bob')
-            ->waitForScript('window.location.search', '?search=bob');
+            ->waitForQueryString('search', 'bob');
     }
 
     public function test_push_mode_syncs_url_on_initial_load_when_value_restored_from_session()
