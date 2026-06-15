@@ -46,9 +46,8 @@ export function handleFileUpload(el, property, component, cleanup) {
     el.addEventListener('change', eventHandler)
 
     // If the Livewire property has changed to null or an empty string, then reset the input...
-    let unwatchValueReset = component.$wire.$watch(property, (value) => {
-        // The element may be removed from the DOM before this watch fires. In this case,
-        // let's just bail early on this.
+    let unwatch = component.$wire.$watch(property, (value) => {
+        // Alpine may have already queued this callback before the input was removed, so return early.
         if (! el.isConnected) return
 
         if (value === null || value === '') {
@@ -75,7 +74,7 @@ export function handleFileUpload(el, property, component, cleanup) {
         el.removeEventListener('click', clearFileInputValue)
         el.removeEventListener('livewire-upload-cancel', clearFileInputValue)
 
-        unwatchValueReset()
+        unwatch()
     })
 }
 
