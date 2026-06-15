@@ -78,6 +78,6 @@ class BaseAuthorize extends LivewireAttribute
             return [$ability, $arguments];
         }
 
-        return [$this->getName(), $ability];
+        return [$this->normalizeGuessedAbilityName($this->getName()), $ability];
     }
 }

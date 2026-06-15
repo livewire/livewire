@@ -732,6 +732,22 @@ class UnitTest extends TestCase
             ->call('create')
             ->assertOk();
     }
+
+    public function test_can_authorize_using_policy_resource_ability_mapping_with_only_class_name()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[Authorize(AuthorizationPost::class)]
+                public function store() : bool
+                {
+                    return true;
+                }
+            })
+            ->call('store')
+            ->assertOk();
+    }
 }
 
 class AuthorizationUser extends AuthUser
