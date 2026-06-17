@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportFileUploads;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Livewire\Drawer\Utils;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 
 class FilePreviewController implements HasMiddleware
 {
@@ -19,6 +20,21 @@ class FilePreviewController implements HasMiddleware
     {
         abort_unless(request()->hasValidSignature(), 401);
 
-        return Utils::pretendPreviewResponseIsPreviewFile($filename);
+        $response = Utils::pretendPreviewResponseIsPreviewFile($filename);
+
+        // Cache hit
+        if ($response->getStatusCode() === 304) {
+            return $response;
+        }
+
+        $temporaryFile = new TemporaryUploadedFile($filename, FileUploadConfiguration::disk());
+        $originalName = $temporaryFile->getClientOriginalName();
+
+        $response->headers->set(
+            'Content-Disposition',
+            HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $originalName),
+        );
+
+        return $response;
     }
 }
