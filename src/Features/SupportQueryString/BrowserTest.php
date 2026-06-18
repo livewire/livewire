@@ -416,6 +416,36 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_can_use_nested_url_aliases()
+    {
+        Livewire::withQueryParams([
+            'form' => ['search' => 'hello'],
+        ])->visit([
+            new class extends Component
+            {
+                #[BaseUrl(as: 'form.search')]
+                public string $search = '';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="search" wire:model.live="search" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertInputValue('@search', 'hello')
+            ->assertScript('return window.location.search', '?form[search]=hello')
+            ->waitForLivewire()->type('@search', 'world')
+            ->assertScript('return window.location.search', '?form[search]=world')
+            ->refresh()
+            ->assertInputValue('@search', 'world')
+            ->assertScript('return window.location.search', '?form[search]=world')
+        ;
+    }
+
     public function test_can_use_url_on_string_backed_enum_object_properties()
     {
         Livewire::visit([
