@@ -6,6 +6,7 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use PHPUnit\Framework\ExpectationFailedException;
 
 class UnitTest extends \Tests\TestCase
@@ -23,6 +24,29 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(FileDownloadComponent::class)
                 ->call('streamDownload', 'download.txt')
                 ->assertFileDownloaded('download.txt', 'alpinejs');
+    }
+
+    public function test_file_download_responses_are_not_included_in_action_returns()
+    {
+        $testable = Livewire::test(FileDownloadComponent::class);
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                [
+                    'snapshot' => json_encode($testable->snapshot),
+                    'updates' => [],
+                    'calls' => [
+                        [
+                            'method' => 'download',
+                            'params' => ['download.txt'],
+                        ],
+                    ],
+                ],
+            ]]);
+
+        $response->assertOk();
+        $response->assertJsonPath('components.0.effects.download.name', 'download.txt');
+        $response->assertJsonPath('components.0.effects.returns.0', null);
     }
 
     public function can_download_a_responsable(){

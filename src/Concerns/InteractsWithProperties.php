@@ -90,7 +90,7 @@ trait InteractsWithProperties
         }
     }
 
-    protected function resetExcept(...$properties)
+    public function resetExcept(...$properties)
     {
         if (count($properties) && is_array($properties[0])) {
             $properties = $properties[0];

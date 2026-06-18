@@ -102,7 +102,7 @@ class IslandCompiler
         $innerContent = $this->injectImportsFromCompiledView($innerContent);
 
         // Ensure the cached directory exists...
-        File::ensureDirectoryExists(dirname($cachedPath));
+        File::ensureDirectoryExists(dirname($cachedPath), 0777);
 
         // Write the cached island to the file system...
         file_put_contents($cachedPath, $innerContent);

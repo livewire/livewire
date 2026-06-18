@@ -12,7 +12,6 @@ import { fetchHtml } from "./fetch"
 let enablePersist = true
 let showProgressBar = true
 let restoreScroll = true
-let autofocus = false
 
 export default function (Alpine) {
 
@@ -123,11 +122,8 @@ export default function (Alpine) {
 
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {
-                            setTimeout(() => {
-                                autofocus && autofocusElementsWithTheAutofocusAttribute()
-                            })
-
                             nowInitializeAlpineOnTheNewPage(Alpine)
+                            autofocusElementsWithTheAutofocusAttribute()
 
                             fireEventForOtherLibrariesToHookInto('alpine:navigated')
                             showProgressBar && finishAndHideProgressBar()
@@ -174,6 +170,8 @@ export default function (Alpine) {
                 onSwap: (callback) => swapCallbacks.push(callback)
             })
 
+            cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement()
+
             // Update the snapshot (not the history state, as the history state has
             // already changed to the new page due to the popstate event).
             // This ensures the current HTML has the latest snapshot.
@@ -201,9 +199,8 @@ export default function (Alpine) {
                     swapCallbacks.forEach(callback => callback())
 
                     andAfterAllThis(() => {
-                        autofocus && autofocusElementsWithTheAutofocusAttribute()
-
                         nowInitializeAlpineOnTheNewPage(Alpine)
+                        autofocusElementsWithTheAutofocusAttribute()
 
                         fireEventForOtherLibrariesToHookInto('alpine:navigated')
                     })
