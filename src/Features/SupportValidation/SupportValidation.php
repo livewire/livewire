@@ -6,9 +6,19 @@ use Livewire\Drawer\Utils;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\ComponentHook;
+use function Livewire\on;
 
 class SupportValidation extends ComponentHook
 {
+    public static $view;
+
+    public static function provide()
+    {
+        on('flush-state', function () {
+            static::$view = null;
+        });
+    }
+
     function hydrate($memo)
     {
         $this->component->setErrorBag(
@@ -65,16 +75,15 @@ class SupportValidation extends ComponentHook
 
     protected function viewErrorBag(): ViewErrorBag
     {
-        $errors = new ViewErrorBag;
+        $view = static::$view ??= app('view');
 
-        $previouslySharedErrors = app('view')->getShared()['errors'] ?? null;
+        $previouslySharedErrors = $view->getShared()['errors'] ?? null;
 
-        if ($previouslySharedErrors instanceof ViewErrorBag) {
-            foreach ($previouslySharedErrors->getBags() as $name => $bag) {
-                $errors->put($name, $bag);
-            }
-        }
+        $errors = $previouslySharedErrors instanceof ViewErrorBag
+            ? clone $previouslySharedErrors
+            : new ViewErrorBag;
 
         return $errors->put('default', $this->component->getErrorBag());
     }
 }
+
