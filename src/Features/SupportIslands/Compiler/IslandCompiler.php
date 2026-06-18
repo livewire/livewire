@@ -125,44 +125,41 @@ class IslandCompiler
 
     protected function extractImportsFromCompiledView(): string
     {
-        return collect([
-            $this->extractPhpUseStatementsFromCompiledView(),
-            $this->extractBladeUseStatementsFromCompiledView(),
-        ])->filter()->implode("\n");
+        // Compile only the leading contents so existing Blade handling for
+        // directives like `@use(...)` has already been applied before we copy
+        // import blocks into the extracted island view.
+        $compiledPrefix = app('blade.compiler')->compileString(
+            explode('@island', $this->contents, 2)[0]
+        );
+
+        return $this->extractLeadingImportBlocks($compiledPrefix);
     }
 
-    protected function extractPhpUseStatementsFromCompiledView(): string
+    protected function extractLeadingImportBlocks(string $contents): string
     {
-        // Match a leading PHP preamble so SFC `use` statements injected into the
-        // compiled view can be copied into each separately compiled island view.
-        if (! preg_match('/\A\s*<\?php(.*?)\?>/s', $this->contents, $matches)) {
-            return '';
+        $imports = [];
+
+        while (preg_match('/\A\s*<\?php(.*?)\?>/s', $contents, $matches)) {
+            if (! $this->phpBlockContainsOnlyImports($matches[1])) {
+                break;
+            }
+
+            $imports[] = trim($matches[0]);
+            $contents = substr($contents, strlen($matches[0]));
         }
 
-        $preamble = $matches[1];
-
-        // Match PHP `use`, `use function`, and `use const` statements while
-        // ignoring anything that looks like a use statement inside PHP comments.
-        $skipComments = '(?:\/\/[^\n]*|\/\*.*?\*\/)(*SKIP)(*FAIL)';
-
-        if (! preg_match_all('/' . $skipComments . '|\buse\s+(?:function\s+|const\s+)?[^;]+;/s', $preamble, $useMatches)) {
-            return '';
-        }
-
-        return "<?php\n" . implode("\n", array_map('trim', $useMatches[0])) . "\n?>";
+        return implode("\n", $imports);
     }
 
-    protected function extractBladeUseStatementsFromCompiledView(): string
+    protected function phpBlockContainsOnlyImports(string $contents): bool
     {
-        $contentsBeforeFirstIsland = explode('@island', $this->contents, 2)[0];
+        $withoutCommentsOrUses = preg_replace(
+            '/(?:\/\/[^\n]*|\/\*.*?\*\/)|\buse\s+(?:function\s+|const\s+)?[^;]+;/s',
+            '',
+            $contents,
+        );
 
-        // Match Blade `@use(...)` directives before the first island so aliases
-        // declared by the parent view remain available in extracted island views.
-        if (! preg_match_all('/@use\s*(\((?:[^()]++|(?1))*\))/s', $contentsBeforeFirstIsland, $useMatches)) {
-            return '';
-        }
-
-        return implode("\n", array_map(fn ($statement) => '@use' . trim($statement), $useMatches[1]));
+        return trim($withoutCommentsOrUses) === '';
     }
 
     protected function generateScopeProviderCode(string $expression): string
