@@ -3,14 +3,18 @@
 namespace Livewire\Features\SupportAuthorization;
 
 use Attribute;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Gate;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use UnitEnum;
+
+use function Illuminate\Support\enum_value;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class BaseAuthorize extends LivewireAttribute
 {
+    use AuthorizesRequests;
+
     public function __construct(
         public UnitEnum|string $ability,
         public array|string|null $argument = null,
@@ -20,7 +24,7 @@ class BaseAuthorize extends LivewireAttribute
     {
         // Action that does not require a model or class...
         if (is_null($this->argument)) {
-            Gate::authorize($this->ability);
+            $this->authorize($this->ability);
 
             return;
         }
@@ -33,7 +37,7 @@ class BaseAuthorize extends LivewireAttribute
             $resolved[] = $this->resolveArgument($arg, $parameters);
         }
 
-        Gate::authorize($this->ability, $resolved);
+        $this->authorize($this->ability, $resolved);
     }
 
     /**
@@ -64,5 +68,16 @@ class BaseAuthorize extends LivewireAttribute
 
         // Fall back to component property
         return data_get($this->component, $arg);
+    }
+
+    protected function parseAbilityAndArguments($ability, $arguments)
+    {
+        $ability = enum_value($ability);
+
+        if (is_string($ability) && ! str_contains($ability, '\\')) {
+            return [$ability, $arguments];
+        }
+
+        return [$this->normalizeGuessedAbilityName($this->getName()), $ability];
     }
 }
