@@ -1,35 +1,8 @@
 // This errors object has the most common methods from \Illuminate\Support\MessageBag class on the backend...
-import Alpine from 'alpinejs'
-import { on } from '@/hooks'
-
-// After every server response, invalidate the cached errors so any Alpine
-// effects depending on $wire.$errors (like wire:show / wire:text) re-read
-// the fresh errors from the new snapshot. Without this, components that
-// skip rendering would never trigger that re-read...
-on('effect', ({ component }) => {
-    if (! component.__errorsState) return
-
-    component.__errorsState.clientErrors = null
-})
-
 export function getErrorsObject(component) {
-    let state = component.__errorsState ??= Alpine.reactive({
-        clientErrors: null,
-    })
-
-    // Store lastSnapshot outside reactive state to avoid Proxy wrapping breaking identity comparison...
-    component.__lastErrorsSnapshot ??= component.snapshot
-
     return {
         messages() {
-            // If the snapshot changed (server responded), reset client overrides...
-            if (component.__lastErrorsSnapshot !== component.snapshot) {
-                state.clientErrors = null
-                component.__lastErrorsSnapshot = component.snapshot
-            }
-
-            // Assign into reactive state so Alpine can track changes...
-            return state.clientErrors ??= component.snapshot.memo.errors
+            return component.errors.messages
         },
 
         keys() {
@@ -104,11 +77,11 @@ export function getErrorsObject(component) {
 
         clear(field = null) {
             if (field === null) {
-                state.clientErrors = {}
+                component.errors.messages = {}
             } else {
-                let errors = { ...(state.clientErrors ?? component.snapshot.memo.errors) }
+                let errors = { ...component.errors.messages }
                 delete errors[field]
-                state.clientErrors = errors
+                component.errors.messages = errors
             }
         },
     }
