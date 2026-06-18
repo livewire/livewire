@@ -170,6 +170,8 @@ export default function (Alpine) {
                 onSwap: (callback) => swapCallbacks.push(callback)
             })
 
+            cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement()
+
             // Update the snapshot (not the history state, as the history state has
             // already changed to the new page due to the popstate event).
             // This ensures the current HTML has the latest snapshot.
