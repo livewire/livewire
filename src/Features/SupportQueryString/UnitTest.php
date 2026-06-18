@@ -239,4 +239,30 @@ class UnitTest extends \Tests\TestCase
         $component->assertStatus(200);
         $this->assertSame('hello', $component->instance()->search);
     }
+
+    function test_nested_query_parameter_without_value_is_handled_correctly()
+    {
+        $component = Livewire::withQueryParams([
+            'form' => ['search' => ''],
+        ])->test(new class extends TestComponent {
+            #[BaseUrl(as: 'form.search')]
+            public string $search = 'default';
+        });
+
+        $component->assertStatus(200);
+        $this->assertSame('', $component->instance()->search);
+    }
+
+    function test_nested_query_parameter_is_retrieved_from_referer_on_subsequent_request()
+    {
+        $url = new BaseUrl(as: 'form.search');
+
+        $value = $url->getFromRefererUrlQueryString(
+            'http://localhost/?form[search]=hello',
+            'form.search',
+            'default'
+        );
+
+        $this->assertSame('hello', $value);
+    }
 }
