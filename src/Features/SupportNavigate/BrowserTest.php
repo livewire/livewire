@@ -26,6 +26,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
             Livewire::component('third-page', ThirdPage::class);
+            Livewire::component('first-autofocus-page', FirstAutofocusPage::class);
+            Livewire::component('second-autofocus-page', SecondAutofocusPage::class);
             Livewire::component('first-html-attribute-page', FirstHtmlAttributesPage::class);
             Livewire::component('second-html-attribute-page', SecondHtmlAttributesPage::class);
             Livewire::component('first-asset-page', FirstAssetPage::class);
@@ -64,6 +66,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/second', SecondPage::class)->middleware('web');
             Route::get('/third', ThirdPage::class)->middleware('web');
             Route::get('/fourth', FourthPage::class)->middleware('web');
+            Route::get('/first-autofocus', FirstAutofocusPage::class)->middleware('web');
+            Route::get('/second-autofocus', SecondAutofocusPage::class)->middleware('web');
             Route::get('/first-html-attributes', FirstHtmlAttributesPage::class)->middleware('web');
             Route::get('/second-html-attributes', SecondHtmlAttributesPage::class)->middleware('web');
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
@@ -291,6 +295,36 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitFor('@link.to.second')
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first');
+        });
+    }
+
+    public function test_wire_navigate_focuses_autofocus_element_when_previous_page_also_has_autofocus(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-autofocus')
+                ->waitFor('@first-autofocus')
+                ->waitUntil("document.activeElement.id === 'first-autofocus'")
+                ->waitForNavigate()->click('@link.to.second.autofocus')
+                ->waitFor('@second-autofocus')
+                ->waitUntil("document.activeElement.id === 'second-autofocus'")
+                ->assertScript('document.activeElement.id', 'second-autofocus');
+        });
+    }
+
+    public function test_wire_navigate_focuses_autofocus_element_when_returning_to_cached_page(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-autofocus')
+                ->waitFor('@first-autofocus')
+                ->waitUntil("document.activeElement.id === 'first-autofocus'")
+                ->waitForNavigate()->click('@link.to.second.autofocus')
+                ->waitFor('@second-autofocus')
+                ->waitForNavigate()->back()
+                ->waitFor('@first-autofocus')
+                ->waitUntil("document.activeElement.id === 'first-autofocus'")
+                ->assertScript('document.activeElement.id', 'first-autofocus');
         });
     }
 
@@ -1498,6 +1532,41 @@ class FourthPage extends Component
                     }
                 })
             </script>
+        </div>
+        HTML;
+    }
+}
+
+class FirstAutofocusPage extends Component
+{
+    public function render(): string
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first autofocus page</div>
+
+            <label for="first-input">First input</label>
+            <input id="first-input" dusk="first-input" type="text">
+
+            <label for="first-autofocus">Second autofocus input</label>
+            <input id="first-autofocus" dusk="first-autofocus" autofocus type="text">
+
+            <a href="/second-autofocus" wire:navigate dusk="link.to.second.autofocus">Go to second autofocus page</a>
+        </div>
+        HTML;
+    }
+}
+
+class SecondAutofocusPage extends Component
+{
+    public function render(): string
+    {
+        return <<<'HTML'
+        <div>
+            <div>On second autofocus page</div>
+
+            <label for="second-autofocus">Second autofocus textarea</label>
+            <textarea id="second-autofocus" dusk="second-autofocus" autofocus></textarea>
         </div>
         HTML;
     }
