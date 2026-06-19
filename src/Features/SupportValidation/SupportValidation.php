@@ -14,6 +14,8 @@ class SupportValidation extends ComponentHook
 
     public static function provide()
     {
+        static::$view = null;
+
         on('flush-state', function () {
             static::$view = null;
         });
