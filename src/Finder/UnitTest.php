@@ -680,6 +680,29 @@ class UnitTest extends \Tests\TestCase
         // Already-canonical names pass through unchanged.
         $this->assertEquals('pages::a.b.c', $finder->normalizeName('pages::a.b.c'));
     }
+
+    public function test_does_not_resolve_volt_component_with_new_and_html_class_as_single_file_component()
+    {
+        $finder = new Finder();
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+
+        // We create a temporary file that looks like a Volt component with new and HTML class
+        $tempFile = __DIR__ . '/Fixtures/volt-style-component.blade.php';
+        file_put_contents($tempFile, <<<'HTML'
+<?php
+$export = new SomeExport();
+?>
+<div class="some-class">Volt component</div>
+HTML
+        );
+
+        try {
+            $path = $finder->resolveSingleFileComponentPath('volt-style-component');
+            $this->assertNull($path);
+        } finally {
+            unlink($tempFile);
+        }
+    }
 }
 
 class SingleSegmentComponent extends Component

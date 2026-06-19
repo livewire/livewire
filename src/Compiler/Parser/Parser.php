@@ -57,12 +57,12 @@ class Parser
         // Use (*SKIP)(*FAIL) to ignore "new" inside comments...
         $skipComments = '(?:\/\/[^\n]*|\/\*.*?\*\/)(*SKIP)(*FAIL)';
 
-        // Find the position of the first "new" outside of comments...
-        if (preg_match('/' . $skipComments . '|\bnew\b/s', $contents, $newMatch, PREG_OFFSET_CAPTURE)) {
+        // Find the position of the first "new class" outside of comments...
+        if (preg_match('/' . $skipComments . '|\bnew\b[^;{}]*?\bclass\b/s', $contents, $newMatch, PREG_OFFSET_CAPTURE)) {
             $newPosition = $newMatch[0][1];
 
-            // Check if "return new" exists outside of comments and find where "new" starts in that match...
-            $hasReturnNew = preg_match('/' . $skipComments . '|\breturn\s+(new\b)/s', $contents, $returnNewMatch, PREG_OFFSET_CAPTURE);
+            // Check if "return new class" exists outside of comments and find where "new" starts in that match...
+            $hasReturnNew = preg_match('/' . $skipComments . '|\breturn\s+(new\b[^;{}]*?\bclass\b)/s', $contents, $returnNewMatch, PREG_OFFSET_CAPTURE);
 
             // If "return new" does not exist or "new" is not at the same position as "return new", add "return"...
             if (!$hasReturnNew || $returnNewMatch[1][1] !== $newPosition) {
@@ -78,7 +78,7 @@ class Parser
         // Use (*SKIP)(*FAIL) to ignore "new" inside comments...
         $skipComments = '(?:\/\/[^\n]*|\/\*.*?\*\/)(*SKIP)(*FAIL)';
 
-        if (!preg_match('/' . $skipComments . '|\bnew\b/s', $contents)) {
+        if (!preg_match('/' . $skipComments . '|\bnew\b[^;{}]*?\bclass\b/s', $contents)) {
             return $contents;
         }
 

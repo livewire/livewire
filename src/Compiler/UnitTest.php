@@ -926,6 +926,30 @@ class UnitTest extends \Tests\TestCase
 
                 EOT,
             ],
+            'new instantiation before new class' => [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                $x = new Collection();
+                new class extends Component {
+                    //
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                $x = new Collection();
+                return new class extends Component {
+                    //
+                };
+
+                EOT,
+            ],
         ];
     }
 }
