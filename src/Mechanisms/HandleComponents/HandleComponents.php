@@ -13,6 +13,8 @@ use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Drawer\Utils;
 use Livewire\Features\SupportFormObjects\Form;
 use Illuminate\Support\Facades\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class HandleComponents extends Mechanism
 {
@@ -676,7 +678,11 @@ class HandleComponents extends Mechanism
             $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $metadata, $idx);
 
             if ($earlyReturnCalled) {
-                $returns[] = $finish($earlyReturn);
+                $return = $finish($earlyReturn);
+
+                // File downloads are sent to the browser through the download effect,
+                // so keep the return slot aligned without leaking the response object into JSON.
+                $returns[] = $return instanceof StreamedResponse || $return instanceof BinaryFileResponse ? null : $return;
 
                 continue;
             }
@@ -697,7 +703,11 @@ class HandleComponents extends Mechanism
             $return = wrap($root)->{$method}(...$params);
             if (config('app.debug')) trigger('profile', 'call'.$idx, $root->getId(), [$start, microtime(true)]);
 
-            $returns[] = $finish($return);
+            $return = $finish($return);
+
+            // File downloads are sent to the browser through the download effect,
+            // so keep the return slot aligned without leaking the response object into JSON.
+            $returns[] = $return instanceof StreamedResponse || $return instanceof BinaryFileResponse ? null : $return;
 
             // Support `Wire:click.renderless`...
             if ($metadata['renderless'] ?? false) {
