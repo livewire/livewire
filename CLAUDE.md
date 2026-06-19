@@ -6,7 +6,7 @@ It is similar to projects like Phoenix Liveview however it isn't "live" in that 
 
 It renders on the server and uses morphing algorithm to path the DOM with updates from the server.
 
-It "dehdrates" the state of a component into a JS-consumable object that is passed back to the server to be "hydrated" during the next request.
+It "dehydrates" the state of a component into a JS-consumable object that is passed back to the server to be "hydrated" during the next request.
 
 # Tech Stack
 
