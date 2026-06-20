@@ -319,36 +319,6 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    public function test_navigate_falls_back_to_browser_for_native_links()
-    {
-        $this->browse(function (Browser $browser) {
-            $currentWindowHandles = count($browser->driver->getWindowHandles());
-
-            $browser
-                ->visit('/first')
-                ->tap(fn ($b) => $b->script(<<<'JS'
-                    window.navigateEventCount = 0
-
-                    document.addEventListener('livewire:navigate', () => {
-                        window.navigateEventCount++
-                    })
-                JS))
-                ->assertSee('On first')
-                ->click('@link.to.external')
-                ->pause(300)
-                ->assertScript('return window.navigateEventCount', 0)
-                ->click('@link.to.download')
-                ->click('@link.to.mailto')
-                ->click('@link.to.tel')
-                ->pause(300)
-                ->assertPathIs('/first')
-                ->assertSee('On first')
-                ->assertScript('return window.navigateEventCount', 0);
-
-            $this->assertCount($currentWindowHandles + 1, $browser->driver->getWindowHandles());
-        });
-    }
-
     public function test_navigate_is_not_triggered_on_cmd_and_enter()
     {
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
@@ -1342,6 +1312,47 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertAttributeMissing('@link.to.second.wire.current.ignore', 'data-current')
 
                 ;
+        });
+    }
+
+    public function test_navigate_falls_back_to_browser_for_native_links()
+    {
+        $this->browse(function (Browser $browser) {
+            $initialHandles = $browser->driver->getWindowHandles();
+            $currentWindowHandles = count($initialHandles);
+
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script(<<<'JS'
+                    window.navigateEventCount = 0
+
+                    document.addEventListener('livewire:navigate', () => {
+                        window.navigateEventCount++
+                    })
+                JS))
+                ->assertSee('On first')
+                ->click('@link.to.external')
+                ->pause(300)
+                ->assertScript('return window.navigateEventCount', 0)
+                ->click('@link.to.download')
+                ->click('@link.to.mailto')
+                ->click('@link.to.tel')
+                ->pause(300)
+                ->assertPathIs('/first')
+                ->assertSee('On first')
+                ->assertScript('return window.navigateEventCount', 0);
+
+            $this->assertCount($currentWindowHandles + 1, $browser->driver->getWindowHandles());
+
+            // Close any extra window handles to avoid interfering with subsequent tests
+            foreach ($browser->driver->getWindowHandles() as $handle) {
+                if (! in_array($handle, $initialHandles)) {
+                    $browser->driver->switchTo()->window($handle);
+                    $browser->driver->close();
+                }
+            }
+
+            $browser->driver->switchTo()->window($initialHandles[0]);
         });
     }
 
