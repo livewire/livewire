@@ -56,8 +56,8 @@ class BaseAuthorize extends LivewireAttribute
             fn (\ReflectionParameter $parameter) : bool => $parameter->getName() === $arg,
         );
 
-        if ($methodArgument instanceof \ReflectionParameter && isset($parameters[$arg])) {
-            $model = app($methodArgument->getType()->getName())->resolveRouteBinding($parameters[$arg]);
+        if ($methodArgument instanceof \ReflectionParameter && isset($parameters[$methodArgument->getPosition()])) {
+            $model = app($methodArgument->getType()->getName())->resolveRouteBinding($parameters[$methodArgument->getPosition()]);
 
             if (! $model) {
                 throw (new \Illuminate\Database\Eloquent\ModelNotFoundException)->setModel($methodArgument->getType()->getName());

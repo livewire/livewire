@@ -193,7 +193,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editPost', post: 1)
+            ->call('editPost', '1')
             ->assertOk();
 
         Livewire::actingAs(AuthorizationUser::find(2))
@@ -204,7 +204,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editPost', post: 1)
+            ->call('editPost', '1')
             ->assertForbidden();
     }
 
@@ -227,7 +227,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editPost', post: 1)
+            ->call('editPost', '1')
             ->assertOk();
 
         Livewire::actingAs(AuthorizationUser::find(2))
@@ -245,7 +245,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editPost', post: 1)
+            ->call('editPost', '1')
             ->assertForbidden();
     }
 
@@ -384,7 +384,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', post: 1)
+            ->call('createComment', '1')
             ->assertOk();
 
         // AssertOk using class name and component property
@@ -422,7 +422,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', post: 1)
+            ->call('createComment', '1')
             ->assertOk();
 
         // AssertForbidden using class name and method argument
@@ -434,7 +434,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', post: 2)
+            ->call('createComment', '2')
             ->assertForbidden();
 
         // AssertForbidden using class name and component property
@@ -472,7 +472,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', post: 2)
+            ->call('createComment', '2')
             ->assertForbidden();
     }
 
@@ -489,7 +489,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', post: 1)
+            ->call('createComment', '1')
             ->assertOk();
 
         // AssertOk using class name and component property
@@ -527,7 +527,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', post: 1)
+            ->call('createComment', '1')
             ->assertOk();
 
         // AssertForbidden using class name and method argument
@@ -539,7 +539,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', post: 2)
+            ->call('createComment', '2')
             ->assertForbidden();
 
         // AssertForbidden using class name and component property
@@ -577,7 +577,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', post: 2)
+            ->call('createComment', '2')
             ->assertForbidden();
     }
 
@@ -594,7 +594,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editComment', comment: 1, post: 1)
+            ->call('editComment', '1', '1')
             ->assertOk();
 
         // AssertOk using component properties
@@ -638,7 +638,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editComment', comment: 1, post: 1)
+            ->call('editComment', '1', '1')
             ->assertOk();
 
         // AssertForbidden using method arguments
@@ -650,7 +650,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editComment', comment: 1, post: 2)
+            ->call('editComment', '1', '2')
             ->assertForbidden();
 
         // AssertForbidden using component properties
@@ -694,7 +694,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editComment', comment: 1, post: 2)
+            ->call('editComment', '1', '2')
             ->assertForbidden();
     }
 
