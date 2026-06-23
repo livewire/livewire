@@ -193,7 +193,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editPost', '1')
+            ->call('editPost', post: 1)
             ->assertOk();
 
         Livewire::actingAs(AuthorizationUser::find(2))
@@ -204,7 +204,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editPost', '1')
+            ->call('editPost', post: 1)
             ->assertForbidden();
     }
 
@@ -227,7 +227,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editPost', '1')
+            ->call('editPost', post: 1)
             ->assertOk();
 
         Livewire::actingAs(AuthorizationUser::find(2))
@@ -245,7 +245,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editPost', '1')
+            ->call('editPost', post: 1)
             ->assertForbidden();
     }
 
@@ -369,6 +369,35 @@ class UnitTest extends TestCase
         $this->assertTrue(Session::has('event-was-handled'));
     }
 
+    public function test_authorize_allows_authorized_event_listeners_with_named_argument()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[\Livewire\Attributes\On('edit-post')]
+                #[Authorize('edit', 'post')]
+                public function editPost(AuthorizationPost $post) : bool
+                {
+                    return true;
+                }
+            })
+            ->dispatch('edit-post', post: 1)
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[\Livewire\Attributes\On('edit-post')]
+                #[Authorize('edit', 'post')]
+                public function editPost(AuthorizationPost $post) : bool
+                {
+                    return true;
+                }
+            })
+            ->dispatch('edit-post', post: 1)
+            ->assertForbidden();
+    }
+
     public function test_can_authorize_defined_gates_with_array_as_argument()
     {
         Gate::define('create-comment', function (AuthorizationUser $user, string $commentClass, AuthorizationPost $post) {
@@ -384,7 +413,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', '1')
+            ->call('createComment', post: 1)
             ->assertOk();
 
         // AssertOk using class name and component property
@@ -422,7 +451,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', '1')
+            ->call('createComment', post: 1)
             ->assertOk();
 
         // AssertForbidden using class name and method argument
@@ -434,7 +463,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', '2')
+            ->call('createComment', post: 2)
             ->assertForbidden();
 
         // AssertForbidden using class name and component property
@@ -472,7 +501,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', '2')
+            ->call('createComment', post: 2)
             ->assertForbidden();
     }
 
@@ -489,7 +518,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', '1')
+            ->call('createComment', post: 1)
             ->assertOk();
 
         // AssertOk using class name and component property
@@ -527,7 +556,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', '1')
+            ->call('createComment', post: 1)
             ->assertOk();
 
         // AssertForbidden using class name and method argument
@@ -539,7 +568,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', '2')
+            ->call('createComment', post: 2)
             ->assertForbidden();
 
         // AssertForbidden using class name and component property
@@ -577,7 +606,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('createComment', '2')
+            ->call('createComment', post: 2)
             ->assertForbidden();
     }
 
@@ -594,7 +623,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editComment', '1', '1')
+            ->call('editComment', comment: 1, post: 1)
             ->assertOk();
 
         // AssertOk using component properties
@@ -638,7 +667,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editComment', '1', '1')
+            ->call('editComment', comment: 1, post: 1)
             ->assertOk();
 
         // AssertForbidden using method arguments
@@ -650,7 +679,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editComment', '1', '2')
+            ->call('editComment', comment: 1, post: 2)
             ->assertForbidden();
 
         // AssertForbidden using component properties
@@ -694,7 +723,7 @@ class UnitTest extends TestCase
                     return true;
                 }
             })
-            ->call('editComment', '1', '2')
+            ->call('editComment', comment: 1, post: 2)
             ->assertForbidden();
     }
 
