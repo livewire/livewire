@@ -925,6 +925,64 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('second error')
             ->assertHasErrors(['first', 'second']);
     }
+
+    public function test_validate_handles_rules_returning_a_collection()
+    {
+        Livewire::test(new class extends TestComponent {
+            public string $prompt = '';
+
+            protected function rules()
+            {
+                return collect(['prompt' => 'required']);
+            }
+
+            function save() { $this->validate(); }
+        })
+            ->call('save')
+            ->assertHasErrors(['prompt' => 'required']);
+    }
+
+    public function test_validate_handles_messages_returning_a_collection()
+    {
+        Livewire::test(new class extends TestComponent {
+            public string $prompt = '';
+
+            protected function rules()
+            {
+                return ['prompt' => 'required'];
+            }
+
+            protected function messages()
+            {
+                return collect(['prompt.required' => 'The prompt is required.']);
+            }
+
+            function save() { $this->validate(); }
+        })
+            ->call('save')
+            ->assertHasErrors(['prompt' => 'required']);
+    }
+
+    public function test_validate_handles_validation_attributes_returning_a_collection()
+    {
+        Livewire::test(new class extends TestComponent {
+            public string $prompt = '';
+
+            protected function rules()
+            {
+                return ['prompt' => 'required'];
+            }
+
+            protected function validationAttributes()
+            {
+                return collect(['prompt' => 'prompt field']);
+            }
+
+            function save() { $this->validate(); }
+        })
+            ->call('save')
+            ->assertHasErrors(['prompt' => 'required']);
+    }
 }
 
 class ComponentWithRulesProperty extends TestComponent
