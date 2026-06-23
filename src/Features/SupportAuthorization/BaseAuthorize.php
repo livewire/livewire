@@ -66,7 +66,7 @@ class BaseAuthorize extends LivewireAttribute
             }
 
             // parameter keys can be a string if user pass named argument to be resolved
-            // e.g wire:click="$dispatch('edit-post', { user: '2' })"
+            // e.g wire:click="$dispatch('edit-post', { post: '2' })"
             if (isset($parameters[$arg])) {
                 $routeBinding = $parameters[$arg];
             }
