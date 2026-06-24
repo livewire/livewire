@@ -118,7 +118,7 @@ trait HandlesValidation
             )
         );
 
-        return array_merge($rulesFromComponent, $rulesFromOutside);
+        return array_merge_recursive($rulesFromComponent, $rulesFromOutside);
     }
 
     protected function getMessages()

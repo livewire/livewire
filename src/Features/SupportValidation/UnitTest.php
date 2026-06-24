@@ -925,6 +925,29 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('second error')
             ->assertHasErrors(['first', 'second']);
     }
+
+    public function test_validate_attribute_and_rules_method_rules_are_merged_for_the_same_property()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Validate(['required', 'string'])]
+            public $foo = '';
+
+            public function rules()
+            {
+                return [
+                    'foo' => ['min:3'],
+                ];
+            }
+
+            function save() { $this->validate(); }
+        })
+            ->set('foo', 'ok')
+            ->call('save')
+            ->assertHasErrors(['foo' => 'min'])
+            ->set('foo', '')
+            ->call('save')
+            ->assertHasErrors(['foo' => 'required']);
+    }
 }
 
 class ComponentWithRulesProperty extends TestComponent
