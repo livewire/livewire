@@ -60,7 +60,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
 function getModifierTail(modifiers) {
     modifiers = modifiers.filter(i => ! [
-        'lazy', 'defer'
+        'lazy', 'defer', 'blur'
     ].includes(i))
 
     if (modifiers.length === 0) return ''
