@@ -15,6 +15,8 @@ Below is a simple example of adding `wire:navigate` to links in a nav bar:
 
 When any of these links are clicked, Livewire will intercept the click and, instead of allowing the browser to perform a full page visit, Livewire will fetch the page in the background and swap it with the current page (resulting in much faster and smoother page navigation).
 
+`wire:navigate` only intercepts same-origin page visits. External links, links with a non-`_self` target, download links, and URLs such as `mailto:` or `tel:` automatically fall back to the browser's default behavior.
+
 ## Styling active links with data-current
 
 Livewire automatically adds a `data-current` attribute to any `wire:navigate` link that matches the current page URL. This allows you to style active navigation links using CSS or Tailwind without any additional directives:
