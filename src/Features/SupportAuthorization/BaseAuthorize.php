@@ -56,8 +56,22 @@ class BaseAuthorize extends LivewireAttribute
             fn (\ReflectionParameter $parameter) : bool => $parameter->getName() === $arg,
         );
 
-        if ($methodArgument instanceof \ReflectionParameter && isset($parameters[$arg])) {
-            $model = app($methodArgument->getType()->getName())->resolveRouteBinding($parameters[$arg]);
+        if ($methodArgument instanceof \ReflectionParameter) {
+            $routeBinding = null;
+
+            // parameter keys can be a string if user pass named argument to be resolved
+            // e.g wire:click="$dispatch('edit-post', { post: '2' })"
+            if (isset($parameters[$arg])) {
+                $routeBinding = $parameters[$arg];
+            }
+
+            // parameter keys can be a numeric if user only pass an id to be resolved
+            // e.g wire:click="editPost('2')"
+            elseif (isset($parameters[$methodArgument->getPosition()])) {
+                $routeBinding = $parameters[$methodArgument->getPosition()];
+            }
+
+            $model = app($methodArgument->getType()->getName())->resolveRouteBinding($routeBinding);
 
             if (! $model) {
                 throw (new \Illuminate\Database\Eloquent\ModelNotFoundException)->setModel($methodArgument->getType()->getName());

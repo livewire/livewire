@@ -680,9 +680,14 @@ class HandleComponents extends Mechanism
             if ($earlyReturnCalled) {
                 $return = $finish($earlyReturn);
 
-                // File downloads are sent to the browser through the download effect,
-                // so keep the return slot aligned without leaking the response object into JSON.
-                $returns[] = $return instanceof StreamedResponse || $return instanceof BinaryFileResponse ? null : $return;
+                // File downloads are sent to the browser through the download effect, so we shouldn't add
+                // the response object as a return here. But we need to keep it's position in `returns`
+                // so we will just set it to `null` instead...
+                if ($return instanceof StreamedResponse || $return instanceof BinaryFileResponse) {
+                    $return = null;
+                }
+
+                $returns[] = $return;
 
                 continue;
             }
@@ -705,9 +710,14 @@ class HandleComponents extends Mechanism
 
             $return = $finish($return);
 
-            // File downloads are sent to the browser through the download effect,
-            // so keep the return slot aligned without leaking the response object into JSON.
-            $returns[] = $return instanceof StreamedResponse || $return instanceof BinaryFileResponse ? null : $return;
+            // File downloads are sent to the browser through the download effect, so we shouldn't add
+            // the response object as a return here. But we need to keep it's position in `returns`
+            // so we will just set it to `null` instead...
+            if ($return instanceof StreamedResponse || $return instanceof BinaryFileResponse) {
+                $return = null;
+            }
+
+            $returns[] = $return;
 
             // Support `Wire:click.renderless`...
             if ($metadata['renderless'] ?? false) {
