@@ -276,4 +276,40 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@item-count', '1')
         ;
     }
+
+    public function test_blur_modifier_does_not_recreate_deleted_array_entries_when_submitting_with_enter()
+    {
+        Livewire::visit(new class extends Component {
+            public array $items = [
+                ['name' => ''],
+            ];
+
+            public function save(): void
+            {
+                $this->items = [];
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <div dusk="item-count">{{ count($items) }}</div>
+
+                        @if (count($items))
+                            <form wire:submit="save">
+                                <input wire:model.blur="items.0.name" dusk="name" />
+                                <button type="submit" dusk="save">Save</button>
+                            </form>
+                        @endif
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@item-count', '1')
+            ->type('@name', 'foo')
+            ->waitForLivewire()->keys('@name', '{enter}')
+            ->assertSeeIn('@item-count', '0')
+            ->assertMissing('@name')
+        ;
+    }
 }
