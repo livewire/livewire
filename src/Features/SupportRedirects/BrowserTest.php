@@ -2,15 +2,38 @@
 
 namespace Livewire\Features\SupportRedirects;
 
-use Livewire\Attributes\On;
-use Tests\BrowserTestCase;
-use Livewire\Livewire;
-use Livewire\Component;
-use Livewire\Attributes\Reactive;
+use Closure;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Reactive;
+use Livewire\Component;
+use Livewire\Livewire;
+use Symfony\Component\HttpFoundation\Response;
+use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
+    public static function tweakApplicationHook()
+    {
+        return function () {
+            Livewire::addPersistentMiddleware(RedirectLivewireUpdateToHtml::class);
+
+            Route::get('/redirected-livewire-update', RedirectedLivewireUpdatePage::class)
+                ->middleware(['web', RedirectLivewireUpdateToHtml::class]);
+
+            Route::get('/redirected-livewire-update/login', fn () => response(<<<'HTML'
+                <!DOCTYPE html>
+                <html>
+                    <body>
+                        <h1 dusk="redirected-html">Redirected HTML response</h1>
+                    </body>
+                </html>
+                HTML))
+                ->middleware('web');
+        };
+    }
+
     public function test_can_redirect()
     {
         Livewire::visit([new class extends Component {
@@ -129,6 +152,22 @@ class BrowserTest extends BrowserTestCase
             ->waitForTextIn('@foo', '1')
             ->waitForTextIn('@session-message', 'Flash cleared');
     }
+
+    public function test_http_redirects_from_livewire_update_requests_do_not_continue_processing_redirected_html()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/redirected-livewire-update')
+                ->waitForLivewireToLoad()
+                ->waitForLivewire()->click('@arm-redirect')
+                ->waitForTextIn('@status', 'Armed')
+                ->waitForLivewire()->click('@trigger-redirected-update')
+                ->assertPathIs('/redirected-livewire-update/login')
+                ->assertSee('Redirected HTML response')
+                ->assertConsoleLogHasNoErrors()
+            ;
+        });
+    }
 }
 
 class RedirectComponent extends Component {
@@ -143,4 +182,48 @@ class RedirectComponent extends Component {
             </div>
         </div>
     HTML; }
+}
+
+class RedirectLivewireUpdateToHtml
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        if (
+            $request->hasHeader('X-Livewire')
+            && $request->session()->pull('redirect_livewire_update_to_html', false)
+        ) {
+            return redirect('/redirected-livewire-update/login');
+        }
+
+        return $next($request);
+    }
+}
+
+class RedirectedLivewireUpdatePage extends Component
+{
+    public string $status = 'Ready';
+
+    public function armRedirect(): void
+    {
+        session()->put('redirect_livewire_update_to_html', true);
+
+        $this->status = 'Armed';
+    }
+
+    public function triggerRedirectedUpdate(): void
+    {
+        $this->status = 'Updated';
+    }
+
+    public function render(): string
+    {
+        return <<<'HTML'
+        <div>
+            <button type="button" dusk="arm-redirect" wire:click="armRedirect">Arm redirect</button>
+            <button type="button" dusk="trigger-redirected-update" wire:click="triggerRedirectedUpdate">Trigger redirected update</button>
+
+            <span dusk="status">{{ $status }}</span>
+        </div>
+        HTML;
+    }
 }
