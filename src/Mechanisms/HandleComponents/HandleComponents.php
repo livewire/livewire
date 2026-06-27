@@ -555,6 +555,12 @@ class HandleComponents extends Mechanism
                     $return = null;
                 }
 
+                // Here we check if the `wire:model` have `.live` and `.renderless` modifiers
+                // then we should skip the rendering of component
+                if (($metadata['renderless'] ?? false) && ($metadata['type'] ?? null) === 'model.live') {
+                        $root->skipRender();
+                }
+
                 $returns[] = $return;
 
                 continue;

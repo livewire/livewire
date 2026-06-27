@@ -12,6 +12,8 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     let { expression, modifiers } = directive
 
+    modifiers = modifiers.filter(m => m !== 'renderless')
+
     if (! expression) {
         return console.warn('Livewire: [wire:model] is missing a value.', el)
     }
