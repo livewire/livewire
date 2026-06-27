@@ -416,6 +416,36 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_can_use_nested_url_aliases()
+    {
+        Livewire::withQueryParams([
+            'form' => ['search' => 'hello'],
+        ])->visit([
+            new class extends Component
+            {
+                #[BaseUrl(as: 'form.search')]
+                public string $search = '';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="search" wire:model.live="search" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertInputValue('@search', 'hello')
+            ->assertScript('return decodeURIComponent(window.location.search)', '?form[search]=hello')
+            ->waitForLivewire()->type('@search', 'world')
+            ->assertScript('return decodeURIComponent(window.location.search)', '?form[search]=world')
+            ->refresh()
+            ->assertInputValue('@search', 'world')
+            ->assertScript('return decodeURIComponent(window.location.search)', '?form[search]=world')
+        ;
+    }
+
     public function test_can_use_url_on_string_backed_enum_object_properties()
     {
         Livewire::visit([
@@ -1103,7 +1133,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     }
                 }
             ])
-            ->assertScript('return window.location.search', '?foo[bar]=baz');
+            ->assertScript('return decodeURIComponent(window.location.search)', '?foo[bar]=baz');
     }
 
     public function test_it_skips_query_string_encoded_keys_not_tracked_by_livewire()
@@ -1127,7 +1157,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     }
                 }
             ])
-            ->assertScript('return window.location.search', '?foo[bar]=baz&bob%5Blob%5D=law');
+            ->assertScript('return decodeURIComponent(window.location.search)', '?foo[bar]=baz&bob[lob]=law');
     }
 
     public function test_except_does_remove_value_from_query_string_when_loaded_with_value_then_changed_to_except_value()

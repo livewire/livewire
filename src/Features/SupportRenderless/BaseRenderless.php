@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Mechanisms\HandleComponents;
+namespace Livewire\Features\SupportRenderless;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 

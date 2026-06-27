@@ -26,6 +26,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
             Livewire::component('third-page', ThirdPage::class);
+            Livewire::component('first-autofocus-page', FirstAutofocusPage::class);
+            Livewire::component('second-autofocus-page', SecondAutofocusPage::class);
             Livewire::component('first-html-attribute-page', FirstHtmlAttributesPage::class);
             Livewire::component('second-html-attribute-page', SecondHtmlAttributesPage::class);
             Livewire::component('first-asset-page', FirstAssetPage::class);
@@ -64,6 +66,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/second', SecondPage::class)->middleware('web');
             Route::get('/third', ThirdPage::class)->middleware('web');
             Route::get('/fourth', FourthPage::class)->middleware('web');
+            Route::get('/first-autofocus', FirstAutofocusPage::class)->middleware('web');
+            Route::get('/second-autofocus', SecondAutofocusPage::class)->middleware('web');
             Route::get('/first-html-attributes', FirstHtmlAttributesPage::class)->middleware('web');
             Route::get('/second-html-attributes', SecondHtmlAttributesPage::class)->middleware('web');
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
@@ -101,6 +105,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             HTML));
 
             Route::get('/page-with-alpine-for-loop', PageWithAlpineForLoop::class);
+            Route::get('/page-with-conditional-alpine-button', PageWithConditionalAlpineButton::class);
             Route::get('/page-with-redirect-to-internal-which-has-external-link', PageWithRedirectToInternalWhichHasExternalLinkPage::class)->middleware('web');
             Route::get('/page-with-redirect-to-external-page', PageWithRedirectToExternalPage::class)->middleware('web');
             Route::get('/script-component', ScriptComponent::class);
@@ -291,6 +296,36 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitFor('@link.to.second')
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first');
+        });
+    }
+
+    public function test_wire_navigate_focuses_autofocus_element_when_previous_page_also_has_autofocus(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-autofocus')
+                ->waitFor('@first-autofocus')
+                ->waitUntil("document.activeElement.id === 'first-autofocus'")
+                ->waitForNavigate()->click('@link.to.second.autofocus')
+                ->waitFor('@second-autofocus')
+                ->waitUntil("document.activeElement.id === 'second-autofocus'")
+                ->assertScript('document.activeElement.id', 'second-autofocus');
+        });
+    }
+
+    public function test_wire_navigate_focuses_autofocus_element_when_returning_to_cached_page(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-autofocus')
+                ->waitFor('@first-autofocus')
+                ->waitUntil("document.activeElement.id === 'first-autofocus'")
+                ->waitForNavigate()->click('@link.to.second.autofocus')
+                ->waitFor('@second-autofocus')
+                ->waitForNavigate()->back()
+                ->waitFor('@first-autofocus')
+                ->waitUntil("document.activeElement.id === 'first-autofocus'")
+                ->assertScript('document.activeElement.id', 'first-autofocus');
         });
     }
 
@@ -797,6 +832,27 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSeeIn('@text', 'a,b,c')
                 ->assertScript('document.getElementById(\'alpine-for-loop\').querySelectorAll(\'p\').length', 3)
                 ->assertConsoleLogMissingWarning('value is not defined')
+            ;
+        });
+    }
+
+    public function test_browser_history_navigation_does_not_recapture_alpine_if_output()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/page-with-conditional-alpine-button')
+                ->waitFor('@add-button')
+                ->assertCount('@add-button', 1)
+                ->waitForNavigate()->click('@link.to.second')
+                ->assertSee('On second')
+                ->waitForNavigate()->back()
+                ->waitFor('@add-button')
+                ->assertCount('@add-button', 1)
+                ->waitForNavigate()->forward()
+                ->assertSee('On second')
+                ->waitForNavigate()->back()
+                ->waitFor('@add-button')
+                ->assertCount('@add-button', 1)
             ;
         });
     }
@@ -1315,6 +1371,47 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_navigate_falls_back_to_browser_for_native_links()
+    {
+        $this->browse(function (Browser $browser) {
+            $initialHandles = $browser->driver->getWindowHandles();
+            $currentWindowHandles = count($initialHandles);
+
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script(<<<'JS'
+                    window.navigateEventCount = 0
+
+                    document.addEventListener('livewire:navigate', () => {
+                        window.navigateEventCount++
+                    })
+                JS))
+                ->assertSee('On first')
+                ->click('@link.to.external')
+                ->pause(300)
+                ->assertScript('return window.navigateEventCount', 0)
+                ->click('@link.to.download')
+                ->click('@link.to.mailto')
+                ->click('@link.to.tel')
+                ->pause(300)
+                ->assertPathIs('/first')
+                ->assertSee('On first')
+                ->assertScript('return window.navigateEventCount', 0);
+
+            $this->assertCount($currentWindowHandles + 1, $browser->driver->getWindowHandles());
+
+            // Close any extra window handles to avoid interfering with subsequent tests
+            foreach ($browser->driver->getWindowHandles() as $handle) {
+                if (! in_array($handle, $initialHandles)) {
+                    $browser->driver->switchTo()->window($handle);
+                    $browser->driver->close();
+                }
+            }
+
+            $browser->driver->switchTo()->window($initialHandles[0]);
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -1352,6 +1449,10 @@ class FirstPage extends Component
             <div>On first</div>
 
             <a :href="window.location.pathname + '#foo'" wire:navigate dusk="link.to.hashtag">Go to same page with hashtag</a>
+            <a href="https://example.com/pinkary" target="_blank" wire:navigate dusk="link.to.external">Go to external page</a>
+            <a href="/first" download wire:navigate dusk="link.to.download">Download first page</a>
+            <a href="mailto:team@example.com" wire:navigate dusk="link.to.mailto">Email team</a>
+            <a href="tel:+123456789" wire:navigate dusk="link.to.tel">Call team</a>
             <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
             <a href="/third" wire:navigate.hover dusk="link.to.third">Go to slow third page</a>
             <a href="/second-remote-asset" wire:navigate.hover dusk="link.to.asset">Go to asset page</a>
@@ -1498,6 +1599,41 @@ class FourthPage extends Component
                     }
                 })
             </script>
+        </div>
+        HTML;
+    }
+}
+
+class FirstAutofocusPage extends Component
+{
+    public function render(): string
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first autofocus page</div>
+
+            <label for="first-input">First input</label>
+            <input id="first-input" dusk="first-input" type="text">
+
+            <label for="first-autofocus">Second autofocus input</label>
+            <input id="first-autofocus" dusk="first-autofocus" autofocus type="text">
+
+            <a href="/second-autofocus" wire:navigate dusk="link.to.second.autofocus">Go to second autofocus page</a>
+        </div>
+        HTML;
+    }
+}
+
+class SecondAutofocusPage extends Component
+{
+    public function render(): string
+    {
+        return <<<'HTML'
+        <div>
+            <div>On second autofocus page</div>
+
+            <label for="second-autofocus">Second autofocus textarea</label>
+            <textarea id="second-autofocus" dusk="second-autofocus" autofocus></textarea>
         </div>
         HTML;
     }
@@ -1763,6 +1899,24 @@ class PageWithAlpineForLoop extends Component
             <div id="alpine-for-loop">
                 <template x-for="(value, index) in items" :key="index">
                     <p x-text="value"></p>
+                </template>
+            </div>
+        </div>
+        HTML;
+    }
+}
+
+class PageWithConditionalAlpineButton extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div x-data="{ canAdd: true }">
+            <a href="/second" wire:navigate dusk="link.to.second">Go to second page</a>
+
+            <div>
+                <template x-if="canAdd">
+                    <button type="button" dusk="add-button">Add passkey</button>
                 </template>
             </div>
         </div>
