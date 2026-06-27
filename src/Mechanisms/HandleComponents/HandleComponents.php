@@ -18,6 +18,13 @@ class HandleComponents extends Mechanism
     public static $renderStack = [];
     public static $componentStack = [];
 
+    // Holding the HandleSynths instance directly avoids resolving it from the
+    // container on every property in the dehydrate/hydrate loops below. This
+    // relies on HandleSynths being registered before HandleComponents in
+    // LivewireServiceProvider::getMechanisms() so the singleton is already
+    // bound when the container builds this mechanism.
+    public function __construct(protected HandleSynths $synths) {}
+
     public function boot()
     {
         on('flush-state', function () {
@@ -281,7 +288,7 @@ class HandleComponents extends Mechanism
         $data = Utils::getPublicPropertiesDefinedOnSubclass($component);
 
         foreach ($data as $key => $value) {
-            $data[$key] = app(HandleSynths::class)->dehydrate($value, $context, $key);
+            $data[$key] = $this->synths->dehydrate($value, $context, $key);
         }
 
         return $data;
@@ -292,7 +299,7 @@ class HandleComponents extends Mechanism
         foreach ($data as $key => $value) {
             if (! property_exists($component, $key)) continue;
 
-            $child = app(HandleSynths::class)->hydrate($value, $context, $key);
+            $child = $this->synths->hydrate($value, $context, $key);
 
             // Typed properties shouldn't be set back to "null". It will throw an error...
             if ((new \ReflectionProperty($component, $key))->getType() && is_null($child)) continue;
@@ -392,7 +399,7 @@ class HandleComponents extends Mechanism
         $finishes = [];
 
         foreach ($updates as $path => $value) {
-            $value = app(HandleSynths::class)->hydrateForUpdate($data, $path, $value, $context);
+            $value = $this->synths->hydrateForUpdate($data, $path, $value, $context);
 
             // We only want to run "updated" hooks after all properties have
             // been updated so that each individual hook has the ability
@@ -463,7 +470,7 @@ class HandleComponents extends Mechanism
 
         $path = implode('.', array_slice($segments, 0, $index + 1));
 
-        $synths = app(HandleSynths::class);
+        $synths = $this->synths;
 
         $synth = $synths->resolve($target, $context, $path);
 
