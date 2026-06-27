@@ -103,6 +103,34 @@ class UnitTest extends \Tests\TestCase
         $this->assertFalse($synths->isRemoval(null));
         $this->assertFalse($synths->isRemoval(''));
     }
+
+    public function test_hydrate_blocks_denylisted_classes_via_the_security_policy()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        // A forged tuple whose meta declares a denylisted gadget class. The
+        // SecurityPolicy denylist must fire before any synth instantiates it.
+        $tuple = [['x' => 1], ['s' => 'arr', 'class' => \Symfony\Component\Process\Process::class]];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('is not allowed to be instantiated');
+
+        $synths->hydrate($tuple, $context, 'evil');
+    }
+
+    public function test_hydrate_property_update_blocks_denylisted_classes_via_the_security_policy()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $tuple = [['x' => 1], ['s' => 'arr', 'class' => \Symfony\Component\Process\Process::class]];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('is not allowed to be instantiated');
+
+        $synths->hydratePropertyUpdate($tuple, $context, 'evil');
+    }
 }
 
 class CustomThing
