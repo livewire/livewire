@@ -18,11 +18,6 @@ class HandleComponents extends Mechanism
     public static $renderStack = [];
     public static $componentStack = [];
 
-    // Holding the HandleSynths instance directly avoids resolving it from the
-    // container on every property in the dehydrate/hydrate loops below. This
-    // relies on HandleSynths being registered before HandleComponents in
-    // LivewireServiceProvider::getMechanisms() so the singleton is already
-    // bound when the container builds this mechanism.
     public function __construct(protected HandleSynths $synths) {}
 
     public function boot()
