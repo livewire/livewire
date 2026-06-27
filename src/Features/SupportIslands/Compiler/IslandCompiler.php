@@ -53,7 +53,7 @@ class IslandCompiler
         $result = $this->restoreBladeComments($result, $comments);
 
         for ($i=$maxNestingLevel; $i >= $currentNestingLevel; $i--) {
-            $result = preg_replace_callback('/(\[STARTISLAND:([0-9]+):' . $i . '\])\((.*?)\)(.*?)(\[ENDISLAND:' . $i . '\])/s', function ($matches) use ($i) {
+            $result = preg_replace_callback('/(\[STARTISLAND:([0-9]+):' . $i . '\])\(((?:[^()]++|\((?3)\))*)\)(.*?)(\[ENDISLAND:' . $i . '\])/s', function ($matches) use ($i) {
                 $occurrence = $matches[2];
                 $innerContent = $matches[4];
                 $expression = $matches[3];
@@ -99,12 +99,12 @@ class IslandCompiler
         $innerContent = $scopeProviderCode . $innerContent;
 
         // Ensure the cached directory exists...
-        File::ensureDirectoryExists(dirname($cachedPath));
+        File::ensureDirectoryExists(dirname($cachedPath), 0777);
 
         // Write the cached island to the file system...
         file_put_contents($cachedPath, $innerContent);
 
-        app('livewire.compiler')->cacheManager->mutateFileModificationTime($cachedPath);
+        app('livewire.compiler')->cacheManager->prepareGeneratedFileForCompilation($cachedPath);
 
         return $output;
     }
@@ -178,7 +178,7 @@ PHP;
     {
         $instance = new class (
             app('files'),
-            storage_path('framework/views/livewire'),
+            rtrim(config('view.compiled'), '/\\') . '/livewire',
         ) extends \Illuminate\View\Compilers\BladeCompiler {
             /**
              * Make this method public...

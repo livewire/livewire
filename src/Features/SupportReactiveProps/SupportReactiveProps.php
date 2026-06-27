@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportReactiveProps;
 use function Livewire\on;
 use function Livewire\after;
 use function Livewire\trigger;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\ComponentHook;
 
 class SupportReactiveProps extends ComponentHook
@@ -47,6 +48,82 @@ class SupportReactiveProps extends ComponentHook
                 $finish();
             }
         });
+    }
+
+    static function shouldSkipUpdate($snapshot, $calls): bool
+    {
+        $id = $snapshot['memo']['id'] ?? null;
+        $reactiveProps = $snapshot['memo']['props'] ?? [];
+
+        // Only applies to components with #[Reactive] properties...
+        if (empty($reactiveProps)) return false;
+
+        // Only if parent already rendered and stored pending params...
+        if (! isset(static::$pendingChildParams[$id])) return false;
+
+        // Don't skip if component also has wire:model bindings...
+        if (! empty($snapshot['memo']['bindings'] ?? [])) return false;
+
+        // Don't skip if there are real method calls (not just $commit)...
+        foreach ($calls as $call) {
+            if (($call['method'] ?? '') !== '$commit') return false;
+        }
+
+        $pendingParams = static::$pendingChildParams[$id];
+
+        foreach ($reactiveProps as $propName) {
+            $currentValue = $snapshot['data'][$propName] ?? null;
+            $newValue = $pendingParams[$propName] ?? null;
+
+            if (! static::valuesMatch($currentValue, $newValue)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static function valuesMatch($snapshotValue, $pendingValue): bool
+    {
+        if ($pendingValue instanceof Model) {
+            return static::modelMatchesSnapshot($snapshotValue, $pendingValue);
+        }
+
+        $snapshotJson = json_encode($snapshotValue);
+        $pendingJson = json_encode($pendingValue);
+
+        // If either side can't be encoded (NAN, INF, recursive refs, etc.),
+        // bail out and treat them as different so we don't accidentally skip.
+        if ($snapshotJson === false || $pendingJson === false) return false;
+
+        return crc32($snapshotJson) === crc32($pendingJson);
+    }
+
+    protected static function modelMatchesSnapshot($snapshotValue, Model $model): bool
+    {
+        // Dehydrated model format: [null, {class: '...', key: ..., s: 'mdl'}]
+        if (! is_array($snapshotValue)) return false;
+
+        $meta = $snapshotValue[1] ?? [];
+
+        if (($meta['s'] ?? null) !== 'mdl') return false;
+
+        $snapshotClass = $meta['class'] ?? null;
+
+        // Class may be stored under either the FQCN or the morph alias...
+        if ($snapshotClass !== get_class($model) && $snapshotClass !== $model->getMorphClass()) {
+            return false;
+        }
+
+        if (($meta['key'] ?? null) != $model->getKey()) return false;
+
+        // Catch all the ways the parent could have mutated the model this request:
+        // local attribute changes (isDirty), saves (wasChanged), and creates (wasRecentlyCreated).
+        if ($model->isDirty()) return false;
+        if ($model->wasChanged()) return false;
+        if ($model->wasRecentlyCreated) return false;
+
+        return true;
     }
 
     static function hasPassedInProps($id) {

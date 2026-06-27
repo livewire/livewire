@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportComputed;
 
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -9,6 +10,16 @@ use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        // The cache key for #[Computed(cache: true)] is derived from the
+        // component name, so cached values from previous test runs in the
+        // same process can poison the initial state of these tests.
+        Cache::flush();
+    }
+
     public function test_can_persist_computed_between_requests_and_bust_them()
     {
         Livewire::visit(new class extends Component {

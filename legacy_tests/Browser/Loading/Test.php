@@ -48,9 +48,7 @@ class Test extends TestCase
                 ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@button');
 
-                    $browser->pause(225);
-
-                    $browser->assertVisible('@show-w-delay');
+                    $browser->waitFor('@show-w-delay');
                 })
                 ->tap($this->assertInitialState())
                 ->waitForLivewire(function (Browser $browser) {

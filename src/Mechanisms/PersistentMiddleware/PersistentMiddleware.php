@@ -112,10 +112,11 @@ class PersistentMiddleware extends Mechanism
 
         $request = $this->makeFakeRequest();
 
+        // If no middleware found, this returns `[]`
         $middleware = $this->getApplicablePersistentMiddleware($request);
 
         // Only send through pipeline if there are middleware found
-        if (is_null($middleware)) return;
+        if (is_null($middleware) || $middleware === []) return;
 
         Utils::applyMiddleware($request, $middleware);
 
@@ -184,6 +185,7 @@ class PersistentMiddleware extends Mechanism
     {
         try {
             $route = app('router')->getRoutes()->match($request);
+            $route->setContainer(app());
             $request->setRouteResolver(fn() => $route);
         } catch (NotFoundHttpException $e){
             return null;

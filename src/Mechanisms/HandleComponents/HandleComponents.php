@@ -11,7 +11,10 @@ use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\MaxNestingDepthExceededException;
 use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Drawer\Utils;
+use Livewire\Features\SupportFormObjects\Form;
 use Illuminate\Support\Facades\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class HandleComponents extends Mechanism
 {
@@ -310,7 +313,12 @@ class HandleComponents extends Mechanism
 
     protected function dehydrate($target, $context, $path)
     {
-        if (Utils::isAPrimitive($target)) return $target;
+        if (Utils::isAPrimitive($target)) {
+            // Normalize negative zero (-0.0) to 0 to prevent checksum mismatches
+            if ($target === -0.0) return 0;
+
+            return $target;
+        }
 
         $synth = $this->propertySynth($target, $context, $path);
 
@@ -464,6 +472,13 @@ class HandleComponents extends Mechanism
 
     protected function updateProperties($component, $updates, $data, $context)
     {
+        // When the JS diff algorithm detects that all properties of a form object
+        // have changed, it consolidates them into a single update (e.g. {form: {title: '...', status: '...'}}).
+        // Form objects are special — they should never be fully replaced. Instead, decompose
+        // the consolidated update into individual property updates so each goes through
+        // the normal hydration path (which handles type casting for enums, etc.)...
+        $updates = $this->expandConsolidatedFormObjectUpdates($component, $updates);
+
         $finishes = [];
 
         foreach ($updates as $path => $value) {
@@ -478,6 +493,23 @@ class HandleComponents extends Mechanism
         foreach ($finishes as $finish) {
             $finish();
         }
+    }
+
+    protected function expandConsolidatedFormObjectUpdates($component, $updates)
+    {
+        $expanded = [];
+
+        foreach ($updates as $path => $value) {
+            if (is_array($value) && property_exists($component, $path) && $component->$path instanceof Form) {
+                foreach ($value as $key => $child) {
+                    $expanded["{$path}.{$key}"] = $child;
+                }
+            } else {
+                $expanded[$path] = $value;
+            }
+        }
+
+        return $expanded;
     }
 
     public function updateProperty($component, $path, $value, $context)
@@ -608,9 +640,16 @@ class HandleComponents extends Mechanism
             // If a value is being set to "null", do the same...
             if ($value === '' || $value === null) {
                 unset($component->$property);
-            } else {
-                throw $e;
+
+                return;
             }
+
+            // This is almost certainly a bot/scanner probing typed properties
+            // with wrong-type values. Abort with 419 directly so it never
+            // reaches the top-level catch (which would report it as a real bug).
+            if (config('app.debug')) throw $e;
+
+            abort(419);
         }
     }
 
@@ -639,7 +678,16 @@ class HandleComponents extends Mechanism
             $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $metadata, $idx);
 
             if ($earlyReturnCalled) {
-                $returns[] = $finish($earlyReturn);
+                $return = $finish($earlyReturn);
+
+                // File downloads are sent to the browser through the download effect, so we shouldn't add
+                // the response object as a return here. But we need to keep it's position in `returns`
+                // so we will just set it to `null` instead...
+                if ($return instanceof StreamedResponse || $return instanceof BinaryFileResponse) {
+                    $return = null;
+                }
+
+                $returns[] = $return;
 
                 continue;
             }
@@ -660,7 +708,16 @@ class HandleComponents extends Mechanism
             $return = wrap($root)->{$method}(...$params);
             if (config('app.debug')) trigger('profile', 'call'.$idx, $root->getId(), [$start, microtime(true)]);
 
-            $returns[] = $finish($return);
+            $return = $finish($return);
+
+            // File downloads are sent to the browser through the download effect, so we shouldn't add
+            // the response object as a return here. But we need to keep it's position in `returns`
+            // so we will just set it to `null` instead...
+            if ($return instanceof StreamedResponse || $return instanceof BinaryFileResponse) {
+                $return = null;
+            }
+
+            $returns[] = $return;
 
             // Support `Wire:click.renderless`...
             if ($metadata['renderless'] ?? false) {

@@ -18,6 +18,15 @@ class BrowserTest extends TestCase
             ;
         });
     }
+
+    public function test_accessing_parent_on_root_component_returns_undefined()
+    {
+        $this->browse(function ($browser) {
+            $this->visitLivewireComponent($browser, RootComponentWithParentAccess::class)
+                ->assertSeeIn('@output', 'undefined')
+            ;
+        });
+    }
 }
 
 class ParentCounter extends Component
@@ -48,6 +57,18 @@ class ChildCounter extends Component
         return <<<'HTML'
         <div>
             <button wire:click="$parent.increment()" dusk="button"></button>
+        </div>
+        HTML;
+    }
+}
+
+class RootComponentWithParentAccess extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <span x-text="typeof $wire.$parent" dusk="output"></span>
         </div>
         HTML;
     }

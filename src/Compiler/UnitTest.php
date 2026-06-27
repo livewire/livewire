@@ -156,6 +156,22 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('.nested { color: red; }', $viewContents);
     }
 
+    public function test_wont_extract_style_inside_verbatim()
+    {
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = SingleFileParser::parse($compiler, __DIR__ . '/Fixtures/sfc-component-with-style-in-verbatim.blade.php');
+
+        $styleContents = $parser->generateStyleContents();
+        $viewContents = $parser->generateViewContents();
+
+        // No style should be extracted — the only style tag is inside a @verbatim block
+        $this->assertNull($styleContents);
+
+        // The style tag should remain in the view portion
+        $this->assertStringContainsString('.example { color: red; }', $viewContents);
+    }
+
     public function test_wont_parse_scripts_inside_assets_or_script_directives()
     {
         $compiler = new Compiler(new CacheManager($this->cacheDir));
@@ -274,6 +290,50 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringNotContainsString('<div>{{ $message }}</div>', $scriptContents);
     }
 
+    public function test_mfc_script_wraps_in_export_function_even_without_imports()
+    {
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = MultiFileParser::parse($compiler, __DIR__ . '/Fixtures/mfc-component');
+
+        $scriptContents = $parser->generateScriptContents();
+
+        // Check that the script is wrapped in export function run() even without imports
+        $this->assertMatchesRegularExpression('/export function run\([^)]*\) \{/', $scriptContents);
+        $this->assertStringContainsString("console.log('Hello from script');", $scriptContents);
+
+        // Ensure no import statements are present
+        $this->assertStringNotContainsString('import', $scriptContents);
+    }
+
+    public function test_mfc_script_hoists_imports_and_wraps_in_export_function()
+    {
+        $compiler = new Compiler(new CacheManager($this->cacheDir));
+
+        $parser = MultiFileParser::parse($compiler, __DIR__ . '/Fixtures/mfc-component-with-imports');
+
+        $scriptContents = $parser->generateScriptContents();
+
+        // Check that imports are hoisted to the top
+        $this->assertStringContainsString("import { Alpine } from 'alpinejs'", $scriptContents);
+        $this->assertStringContainsString("import { debounce } from './utils'", $scriptContents);
+
+        // Check that the script is wrapped in export function run()
+        $this->assertMatchesRegularExpression('/export function run\([^)]*\) \{/', $scriptContents);
+        $this->assertStringContainsString("console.log('Component initialized');", $scriptContents);
+
+        // Ensure imports appear before the export function
+        $importPos = strpos($scriptContents, 'import');
+        $exportPos = strpos($scriptContents, 'export function run');
+        $this->assertLessThan($exportPos, $importPos, 'Imports should appear before export function');
+
+        // Ensure the function body contains the actual logic (not the imports)
+        preg_match('/export function run\([^)]*\) \{(.+)\}/s', $scriptContents, $matches);
+        $functionBody = $matches[1] ?? '';
+        $this->assertStringNotContainsString('import', $functionBody, 'Import statements should not be in function body');
+        $this->assertStringContainsString("console.log('Component initialized');", $functionBody);
+    }
+
     public function test_can_parse_placeholder_directive()
     {
         $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
@@ -310,6 +370,22 @@ class UnitTest extends \Tests\TestCase
         $class = $compiler->compile(__DIR__ . '/Fixtures/sfc-component.blade.php');
 
         $this->assertInstanceOf(Component::class, new $class);
+    }
+
+    public function test_generated_blade_view_does_not_render_stale_contents_after_being_rewritten_within_same_second()
+    {
+        $cacheManager = new CacheManager($this->cacheDir);
+
+        $sourcePath = $this->tempPath . '/component.blade.php';
+        $viewPath = $cacheManager->getViewPath($sourcePath);
+
+        $cacheManager->writeViewFile($sourcePath, '<div>First version</div>');
+
+        $this->assertSame('<div>First version</div>', view()->file($viewPath)->render());
+
+        $cacheManager->writeViewFile($sourcePath, '<div>Second version</div>');
+
+        $this->assertSame('<div>Second version</div>', view()->file($viewPath)->render());
     }
 
     public function test_compiler_will_recompile_if_source_file_is_older_than_compiled_file()
@@ -461,6 +537,98 @@ class UnitTest extends \Tests\TestCase
         $generatedClassContents = $parser->generateClassContents();
 
         $this->assertEquals($expectedOutput, $generatedClassContents);
+    }
+
+    #[DataProvider('commentedUseStatementProvider')]
+    public function test_commented_use_statements_are_not_injected_into_view_contents($classPortion, $shouldNotContain, $shouldContain)
+    {
+        $parser = new SingleFileParser(
+            path: '',
+            contents: '',
+            scriptPortion: null,
+            stylePortion: null,
+            globalStylePortion: null,
+            classPortion: $classPortion,
+            placeholderPortion: null,
+            viewPortion: '<div></div>',
+        );
+
+        $viewContents = $parser->generateViewContents();
+
+        foreach ($shouldNotContain as $needle) {
+            $this->assertStringNotContainsString($needle, $viewContents);
+        }
+
+        foreach ($shouldContain as $needle) {
+            $this->assertStringContainsString($needle, $viewContents);
+        }
+    }
+
+    public static function commentedUseStatementProvider()
+    {
+        return [
+            'single-line // comment with use statement' => [
+                <<<'EOT'
+                <?php
+                // use App\Actions\One\MyAction;
+                use App\Actions\Two\MyAction;
+                use Livewire\Component;
+
+                new class extends Component {
+                };
+                ?>
+                EOT,
+                ['use App\Actions\One\MyAction;'],
+                ['use App\Actions\Two\MyAction;', 'use Livewire\Component;'],
+            ],
+            'multi-line /* */ comment with use statement' => [
+                <<<'EOT'
+                <?php
+                /* use App\Actions\One\MyAction; */
+                use App\Actions\Two\MyAction;
+                use Livewire\Component;
+
+                new class extends Component {
+                };
+                ?>
+                EOT,
+                ['use App\Actions\One\MyAction;'],
+                ['use App\Actions\Two\MyAction;', 'use Livewire\Component;'],
+            ],
+            'docblock /** */ comment with use statement' => [
+                <<<'EOT'
+                <?php
+                /**
+                 * use App\Actions\One\MyAction;
+                 */
+                use App\Actions\Two\MyAction;
+                use Livewire\Component;
+
+                new class extends Component {
+                };
+                ?>
+                EOT,
+                ['use App\Actions\One\MyAction;'],
+                ['use App\Actions\Two\MyAction;', 'use Livewire\Component;'],
+            ],
+            'multi-line block comment spanning multiple use statements' => [
+                <<<'EOT'
+                <?php
+                /*
+                use App\Actions\One\MyAction;
+                use App\Actions\Three\AnotherAction;
+                */
+                use App\Actions\Two\MyAction;
+                use Livewire\Component;
+
+                new class extends Component {
+                };
+                ?>
+                EOT,
+                ['use App\Actions\One\MyAction;', 'use App\Actions\Three\AnotherAction;'],
+                ['use App\Actions\Two\MyAction;', 'use Livewire\Component;'],
+            ],
+        ];
     }
 
     public static function classReturnProvider()
@@ -654,6 +822,106 @@ class UnitTest extends \Tests\TestCase
                             protected $table = 'users';
                         };
                     }
+                };
+
+                EOT,
+            ],
+            'single line comment with new' => [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                // new
+                new class extends Component {
+                    //
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                // new
+                return new class extends Component {
+                    //
+                };
+
+                EOT,
+            ],
+            'multi line comment with new' => [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                /* new */
+                new class extends Component {
+                    //
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                /* new */
+                return new class extends Component {
+                    //
+                };
+
+                EOT,
+            ],
+            'docblock comment with new' => [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                /**
+                 * new
+                 */
+                new class extends Component {
+                    //
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                /**
+                 * new
+                 */
+                return new class extends Component {
+                    //
+                };
+
+                EOT,
+            ],
+            'todo comment with new keyword' => [
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                // TODO: new feature coming soon
+                new class extends Component {
+                    //
+                };
+                ?>
+                EOT,
+                <<<'EOT'
+                <?php
+
+                use Livewire\Component;
+
+                // TODO: new feature coming soon
+                return new class extends Component {
+                    //
                 };
 
                 EOT,

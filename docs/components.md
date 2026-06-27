@@ -45,6 +45,16 @@ new class extends Component {
 > ],
 > ```
 
+> [!tip] Prefer v3 conventions?
+> If you prefer class-based components from v3, you can restore the previous defaults with two config lines in `config/livewire.php`:
+>
+> ```php
+> 'make_command' => [
+>     'type' => 'class',
+>     'emoji' => false,
+> ],
+> ```
+
 ### Creating page components
 
 When creating components that will be used as full pages, use the `pages::` namespace to organize them in a dedicated directory:
@@ -78,6 +88,21 @@ resources/views/components/post/⚡create/
 ├── create.global.css   # Global styles (optional)
 └── create.test.php     # Pest test (optional, with --test flag)
 ```
+
+### Command options
+
+The `make:livewire` command accepts the following options:
+
+| Option | Description |
+|--------|-------------|
+| `--sfc` | Create a single-file component (default) |
+| `--mfc` | Create a multi-file component |
+| `--class` | Create a class-based component |
+| `--type=sfc\|mfc\|class` | Set the component type explicitly |
+| `--emoji=true\|false` | Override the config emoji setting for this command |
+| `--test` | Include a Pest test file |
+| `--js` | Include a JavaScript file (multi-file components only) |
+| `--css` | Include CSS files (multi-file components only) |
 
 ### Converting between formats
 
@@ -148,6 +173,20 @@ For namespaced components—like `pages::`—use the namespace prefix:
 ```blade
 <livewire:pages::post.create />
 ```
+
+### How file paths map to component names
+
+Regardless of which format you use (single-file, multi-file, or class-based), the component name you use in Blade tags and routes is always the same. The ⚡ emoji prefix and file structure are stripped away automatically:
+
+| Format | File path | Component name |
+|--------|-----------|---------------|
+| Single-file | `resources/views/components/post/⚡create.blade.php` | `post.create` |
+| Multi-file | `resources/views/components/post/⚡create/create.php` | `post.create` |
+| Class-based | `app/Livewire/Post/Create.php` | `post.create` |
+| Single-file (namespaced) | `resources/views/pages/post/⚡create.blade.php` | `pages::post.create` |
+| Multi-file (namespaced) | `resources/views/pages/post/⚡create/create.php` | `pages::post.create` |
+
+This means you can switch between formats without changing any of your Blade templates or routes.
 
 ### Passing props
 

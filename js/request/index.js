@@ -15,6 +15,11 @@ let interceptors = new InterceptorRegistry
 let messageBus = new MessageBus()
 let actionInterceptors = []
 let partitionInterceptors = []
+let sessionExpired = false
+
+export function sessionIsExpired() {
+    return sessionExpired
+}
 
 export function setNextActionOrigin(origin) {
     outstandingActionOrigin = origin
@@ -372,6 +377,10 @@ function sendMessages() {
                 if (preventDefault) return
 
                 if (response.status === 419) {
+                    if (sessionExpired) return
+
+                    sessionExpired = true
+
                     confirm(
                         'This page has expired.\nWould you like to refresh the page?'
                     ) && window.location.reload()
@@ -411,6 +420,19 @@ function sendMessages() {
                 request.messages.forEach(message => {
                     messageResponsePayloads.forEach(payload => {
                         if (message.isCancelled()) return
+
+                        // Server skipped this child (unchanged reactive props)...
+                        if (payload.skip) {
+                            if (payload.id === message.component.id) {
+                                message.responsePayload = payload
+                                message.markSkipped()
+                                message.invokeOnSkipped()
+                                message.resolveActionPromises([], [])
+                                message.invokeOnFinish()
+                            }
+
+                            return
+                        }
 
                         let { snapshot: snapshotEncoded, effects } = payload
                         let snapshot = JSON.parse(snapshotEncoded)
@@ -509,7 +531,7 @@ async function sendRequest(request, handlers) {
 
     /**
      * Sometimes a response will be prepended with html to render a dump, so we
-     * will seperate the dump html from Livewire's JSON response content and
+     * will separate the dump html from Livewire's JSON response content and
      * render the dump in a modal and allow Livewire to continue with the
      * request.
      */
@@ -622,7 +644,7 @@ function getDestination(uri, response) {
 
     // If there was no redirect triggered by the URL that was fetched...
     if ((destination.pathname + destination.search) === (finalDestination.pathname + finalDestination.search)) {
-        // Then let's cary over any "hash" entries on the URL.
+        // Then let's carry over any "hash" entries on the URL.
         // We have to do this because hashes aren't sent to
         // the server by "fetch", so it needs to get added
         finalDestination.hash = destination.hash

@@ -247,6 +247,26 @@ class UnitTest extends \Tests\TestCase
             $this->assertEquals(['data-foo' => 'bar'], $component->instance()->getHtmlAttributes());
         });
     }
+
+    public function test_negative_zero_float_does_not_cause_checksum_corruption()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $value;
+            public $refreshed = false;
+
+            public function mount()
+            {
+                $this->value = -0.0;
+            }
+
+            public function refresh()
+            {
+                $this->refreshed = true;
+            }
+        })
+        ->call('refresh')
+        ->assertSetStrict('refreshed', true);
+    }
 }
 
 class BasicComponent extends TestComponent

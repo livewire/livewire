@@ -1,9 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
+use Livewire\Mechanisms\HandleRequests\RequireLivewireHeaders;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 use Tests\TestComponent;
@@ -114,6 +117,40 @@ class UnitTest extends TestCase
         $response->assertStatus(419);
     }
 
+    public function test_bad_checksum_exception_is_not_reported_when_debug_is_disabled(): void
+    {
+        config()->set('app.debug', false);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (CorruptComponentPayloadException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new CorruptComponentPayloadException);
+
+        $this->assertEmpty($reported);
+    }
+
+    public function test_bad_checksum_exception_is_reported_when_debug_is_enabled(): void
+    {
+        config()->set('app.debug', true);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (CorruptComponentPayloadException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new CorruptComponentPayloadException);
+
+        $this->assertCount(1, $reported);
+    }
+
     public function test_type_mismatched_update_value_returns_419(): void
     {
         // Disable debug mode to test production HTTP responses (404/419)...
@@ -132,6 +169,62 @@ class UnitTest extends TestCase
             ]]);
 
         $response->assertStatus(419);
+    }
+
+    public function test_tampered_property_type_is_not_reported(): void
+    {
+        config()->set('app.debug', false);
+
+        $reported = [];
+        app(\Illuminate\Contracts\Debug\ExceptionHandler::class)
+            ->reportable(function (\Throwable $e) use (&$reported) {
+                $reported[] = $e;
+                return false;
+            });
+
+        $testable = Livewire::test(new class extends TestComponent {
+            public array $items = [];
+        });
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => json_encode($testable->snapshot), 'updates' => ['items' => 'not_an_array'], 'calls' => []],
+            ]]);
+
+        $response->assertStatus(419);
+        $this->assertEmpty($reported, 'Scanner-tampered property assignment should not be reported.');
+    }
+
+    public function test_legitimate_typeerror_is_reported(): void
+    {
+        config()->set('app.debug', false);
+
+        $reported = [];
+        app(\Illuminate\Contracts\Debug\ExceptionHandler::class)
+            ->reportable(function (\Throwable $e) use (&$reported) {
+                $reported[] = $e;
+                return false;
+            });
+
+        $testable = Livewire::test(new class extends TestComponent {
+            public function bug(): int
+            {
+                return 'not_an_int';
+            }
+        });
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                [
+                    'snapshot' => json_encode($testable->snapshot),
+                    'updates' => [],
+                    'calls' => [['method' => 'bug', 'params' => [], 'metadata' => []]],
+                ],
+            ]]);
+
+        $response->assertStatus(419);
+        $this->assertNotEmpty($reported, 'Legitimate TypeError from component method body should be reported.');
+        $this->assertInstanceOf(\TypeError::class, $reported[0]);
     }
 
     public function test_valid_request_returns_200(): void
@@ -263,6 +356,40 @@ class UnitTest extends TestCase
                     ['method' => 'loadItems', 'params' => []],
                 ]],
             ]]);
+    }
+
+    public function test_require_livewire_headers_middleware_is_not_duplicated_on_update(): void
+    {
+        $beforeActionRoute = collect(Route::getRoutes()->getRoutes())->first(function ($route) {
+            return $route->getName() === 'default-livewire.update';
+        });
+
+        $beforeActionCount = count(
+            array_filter($beforeActionRoute->middleware(), fn ($m) => $m === RequireLivewireHeaders::class)
+        );
+
+        $this->assertEquals(1, $beforeActionCount);
+        
+        $testable = Livewire::test(new class extends TestComponent {});
+        $encodedSnapshot = json_encode($testable->snapshot);
+
+        // Livewire's update route should still be matched, not the catch-all
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => $encodedSnapshot, 'updates' => [], 'calls' => []],
+            ]]);
+
+        $response->assertOk();
+
+        $afterActionRoute = collect(Route::getRoutes()->getRoutes())->first(function ($route) {
+            return $route->getName() === 'default-livewire.update';
+        });
+
+        $afterActionCount = count(
+            array_filter($afterActionRoute->middleware(), fn ($m) => $m === RequireLivewireHeaders::class)
+        );
+
+        $this->assertEquals(1, $afterActionCount);
     }
 
     public function test_get_update_uri_works_when_update_route_property_is_null(): void

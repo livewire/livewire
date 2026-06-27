@@ -1,3 +1,5 @@
+import { replaceNoncesInHtml, cloneScriptTag } from '@/utils'
+
 let oldBodyScriptTagHashes = []
 
 let attributesExemptFromScriptTagHashing = [
@@ -7,6 +9,10 @@ let attributesExemptFromScriptTagHashing = [
 ]
 
 export function swapCurrentPageWithNewHtml(html, andThen) {
+    // Rewrite nonces in the fetched HTML to match the original page's nonce
+    // before parsing, so DOMParser doesn't trigger CSP violations...
+    html = replaceNoncesInHtml(html)
+
     let newDocument = (new DOMParser()).parseFromString(html, "text/html")
     let newHtml = newDocument.documentElement
     let newBody = document.adoptNode(newDocument.body)
@@ -78,7 +84,12 @@ function replaceHtmlAttributes(newHtmlElement) {
 
 function mergeNewHead(newHead) {
     let children = Array.from(document.head.children)
-    let headChildrenHtmlLookup = children.map(i => i.outerHTML)
+
+    // Compare head assets ignoring nonces so that identical assets
+    // with different nonces aren't treated as "new"...
+    let headChildrenHtmlLookup = children.map(i =>
+        ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing)
+    )
 
     // Only add scripts and styles that aren't already loaded on the page.
     let garbageCollector = document.createDocumentFragment()
@@ -89,7 +100,9 @@ function mergeNewHead(newHead) {
 
     for (let child of Array.from(newHead.children)) {
         if (isAsset(child)) {
-            if (! headChildrenHtmlLookup.includes(child.outerHTML)) {
+            let childHtml = ignoreAttributes(child.outerHTML, attributesExemptFromScriptTagHashing)
+
+            if (! headChildrenHtmlLookup.includes(childHtml)) {
                 if (isTracked(child)) {
                     if (ifTheQueryStringChangedSinceLastRequest(child, children)) {
                         setTimeout(() => window.location.reload())
@@ -160,19 +173,6 @@ async function injectScriptTagAndWaitForItToFullyLoad(script) {
 
         document.head.appendChild(script)
     })
-}
-
-function cloneScriptTag(el) {
-    let script = document.createElement('script')
-
-    script.textContent = el.textContent
-    script.async = el.async
-
-    for (let attr of el.attributes) {
-        script.setAttribute(attr.name, attr.value)
-    }
-
-    return script
 }
 
 function isTracked(el) {

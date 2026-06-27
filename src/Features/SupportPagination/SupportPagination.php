@@ -80,7 +80,13 @@ class SupportPagination extends ComponentHook
         Paginator::currentPageResolver(function ($pageName) {
             $this->ensurePaginatorIsInitialized($pageName);
 
-            return (int) $this->component->paginators[$pageName];
+            $page = $this->component->paginators[$pageName];
+
+            if (filter_var($page, FILTER_VALIDATE_INT) !== false && (int) $page >= 1) {
+                return $this->component->paginators[$pageName] = (int) $page;
+            }
+
+            return $this->component->paginators[$pageName] = 1;
         });
     }
 
