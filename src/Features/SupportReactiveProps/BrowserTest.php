@@ -819,20 +819,6 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.successCount', 1)
         ;
     }
-}
-
-class ReactivePropsBrowserTestPost extends Model
-{
-    use Sushi;
-
-    protected $guarded = [];
-
-    public function getRows() {
-        return [
-            ['id' => 1, 'title' => 'Post #1'],
-            ['id' => 2, 'title' => 'Post #2'],
-        ];
-    }
 
     public function test_rapid_model_live_updates_do_not_throw_cannot_mutate_reactive_prop_exception()
     {
@@ -1002,5 +988,19 @@ class ReactivePropsBrowserTestPost extends Model
             ->assertSeeIn('@child.query-order', 'ab')
             ->assertMissing('#livewire-error')
         ;
+    }
+}
+
+class ReactivePropsBrowserTestPost extends Model
+{
+    use Sushi;
+
+    protected $guarded = [];
+
+    public function getRows() {
+        return [
+            ['id' => 1, 'title' => 'Post #1'],
+            ['id' => 2, 'title' => 'Post #2'],
+        ];
     }
 }

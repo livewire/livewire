@@ -66,19 +66,23 @@ export function coordinateNetworkInteractions(messageBus) {
             }
 
             // Wire:model.live:
-            // - If both incoming and outgoing requests are model.live, let them run in parallel...
-            if (Array.from(message.actions).every(action => action.metadata.type === 'model.live')) {
-                if (action.metadata.type === 'model.live') {
-                    let incomingHasBoundChildren = componentHasBoundChildren(action.component)
+            // - Normally we let overlapping model.live requests run in parallel so that typing
+            //   quickly into an input doesn't have to wait for each keystroke's request to finish...
+            // - The exception is when a component passes reactive/modelable data down to children.
+            //   Those children get bundled into the parent's request along with a snapshot of the
+            //   parent's state. Two parallel requests would each bundle the *same* (now stale)
+            //   parent snapshot, so the second commit can clobber fresh state or throw
+            //   "Cannot mutate reactive prop". In that case we skip the parallel fast-path and fall
+            //   through to defer the incoming action until the in-flight one finishes — that way it
+            //   bundles a fresh parent snapshot...
+            let bothAreModelLive = action.metadata.type === 'model.live'
+                && Array.from(message.actions).every(action => action.metadata.type === 'model.live')
 
-                    let outgoingHasBoundChildren = Array.from(message.actions).some(activeAction => {
-                        return componentHasBoundChildren(activeAction.component)
-                    })
+            if (bothAreModelLive) {
+                let incomingHasBoundChildren = componentHasBoundChildren(action.component)
+                let outgoingHasBoundChildren = Array.from(message.actions).some(activeAction => componentHasBoundChildren(activeAction.component))
 
-                    if (! incomingHasBoundChildren && ! outgoingHasBoundChildren) {
-                        return
-                    }
-                }
+                if (! incomingHasBoundChildren && ! outgoingHasBoundChildren) return
             }
 
             action.defer()
@@ -90,6 +94,9 @@ export function coordinateNetworkInteractions(messageBus) {
     })
 }
 
+// Does this component have any child components bound to it via reactive/modelable props?
+// Those children get bundled into the component's network requests, which is what makes
+// overlapping model.live requests unsafe (see the model.live note above)...
 function componentHasBoundChildren(component) {
     let hasBoundChildren = false
 
