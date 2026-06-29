@@ -119,6 +119,82 @@ class UnitTest extends TestCase
         File::delete($viewPath);
     }
 
+    public function test_sfc_island_can_use_php_imports_from_parent_view()
+    {
+        // Create a temporary view file to simulate an SFC's compiled view...
+        $viewPath = app('livewire.compiler')->cacheManager->cacheDirectory . '/test-sfc-island-imports.blade.php';
+        File::ensureDirectoryExists(dirname($viewPath));
+        File::put($viewPath, <<<'HTML'
+        <?php
+        use Carbon\Carbon;
+        ?>
+
+        <div>
+            @island(name: 'timestamp', with: ['timestamp' => Carbon::parse('2024-01-01')->timestamp])
+                <div>year: {{ Carbon::createFromTimestamp($timestamp)->year }}</div>
+            @endisland
+        </div>
+        HTML);
+
+        try {
+            Livewire::test(new class($viewPath) extends \Livewire\Component {
+                protected static string $viewPath;
+
+                public function __construct($viewPath = null)
+                {
+                    if ($viewPath) {
+                        static::$viewPath = $viewPath;
+                    }
+                }
+
+                // SFCs use view() instead of render()...
+                protected function view($data = [])
+                {
+                    return app('view')->file(static::$viewPath, $data);
+                }
+            }, ['viewPath' => $viewPath])->assertSee('year: 2024');
+        } finally {
+            File::delete($viewPath);
+        }
+    }
+
+    public function test_sfc_island_can_use_blade_use_imports_from_parent_view()
+    {
+        // Create a temporary view file to simulate an SFC's compiled view...
+        $viewPath = app('livewire.compiler')->cacheManager->cacheDirectory . '/test-sfc-island-blade-use-imports.blade.php';
+        File::ensureDirectoryExists(dirname($viewPath));
+        File::put($viewPath, <<<'HTML'
+        @use('Carbon\Carbon')
+
+        <div>
+            @island(name: 'timestamp', with: ['timestamp' => Carbon::parse('2024-01-01')->timestamp])
+                <div>year: {{ Carbon::createFromTimestamp($timestamp)->year }}</div>
+            @endisland
+        </div>
+        HTML);
+
+        try {
+            Livewire::test(new class($viewPath) extends \Livewire\Component {
+                protected static string $viewPath;
+
+                public function __construct($viewPath = null)
+                {
+                    if ($viewPath) {
+                        static::$viewPath = $viewPath;
+                    }
+                }
+
+                // SFCs use view() instead of render()...
+                protected function view($data = [])
+                {
+                    return app('view')->file(static::$viewPath, $data);
+                }
+            }, ['viewPath' => $viewPath])->assertSee('year: 2024');
+        } finally {
+            File::delete($viewPath);
+        }
+    }
+
     public function test_render_island_directives()
     {
         Livewire::test(new class extends \Livewire\Component {

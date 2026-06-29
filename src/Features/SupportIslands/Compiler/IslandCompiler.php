@@ -98,6 +98,9 @@ class IslandCompiler
         $scopeProviderCode = $this->generateScopeProviderCode($expression);
         $innerContent = $scopeProviderCode . $innerContent;
 
+        // Carry SFC import aliases into separately compiled island views...
+        $innerContent = $this->injectImportsFromCompiledView($innerContent);
+
         // Ensure the cached directory exists...
         File::ensureDirectoryExists(dirname($cachedPath), 0777);
 
@@ -107,6 +110,56 @@ class IslandCompiler
         app('livewire.compiler')->cacheManager->prepareGeneratedFileForCompilation($cachedPath);
 
         return $output;
+    }
+
+    protected function injectImportsFromCompiledView(string $contents): string
+    {
+        $imports = $this->extractImportsFromCompiledView();
+
+        if (! $imports) {
+            return $contents;
+        }
+
+        return $imports . "\n\n" . $contents;
+    }
+
+    protected function extractImportsFromCompiledView(): string
+    {
+        // Compile only the leading contents so existing Blade handling for
+        // directives like `@use(...)` has already been applied before we copy
+        // import blocks into the extracted island view.
+        $compiledPrefix = app('blade.compiler')->compileString(
+            explode('@island', $this->contents, 2)[0]
+        );
+
+        return $this->extractLeadingImportBlocks($compiledPrefix);
+    }
+
+    protected function extractLeadingImportBlocks(string $contents): string
+    {
+        $imports = [];
+
+        while (preg_match('/\A\s*<\?php(.*?)\?>/s', $contents, $matches)) {
+            if (! $this->phpBlockContainsOnlyImports($matches[1])) {
+                break;
+            }
+
+            $imports[] = trim($matches[0]);
+            $contents = substr($contents, strlen($matches[0]));
+        }
+
+        return implode("\n", $imports);
+    }
+
+    protected function phpBlockContainsOnlyImports(string $contents): bool
+    {
+        $withoutCommentsOrUses = preg_replace(
+            '/(?:\/\/[^\n]*|\/\*.*?\*\/)|\buse\s+(?:function\s+|const\s+)?[^;]+;/s',
+            '',
+            $contents,
+        );
+
+        return trim($withoutCommentsOrUses) === '';
     }
 
     protected function generateScopeProviderCode(string $expression): string
