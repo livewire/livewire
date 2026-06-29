@@ -6,6 +6,7 @@ use Attribute;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Arr;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+use Livewire\ImplicitlyBoundMethod;
 use UnitEnum;
 
 use function Illuminate\Support\enum_value;
@@ -31,10 +32,20 @@ class BaseAuthorize extends LivewireAttribute
 
         $arguments = Arr::wrap($this->argument);
 
+        // Resolve method dependencies lazily, then reuse them for multi-argument authorization checks...
+        $methodDependencies = null;
+        $resolveMethodDependencies = function () use (&$methodDependencies, $parameters): array {
+            return $methodDependencies ??= ImplicitlyBoundMethod::resolveMethodDependencies(
+                app(),
+                [$this->component, $this->getName()],
+                $parameters,
+            );
+        };
+
         // Resolve each argument (prioritize method parameters first, then component properties)
         $resolved = [];
         foreach ($arguments as $arg) {
-            $resolved[] = $this->resolveArgument($arg, $parameters);
+            $resolved[] = $this->resolveArgument($arg, $parameters, $resolveMethodDependencies);
         }
 
         $this->authorize($this->ability, $resolved);
@@ -43,7 +54,7 @@ class BaseAuthorize extends LivewireAttribute
     /**
      * Resolve a single argument.
      */
-    protected function resolveArgument(string $arg, array $parameters): mixed
+    protected function resolveArgument(string $arg, array $parameters, \Closure $resolveMethodDependencies): mixed
     {
         // Action that does not require a model, for example a 'create' action...
         if (class_exists($arg)) {
@@ -57,27 +68,9 @@ class BaseAuthorize extends LivewireAttribute
         );
 
         if ($methodArgument instanceof \ReflectionParameter) {
-            $routeBinding = null;
+            $methodDependencies = $resolveMethodDependencies();
 
-            // parameter keys can be a string if user pass named argument to be resolved
-            // e.g wire:click="$dispatch('edit-post', { post: '2' })"
-            if (isset($parameters[$arg])) {
-                $routeBinding = $parameters[$arg];
-            }
-
-            // parameter keys can be a numeric if user only pass an id to be resolved
-            // e.g wire:click="editPost('2')"
-            elseif (isset($parameters[$methodArgument->getPosition()])) {
-                $routeBinding = $parameters[$methodArgument->getPosition()];
-            }
-
-            $model = app($methodArgument->getType()->getName())->resolveRouteBinding($routeBinding);
-
-            if (! $model) {
-                throw (new \Illuminate\Database\Eloquent\ModelNotFoundException)->setModel($methodArgument->getType()->getName());
-            }
-
-            return $model;
+            return $methodDependencies['named'][$arg];
         }
 
         // Fall back to component property

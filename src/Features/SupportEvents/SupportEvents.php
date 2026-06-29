@@ -9,7 +9,7 @@ use Livewire\Features\SupportAttributes\AttributeLevel;
 use Livewire\ComponentHook;
 use Livewire\Exceptions\EventHandlerDoesNotExist;
 use Livewire\Features\SupportAuthorization\BaseAuthorize;
-use Livewire\Mechanisms\HandleComponents\BaseRenderless;
+use Livewire\Features\SupportRenderless\BaseRenderless;
 
 class SupportEvents extends ComponentHook
 {

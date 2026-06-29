@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportAuthorization;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as AuthUser;
+use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Authorize;
@@ -181,6 +182,33 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_can_authorize_policy_with_positional_model_id_argument()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[Authorize('edit', 'post')]
+                public function editPost(AuthorizationPost $post) : bool
+                {
+                    return true;
+                }
+            })
+            ->call('editPost', 1)
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[Authorize('edit', 'post')]
+                public function editPost(AuthorizationPost $post) : bool
+                {
+                    return true;
+                }
+            })
+            ->call('editPost', 1)
+            ->assertForbidden();
+    }
+
     public function test_can_authorize_policy_with_model_id_argument()
     {
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
@@ -202,6 +230,60 @@ class UnitTest extends TestCase
                 public function editPost(AuthorizationPost $post) : bool
                 {
                     return true;
+                }
+            })
+            ->call('editPost', post: 1)
+            ->assertForbidden();
+    }
+
+    public function test_can_authorize_policy_with_dependency_injection_and_positional_model_id_argument()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[Authorize('edit', 'post')]
+                public function editPost(UrlGenerator $generator, AuthorizationPost $post) : bool
+                {
+                    return $generator->to('/some-url') !== '';
+                }
+            })
+            ->call('editPost', 1)
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[Authorize('edit', 'post')]
+                public function editPost(UrlGenerator $generator, AuthorizationPost $post) : bool
+                {
+                    return $generator->to('/some-url') !== '';
+                }
+            })
+            ->call('editPost', 1)
+            ->assertForbidden();
+    }
+
+    public function test_can_authorize_policy_with_dependency_injection_and_named_model_id_argument()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[Authorize('edit', 'post')]
+                public function editPost(UrlGenerator $generator, AuthorizationPost $post) : bool
+                {
+                    return $generator->to('/some-url') !== '';
+                }
+            })
+            ->call('editPost', post: 1)
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[Authorize('edit', 'post')]
+                public function editPost(UrlGenerator $generator, AuthorizationPost $post) : bool
+                {
+                    return $generator->to('/some-url') !== '';
                 }
             })
             ->call('editPost', post: 1)
