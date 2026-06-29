@@ -476,11 +476,11 @@ class UnitTest extends \Tests\TestCase
         \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::$disableBackButtonCache = false;
 
         ob_start();
-        $this->get($photo->temporaryUrl())->sendContent();
+        $response = $this->get($photo->temporaryUrl())->sendContent();
         $rawFileContents = ob_get_clean();
 
         $this->assertEquals($file->get(), $rawFileContents);
-
+        $this->assertEquals('attachment; filename=avatar.jpg', $response->headers->get('content-disposition'));
         $this->assertTrue($photo->isPreviewable());
     }
 
@@ -532,10 +532,12 @@ class UnitTest extends \Tests\TestCase
         \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::$disableBackButtonCache = false;
 
         ob_start();
-        $this->get($photo->temporaryUrl())->sendContent();
+        $response = $this->get($photo->temporaryUrl());
+        $response->sendContent();
         $rawFileContents = ob_get_clean();
 
         $this->assertEquals($file->get(), $rawFileContents);
+        $this->assertEquals('attachment; filename=avatar.jpg', $response->headers->get('content-disposition'));
 
         $this->assertTrue($photo->isPreviewable());
     }
@@ -623,10 +625,12 @@ class UnitTest extends \Tests\TestCase
         // When testing, rather than trying to hit an s3 server, we just serve
         // the local driver preview URL.
         ob_start();
-        $this->get($photo->temporaryUrl())->sendContent();
+        $response = $this->get($photo->temporaryUrl());
+        $response->sendContent();
         $rawFileContents = ob_get_clean();
 
         $this->assertEquals($file->get(), $rawFileContents);
+        $this->assertEquals('attachment; filename=avatar.jpg', $response->headers->get('content-disposition'));
     }
 
     public function test_removing_first_item_from_array_of_temporary_uploaded_files_serializes_correctly()
