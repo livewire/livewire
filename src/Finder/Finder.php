@@ -393,9 +393,9 @@ class Finder
         }
 
         // Light touch check: Look for the pattern that indicates an SFC
-        // Pattern: <?php followed by 'new' and 'class' (with potential attributes/newlines between)
+        // Pattern: <?php followed by 'new class' (with potential attributes/newlines between)
         // This distinguishes SFCs from regular Blade views
-        return preg_match('/\<\?php.*new\s+.*class/s', $contents) === 1;
+        return preg_match('/\<\?php.*\bnew\s+(?:#\[[^\]]*\]\s*)*class\b/s', $contents) === 1;
     }
 
     protected function hasValidMultiFileComponentSource(string $dir, string $fileBaseName): bool
