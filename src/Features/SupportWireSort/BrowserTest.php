@@ -116,6 +116,79 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@result', 'item:item-1,position:2');
     }
 
+    public function test_wire_sort_item_id_is_passed_for_lazy_child_components()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $result = '';
+
+                public function sortItem($item, $position)
+                {
+                    $this->result = "item:{$item},position:{$position}";
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <ul dusk="sortable" wire:sort="sortItem">
+                            <livewire:child wire:key="item-1" wire:sort:item="item-1" lazy>
+                                Item 1
+                            </livewire:child>
+
+                            <livewire:child wire:key="item-2" wire:sort:item="item-2" lazy>
+                                Item 2
+                            </livewire:child>
+                        </ul>
+
+                        <div dusk="result">{{ $result }}</div>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public function placeholder()
+                {
+                    return <<<'HTML'
+                    <li>Loading...</li>
+                    HTML;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <li {{ $attributes }}>
+                        Child {{ $slot }}
+                    </li>
+                    HTML;
+                }
+            },
+        ])
+        ->waitForText('Child Item 2')
+        ->tap(function ($b) {
+            $b->script(<<<'JS'
+                let el = document.querySelector('[dusk="sortable"]')
+                let item = el.querySelector('[wire\\:sort\\:item="item-2"]')
+
+                el.insertBefore(item, el.firstElementChild)
+
+                let key = Object.keys(el).find(k => k.startsWith('Sortable'))
+                let instance = el[key]
+
+                instance.options.onSort({
+                    item: item,
+                    from: el,
+                    to: el,
+                    target: el,
+                    newIndex: 0,
+                    oldIndex: 1,
+                })
+            JS);
+        })
+        ->waitForTextIn('@result', 'item:item-2,position:0')
+        ->assertSeeIn('@result', 'item:item-2,position:0');
+    }
+
     public function test_wire_sort_works_without_sort_id()
     {
         Livewire::visit(new class extends Component {
