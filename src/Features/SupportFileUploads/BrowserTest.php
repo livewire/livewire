@@ -273,6 +273,50 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_removing_a_conditionally_rendered_file_input_does_not_accumulate_component_cleanups()
+    {
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+
+            public $showUpload = false;
+
+            function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="$toggle('showUpload')" dusk="toggle">Toggle</button>
+
+                    @if ($showUpload)
+                        <input type="file" wire:model="photo" dusk="upload">
+                    @endif
+                </div>
+                HTML;
+            }
+        })
+        // One full mount/teardown cycle so any one-time registrations have happened...
+        ->waitForLivewire()->click('@toggle')
+        ->waitForLivewire()->click('@toggle')
+        ->tap(function ($b) use (&$cleanupsAfterFirstCycle) {
+            $cleanupsAfterFirstCycle = $b->script('return window.Livewire.all()[0].cleanups.length')[0];
+        })
+        ->waitForLivewire()->click('@toggle')
+        ->waitForLivewire()->click('@toggle')
+        ->waitForLivewire()->click('@toggle')
+        ->waitForLivewire()->click('@toggle')
+        ->tap(function ($b) use (&$cleanupsAfterFirstCycle) {
+            $cleanupsAfterThreeMoreCycles = $b->script('return window.Livewire.all()[0].cleanups.length')[0];
+
+            // Before the fix, every mount/teardown of the file input left a component-lifetime
+            // cleanup behind (its $watch closure), stranding the input's detached DOM subtree...
+            $this->assertSame(
+                $cleanupsAfterFirstCycle,
+                $cleanupsAfterThreeMoreCycles,
+                'Tearing down a wire:model file input leaked a component-lifetime cleanup per cycle',
+            );
+        })
+        ;
+    }
+
     public function test_finish_upload_rejects_forged_unsigned_paths()
     {
         Storage::persistentFake('tmp-for-tests');
