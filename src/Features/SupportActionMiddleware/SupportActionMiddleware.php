@@ -25,7 +25,7 @@ class SupportActionMiddleware extends ComponentHook
         });
     }
 
-    static function hasMiddlewareAttribute($component, $method)
+    protected static function hasMiddlewareAttribute($component, $method)
     {
         return $component->getAttributes()
             ->filter(fn ($attr) => $attr instanceof BaseMiddleware)
