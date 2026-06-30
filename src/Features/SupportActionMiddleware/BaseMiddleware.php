@@ -4,20 +4,15 @@ namespace Livewire\Features\SupportActionMiddleware;
 
 use Attribute;
 use Illuminate\Auth\Middleware\Authorize as AuthorizeMiddleware;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
-use Livewire\ImplicitlyBoundMethod;
-
-use function Illuminate\Support\enum_value;
+use Livewire\Features\SupportAuthorization\BaseAuthorize;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class BaseMiddleware extends LivewireAttribute
 {
-    use AuthorizesRequests;
-    
     public function __construct(public string $middleware)
     {
         //
@@ -48,44 +43,17 @@ class BaseMiddleware extends LivewireAttribute
 
         $ability = array_shift($arguments);
 
-        $methodDependencies = null;
-        $resolveMethodDependencies = function () use (&$methodDependencies, $parameters): array {
-            return $methodDependencies ??= ImplicitlyBoundMethod::resolveMethodDependencies(
-                app(),
-                [$this->component, $this->getName()],
-                $parameters,
-            );
-        };
+        $authorizeAttribute = new BaseAuthorize($ability, $arguments);
 
-        $resolved = [];
-        foreach ($arguments as $arg) {
-            $resolved[] = $this->resolveArgument($arg, $parameters, $resolveMethodDependencies);
-        }
-
-        $this->authorize($ability, $resolved);
-    }
-
-    protected function resolveArgument(string $arg, array $parameters, \Closure $resolveMethodDependencies): mixed
-    {
-        // Action that does not require a model, for example a 'create' action...
-        if (class_exists($arg)) {
-            return $arg;
-        }
-
-        // Try method parameter first (prioritized per rules)
-        $methodArgument = Arr::first(
-            (new \ReflectionObject($this->component))->getMethod($this->getName())->getParameters(),
-            fn (\ReflectionParameter $parameter) : bool => $parameter->getName() === $arg,
+        $authorizeAttribute->__boot(
+            $this->component,
+            $this->getLevel(),
+            $this->getName(),
+            $this->getSubName(),
+            $this->getSubTarget()
         );
 
-        if ($methodArgument instanceof \ReflectionParameter) {
-            $methodDependencies = $resolveMethodDependencies();
-
-            return $methodDependencies['named'][$arg];
-        }
-
-        // Fall back to component property
-        return data_get($this->component, $arg);
+        $authorizeAttribute->call($parameters);
     }
 
     protected function parseMiddleware($middleware)
@@ -97,16 +65,5 @@ class BaseMiddleware extends LivewireAttribute
         }
 
         return $parameters;
-    }
-
-    protected function parseAbilityAndArguments($ability, $arguments)
-    {
-        $ability = enum_value($ability);
-
-        if (is_string($ability) && ! str_contains($ability, '\\')) {
-            return [$ability, $arguments];
-        }
-
-        return [$this->normalizeGuessedAbilityName($this->getName()), $ability];
     }
 }
