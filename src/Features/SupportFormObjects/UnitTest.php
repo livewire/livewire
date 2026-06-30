@@ -883,6 +883,17 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
+    function test_can_perform_validation_inside_lifecycle_hooks()
+    {
+        Livewire::test(new class extends TestComponent {
+            public FormWithValidationInLifecycleHookStub $form;
+        })
+        ->assertHasNoErrors()
+        ->set('form.title', '')
+        ->assertHasErrors('form.title')
+        ;
+    }
+
     function test_can_reset_and_return_property_with_pull_method()
     {
         Livewire::test(new class extends TestComponent {
@@ -1378,5 +1389,19 @@ class FormWithUpdatedHookStub extends Form
     public function updated(string $property)
     {
         $this->updated_properties[] = $property;
+    }
+}
+
+class FormWithValidationInLifecycleHookStub extends Form
+{
+    public string $title = '';
+
+    public function updated() {
+        $this->validate();
+    }
+
+    public function rules()
+    {
+        return ['title' => 'required'];
     }
 }
