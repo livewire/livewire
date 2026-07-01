@@ -15,7 +15,7 @@ class SupportAttributes extends ComponentHook
             }
         };
 
-        $this->invokeLivewireAttribute($callback);
+        $this->getLivewireAttributes()->each($callback);
     }
 
     function mount(...$params)
@@ -26,7 +26,7 @@ class SupportAttributes extends ComponentHook
             }
         };
 
-        $this->invokeLivewireAttribute($callback);
+        $this->getLivewireAttributes()->each($callback);
     }
 
     function hydrate(...$params)
@@ -37,7 +37,7 @@ class SupportAttributes extends ComponentHook
             }
         };
 
-        $this->invokeLivewireAttribute($callback);
+        $this->getLivewireAttributes()->each($callback);
     }
 
     function update($propertyName, $fullPath, $newValue)
@@ -103,7 +103,7 @@ class SupportAttributes extends ComponentHook
             }
         };
 
-        $this->invokeLivewireAttribute($callback);
+        $this->getLivewireAttributes()->each($callback);
     }
 
     function destroy(...$params)
@@ -114,7 +114,7 @@ class SupportAttributes extends ComponentHook
             }
         };
 
-        $this->invokeLivewireAttribute($callback);
+        $this->getLivewireAttributes()->each($callback);
     }
 
     function exception(...$params)
@@ -125,11 +125,6 @@ class SupportAttributes extends ComponentHook
             }
         };
 
-        $this->invokeLivewireAttribute($callback);
-    }
-
-    protected function invokeLivewireAttribute(callable $callback)
-    {
         $this->getLivewireAttributes()->each($callback);
     }
 
