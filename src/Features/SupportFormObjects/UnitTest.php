@@ -297,6 +297,31 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
+    function test_form_object_validate_only_replaces_messages_for_the_field_being_validated()
+    {
+        Livewire::test(new class extends TestComponent {
+            public FormWithRequiredIntegerValidation $form;
+        })
+        ->assertSetStrict('form.number', 1)
+        ->set('form.number', '')
+        // Check the message bag directly because rule assertions do not prove
+        // messages were replaced for the same error key.
+        ->tap(function ($component) {
+            $this->assertEquals(
+                ['The number field is required.'],
+                $component->errors()->get('form.number')
+            );
+        })
+        ->set('form.number', 'a')
+        ->tap(function ($component) {
+            $this->assertEquals(
+                ['The number field must be an integer.'],
+                $component->errors()->get('form.number')
+            );
+        })
+        ;
+    }
+
     function test_can_validate_a_specific_rule_for_form_object_with_validate_only()
     {
         Livewire::test(new class extends TestComponent {
@@ -1087,6 +1112,12 @@ class PostFormValidateOnUpdateStub extends Form
     protected $rules = [
         'title' => 'min:5',
     ];
+}
+
+class FormWithRequiredIntegerValidation extends Form
+{
+    #[Validate(['required', 'integer'])]
+    public $number = 1;
 }
 
 class PostFormWithoutRules extends Form
