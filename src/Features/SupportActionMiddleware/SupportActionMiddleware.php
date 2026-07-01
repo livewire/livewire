@@ -19,7 +19,7 @@ class SupportActionMiddleware extends ComponentHook
                 $method = SupportEvents::getListenerMethodName($component, $name);
             }
 
-            if (static::hasMiddlewareAttribute($component, $method)) {
+            if (method_exists($component, $method) && static::hasMiddlewareAttribute($component, $method)) {
                 app()->instance('redirect', array_pop(SupportRedirects::$redirectorCacheStack));
             }
         });
