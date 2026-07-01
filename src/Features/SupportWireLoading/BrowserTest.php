@@ -139,6 +139,48 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    function test_wire_loading_attr_is_removed_after_overlapping_loading_events()
+    {
+        Livewire::visit(new class extends Component {
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <button
+                            type="button"
+                            x-on:click="window.dispatchEvent(new CustomEvent('livewire-upload-start', { detail: { id: $wire.$id, property: 'file' } }))"
+                            dusk="start">
+                            Start loading
+                        </button>
+
+                        <button
+                            type="button"
+                            x-on:click="window.dispatchEvent(new CustomEvent('livewire-upload-finish', { detail: { id: $wire.$id, property: 'file' } }))"
+                            dusk="finish">
+                            Finish loading
+                        </button>
+
+                        <button
+                            type="button"
+                            wire:loading.attr="disabled"
+                            dusk="target">
+                            Target
+                        </button>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertAttributeMissing('@target', 'disabled')
+        ->click('@start')
+        ->assertAttribute('@target', 'disabled', 'true')
+        ->click('@start')
+        ->assertAttribute('@target', 'disabled', 'true')
+        ->click('@finish')
+        ->click('@finish')
+        ->assertAttributeMissing('@target', 'disabled')
+        ;
+    }
+
     function test_wire_loading_attr_doesnt_conflict_with_exist_one()
     {
         Livewire::visit(new class extends Component {
