@@ -297,17 +297,22 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    function test_validate_only_replaces_stale_validation_errors_for_same_form_field()
+    function test_form_object_validate_only_replaces_messages_for_the_field_being_validated()
     {
         Livewire::test(new class extends TestComponent {
             public FormWithRequiredIntegerValidation $form;
         })
         ->assertSetStrict('form.number', 1)
-        ->assertHasNoErrors()
         ->set('form.number', '')
-        ->assertHasErrors(['form.number' => 'required'])
+        // Check the message bag directly because rule assertions do not prove
+        // messages were replaced for the same error key.
+        ->tap(function ($component) {
+            $this->assertEquals(
+                ['The number field is required.'],
+                $component->errors()->get('form.number')
+            );
+        })
         ->set('form.number', 'a')
-        ->assertHasErrors(['form.number' => 'integer'])
         ->tap(function ($component) {
             $this->assertEquals(
                 ['The number field must be an integer.'],
