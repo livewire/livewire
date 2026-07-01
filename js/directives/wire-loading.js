@@ -9,14 +9,16 @@ directive('loading', ({ el, directive, component, cleanup }) => {
 
     let [delay, abortDelay] = applyDelay(directive)
 
+    let restoreLoadingState
+
     let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
-        () => delay(() => toggleBooleanStateDirective(el, directive, true)),
-        () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
+        () => delay(() => restoreLoadingState = toggleBooleanStateDirective(el, directive, true)),
+        () => abortDelay(() => restoreLoadingState ? restoreLoadingState() : toggleBooleanStateDirective(el, directive, false)),
     ])
 
     let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
-        () => delay(() => toggleBooleanStateDirective(el, directive, true)),
-        () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
+        () => delay(() => restoreLoadingState = toggleBooleanStateDirective(el, directive, true)),
+        () => abortDelay(() => restoreLoadingState ? restoreLoadingState() : toggleBooleanStateDirective(el, directive, false)),
     ])
 
     cleanup(() => {
