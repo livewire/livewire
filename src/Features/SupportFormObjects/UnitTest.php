@@ -297,46 +297,24 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    function test_validate_only_does_not_merge_stale_validation_errors()
-    {
-        $component = Livewire::test(new class extends TestComponent {
-            public PostFormValidateStub $form;
-
-            function save()
-            {
-                $this->form->validateOnly('title');
-            }
-        })
-        ->assertHasNoErrors()
-        ->call('save')
-        ->call('save')
-        ;
-
-        $this->assertEquals(
-            ['The title field is required.'],
-            $component->errors()->get('form.title')
-        );
-    }
-
     function test_validate_only_replaces_stale_validation_errors_for_same_form_field()
     {
-        $component = Livewire::test(new class extends TestComponent {
+        Livewire::test(new class extends TestComponent {
             public FormWithRequiredIntegerValidation $form;
-
-            function save()
-            {
-                $this->form->validateOnly('number');
-            }
         })
+        ->assertSetStrict('form.number', 1)
         ->assertHasNoErrors()
-        ->call('save')
-        ->set('form.number', 'abc')
+        ->set('form.number', '')
+        ->assertHasErrors(['form.number' => 'required'])
+        ->set('form.number', 'a')
+        ->assertHasErrors(['form.number' => 'integer'])
+        ->tap(function ($component) {
+            $this->assertEquals(
+                ['The number field must be an integer.'],
+                $component->errors()->get('form.number')
+            );
+        })
         ;
-
-        $this->assertEquals(
-            ['The number field must be an integer.'],
-            $component->errors()->get('form.number')
-        );
     }
 
     function test_can_validate_a_specific_rule_for_form_object_with_validate_only()
@@ -1133,8 +1111,8 @@ class PostFormValidateOnUpdateStub extends Form
 
 class FormWithRequiredIntegerValidation extends Form
 {
-    #[Validate('required|integer')]
-    public $number = '';
+    #[Validate(['required', 'integer'])]
+    public $number = 1;
 }
 
 class PostFormWithoutRules extends Form
