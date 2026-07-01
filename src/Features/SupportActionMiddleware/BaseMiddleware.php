@@ -25,7 +25,7 @@ class BaseMiddleware extends LivewireAttribute
         if ($middleware === []) return;
 
         $authorizeMiddleware = Arr::first($middleware, function ($m) {
-            return Str::before($m, ':') === AuthorizeMiddleware::class;
+            return is_string($m) && Str::before($m, ':') === AuthorizeMiddleware::class;
         });
 
         if ($authorizeMiddleware) {
@@ -42,6 +42,9 @@ class BaseMiddleware extends LivewireAttribute
         $arguments = $this->parseMiddleware($middleware);
 
         $ability = array_shift($arguments);
+
+        // pass `null` if arguments is an empty array after array_shiftg
+        $arguments = empty($arguments) ? null : $arguments;
 
         $authorizeAttribute = new BaseAuthorize($ability, $arguments);
 

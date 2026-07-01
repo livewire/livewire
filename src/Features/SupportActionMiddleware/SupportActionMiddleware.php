@@ -20,7 +20,7 @@ class SupportActionMiddleware extends ComponentHook
             }
 
             if (method_exists($component, $method) && static::hasMiddlewareAttribute($component, $method)) {
-                app()->instance('redirect', array_pop(SupportRedirects::$redirectorCacheStack));
+                static::restoreOriginalRedirector();
             }
         });
     }
@@ -31,5 +31,20 @@ class SupportActionMiddleware extends ComponentHook
             ->filter(fn ($attr) => $attr instanceof BaseMiddleware)
             ->filter(fn ($attr) => $attr->getName() === $method)
             ->isNotEmpty();
+    }
+
+    protected static function restoreOriginalRedirector()
+    {
+        $redirectorCacheStack = SupportRedirects::$redirectorCacheStack;
+
+        if (empty($redirectorCacheStack)) return;
+
+        $lastIndex = array_key_last($redirectorCacheStack);
+
+        $cachedRedirector = SupportRedirects::$redirectorCacheStack[$lastIndex];
+
+        if (is_object($cachedRedirector)) {
+            app()->instance('redirect', $cachedRedirector);
+        }
     }
 }
