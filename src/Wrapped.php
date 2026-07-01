@@ -28,9 +28,7 @@ class Wrapped
                 $shouldPropagate = false;
             };
 
-            $target = $this->target instanceof Form ? $this->target->getComponent() : $this->target;
-
-            trigger('exception', $target, $e, $stopPropagation);
+            trigger('exception', $this->target, $e, $stopPropagation);
 
             $shouldPropagate && throw $e;
         }
