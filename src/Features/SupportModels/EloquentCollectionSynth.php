@@ -63,7 +63,7 @@ class EloquentCollectionSynth extends Synth {
         $modelClass = $meta['modelClass'];
 
         // If no alias found, this returns `null`
-        $modelAlias = Relation::getMorphedModel($modelClass);
+        $modelAlias = $modelClass ? Relation::getMorphedModel($modelClass) : null;
 
         if (! is_null($modelAlias)) {
             $modelClass = $modelAlias;

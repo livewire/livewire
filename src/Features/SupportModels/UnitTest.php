@@ -324,6 +324,27 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertCount(1, array_values($articleQueries));
     }
+
+    public function test_eloquent_collection_synth_handles_null_model_class_without_deprecation()
+    {
+        $component = Livewire::test(ArticleComponent::class);
+
+        $synth = new EloquentCollectionSynth(
+            new \Livewire\Mechanisms\HandleComponents\ComponentContext($component->instance()),
+            'articles'
+        );
+
+        $meta = [
+            'class' => Collection::class,
+            'modelClass' => null,
+            'keys' => [],
+        ];
+
+        // Should not trigger "Using null as an array offset" deprecation
+        $result = $synth->hydrate(null, $meta, fn ($v) => $v);
+
+        $this->assertInstanceOf(Collection::class, $result);
+    }
 }
 
 #[\Attribute]
