@@ -7,6 +7,7 @@ use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Auth\Middleware\Authorize as AuthorizeMiddleware;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as AuthUser;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -74,49 +75,6 @@ class UnitTest extends TestCase
         $this->assertFalse(Session::has('authorization-denied'));
     }
 
-    public function test_can_apply_authorize_middleware_to_action()
-    {
-        Gate::policy(MiddlewareTestPost::class, AuthorizationPostPolicy::class);
-
-        Livewire::actingAs(MiddlewareTestUser::find(1))
-            ->test(new class extends TestComponent {
-                public MiddlewareTestPost $post;
-
-                public function mount() {
-                    $this->post = MiddlewareTestPost::find(1);
-                }
-                
-                #[Middleware('can:edit,post')]
-                public function protectedAction()
-                {
-                    Session::put('action-was-called', true);
-                }
-            })
-            ->call('protectedAction')
-            ->assertOk();
-
-        $this->assertTrue(Session::has('action-was-called'));
-
-        Livewire::actingAs(MiddlewareTestUser::find(2))
-            ->test(new class extends TestComponent {
-                public MiddlewareTestPost $post;
-
-                public function mount() {
-                    $this->post = MiddlewareTestPost::find(1);
-                }
-                
-                #[Middleware('can:edit,post')]
-                public function protectedAction()
-                {
-                    Session::put('action-not-called', true);
-                }
-            })
-            ->call('protectedAction')
-            ->assertForbidden();
-
-        $this->assertFalse(Session::has('action-not-called'));
-    }
-
     public function test_can_apply_single_middleware_to_action()
     {
         Livewire::actingAs(MiddlewareTestUser::find(1))
@@ -141,17 +99,17 @@ class UnitTest extends TestCase
 
         Livewire::test(new class extends TestComponent {
             #[Middleware('auth')]
-            #[Middleware('verified')]
+            #[Middleware(MiddlewareTest::class)]
             public function protectedAction()
             {
                 Session::put('action-was-called', true);
-                return true;
             }
         })
         ->call('protectedAction')
         ->assertRedirectToRoute('login');
 
         $this->assertFalse(Session::has('action-was-called'));
+        $this->assertTrue(Session::has('not-authenticated'));
     }
 
     public function test_middleware_works_with_event_listeners()
@@ -237,6 +195,80 @@ class UnitTest extends TestCase
         $this->assertTrue(Session::has('protected-action-called'));
         $this->assertTrue(Session::has('public-action-called'));
     }
+
+    public function test_authorize_middleware_with_component_property()
+    {
+        Gate::policy(MiddlewareTestPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(MiddlewareTestUser::find(1))
+            ->test(new class extends TestComponent {
+                public MiddlewareTestPost $post;
+
+                public function mount()
+                {
+                    $this->post = MiddlewareTestPost::find(1);
+                }
+
+                #[Middleware('can:edit,post')]
+                public function editPost()
+                {
+                    Session::put('can-edit-post', true);
+                }
+            })
+            ->call('editPost')
+            ->assertOk();
+
+        Livewire::actingAs(MiddlewareTestUser::find(2))
+            ->test(new class extends TestComponent {
+                public MiddlewareTestPost $post;
+
+                public function mount()
+                {
+                    $this->post = MiddlewareTestPost::find(1);
+                }
+
+                #[Middleware('can:edit,post')]
+                public function editPost()
+                {
+                    Session::put('cannot-edit-post', true);
+                }
+            })
+            ->call('editPost')
+            ->assertForbidden();
+
+        $this->assertTrue(Session::has('can-edit-post'));
+        $this->assertFalse(Session::has('cannot-edit-post'));
+    }
+
+    public function test_authorize_middleware_with_method_parameter()
+    {
+        Gate::policy(MiddlewareTestPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(MiddlewareTestUser::find(1))
+            ->test(new class extends TestComponent {
+                #[Middleware('can:edit,post')]
+                public function editPost(MiddlewareTestPost $post)
+                {
+                    Session::put('can-edit-post', true);
+                }
+            })
+            ->call('editPost', post: 1)
+            ->assertOk();
+
+        Livewire::actingAs(MiddlewareTestUser::find(2))
+            ->test(new class extends TestComponent {
+                #[Middleware('can:edit,post')]
+                public function editPost(MiddlewareTestPost $post)
+                {
+                    Session::put('cannot-edit-post', true);
+                }
+            })
+            ->call('editPost', post: 1)
+            ->assertForbidden();
+
+        $this->assertTrue(Session::has('can-edit-post'));
+        $this->assertFalse(Session::has('cannot-edit-post'));
+    }
 }
 
 class MiddlewareTestUser extends AuthUser
@@ -256,6 +288,18 @@ class MiddlewareTestPost extends Model
     protected $rows = [
         ['id' => 1, 'title' => 'First', 'user_id' => 1],
     ];
+}
+
+class MiddlewareTest
+{
+    public function handle(Request $request, \Closure $next)
+    {
+        if(! $request->user()) {
+            Session::put('not-authenticated', true);
+        }
+        
+        return $next($request);
+    }
 }
 
 class AuthorizationPostPolicy
