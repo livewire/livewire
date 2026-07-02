@@ -25,7 +25,7 @@ class BaseMiddleware extends LivewireAttribute
         if ($middleware === []) return;
 
         $authorizeMiddleware = Arr::first($middleware, function ($m) {
-            return is_string($m) && Str::before($m, ':') === AuthorizeMiddleware::class;
+            return is_string($m) && Str::before($m, ':') == AuthorizeMiddleware::class;
         });
 
         if ($authorizeMiddleware) {
