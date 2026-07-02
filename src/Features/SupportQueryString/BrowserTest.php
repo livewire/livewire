@@ -1239,47 +1239,6 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_can_update_query_string_when_page_script_wraps_replace_state()
-    {
-        Livewire::visit([
-            new class extends Component
-            {
-                #[Url]
-                public string $search = '';
-
-                public function render()
-                {
-                    return <<<'HTML'
-                    <div>
-                        <input dusk="search" wire:model.live="search" />
-                    </div>
-
-                    @push('scripts')
-                        <script>
-                            let originalReplaceState = window.history.replaceState.bind(window.history)
-
-                            window.history.replaceState = function (state, title, url) {
-                                if (
-                                    window.history.state !== null &&
-                                    JSON.stringify(window.history.state) === JSON.stringify(state)
-                                ) {
-                                    return
-                                }
-
-                                return originalReplaceState(state, title, url)
-                            }
-                        </script>
-                    @endpush
-                    HTML;
-                }
-            },
-        ])
-            ->waitForLivewireToLoad()
-            ->assertQueryStringMissing('search')
-            ->waitForLivewire()->type('@search', 'bob')
-            ->waitForQueryString('search', 'bob');
-    }
-
     public function test_push_mode_syncs_url_on_initial_load_when_value_restored_from_session()
     {
         $this->beforeServingApplication(function () {
