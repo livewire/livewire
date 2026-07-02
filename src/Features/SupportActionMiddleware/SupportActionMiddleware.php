@@ -37,11 +37,11 @@ class SupportActionMiddleware extends ComponentHook
     {
         $redirectorCacheStack = SupportRedirects::$redirectorCacheStack;
 
-        if (empty($redirectorCacheStack)) return;
+        if ($redirectorCacheStack === []) return;
 
         $lastIndex = array_key_last($redirectorCacheStack);
 
-        $cachedRedirector = SupportRedirects::$redirectorCacheStack[$lastIndex];
+        $cachedRedirector = $redirectorCacheStack[$lastIndex];
 
         if (is_object($cachedRedirector)) {
             app()->instance('redirect', $cachedRedirector);
