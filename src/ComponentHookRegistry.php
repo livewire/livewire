@@ -82,7 +82,7 @@ class ComponentHookRegistry
         });
 
         on('exception', function ($target, $e, $stopPropagation) {
-            if ($target instanceof \Livewire\Form) {
+            if ($target instanceof \Livewire\Features\SupportFormObjects\Form) {
                 $target = $target->getComponent();
             }
 
