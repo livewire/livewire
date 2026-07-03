@@ -9,6 +9,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use function Livewire\on;
 use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
+use Livewire\Features\SupportActionMiddleware\SupportActionMiddleware;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class PersistentMiddleware extends Mechanism
@@ -26,6 +27,7 @@ class PersistentMiddleware extends Mechanism
 
     protected $path;
     protected $method;
+    protected $actions = [];
     protected $middlewareAppliedFor = [];
     protected $resolvedRouteModels = [];
 
@@ -33,14 +35,18 @@ class PersistentMiddleware extends Mechanism
     {
         on('dehydrate', function ($component, $context) {
             [$path, $method] = $this->extractPathAndMethodFromRequest();
+            $actions = $this->extractActionNameFromComponent($component);
 
             $context->addMemo('path', $path);
             $context->addMemo('method', $method);
+            $context->addMemo('actions', $actions);
         });
 
         on('snapshot-verified', function ($snapshot) {
             // Only apply middleware to requests hitting the Livewire update endpoint, and not any fake requests such as a test.
             if (! app(HandleRequests::class)->isLivewireRoute()) return;
+
+            $this->extractActionNameFromSnapshot($snapshot);
 
             $this->extractPathAndMethodFromSnapshot($snapshot);
 
@@ -51,6 +57,7 @@ class PersistentMiddleware extends Mechanism
             // Only flush these at the end of a full request, so that child components have access to this data.
             $this->path = null;
             $this->method = null;
+            $this->actions = [];
             $this->middlewareAppliedFor = [];
             $this->resolvedRouteModels = [];
         });
@@ -74,6 +81,31 @@ class PersistentMiddleware extends Mechanism
     function getResolvedRouteModel($class, $key)
     {
         return $this->resolvedRouteModels[$class.':'.$key] ?? null;
+    }
+
+    protected function gatherActionMiddleware($request, $actions)
+    {
+        $middleware = SupportActionMiddleware::gatherActionMiddleware($request, $actions);
+
+        $this->addPersistentMiddleware($middleware);
+
+        return $middleware;
+    }
+
+    protected function extractActionNameFromComponent($component)
+    {
+        if (app(HandleRequests::class)->isLivewireRoute()) {
+            return $this->actions;
+        }
+
+        return SupportActionMiddleware::getActionNameFromComponent($component);
+    }
+
+    protected function extractActionNameFromSnapshot($snapshot)
+    {
+        if (! isset($snapshot['memo']['actions'])) return;
+
+        $this->actions = $snapshot['memo']['actions'];
     }
 
     protected function extractPathAndMethodFromRequest()
@@ -176,7 +208,11 @@ class PersistentMiddleware extends Mechanism
 
         if (! $route) return [];
 
-        $middleware = app('router')->gatherRouteMiddleware($route);
+        $routeMiddleware = app('router')->gatherRouteMiddleware($route);
+
+        $actionMiddleware = $this->gatherActionMiddleware($request, $this->actions);
+
+        $middleware = array_merge($routeMiddleware, $actionMiddleware);
 
         return $this->filterMiddlewareByPersistentMiddleware($middleware);
     }

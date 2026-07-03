@@ -231,7 +231,7 @@ class SupportPageComponents extends ComponentHook
         return method_exists(app('router'), 'substituteImplicitBindingsUsing');
     }
 
-    protected static function routeActionIsAPageComponent($route)
+    public static function routeActionIsAPageComponent($route)
     {
         $action = $route->action;
 
