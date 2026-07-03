@@ -135,6 +135,15 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
             ->assertSeeText('Store ID: 2')
             ->assertSeeText('Book ID: 2');
     }
+
+    public function test_scope_binding_is_honored_when_parent_is_mount_param_and_child_is_prop()
+    {
+        Route::get('/scoped-prop-child/{store:name}/{book:name}', ComponentWithMountParentAndPropChild::class)->scopeBindings();
+
+        $this->get('/scoped-prop-child/Second/Foo')
+            ->assertSeeText('Store ID: 2')
+            ->assertSeeText('Book ID: 2');
+    }
 }
 
 class PropBoundModel extends Model
@@ -441,6 +450,28 @@ class ComponentWithScopeBindingsReversedProps extends Component
         return <<<'BLADE'
             <div>
                 Store ID: {{ $store->id }}
+                Book ID: {{ $book->id }}
+            </div>
+        BLADE;
+    }
+}
+
+class ComponentWithMountParentAndPropChild extends Component
+{
+    public Book $book;
+
+    public $storeId;
+
+    public function mount(Store $store)
+    {
+        $this->storeId = $store->id;
+    }
+
+    public function render()
+    {
+        return <<<'BLADE'
+            <div>
+                Store ID: {{ $storeId }}
                 Book ID: {{ $book->id }}
             </div>
         BLADE;

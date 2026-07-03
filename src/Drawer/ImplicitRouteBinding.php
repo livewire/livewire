@@ -27,10 +27,43 @@ class ImplicitRouteBinding
 
     public function resolveAllParameters(Route $route, Component $component)
     {
-        $props = $this->resolveComponentProps($route, $component);
-        $params = $this->resolveMountParameters($route, $component);
+        // Resolve every bindable route parameter in URI order first (like Laravel's
+        // own implicit binding) so that scoped child bindings always see their
+        // parent as an already-resolved model, regardless of whether the parent
+        // is a public property or a mount() parameter...
+        $this->resolveRouteParametersInOrder($route, $component);
 
-        return $props->merge($params)->all();
+        $params = $this->resolveMountParameters($route, $component);
+        $props = $this->resolveComponentProps($route, $component);
+
+        return $params->merge($props)->all();
+    }
+
+    protected function resolveRouteParametersInOrder(Route $route, Component $component)
+    {
+        $types = $this->getPublicPropertyTypes($component)
+            ->merge($this->getMountParameterTypes($component)->filter())
+            ->filter(function ($className) {
+                return $className && (is_subclass_of($className, UrlRoutable::class) || is_subclass_of($className, BackedEnum::class));
+            });
+
+        foreach ($route->parametersWithoutNulls() as $name => $value) {
+            if (! $types->has($name)) continue;
+
+            $route->setParameter($name, $this->resolveParameter($route, $name, $types->get($name)));
+        }
+    }
+
+    protected function getMountParameterTypes(Component $component)
+    {
+        if (! method_exists($component, 'mount')) {
+            return new Collection();
+        }
+
+        return collect((new ReflectionMethod($component, 'mount'))->getParameters())
+            ->mapWithKeys(function ($parameter) {
+                return [$parameter->getName() => Reflector::getParameterClassName($parameter)];
+            });
     }
 
     public function resolveMountParameters(Route $route, Component $component)
