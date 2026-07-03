@@ -43,7 +43,7 @@ class BaseMiddleware extends LivewireAttribute
 
         $ability = array_shift($arguments);
 
-        // pass `null` if arguments is an empty array after array_shiftg
+        // pass `null` if arguments is an empty array after array_shift
         $arguments = empty($arguments) ? null : $arguments;
 
         $authorizeAttribute = new BaseAuthorize($ability, $arguments);
