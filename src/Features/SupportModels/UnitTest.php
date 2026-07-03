@@ -325,25 +325,32 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(1, array_values($articleQueries));
     }
 
-    public function test_eloquent_collection_synth_handles_null_model_class_without_deprecation()
+    public function test_hydrating_an_empty_eloquent_collection_does_not_trigger_deprecations()
     {
-        $component = Livewire::test(ArticleComponent::class);
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public Collection $articles;
 
-        $synth = new EloquentCollectionSynth(
-            new \Livewire\Mechanisms\HandleComponents\ComponentContext($component->instance()),
-            'articles'
-        );
+            public function mount() {
+                $this->articles = new Collection();
+            }
 
-        $meta = [
-            'class' => Collection::class,
-            'modelClass' => null,
-            'keys' => [],
-        ];
+            public function render() { return <<<'HTML'
+                <div>count: {{ count($articles) }}</div>
+            HTML; }
+        });
 
-        // Should not trigger "Using null as an array offset" deprecation
-        $result = $synth->hydrate(null, $meta, fn ($v) => $v);
+        // An empty collection dehydrates with `modelClass` as `null`. Convert
+        // deprecations to exceptions so the test fails if hydrating passes
+        // that `null` as an array offset (deprecated in PHP 8.5)...
+        set_error_handler(function ($severity, $message) {
+            throw new \ErrorException($message, 0, $severity);
+        }, E_DEPRECATED | E_USER_DEPRECATED);
 
-        $this->assertInstanceOf(Collection::class, $result);
+        try {
+            $component->call('$refresh')->assertSee('count: 0');
+        } finally {
+            restore_error_handler();
+        }
     }
 }
 
