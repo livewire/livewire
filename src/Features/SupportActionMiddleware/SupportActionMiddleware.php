@@ -2,60 +2,34 @@
 
 namespace Livewire\Features\SupportActionMiddleware;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Livewire\ComponentHook;
 use Livewire\Features\SupportEvents\BaseOn;
 use Livewire\Features\SupportPageComponents\SupportPageComponents;
 
-use function Livewire\on;
-use function Livewire\store;
-
 class SupportActionMiddleware extends ComponentHook
 {
-    protected static $listeners = [];
-
-    public static function provide()
+    public static function gatherActionMiddleware($request)
     {
-        on('flush-state', function () {
-            static::$listeners = [];
-        });
-    }
-
-    // Since this might runs before all component hooks (e.g on snapshot verified)
-    // we need to retrieve all methods from middleware attribute on dehydrate
-    // and store it in component payload memo so later can be used to determine method name
-    public static function getActionNameFromComponent($component)
-    {
-        // Contains [middleware => method]
-        $middlewareFromAttributes = store($component)->get('middlewareFromAttributes', []);
-
-        return collect($middlewareFromAttributes)
-            ->values()
-            ->unique()
-            ->all();
-    }
-
-    public static function gatherActionMiddleware(Request $request, array $actions)
-    {
-        if (! $componentClass = static::routeActionIsAPageComponent($request->route())) {
+        if (! $component = static::routeActionIsAPageComponent($request->route())) {
             return [];
         }
 
-        $component = new $componentClass;
-
         // Since an action can be called as event listener
-        // we need to store all event listener to $listeners property
-        // and use all reflected methods to resolve attribute middleware
-        $methods = static::getComponentMetadata($component);
+        // we need to retrieve all that using middleware attribute
+        [$actions, $listeners] = static::getComponentMetadata($component);
+
+        $methods = array_unique(array_merge(
+            array_keys($actions),       // [method => reflection]
+            array_values($listeners)    // [event => method]
+        ));
 
         $calls = $request->input('components.0.calls');
-        
+
         $methodName = null;
         foreach ($calls as $call) {
-            $method = static::resolveMethodFromCall($call);
+            $method = static::resolveMethodFromCall($call, $listeners);
 
-            if (method_exists($component, $method) && in_array($method, $actions, true)) {
+            if (method_exists($component, $method) && in_array($method, $methods, true)) {
                 $methodName = $method;
                 break;
             }
@@ -63,25 +37,25 @@ class SupportActionMiddleware extends ComponentHook
 
         if (! $methodName) return [];
 
-        return static::resolveAttributeMiddleware($methodName, $methods);
+        return static::resolveAttributeMiddleware($methodName, $actions);
     }
 
-    protected static function resolveMethodFromCall(array $call)
+    protected static function resolveMethodFromCall($call, $listeners)
     {
         $method = $call['method'] ?? '';
 
         if ($method === '__dispatch') {
             [$name] = $call['params'] ?? [];
 
-            return static::$listeners[$name] ?? '';
+            return $listeners[$name] ?? '';
         }
 
         return $method;
     }
 
-    protected static function resolveAttributeMiddleware($method, $methods)
+    protected static function resolveAttributeMiddleware($method, $actions)
     {
-        $reflectionMethod = $methods[$method] ?? null;
+        $reflectionMethod = $actions[$method] ?? null;
 
         if (! $reflectionMethod) return [];
 
@@ -117,9 +91,7 @@ class SupportActionMiddleware extends ComponentHook
             }
         }
 
-        static::$listeners = $listeners;
-
-        return $methods;
+        return [$methods, $listeners];
     }
 
     protected static function routeActionIsAPageComponent($route)
