@@ -54,14 +54,9 @@ class SupportActionMiddleware extends ComponentHook
 
         if (! $reflectionMethod) return [];
 
-        $attributes = $reflectionMethod->getAttributes(
-            BaseMiddleware::class,
-            \ReflectionAttribute::IS_INSTANCEOF
-        );
-
         $middleware = array_map(
             fn ($attribute) => $attribute->newInstance()->middleware,
-            $attributes
+            $reflectionMethod->getAttributes()
         );
 
         return app('router')->resolveMiddleware($middleware);
