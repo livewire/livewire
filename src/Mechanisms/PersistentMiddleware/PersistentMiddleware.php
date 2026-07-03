@@ -86,22 +86,6 @@ class PersistentMiddleware extends Mechanism
         return $middleware;
     }
 
-    protected function extractActionNameFromComponent($component)
-    {
-        if (app(HandleRequests::class)->isLivewireRoute()) {
-            return $this->actions;
-        }
-
-        return SupportActionMiddleware::getActionNameFromComponent($component);
-    }
-
-    protected function extractActionNameFromSnapshot($snapshot)
-    {
-        if (! isset($snapshot['memo']['actions'])) return;
-
-        $this->actions = $snapshot['memo']['actions'];
-    }
-
     protected function extractPathAndMethodFromRequest()
     {
         if (app(HandleRequests::class)->isLivewireRoute()) {
