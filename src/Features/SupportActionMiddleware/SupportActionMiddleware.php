@@ -45,8 +45,9 @@ class SupportActionMiddleware extends ComponentHook
         $component = new $componentClass;
 
         // Since an action can be called as event listener
-        // we need to retrieve all event listener to resolve method name
-        $reflectionMethods = static::getComponentListeners($component);
+        // we need to store all event listener to $listeners property
+        // and use all reflected methods to resolve attribute middleware
+        $methods = static::getComponentMetadata($component);
 
         $calls = $request->input('components.0.calls');
         
@@ -62,7 +63,7 @@ class SupportActionMiddleware extends ComponentHook
 
         if (! $methodName) return [];
 
-        return static::resolveAttributeMiddleware($methodName, $reflectionMethods);
+        return static::resolveAttributeMiddleware($methodName, $methods);
     }
 
     protected static function resolveMethodFromCall(array $call)
@@ -78,45 +79,47 @@ class SupportActionMiddleware extends ComponentHook
         return $method;
     }
 
-    protected static function resolveAttributeMiddleware($method, $reflectionMethods)
+    protected static function resolveAttributeMiddleware($method, $methods)
     {
-        $reflectionMethod = Arr::first($reflectionMethods, function ($reflected) use ($method) {
-            return $reflected->getName() === $method;
-        });
+        $reflectionMethod = $methods[$method] ?? null;
 
-        $attributes = $reflectionMethod->getAttributes(BaseMiddleware::class, \ReflectionAttribute::IS_INSTANCEOF);
+        if (! $reflectionMethod) return [];
 
-        $arguments = collect($attributes)
-            ->map(fn ($attr) => $attr->newInstance()->middleware)
-            ->values()
-            ->all();
+        $attributes = $reflectionMethod->getAttributes(
+            BaseMiddleware::class,
+            \ReflectionAttribute::IS_INSTANCEOF
+        );
 
-        return app('router')->resolveMiddleware($arguments);
+        $middleware = array_map(
+            fn ($attribute) => $attribute->newInstance()->middleware,
+            $attributes
+        );
+
+        return app('router')->resolveMiddleware($middleware);
     }
 
-    protected static function getComponentListeners($component)
+    protected static function getComponentMetadata($component)
     {
-        $reflectionClass = new \ReflectionClass($component);
-        $reflectionMethods = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);
-        
-        $hasMiddlewareAttribute = array_filter($reflectionMethods, function ($method) {
-            return $method->getAttributes(BaseOn::class, \ReflectionAttribute::IS_INSTANCEOF)
-                && $method->getAttributes(BaseMiddleware::class, \ReflectionAttribute::IS_INSTANCEOF);
-        });
+        $reflectionMethods = (new \ReflectionClass($component))
+            ->getMethods(\ReflectionMethod::IS_PUBLIC);
 
+        $methods = [];
         $listeners = [];
-        foreach ($hasMiddlewareAttribute as $method) {
-            foreach ($method->getAttributes() as $attribute) {
-                if (is_subclass_of($attribute->getName(), BaseOn::class)) {
-                    $arguments = $attribute->getArguments();
-                    $listeners[$arguments[0]] = $method->getName();
-                }
+        foreach ($reflectionMethods as $method) {
+            if (! $method->getAttributes(BaseMiddleware::class, \ReflectionAttribute::IS_INSTANCEOF)) {
+                continue;
+            }
+
+            $methods[$method->getName()] = $method;
+
+            foreach ($method->getAttributes(BaseOn::class, \ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
+                $listeners[$attribute->getArguments()[0]] = $method->getName();
             }
         }
 
         static::$listeners = $listeners;
 
-        return $reflectionMethods;
+        return $methods;
     }
 
     protected static function routeActionIsAPageComponent($route)
