@@ -14,13 +14,4 @@ class BaseMiddleware extends LivewireAttribute
     {
         //
     }
-
-    public function boot()
-    {
-        store($this->component)->push(
-            'middlewareFromAttributes',
-            $this->getName() ?? '$refresh',
-            $this->middleware
-        );
-    }
 }
