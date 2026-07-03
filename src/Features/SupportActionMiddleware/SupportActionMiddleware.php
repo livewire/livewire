@@ -4,14 +4,10 @@ namespace Livewire\Features\SupportActionMiddleware;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Livewire\Attributes\On;
 use Livewire\ComponentHook;
 use Livewire\Features\SupportEvents\BaseOn;
-use Livewire\Features\SupportEvents\SupportEvents;
 use Livewire\Features\SupportPageComponents\SupportPageComponents;
-use Livewire\Mechanisms\HandleComponents\ComponentContext;
 
-use function Livewire\invade;
 use function Livewire\store;
 
 class SupportActionMiddleware extends ComponentHook

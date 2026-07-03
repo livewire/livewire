@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportActionMiddleware;
 
 use Attribute;
-use Illuminate\Support\Arr;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 use function Livewire\store;
