@@ -18,18 +18,13 @@ class SupportActionMiddleware extends ComponentHook
         // we need to retrieve all that using middleware attribute
         [$actions, $listeners] = static::getComponentMetadata($component);
 
-        $methods = array_unique(array_merge(
-            array_keys($actions),       // [method => reflection]
-            array_values($listeners)    // [event => method]
-        ));
-
         $calls = $request->input('components.0.calls');
 
         $methodName = null;
         foreach ($calls as $call) {
             $method = static::resolveMethodFromCall($call, $listeners);
 
-            if (method_exists($component, $method) && in_array($method, $methods, true)) {
+            if (method_exists($component, $method) && in_array($method, array_keys($actions), true)) {
                 $methodName = $method;
                 break;
             }
