@@ -34,9 +34,7 @@ class SupportActionMiddleware extends ComponentHook
 
         $middleware = static::resolveAttributeMiddleware($methodName, $actions);
 
-        $route->middleware($middleware);
-
-        return $middleware;
+        return tap($middleware, $route->middleware(...));
     }
 
     protected static function resolveMethodFromCall($call, $listeners)
