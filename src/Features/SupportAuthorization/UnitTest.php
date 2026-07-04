@@ -867,7 +867,7 @@ class UnitTest extends TestCase
 
         Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
-                #[Authorize(AuthorizationPost::class)]
+                #[BaseAuthorize(AuthorizationPost::class)]
                 #[BaseOn('some-event')]
                 public function store() : bool
                 {
