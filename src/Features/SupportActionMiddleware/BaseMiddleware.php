@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportAuthorization\BaseAuthorize;
+use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class BaseMiddleware extends LivewireAttribute
@@ -23,6 +24,9 @@ class BaseMiddleware extends LivewireAttribute
         $middleware = app('router')->resolveMiddleware([$this->middleware]);
 
         if ($middleware === []) return;
+
+        // This is to ensure all resolved middleware doesnt contain a closure
+        $middleware = $this->filterMiddlewareByPersistentMiddleware($middleware);
 
         $authorizeMiddleware = Arr::first($middleware, function ($m) {
             return is_string($m) && Str::before($m, ':') == AuthorizeMiddleware::class;
@@ -68,5 +72,25 @@ class BaseMiddleware extends LivewireAttribute
         }
 
         return $parameters;
+    }
+
+    protected function filterMiddlewareByPersistentMiddleware($middleware)
+    {
+        $middleware = collect($middleware);
+
+        $persistentMiddleware = collect(app(PersistentMiddleware::class)->getPersistentMiddleware());
+
+        return $middleware
+            ->filter(function ($value, $key) use ($persistentMiddleware) {
+                return $persistentMiddleware->contains(function($iValue, $iKey) use ($value) {
+                    // Some middlewares can be closures.
+                    if (! is_string($value)) return false;
+
+                    // Ensure any middleware arguments aren't included in the comparison
+                    return Str::before($value, ':') == $iValue;
+                });
+            })
+            ->values()
+            ->all();
     }
 }
