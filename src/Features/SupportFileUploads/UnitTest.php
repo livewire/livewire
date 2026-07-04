@@ -27,14 +27,16 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
     }
 
-    public function test_s3_driver_only_supports_single_file_uploads()
+    public function test_s3_driver_supports_multiple_file_uploads()
     {
         config()->set('livewire.temporary_file_upload.disk', 's3');
 
-        $this->expectException(S3DoesntSupportMultipleFileUploads::class);
-
         Livewire::test(FileUploadComponent::class)
-            ->set('photos', [UploadedFile::fake()->image('avatar.jpg')]);
+            ->set('photos', [
+                UploadedFile::fake()->image('avatar.jpg'),
+                UploadedFile::fake()->image('avatar2.jpg'),
+            ])
+            ->assertCount('photos', 2);
     }
 
     public function test_can_set_a_file_as_a_property_and_store_it()

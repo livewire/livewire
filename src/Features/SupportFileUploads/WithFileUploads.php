@@ -3,26 +3,16 @@
 namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Validation\ValidationException;
-use Illuminate\Http\UploadedFile;
 use Livewire\Attributes\Renderless;
-use Livewire\Facades\GenerateSignedUploadUrlFacade;
 
 trait WithFileUploads
 {
     #[Renderless]
     function _startUpload($name, $fileInfo, $isMultiple)
     {
-        if (FileUploadConfiguration::isUsingS3()) {
-            throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
+        $plan = app(UploadPlanner::class)->plan($fileInfo, $isMultiple);
 
-            $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
-
-            $this->dispatch('upload:generatedSignedUrlForS3', name: $name, payload: GenerateSignedUploadUrlFacade::forS3($file))->self();
-
-            return;
-        }
-
-        $this->dispatch('upload:generatedSignedUrl', name: $name, url: GenerateSignedUploadUrlFacade::forLocal())->self();
+        $this->dispatch('upload:plan', name: $name, plan: $plan)->self();
     }
 
     function _finishUpload($name, $tmpPath, $isMultiple, $append = true)
@@ -134,6 +124,13 @@ trait WithFileUploads
             $yesterdaysStamp = now()->subDay()->timestamp;
             if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
                 $storage->delete($filePathname);
+            }
+        }
+
+        // Remove chunk directories whose chunks have all been cleaned up above...
+        foreach ($storage->directories(FileUploadConfiguration::path('chunks')) as $directory) {
+            if (empty($storage->allFiles($directory))) {
+                $storage->deleteDirectory($directory);
             }
         }
     }

@@ -125,6 +125,35 @@ class FileUploadConfiguration
         return config('livewire.temporary_file_upload.max_upload_time') ?: 5;
     }
 
+    public static function chunkingEnabled()
+    {
+        return (bool) (config('livewire.temporary_file_upload.chunking') ?? true);
+    }
+
+    public static function chunkSize()
+    {
+        $size = (int) (config('livewire.temporary_file_upload.chunk_size') ?: 5 * 1024 * 1024);
+
+        // S3 requires multipart upload parts (except the last) to be at least 5MB...
+        return static::isUsingS3() ? max($size, 5 * 1024 * 1024) : $size;
+    }
+
+    public static function chunkThreshold()
+    {
+        return (int) (config('livewire.temporary_file_upload.chunk_threshold') ?: static::chunkSize());
+    }
+
+    public static function maxDeclaredSizeInKilobytes()
+    {
+        foreach (static::rules() as $rule) {
+            if (is_string($rule) && preg_match('/^max:(\d+)$/', $rule, $matches)) {
+                return (int) $matches[1];
+            }
+        }
+
+        return null;
+    }
+
     public static function storeTemporaryFile($file, $disk)
     {
         $filename = TemporaryUploadedFile::generateHashName($file);

@@ -140,6 +140,9 @@ return [
         ],
         'max_upload_time' => 5, // Max duration (in minutes) before an upload is invalidated...
         'cleanup' => true, // Should cleanup temporary uploads older than 24 hrs...
+        'chunking' => true,        // Upload large files in resumable chunks (S3 multipart on S3 disks)...
+        'chunk_size' => null,      // Example: 10 * 1024 * 1024 (bytes)  | Default: 5MB (the S3 multipart minimum)
+        'chunk_threshold' => null, // Files larger than this are chunked | Default: chunk_size
     ],
 
     /*

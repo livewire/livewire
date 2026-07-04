@@ -202,11 +202,15 @@ class TemporaryUploadedFile extends UploadedFile
 
     public static function generateHashNameWithOriginalNameEmbedded($file)
     {
-        $hash = str()->random(30);
-        $meta = str('-meta'.base64_encode($file->getClientOriginalName()).'-')->replace('/', '_');
-        $extension = '.'.$file->getClientOriginalExtension();
+        $originalName = is_string($file) ? $file : $file->getClientOriginalName();
+        $extension = is_string($file)
+            ? pathinfo($file, PATHINFO_EXTENSION)
+            : $file->getClientOriginalExtension();
 
-        return $hash.$meta.$extension;
+        $hash = str()->random(30);
+        $meta = str('-meta'.base64_encode($originalName).'-')->replace('/', '_');
+
+        return $hash.$meta.'.'.$extension;
     }
 
     public function hashName($path = null)
