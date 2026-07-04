@@ -132,10 +132,14 @@ class FileUploadConfiguration
 
     public static function chunkSize()
     {
-        $size = (int) (config('livewire.temporary_file_upload.chunk_size') ?: 5 * 1024 * 1024);
+        // S3 requires multipart upload parts (except the last) to be at least 5MB.
+        // Chunks on other disks pass through PHP, so they default to 1MB — small
+        // enough to clear even a stock php.ini's upload_max_filesize of 2M...
+        if (static::isUsingS3()) {
+            return max((int) (config('livewire.temporary_file_upload.chunk_size') ?: 5 * 1024 * 1024), 5 * 1024 * 1024);
+        }
 
-        // S3 requires multipart upload parts (except the last) to be at least 5MB...
-        return static::isUsingS3() ? max($size, 5 * 1024 * 1024) : $size;
+        return (int) (config('livewire.temporary_file_upload.chunk_size') ?: 1024 * 1024);
     }
 
     public static function chunkThreshold()
