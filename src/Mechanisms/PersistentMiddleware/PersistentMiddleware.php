@@ -77,13 +77,11 @@ class PersistentMiddleware extends Mechanism
         return $this->resolvedRouteModels[$class.':'.$key] ?? null;
     }
 
-    protected function gatherActionMiddleware($request)
+    protected function applyActionMiddleware($request, $route)
     {
-        $middleware = SupportActionMiddleware::gatherActionMiddleware($request);
+        $middleware = SupportActionMiddleware::gatherActionMiddleware($request, $route);
 
         $this->addPersistentMiddleware($middleware);
-
-        return $middleware;
     }
 
     protected function extractPathAndMethodFromRequest()
@@ -186,11 +184,9 @@ class PersistentMiddleware extends Mechanism
 
         if (! $route) return [];
 
-        $routeMiddleware = app('router')->gatherRouteMiddleware($route);
-
-        $actionMiddleware = $this->gatherActionMiddleware($request);
-
-        $middleware = array_merge($routeMiddleware, $actionMiddleware);
+        $this->applyActionMiddleware($request, $route);
+        
+        $middleware = app('router')->gatherRouteMiddleware($route);
 
         return $this->filterMiddlewareByPersistentMiddleware($middleware);
     }
