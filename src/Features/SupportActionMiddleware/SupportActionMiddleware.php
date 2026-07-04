@@ -8,9 +8,9 @@ use Livewire\Features\SupportPageComponents\SupportPageComponents;
 
 class SupportActionMiddleware extends ComponentHook
 {
-    public static function gatherActionMiddleware($request)
+    public static function gatherActionMiddleware($request, $route)
     {
-        if (! $component = static::routeActionIsAPageComponent($request->route())) {
+        if (! $component = static::routeActionIsAPageComponent($route)) {
             return [];
         }
 
@@ -18,7 +18,7 @@ class SupportActionMiddleware extends ComponentHook
         // we need to retrieve all that using middleware attribute
         [$actions, $listeners] = static::getComponentMetadata($component);
 
-        $calls = $request->input('components.0.calls');
+        $calls = $request->array('components.0.calls', []);
 
         $methodName = null;
         foreach ($calls as $call) {
@@ -32,7 +32,11 @@ class SupportActionMiddleware extends ComponentHook
 
         if (! $methodName) return [];
 
-        return static::resolveAttributeMiddleware($methodName, $actions);
+        $middleware = static::resolveAttributeMiddleware($methodName, $actions);
+
+        $route->middleware($middleware);
+
+        return $middleware;
     }
 
     protected static function resolveMethodFromCall($call, $listeners)
@@ -56,7 +60,7 @@ class SupportActionMiddleware extends ComponentHook
 
         $middleware = array_map(
             fn ($attribute) => $attribute->newInstance()->middleware,
-            $reflectionMethod->getAttributes()
+            $reflectionMethod->getAttributes(BaseMiddleware::class, \ReflectionAttribute::IS_INSTANCEOF)
         );
 
         return app('router')->resolveMiddleware($middleware);
