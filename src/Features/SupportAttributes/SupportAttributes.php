@@ -9,35 +9,29 @@ class SupportAttributes extends ComponentHook
 {
     function boot(...$params)
     {
-        $callback = function ($attribute) use ($params) {
+        $this->getLivewireAttributes()->each(function ($attribute) use ($params) {
             if (method_exists($attribute, 'boot')) {
                 $attribute->boot(...$params);
             }
-        };
-
-        $this->getLivewireAttributes()->each($callback);
+        });
     }
 
     function mount(...$params)
     {
-        $callback = function ($attribute) use ($params) {
+        $this->getLivewireAttributes()->each(function ($attribute) use ($params) {
             if (method_exists($attribute, 'mount')) {
                 $attribute->mount(...$params);
             }
-        };
-
-        $this->getLivewireAttributes()->each($callback);
+        });
     }
 
     function hydrate(...$params)
     {
-        $callback = function ($attribute) use ($params) {
+        $this->getLivewireAttributes()->each(function ($attribute) use ($params) {
             if (method_exists($attribute, 'hydrate')) {
                 $attribute->hydrate(...$params);
             }
-        };
-
-        $this->getLivewireAttributes()->each($callback);
+        });
     }
 
     function update($propertyName, $fullPath, $newValue)
@@ -97,35 +91,29 @@ class SupportAttributes extends ComponentHook
 
     function dehydrate(...$params)
     {
-        $callback = function ($attribute) use ($params) {
+        $this->getLivewireAttributes()->each(function ($attribute) use ($params) {
             if (method_exists($attribute, 'dehydrate')) {
                 $attribute->dehydrate(...$params);
             }
-        };
-
-        $this->getLivewireAttributes()->each($callback);
+        });
     }
 
     function destroy(...$params)
     {
-        $callback = function ($attribute) use ($params) {
+        $this->getLivewireAttributes()->each(function ($attribute) use ($params) {
             if (method_exists($attribute, 'destroy')) {
                 $attribute->destroy(...$params);
             }
-        };
-
-        $this->getLivewireAttributes()->each($callback);
+        });
     }
 
     function exception(...$params)
     {
-        $callback = function ($attribute) use ($params) {
+        $this->getLivewireAttributes()->each(function ($attribute) use ($params) {
             if (method_exists($attribute, 'exception')) {
                 $attribute->exception(...$params);
             }
-        };
-
-        $this->getLivewireAttributes()->each($callback);
+        });
     }
 
     protected function getLivewireAttributes()
