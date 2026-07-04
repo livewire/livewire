@@ -270,6 +270,31 @@ Now, any temporary files older than 24 hours will be cleaned up by S3 automatica
 > [!info]
 > If you are not using S3 for file storage, Livewire will handle file cleanup automatically and there is no need to run the command above.
 
+## Chunked and resumable uploads
+
+Large files are uploaded in chunks automatically — no configuration or markup changes required.
+
+When a selected file is bigger than the configured chunk threshold, Livewire slices it in the browser and uploads the pieces one at a time, then reassembles and validates the file on the server. On S3 disks, Livewire uses native [S3 multipart uploads](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html) instead, so large files still bypass your application server entirely.
+
+Chunking solves two long-standing upload problems:
+
+* **PHP's upload limits no longer apply.** Because each chunk is smaller than a stock `php.ini`'s `upload_max_filesize`, users can upload files far bigger than your PHP configuration would normally allow. Your Livewire validation rules (like `max:`) remain the authority on how big is too big.
+* **Interrupted uploads are resumable.** If an upload is cancelled, interrupted, or the page is reloaded mid-flight, re-selecting the same file resumes from where it left off — Livewire fingerprints the file and only uploads the chunks the server doesn't already have.
+
+You can tune this behavior in the `temporary_file_upload` section of Livewire's config file:
+
+```php
+'temporary_file_upload' => [
+    // ...
+    'chunking' => true,        // Set to false to always upload files whole...
+    'chunk_size' => null,      // Bytes per chunk | Default: 1MB (5MB on S3 — the multipart minimum)
+    'chunk_threshold' => null, // Files larger than this are chunked | Default: chunk_size
+],
+```
+
+> [!info] Abandoned S3 multipart uploads
+> Abandoned multipart uploads on S3 hold invisible storage until they are aborted. Add an [AbortIncompleteMultipartUpload lifecycle rule](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-abort-incomplete-mpu-lifecycle-config.html) to your bucket (one day is a good default) so they are cleaned up automatically. On non-S3 disks, Livewire cleans up stale chunks alongside other temporary uploads.
+
 ## Loading indicators
 
 Although `wire:model` for file uploads works differently than other `wire:model` input types under the hood, the interface for showing loading indicators remains the same.
