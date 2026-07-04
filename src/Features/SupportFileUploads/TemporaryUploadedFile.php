@@ -169,7 +169,17 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function delete()
     {
+        $this->deleteMetaFile();
+
         return $this->storage->delete($this->path);
+    }
+
+    protected function deleteMetaFile()
+    {
+        // S3 uploads don't have a meta file sidecar...
+        if ($this->isActuallyUsingS3()) return;
+
+        $this->storage->delete($this->path.'.json');
     }
 
     public function storeAs($path, $name = null, $options = [])
@@ -183,6 +193,10 @@ class TemporaryUploadedFile extends UploadedFile
         // Same disk and no extra options — move instead of copy for performance.
         if ($this->disk === $disk && empty($options)) {
             Storage::disk($disk)->move($this->path, $newPath);
+
+            // The temporary upload is gone — don't leave its metadata
+            // sidecar stranded in the tmp directory...
+            $this->deleteMetaFile();
         } else {
             Storage::disk($disk)->put(
                 $newPath, $this->storage->readStream($this->path), $options
