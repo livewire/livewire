@@ -877,6 +877,23 @@ class UnitTest extends TestCase
             ->dispatch('some-event')
             ->assertOk();
     }
+
+    public function test_base_authorize_attribute_blocks_unauthorized_user_via_event()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[BaseAuthorize(AuthorizationPost::class)]
+                #[BaseOn('some-event')]
+                public function store() : bool
+                {
+                    return true;
+                }
+            })
+            ->dispatch('some-event')
+            ->assertForbidden();
+    }
 }
 
 class AuthorizationUser extends AuthUser
