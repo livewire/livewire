@@ -4,12 +4,10 @@ namespace Livewire\Features\SupportActionMiddleware;
 
 use Attribute;
 use Illuminate\Auth\Middleware\Authorize as AuthorizeMiddleware;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
-use Livewire\Features\SupportAuthorization\BaseAuthorize;
-use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
+use Livewire\Features\SupportRedirects\SupportRedirects;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class BaseMiddleware extends LivewireAttribute
@@ -25,72 +23,45 @@ class BaseMiddleware extends LivewireAttribute
 
         if ($middleware === []) return;
 
-        // This is to ensure all resolved middleware doesnt contain a closure
-        $middleware = $this->filterMiddlewareByPersistentMiddleware($middleware);
+        $middleware = $this->filterMiddleware($middleware);
 
-        $authorizeMiddleware = Arr::first($middleware, function ($m) {
-            return is_string($m) && Str::before($m, ':') == AuthorizeMiddleware::class;
-        });
+        try {
+            Utils::applyMiddleware(request(), $middleware);
+        } catch (\Throwable $e) {
+            $this->restoreOriginalRedirector();
 
-        if ($authorizeMiddleware) {
-            $this->handleAuthorizeMiddleware($authorizeMiddleware, $parameters);
+            throw $e;
+        }
+    }   
 
-            return;
+    protected function restoreOriginalRedirector()
+    {
+        $redirectorCacheStack = SupportRedirects::$redirectorCacheStack;
+
+        if ($redirectorCacheStack === []) return;
+
+        $lastIndex = array_key_last($redirectorCacheStack);
+
+        $cachedRedirector = $redirectorCacheStack[$lastIndex];
+
+        if (is_object($cachedRedirector)) {
+            app()->instance('redirect', $cachedRedirector);
+        }
+    }
+
+    protected function filterMiddleware($middlewares)
+    {
+        $resolved = [];
+        foreach ($middlewares as $middleware) {
+            if (! is_string($middleware)) continue;
+
+            if (Str::before($middleware, ':') == AuthorizeMiddleware::class) {
+                throw new \InvalidArgumentException("Cannot use authorization middleware as argument");
+            }
+
+            $resolved[] = $middleware;
         }
 
-        Utils::applyMiddleware(request(), $middleware);
-    }
-
-    protected function handleAuthorizeMiddleware($middleware, $parameters)
-    {
-        $arguments = $this->parseMiddleware($middleware);
-
-        $ability = array_shift($arguments);
-
-        // pass `null` if arguments is an empty array after array_shift
-        $arguments = empty($arguments) ? null : $arguments;
-
-        $authorizeAttribute = new BaseAuthorize($ability, $arguments);
-
-        $authorizeAttribute->__boot(
-            $this->component,
-            $this->getLevel(),
-            $this->getName(),
-            $this->getSubName(),
-            $this->getSubTarget()
-        );
-
-        $authorizeAttribute->call($parameters);
-    }
-
-    protected function parseMiddleware($middleware)
-    {
-        [$name, $parameters] = array_pad(explode(':', $middleware, 2), 2, []);
-
-        if (is_string($parameters)) {
-            $parameters = explode(',', $parameters);
-        }
-
-        return $parameters;
-    }
-
-    protected function filterMiddlewareByPersistentMiddleware($middleware)
-    {
-        $middleware = collect($middleware);
-
-        $persistentMiddleware = collect(app(PersistentMiddleware::class)->getPersistentMiddleware());
-
-        return $middleware
-            ->filter(function ($value, $key) use ($persistentMiddleware) {
-                return $persistentMiddleware->contains(function($iValue, $iKey) use ($value) {
-                    // Some middlewares can be closures.
-                    if (! is_string($value)) return false;
-
-                    // Ensure any middleware arguments aren't included in the comparison
-                    return Str::before($value, ':') == $iValue;
-                });
-            })
-            ->values()
-            ->all();
+        return $resolved;
     }
 }
