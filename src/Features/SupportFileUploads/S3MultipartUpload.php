@@ -23,7 +23,12 @@ class S3MultipartUpload
 
     public function plan($fileInfo)
     {
-        $partSize = FileUploadConfiguration::chunkSize();
+        // Grow the part size for very large files — S3 allows at most 10,000
+        // parts per multipart upload...
+        $partSize = max(
+            FileUploadConfiguration::chunkSize(),
+            (int) ceil(max(0, $fileInfo['size']) / ChunkedUpload::MAX_CHUNKS)
+        );
 
         $fingerprint = ChunkedUpload::fingerprint($fileInfo, $partSize);
 

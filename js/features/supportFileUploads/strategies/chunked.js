@@ -21,7 +21,7 @@ export default async function chunked(ctx) {
 async function uploadFileInChunks(entry, index, file, ctx) {
     let { plan, headers, uploadState, progress } = ctx
 
-    let chunkSize = plan.chunkSize
+    let chunkSize = entry.chunkSize
     let received = new Set(entry.receivedChunks)
 
     // If every chunk is already on the server but the file was never
@@ -102,11 +102,8 @@ function chunkFormData(entry, chunkIndex, blob, file) {
 
     formData.append('id', entry.id)
     formData.append('index', chunkIndex)
-    formData.append('total', entry.totalChunks)
     formData.append('name', file.name)
     formData.append('type', file.type)
-    formData.append('size', file.size)
-    formData.append('lastModified', file.lastModified)
     formData.append('chunk', blob, file.name + '.part')
 
     return formData

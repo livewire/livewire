@@ -14,7 +14,7 @@ export default async function s3(ctx) {
         let entry = plan.files[index]
 
         if (entry.multipart) {
-            paths.push(await uploadMultipart(entry.multipart, file, ctx))
+            paths.push(await uploadMultipart(entry.multipart, file, index, ctx))
 
             continue
         }
@@ -42,43 +42,81 @@ export default async function s3(ctx) {
     return paths
 }
 
-async function uploadMultipart(multipart, file, ctx) {
-    let { uploadState, progress, csrfHeaders } = ctx
+async function uploadMultipart(multipart, file, index, ctx) {
+    let { uploadState, progress, csrfHeaders, refreshPlan } = ctx
 
-    // Parts already uploaded in a previous attempt count toward progress...
-    Object.values(multipart.uploadedParts || {}).forEach(size => progress.commit(size))
+    // Parts counted toward progress so far (uploaded now or in a previous attempt)...
+    let committed = new Set
 
-    for (let part of multipart.parts) {
-        if (uploadState.cancelled) throw { type: 'abort' }
+    let commitPart = (partNumber, size) => {
+        if (committed.has(partNumber)) return
 
-        let start = (part.partNumber - 1) * multipart.partSize
-        let blob = file.slice(start, Math.min(start + multipart.partSize, file.size))
+        committed.add(partNumber)
 
-        await withRetries(() => sendRequest({
-            method: 'put',
-            url: part.url,
-            body: blob,
-            onProgress: loaded => progress.report(loaded),
-            uploadState,
-        }), {
-            shouldRetry: error => error.type === 'network'
-                || (error.type === 'status' && error.status >= 500),
-        })
-
-        progress.commit(blob.size)
+        progress.commit(size)
     }
 
-    let response = await sendRequest({
-        method: 'post',
-        url: multipart.completeUrl,
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            ...csrfHeaders,
-        },
-        body: JSON.stringify({ action: 'complete', ref: multipart.ref }),
-        uploadState,
-    })
+    Object.entries(multipart.uploadedParts || {}).forEach(([number, size]) => commitPart(+ number, size))
 
-    return response.paths[0]
+    let refreshes = 0
+
+    while (true) {
+        try {
+            // The plan's part list is authoritative — the server only includes
+            // parts S3 doesn't already have...
+            for (let part of multipart.parts) {
+                if (uploadState.cancelled) throw { type: 'abort' }
+
+                let start = (part.partNumber - 1) * multipart.partSize
+                let blob = file.slice(start, Math.min(start + multipart.partSize, file.size))
+
+                await withRetries(() => sendRequest({
+                    method: 'put',
+                    url: part.url,
+                    body: blob,
+                    onProgress: loaded => progress.report(loaded),
+                    uploadState,
+                }), {
+                    shouldRetry: error => error.type === 'network'
+                        || (error.type === 'status' && error.status >= 500),
+                })
+
+                commitPart(part.partNumber, blob.size)
+            }
+
+            let response = await withRetries(() => sendRequest({
+                method: 'post',
+                url: multipart.completeUrl,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    ...csrfHeaders,
+                },
+                body: JSON.stringify({ action: 'complete', ref: multipart.ref }),
+                uploadState,
+            }), {
+                shouldRetry: error => error.type === 'network'
+                    || (error.type === 'status' && error.status >= 500),
+            })
+
+            return response.paths[0]
+        } catch (error) {
+            // The presigned part URLs (or the completion URL) expired mid-upload —
+            // slow connections, big files. Re-handshake for a fresh plan and pick
+            // up where we left off...
+            let expired = error && error.type === 'status' && [401, 403].includes(error.status)
+
+            if (! expired || ! refreshPlan || ++refreshes > 3) throw error
+
+            let fresh = await refreshPlan()
+
+            let entry = fresh.strategy === 's3' && fresh.files[index] && fresh.files[index].multipart
+
+            if (! entry) throw error
+
+            multipart = entry
+
+            Object.entries(multipart.uploadedParts || {}).forEach(([number, size]) => commitPart(+ number, size))
+        }
+    }
 }

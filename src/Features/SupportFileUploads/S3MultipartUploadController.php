@@ -12,7 +12,9 @@ class S3MultipartUploadController extends FileUploadController
 
         abort_unless(FileUploadConfiguration::isUsingS3(), 404);
 
-        $fingerprint = TemporaryUploadedFile::extractPathFromSignedPath((string) request('ref'));
+        $ref = request('ref');
+
+        $fingerprint = is_string($ref) ? TemporaryUploadedFile::extractPathFromSignedPath($ref) : false;
 
         abort_if($fingerprint === false || ! preg_match('/^[a-f0-9]{40}$/', $fingerprint), 403, 'Invalid multipart upload reference.');
 

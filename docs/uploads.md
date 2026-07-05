@@ -281,6 +281,8 @@ Chunking solves two long-standing upload problems:
 * **PHP's upload limits no longer apply.** Because each chunk is smaller than a stock `php.ini`'s `upload_max_filesize`, users can upload files far bigger than your PHP configuration would normally allow. Your Livewire validation rules (like `max:`) remain the authority on how big is too big.
 * **Interrupted uploads are resumable.** If an upload is cancelled, interrupted, or the page is reloaded mid-flight, re-selecting the same file resumes from where it left off — Livewire fingerprints the file and only uploads the chunks the server doesn't already have.
 
+Chunked uploads are locked down the same way regular temporary uploads are: every chunk request carries a cryptographically signed reference encoding the upload's identity, chunk count, and chunk size — none of which a client can tamper with — and fingerprints are scoped to the user's session, so one user can never touch another user's in-flight upload.
+
 You can tune this behavior in the `temporary_file_upload` section of Livewire's config file:
 
 ```php

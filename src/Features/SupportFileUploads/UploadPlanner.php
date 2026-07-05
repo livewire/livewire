@@ -21,9 +21,9 @@ class UploadPlanner
     public function plan($fileInfos, $isMultiple)
     {
         $fileInfos = collect($fileInfos)->values()->map(fn ($info) => [
-            'name' => (string) ($info['name'] ?? ''),
-            'size' => (int) ($info['size'] ?? 0),
-            'type' => (string) ($info['type'] ?? ''),
+            'name' => is_string($info['name'] ?? null) ? $info['name'] : '',
+            'size' => max(0, (int) ($info['size'] ?? 0)),
+            'type' => is_string($info['type'] ?? null) ? $info['type'] : '',
             'lastModified' => (int) ($info['lastModified'] ?? 0),
         ]);
 
@@ -54,24 +54,33 @@ class UploadPlanner
 
     protected function planForChunked($fileInfos)
     {
-        $chunkSize = FileUploadConfiguration::chunkSize();
-
         return [
             'strategy' => 'chunked',
             'url' => GenerateSignedUploadUrlFacade::forChunks(),
-            'chunkSize' => $chunkSize,
-            'files' => $fileInfos->map(function ($info) use ($chunkSize) {
-                $id = ChunkedUpload::fingerprint($info, $chunkSize);
+            'files' => $fileInfos->map(function ($info) {
+                $chunkSize = $this->chunkSizeFor($info['size']);
+                $totalChunks = ChunkedUpload::totalChunks($info['size'], $chunkSize);
+                $fingerprint = ChunkedUpload::fingerprint($info, $chunkSize);
 
                 return [
-                    'id' => TemporaryUploadedFile::signPath($id),
-                    'totalChunks' => ChunkedUpload::totalChunks($info['size'], $chunkSize),
+                    // A signed capability — the chunk endpoint takes the chunk
+                    // count and size from here, not from request input...
+                    'id' => ChunkedUpload::signCapability($fingerprint, $totalChunks, $chunkSize),
+                    'chunkSize' => $chunkSize,
+                    'totalChunks' => $totalChunks,
                     // Chunks that already made it to the server from a previous
                     // attempt — the frontend skips these so uploads are resumable...
-                    'receivedChunks' => ChunkedUpload::receivedChunks($id),
+                    'receivedChunks' => ChunkedUpload::receivedChunks($fingerprint),
                 ];
             })->all(),
         ];
+    }
+
+    protected function chunkSizeFor($size)
+    {
+        // Grow the chunk size for very large files so no upload ever needs
+        // more than 10,000 chunks (also S3's limit on multipart parts)...
+        return max(FileUploadConfiguration::chunkSize(), (int) ceil($size / ChunkedUpload::MAX_CHUNKS));
     }
 
     protected function planForS3($fileInfos)

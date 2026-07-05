@@ -24,31 +24,33 @@ class ChunkedUploadController extends FileUploadController
     {
         abort_unless(request()->hasValidSignature(), 401);
 
-        $id = TemporaryUploadedFile::extractPathFromSignedPath((string) request('id'));
+        // The upload's fingerprint, chunk count, and chunk size all come from
+        // the signed reference the server issued at plan time — never from
+        // request input the client could tamper with...
+        $capability = ChunkedUpload::verifyCapability(request('id'));
 
-        abort_if($id === false || ! preg_match('/^[a-f0-9]{40}$/', $id), 403, 'Invalid chunk upload reference.');
+        abort_if($capability === false, 403, 'Invalid chunk upload reference.');
 
-        $index = (int) request('index');
-        $total = (int) request('total');
-
-        abort_if($index < 0 || $total < 1 || $index >= $total || $total > 10000, 422, 'Invalid chunk index.');
+        [$fingerprint, $totalChunks, $chunkSize] = $capability;
 
         // Individual chunks only need transport-level validation — the
         // configured upload rules run against the assembled file below...
         Validator::make(request()->all(), [
-            'chunk' => 'required|file|max:'.((int) ceil(FileUploadConfiguration::chunkSize() / 1024) + 1),
+            'index' => 'required|integer|min:0|max:'.($totalChunks - 1),
+            'chunk' => 'required|file|max:'.((int) ceil($chunkSize / 1024) + 1),
             'name' => 'required|string',
+            'type' => 'nullable|string',
         ])->validate();
 
-        ChunkedUpload::storeChunk($id, $index, request()->file('chunk'));
+        ChunkedUpload::storeChunk($fingerprint, (int) request('index'), request()->file('chunk'));
 
-        $received = ChunkedUpload::receivedChunks($id);
+        $received = ChunkedUpload::receivedChunks($fingerprint);
 
-        if (count($received) < $total) {
+        if (count($received) < $totalChunks) {
             return ['complete' => false, 'received' => $received];
         }
 
-        $path = ChunkedUpload::assemble($id, [
+        $path = ChunkedUpload::assemble($fingerprint, [
             'name' => request('name'),
             'type' => request('type'),
         ], FileUploadConfiguration::disk());

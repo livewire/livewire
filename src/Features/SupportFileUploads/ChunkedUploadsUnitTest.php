@@ -28,11 +28,25 @@ class ChunkedUploadsUnitTest extends \Tests\TestCase
         ], false);
 
         $this->assertEquals('chunked', $plan['strategy']);
-        $this->assertEquals(1024, $plan['chunkSize']);
+        $this->assertEquals(1024, $plan['files'][0]['chunkSize']);
         $this->assertCount(1, $plan['files']);
         $this->assertEquals(3, $plan['files'][0]['totalChunks']);
         $this->assertEquals([], $plan['files'][0]['receivedChunks']);
         $this->assertStringContainsString('upload-chunk', $plan['url']);
+    }
+
+    public function test_planner_grows_the_chunk_size_so_no_file_needs_more_than_ten_thousand_chunks()
+    {
+        config()->set('livewire.temporary_file_upload.chunk_size', 1024);
+        config()->set('livewire.temporary_file_upload.rules', ['required', 'file']);
+
+        $plan = app(UploadPlanner::class)->plan([
+            ['name' => 'huge.mp4', 'size' => 50 * 1024 * 1024, 'type' => 'video/mp4'],
+        ], false);
+
+        $this->assertEquals('chunked', $plan['strategy']);
+        $this->assertEquals((int) ceil(50 * 1024 * 1024 / 10000), $plan['files'][0]['chunkSize']);
+        $this->assertEquals(10000, $plan['files'][0]['totalChunks']);
     }
 
     public function test_planner_keeps_small_files_on_the_form_strategy_when_chunking_is_disabled()
@@ -76,6 +90,21 @@ class ChunkedUploadsUnitTest extends \Tests\TestCase
             ChunkedUpload::fingerprint($info, 1024),
             ChunkedUpload::fingerprint(array_merge($info, ['size' => 3001]), 1024)
         );
+    }
+
+    public function test_chunk_fingerprints_are_scoped_to_the_session()
+    {
+        $info = ['name' => 'movie.mp4', 'size' => 3000, 'type' => 'video/mp4', 'lastModified' => 123];
+
+        session()->setId(str_repeat('a', 40));
+        $first = ChunkedUpload::fingerprint($info, 1024);
+
+        // Another user uploading a file with identical metadata must never
+        // land on (or be able to reference) the same chunk directory...
+        session()->setId(str_repeat('b', 40));
+        $second = ChunkedUpload::fingerprint($info, 1024);
+
+        $this->assertNotEquals($first, $second);
     }
 
     public function test_planner_generates_a_presigned_url_per_file_on_s3()
@@ -134,7 +163,7 @@ class ChunkedUploadsUnitTest extends \Tests\TestCase
         $info = ['name' => 'novel.txt', 'size' => 2048, 'type' => 'text/plain', 'lastModified' => 5];
 
         $id = ChunkedUpload::fingerprint($info, 1024);
-        $signedId = TemporaryUploadedFile::signPath($id);
+        $signedId = ChunkedUpload::signCapability($id, 2, 1024);
         $url = GenerateSignedUploadUrlFacade::forChunks();
 
         $first = $this->post($url, array_merge($this->chunkPayload($signedId, 0, $info), [
@@ -173,14 +202,49 @@ class ChunkedUploadsUnitTest extends \Tests\TestCase
     {
         $url = GenerateSignedUploadUrlFacade::forChunks();
 
-        $this->post($url, array_merge($this->chunkPayload('bad-token:'.sha1('malicious'), 0, ['name' => 'x.txt', 'size' => 10, 'type' => 'text/plain']), [
+        $this->post($url, array_merge($this->chunkPayload('bad-token:'.sha1('malicious').'|2|1024', 0, ['name' => 'x.txt', 'size' => 10, 'type' => 'text/plain']), [
             'chunk' => UploadedFile::fake()->createWithContent('x.txt.part', 'hello'),
         ]))->assertForbidden();
     }
 
+    public function test_chunk_endpoint_rejects_ids_with_a_tampered_chunk_count_or_size()
+    {
+        $url = GenerateSignedUploadUrlFacade::forChunks();
+        $signedId = ChunkedUpload::signCapability(sha1('some-file'), 2, 1024);
+
+        // Inflating the signed chunk count or chunk size breaks the signature...
+        $inflated = str_replace('|2|1024', '|10000|1024', $signedId);
+
+        $this->post($url, array_merge($this->chunkPayload($inflated, 0, ['name' => 'x.txt', 'size' => 10, 'type' => 'text/plain']), [
+            'chunk' => UploadedFile::fake()->createWithContent('x.txt.part', 'hello'),
+        ]))->assertForbidden();
+
+        // A bare signed fingerprint without the capability payload is also rejected...
+        $this->post($url, array_merge($this->chunkPayload(TemporaryUploadedFile::signPath(sha1('some-file')), 0, ['name' => 'x.txt', 'size' => 10, 'type' => 'text/plain']), [
+            'chunk' => UploadedFile::fake()->createWithContent('x.txt.part', 'hello'),
+        ]))->assertForbidden();
+    }
+
+    public function test_chunk_endpoint_bounds_the_index_and_chunk_size_by_the_signed_capability()
+    {
+        $url = GenerateSignedUploadUrlFacade::forChunks();
+        $signedId = ChunkedUpload::signCapability(sha1('some-file'), 2, 1024);
+        $headers = ['Accept' => 'application/json'];
+
+        // An index at or past the signed chunk count is rejected...
+        $this->post($url, array_merge($this->chunkPayload($signedId, 2, ['name' => 'x.txt', 'size' => 10, 'type' => 'text/plain']), [
+            'chunk' => UploadedFile::fake()->createWithContent('x.txt.part', 'hello'),
+        ]), $headers)->assertStatus(422);
+
+        // A chunk meaningfully larger than the signed chunk size is rejected...
+        $this->post($url, array_merge($this->chunkPayload($signedId, 0, ['name' => 'x.txt', 'size' => 10, 'type' => 'text/plain']), [
+            'chunk' => UploadedFile::fake()->createWithContent('x.txt.part', str_repeat('A', 5 * 1024)),
+        ]), $headers)->assertStatus(422);
+    }
+
     public function test_chunk_endpoint_requires_a_valid_signature()
     {
-        $this->post(route('livewire.upload-chunk'), $this->chunkPayload(TemporaryUploadedFile::signPath(sha1('x')), 0, ['name' => 'x.txt', 'size' => 10, 'type' => 'text/plain']))
+        $this->post(route('livewire.upload-chunk'), $this->chunkPayload(ChunkedUpload::signCapability(sha1('x'), 1, 1024), 0, ['name' => 'x.txt', 'size' => 10, 'type' => 'text/plain']))
             ->assertUnauthorized();
     }
 
@@ -192,7 +256,7 @@ class ChunkedUploadsUnitTest extends \Tests\TestCase
         $info = ['name' => 'novel.txt', 'size' => 1500, 'type' => 'text/plain', 'lastModified' => 5];
 
         $id = ChunkedUpload::fingerprint($info, 1024);
-        $signedId = TemporaryUploadedFile::signPath($id);
+        $signedId = ChunkedUpload::signCapability($id, 2, 1024);
         $url = GenerateSignedUploadUrlFacade::forChunks();
 
         $this->post($url, array_merge($this->chunkPayload($signedId, 0, $info), [
@@ -258,11 +322,8 @@ class ChunkedUploadsUnitTest extends \Tests\TestCase
         return [
             'id' => $signedId,
             'index' => $index,
-            'total' => ChunkedUpload::totalChunks($info['size'], FileUploadConfiguration::chunkSize()),
             'name' => $info['name'],
             'type' => $info['type'],
-            'size' => $info['size'],
-            'lastModified' => $info['lastModified'] ?? 0,
         ];
     }
 }

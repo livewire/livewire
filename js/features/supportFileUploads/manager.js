@@ -270,16 +270,6 @@ export class MessageBag {
     shift(name) {
         return this.bag[name].shift()
     }
-
-    call(name, ...params) {
-        (this.listeners[name] || []).forEach(callback => {
-            callback(...params)
-        })
-    }
-
-    has(name) {
-        return Object.keys(this.listeners).includes(name)
-    }
 }
 
 function setUploadLoading() {
