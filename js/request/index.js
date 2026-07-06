@@ -141,6 +141,8 @@ export async function sendRequest(pool) {
      */
     if (response.redirected) {
         window.location.href = response.url
+
+        return
     }
 
     /**
