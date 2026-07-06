@@ -317,6 +317,14 @@ export class Component {
 
     addCleanup(cleanup) {
         this.cleanups.push(cleanup)
+
+        return () => {
+            let index = this.cleanups.indexOf(cleanup)
+
+            if (index === -1) return
+
+            this.cleanups.splice(index, 1)
+        }
     }
 
     cleanup() {
