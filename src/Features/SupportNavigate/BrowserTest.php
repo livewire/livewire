@@ -37,6 +37,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('second-tracked-asset-page', SecondTrackedAssetPage::class);
             Livewire::component('second-remote-asset', SecondRemoteAsset::class);
             Livewire::component('first-scroll-page', FirstScrollPage::class);
+            Livewire::component('first-scroll-page-with-filament-replace-state-wrapper', FirstScrollPageWithFilamentReplaceStateWrapper::class);
             Livewire::component('second-scroll-page', SecondScrollPage::class);
             Livewire::component('first-click-handler-page', FirstClickHandlerPage::class);
             Livewire::component('second-click-handler-page', SecondClickHandlerPage::class);
@@ -74,6 +75,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/second-asset', SecondAssetPage::class)->middleware('web');
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
             Route::get('/first-scroll', FirstScrollPage::class)->middleware('web');
+            Route::get('/first-scroll-with-filament-replace-state-wrapper', FirstScrollPageWithFilamentReplaceStateWrapper::class)->middleware('web');
             Route::get('/second-scroll', SecondScrollPage::class)->middleware('web');
             Route::get('/first-click-handler', FirstClickHandlerPage::class)->middleware('web');
             Route::get('/second-click-handler', SecondClickHandlerPage::class)->middleware('web');
@@ -593,6 +595,36 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->forward()
                 ->waitForText('On second')
                 ->assertInViewPort('@second-target')
+            ;
+        });
+    }
+
+    /**
+     * Filament wraps history.replaceState() and skips calls when the incoming state
+     * already matches window.history.state. Livewire needs to avoid mutating the
+     * current state before calling replaceState() so Filament still writes the
+     * navigate snapshot used to restore scroll on back navigation.
+     *
+     * @see https://github.com/filamentphp/filament/issues/20017
+     */
+    public function test_navigate_back_preserves_scroll_when_filament_wraps_replace_state()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-scroll-with-filament-replace-state-wrapper')
+                ->assertVisible('@first-target')
+                ->assertNotInViewPort('@first-target')
+                ->scrollTo('@first-target')
+                ->assertInViewPort('@first-target')
+
+                ->waitForNavigate()->click('@link.to.second')
+                ->waitForText('On second')
+                ->assertNotInViewPort('@second-target')
+                ->scrollTo('@second-target')
+
+                ->waitForNavigate()->back()
+                ->waitForText('On first')
+                ->assertInViewPort('@first-target')
             ;
         });
     }
@@ -1768,6 +1800,52 @@ class FirstScrollPage extends Component
 
             <div style="height: 100vh;">spacer</div>
         </div>
+        HTML;
+    }
+}
+
+class FirstScrollPageWithFilamentReplaceStateWrapper extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first</div>
+
+            <div style="height: 100vh;">spacer</div>
+
+            <div dusk="first-target">below the fold</div>
+
+            <a href="/second-scroll" wire:navigate.hover dusk="link.to.second">Go to second page</a>
+
+            <div style="height: 100vh;">spacer</div>
+        </div>
+
+        @push('scripts')
+            <script>
+                if (! window.livewireReplaceStateWrapperInstalled) {
+                    window.livewireReplaceStateWrapperInstalled = true
+                    window.livewireReplaceStateSkipped = false
+
+                    let originalReplaceState = window.history.replaceState.bind(window.history)
+
+                    originalReplaceState({ library: { scroll: true } }, '', window.location.href)
+
+                    window.history.replaceState = function (state, title, url) {
+                        if (
+                            window.history.state !== null &&
+                            JSON.stringify(window.history.state) === JSON.stringify(state)
+                        ) {
+                            window.livewireReplaceStateSkipped = true
+
+                            return
+                        }
+
+                        return originalReplaceState(state, title, url)
+                    }
+                }
+            </script>
+        @endpush
         HTML;
     }
 }
