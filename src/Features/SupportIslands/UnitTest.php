@@ -119,6 +119,13 @@ class UnitTest extends TestCase
         File::delete($viewPath);
     }
 
+    public function test_sfc_island_can_use_imports_from_the_component_class()
+    {
+        app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');
+
+        Livewire::test('sfc-island-imports')->assertSee('year: 2024');
+    }
+
     public function test_sfc_island_can_use_php_imports_from_parent_view()
     {
         // Create a temporary view file to simulate an SFC's compiled view...

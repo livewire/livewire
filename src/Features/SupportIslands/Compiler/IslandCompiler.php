@@ -4,16 +4,23 @@ namespace Livewire\Features\SupportIslands\Compiler;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Arr;
+use Livewire\Compiler\Parser\Parser;
 
 class IslandCompiler
 {
     protected string $mutableContents;
+
+    protected ?string $imports;
 
     public function __construct(
         public string $pathSignature,
         public string $contents,
     ) {
         $this->mutableContents = $contents;
+
+        // Islands are extracted into separately compiled views, so any imports
+        // from the top of the view need to be carried into each island...
+        $this->imports = $this->extractImports();
     }
 
     public static function compile(string $pathSignature, string $contents): string
@@ -98,8 +105,10 @@ class IslandCompiler
         $scopeProviderCode = $this->generateScopeProviderCode($expression);
         $innerContent = $scopeProviderCode . $innerContent;
 
-        // Carry SFC import aliases into separately compiled island views...
-        $innerContent = $this->injectImportsFromCompiledView($innerContent);
+        // Carry imports from the top of the view into the extracted island view...
+        if ($this->imports) {
+            $innerContent = $this->imports . "\n\n" . $innerContent;
+        }
 
         // Ensure the cached directory exists...
         File::ensureDirectoryExists(dirname($cachedPath), 0777);
@@ -112,54 +121,28 @@ class IslandCompiler
         return $output;
     }
 
-    protected function injectImportsFromCompiledView(string $contents): string
+    protected function extractImports(): ?string
     {
-        $imports = $this->extractImportsFromCompiledView();
+        $prefix = explode('@island', $this->contents, 2)[0];
 
-        if (! $imports) {
-            return $contents;
-        }
-
-        return $imports . "\n\n" . $contents;
-    }
-
-    protected function extractImportsFromCompiledView(): string
-    {
-        // Compile only the leading contents so existing Blade handling for
-        // directives like `@use(...)` has already been applied before we copy
-        // import blocks into the extracted island view.
-        $compiledPrefix = app('blade.compiler')->compileString(
-            explode('@island', $this->contents, 2)[0]
-        );
-
-        return $this->extractLeadingImportBlocks($compiledPrefix);
-    }
-
-    protected function extractLeadingImportBlocks(string $contents): string
-    {
         $imports = [];
 
-        while (preg_match('/\A\s*<\?php(.*?)\?>/s', $contents, $matches)) {
-            if (! $this->phpBlockContainsOnlyImports($matches[1])) {
-                break;
+        // Collect `use` statements from leading PHP blocks (the compiler hoists
+        // an SFC's imports into one of these at the top of the view)...
+        while (preg_match('/\A\s*<\?php(.*?)\?>/s', $prefix, $matches)) {
+            if ($statements = Parser::extractUseStatements($matches[1])) {
+                $imports[] = "<?php\n" . $statements . "\n?>";
             }
 
-            $imports[] = trim($matches[0]);
-            $contents = substr($contents, strlen($matches[0]));
+            $prefix = substr($prefix, strlen($matches[0]));
         }
 
-        return implode("\n", $imports);
-    }
+        // Collect `@use(...)` directives as-is and let Blade compile them within the island...
+        if (preg_match_all('/(?<![@\w])@use\s*\([^)]*\)/', $prefix, $matches)) {
+            $imports = array_merge($imports, $matches[0]);
+        }
 
-    protected function phpBlockContainsOnlyImports(string $contents): bool
-    {
-        $withoutCommentsOrUses = preg_replace(
-            '/(?:\/\/[^\n]*|\/\*.*?\*\/)|\buse\s+(?:function\s+|const\s+)?[^;]+;/s',
-            '',
-            $contents,
-        );
-
-        return trim($withoutCommentsOrUses) === '';
+        return $imports ? implode("\n", $imports) : null;
     }
 
     protected function generateScopeProviderCode(string $expression): string
