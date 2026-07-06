@@ -635,6 +635,75 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_wire_model_renderless_live_updates_without_rendering()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public $renders = 0;
+
+            public function render()
+            {
+                $this->renders++;
+
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.renderless.live="title" />
+                        <button dusk="refresh" type="button" wire:click="$commit">Refresh</button>
+
+                        <span dusk="ephemeral" x-text="$wire.title"></span>
+                        <span dusk="server">{{ $title }}</span>
+                        <span dusk="renders">{{ $renders }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeNothingIn('@ephemeral')
+            ->assertSeeNothingIn('@server')
+            ->assertSeeIn('@renders', '1')
+            ->type('@input', 'hello')
+            ->pause(500)
+            ->assertSeeIn('@ephemeral', 'hello')
+            ->assertSeeNothingIn('@server')
+            ->assertSeeIn('@renders', '1')
+            ->waitForLivewire()->click('@refresh')
+            ->assertSeeIn('@server', 'hello')
+            ->assertSeeIn('@renders', '2')
+        ;
+    }
+
+    public function test_wire_click_renderless_magic_action_updates_without_rendering()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public $renders = 0;
+
+            public function render()
+            {
+                $this->renders++;
+
+                return <<<'BLADE'
+                    <div>
+                        <button dusk="set" type="button" wire:click.renderless="$set('title', 'hello')">Set</button>
+                        <button dusk="refresh" type="button" wire:click="$commit">Refresh</button>
+
+                        <span dusk="server">{{ $title }}</span>
+                        <span dusk="renders">{{ $renders }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@renders', '1')
+            ->waitForLivewire()->click('@set')
+            ->assertSeeNothingIn('@server')
+            ->assertSeeIn('@renders', '1')
+            ->waitForLivewire()->click('@refresh')
+            ->assertSeeIn('@server', 'hello')
+            ->assertSeeIn('@renders', '2')
+        ;
+    }
+
     public function test_wire_model_live_blur_ephemeral_immediate_network_on_blur()
     {
         Livewire::visit(new class extends Component {
