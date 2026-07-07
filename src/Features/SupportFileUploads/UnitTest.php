@@ -28,6 +28,23 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
     }
 
+    public function test_a_missing_s3_flysystem_adapter_fails_fast_with_a_pointer_to_the_composer_package()
+    {
+        FileUploadConfiguration::$enforceS3AdapterCheckForTesting = true;
+
+        try {
+            config()->set('livewire.temporary_file_upload.disk', 's3');
+
+            $this->expectException(MissingS3AdapterException::class);
+            $this->expectExceptionMessage('composer require league/flysystem-aws-s3-v3');
+
+            Livewire::test(FileUploadComponent::class)
+                ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
+        } finally {
+            FileUploadConfiguration::$enforceS3AdapterCheckForTesting = false;
+        }
+    }
+
     public function test_s3_driver_supports_multiple_file_uploads()
     {
         config()->set('livewire.temporary_file_upload.disk', 's3');

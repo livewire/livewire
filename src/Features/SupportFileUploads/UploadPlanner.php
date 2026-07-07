@@ -32,6 +32,10 @@ class UploadPlanner
         }
 
         if (FileUploadConfiguration::isUsingS3()) {
+            // A missing Flysystem S3 adapter would otherwise surface as an
+            // opaque fatal mid-request — fail fast with a pointer instead...
+            FileUploadConfiguration::ensureS3AdapterIsInstalled();
+
             return $this->planForS3($fileInfos);
         }
 

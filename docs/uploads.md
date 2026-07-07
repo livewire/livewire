@@ -250,6 +250,15 @@ If you wish to bypass your application server and instead store Livewire's tempo
 LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK=s3
 ```
 
+> [!warning] Install the Flysystem S3 adapter
+> Laravel's `s3` driver requires the Flysystem S3 package, which isn't installed by default:
+>
+> ```shell
+> composer require league/flysystem-aws-s3-v3 "^3.0"
+> ```
+>
+> This also applies to S3-compatible services like Cloudflare R2 and DigitalOcean Spaces, configured via the `endpoint` option on your disk.
+
 Now, when a user uploads a file, the file will never actually be stored on your server. Instead, it will be uploaded directly to your S3 bucket within the `livewire-tmp/` sub-directory.
 
 > [!tip]

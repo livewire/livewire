@@ -7,6 +7,19 @@ use League\Flysystem\WhitespacePathNormalizer;
 
 class FileUploadConfiguration
 {
+    public static $enforceS3AdapterCheckForTesting = false;
+
+    public static function ensureS3AdapterIsInstalled()
+    {
+        // Unit tests swap the S3-touching facades with fakes, so the adapter
+        // is never actually needed there...
+        if (app()->runningUnitTests() && ! static::$enforceS3AdapterCheckForTesting) return;
+
+        if (! class_exists(\League\Flysystem\AwsS3V3\AwsS3V3Adapter::class)) {
+            throw new MissingS3AdapterException;
+        }
+    }
+
     public static function storage()
     {
         $disk = static::disk();
