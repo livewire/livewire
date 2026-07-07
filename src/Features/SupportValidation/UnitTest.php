@@ -2,19 +2,20 @@
 
 namespace Livewire\Features\SupportValidation;
 
-use Tests\TestComponent;
-use Livewire\Wireable;
 use Livewire\Livewire;
-use Livewire\Exceptions\MissingRulesException;
+use Livewire\Wireable;
 use Livewire\Component;
-use Livewire\Attributes\Validate;
+use Tests\TestComponent;
 use Livewire\Attributes\Rule;
-use Illuminate\Support\ViewErrorBag;
+use Livewire\Attributes\Validate;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Collection;
+use PHPUnit\Framework\AssertionFailedError;
+use Livewire\Exceptions\MissingRulesException;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -998,6 +999,42 @@ class UnitTest extends \Tests\TestCase
         })
             ->call('save')
             ->assertHasErrors(['prompt' => 'required']);
+    }
+
+    public function test_assert_only_has_errors()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            #[Validate('required')]
+            #[Validate('min:100')]
+            public $foo = '';
+
+            #[Validate('required')]
+            #[Validate('min:100')]
+            public $bar = '';
+
+            public function runValidation()
+            {
+                $this->validate();
+            }
+        })->set('foo', 'invalid')->set('bar', 'also-invalid')->call('runValidation');
+
+        try {
+            $component->assertOnlyHasErrors('foo');
+            $this->fail();
+        } catch (AssertionFailedError $e) {
+            $this->assertStringStartsWith('Component has unexpected errors: bar', $e->getMessage());
+        }
+
+        $component->assertOnlyHasErrors(['foo', 'bar']);
+
+        try {
+            $component->assertOnlyHasErrors(['foo' => 'min']);
+            $this->fail();
+        } catch (AssertionFailedError $e) {
+            $this->assertStringStartsWith('Component has unexpected errors: bar', $e->getMessage());
+        }
+
+        $component->assertOnlyHasErrors(['foo' => 'min', 'bar' => 'min']);
     }
 }
 
