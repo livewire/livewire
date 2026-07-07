@@ -16,6 +16,7 @@ use Livewire\Features\SupportEvents\HandlesEvents;
 use Livewire\Features\SupportHtmlAttributeForwarding\HandlesHtmlAttributeForwarding;
 use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
 use Livewire\Features\SupportAttributes\HandlesAttributes;
+use Livewire\Features\SupportRenderless\HandlesRenderless;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
@@ -42,6 +43,7 @@ abstract class Component
     use HandlesDisablingBackButtonCache;
     use HandlesSlots;
     use HandlesHtmlAttributeForwarding;
+    use HandlesRenderless;
 
     protected $__id;
     protected $__name;
@@ -69,20 +71,6 @@ abstract class Component
     function getName()
     {
         return $this->__name;
-    }
-
-    function renderless()
-    {
-        $this->skipRender();
-    }
-
-    function skipRender($html = null)
-    {
-        if (store($this)->has('forceRender')) {
-            return;
-        }
-
-        store($this)->set('skipRender', $html ?: true);
     }
 
     function forceRender()
