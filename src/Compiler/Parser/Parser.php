@@ -209,15 +209,7 @@ PHP
     {
         // Extract everything between <?php and "new"
         if (preg_match('/\<\?php(.*?)new/s', $classPortion, $matches)) {
-            $preamble = $matches[1];
-
-            // Use (*SKIP)(*FAIL) to ignore "use" statements inside comments...
-            $skipComments = '(?:\/\/[^\n]*|\/\*.*?\*\/)(*SKIP)(*FAIL)';
-
-            // Extract all use statements
-            if (preg_match_all('/' . $skipComments . '|use\s+[^;]+;/s', $preamble, $useMatches)) {
-                $useStatements = implode("\n", $useMatches[0]);
-            }
+            $useStatements = static::extractUseStatements($matches[1]);
         }
 
         // Only add PHP tags and use statements if we found any
@@ -226,5 +218,18 @@ PHP
         }
 
         return $contents;
+    }
+
+    public static function extractUseStatements(string $contents): ?string
+    {
+        // Use (*SKIP)(*FAIL) to ignore "use" statements inside comments...
+        $skipComments = '(?:\/\/[^\n]*|\/\*.*?\*\/)(*SKIP)(*FAIL)';
+
+        // Extract all use statements (excluding closure `use (...)` clauses)...
+        if (! preg_match_all('/' . $skipComments . '|\buse\s+[^;()]+;/s', $contents, $useMatches)) {
+            return null;
+        }
+
+        return $useMatches[0] ? implode("\n", $useMatches[0]) : null;
     }
 }

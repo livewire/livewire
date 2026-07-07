@@ -8,6 +8,7 @@ use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Authorize;
+use Livewire\Features\SupportEvents\BaseOn;
 use Livewire\Livewire;
 use Sushi\Sushi;
 use Tests\TestCase;
@@ -858,6 +859,40 @@ class UnitTest extends TestCase
             })
             ->call('store')
             ->assertOk();
+    }
+
+    public function test_can_trigger_base_authorize_attribute_using_event()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[BaseAuthorize(AuthorizationPost::class)]
+                #[BaseOn('some-event')]
+                public function store() : bool
+                {
+                    return true;
+                }
+            })
+            ->dispatch('some-event')
+            ->assertOk();
+    }
+
+    public function test_base_authorize_attribute_blocks_unauthorized_user_via_event()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[BaseAuthorize(AuthorizationPost::class)]
+                #[BaseOn('some-event')]
+                public function store() : bool
+                {
+                    return true;
+                }
+            })
+            ->dispatch('some-event')
+            ->assertForbidden();
     }
 }
 

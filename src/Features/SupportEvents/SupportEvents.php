@@ -30,7 +30,7 @@ class SupportEvents extends ComponentHook
             // its normal "call" hook doesn't get run when the method
             // is called as an event listener...
             $this->component->getAttributes()
-                ->filter(fn ($i) => is_subclass_of($i, BaseAuthorize::class))
+                ->filter(fn ($i) => $i instanceof BaseAuthorize)
                 ->filter(fn ($i) => $i->getName() === $method)
                 ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
                 ->each(fn ($i) => $i->call($params));
@@ -43,7 +43,7 @@ class SupportEvents extends ComponentHook
             // is "renderless" as it's normal "call" hook doesn't get run when
             // the method is called as an event listener...
             $isRenderless = $this->component->getAttributes()
-                ->filter(fn ($i) => is_subclass_of($i, BaseRenderless::class))
+                ->filter(fn ($i) => $i instanceof BaseRenderless)
                 ->filter(fn ($i) => $i->getName() === $method)
                 ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
                 ->count() > 0;

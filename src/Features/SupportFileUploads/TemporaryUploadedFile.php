@@ -190,18 +190,9 @@ class TemporaryUploadedFile extends UploadedFile
 
         $newPath = trim($path.'/'.$name, '/');
 
-        // Same disk and no extra options — move instead of copy for performance.
-        if ($this->disk === $disk && empty($options)) {
-            Storage::disk($disk)->move($this->path, $newPath);
-
-            // The temporary upload is gone — don't leave its metadata
-            // sidecar stranded in the tmp directory...
-            $this->deleteMetaFile();
-        } else {
-            Storage::disk($disk)->put(
-                $newPath, $this->storage->readStream($this->path), $options
-            );
-        }
+        Storage::disk($disk)->put(
+            $newPath, $this->storage->readStream($this->path), $options
+        );
 
         return $newPath;
     }
