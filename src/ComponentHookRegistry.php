@@ -82,6 +82,10 @@ class ComponentHookRegistry
         });
 
         on('exception', function ($target, $e, $stopPropagation) {
+            if ($target instanceof \Livewire\Features\SupportFormObjects\Form) {
+                $target = $target->getComponent();
+            }
+
             if ($target instanceof \Livewire\Component) {
                 static::proxyCallToHooks($target, 'callException')($e, $stopPropagation);
             }
