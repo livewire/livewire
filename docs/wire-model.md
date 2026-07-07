@@ -304,6 +304,18 @@ Bracket notation is also supported as an alternative:
 
 Both notations are equivalent — `address['city']` resolves the same path as `address.city`. Bracket and dot notation can be mixed freely within a single expression.
 
+## Skipping renders
+
+The `.renderless` modifier sends a live model update to the server without re-rendering the component:
+
+```blade
+<input type="text" wire:model.renderless.live="search">
+```
+
+This is useful for model updates that should be persisted on the server but should not morph the current DOM after the message completes.
+
+Because `.renderless` only affects server messages, use it with `.live`.
+
 ## Going deeper
 
 For a more complete documentation on using `wire:model` in the context of HTML forms, visit the [Livewire forms documentation page](/docs/4.x/forms).
@@ -339,4 +351,5 @@ wire:model="property[0]"
 | `.boolean` | Cast value to `bool` on the server |
 | `.fill` | Use initial value from HTML `value` attribute |
 | `.deep` | Also listen to events from child elements |
+| `.renderless` | Skip re-rendering after a live model update |
 | `.preserve-scroll` | Maintain scroll position during updates |

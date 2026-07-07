@@ -44,13 +44,15 @@ class SupportSlots extends ComponentHook
 
     function hydrate($memo)
     {
-        // When a child component re-renders, we will need to stub out the known slots
-        // with placeholders so that they can be rendered and morph'd correctly...
-        $slots = $memo['slots'] ?? [];
+        // When a child component re-renders, we will need to restore the known slots so
+        // that they can be rendered and morph'd correctly. Full Slots are restored when
+        // content was persisted from a skipped render (e.g. lazy components); otherwise
+        // placeholders are used...
+        [$hydrated, $placeholders] = collect($memo['slots'] ?? [])
+            ->partition(fn ($s) => isset($s['content']));
 
-        if (! empty($slots)) {
-            $this->component->withPlaceholderSlots($slots);
-        }
+        if ($hydrated->isNotEmpty()) $this->component->withHydratedSlots($hydrated->all());
+        if ($placeholders->isNotEmpty()) $this->component->withPlaceholderSlots($placeholders->all());
     }
 
     public function dehydrate($context)
@@ -77,11 +79,19 @@ class SupportSlots extends ComponentHook
         $slotMemo = [];
 
         foreach ($slots as $slot) {
-            $slotMemo[] = [
+            $entry = [
                 'name' => $slot->getName(),
                 'componentId' => $slot->getComponentId(),
                 'parentId' => $slot->getParentId(),
             ];
+
+            // If the slot has content and the render was skipped (e.g. lazy loading),
+            // persist the content so it survives the dehydrate → hydrate cycle...
+            if ($slot instanceof Slot && $this->storeGet('skipRender', false)) {
+                $entry['content'] = $slot->content;
+            }
+
+            $slotMemo[] = $entry;
         }
 
         if (! empty($slotMemo)) {
