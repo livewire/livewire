@@ -53,7 +53,7 @@ class HistoryCoordinator {
     }
 
     writeToHistory(method, url, callback) {
-        let state = window.history.state || {}
+        let state = window.history.state ? { ...window.history.state } : {}
         if (!state.alpine) state.alpine = {}
 
         // Process the state using the callback...

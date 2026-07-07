@@ -156,6 +156,8 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
                 $template = static::suffixClosingDirective($match[0], $template, $matchPosition);
             } elseif (preg_match($loopEmptyDirectivePattern, $match[0])) {
                 $template = static::suffixLoopEmptyDirective($match[0], $template, $matchPosition);
+            } elseif (preg_match('/@(continue|break)(?![a-zA-Z])/', $match[0])) {
+                $template = static::compileEarlyLoopExitDirective($match[0], $template, $matchPosition, $match[1], $match[3]);
             }
         }
 
@@ -210,6 +212,38 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         $pattern .= "/mUi";
 
         return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $found, $prefix, $suffix);
+    }
+
+    protected static function compileEarlyLoopExitDirective($found, $template, $position, $directive, $expression)
+    {
+        if (! static::$shouldInjectConditionalMarkers) {
+            return $template;
+        }
+
+        $foundEscaped = preg_quote($found, '/');
+
+        $livewireCheckOpeningTag = '<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?>';
+
+        $livewireCheckClosingTag = '<?php endif; ?>';
+
+        $marker = $livewireCheckOpeningTag.'<!--[if ENDBLOCK]><![endif]-->'.$livewireCheckClosingTag;
+
+        /*
+         * Mirrors Laravel's loop-exit compilation from
+         * Illuminate\View\Compilers\Concerns\CompilesLoops::compileBreak()
+         * and ::compileContinue(), adding Livewire's marker before the early exit.
+         */
+        if ($expression && preg_match('/\(\s*(-?\d+)\s*\)$/', $expression, $matches)) {
+            $replacement = $marker.'<?php '.$directive.' '.max(1, $matches[1]).'; ?>';
+        } elseif ($expression) {
+            $replacement = '<?php if'.$expression.': ?>'.$marker.'<?php '.$directive.'; ?><?php endif; ?>';
+        } else {
+            $replacement = $marker.'<?php '.$directive.'; ?>';
+        }
+
+        $pattern = "/{$foundEscaped}/mUi";
+
+        return static::replaceMatchIfNotInsideAHtmlTag($template, $position, $pattern, $replacement, '', '');
     }
 
     protected static function suffixClosingDirective($found, $template, $position)
