@@ -217,6 +217,28 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(__DIR__ . '/Fixtures/finder-test-single-file-component.blade.php', $path);
     }
 
+    public function test_can_resolve_single_file_component_with_inline_php_attribute()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('single-file-component-with-inline-php-attribute');
+
+        $this->assertEquals(__DIR__ . '/Fixtures/single-file-component-with-inline-php-attribute.blade.php', $path);
+    }
+
+    public function test_can_resolve_single_file_component_with_multiline_php_attribute()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('single-file-component-with-multiline-php-attribute');
+
+        $this->assertEquals(__DIR__ . '/Fixtures/single-file-component-with-multiline-php-attribute.blade.php', $path);
+    }
+
     public function test_can_resolve_location_single_file_component_with_zap()
     {
         $finder = new Finder();
@@ -679,6 +701,14 @@ class UnitTest extends \Tests\TestCase
 
         // Already-canonical names pass through unchanged.
         $this->assertEquals('pages::a.b.c', $finder->normalizeName('pages::a.b.c'));
+    }
+
+    public function test_volt_functional_component_is_not_resolved_as_single_file_component()
+    {
+        $finder = new Finder();
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+
+        $this->assertNull($finder->resolveSingleFileComponentPath('volt-functional-component'));
     }
 }
 

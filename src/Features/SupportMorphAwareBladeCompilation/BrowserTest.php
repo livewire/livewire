@@ -81,5 +81,39 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertVisible('@disable')
         ;
     }
-}
 
+    public function test_continue_inside_loop_does_not_break_morphing_when_condition_changes(): void
+    {
+        Livewire::visit(new class extends Component {
+
+            public bool $show = false;
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <button type="button" wire:click="showContent" dusk="show">Show</button>
+
+                    @foreach ([1] as $item)
+                        @if (true)
+                            @continue(! $show)
+
+                            <div dusk="content">Content</div>
+                        @endif
+                    @endforeach
+                </div>
+                HTML;
+            }
+
+            public function showContent(): void
+            {
+                $this->show = true;
+            }
+        })
+        ->assertNotPresent('@content')
+        ->waitForLivewire()->click('@show')
+        ->assertVisible('@content')
+        ->assertConsoleLogHasNoErrors()
+        ;
+    }
+}

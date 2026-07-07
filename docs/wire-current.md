@@ -38,7 +38,7 @@ Here's an example where you might want to use exact matching to prevent the "Das
 
 By default, `wire:current` will remove trailing slashes (`/`) from its comparison.
 
-If you'd like to disable this behavior and force a stract path string comparison, you can append the `.strict` modifier:
+If you'd like to disable this behavior and force a strict path string comparison, you can append the `.strict` modifier:
 
 ```blade
 <nav>

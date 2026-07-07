@@ -1,6 +1,6 @@
 import { replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
-import { createUrlObjectFromString, extractDestinationFromLink, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
+import { createUrlObjectFromString, extractDestinationFromLink, linkShouldBeHandledNatively, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
 import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
 import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
 import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
@@ -12,7 +12,6 @@ import { fetchHtml } from "./fetch"
 let enablePersist = true
 let showProgressBar = true
 let restoreScroll = true
-let autofocus = false
 
 export default function (Alpine) {
 
@@ -44,7 +43,7 @@ export default function (Alpine) {
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
 
-            if (! destination) return
+            if (linkShouldBeHandledNatively(el, destination)) return
 
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
@@ -55,8 +54,6 @@ export default function (Alpine) {
 
         whenThisLinkIsPressed(el, (whenItIsReleased) => {
             let destination = extractDestinationFromLink(el)
-
-            if (! destination) return
 
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
@@ -123,11 +120,8 @@ export default function (Alpine) {
 
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {
-                            setTimeout(() => {
-                                autofocus && autofocusElementsWithTheAutofocusAttribute()
-                            })
-
                             nowInitializeAlpineOnTheNewPage(Alpine)
+                            autofocusElementsWithTheAutofocusAttribute()
 
                             fireEventForOtherLibrariesToHookInto('alpine:navigated')
                             showProgressBar && finishAndHideProgressBar()
@@ -174,6 +168,8 @@ export default function (Alpine) {
                 onSwap: (callback) => swapCallbacks.push(callback)
             })
 
+            cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement()
+
             // Update the snapshot (not the history state, as the history state has
             // already changed to the new page due to the popstate event).
             // This ensures the current HTML has the latest snapshot.
@@ -201,9 +197,8 @@ export default function (Alpine) {
                     swapCallbacks.forEach(callback => callback())
 
                     andAfterAllThis(() => {
-                        autofocus && autofocusElementsWithTheAutofocusAttribute()
-
                         nowInitializeAlpineOnTheNewPage(Alpine)
+                        autofocusElementsWithTheAutofocusAttribute()
 
                         fireEventForOtherLibrariesToHookInto('alpine:navigated')
                     })
