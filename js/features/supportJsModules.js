@@ -6,17 +6,12 @@ import Alpine from 'alpinejs'
 let pendingComponentAssets = new WeakMap()
 let pendingComponentCount = 0
 
-// When Alpine's morph plugin clones a server-rendered element into the live
-// tree it runs `Alpine.cloneNode(from, to)`, which calls `initTree(to)` on the
-// detached `to` element. `_x_ignore` on the live `from` doesn't reach it, so
-// expressions like `x-data="myComponent"` evaluate before the script module
-// has loaded. Mirror the ignore flag onto `to` for any element whose live
-// counterpart sits under a component with a pending module.
-//
-// This runs for every element pair morphed on every request, so bail before
-// touching the DOM unless something is actually pending. `findComponentByEl`
-// (not `.closest('[wire\\:id]')`) is required here so that elements forwarded
-// into a child through a slot still resolve to the component that owns them.
+// Alpine's morph clones each matched element via `Alpine.cloneNode(from, to)`;
+// the detached `to` node can't see `_x_ignore` on the live root, so we mirror
+// it manually. This runs for every element pair on every morph, so bail fast
+// when nothing's pending — and resolve via `findComponentByEl`, not `.closest`,
+// so slot-forwarded content defers to the component that owns it, not its
+// nearest DOM ancestor.
 Alpine.interceptClone((from, to) => {
     if (pendingComponentCount === 0) return
     if (! from || from.nodeType !== 1) return
@@ -35,11 +30,9 @@ on('effect', ({ component, effects }) => {
         let encodedName = component.name.replace(/\./g, '--').replace(/::/g, '---').replace(/:/g, '----')
         let path = `${getModuleUrl()}/js/${encodedName}.js?v=${scriptModuleHash}`
 
-        // If Alpine has already initialised this component (i.e. an update or
-        // lazy load, not a fresh init), block its subtree from initialising
-        // until the module is loaded. Otherwise children morphed in by the
-        // response will run `x-data` before `Alpine.data()` is registered.
-        let alreadyInitialised = component.el && component.el._x_marker
+        // Already initialised (e.g. lazy hydration) — block the subtree until
+        // the module loads, so `x-data` doesn't evaluate before `Alpine.data()`.
+        let alreadyInitialised = component.el._x_marker
 
         if (alreadyInitialised) {
             component.el._x_ignore = true
@@ -55,16 +48,11 @@ on('effect', ({ component, effects }) => {
         import(/* @vite-ignore */ path).then(module => {
             module.run.call(component.$wire, component.$wire, component.$wire.js);
         }).finally(() => {
-            // Runs whether the import succeeded or failed. A failed import (e.g. a
-            // 404 on the module route) leaves `Alpine.data()` unregistered, so any
-            // expression depending on it will throw once we stop ignoring this
-            // element — but that's preferable to leaving the entire component's
-            // directives permanently un-initialised because one script failed.
-            if (alreadyInitialised && component.el && component.el.isConnected) {
+            // Runs on success or failure — a failed import leaves `Alpine.data()`
+            // unregistered, so the dependent expression will throw, but that beats
+            // leaving the whole component's directives permanently un-initialised.
+            if (alreadyInitialised && component.el.isConnected) {
                 delete component.el._x_ignore
-                // Clear the marker so initTree re-processes root's directives,
-                // picking up `x-data` (and similar) that morph added during the
-                // ignored window.
                 delete component.el._x_marker
                 Alpine.initTree(component.el)
             }

@@ -69,10 +69,8 @@ export function start() {
                     destroyComponent(component.id)
                 })
 
-                // If the component's script module is still loading, defer Alpine
-                // processing on this element until it resolves. Otherwise expressions
-                // like `x-data="myComponent"` will fail because `Alpine.data()`
-                // hasn't been registered yet.
+                // Defer Alpine processing until the script module loads, otherwise
+                // `x-data` etc. evaluate before `Alpine.data()` is registered.
                 if (assetIsPendingFor(component)) {
                     el._x_ignore = true
 
