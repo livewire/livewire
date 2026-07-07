@@ -324,6 +324,34 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertCount(1, array_values($articleQueries));
     }
+
+    public function test_hydrating_an_empty_eloquent_collection_does_not_trigger_deprecations()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public Collection $articles;
+
+            public function mount() {
+                $this->articles = new Collection();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>count: {{ count($articles) }}</div>
+            HTML; }
+        });
+
+        // An empty collection dehydrates with `modelClass` as `null`. Convert
+        // deprecations to exceptions so the test fails if hydrating passes
+        // that `null` as an array offset (deprecated in PHP 8.5)...
+        set_error_handler(function ($severity, $message) {
+            throw new \ErrorException($message, 0, $severity);
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
+        try {
+            $component->call('$refresh')->assertSee('count: 0');
+        } finally {
+            restore_error_handler();
+        }
+    }
 }
 
 #[\Attribute]
