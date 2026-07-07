@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Testing\FileFactory;
 use Illuminate\Support\Arr;
+use Livewire\Attributes\Validate;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -943,6 +944,134 @@ class UnitTest extends \Tests\TestCase
         Storage::disk('default-disk')->assertExists('images/avatar.jpg');
         Storage::disk('tmp-for-tests')->assertMissing('images/avatar.jpg');
     }
+
+    public function test_upload_is_rejected_from_declared_metadata_when_it_violates_the_property_max_rule()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->create('photo.png', 2048, 'image/png');
+
+        $test = Livewire::test(FileUploadWithValidateAttributeComponent::class)
+            ->set('photo', $file);
+
+        $this->assertEquals(
+            ['The photo field must not be greater than 1024 kilobytes.'],
+            $test->errors()->get('photo')
+        );
+
+        $test->assertSetStrict('photo', null);
+
+        // The reject decision came from the declared metadata — no bytes ever moved...
+        $this->assertEmpty(Storage::disk('tmp-for-tests')->allFiles());
+    }
+
+    public function test_upload_is_rejected_from_declared_metadata_when_it_violates_the_property_min_rule()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->create('photo.png', 50, 'image/png');
+
+        $test = Livewire::test(FileUploadWithMinRuleComponent::class)
+            ->set('photo', $file);
+
+        $this->assertEquals(
+            ['The photo field must be at least 100 kilobytes.'],
+            $test->errors()->get('photo')
+        );
+
+        $test->assertSetStrict('photo', null);
+
+        $this->assertEmpty(Storage::disk('tmp-for-tests')->allFiles());
+    }
+
+    public function test_multiple_uploads_are_rejected_from_declared_metadata_when_one_violates_the_wildcard_max_rule()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $smallFile = UploadedFile::fake()->create('small.png', 100, 'image/png');
+        $bigFile = UploadedFile::fake()->create('big.png', 2048, 'image/png');
+
+        $test = Livewire::test(MultipleFileUploadWithValidateAttributeComponent::class)
+            ->set('photos', [$smallFile, $bigFile]);
+
+        $this->assertEquals(
+            ['The photos.1 field must not be greater than 1024 kilobytes.'],
+            $test->errors()->get('photos.1')
+        );
+
+        $test->assertSetStrict('photos', []);
+
+        $this->assertEmpty(Storage::disk('tmp-for-tests')->allFiles());
+    }
+
+    public function test_upload_that_fails_property_rules_after_upload_is_deleted_and_never_attached()
+    {
+        Storage::fake('tmp-for-tests');
+
+        // Passes the declared-size preflight, but fails the "image" rule
+        // against the real file after upload...
+        $file = UploadedFile::fake()->create('document.txt', 100, 'text/plain');
+
+        $test = Livewire::test(FileUploadWithValidateAttributeComponent::class)
+            ->set('photo', $file)
+            ->assertHasErrors('photo')
+            ->assertSetStrict('photo', null)
+            ->assertDispatched('upload:errored');
+
+        // The rejected temporary file (and its metadata sidecar) are cleaned up...
+        $this->assertEmpty(Storage::disk('tmp-for-tests')->allFiles());
+    }
+
+    public function test_upload_that_passes_property_rules_is_attached()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->image('photo.png')->size(500);
+
+        $test = Livewire::test(FileUploadWithValidateAttributeComponent::class)
+            ->set('photo', $file)
+            ->assertHasNoErrors()
+            ->assertDispatched('upload:finished');
+
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $test->viewData('photo'));
+    }
+
+    public function test_a_failed_upload_clears_when_a_valid_file_is_uploaded_after_it()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $test = Livewire::test(FileUploadWithValidateAttributeComponent::class)
+            ->set('photo', UploadedFile::fake()->create('photo.png', 2048, 'image/png'))
+            ->assertHasErrors('photo')
+            ->set('photo', UploadedFile::fake()->image('photo.png')->size(500))
+            ->assertHasNoErrors();
+
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $test->viewData('photo'));
+    }
+}
+
+class FileUploadWithValidateAttributeComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[Validate('image|max:1024')]
+    public $photo;
+}
+
+class FileUploadWithMinRuleComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[Validate('file|min:100')]
+    public $photo;
+}
+
+class MultipleFileUploadWithValidateAttributeComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[Validate(['photos.*' => 'image|max:1024'])]
+    public $photos = [];
 }
 
 class FileUploadToDefaultDiskComponent extends TestComponent

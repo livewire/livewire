@@ -10,7 +10,9 @@ trait WithFileUploads
     #[Renderless]
     function _startUpload($name, $fileInfo, $isMultiple)
     {
-        $plan = app(UploadPlanner::class)->plan($fileInfo, $isMultiple);
+        $plan = app(UploadPlanner::class)->plan(
+            $fileInfo, $isMultiple, DeclaredSizeRules::for($this, $name, $isMultiple)
+        );
 
         $this->dispatch('upload:plan', name: $name, plan: $plan)->self();
     }
@@ -32,11 +34,12 @@ trait WithFileUploads
             return $path;
         })->toArray();
 
+        $uploads = collect($tmpPath)->map(function ($i) {
+            return TemporaryUploadedFile::createFromLivewire($i);
+        });
+
         if ($isMultiple) {
-            $file = collect($tmpPath)->map(function ($i) {
-                return TemporaryUploadedFile::createFromLivewire($i);
-            })->toArray();
-            $this->dispatch('upload:finished', name: $name, tmpFilenames: collect($file)->map->getFilename()->toArray())->self();
+            $file = $uploads->toArray();
 
             if ($append) {
                 $existing = $this->getPropertyValue($name);
@@ -47,8 +50,7 @@ trait WithFileUploads
                 }
             }
         } else {
-            $file = TemporaryUploadedFile::createFromLivewire($tmpPath[0]);
-            $this->dispatch('upload:finished', name: $name, tmpFilenames: [$file->getFilename()])->self();
+            $file = $uploads->first();
 
             // If the property is an array, but the upload ISNT set to "multiple"
             // then APPEND the upload to the array, rather than replacing it.
@@ -57,7 +59,49 @@ trait WithFileUploads
             }
         }
 
+        // A file that fails the property's validation rules should never be
+        // attached to the component — reject it before announcing success...
+        $this->validateIncomingUpload($name, $file, $uploads);
+
+        $this->dispatch('upload:finished', name: $name, tmpFilenames: $uploads->map->getFilename()->toArray())->self();
+
         app('livewire')->updateProperty($this, $name, $file);
+    }
+
+    protected function validateIncomingUpload($name, $candidate, $uploads)
+    {
+        // Rules from #[Validate] on form object properties are registered on
+        // the form object itself, not the root component...
+        $target = $this;
+        $field = $name;
+        $root = (string) str($name)->before('.');
+
+        if (($this->all()[$root] ?? null) instanceof \Livewire\Features\SupportFormObjects\Form) {
+            $target = $this->all()[$root];
+            $field = (string) str($name)->after('.');
+        }
+
+        if ($target->missingRuleFor($field)) return;
+
+        try {
+            if (is_array($candidate) || $candidate instanceof \Illuminate\Support\Collection) {
+                // Validate each incoming file against the property's wildcard
+                // rules — files already attached passed when they arrived...
+                $total = count($candidate);
+
+                for ($i = $total - $uploads->count(); $i < $total; $i++) {
+                    $target->validateOnly("{$field}.{$i}", dataOverrides: [$field => $candidate]);
+                }
+            } else {
+                $target->validateOnly($field, dataOverrides: [$field => $candidate]);
+            }
+        } catch (ValidationException $e) {
+            $uploads->each->delete();
+
+            $this->dispatch('upload:errored', name: $name)->self();
+
+            throw $e;
+        }
     }
 
     function _uploadErrored($name, $errorsInJson, $isMultiple) {

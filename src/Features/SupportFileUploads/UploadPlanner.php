@@ -18,7 +18,7 @@ use Livewire\Facades\S3MultipartUploadFacade;
  */
 class UploadPlanner
 {
-    public function plan($fileInfos, $isMultiple)
+    public function plan($fileInfos, $isMultiple, $sizeRules = [])
     {
         $fileInfos = collect($fileInfos)->values()->map(fn ($info) => [
             'name' => is_string($info['name'] ?? null) ? $info['name'] : '',
@@ -27,7 +27,7 @@ class UploadPlanner
             'lastModified' => (int) ($info['lastModified'] ?? 0),
         ]);
 
-        if ($errors = $this->declaredSizeViolations($fileInfos)) {
+        if ($errors = $this->declaredSizeViolations($fileInfos, $sizeRules)) {
             return ['strategy' => 'reject', 'errors' => json_encode(['errors' => $errors])];
         }
 
@@ -106,22 +106,48 @@ class UploadPlanner
         ];
     }
 
-    protected function declaredSizeViolations($fileInfos)
+    protected function declaredSizeViolations($fileInfos, $sizeRules = [])
     {
         $maxKilobytes = FileUploadConfiguration::maxDeclaredSizeInKilobytes();
 
-        if (! $maxKilobytes) return null;
+        if (! $maxKilobytes && ! $sizeRules) return null;
 
         $errors = [];
 
         foreach ($fileInfos as $index => $info) {
-            if ($info['size'] > $maxKilobytes * 1024) {
-                $message = trans('validation.max.file', ['attribute' => 'files.'.$index, 'max' => $maxKilobytes]);
-
+            if ($message = $this->declaredSizeViolation($info['size'], $maxKilobytes, $sizeRules, 'files.'.$index)) {
                 $errors['files.'.$index] = [$message];
             }
         }
 
         return $errors ?: null;
+    }
+
+    protected function declaredSizeViolation($bytes, $globalMaxKilobytes, $sizeRules, $attribute)
+    {
+        // These comparisons mirror Laravel's file size validation exactly
+        // (kilobytes, boundary-inclusive) so a file the preflight lets through
+        // never fails the same rule after upload — and vice versa...
+        if ($globalMaxKilobytes && $bytes > $globalMaxKilobytes * 1024) {
+            return trans('validation.max.file', ['attribute' => $attribute, 'max' => $globalMaxKilobytes]);
+        }
+
+        if (isset($sizeRules['max']) && $bytes > $sizeRules['max'] * 1024) {
+            return trans('validation.max.file', ['attribute' => $attribute, 'max' => $sizeRules['max']]);
+        }
+
+        if (isset($sizeRules['min']) && $bytes < $sizeRules['min'] * 1024) {
+            return trans('validation.min.file', ['attribute' => $attribute, 'min' => $sizeRules['min']]);
+        }
+
+        if (isset($sizeRules['size']) && $bytes !== $sizeRules['size'] * 1024) {
+            return trans('validation.size.file', ['attribute' => $attribute, 'size' => $sizeRules['size']]);
+        }
+
+        if (isset($sizeRules['between']) && ($bytes < $sizeRules['between'][0] * 1024 || $bytes > $sizeRules['between'][1] * 1024)) {
+            return trans('validation.between.file', ['attribute' => $attribute, 'min' => $sizeRules['between'][0], 'max' => $sizeRules['between'][1]]);
+        }
+
+        return null;
     }
 }

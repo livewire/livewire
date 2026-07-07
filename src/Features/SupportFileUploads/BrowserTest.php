@@ -62,6 +62,52 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_upload_violating_property_size_rules_is_rejected_before_uploading_and_never_attached()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            #[BaseValidate('image|max:1024')]
+            public $photo;
+
+            function mount()
+            {
+                Storage::disk('tmp-for-tests')->deleteDirectory('livewire-tmp');
+            }
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photo" dusk="upload">
+
+                @error('photo') <span dusk="error">{{ $message }}</span> @enderror
+
+                <div>
+                    @if ($photo)
+                        <img src="{{ $photo->temporaryUrl() }}" dusk="preview">
+                    @endif
+                </div>
+            </div>
+            HTML; }
+        })
+        ->assertMissing('@error')
+        // This file is ~1041KB — over the property's 1024KB max...
+        ->attach('@upload', __DIR__ . '/browser_test_image_big.jpg')
+        ->waitFor('@error')
+        ->assertSeeIn('@error', 'The photo field must not be greater than 1024 kilobytes.')
+        ->assertMissing('@preview')
+        ->tap(function () {
+            // The declared size was rejected during the handshake — no bytes ever moved...
+            $this->assertEmpty(Storage::disk('tmp-for-tests')->files('livewire-tmp'));
+        })
+        // A valid file afterwards uploads normally and clears the error...
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        ->waitFor('@preview')
+        ->assertMissing('@error')
+        ;
+    }
+
     public function test_can_cancel_an_upload()
     {
         if (getenv('FORCE_RUN') !== '1') {
