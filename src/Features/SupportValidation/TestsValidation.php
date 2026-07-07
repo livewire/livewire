@@ -61,6 +61,8 @@ trait TestsValidation
         $unexpectedErrorKeys = Arr::except($this->errors()->toArray(), $expectedErrorKeys);
 
         PHPUnit::assertTrue(count($unexpectedErrorKeys) === 0, "Component has unexpected errors: ".implode(', ', array_keys($unexpectedErrorKeys)));
+
+        return $this;
     }
 
     protected function makeErrorAssertion($key = null, $value = null) {
