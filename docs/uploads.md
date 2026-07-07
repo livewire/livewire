@@ -19,6 +19,8 @@ new class extends Component {
 
     public function save()
     {
+        $this->validate();
+
         $this->photo->store(path: 'photos');
     }
 };
@@ -101,6 +103,8 @@ new class extends Component {
 
     public function save()
     {
+        $this->validate();
+
         foreach ($this->photos as $photo) {
             $photo->store(path: 'photos');
         }
