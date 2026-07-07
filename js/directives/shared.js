@@ -15,9 +15,10 @@ export function toggleBooleanStateDirective(el, directive, isTruthy, cachedDispl
         let hadAttribute = el.hasAttribute(attribute)
         let value = el.getAttribute(attribute)
 
+        // A callback that puts the attribute back exactly as it was before loading...
         let restore = hadAttribute
             ? () => el.setAttribute(attribute, value)
-            : undefined
+            : () => el.removeAttribute(attribute)
 
         if (isTruthy) {
             el.setAttribute(attribute, true)
