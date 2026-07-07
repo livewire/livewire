@@ -109,6 +109,19 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertConsoleLogHasNoErrors();
     }
 
+    public function test_alpine_data_works_in_slot_forwarded_to_child_of_lazy_component()
+    {
+        // Regression test for: the parent (not the child wrapping it) owns the
+        // script module here. The `x-data` element sits inside a slot physically
+        // rendered inside the child's DOM, so component lookups involved in
+        // deferring Alpine init need to resolve slot ownership correctly rather
+        // than just the nearest `wire:id` ancestor.
+        Livewire::visit('testns::lazy-with-alpine-data-in-slot.parent')
+            ->waitForText('alpine-data-loaded')
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
     public function test_alpine_data_works_in_component_inside_island()
     {
         Livewire::visit('testns::island-with-alpine-data')
