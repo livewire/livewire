@@ -555,6 +555,11 @@ class HandleComponents extends Mechanism
                     $return = null;
                 }
 
+                // Support `.renderless` on magic actions like `wire:model.renderless.live`...
+                if ($metadata['renderless'] ?? false) {
+                    $root->skipRender();
+                }
+
                 $returns[] = $return;
 
                 continue;

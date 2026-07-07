@@ -111,6 +111,8 @@ trait HandlesValidation
         if (method_exists($this, 'rules')) $rulesFromComponent = $this->rules();
         else if (property_exists($this, 'rules')) $rulesFromComponent = $this->rules;
 
+        if ($rulesFromComponent instanceof Arrayable) $rulesFromComponent = $rulesFromComponent->toArray();
+
         $rulesFromOutside = array_merge_recursive(
             ...array_map(
                 fn($i) => value($i),
@@ -128,6 +130,8 @@ trait HandlesValidation
         if (method_exists($this, 'messages')) $messages = $this->messages();
         elseif (property_exists($this, 'messages')) $messages = $this->messages;
 
+        if ($messages instanceof Arrayable) $messages = $messages->toArray();
+
         $messagesFromOutside = array_merge(
             ...array_map(
                 fn($i) => value($i),
@@ -144,6 +148,8 @@ trait HandlesValidation
 
         if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
         elseif (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
+
+        if ($validationAttributes instanceof Arrayable) $validationAttributes = $validationAttributes->toArray();
 
         $validationAttributesFromOutside = array_merge(
             ...array_map(

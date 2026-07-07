@@ -1,4 +1,5 @@
 import { directive } from '@/directives'
+import { checkDirty } from '@/directives/wire-dirty'
 import { handleFileUpload } from '@/features/supportFileUploads'
 import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
@@ -11,6 +12,8 @@ directive('model', ({ el, directive, component, cleanup }) => {
     component = findComponentByEl(el)
 
     let { expression, modifiers } = directive
+
+    modifiers = modifiers.filter(m => m !== 'renderless')
 
     if (! expression) {
         return console.warn('Livewire: [wire:model] is missing a value.', el)
@@ -95,7 +98,17 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Network event listeners (for modifiers after .live, or .lazy backwards compat)
     if (shouldSendNetwork && networkOnBlur) {
-        bindings['@blur'] = () => update()
+        bindings['@blur'] = () => {
+            // Wait a microtask so an ephemeral blur sync (`.blur.live.blur`) lands before the dirty check...
+            queueMicrotask(() => {
+                let target = expression.startsWith('$parent') ? component.parent : component
+
+                // Skip the request if nothing has changed since the last server sync...
+                if (target && ! checkDirty(target)) return
+
+                update()
+            })
+        }
     }
 
     if (shouldSendNetwork && networkOnChange) {

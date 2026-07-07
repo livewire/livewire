@@ -527,6 +527,9 @@ async function sendRequest(request, handlers) {
 
     if (response.redirected) {
         handlers.redirect(response.url)
+        handlers.finish()
+
+        return
     }
 
     /**

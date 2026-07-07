@@ -819,6 +819,78 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.successCount', 1)
         ;
     }
+
+    public function test_overlapping_model_live_requests_do_not_lose_parent_state_or_throw()
+    {
+        // Regression for the "Cannot mutate reactive prop" crash (and silent state loss) that
+        // happened when two model.live requests overlapped while the parent was passing reactive
+        // data down to a child. The second request used to bundle a stale parent snapshot...
+        Livewire::visit([
+            new class extends Component {
+                public string $search = '';
+
+                public int $updateCount = 0;
+
+                public array $facets = [
+                    'query' => [
+                        'values' => [
+                            ['value' => ''],
+                        ],
+                    ],
+                ];
+
+                public function updatedSearch(): void
+                {
+                    // Hold the first request open long enough that the next keystroke's request
+                    // fires while this one is still in-flight...
+                    usleep(200 * 1000);
+
+                    // Accumulate server-side state and mutate the array passed to the reactive
+                    // child. Against a stale snapshot this increment is silently lost and mutating
+                    // the reactive prop throws "Cannot mutate reactive prop"...
+                    $this->updateCount++;
+                    $this->facets['query']['values'][0]['value'] = $this->search;
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <input type="text" wire:model.live.debounce.5ms="search" dusk="parent.search">
+
+                        <span dusk="parent.update-count">{{ $updateCount }}</span>
+
+                        <livewire:child-facets :facets="$facets" />
+                    </div>
+                    HTML;
+                }
+            },
+            'child-facets' => new class extends Component {
+                #[BaseReactive]
+                public array $facets = [];
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <span dusk="child.query">{{ $facets['query']['values'][0]['value'] ?? '' }}</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->assertMissing('#livewire-error')
+
+            // Type two characters quickly so their model.live requests overlap...
+            ->keys('@parent.search', 'b')
+            ->pause(25)
+            ->keys('@parent.search', 'o')
+
+            // Both updates must land against fresh state: the counter reaches 2 (no lost
+            // increment), the reactive child reflects the full input, and nothing throws...
+            ->waitForTextIn('@parent.update-count', '2')
+            ->assertSeeIn('@parent.update-count', '2')
+            ->assertSeeIn('@child.query', 'bo')
+            ->assertMissing('#livewire-error')
+        ;
+    }
 }
 
 class ReactivePropsBrowserTestPost extends Model
