@@ -71,6 +71,18 @@ abstract class ComponentHook
         };
     }
 
+    function callRenderPlaceholder(...$params) {
+        $callbacks = [];
+
+        if (method_exists($this, 'renderPlaceholder')) $callbacks[] = $this->renderPlaceholder(...$params);
+
+        return function (...$params) use ($callbacks) {
+            foreach ($callbacks as $callback) {
+                if (is_callable($callback)) $callback(...$params);
+            }
+        };
+    }
+
     function callDehydrate(...$params) {
         if (method_exists($this, 'dehydrate')) $this->dehydrate(...$params);
     }
