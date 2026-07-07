@@ -132,7 +132,8 @@ return [
         'disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK'), // Example: 'local', 's3'             | Default: 'default'
         'rules' => null,                                      // Example: ['file', 'mimes:png,jpg'] | Default: ['required', 'file', 'max:12288'] (12MB)
         'directory' => null,                                  // Example: 'tmp'                     | Default: 'livewire-tmp'
-        'middleware' => null,                                 // Example: 'throttle:5,1'            | Default: 'throttle:60,1'
+        'middleware' => null,                                 // Example: 'throttle:5,1'            | Default: 'throttle:60,1' (chunk endpoint: 'throttle:600,1')
+        //                                                    // Note: a custom value also governs the chunk endpoint, where one file = many requests — throttle generously (or by bytes)...
         'preview_mimes' => [                                  // Supported file types for temporary pre-signed file URLs...
             'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
             'mov', 'avi', 'wmv', 'mp3', 'm4a',

@@ -6,6 +6,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 use Livewire\Facades\S3MultipartUploadFacade;
+use Livewire\Livewire;
 
 class ChunkedUploadsUnitTest extends \Tests\TestCase
 {
@@ -315,6 +316,144 @@ class ChunkedUploadsUnitTest extends \Tests\TestCase
             'action' => 'complete',
             'ref' => TemporaryUploadedFile::signPath(sha1('x')),
         ])->assertNotFound();
+    }
+
+    public function test_a_resent_final_chunk_after_assembly_resolves_from_the_completion_tombstone()
+    {
+        config()->set('livewire.temporary_file_upload.chunk_size', 1024);
+
+        $info = ['name' => 'novel.txt', 'size' => 2048, 'type' => 'text/plain', 'lastModified' => 5];
+
+        $id = ChunkedUpload::fingerprint($info, 1024);
+        $signedId = ChunkedUpload::signCapability($id, 2, 1024);
+        $url = GenerateSignedUploadUrlFacade::forChunks();
+
+        $this->post($url, array_merge($this->chunkPayload($signedId, 0, $info), [
+            'chunk' => UploadedFile::fake()->createWithContent('novel.txt.part', str_repeat('A', 1024)),
+        ]))->assertOk();
+
+        $completed = $this->post($url, array_merge($this->chunkPayload($signedId, 1, $info), [
+            'chunk' => UploadedFile::fake()->createWithContent('novel.txt.part', str_repeat('B', 1024)),
+        ]));
+
+        $completed->assertOk();
+        $this->assertTrue($completed->json('complete'));
+        $originalPath = $completed->json('paths.0');
+
+        // The chunk directory is gone now, so a re-sent final chunk (a lost
+        // completion response) has nothing to stitch — it must resolve from the
+        // tombstone with the SAME path rather than re-uploading the file...
+        $this->assertEmpty(FileUploadConfiguration::storage()->files(ChunkedUpload::directory($id)));
+
+        $resent = $this->post($url, array_merge($this->chunkPayload($signedId, 1, $info), [
+            'chunk' => UploadedFile::fake()->createWithContent('novel.txt.part', str_repeat('B', 1024)),
+        ]));
+
+        $resent->assertOk();
+        $this->assertTrue($resent->json('complete'));
+        $this->assertEquals($originalPath, $resent->json('paths.0'));
+
+        // The re-send must NOT recreate a chunk directory to re-stitch from...
+        $this->assertEmpty(FileUploadConfiguration::storage()->files(ChunkedUpload::directory($id)));
+    }
+
+    public function test_the_planner_reports_a_completed_upload_so_a_reload_skips_re_uploading()
+    {
+        config()->set('livewire.temporary_file_upload.chunk_size', 1024);
+
+        $info = ['name' => 'novel.txt', 'size' => 2048, 'type' => 'text/plain', 'lastModified' => 5];
+
+        $id = ChunkedUpload::fingerprint($info, 1024);
+        $signedResult = TemporaryUploadedFile::signPath('assembled-novel.txt');
+
+        // A prior attempt fully assembled the file and left a completion
+        // tombstone (its chunk directory is long gone)...
+        FileUploadConfiguration::storage()->put(ChunkedUpload::directory($id).'.done', $signedResult);
+
+        // A fresh plan (as after a page reload) surfaces that result so the
+        // frontend returns it instead of re-uploading everything...
+        $plan = app(UploadPlanner::class)->plan([$info], false);
+
+        $this->assertEquals('chunked', $plan['strategy']);
+        $this->assertEquals($signedResult, $plan['files'][0]['completed']);
+    }
+
+    public function test_the_reassembled_file_is_validated_against_the_max_rule_regardless_of_the_declared_size()
+    {
+        config()->set('livewire.temporary_file_upload.chunk_size', 1024);
+        config()->set('livewire.temporary_file_upload.rules', ['required', 'file', 'max:1']); // 1KB
+
+        // Declared size is a small lie (512 bytes), but the actual assembled
+        // bytes exceed the max rule — assembly must re-validate and reject...
+        $info = ['name' => 'novel.txt', 'size' => 512, 'type' => 'text/plain', 'lastModified' => 5];
+
+        $id = ChunkedUpload::fingerprint($info, 1024);
+        $signedId = ChunkedUpload::signCapability($id, 1, 1024);
+        $url = GenerateSignedUploadUrlFacade::forChunks();
+
+        $response = $this->post($url, array_merge($this->chunkPayload($signedId, 0, $info), [
+            'chunk' => UploadedFile::fake()->createWithContent('novel.txt.part', str_repeat('A', 1536)),
+        ]), ['Accept' => 'application/json']);
+
+        $response->assertStatus(422);
+        $this->assertArrayHasKey('files.0', $response->json('errors'));
+
+        // A rejected assembly leaves nothing behind (no tombstone, no chunks)...
+        $this->assertNull(ChunkedUpload::completedPath($id));
+        $this->assertEmpty(FileUploadConfiguration::storage()->files(ChunkedUpload::directory($id)));
+    }
+
+    public function test_multipart_endpoint_aborts_uploads_and_rejects_unknown_actions()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
+        S3MultipartUploadFacade::swap(new class extends S3MultipartUpload {
+            public $aborted = [];
+            public function abort($fingerprint) { $this->aborted[] = $fingerprint; }
+        });
+
+        $fingerprint = sha1('some-file-identity');
+
+        $aborted = $this->post(GenerateSignedUploadUrlFacade::forMultipart(), [
+            'action' => 'abort',
+            'ref' => TemporaryUploadedFile::signPath($fingerprint),
+        ]);
+
+        $aborted->assertOk();
+        $this->assertTrue($aborted->json('aborted'));
+        $this->assertEquals([$fingerprint], S3MultipartUploadFacade::getFacadeRoot()->aborted);
+
+        // An unknown action is a 422, not a silent no-op...
+        $this->post(GenerateSignedUploadUrlFacade::forMultipart(), [
+            'action' => 'frobnicate',
+            'ref' => TemporaryUploadedFile::signPath($fingerprint),
+        ], ['Accept' => 'application/json'])->assertStatus(422);
+    }
+
+    public function test_empty_chunk_directories_are_swept_up_by_cleanup()
+    {
+        Storage::fake('avatars');
+
+        $storage = FileUploadConfiguration::storage();
+
+        // A leftover chunk directory from an abandoned upload, aged past 24h...
+        $id = sha1('abandoned-upload');
+        $storage->put(ChunkedUpload::directory($id).'/0.part', str_repeat('A', 128));
+        touch($storage->path(ChunkedUpload::directory($id).'/0.part'), now()->subDays(2)->timestamp);
+
+        $this->assertNotEmpty($storage->files(ChunkedUpload::directory($id)));
+
+        // Any new upload triggers cleanupOldUploads()...
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->call('upload', 'uploaded-avatar.png');
+
+        // The stale part is gone AND its now-empty directory is pruned...
+        $this->assertEmpty($storage->files(ChunkedUpload::directory($id)));
+        $this->assertNotContains(
+            ChunkedUpload::directory($id),
+            $storage->directories(FileUploadConfiguration::path('chunks'))
+        );
     }
 
     protected function chunkPayload($signedId, $index, $info)

@@ -294,6 +294,9 @@ You can tune this behavior in the `temporary_file_upload` section of Livewire's 
 ],
 ```
 
+> [!warning] Custom upload middleware and throttling
+> A single chunked file is uploaded as many small requests, so the chunk endpoint uses a higher default throttle (`throttle:600,1`). If you set a custom `middleware` on `temporary_file_upload`, it governs the chunk endpoint too — a tight throttle like `throttle:60,1` will fail large uploads. Throttle generously, or disable `chunking` if you don't need it.
+
 > [!info] Abandoned S3 multipart uploads
 > Abandoned multipart uploads on S3 hold invisible storage until they are aborted. Add an [AbortIncompleteMultipartUpload lifecycle rule](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-abort-incomplete-mpu-lifecycle-config.html) to your bucket (one day is a good default) so they are cleaned up automatically. On non-S3 disks, Livewire cleans up stale chunks alongside other temporary uploads.
 

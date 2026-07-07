@@ -1,4 +1,4 @@
-import { sendRequest, withRetries } from '../request'
+import { sendRequest, withRetries, transient } from '../request'
 
 // Direct-to-S3 uploads. Every file gets its own presigned URL, so multiple
 // file uploads work the same as single ones. Files over the chunk threshold
@@ -6,12 +6,12 @@ import { sendRequest, withRetries } from '../request'
 // URL, then the server completes the multipart upload (collecting ETags via
 // ListParts, so no special CORS configuration is needed).
 export default async function s3(ctx) {
-    let { plan, files, uploadState, progress } = ctx
+    let { files, uploadState } = ctx
 
     let paths = []
 
     for (let [index, file] of files.entries()) {
-        let entry = plan.files[index]
+        let entry = ctx.plan.files[index]
 
         if (entry.multipart) {
             paths.push(await uploadMultipart(entry.multipart, file, index, ctx))
@@ -21,25 +21,57 @@ export default async function s3(ctx) {
 
         if (uploadState.cancelled) throw { type: 'abort' }
 
-        let headers = { ...entry.headers }
-
-        if ('Host' in headers) delete headers.Host
-
-        await withRetries(() => sendRequest({
-            method: 'put',
-            url: entry.url,
-            headers,
-            body: file,
-            onProgress: loaded => progress.report(loaded),
-            uploadState,
-        }), { shouldRetry: error => error.type === 'network' })
-
-        progress.commit(file.size)
-
-        paths.push(entry.path)
+        paths.push(await uploadSingle(entry, index, file, ctx))
     }
 
     return paths
+}
+
+async function uploadSingle(entry, index, file, ctx) {
+    let { uploadState, progress, refreshPlan } = ctx
+
+    let headers = () => {
+        let h = { ...entry.headers }
+
+        if ('Host' in h) delete h.Host
+
+        return h
+    }
+
+    await withRetries(async () => {
+        if (uploadState.cancelled) throw { type: 'abort' }
+
+        try {
+            return await sendRequest({
+                method: 'put',
+                url: entry.url,
+                headers: headers(),
+                body: file,
+                onProgress: loaded => progress.report(loaded),
+                uploadState,
+            })
+        } catch (error) {
+            // The presigned PUT URL expired mid-upload (slow connection, big
+            // file) — re-handshake for a fresh one and let the retry use it...
+            if (error.type === 'status' && [401, 403].includes(error.status) && refreshPlan) {
+                let fresh = await refreshPlan()
+
+                let next = fresh.strategy === 's3' && fresh.files[index] && ! fresh.files[index].multipart && fresh.files[index]
+
+                if (next) {
+                    entry = next
+
+                    error.refreshed = true
+                }
+            }
+
+            throw error
+        }
+    }, { shouldRetry: error => transient(error) || error.refreshed })
+
+    progress.commit(file.size)
+
+    return entry.path
 }
 
 async function uploadMultipart(multipart, file, index, ctx) {
@@ -77,11 +109,15 @@ async function uploadMultipart(multipart, file, index, ctx) {
                     onProgress: loaded => progress.report(loaded),
                     uploadState,
                 }), {
-                    shouldRetry: error => error.type === 'network'
-                        || (error.type === 'status' && error.status >= 500),
+                    shouldRetry: error => transient(error),
                 })
 
                 commitPart(part.partNumber, blob.size)
+
+                // We made real progress, so reset the re-handshake budget: the
+                // cap should catch "stuck" uploads, not put a wall-clock ceiling
+                // on legitimately long ones...
+                refreshes = 0
             }
 
             let response = await withRetries(() => sendRequest({
@@ -95,8 +131,7 @@ async function uploadMultipart(multipart, file, index, ctx) {
                 body: JSON.stringify({ action: 'complete', ref: multipart.ref }),
                 uploadState,
             }), {
-                shouldRetry: error => error.type === 'network'
-                    || (error.type === 'status' && error.status >= 500),
+                shouldRetry: error => transient(error),
             })
 
             return response.paths[0]

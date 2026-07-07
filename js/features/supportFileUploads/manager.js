@@ -87,9 +87,13 @@ export class UploadManager {
             return { name: file.name, size: file.size, type: file.type, lastModified: file.lastModified }
         })
 
-        this.component.$wire.call('_startUpload', name, fileInfos, uploadObject.multiple)
+        // Return the roundtrip so refreshPlan() can release its waiter if the
+        // call itself fails (network drop, expired session) rather than hang...
+        let call = this.component.$wire.call('_startUpload', name, fileInfos, uploadObject.multiple)
 
         setUploadLoading(this.component, name)
+
+        return call
     }
 
     async handlePlan(name, plan) {
@@ -98,9 +102,15 @@ export class UploadManager {
         let waiter = this.planWaiters.get(name)
 
         if (waiter) {
-            this.planWaiters.delete(name)
-
-            waiter(plan)
+            // Only feed the plan to the waiter if its upload is still the one in
+            // flight. If the upload was cancelled/replaced in the meantime the
+            // waiter is stale — release it so its strategy unwinds cleanly
+            // instead of hanging forever (and wedging the whole property)...
+            if (this.uploadBag.first(name) === waiter.uploadObject) {
+                this.resolveWaiter(name, plan)
+            } else {
+                this.rejectWaiter(name, { type: 'abort' })
+            }
 
             return
         }
@@ -108,6 +118,12 @@ export class UploadManager {
         let uploadObject = this.uploadBag.first(name)
 
         if (! uploadObject) return
+
+        // A plan already ran for this upload (e.g. a late-arriving refresh plan
+        // whose waiter was already released) — don't start its strategy twice...
+        if (uploadObject.planHandled) return
+
+        uploadObject.planHandled = true
 
         if (plan.strategy === 'reject') {
             this.component.$wire.call('_uploadErrored', name, plan.errors, uploadObject.multiple)
@@ -154,11 +170,43 @@ export class UploadManager {
     }
 
     refreshPlan(name, uploadObject) {
-        return new Promise(resolve => {
-            this.planWaiters.set(name, resolve)
+        return new Promise((resolve, reject) => {
+            // Backstop: if the fresh plan never arrives (a dropped event, a
+            // dead roundtrip) release the waiter so the strategy errors instead
+            // of hanging indefinitely...
+            let timeout = setTimeout(() => this.rejectWaiter(name, { type: 'network' }), 30000)
 
-            this.startUpload(name, uploadObject)
+            this.planWaiters.set(name, { uploadObject, resolve, reject, timeout })
+
+            // If the _startUpload roundtrip itself fails, release the waiter...
+            Promise.resolve(this.startUpload(name, uploadObject)).catch(() => {
+                this.rejectWaiter(name, { type: 'network' })
+            })
         })
+    }
+
+    resolveWaiter(name, plan) {
+        let waiter = this.planWaiters.get(name)
+
+        if (! waiter) return
+
+        this.planWaiters.delete(name)
+
+        clearTimeout(waiter.timeout)
+
+        waiter.resolve(plan)
+    }
+
+    rejectWaiter(name, reason) {
+        let waiter = this.planWaiters.get(name)
+
+        if (! waiter) return
+
+        this.planWaiters.delete(name)
+
+        clearTimeout(waiter.timeout)
+
+        waiter.reject(reason)
     }
 
     makeProgressTracker(uploadObject) {
@@ -168,7 +216,7 @@ export class UploadManager {
             total,
             base: 0,
             report: inFlightBytes => {
-                let loaded = Math.min(tracker.base + inFlightBytes, total)
+                let loaded = Math.max(0, Math.min(tracker.base + inFlightBytes, total))
                 let progress = Math.floor((loaded * 100) / total)
 
                 uploadObject.progressCallback({
@@ -176,7 +224,9 @@ export class UploadManager {
                 })
             },
             commit: bytes => {
-                tracker.base = Math.min(tracker.base + bytes, total)
+                // Floor at 0 so a bogus (negative) chunk length from corrupted
+                // server state can't send the progress bar backwards...
+                tracker.base = Math.max(0, Math.min(tracker.base + bytes, total))
 
                 tracker.report(0)
             },
@@ -219,6 +269,10 @@ export class UploadManager {
 
     cancelUpload(name, cancelledCallback = null) {
         unsetUploadLoading(this.component)
+
+        // Release any pending re-handshake waiter so a cancel can't leave it
+        // dangling (which would hang the strategy and swallow the next upload)...
+        this.rejectWaiter(name, { type: 'abort' })
 
         let uploadItem = this.uploadBag.first(name)
 

@@ -2,6 +2,8 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 
 /**
@@ -32,7 +34,11 @@ class S3MultipartUpload
 
         $fingerprint = ChunkedUpload::fingerprint($fileInfo, $partSize);
 
-        $mapping = $this->existing($fingerprint) ?? $this->create($fingerprint, $fileInfo, $partSize);
+        // Serialize planning per fingerprint so two tabs (or a double request)
+        // can't each open a separate multipart upload and orphan one of them...
+        $mapping = $this->withPlanLock($fingerprint, fn () =>
+            $this->existing($fingerprint) ?? $this->create($fingerprint, $fileInfo, $partSize)
+        );
 
         $uploadedParts = $this->uploadedParts($mapping);
 
@@ -61,7 +67,20 @@ class S3MultipartUpload
 
         abort_if(is_null($mapping), 404, 'No multipart upload in progress for this file.');
 
-        $parts = collect($this->listParts($mapping))
+        $rawParts = $this->listParts($mapping);
+
+        // S3 will happily assemble a truncated object from a partial part set
+        // (every part here is >=5MB, so its EntityTooSmall guard never fires).
+        // Refuse to finalize unless every expected part and byte is present...
+        $expectedParts = ChunkedUpload::totalChunks((int) ($mapping['size'] ?? 0), (int) ($mapping['partSize'] ?? 1));
+        $uploadedBytes = collect($rawParts)->sum(fn ($part) => (int) $part['Size']);
+
+        abort_if(
+            count($rawParts) < $expectedParts || $uploadedBytes < (int) ($mapping['size'] ?? 0),
+            422, 'The multipart upload is incomplete.'
+        );
+
+        $parts = collect($rawParts)
             ->map(fn ($part) => ['PartNumber' => $part['PartNumber'], 'ETag' => $part['ETag']])
             ->sortBy('PartNumber')->values()->all();
 
@@ -132,14 +151,49 @@ class S3MultipartUpload
         try {
             $this->listParts($mapping, limit: 1);
         } catch (\Throwable $e) {
-            // The multipart upload expired or was aborted out from under us,
-            // so throw the stale mapping away and start fresh...
+            // Only discard the mapping when S3 says the upload is genuinely
+            // gone. A transient error (throttling, timeout, a credential blip)
+            // must NOT delete the mapping — doing so would orphan a live
+            // multipart upload and force the user to restart from zero...
+            if (! $this->isMissingUploadError($e)) throw $e;
+
             $this->deleteMapping($fingerprint);
 
             return null;
         }
 
         return $mapping;
+    }
+
+    protected function isMissingUploadError(\Throwable $e)
+    {
+        return method_exists($e, 'getAwsErrorCode') && $e->getAwsErrorCode() === 'NoSuchUpload';
+    }
+
+    protected function withPlanLock($fingerprint, $callback)
+    {
+        $lock = null;
+
+        try {
+            $lock = Cache::lock('livewire-multipart-plan:'.$fingerprint, 60);
+        } catch (\Throwable $e) {
+            // Cache store doesn't support locks — proceed without serializing...
+            return $callback();
+        }
+
+        try {
+            $lock->block(15);
+        } catch (LockTimeoutException $e) {
+            // Another request is planning the same file; its mapping will exist
+            // by now, so just read it...
+            return $callback();
+        }
+
+        try {
+            return $callback();
+        } finally {
+            $lock->release();
+        }
     }
 
     protected function uploadedParts($mapping)

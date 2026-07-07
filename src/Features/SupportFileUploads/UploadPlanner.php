@@ -71,6 +71,10 @@ class UploadPlanner
                     // Chunks that already made it to the server from a previous
                     // attempt — the frontend skips these so uploads are resumable...
                     'receivedChunks' => ChunkedUpload::receivedChunks($fingerprint),
+                    // Already fully assembled on a previous attempt (a lost
+                    // completion response before reload) — the frontend returns
+                    // this straight away instead of re-uploading...
+                    'completed' => ChunkedUpload::completedPath($fingerprint),
                 ];
             })->all(),
         ];

@@ -1,4 +1,4 @@
-import { sendRequest, withRetries } from '../request'
+import { sendRequest, withRetries, transient } from '../request'
 
 // Large files on non-S3 disks: slice each file into chunks and POST them one
 // at a time to the signed chunk endpoint. The server stitches the file back
@@ -20,6 +20,10 @@ export default async function chunked(ctx) {
 
 async function uploadFileInChunks(entry, index, file, ctx) {
     let { plan, headers, uploadState, progress } = ctx
+
+    // Already fully assembled on a previous attempt (a lost completion response
+    // before a reload) — the server kept the result, so skip re-uploading...
+    if (entry.completed) return entry.completed
 
     let chunkSize = entry.chunkSize
     let received = new Set(entry.receivedChunks)
@@ -91,9 +95,7 @@ async function sendChunk(entry, index, chunkIndex, file, chunkSize, ctx) {
             throw error
         }
     }, {
-        shouldRetry: error => error.type === 'network'
-            || (error.type === 'status' && error.status >= 500)
-            || error.refreshed,
+        shouldRetry: error => transient(error) || error.refreshed,
     })
 }
 
@@ -110,7 +112,9 @@ function chunkFormData(entry, chunkIndex, blob, file) {
 }
 
 function chunkLength(file, index, chunkSize) {
-    return Math.min((index + 1) * chunkSize, file.size) - index * chunkSize
+    // Floor at 0 — a bogus index past the end (corrupted server state) would
+    // otherwise yield a negative length and rewind the progress bar...
+    return Math.max(0, Math.min((index + 1) * chunkSize, file.size) - index * chunkSize)
 }
 
 function allChunks(total) {

@@ -76,11 +76,44 @@ class ChunkedUpload
             ->sort()->values()->all();
     }
 
+    public static function hasAllChunks($id, $totalChunks)
+    {
+        $received = static::receivedChunks($id);
+
+        if (count($received) < $totalChunks) return false;
+
+        // Guard against gaps: every index 0..totalChunks-1 must be present so we
+        // never assemble a truncated file from a partial (or vanishing) set...
+        for ($index = 0; $index < $totalChunks; $index++) {
+            if (! in_array($index, $received, true)) return false;
+        }
+
+        return true;
+    }
+
     public static function storeChunk($id, $index, $chunk)
     {
         FileUploadConfiguration::storage()->putFileAs(
             static::directory($id), $chunk, $index.'.part'
         );
+    }
+
+    // Once a file has been assembled its chunk directory is gone, so a re-sent
+    // final chunk (a lost completion response, a duplicate request, a reload)
+    // has nothing to stitch. A tiny tombstone remembers the signed result path
+    // so those re-sends resolve instantly instead of re-uploading the file...
+    public static function completedPath($id)
+    {
+        $storage = FileUploadConfiguration::storage();
+
+        $path = static::directory($id).'.done';
+
+        return $storage->exists($path) ? $storage->get($path) : null;
+    }
+
+    protected static function markCompleted($id, $signedPath)
+    {
+        FileUploadConfiguration::storage()->put(static::directory($id).'.done', $signedPath);
     }
 
     public static function assemble($id, $fileInfo, $disk)
@@ -110,6 +143,8 @@ class ChunkedUpload
             // The assembled file goes through the exact same validation and
             // storage path as a directly-uploaded file...
             $paths = (new FileUploadController)->validateAndStore([$file], $disk);
+
+            static::markCompleted($id, $paths->first());
         } finally {
             @unlink($tmpPath);
 

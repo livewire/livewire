@@ -21,7 +21,13 @@ export function sendRequest({ method, url, headers = {}, body = null, onProgress
 
             if ((request.status + '')[0] === '2') return resolve(response)
 
-            reject({ type: 'status', status: request.status, response, raw: request.response })
+            reject({
+                type: 'status',
+                status: request.status,
+                response,
+                raw: request.response,
+                retryAfter: request.getResponseHeader('Retry-After'),
+            })
         })
 
         request.addEventListener('error', () => reject({ type: 'network' }))
@@ -47,7 +53,29 @@ export async function withRetries(makeAttempt, { retries = 2, shouldRetry = () =
 
             attempt++
 
-            await new Promise(resolve => setTimeout(resolve, 500 * attempt))
+            await new Promise(resolve => setTimeout(resolve, backoff(error, attempt)))
         }
     }
+}
+
+// Transient failures worth retrying: connection blips, server errors, and rate
+// limiting (one chunked file = many rapid requests, so 429 is expected)...
+export function transient(error) {
+    return !! error && (
+        error.type === 'network'
+        || (error.type === 'status' && (error.status === 429 || error.status >= 500))
+    )
+}
+
+function backoff(error, attempt) {
+    let delay = 500 * attempt
+
+    // Honor a server-sent Retry-After (seconds) on rate-limit responses...
+    if (error && error.type === 'status' && error.status === 429) {
+        let retryAfter = parseInt(error.retryAfter, 10)
+
+        if (! isNaN(retryAfter)) delay = Math.max(delay, retryAfter * 1000)
+    }
+
+    return delay
 }

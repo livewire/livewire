@@ -44,6 +44,13 @@ class S3CleanupCommand extends Command
             'Expiration' => [
                 'Days' => 1,
             ],
+            // Completed temporary objects expire above, but abandoned S3
+            // multipart uploads (cancelled/interrupted chunked uploads) are not
+            // objects — their uploaded parts hold invisible, billable storage
+            // until this rule aborts them...
+            'AbortIncompleteMultipartUpload' => [
+                'DaysAfterInitiation' => 1,
+            ],
             'Status' => 'Enabled',
         ];
 
@@ -66,16 +73,6 @@ class S3CleanupCommand extends Command
         $this->info('Livewire temporary S3 upload directory ['.$prefix.'] set to automatically cleanup files older than 24hrs!');
     }
 
-    private function checkIfLivewireConfigurationIsAlreadySet(array $existingConfigurationRules, string $bucket, S3Client $client, string $prefix) {
-        $existingConfigurationHasLivewire = collect($existingConfigurationRules)->contains('Filter.Prefix', $prefix);
-
-        if($existingConfigurationHasLivewire) {
-            $this->info('Livewire temporary S3 upload directory ['.$prefix.'] already set to automatically cleanup files older than 24hrs!');
-            $this->info('No changes made to S3 bucket ['.$bucket.'] configuration.');
-            exit;
-        }
-    }
-
     private function mergeRulesWithExistingConfiguration(S3Client $client, string $bucket, string $prefix, array $rules): array
     {
         try {
@@ -88,9 +85,15 @@ class S3CleanupCommand extends Command
         }
 
         if ($existingConfiguration) {
-            $this->checkIfLivewireConfigurationIsAlreadySet($existingConfiguration['Rules'], $bucket, $client, $prefix);
-            $existingConfiguration = $existingConfiguration['Rules'];
-            $rules = array_merge($existingConfiguration, $rules);
+            // Drop any prior rule for our prefix and re-add the current one, so
+            // re-running the command upgrades an older rule (e.g. one missing
+            // the AbortIncompleteMultipartUpload action) instead of no-op'ing...
+            $existingRules = collect($existingConfiguration['Rules'])
+                ->reject(fn ($rule) => data_get($rule, 'Filter.Prefix') === $prefix)
+                ->values()
+                ->all();
+
+            $rules = array_merge($existingRules, $rules);
         }
 
         return $rules;

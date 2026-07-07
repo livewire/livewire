@@ -2,6 +2,8 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 
 class ChunkedUploadController extends FileUploadController
@@ -33,6 +35,13 @@ class ChunkedUploadController extends FileUploadController
 
         [$fingerprint, $totalChunks, $chunkSize] = $capability;
 
+        // The file was already assembled on a previous request whose response
+        // never made it back (or this is a duplicate/reload). Hand back the
+        // remembered result instead of re-stitching anything...
+        if ($path = ChunkedUpload::completedPath($fingerprint)) {
+            return ['complete' => true, 'paths' => [$path]];
+        }
+
         // Individual chunks only need transport-level validation — the
         // configured upload rules run against the assembled file below...
         Validator::make(request()->all(), [
@@ -50,11 +59,51 @@ class ChunkedUploadController extends FileUploadController
             return ['complete' => false, 'received' => $received];
         }
 
-        $path = ChunkedUpload::assemble($fingerprint, [
-            'name' => request('name'),
-            'type' => request('type'),
-        ], FileUploadConfiguration::disk());
+        return $this->assembleOnce($fingerprint, $totalChunks);
+    }
 
-        return ['complete' => true, 'paths' => [$path]];
+    // Only one request may assemble a given fingerprint. Concurrent "final"
+    // chunks (two tabs, a double-click) would otherwise both stitch the file —
+    // racing each other's directory deletion into a truncated or empty result.
+    protected function assembleOnce($fingerprint, $totalChunks)
+    {
+        $lock = null;
+
+        try {
+            $lock = Cache::lock('livewire-chunk-assemble:'.$fingerprint, 60);
+        } catch (\Throwable $e) {
+            // The configured cache store doesn't support locks — fall through
+            // and rely on the tombstone + completeness guards below...
+        }
+
+        if ($lock) {
+            try {
+                $lock->block(15);
+            } catch (LockTimeoutException $e) {
+                // Another request is assembling right now; report progress and
+                // let the client's resync loop pick up the finished result...
+                return ['complete' => false, 'received' => ChunkedUpload::receivedChunks($fingerprint)];
+            }
+        }
+
+        try {
+            if ($path = ChunkedUpload::completedPath($fingerprint)) {
+                return ['complete' => true, 'paths' => [$path]];
+            }
+
+            abort_unless(
+                ChunkedUpload::hasAllChunks($fingerprint, $totalChunks),
+                422, 'The chunked upload is incomplete.'
+            );
+
+            $path = ChunkedUpload::assemble($fingerprint, [
+                'name' => request('name'),
+                'type' => request('type'),
+            ], FileUploadConfiguration::disk());
+
+            return ['complete' => true, 'paths' => [$path]];
+        } finally {
+            if ($lock) $lock->release();
+        }
     }
 }

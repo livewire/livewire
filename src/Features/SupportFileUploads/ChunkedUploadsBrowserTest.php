@@ -56,6 +56,16 @@ class ChunkedUploadsBrowserTest extends \Tests\BrowserTestCase
         ->attach('@upload', __DIR__ . '/browser_test_image_big.jpg')
         ->waitFor('@filename')
         ->assertSeeIn('@filename', 'browser_test_image_big.jpg')
+        ->tap(function ($browser) {
+            // Prove the file actually travelled through the chunk endpoint. A
+            // regression that quietly fell back to the plain form POST would
+            // otherwise still pass the sha256 check below...
+            $chunkRequests = $browser->script(
+                "return window.performance.getEntriesByType('resource').filter(r => r.name.includes('upload-chunk')).length"
+            )[0];
+
+            $this->assertGreaterThan(1, $chunkRequests, 'Expected the 1MB file to upload as multiple chunk requests.');
+        })
         ->waitForLivewire()
         ->click('@save')
         ->tap(function () {
