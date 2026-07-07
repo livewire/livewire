@@ -2,20 +2,20 @@
 
 namespace Livewire\Features\SupportValidation;
 
-use Livewire\Livewire;
-use Livewire\Wireable;
-use Livewire\Component;
 use Tests\TestComponent;
-use Livewire\Attributes\Rule;
+use Livewire\Wireable;
+use Livewire\Livewire;
+use Livewire\Exceptions\MissingRulesException;
+use Livewire\Component;
 use Livewire\Attributes\Validate;
-use Illuminate\Support\Collection;
+use Livewire\Attributes\Rule;
+use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Lang;
-use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Collection;
 use PHPUnit\Framework\AssertionFailedError;
-use Livewire\Exceptions\MissingRulesException;
 
 class UnitTest extends \Tests\TestCase
 {

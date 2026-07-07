@@ -3,14 +3,14 @@
 namespace Livewire\Features\SupportValidation;
 
 use Closure;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
-use function Livewire\store;
-use Illuminate\Support\Collection;
-use Illuminate\Support\MessageBag;
-use PHPUnit\Framework\Assert as PHPUnit;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Contracts\Validation\ValidationRule;
+use function Livewire\store;
+use PHPUnit\Framework\Assert as PHPUnit;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\Arr;
 
 trait TestsValidation
 {
