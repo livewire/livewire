@@ -24,6 +24,10 @@ directive('loading', ({ el, directive, component, cleanup }) => {
     }
 
     function endLoading() {
+        // Guard against unbalanced end triggers, otherwise a stray one would
+        // drive the count negative and stop the directive ever applying again...
+        if (activeLoadingCount === 0) return
+
         activeLoadingCount--
 
         // Only restore/remove once every overlapping loading trigger has finished...
@@ -71,23 +75,31 @@ function applyDelay(directive) {
         }
     })
 
-    let timeout
-    let started = false
+    // Each delay cycle gets its own state, otherwise overlapping loading
+    // cycles would share one timeout and swallow each other's end callback...
+    let cycles = []
 
     return [
         (callback) => { // Initiate delay...
-            timeout = setTimeout(() => {
+            let cycle = { started: false }
+
+            cycle.timeout = setTimeout(() => {
                 callback()
 
-                started = true
+                cycle.started = true
             }, duration)
+
+            cycles.push(cycle)
         },
         async (callback) => { // Execute or abort...
-            if (started) {
+            let cycle = cycles.shift()
+
+            if (! cycle) return
+
+            if (cycle.started) {
                 await callback()
-                started = false
             } else {
-                clearTimeout(timeout)
+                clearTimeout(cycle.timeout)
             }
         },
     ]

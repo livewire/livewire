@@ -176,6 +176,55 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->click('@start')
         ->assertAttribute('@target', 'disabled', 'true')
         ->click('@finish')
+        ->assertAttribute('@target', 'disabled', 'true')
+        ->click('@finish')
+        ->assertAttributeMissing('@target', 'disabled')
+        ;
+    }
+
+    function test_wire_loading_delay_attr_still_works_after_overlapping_loading_events()
+    {
+        Livewire::visit(new class extends Component {
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <button
+                            type="button"
+                            x-on:click="window.dispatchEvent(new CustomEvent('livewire-upload-start', { detail: { id: $wire.$id, property: 'file' } }))"
+                            dusk="start">
+                            Start loading
+                        </button>
+
+                        <button
+                            type="button"
+                            x-on:click="window.dispatchEvent(new CustomEvent('livewire-upload-finish', { detail: { id: $wire.$id, property: 'file' } }))"
+                            dusk="finish">
+                            Finish loading
+                        </button>
+
+                        <button
+                            type="button"
+                            wire:loading.delay.shortest.attr="disabled"
+                            dusk="target">
+                            Target
+                        </button>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertAttributeMissing('@target', 'disabled')
+        ->click('@start')
+        ->click('@start')
+        ->pause(150) // Wait for both delay timeouts to fire...
+        ->assertAttribute('@target', 'disabled', 'true')
+        ->click('@finish')
+        ->click('@finish')
+        ->assertAttributeMissing('@target', 'disabled')
+        // A fresh loading cycle should still apply the attribute...
+        ->click('@start')
+        ->pause(150)
+        ->assertAttribute('@target', 'disabled', 'true')
         ->click('@finish')
         ->assertAttributeMissing('@target', 'disabled')
         ;
