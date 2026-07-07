@@ -46,8 +46,14 @@ on('effect', ({ component, effects }) => {
         pendingComponentCount++
 
         import(/* @vite-ignore */ path).then(module => {
-            module.run.call(component.$wire, component.$wire, component.$wire.js);
+            module.run.call(component.$wire, component.$wire, component.$wire.js)
         }).finally(() => {
+            let pendingAsset = pendingComponentAssets.get(component)
+
+            pendingAsset.loading = false
+            pendingComponentAssets.delete(component)
+            pendingComponentCount--
+
             // Runs on success or failure — a failed import leaves `Alpine.data()`
             // unregistered, so the dependent expression will throw, but that beats
             // leaving the whole component's directives permanently un-initialised.
@@ -57,11 +63,8 @@ on('effect', ({ component, effects }) => {
                 Alpine.initTree(component.el)
             }
 
-            pendingComponentAssets.get(component).loading = false
-            pendingComponentAssets.get(component).afterLoaded.forEach(callback => callback())
-            pendingComponentAssets.delete(component)
-            pendingComponentCount--
-        });
+            pendingAsset.afterLoaded.forEach(callback => callback())
+        })
     }
 })
 

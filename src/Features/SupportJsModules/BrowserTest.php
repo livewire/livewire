@@ -19,6 +19,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ]);
             });
 
+            Route::get('/slow-slot-module.js', function () {
+                usleep(2_000_000);
+
+                return response("export let greeting = 'slot-alpine-data-loaded'", 200, [
+                    'Content-Type' => 'application/javascript',
+                ]);
+            });
+
             Route::get('/alpine-data-page', function () {
                 return app('livewire')->new('testns::alpine-data.index')();
             })->middleware('web');
@@ -119,6 +127,15 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit('testns::lazy-with-alpine-data-in-slot.parent')
             ->waitForText('alpine-data-loaded')
             ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_works_in_lazy_slot_when_existing_child_wrapper_morphs_forwarded_content()
+    {
+        Livewire::visit('testns::lazy-slot-with-existing-wrapper.parent')
+            ->assertSeeIn('@target', 'Loading...')
+            ->waitForText('slot-alpine-data-loaded')
+            ->assertSeeIn('@target', 'slot-alpine-data-loaded')
             ->assertConsoleLogHasNoErrors();
     }
 
