@@ -127,18 +127,24 @@ class TemporaryUploadedFile extends UploadedFile
         if ((FileUploadConfiguration::isUsingS3() or FileUploadConfiguration::isUsingGCS()) && ! app()->runningUnitTests()) {
             // Presigned URLs embed their signing timestamp, so regenerating one
             // produces a different URL on every render — and a changed src makes
-            // the browser re-download the whole file. Cache the URL so re-renders
-            // morph the same src. The cache window is far shorter than the URL's
-            // validity, so a cached URL always has plenty of life left...
-            return $this->cachedTemporaryUrl ??= cache()->remember(
-                'livewire-tmp-preview-url:'.$this->getFilename(),
-                now()->addHours(6),
-                fn () => $this->storage->temporaryUrl(
-                    $this->path,
-                    now()->addDay()->endOfHour(),
-                    ['ResponseContentDisposition' => 'attachment; filename="' . urlencode($this->getClientOriginalName()) . '"']
-                )
+            // the browser re-download the whole file. The generated URL rides
+            // along in the component snapshot (see FileUploadSynth) so re-renders
+            // morph an identical src for as long as the URL has life left...
+            if ($cached = $this->getCachedTemporaryUrl()) {
+                return $cached['url'];
+            }
+
+            $expiresAt = now()->addDay()->endOfHour();
+
+            $url = $this->storage->temporaryUrl(
+                $this->path,
+                $expiresAt,
+                ['ResponseContentDisposition' => 'attachment; filename="' . urlencode($this->getClientOriginalName()) . '"']
             );
+
+            $this->setCachedTemporaryUrl($url, $expiresAt->getTimestamp());
+
+            return $url;
         }
 
         if (method_exists($this->storage->getAdapter(), 'getTemporaryUrl')) {
@@ -177,11 +183,26 @@ class TemporaryUploadedFile extends UploadedFile
         return $this->storage->get($this->path);
     }
 
+    public function getCachedTemporaryUrl()
+    {
+        if (! $this->cachedTemporaryUrl) return null;
+
+        // Regenerate once the URL is within an hour of expiring...
+        if (($this->cachedTemporaryUrl['exp'] ?? 0) - now()->getTimestamp() < 3600) return null;
+
+        return $this->cachedTemporaryUrl;
+    }
+
+    public function setCachedTemporaryUrl($url, $expiresAt)
+    {
+        if (! is_string($url) || ! is_numeric($expiresAt)) return;
+
+        $this->cachedTemporaryUrl = ['url' => $url, 'exp' => (int) $expiresAt];
+    }
+
     public function delete()
     {
         $this->deleteMetaFile();
-
-        cache()->forget('livewire-tmp-preview-url:'.$this->getFilename());
 
         return $this->storage->delete($this->path);
     }

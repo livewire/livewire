@@ -28,6 +28,51 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
     }
 
+    public function test_a_cached_temporary_url_is_reused_until_close_to_expiry()
+    {
+        $file = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->viewData('photo');
+
+        // No URL generated yet...
+        $this->assertNull($file->getCachedTemporaryUrl());
+
+        // A URL with plenty of life left is reused...
+        $file->setCachedTemporaryUrl('https://example.com/signed', now()->addHours(12)->getTimestamp());
+        $this->assertEquals('https://example.com/signed', $file->getCachedTemporaryUrl()['url']);
+
+        // A URL within an hour of expiring is regenerated instead...
+        $file->setCachedTemporaryUrl('https://example.com/signed', now()->addMinutes(30)->getTimestamp());
+        $this->assertNull($file->getCachedTemporaryUrl());
+    }
+
+    public function test_a_cached_temporary_url_survives_the_snapshot_roundtrip()
+    {
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
+
+        $file = $component->viewData('photo');
+        $expiresAt = now()->addHours(12)->getTimestamp();
+        $file->setCachedTemporaryUrl('https://example.com/signed', $expiresAt);
+
+        $context = new \Livewire\Mechanisms\HandleComponents\ComponentContext($component->instance());
+        $synth = new FileUploadSynth($context, 'photo');
+
+        // Dehydrate: the URL rides along in the snapshot meta...
+        [$value, $meta] = $synth->dehydrate($file);
+        $this->assertEquals('https://example.com/signed', $meta['url']);
+        $this->assertEquals($expiresAt, $meta['exp']);
+
+        // Hydrate: the next request's instance reuses the same URL...
+        $hydrated = $synth->hydrate($value, $meta);
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $hydrated);
+        $this->assertEquals('https://example.com/signed', $hydrated->getCachedTemporaryUrl()['url']);
+
+        // A file that never generated a URL adds nothing to the snapshot...
+        [, $emptyMeta] = $synth->dehydrate($synth->hydrate($value, []));
+        $this->assertSame([], $emptyMeta);
+    }
+
     public function test_a_missing_s3_flysystem_adapter_fails_fast_with_a_pointer_to_the_composer_package()
     {
         FileUploadConfiguration::$enforceS3AdapterCheckForTesting = true;

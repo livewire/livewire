@@ -13,7 +13,17 @@ class FileUploadSynth extends Synth {
     }
 
     function dehydrate($target) {
-        return [$this->dehydratePropertyFromWithFileUploads($target), []];
+        $meta = [];
+
+        // Carry the generated preview URL through the snapshot so the next
+        // request serves the same URL instead of signing a new one — a changed
+        // src would make the browser re-download the whole file...
+        if ($target instanceof TemporaryUploadedFile && ($cached = $target->getCachedTemporaryUrl())) {
+            $meta['url'] = $cached['url'];
+            $meta['exp'] = $cached['exp'];
+        }
+
+        return [$this->dehydratePropertyFromWithFileUploads($target), $meta];
     }
 
     public function dehydratePropertyFromWithFileUploads($value)
@@ -58,9 +68,15 @@ class FileUploadSynth extends Synth {
         return $value;
     }
 
-    function hydrate($value) {
+    function hydrate($value, $meta) {
         if (TemporaryUploadedFile::canUnserialize($value)) {
-            return TemporaryUploadedFile::unserializeFromLivewireRequest($value);
+            $file = TemporaryUploadedFile::unserializeFromLivewireRequest($value);
+
+            if ($file instanceof TemporaryUploadedFile && isset($meta['url'], $meta['exp'])) {
+                $file->setCachedTemporaryUrl($meta['url'], $meta['exp']);
+            }
+
+            return $file;
         }
     }
 }
