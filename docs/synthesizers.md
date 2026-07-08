@@ -244,3 +244,117 @@ class AddressSynth extends Synth
     }
 }
 ```
+
+## JavaScript synthesizers
+
+Synthesizers make rich values like Carbon dates usable on the server, but by default, JavaScript only ever sees the raw dehydrated value. For example, given the following component:
+
+```php
+use Carbon\Carbon;
+
+class ShowPost extends Component
+{
+    public Carbon $publishedAt;
+}
+```
+
+Accessing `$wire.publishedAt` in JavaScript returns a plain ISO date string like `"2021-01-01T00:00:00+00:00"` — not something you can call date methods on.
+
+JavaScript synthesizers are the client-side counterpart to PHP synthesizers. By registering one for the same synth key, the raw value is upgraded into a rich JavaScript object when component state reaches the frontend, and converted back to its raw wire format when updates are sent to the server.
+
+Register a JavaScript synthesizer using `Livewire.synth()` inside a `livewire:init` listener so it's available before components initialize:
+
+```js
+document.addEventListener('livewire:init', () => {
+    Livewire.synth('cbn', {
+        match: (value) => value instanceof Date,
+
+        hydrate: (value, meta) => new Date(value),
+
+        dehydrate: (value) => value.toISOString(),
+    })
+})
+```
+
+With this synth registered, every Carbon property is a real `Date` object on the frontend:
+
+```blade
+<span x-text="$wire.publishedAt.toLocaleDateString()"></span>
+
+<button x-on:click="$wire.publishedAt = new Date()">Publish now</button>
+```
+
+When you assign a fresh `Date` and the next request is sent, Livewire calls `dehydrate()` and the server receives the ISO string, which the PHP `CarbonSynth` hydrates back into a Carbon instance.
+
+Let's break down the three required functions:
+
+The first parameter of `Livewire.synth()` is the key of the PHP synthesizer you are pairing with — the same key found in the `s` field of the property's [metadata tuple](/docs/4.x/hydration#deeply-nested-tuples) (`cbn` is the key of Livewire's internal Carbon synthesizer).
+
+`hydrate()` receives the raw wire value along with its full metadata tuple and returns the rich JavaScript value. It is called whenever component state arrives from the server: on the initial page load and after every subsequent request.
+
+```js
+hydrate: (value, meta) => new Date(value),
+```
+
+`dehydrate()` does the inverse: it receives the rich value and must return the raw wire format. It is called when Livewire compares component state and builds the update payload for the server. Whatever it returns must be a value the PHP synthesizer's `hydrate()` method understands — typically the same format the server sent down in the first place.
+
+```js
+dehydrate: (value) => value.toISOString(),
+```
+
+`match()` identifies rich values inside component state. Livewire uses it to know which values should be treated as atomic units when diffing, and which synthesizer should dehydrate a brand-new instance you've assigned (like the `new Date()` above, which never came from the server).
+
+```js
+match: (value) => value instanceof Date,
+```
+
+### Pairing with a custom PHP synthesizer
+
+JavaScript synthesizers really shine when paired with a custom PHP synthesizer. Continuing the `Address` example from above, you can give the frontend a matching rich object:
+
+```js
+class Address {
+    constructor({ street, city, state, zip }) {
+        this.street = street
+        this.city = city
+        this.state = state
+        this.zip = zip
+    }
+
+    get full() {
+        return `${this.street}, ${this.city}, ${this.state} ${this.zip}`
+    }
+}
+
+document.addEventListener('livewire:init', () => {
+    Livewire.synth('address', {
+        match: (value) => value instanceof Address,
+
+        hydrate: (value) => new Address(value),
+
+        dehydrate: (value) => ({
+            street: value.street,
+            city: value.city,
+            state: value.state,
+            zip: value.zip,
+        }),
+    })
+})
+```
+
+Now the same `Address` concept exists on both sides of the wire:
+
+```blade
+<span x-text="$wire.address.full"></span>
+```
+
+You can still mutate individual fields (`$wire.address.street = '...'` or `wire:model="address.street"`) — when a rich value changes, Livewire sends its entire dehydrated form to the server, where the PHP synthesizer hydrates it back into an `Address`.
+
+### Things to know
+
+* **Registration is global per key.** Registering a synth for `cbn` upgrades _every_ Carbon and native date property across your entire application, so make sure your frontend code is prepared for that.
+* **Rich values are atomic.** Livewire never diffs _inside_ a rich value. When one changes, its full dehydrated form is sent to the server and the corresponding property update fires at the property's path.
+* **Rich values also work as action parameters.** Calling `$wire.save(new Date())` dehydrates the parameter before it's sent to the server.
+* **Binding inputs directly to a rich property** (`wire:model="publishedAt"`) sets the input's raw string value onto the property. The string is sent to the server as-is and re-hydrated there, but the input will display the browser's string representation of the rich object — for form inputs, prefer binding to nested fields or handling conversion yourself.
+
+For reference, these are the keys of Livewire's built-in synthesizers: `arr` (arrays), `cbn` (Carbon/DateTime), `clctn` (Collections), `str` (Stringables), `enm` (Enums), `std` (stdClass), `mdl` (Eloquent models), `elcln` (Eloquent collections), `wrbl` (Wireables), `form` (Form objects), and `fil` (file uploads).
