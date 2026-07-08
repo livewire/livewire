@@ -14,6 +14,7 @@ class TemporaryUploadedFile extends UploadedFile
     protected $storage;
     protected $path;
     protected $metaFileData;
+    protected $cachedTemporaryUrl;
 
     public function __construct($path, $disk)
     {
@@ -124,10 +125,19 @@ class TemporaryUploadedFile extends UploadedFile
         }
 
         if ((FileUploadConfiguration::isUsingS3() or FileUploadConfiguration::isUsingGCS()) && ! app()->runningUnitTests()) {
-            return $this->storage->temporaryUrl(
-                $this->path,
-                now()->addDay()->endOfHour(),
-                ['ResponseContentDisposition' => 'attachment; filename="' . urlencode($this->getClientOriginalName()) . '"']
+            // Presigned URLs embed their signing timestamp, so regenerating one
+            // produces a different URL on every render — and a changed src makes
+            // the browser re-download the whole file. Cache the URL so re-renders
+            // morph the same src. The cache window is far shorter than the URL's
+            // validity, so a cached URL always has plenty of life left...
+            return $this->cachedTemporaryUrl ??= cache()->remember(
+                'livewire-tmp-preview-url:'.$this->getFilename(),
+                now()->addHours(6),
+                fn () => $this->storage->temporaryUrl(
+                    $this->path,
+                    now()->addDay()->endOfHour(),
+                    ['ResponseContentDisposition' => 'attachment; filename="' . urlencode($this->getClientOriginalName()) . '"']
+                )
             );
         }
 
@@ -170,6 +180,8 @@ class TemporaryUploadedFile extends UploadedFile
     public function delete()
     {
         $this->deleteMetaFile();
+
+        cache()->forget('livewire-tmp-preview-url:'.$this->getFilename());
 
         return $this->storage->delete($this->path);
     }
