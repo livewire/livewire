@@ -80,6 +80,8 @@ public function save()
 }
 ```
 
+If you're storing files in S3 — or an S3-compatible service like Cloudflare R2 or DigitalOcean Spaces — the [Using S3](#using-s3) section below walks through the entire setup from scratch.
+
 ## Handling multiple files
 
 Livewire automatically handles multiple file uploads by detecting the `multiple` attribute on the `<input>` tag.
@@ -123,7 +125,7 @@ new class extends Component {
 Like we've discussed, validating file uploads with Livewire is the same as handling file uploads from a standard Laravel controller.
 
 > [!warning] Ensure S3 is properly configured
-> Many of the validation rules relating to files require access to the file. When [uploading directly to S3](#uploading-directly-to-amazon-s3), these validation rules will fail if the S3 file object is not publicly accessible.
+> Many of the validation rules relating to files require access to the file. When [storing temporary uploads directly in S3](#using-s3), these validation rules will fail if the S3 file object is not publicly accessible.
 
 For more information on file validation, consult [Laravel's file validation documentation](https://laravel.com/docs/validation#available-validation-rules).
 
@@ -236,39 +238,122 @@ new class extends Component {
 
 For more information on testing file uploads, please consult [Laravel's file upload testing documentation](https://laravel.com/docs/http-tests#testing-file-uploads).
 
-## Uploading directly to Amazon S3
+## Using S3
 
-As previously discussed, Livewire stores all file uploads in a temporary directory until the developer permanently stores the file.
+Everything in this section applies equally to Amazon S3 and S3-compatible services like Cloudflare R2 and DigitalOcean Spaces.
 
-By default, Livewire uses the default filesystem disk configuration (usually `local`) and stores the files within a `livewire-tmp/` directory.
+Before configuring anything, it helps to know that every Livewire file upload makes two stops:
 
-Consequently, file uploads are always utilizing your application server, even if you choose to store the uploaded files in an S3 bucket later.
+1. **Temporary storage** — the moment a user selects a file, Livewire uploads it to a temporary directory (`livewire-tmp/`) so it can be validated and previewed. This part belongs to Livewire.
+2. **Permanent storage** — nothing is kept until your code calls `->store()`. Where that call puts the file is entirely up to you.
 
-If you wish to bypass your application server and instead store Livewire's temporary uploads in an S3 bucket, set the `LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK` environment variable in your `.env` file to `s3` (or another custom disk that uses the `s3` driver):
+These two stops are configured independently, and "using S3" can mean either or both:
+
+* If you just want your uploaded files to *end up* in S3, you only need steps 1 and 2.
+* If you also want the uploads themselves to bypass your server and go straight to your bucket, continue to step 3.
+
+### Step 1: Configure an S3 disk
+
+Laravel ships with an `s3` disk in `config/filesystems.php` that's wired to environment variables, so you rarely need to touch the config file itself.
+
+First, install the Flysystem S3 adapter — it isn't included with Laravel by default:
+
+```shell
+composer require league/flysystem-aws-s3-v3 "^3.0"
+```
+
+Then fill in the credentials in your `.env` file.
+
+For Amazon S3:
+
+```env
+AWS_ACCESS_KEY_ID=your-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=your-bucket-name
+```
+
+For an S3-compatible service, also set the service's `endpoint`. Cloudflare R2, for example:
+
+```env
+AWS_ACCESS_KEY_ID=your-r2-access-key-id
+AWS_SECRET_ACCESS_KEY=your-r2-secret-key
+AWS_DEFAULT_REGION=auto
+AWS_BUCKET=your-bucket-name
+AWS_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+```
+
+Or DigitalOcean Spaces:
+
+```env
+AWS_ACCESS_KEY_ID=your-spaces-key
+AWS_SECRET_ACCESS_KEY=your-spaces-secret
+AWS_DEFAULT_REGION=nyc3
+AWS_BUCKET=your-space-name
+AWS_ENDPOINT=https://nyc3.digitaloceanspaces.com
+```
+
+> [!tip] Verify the disk before going further
+> Run `php artisan tinker` and try writing a file:
+>
+> ```php
+> Storage::disk('s3')->put('connectivity-test.txt', 'hello');
+> ```
+>
+> If this returns `true`, your credentials work and everything below will too. Debugging a typo'd secret here takes seconds — debugging it through a failing file upload takes much longer.
+
+### Step 2: Store uploaded files in S3
+
+Where an upload ends up permanently is decided by your `->store()` call — not by any Livewire configuration. Pass the disk name to store the file in S3:
+
+```php
+public function save()
+{
+    $this->validate();
+
+    $this->photo->store(path: 'photos', options: 's3');
+}
+```
+
+Uploaded files now land in the `photos/` directory of your bucket. If that's all you were after, you're done.
+
+At this point, temporary uploads — the hop between the user selecting a file and your `save()` method running — are still stored on your application server. That's perfectly fine for most applications. If you'd like uploads to skip your server entirely, continue to step 3.
+
+### Step 3 (optional): Send temporary uploads directly to S3
+
+By default, Livewire keeps temporary uploads on a local disk, which means every upload passes through your application server — even if it's permanently stored in S3 afterwards.
+
+To bypass your server, point Livewire's temporary upload disk at S3 in your `.env` file:
 
 ```env
 LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK=s3
 ```
 
-> [!warning] Install the Flysystem S3 adapter
-> Laravel's `s3` driver requires the Flysystem S3 package, which isn't installed by default:
->
-> ```shell
-> composer require league/flysystem-aws-s3-v3 "^3.0"
-> ```
->
-> This also applies to S3-compatible services like Cloudflare R2 and DigitalOcean Spaces, configured via the `endpoint` option on your disk.
+Now, when a user selects a file, the browser uploads it straight to the `livewire-tmp/` directory of your bucket using a pre-signed URL — the file never touches your server. Image previews via `->temporaryUrl()` are served directly from S3 as well, and large files automatically use native S3 multipart uploads (see [chunked and resumable uploads](#chunked-and-resumable-uploads)).
 
-Now, when a user uploads a file, the file will never actually be stored on your server. Instead, it will be uploaded directly to your S3 bucket within the `livewire-tmp/` sub-directory.
+Because the browser now talks to your bucket directly, your bucket must allow cross-origin `PUT` requests from your application's domain. Add a CORS policy to the bucket:
+
+```json
+[
+    {
+        "AllowedOrigins": ["https://your-app.com"],
+        "AllowedMethods": ["PUT", "GET"],
+        "AllowedHeaders": ["*"],
+        "MaxAgeSeconds": 3000
+    }
+]
+```
+
+On Amazon S3 this lives under the bucket's **Permissions → Cross-origin resource sharing (CORS)**; on Cloudflare R2 it's under **Settings → CORS policy**. Without it, uploads will fail in the browser with CORS errors even though everything on the server is configured correctly.
 
 > [!tip]
-> Alternatively, you can publish Livewire's configuration file with `php artisan livewire:config` for full control over the `temporary_file_upload` config.
+> For full control over the temporary upload behavior — disk, directory, validation rules, and more — publish Livewire's config file with `php artisan livewire:config` and edit the `temporary_file_upload` section.
 
 ### Configuring automatic file cleanup
 
-Livewire's temporary upload directory will fill up with files quickly; therefore, it's essential to configure S3 to clean up files older than 24 hours.
+When temporary uploads are stored in S3, Livewire can't clean them up for you like it does locally, so your `livewire-tmp/` directory will fill up with files quickly. Instead, S3 itself should be configured to delete files older than 24 hours.
 
-To configure this behavior, run the following Artisan command from the environment that is utilizing an S3 bucket for file uploads:
+To set that up, run the following Artisan command from the environment that is using the S3 bucket for temporary uploads:
 
 ```shell
 php artisan livewire:configure-s3-upload-cleanup
@@ -277,7 +362,7 @@ php artisan livewire:configure-s3-upload-cleanup
 Now, any temporary files older than 24 hours will be cleaned up by S3 automatically.
 
 > [!info]
-> If you are not using S3 for file storage, Livewire will handle file cleanup automatically and there is no need to run the command above.
+> If you are not using S3 for temporary uploads, Livewire handles file cleanup automatically and there is no need to run the command above.
 
 ## Chunked and resumable uploads
 
