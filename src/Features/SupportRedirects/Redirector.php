@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportRedirects;
 
 use Livewire\Component;
 use Illuminate\Routing\Redirector as BaseRedirector;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class Redirector extends BaseRedirector
 {
@@ -12,6 +13,10 @@ class Redirector extends BaseRedirector
     public function to($path, $status = 302, $headers = [], $secure = null)
     {
         $this->component->redirect($this->generator->to($path, [], $secure));
+
+        if (app(HandleRequests::class)->isLivewireRoute()) {
+            return parent::to($path, $status, $headers, $secure);
+        }
 
         return $this;
     }
