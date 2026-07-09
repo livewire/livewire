@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Livewire\Livewire;
@@ -433,5 +434,19 @@ class UnitTest extends TestCase
         $uri = $handleRequests->getUpdateUri();
 
         $this->assertEquals(EndpointResolver::updatePath(), $uri);
+    }
+
+    public function test_can_handle_redirect_from_authentication_exception()
+    {
+        Route::livewire('/login-page', new class extends TestComponent {})->name('login');
+
+        Livewire::test(new class extends TestComponent {
+            public function save()
+            {
+                throw new AuthenticationException();
+            }
+        })
+        ->call('save')
+        ->assertRedirectToRoute('login');
     }
 }
