@@ -230,7 +230,14 @@ Livewire serves its JavaScript from a hash-based endpoint like `/livewire-{hash}
 
 **Nginx configuration blocking the route:**
 If you're using Nginx with a custom configuration, it may be blocking Laravel's dynamic Livewire routes. You can either:
-- Configure Nginx to pass requests matching `/livewire-*/` to Laravel (e.g., `location ~ ^/livewire-[a-f0-9]+/ { try_files $uri $uri/ /index.php?$query_string; }`)
+- Configure Nginx to pass requests matching `/livewire-*/` to Laravel:
+
+    ```nginx
+    location ~ ^/livewire-[a-f0-9]+/ {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+    ```
+
 - [Manually bundle Livewire](#manually-bundling-livewire-and-alpine) to avoid serving through Laravel
 - [Publish Livewire's assets](#publishing-livewires-assets-to-public-directory) to serve them directly from your web server
 

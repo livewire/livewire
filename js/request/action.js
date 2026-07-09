@@ -1,3 +1,4 @@
+import { dehydrateTree } from '@/synths'
 
 export default class Action {
     squashedActions = new Set()
@@ -21,7 +22,9 @@ export default class Action {
     constructor(component, name, params = [], metadata = {}, origin = null) {
         this.component = component
         this.name = name
-        this.params = params
+        // Convert any rich synth values back to their raw wire format
+        // so they can be serialized into the request payload...
+        this.params = dehydrateTree(params)
         this.metadata = metadata
         this.origin = origin
 
