@@ -1,4 +1,53 @@
 import { getCsrfToken } from '@/utils';
+import { registerSynth } from '@/synths';
+
+/**
+ * The rich JS counterpart to PHP's TemporaryUploadedFile. Wraps the raw
+ * "livewire-file:..." wire value so file properties are useful objects
+ * on the frontend instead of opaque serialized strings.
+ */
+export class TemporaryUpload {
+    constructor(serialized, meta = {}) {
+        this.serialized = serialized
+        this.meta = meta
+    }
+
+    // The original filename from the user's machine...
+    get name() { return this.meta.name ?? this.filename }
+
+    // The hashed temporary filename on the server (used by $wire.removeUpload())...
+    get filename() { return this.serialized.replace('livewire-file:', '') }
+
+    get extension() { return this.filename.split('.').pop() }
+
+    get isPreviewable() { return this.meta.previewUrl !== undefined }
+
+    temporaryUrl() { return this.meta.previewUrl ?? null }
+
+    // Degrade to the raw wire value when stringified or JSON-serialized...
+    toString() { return this.serialized }
+
+    toJSON() { return this.serialized }
+}
+
+registerSynth('fil', {
+    match: (value) => value instanceof TemporaryUpload,
+
+    hydrate: (value, meta) => {
+        if (typeof value !== 'string' || value === '') return value
+
+        // Legacy multiple-file format: hydrate into an array of rich objects...
+        if (value.startsWith('livewire-files:')) {
+            return JSON.parse(value.replace('livewire-files:', '')).map(
+                filename => new TemporaryUpload('livewire-file:' + filename)
+            )
+        }
+
+        return new TemporaryUpload(value, meta)
+    },
+
+    dehydrate: (value) => value.serialized,
+})
 
 let uploadManagers = new WeakMap
 

@@ -13,7 +13,35 @@ class FileUploadSynth extends Synth {
     }
 
     function dehydrate($target) {
-        return [$this->dehydratePropertyFromWithFileUploads($target), []];
+        return [
+            $this->dehydratePropertyFromWithFileUploads($target),
+            $target instanceof TemporaryUploadedFile ? static::metaFor($target) : [],
+        ];
+    }
+
+    public static function metaFor(TemporaryUploadedFile $file)
+    {
+        $meta = [];
+
+        try {
+            $name = $file->getClientOriginalName();
+
+            // Names extracted from hashed file paths can decode into binary
+            // garbage that would corrupt the snapshot's JSON encoding...
+            if (is_string($name) && mb_check_encoding($name, 'UTF-8')) {
+                $meta['name'] = $name;
+            }
+        } catch (\Throwable $e) {
+            //
+        }
+
+        try {
+            $meta['previewUrl'] = $file->temporaryUrl();
+        } catch (\Throwable $e) {
+            // Not previewable, or the disk doesn't support temporary URLs...
+        }
+
+        return $meta;
     }
 
     public function dehydratePropertyFromWithFileUploads($value)

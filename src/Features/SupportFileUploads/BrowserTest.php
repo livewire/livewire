@@ -62,6 +62,71 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_file_uploads_hydrate_into_rich_js_objects()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photo" dusk="upload">
+
+                <span dusk="name" x-text="$wire.photo?.name"></span>
+                <span dusk="extension" x-text="$wire.photo?.extension"></span>
+
+                <template x-if="$wire.photo?.isPreviewable">
+                    <img dusk="preview" x-bind:src="$wire.photo.temporaryUrl()">
+                </template>
+            </div>
+            HTML; }
+        })
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        // The rich object exposes the original client-side filename...
+        ->waitForTextIn('@name', 'browser_test_image.png')
+        ->assertSeeIn('@extension', 'png')
+        // And a preview URL usable entirely from JavaScript — the image must actually load...
+        ->waitFor('@preview')
+        ->waitUntil('document.querySelector(\'[dusk="preview"]\').naturalWidth > 0');
+    }
+
+    public function test_multiple_file_uploads_hydrate_into_arrays_of_rich_objects_and_support_removal()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photos = [];
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photos" dusk="upload" multiple>
+
+                <span dusk="names" x-text="$wire.photos.map(photo => photo.name).join(',')"></span>
+
+                <button dusk="remove-first" type="button" x-on:click="$wire.removeUpload('photos', $wire.photos[0].filename)">Remove first</button>
+            </div>
+            HTML; }
+        })
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        ->waitUntil('window.Livewire.all()[0].$wire.photos.length === 1')
+        // Dusk's attach() accumulates files on a multiple input, so clear the
+        // selection between attaches to avoid re-uploading the first file...
+        ->tap(fn ($b) => $b->script('document.querySelector(\'[dusk="upload"]\').value = null'))
+        ->attach('@upload', __DIR__ . '/browser_test_image2.png')
+        ->waitUntil('window.Livewire.all()[0].$wire.photos.length === 2')
+        ->assertSeeIn('@names', 'browser_test_image.png,browser_test_image2.png')
+        // The rich object's temp filename feeds the existing removeUpload API...
+        ->click('@remove-first')
+        ->waitUntil('window.Livewire.all()[0].$wire.photos.length === 1')
+        ->waitForTextIn('@names', 'browser_test_image2.png')
+        ->assertDontSeeIn('@names', 'browser_test_image.png,');
+    }
+
     public function test_can_cancel_an_upload()
     {
         if (getenv('FORCE_RUN') !== '1') {
