@@ -1,4 +1,5 @@
 import { dataSet, deepClone, diff, diffAndConsolidate, diffAndPatchRecursive, extractData} from '@/utils'
+import { dehydrateTree } from '@/synths'
 import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
@@ -74,7 +75,9 @@ export class Component {
     mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
         let snapshot = JSON.parse(snapshotEncoded)
 
-        let oldCanonical = deepClone(this.canonical)
+        // Canonical can contain rich synth values that don't survive JSON
+        // cloning, so re-extract a fresh copy from the old raw snapshot...
+        let oldCanonical = extractData(deepClone(this.snapshot.data))
         let updatedOldCanonical = this.applyUpdates(oldCanonical, updates)
 
         let newCanonical = extractData(deepClone(snapshot.data))
@@ -103,7 +106,7 @@ export class Component {
         // These updates will be applied first on the server
         // on the next request, then trickle back to the
         // client on the next request that gets sent.
-        this.queuedUpdates[propertyName] = value
+        this.queuedUpdates[propertyName] = dehydrateTree(value)
     }
 
     mergeQueuedUpdates(diff) {

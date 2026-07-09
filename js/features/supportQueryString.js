@@ -1,5 +1,6 @@
 import { on } from '@/hooks'
 import { dataGet } from '@/utils'
+import { dehydrateTree } from '@/synths'
 import Alpine from 'alpinejs'
 import { track } from '@/plugins/history'
 
@@ -13,13 +14,15 @@ on('effect', ({ component, effects, cleanup }) => {
 
         if (! as) as = name
 
-        let initialValue = [false, null, undefined].includes(except) ? dataGet(component.ephemeral, name) : except
+        // Rich synth values can't be serialized into a URL, so they're
+        // converted back to their raw wire format at this boundary...
+        let initialValue = [false, null, undefined].includes(except) ? dehydrateTree(dataGet(component.ephemeral, name)) : except
 
         let { replace, push, pop } = track(as, initialValue, alwaysShow, except)
 
         if (use === 'replace') {
             let effectReference = Alpine.effect(() => {
-                replace(dataGet(component.reactive, name))
+                replace(dehydrateTree(dataGet(component.reactive, name)))
             })
 
             cleanup(() => Alpine.release(effectReference))
@@ -29,10 +32,10 @@ on('effect', ({ component, effects, cleanup }) => {
             let forgetCommitHandler = on('commit', ({ component: commitComponent, succeed }) => {
                 if (component !== commitComponent) return
 
-                let beforeValue = dataGet(component.canonical, name)
+                let beforeValue = dehydrateTree(dataGet(component.canonical, name))
 
                 succeed(() => {
-                    let afterValue = dataGet(component.canonical, name)
+                    let afterValue = dehydrateTree(dataGet(component.canonical, name))
 
                     if (JSON.stringify(beforeValue) === JSON.stringify(afterValue)) return
 
@@ -64,7 +67,7 @@ on('effect', ({ component, effects, cleanup }) => {
 
             // If the current property value differs from the initial value
             // (e.g. restored from session), sync the URL via replaceState...
-            let currentValue = dataGet(component.ephemeral, name)
+            let currentValue = dehydrateTree(dataGet(component.ephemeral, name))
 
             if (JSON.stringify(currentValue) !== JSON.stringify(initialValue)) {
                 replace(currentValue)
