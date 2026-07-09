@@ -12,6 +12,7 @@
  */
 
 let synths = {}
+let synthList = []
 
 export function registerSynth(key, synth) {
     if (typeof key !== 'string' || key === '') {
@@ -24,15 +25,19 @@ export function registerSynth(key, synth) {
         }
     }
 
+    if (synths[key]) synthList = synthList.filter(i => i !== synths[key])
+
     synths[key] = synth
+    synthList.push(synth)
 }
 
 export function flushSynths() {
     synths = {}
+    synthList = []
 }
 
 export function hasSynths() {
-    return Object.keys(synths).length > 0
+    return synthList.length > 0
 }
 
 /**
@@ -43,8 +48,8 @@ export function hasSynths() {
 export function findSynthByValue(value) {
     if (typeof value !== 'object' || value === null) return
 
-    for (let key in synths) {
-        if (synths[key].match(value)) return synths[key]
+    for (let i = 0; i < synthList.length; i++) {
+        if (synthList[i].match(value)) return synthList[i]
     }
 }
 
@@ -59,8 +64,10 @@ export function hydrateValue(value, meta) {
 }
 
 /**
- * Walk a value tree and return a copy with every rich synth value converted
- * back to its raw wire format. Never mutates the original tree.
+ * Walk a value tree and convert every rich synth value back to its raw wire
+ * format. Never mutates the original tree. Copy-on-write: subtrees without
+ * rich values are returned by reference, so trees of plain data pass through
+ * with zero allocations.
  */
 export function dehydrateTree(value) {
     if (! hasSynths()) return value
@@ -75,11 +82,23 @@ function dehydrateTreeRecursive(value) {
 
     if (typeof value !== 'object' || value === null) return value
 
-    let copy = Array.isArray(value) ? [] : {}
+    let copy = null
 
-    Object.entries(value).forEach(([key, child]) => {
-        copy[key] = dehydrateTreeRecursive(child)
-    })
+    for (let key in value) {
+        let child = value[key]
 
-    return copy
+        // Primitives can never be rich values, so skip recursing into them...
+        if (typeof child !== 'object' || child === null) continue
+
+        let dehydrated = dehydrateTreeRecursive(child)
+
+        // Only clone this node once a descendant actually changed...
+        if (copy === null && dehydrated !== child) {
+            copy = Array.isArray(value) ? [...value] : { ...value }
+        }
+
+        if (copy !== null) copy[key] = dehydrated
+    }
+
+    return copy ?? value
 }
