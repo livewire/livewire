@@ -128,6 +128,100 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@same', 'same');
     }
 
+    public function test_replacing_a_rich_value_triggers_alpine_reactivity()
+    {
+        Livewire::visit(new class extends Component {
+            public Carbon $date;
+
+            public function mount(): void
+            {
+                $this->date = Carbon::parse('2021-01-01 00:00:00', 'UTC');
+            }
+
+            public function advance(): void
+            {
+                $this->date = $this->date->addYear();
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <script>
+                        document.addEventListener('livewire:init', () => {
+                            Livewire.synth('cbn', {
+                                match: (value) => value instanceof Date,
+                                hydrate: (value) => new Date(value),
+                                dehydrate: (value) => value.toISOString(),
+                            })
+                        })
+                    </script>
+
+                    <span dusk="text" x-text="$wire.date.getUTCFullYear()"></span>
+
+                    <button dusk="assign" type="button" x-on:click="$wire.date = new Date('2025-06-06T00:00:00Z')">Assign</button>
+
+                    <button dusk="advance" type="button" wire:click="advance">Advance</button>
+                </div>
+                HTML;
+            }
+        })
+        // Initial hydration renders through the effect...
+        ->waitForTextIn('@text', '2021')
+        // A client-side assignment fires the effect without any request...
+        ->click('@assign')
+        ->waitForTextIn('@text', '2025')
+        // A server-side change patches the reactive property and fires the effect...
+        ->waitForLivewire()->click('@advance')
+        ->waitForTextIn('@text', '2026');
+    }
+
+    public function test_mutating_a_date_in_place_is_not_reactive_but_is_still_sent_to_the_server()
+    {
+        Livewire::visit(new class extends Component {
+            public Carbon $date;
+
+            public function mount(): void
+            {
+                $this->date = Carbon::parse('2021-01-01 00:00:00', 'UTC');
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <script>
+                        document.addEventListener('livewire:init', () => {
+                            Livewire.synth('cbn', {
+                                match: (value) => value instanceof Date,
+                                hydrate: (value) => new Date(value),
+                                dehydrate: (value) => value.toISOString(),
+                            })
+                        })
+                    </script>
+
+                    <span dusk="text" x-text="$wire.date.getUTCFullYear()"></span>
+
+                    <span dusk="server">{{ $date->year }}</span>
+
+                    <button dusk="mutate" type="button" x-on:click="$wire.date.setUTCFullYear(2030)">Mutate</button>
+
+                    <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForTextIn('@text', '2021')
+        // In-place mutation doesn't replace the property, so no effect fires.
+        // (Dates can't be proxied, same as Vue's documented behavior.)
+        ->click('@mutate')
+        ->pause(100)
+        ->assertSeeIn('@text', '2021')
+        // But state diffing still detects the mutation and sends it up...
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@server', '2030');
+    }
+
     public function test_rich_values_dispatched_to_server_side_listeners_are_dehydrated()
     {
         Livewire::visit(new class extends Component {

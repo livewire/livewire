@@ -350,6 +350,31 @@ Now the same `Address` concept exists on both sides of the wire:
 
 You can still mutate individual fields (`$wire.address.street = '...'` or `wire:model="address.street"`) — when a rich value changes, Livewire sends its entire dehydrated form to the server, where the PHP synthesizer hydrates it back into an `Address`.
 
+### Reactivity
+
+Rich values participate in Alpine's reactivity at the property level. Any effect that reads the property — `x-text`, `$wire.$watch()`, `wire:dirty` — re-runs whenever the property is _replaced_:
+
+```blade
+<!-- This re-renders when $wire.publishedAt is assigned a new value... -->
+<div x-text="$wire.publishedAt.toDateString()"></div>
+
+<!-- ...whether from the client: -->
+<button x-on:click="$wire.publishedAt = new Date()">Publish now</button>
+```
+
+The same applies when the property changes server-side: because rich values are atomic, Livewire replaces the whole value when merging a server response, which triggers any effects reading it. And when a rich value _hasn't_ changed, Livewire keeps the existing object (same identity) so effects don't re-run needlessly.
+
+Rich values built from plain classes — like the `Address` example above — are also deeply reactive, just like plain objects: mutating `$wire.address.street` re-runs an effect reading `$wire.address.full`.
+
+The one exception is in-place mutation of native objects like `Date`:
+
+```blade
+<!-- This will NOT re-render the x-text above: -->
+<button x-on:click="$wire.publishedAt.setFullYear(2030)">Won't react</button>
+```
+
+JavaScript proxies can't intercept a `Date`'s internal methods, so Alpine (like Vue) can't observe the mutation. The change is still detected by Livewire's state diffing and sent to the server on the next request — but no frontend effects fire. Treat values like dates as immutable: assign a new instance instead of mutating.
+
 ### Things to know
 
 * **Registration is global per key.** Registering a synth for `cbn` upgrades _every_ Carbon and native date property across your entire application, so make sure your frontend code is prepared for that.
