@@ -222,6 +222,85 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@server', '2030');
     }
 
+    public function test_wire_dirty_tracks_rich_values()
+    {
+        Livewire::visit(new class extends Component {
+            public Carbon $date;
+
+            public function mount(): void
+            {
+                $this->date = Carbon::parse('2021-01-01 00:00:00', 'UTC');
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <script>
+                        document.addEventListener('livewire:init', () => {
+                            Livewire.synth('cbn', {
+                                match: (value) => value instanceof Date,
+                                hydrate: (value) => new Date(value),
+                                dehydrate: (value) => value.toISOString(),
+                            })
+                        })
+                    </script>
+
+                    <div wire:dirty wire:target="date">Unsaved changes...</div>
+
+                    <button dusk="mutate" type="button" x-on:click="$wire.date = new Date('2030-05-05T00:00:00Z')">Mutate</button>
+
+                    <button dusk="revert" type="button" x-on:click="$wire.date = new Date('2021-01-01T00:00:00Z')">Revert</button>
+                </div>
+                HTML;
+            }
+        })
+        ->assertDontSee('Unsaved changes...')
+        ->click('@mutate')
+        ->waitForText('Unsaved changes...')
+        // Reverting to an equal-but-different Date instance should read as clean...
+        ->click('@revert')
+        ->waitUntilMissingText('Unsaved changes...');
+    }
+
+    public function test_url_bound_rich_values_are_dehydrated_into_the_query_string()
+    {
+        Livewire::visit(new class extends Component {
+            #[\Livewire\Attributes\Url]
+            public Carbon $date;
+
+            public function mount(): void
+            {
+                $this->date = Carbon::parse('2021-01-01 00:00:00', 'UTC');
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <script>
+                        document.addEventListener('livewire:init', () => {
+                            Livewire.synth('cbn', {
+                                match: (value) => value instanceof Date,
+                                hydrate: (value) => new Date(value),
+                                dehydrate: (value) => value.toISOString(),
+                            })
+                        })
+                    </script>
+
+                    <span dusk="output">{{ $date->toDateString() }}</span>
+
+                    <button dusk="change" type="button" x-on:click="$wire.$set('date', new Date('2030-05-05T00:00:00Z'))">Change</button>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewire()->click('@change')
+        ->assertSeeIn('@output', '2030-05-05')
+        // The URL must carry the raw wire format, not a stringified Date object...
+        ->assertScript('new URLSearchParams(window.location.search).get("date")', '2030-05-05T00:00:00.000Z');
+    }
+
     public function test_rich_values_dispatched_to_server_side_listeners_are_dehydrated()
     {
         Livewire::visit(new class extends Component {
