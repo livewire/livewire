@@ -62,6 +62,139 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_file_uploads_hydrate_into_rich_js_objects()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photo" dusk="upload">
+
+                <span dusk="name" x-text="$wire.photo?.name"></span>
+                <span dusk="extension" x-text="$wire.photo?.extension"></span>
+
+                <template x-if="$wire.photo?.isPreviewable">
+                    <img dusk="preview" x-bind:src="$wire.photo.temporaryUrl()">
+                </template>
+            </div>
+            HTML; }
+        })
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        // The rich object exposes the original client-side filename...
+        ->waitForTextIn('@name', 'browser_test_image.png')
+        ->assertSeeIn('@extension', 'png')
+        // And a preview URL usable entirely from JavaScript — the image must actually load...
+        ->waitFor('@preview')
+        ->waitUntil('document.querySelector(\'[dusk="preview"]\').naturalWidth > 0');
+    }
+
+    public function test_rich_upload_objects_expose_reactive_progress_state_and_client_side_previews()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photo" dusk="upload">
+
+                {{-- Log every reactive change to the upload's lifecycle state... --}}
+                <div x-effect="window.__log = window.__log || []; window.__log.push($wire.photo ? [$wire.photo.progress, $wire.photo.isUploading] : null)"></div>
+
+                <template x-if="$wire.photo">
+                    <img dusk="preview" x-bind:src="$wire.photo.previewUrl">
+                </template>
+
+                <span dusk="status" x-text="$wire.photo ? ($wire.photo.isUploading ? 'uploading' : 'finished') : 'empty'"></span>
+            </div>
+            HTML; }
+        })
+        ->assertSeeIn('@status', 'empty')
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        ->waitForTextIn('@status', 'finished')
+        // The property held a pending object during the upload (progress state
+        // was observable before the server ever responded)...
+        ->assertScript('window.__log.some(entry => entry && entry[1] === true)', true)
+        // ...and settled at progress 100 / not uploading...
+        ->assertScript('window.__log[window.__log.length - 1][0]', 100)
+        ->assertScript('window.__log[window.__log.length - 1][1]', false)
+        // The preview never needed the server: it's a local blob URL, live
+        // during the upload AND after it settled...
+        ->assertScript('document.querySelector(\'[dusk="preview"]\').src.startsWith("blob:")', true)
+        ->waitUntil('document.querySelector(\'[dusk="preview"]\').naturalWidth > 0')
+        // And the settled object still exposes its server-side wire identity...
+        ->assertScript('window.Livewire.all()[0].$wire.photo.serialized.startsWith("livewire-file:")', true);
+    }
+
+    public function test_rich_upload_objects_can_remove_themselves()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photo" dusk="upload">
+
+                <span dusk="status" x-text="$wire.photo ? $wire.photo.name : 'empty'"></span>
+
+                <button dusk="remove" type="button" x-on:click="$wire.photo.remove()">Remove</button>
+            </div>
+            HTML; }
+        })
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        ->waitForTextIn('@status', 'browser_test_image.png')
+        ->click('@remove')
+        ->waitForTextIn('@status', 'empty')
+        // Removing also clears the file input so the same file can be re-selected...
+        ->assertScript('document.querySelector(\'[dusk="upload"]\').value', '');
+    }
+
+    public function test_multiple_file_uploads_hydrate_into_arrays_of_rich_objects_and_support_removal()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photos = [];
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photos" dusk="upload" multiple>
+
+                <span dusk="names" x-text="$wire.photos.map(photo => photo.name).join(',')"></span>
+
+                <button dusk="remove-first" type="button" x-on:click="$wire.photos[0].remove()">Remove first</button>
+            </div>
+            HTML; }
+        })
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        ->waitUntil('window.Livewire.all()[0].$wire.photos.length === 1')
+        // Dusk's attach() accumulates files on a multiple input, so clear the
+        // selection between attaches to avoid re-uploading the first file...
+        ->tap(fn ($b) => $b->script('document.querySelector(\'[dusk="upload"]\').value = null'))
+        ->attach('@upload', __DIR__ . '/browser_test_image2.png')
+        ->waitUntil('window.Livewire.all()[0].$wire.photos.length === 2')
+        ->assertSeeIn('@names', 'browser_test_image.png,browser_test_image2.png')
+        // The rich object's temp filename feeds the existing removeUpload API...
+        ->click('@remove-first')
+        ->waitUntil('window.Livewire.all()[0].$wire.photos.length === 1')
+        ->waitForTextIn('@names', 'browser_test_image2.png')
+        ->assertDontSeeIn('@names', 'browser_test_image.png,');
+    }
+
     public function test_upload_violating_property_size_rules_is_rejected_before_uploading_and_never_attached()
     {
         Storage::persistentFake('tmp-for-tests');

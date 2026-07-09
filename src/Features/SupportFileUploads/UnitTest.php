@@ -68,9 +68,13 @@ class UnitTest extends \Tests\TestCase
         $this->assertInstanceOf(TemporaryUploadedFile::class, $hydrated);
         $this->assertEquals('https://example.com/signed', $hydrated->getCachedTemporaryUrl()['url']);
 
-        // A file that never generated a URL adds nothing to the snapshot...
-        [, $emptyMeta] = $synth->dehydrate($synth->hydrate($value, []));
-        $this->assertSame([], $emptyMeta);
+        // A file that never generated a URL still ships rich frontend meta:
+        // the original filename and an eagerly signed preview URL (but no
+        // cache expiry, since nothing was persisted)...
+        [, $freshMeta] = $synth->dehydrate($synth->hydrate($value, []));
+        $this->assertEquals('avatar.jpg', $freshMeta['name']);
+        $this->assertArrayHasKey('url', $freshMeta);
+        $this->assertArrayNotHasKey('exp', $freshMeta);
     }
 
     public function test_a_missing_s3_flysystem_adapter_fails_fast_with_a_pointer_to_the_composer_package()
