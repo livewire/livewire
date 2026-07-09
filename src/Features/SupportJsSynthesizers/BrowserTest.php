@@ -128,6 +128,48 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@same', 'same');
     }
 
+    public function test_rich_values_dispatched_to_server_side_listeners_are_dehydrated()
+    {
+        Livewire::visit(new class extends Component {
+            public Carbon $date;
+
+            public function mount(): void
+            {
+                $this->date = Carbon::parse('2021-01-01 00:00:00', 'UTC');
+            }
+
+            #[\Livewire\Attributes\On('date-picked')]
+            public function handleDatePicked($value): void
+            {
+                $this->date = Carbon::parse($value);
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <script>
+                        document.addEventListener('livewire:init', () => {
+                            Livewire.synth('cbn', {
+                                match: (value) => value instanceof Date,
+                                hydrate: (value) => new Date(value),
+                                dehydrate: (value) => value.toISOString(),
+                            })
+                        })
+                    </script>
+
+                    <span dusk="output">{{ $date->toDateString() }}</span>
+
+                    <button dusk="dispatch" type="button" x-on:click="$wire.$dispatch('date-picked', { value: new Date('2034-09-09T00:00:00Z') })">Dispatch</button>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@output', '2021-01-01')
+        ->waitForLivewire()->click('@dispatch')
+        ->assertSeeIn('@output', '2034-09-09');
+    }
+
     public function test_a_custom_rich_object_supports_nested_data_binding()
     {
         Livewire::visit(new class extends Component {
