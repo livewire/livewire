@@ -93,6 +93,74 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitUntil('document.querySelector(\'[dusk="preview"]\').naturalWidth > 0');
     }
 
+    public function test_rich_upload_objects_expose_reactive_progress_state_and_client_side_previews()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photo" dusk="upload">
+
+                {{-- Log every reactive change to the upload's lifecycle state... --}}
+                <div x-effect="window.__log = window.__log || []; window.__log.push($wire.photo ? [$wire.photo.progress, $wire.photo.isUploading] : null)"></div>
+
+                <template x-if="$wire.photo">
+                    <img dusk="preview" x-bind:src="$wire.photo.previewUrl">
+                </template>
+
+                <span dusk="status" x-text="$wire.photo ? ($wire.photo.isUploading ? 'uploading' : 'finished') : 'empty'"></span>
+            </div>
+            HTML; }
+        })
+        ->assertSeeIn('@status', 'empty')
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        ->waitForTextIn('@status', 'finished')
+        // The property held a pending object during the upload (progress state
+        // was observable before the server ever responded)...
+        ->assertScript('window.__log.some(entry => entry && entry[1] === true)', true)
+        // ...and settled at progress 100 / not uploading...
+        ->assertScript('window.__log[window.__log.length - 1][0]', 100)
+        ->assertScript('window.__log[window.__log.length - 1][1]', false)
+        // The preview never needed the server: it's a local blob URL, live
+        // during the upload AND after it settled...
+        ->assertScript('document.querySelector(\'[dusk="preview"]\').src.startsWith("blob:")', true)
+        ->waitUntil('document.querySelector(\'[dusk="preview"]\').naturalWidth > 0')
+        // And the settled object still exposes its server-side wire identity...
+        ->assertScript('window.Livewire.all()[0].$wire.photo.serialized.startsWith("livewire-file:")', true);
+    }
+
+    public function test_rich_upload_objects_can_remove_themselves()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photo" dusk="upload">
+
+                <span dusk="status" x-text="$wire.photo ? $wire.photo.name : 'empty'"></span>
+
+                <button dusk="remove" type="button" x-on:click="$wire.photo.remove()">Remove</button>
+            </div>
+            HTML; }
+        })
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        ->waitForTextIn('@status', 'browser_test_image.png')
+        ->click('@remove')
+        ->waitForTextIn('@status', 'empty')
+        // Removing also clears the file input so the same file can be re-selected...
+        ->assertScript('document.querySelector(\'[dusk="upload"]\').value', '');
+    }
+
     public function test_multiple_file_uploads_hydrate_into_arrays_of_rich_objects_and_support_removal()
     {
         Storage::persistentFake('tmp-for-tests');
@@ -108,7 +176,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 <span dusk="names" x-text="$wire.photos.map(photo => photo.name).join(',')"></span>
 
-                <button dusk="remove-first" type="button" x-on:click="$wire.removeUpload('photos', $wire.photos[0].filename)">Remove first</button>
+                <button dusk="remove-first" type="button" x-on:click="$wire.photos[0].remove()">Remove first</button>
             </div>
             HTML; }
         })

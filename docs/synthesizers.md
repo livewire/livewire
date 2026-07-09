@@ -308,6 +308,23 @@ dehydrate: (value) => value.toISOString(),
 match: (value) => value instanceof Date,
 ```
 
+### Hydration context
+
+`hydrate()` receives a third argument: a context object containing the owning `component` and the value's `path` in component state (`'date'`, `'items.2'`, etc.). Rich values can hold onto it to know where they live — for example, to update or remove themselves through `component.$wire`:
+
+```js
+hydrate: (value, meta, context) => new Reminder(value, context),
+
+// Inside the rich class:
+dismiss() {
+    this.context.component.$wire.$set(this.context.path, null)
+}
+```
+
+### Values without a wire representation
+
+`dehydrate()` may return `undefined` to signal that a value has no server-side representation yet. Livewire will never send such a value to the server: it's skipped in update payloads, and omitted from arrays entirely (rather than serialized as `null`). This enables optimistic client-side values — Livewire's rich upload objects use it to represent in-flight uploads, exposing reactive `progress` state on the property while the file is still uploading.
+
 ### Pairing with a custom PHP synthesizer
 
 JavaScript synthesizers really shine when paired with a custom PHP synthesizer. Continuing the `Address` example from above, you can give the frontend a matching rich object:
