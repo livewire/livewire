@@ -1,3 +1,4 @@
+import Alpine from 'alpinejs'
 import { getCsrfToken, dataGet, dataSet } from '@/utils'
 import { TemporaryUpload, stashObjectUrl } from './synth'
 import form from './strategies/form'
@@ -9,6 +10,12 @@ let strategies = { form, chunked, s3 }
 let uploadManagers = new WeakMap
 
 export function getUploadManager(component) {
+    // Rich upload objects living in reactive state reach for their component
+    // through Alpine's proxies — unwrap so every caller resolves the same
+    // manager instance (a duplicate would register duplicate listeners and
+    // track uploads the original never sees)...
+    component = Alpine.raw(component)
+
     if (! uploadManagers.has(component)) {
         let manager = new UploadManager(component)
 

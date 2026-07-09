@@ -149,14 +149,21 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 <span dusk="status" x-text="$wire.photo ? $wire.photo.name : 'empty'"></span>
 
-                <button dusk="remove" type="button" x-on:click="$wire.photo.remove()">Remove</button>
+                <button dusk="remove" type="button" x-on:click="$wire.photo.remove(() => window.__removed = true)">Remove</button>
             </div>
             HTML; }
         })
         ->attach('@upload', __DIR__ . '/browser_test_image.png')
         ->waitForTextIn('@status', 'browser_test_image.png')
+        ->tap(fn ($b) => $b->script('window.__errs = []; window.addEventListener("error", e => window.__errs.push(e.message)); window.__removed = false'))
         ->click('@remove')
         ->waitForTextIn('@status', 'empty')
+        // The removal must complete cleanly: no duplicate-manager errors (rich
+        // objects reach their component through Alpine proxies, which must
+        // resolve to the same upload manager as the wire:model directive)...
+        ->assertScript('window.__errs.length', 0)
+        // ...and the finish callback must actually fire...
+        ->assertScript('window.__removed', true)
         // Removing also clears the file input so the same file can be re-selected...
         ->assertScript('document.querySelector(\'[dusk="upload"]\').value', '');
     }
