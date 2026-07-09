@@ -73,8 +73,9 @@ export class TemporaryUpload {
     // The signed server-side preview URL (equivalent of PHP's temporaryUrl())...
     temporaryUrl() { return this.meta.url ?? null }
 
-    // Remove this upload from the property it lives on. Cancels the upload
-    // if it's still in flight...
+    // Remove this upload from the property it lives on, instantly. Cancels
+    // the upload if it's still in flight; otherwise the property updates
+    // optimistically and the server confirms in the background...
     remove(finishCallback = () => {}) {
         if (! this.context) throw 'Cannot remove an upload that isn\'t attached to a component property'
 
@@ -83,8 +84,6 @@ export class TemporaryUpload {
         if (this.isUploading) {
             return manager.cancelUpload(this._propertyName)
         }
-
-        releaseObjectUrl(this.filename)
 
         return manager.removeUpload(this._propertyName, this.filename, finishCallback)
     }

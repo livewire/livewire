@@ -218,7 +218,7 @@ Property | Description
 `isPreviewable` | Whether a preview URL is available
 `previewUrl` | The best available preview URL: a local blob URL when possible, otherwise the signed server URL
 `temporaryUrl()` | The signed server-side preview URL (the JavaScript equivalent of PHP's `->temporaryUrl()`)
-`remove()` | Remove this upload from its property — cancels the upload if it's still in flight
+`remove()` | Remove this upload from its property, instantly — the property updates optimistically and the server confirms in the background (in-flight uploads are cancelled instead)
 
 Properties holding multiple uploads hydrate into arrays of rich objects, so each file can be listed and removed individually:
 

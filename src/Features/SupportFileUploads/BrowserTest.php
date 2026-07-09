@@ -156,14 +156,16 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->attach('@upload', __DIR__ . '/browser_test_image.png')
         ->waitForTextIn('@status', 'browser_test_image.png')
         ->tap(fn ($b) => $b->script('window.__errs = []; window.addEventListener("error", e => window.__errs.push(e.message)); window.__removed = false'))
-        ->click('@remove')
+        // Removal is optimistic: the property nulls in the same synchronous
+        // frame as the click — no server round trip could have completed...
+        ->assertScript('(() => { document.querySelector(\'[dusk="remove"]\').click(); return window.Livewire.all()[0].$wire.photo === null })()', true)
         ->waitForTextIn('@status', 'empty')
         // The removal must complete cleanly: no duplicate-manager errors (rich
         // objects reach their component through Alpine proxies, which must
         // resolve to the same upload manager as the wire:model directive)...
         ->assertScript('window.__errs.length', 0)
-        // ...and the finish callback must actually fire...
-        ->assertScript('window.__removed', true)
+        // ...and the server-confirmation finish callback must still fire...
+        ->waitUntil('window.__removed === true')
         // Removing also clears the file input so the same file can be re-selected...
         ->assertScript('document.querySelector(\'[dusk="upload"]\').value', '');
     }
@@ -195,11 +197,15 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->attach('@upload', __DIR__ . '/browser_test_image2.png')
         ->waitUntil('window.Livewire.all()[0].$wire.photos.length === 2')
         ->assertSeeIn('@names', 'browser_test_image.png,browser_test_image2.png')
-        // The rich object's temp filename feeds the existing removeUpload API...
-        ->click('@remove-first')
-        ->waitUntil('window.Livewire.all()[0].$wire.photos.length === 1')
+        // Removal is optimistic: the array shrinks in the same synchronous
+        // frame as the click, before any server round trip...
+        ->assertScript('(() => { document.querySelector(\'[dusk="remove-first"]\').click(); return window.Livewire.all()[0].$wire.photos.length })()', 1)
         ->waitForTextIn('@names', 'browser_test_image2.png')
-        ->assertDontSeeIn('@names', 'browser_test_image.png,');
+        ->assertDontSeeIn('@names', 'browser_test_image.png,')
+        // And the server settles on the same state (no reconciliation flicker)...
+        ->pause(500)
+        ->assertScript('window.Livewire.all()[0].$wire.photos.length', 1)
+        ->assertSeeIn('@names', 'browser_test_image2.png');
     }
 
     public function test_upload_violating_property_size_rules_is_rejected_before_uploading_and_never_attached()

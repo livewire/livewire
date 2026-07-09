@@ -1,6 +1,6 @@
 import Alpine from 'alpinejs'
 import { getCsrfToken, dataGet, dataSet } from '@/utils'
-import { TemporaryUpload, stashObjectUrl } from './synth'
+import { TemporaryUpload, stashObjectUrl, releaseObjectUrl } from './synth'
 import form from './strategies/form'
 import chunked from './strategies/chunked'
 import s3 from './strategies/s3'
@@ -79,7 +79,27 @@ export class UploadManager {
             tmpFilename, finishCallback
         })
 
+        releaseObjectUrl(tmpFilename)
+
+        // Optimistically detach the upload so the UI responds instantly.
+        // Canonical is updated in lockstep so the detachment isn't echoed
+        // to the server as a property update — _removeUpload runs against
+        // the property as the server last knew it (keeping its gated,
+        // property-scoped delete) and the response snapshot reconciles...
+        this.detachUpload(this.component.reactive, name, tmpFilename)
+        this.detachUpload(this.component.canonical, name, tmpFilename)
+
         this.component.$wire.call('_removeUpload', name, tmpFilename)
+    }
+
+    detachUpload(tree, name, tmpFilename) {
+        let value = dataGet(tree, name)
+
+        if (Array.isArray(value)) {
+            dataSet(tree, name, value.filter(upload => ! (upload instanceof TemporaryUpload && upload.filename === tmpFilename)))
+        } else if (value instanceof TemporaryUpload && value.filename === tmpFilename) {
+            dataSet(tree, name, null)
+        }
     }
 
     setUpload(name, uploadObject) {
