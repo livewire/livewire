@@ -209,6 +209,9 @@ class HandleRequests extends Mechanism
                 if (config('app.debug')) throw $e;
 
                 abort(419);
+            } catch (\Illuminate\Auth\AuthenticationException $e) {
+                $effects['redirect'] = $e->redirectTo(request());
+                $effects['redirectUsingNavigate'] = true;
             }
 
             $componentResponses[] = [
