@@ -1,3 +1,4 @@
+import { hasSynths, findSynthByValue, hydrateValue, dehydrateTree } from '@/synths'
 
 export class Bag {
     constructor() { this.arrays = {} }
@@ -66,9 +67,10 @@ export function isPrimitive(subject) { return typeof subject !== 'object' || sub
 export function deepClone(obj) { return JSON.parse(JSON.stringify(obj)) }
 
 /**
- * Determine if two objects take the exact same shape.
+ * Determine if two objects take the exact same shape. Rich synth values
+ * are compared by their dehydrated wire format.
  */
-export function deeplyEqual(a, b) { return JSON.stringify(a) === JSON.stringify(b) }
+export function deeplyEqual(a, b) { return JSON.stringify(dehydrateTree(a)) === JSON.stringify(dehydrateTree(b)) }
 
 /**
  * An easy way to loop through arrays and objects.
@@ -165,6 +167,14 @@ export function diff(left, right, diffs = {}, path = '') {
     // Are they the same?
     if (left === right) return diffs
 
+    // Rich synth values are atomic: compare their dehydrated wire formats
+    // instead of recursing into them...
+    if (hasSynths() && (findSynthByValue(left) || findSynthByValue(right))) {
+        if (! deeplyEqual(left, right)) diffs[path] = dehydrateTree(right)
+
+        return diffs
+    }
+
     // Are they COMPLETELY different?
     if (typeof left !== typeof right || (isObject(left) && isArray(right)) || (isArray(left) && isObject(right))) {
         diffs[path] = right;
@@ -211,12 +221,29 @@ export function diffAndConsolidate(left, right) {
 
     diffRecursive(left, right, '', diffs, left, right)
 
+    // Consolidated diffs can contain subtrees with rich synth values nested
+    // inside them. Convert everything back to raw wire format so the diff
+    // is safe to send to the server...
+    if (hasSynths()) {
+        Object.entries(diffs).forEach(([key, value]) => diffs[key] = dehydrateTree(value))
+    }
+
     return diffs
 }
 
 function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     // Are they the same?
     if (left === right) return { changed: false, consolidated: false }
+
+    // Rich synth values are atomic: compare their dehydrated wire formats
+    // instead of recursing into them...
+    if (hasSynths() && (findSynthByValue(left) || findSynthByValue(right))) {
+        if (deeplyEqual(left, right)) return { changed: false, consolidated: false }
+
+        diffs[path] = right
+
+        return { changed: true, consolidated: false }
+    }
 
     // Track if we're doing a type conversion from empty array/null/undefined to object
     // In this case, we want granular diffs, not consolidation
@@ -363,6 +390,14 @@ export function diffAndPatchRecursive(left, right, target) {
 
         if (deeplyEqual(left?.[key], right[key])) return
 
+        // Rich synth values are atomic: replace them wholesale instead of
+        // recursing into and merging their internals...
+        if (hasSynths() && (findSynthByValue(left?.[key]) || findSynthByValue(right[key]) || findSynthByValue(target[key]))) {
+            target[key] = right[key]
+
+            return
+        }
+
         if (isObjecty(left?.[key]) && isObjecty(right[key]) && isObjecty(target[key])
             && isArray(right[key]) === isArray(target[key])) {
             diffAndPatchRecursive(left[key], right[key], target[key])
@@ -392,6 +427,9 @@ export function diffAndPatchRecursive(left, right, target) {
  * The data that's passed between the browser and server is in the form of
  * nested tuples consisting of the schema: [rawValue, metadata]. In this
  * method we're extracting the plain JS object of only the raw values.
+ *
+ * If a JS synth has been registered for a tuple's synth key, the raw value
+ * is hydrated into a rich JS value (children are hydrated first).
  */
 export function extractData(payload) {
     let value = isSynthetic(payload) ? payload[0] : payload
@@ -403,7 +441,7 @@ export function extractData(payload) {
         })
     }
 
-    return value
+    return hydrateValue(value, meta)
 }
 
 /**

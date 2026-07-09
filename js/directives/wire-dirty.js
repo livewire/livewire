@@ -1,6 +1,6 @@
 import { directive, getDirectives } from '@/directives'
 import { toggleBooleanStateDirective } from './shared'
-import { dataGet, WeakBag } from '@/utils'
+import { dataGet, deeplyEqual, WeakBag } from '@/utils'
 import { on } from '@/hooks'
 
 let refreshDirtyStatesByComponent = new WeakBag
@@ -45,17 +45,17 @@ export function checkDirty(component, targets) {
     let isDirty = false
 
     if (targets === undefined) {
-        isDirty = JSON.stringify(component.canonical) !== JSON.stringify(component.reactive)
+        isDirty = ! deeplyEqual(component.canonical, component.reactive)
     } else if (Array.isArray(targets)) {
         for (let i = 0; i < targets.length; i++) {
             if (isDirty) break;
 
             let target = targets[i]
 
-            isDirty = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target))
+            isDirty = ! deeplyEqual(dataGet(component.canonical, target), dataGet(component.reactive, target))
         }
     } else {
-        isDirty = JSON.stringify(dataGet(component.canonical, targets)) !== JSON.stringify(dataGet(component.reactive, targets))
+        isDirty = ! deeplyEqual(dataGet(component.canonical, targets), dataGet(component.reactive, targets))
     }
 
     return isDirty
