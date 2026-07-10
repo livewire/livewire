@@ -171,3 +171,8 @@ function store($instance = null)
         }
     };
 }
+
+function navigate($path)
+{
+    return app('redirect')->navigate($path);
+}

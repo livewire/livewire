@@ -21,6 +21,13 @@ class Redirector extends BaseRedirector
         return $this->to($path, $status, $headers);
     }
 
+    public function navigate($path)
+    {
+        $this->component->redirect($this->generator->to($path), true);
+
+        return $this;
+    }
+
     public function with($key, $value = null)
     {
         $key = is_array($key) ? $key : [$key => $value];

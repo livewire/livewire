@@ -9,6 +9,8 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Tests\TestComponent;
 
+use function Livewire\navigate;
+
 class UnitTest extends \Tests\TestCase
 {
     public function test_standard_redirect()
@@ -110,6 +112,37 @@ class UnitTest extends \Tests\TestCase
         $component = Livewire::test(TriggersRedirectStub::class);
 
         $component->runAction('triggerRedirectHelperUsingArrayWith');
+
+        $this->assertEquals(url('foo'), $component->effects['redirect']);
+
+        $this->assertEquals('livewire-is-awesome', Session::get('success'));
+    }
+
+    public function test_navigate_helper()
+    {
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerNavigateHelper');
+
+        $this->assertEquals(url('foo'), $component->effects['redirect']);
+    }
+
+    public function test_navigate_helper_using_key_value_with()
+    {
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerNavigateHelperUsingKeyValueWith');
+
+        $this->assertEquals(url('foo'), $component->effects['redirect']);
+
+        $this->assertEquals('livewire-is-awesome', Session::get('success'));
+    }
+
+    public function test_navigate_helper_using_array_with()
+    {
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerNavigateHelperUsingArrayWith');
 
         $this->assertEquals(url('foo'), $component->effects['redirect']);
 
@@ -296,6 +329,23 @@ class TriggersRedirectStub extends TestComponent
     public function triggerRedirectHelperUsingAway()
     {
         return redirect()->away('foo');
+    }
+
+    public function triggerNavigateHelper()
+    {
+        return navigate('foo');
+    }
+
+    public function triggerNavigateHelperUsingKeyValueWith()
+    {
+        return navigate('foo')->with('success', 'livewire-is-awesome');
+    }
+
+    public function triggerNavigateHelperUsingArrayWith()
+    {
+        return navigate('foo')->with([
+            'success' => 'livewire-is-awesome'
+        ]);
     }
 }
 
