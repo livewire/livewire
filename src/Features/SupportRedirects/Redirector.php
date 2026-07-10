@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportRedirects;
 
 use Livewire\Component;
 use Illuminate\Routing\Redirector as BaseRedirector;
-use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class Redirector extends BaseRedirector
 {
