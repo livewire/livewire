@@ -208,6 +208,40 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@names', 'browser_test_image2.png');
     }
 
+    public function test_uploading_to_an_array_property_through_an_input_missing_the_multiple_attribute_appends_instead_of_replacing()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photos = [];
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photos" dusk="upload">
+
+                {{-- Log the property's shape on every reactive change... --}}
+                <div x-effect="window.__shapes = window.__shapes || []; window.__shapes.push(Array.isArray($wire.photos))"></div>
+
+                <span dusk="names" x-text="Array.isArray($wire.photos) ? $wire.photos.map(photo => photo.name).join(',') : 'NOT-AN-ARRAY'"></span>
+            </div>
+            HTML; }
+        })
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        ->waitForTextIn('@names', 'browser_test_image.png')
+        // The property stayed an array through the entire upload lifecycle —
+        // the pending object was appended into it, never swapped in as a
+        // bare object out from under x-for loops...
+        ->assertScript('window.__shapes.every(shape => shape === true)', true)
+        ->assertScript('window.Livewire.all()[0].$wire.photos.length', 1)
+        // A second selection through the same single input appends, matching
+        // the server's long-standing behavior for array properties...
+        ->attach('@upload', __DIR__ . '/browser_test_image2.png')
+        ->waitUntil('window.Livewire.all()[0].$wire.photos.length === 2')
+        ->assertSeeIn('@names', 'browser_test_image.png,browser_test_image2.png');
+    }
+
     public function test_upload_violating_property_size_rules_is_rejected_before_uploading_and_never_attached()
     {
         Storage::persistentFake('tmp-for-tests');

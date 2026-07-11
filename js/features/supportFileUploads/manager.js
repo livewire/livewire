@@ -51,6 +51,15 @@ export class UploadManager {
     }
 
     upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+        // Uploading a single file into an array property has always meant
+        // "append" on the server — treat it as a multiple upload on the
+        // client too, so the pending phase appends a rich object to the
+        // array instead of swapping the array out for a bare object
+        // mid-upload (which would break x-for loops over the property)...
+        if (Array.isArray(dataGet(this.component.ephemeral, name))) {
+            return this.uploadMultiple(name, [file], tmpFilenames => finishCallback(tmpFilenames[0]), errorCallback, progressCallback, cancelledCallback)
+        }
+
         this.setUpload(name, {
             files: [file],
             multiple: false,

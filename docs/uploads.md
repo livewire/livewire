@@ -124,6 +124,8 @@ new class extends Component {
 </form>
 ```
 
+If a file input bound to an array property is missing the `multiple` attribute, Livewire still treats each upload as a multiple upload and appends it to the array — the property's shape wins. The `multiple` attribute's job is telling the browser to allow selecting more than one file at a time.
+
 ## File validation
 
 Like we've discussed, validating file uploads with Livewire is the same as handling file uploads from a standard Laravel controller.
