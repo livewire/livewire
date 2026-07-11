@@ -357,6 +357,10 @@ Livewire::setUpdateRoute(function ($handle, $path) {
 
 ### JavaScript deprecations
 
+#### Removed: internal `upload:generatedSignedUrl` events
+
+The file-upload internals now negotiate a single server-decided `upload:plan` event instead of the old `upload:generatedSignedUrl` / `upload:generatedSignedUrlForS3` events. These were undocumented internal events, but if you had custom JavaScript listening for them via `$wire.$on('upload:generatedSignedUrl', ...)`, it will silently stop firing. The public upload API (`Livewire.upload`, `livewire-upload-start` / `-progress` / `-finish` / `-error` / `-cancel` DOM events) is unchanged — and the progress event now additionally carries `loaded` and `total` byte counts.
+
 #### Deprecated: `$wire.$js()` method
 
 The `$wire.$js()` method for defining JavaScript actions has been deprecated:
@@ -797,6 +801,23 @@ Every element that triggers a network request automatically receives a `data-loa
 ```
 
 [Learn more about loading states →](/docs/4.x/loading-states)
+
+### Chunked, resumable, and multiple-file S3 uploads
+
+File uploads now handle large files and unreliable connections automatically — no markup or API changes required:
+
+- **Large files bypass PHP's upload limits.** Files above the chunk threshold are sliced in the browser and reassembled server-side, so `upload_max_filesize` / `post_max_size` no longer cap your uploads — your `max:` validation rule does.
+- **Interrupted uploads resume.** Cancel, connection drop, or a full page reload — re-selecting the same file resumes from the chunks the server already has.
+- **S3 gets multiple files and native multipart.** Multiple-file S3 uploads now work (one presigned PUT per file), and large files use real S3 multipart uploads.
+
+This is on by default. A few things to be aware of when upgrading:
+
+- **Chunking is enabled automatically.** Any local-disk file larger than 1MB now flows through the new chunk endpoint instead of a single POST. Set `temporary_file_upload.chunking` to `false` to opt out.
+- **If you set a custom upload `middleware`,** it now also governs the chunked upload endpoint, where a single file arrives as many rapid requests. A tight throttle like `throttle:60,1` will fail large uploads — throttle generously (the built-in default for the chunk endpoint is `throttle:600,1`).
+- **S3 users should add an `AbortIncompleteMultipartUpload` lifecycle rule** so abandoned multipart uploads don't accrue invisible storage. Re-running `php artisan livewire:configure-s3-upload-cleanup` adds it for you.
+- **`S3DoesntSupportMultipleFileUploads` is no longer thrown** (S3 multiple uploads are supported now). The class remains for backward compatibility but is deprecated; tests asserting this exception should be removed.
+
+[Learn more about uploads →](/docs/4.x/uploads)
 
 ### JavaScript improvements
 

@@ -56,11 +56,12 @@ export function findSynthByValue(value) {
 /**
  * Hydrate a raw wire value into a rich JS value if a synth is registered
  * for the metadata's synth key. Otherwise pass the raw value through.
+ * Context ({ component, path }) tells the rich value where it lives.
  */
-export function hydrateValue(value, meta) {
+export function hydrateValue(value, meta, context = undefined) {
     let synth = meta && synths[meta.s]
 
-    return synth ? synth.hydrate(value, meta) : value
+    return synth ? synth.hydrate(value, meta, context) : value
 }
 
 /**
@@ -100,5 +101,10 @@ function dehydrateTreeRecursive(value) {
         if (copy !== null) copy[key] = dehydrated
     }
 
-    return copy ?? value
+    if (copy === null) return value
+
+    // Values that dehydrate to undefined have no wire representation yet
+    // (e.g. pending uploads) — omit them entirely so they can't corrupt
+    // the payload as JSON nulls...
+    return Array.isArray(copy) ? copy.filter(child => child !== undefined) : copy
 }

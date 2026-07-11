@@ -7,6 +7,19 @@ use League\Flysystem\WhitespacePathNormalizer;
 
 class FileUploadConfiguration
 {
+    public static $enforceS3AdapterCheckForTesting = false;
+
+    public static function ensureS3AdapterIsInstalled()
+    {
+        // Unit tests swap the S3-touching facades with fakes, so the adapter
+        // is never actually needed there...
+        if (app()->runningUnitTests() && ! static::$enforceS3AdapterCheckForTesting) return;
+
+        if (! class_exists(\League\Flysystem\AwsS3V3\AwsS3V3Adapter::class)) {
+            throw new MissingS3AdapterException;
+        }
+    }
+
     public static function storage()
     {
         $disk = static::disk();
@@ -123,6 +136,39 @@ class FileUploadConfiguration
     public static function maxUploadTime()
     {
         return config('livewire.temporary_file_upload.max_upload_time') ?: 5;
+    }
+
+    public static function chunkingEnabled()
+    {
+        return (bool) (config('livewire.temporary_file_upload.chunking') ?? true);
+    }
+
+    public static function chunkSize()
+    {
+        // S3 requires multipart upload parts (except the last) to be at least 5MB.
+        // Chunks on other disks pass through PHP, so they default to 1MB — small
+        // enough to clear even a stock php.ini's upload_max_filesize of 2M...
+        if (static::isUsingS3()) {
+            return max((int) (config('livewire.temporary_file_upload.chunk_size') ?: 5 * 1024 * 1024), 5 * 1024 * 1024);
+        }
+
+        return (int) (config('livewire.temporary_file_upload.chunk_size') ?: 1024 * 1024);
+    }
+
+    public static function chunkThreshold()
+    {
+        return (int) (config('livewire.temporary_file_upload.chunk_threshold') ?: static::chunkSize());
+    }
+
+    public static function maxDeclaredSizeInKilobytes()
+    {
+        foreach (static::rules() as $rule) {
+            if (is_string($rule) && preg_match('/^max:(\d+)$/', $rule, $matches)) {
+                return (int) $matches[1];
+            }
+        }
+
+        return null;
     }
 
     public static function storeTemporaryFile($file, $disk)

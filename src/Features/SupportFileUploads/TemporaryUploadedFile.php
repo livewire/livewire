@@ -14,6 +14,7 @@ class TemporaryUploadedFile extends UploadedFile
     protected $storage;
     protected $path;
     protected $metaFileData;
+    protected $cachedTemporaryUrl;
 
     public function __construct($path, $disk)
     {
@@ -124,11 +125,26 @@ class TemporaryUploadedFile extends UploadedFile
         }
 
         if ((FileUploadConfiguration::isUsingS3() or FileUploadConfiguration::isUsingGCS()) && ! app()->runningUnitTests()) {
-            return $this->storage->temporaryUrl(
+            // Presigned URLs embed their signing timestamp, so regenerating one
+            // produces a different URL on every render — and a changed src makes
+            // the browser re-download the whole file. The generated URL rides
+            // along in the component snapshot (see FileUploadSynth) so re-renders
+            // morph an identical src for as long as the URL has life left...
+            if ($cached = $this->getCachedTemporaryUrl()) {
+                return $cached['url'];
+            }
+
+            $expiresAt = now()->addDay()->endOfHour();
+
+            $url = $this->storage->temporaryUrl(
                 $this->path,
-                now()->addDay()->endOfHour(),
+                $expiresAt,
                 ['ResponseContentDisposition' => 'attachment; filename="' . urlencode($this->getClientOriginalName()) . '"']
             );
+
+            $this->setCachedTemporaryUrl($url, $expiresAt->getTimestamp());
+
+            return $url;
         }
 
         if (method_exists($this->storage->getAdapter(), 'getTemporaryUrl')) {
@@ -167,9 +183,36 @@ class TemporaryUploadedFile extends UploadedFile
         return $this->storage->get($this->path);
     }
 
+    public function getCachedTemporaryUrl()
+    {
+        if (! $this->cachedTemporaryUrl) return null;
+
+        // Regenerate once the URL is within an hour of expiring...
+        if (($this->cachedTemporaryUrl['exp'] ?? 0) - now()->getTimestamp() < 3600) return null;
+
+        return $this->cachedTemporaryUrl;
+    }
+
+    public function setCachedTemporaryUrl($url, $expiresAt)
+    {
+        if (! is_string($url) || ! is_numeric($expiresAt)) return;
+
+        $this->cachedTemporaryUrl = ['url' => $url, 'exp' => (int) $expiresAt];
+    }
+
     public function delete()
     {
+        $this->deleteMetaFile();
+
         return $this->storage->delete($this->path);
+    }
+
+    protected function deleteMetaFile()
+    {
+        // S3 uploads don't have a meta file sidecar...
+        if ($this->isActuallyUsingS3()) return;
+
+        $this->storage->delete($this->path.'.json');
     }
 
     public function storeAs($path, $name = null, $options = [])
@@ -197,11 +240,15 @@ class TemporaryUploadedFile extends UploadedFile
 
     public static function generateHashNameWithOriginalNameEmbedded($file)
     {
-        $hash = str()->random(30);
-        $meta = str('-meta'.base64_encode($file->getClientOriginalName()).'-')->replace('/', '_');
-        $extension = '.'.$file->getClientOriginalExtension();
+        $originalName = is_string($file) ? $file : $file->getClientOriginalName();
+        $extension = is_string($file)
+            ? pathinfo($file, PATHINFO_EXTENSION)
+            : $file->getClientOriginalExtension();
 
-        return $hash.$meta.$extension;
+        $hash = str()->random(30);
+        $meta = str('-meta'.base64_encode($originalName).'-')->replace('/', '_');
+
+        return $hash.$meta.'.'.$extension;
     }
 
     public function hashName($path = null)

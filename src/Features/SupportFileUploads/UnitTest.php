@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Testing\FileFactory;
 use Illuminate\Support\Arr;
+use Livewire\Attributes\Validate;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -27,14 +28,82 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
     }
 
-    public function test_s3_driver_only_supports_single_file_uploads()
+    public function test_a_cached_temporary_url_is_reused_until_close_to_expiry()
+    {
+        $file = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->viewData('photo');
+
+        // No URL generated yet...
+        $this->assertNull($file->getCachedTemporaryUrl());
+
+        // A URL with plenty of life left is reused...
+        $file->setCachedTemporaryUrl('https://example.com/signed', now()->addHours(12)->getTimestamp());
+        $this->assertEquals('https://example.com/signed', $file->getCachedTemporaryUrl()['url']);
+
+        // A URL within an hour of expiring is regenerated instead...
+        $file->setCachedTemporaryUrl('https://example.com/signed', now()->addMinutes(30)->getTimestamp());
+        $this->assertNull($file->getCachedTemporaryUrl());
+    }
+
+    public function test_a_cached_temporary_url_survives_the_snapshot_roundtrip()
+    {
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
+
+        $file = $component->viewData('photo');
+        $expiresAt = now()->addHours(12)->getTimestamp();
+        $file->setCachedTemporaryUrl('https://example.com/signed', $expiresAt);
+
+        $context = new \Livewire\Mechanisms\HandleComponents\ComponentContext($component->instance());
+        $synth = new FileUploadSynth($context, 'photo');
+
+        // Dehydrate: the URL rides along in the snapshot meta...
+        [$value, $meta] = $synth->dehydrate($file);
+        $this->assertEquals('https://example.com/signed', $meta['url']);
+        $this->assertEquals($expiresAt, $meta['exp']);
+
+        // Hydrate: the next request's instance reuses the same URL...
+        $hydrated = $synth->hydrate($value, $meta);
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $hydrated);
+        $this->assertEquals('https://example.com/signed', $hydrated->getCachedTemporaryUrl()['url']);
+
+        // A file that never generated a URL still ships rich frontend meta:
+        // the original filename and an eagerly signed preview URL (but no
+        // cache expiry, since nothing was persisted)...
+        [, $freshMeta] = $synth->dehydrate($synth->hydrate($value, []));
+        $this->assertEquals('avatar.jpg', $freshMeta['name']);
+        $this->assertArrayHasKey('url', $freshMeta);
+        $this->assertArrayNotHasKey('exp', $freshMeta);
+    }
+
+    public function test_a_missing_s3_flysystem_adapter_fails_fast_with_a_pointer_to_the_composer_package()
+    {
+        FileUploadConfiguration::$enforceS3AdapterCheckForTesting = true;
+
+        try {
+            config()->set('livewire.temporary_file_upload.disk', 's3');
+
+            $this->expectException(MissingS3AdapterException::class);
+            $this->expectExceptionMessage('composer require league/flysystem-aws-s3-v3');
+
+            Livewire::test(FileUploadComponent::class)
+                ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
+        } finally {
+            FileUploadConfiguration::$enforceS3AdapterCheckForTesting = false;
+        }
+    }
+
+    public function test_s3_driver_supports_multiple_file_uploads()
     {
         config()->set('livewire.temporary_file_upload.disk', 's3');
 
-        $this->expectException(S3DoesntSupportMultipleFileUploads::class);
-
         Livewire::test(FileUploadComponent::class)
-            ->set('photos', [UploadedFile::fake()->image('avatar.jpg')]);
+            ->set('photos', [
+                UploadedFile::fake()->image('avatar.jpg'),
+                UploadedFile::fake()->image('avatar2.jpg'),
+            ])
+            ->assertCount('photos', 2);
     }
 
     public function test_can_set_a_file_as_a_property_and_store_it()
@@ -941,6 +1010,260 @@ class UnitTest extends \Tests\TestCase
         Storage::disk('default-disk')->assertExists('images/avatar.jpg');
         Storage::disk('tmp-for-tests')->assertMissing('images/avatar.jpg');
     }
+
+    public function test_upload_is_rejected_from_declared_metadata_when_it_violates_the_property_max_rule()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->create('photo.png', 2048, 'image/png');
+
+        $test = Livewire::test(FileUploadWithValidateAttributeComponent::class)
+            ->set('photo', $file);
+
+        $this->assertEquals(
+            ['The photo field must not be greater than 1024 kilobytes.'],
+            $test->errors()->get('photo')
+        );
+
+        $test->assertSetStrict('photo', null);
+
+        // The reject decision came from the declared metadata — no bytes ever moved...
+        $this->assertEmpty(Storage::disk('tmp-for-tests')->allFiles());
+    }
+
+    public function test_upload_is_rejected_from_declared_metadata_when_it_violates_the_property_min_rule()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->create('photo.png', 50, 'image/png');
+
+        $test = Livewire::test(FileUploadWithMinRuleComponent::class)
+            ->set('photo', $file);
+
+        $this->assertEquals(
+            ['The photo field must be at least 100 kilobytes.'],
+            $test->errors()->get('photo')
+        );
+
+        $test->assertSetStrict('photo', null);
+
+        $this->assertEmpty(Storage::disk('tmp-for-tests')->allFiles());
+    }
+
+    public function test_multiple_uploads_are_rejected_from_declared_metadata_when_one_violates_the_wildcard_max_rule()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $smallFile = UploadedFile::fake()->create('small.png', 100, 'image/png');
+        $bigFile = UploadedFile::fake()->create('big.png', 2048, 'image/png');
+
+        $test = Livewire::test(MultipleFileUploadWithValidateAttributeComponent::class)
+            ->set('photos', [$smallFile, $bigFile]);
+
+        $this->assertEquals(
+            ['The photos.1 field must not be greater than 1024 kilobytes.'],
+            $test->errors()->get('photos.1')
+        );
+
+        $test->assertSetStrict('photos', []);
+
+        $this->assertEmpty(Storage::disk('tmp-for-tests')->allFiles());
+    }
+
+    public function test_upload_is_rejected_from_declared_metadata_when_it_violates_the_property_image_rule()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->create('document.txt', 100, 'text/plain');
+
+        $test = Livewire::test(FileUploadWithValidateAttributeComponent::class)
+            ->set('photo', $file);
+
+        $this->assertEquals(
+            ['The photo field must be an image.'],
+            $test->errors()->get('photo')
+        );
+
+        $test->assertSetStrict('photo', null);
+
+        // The reject decision came from the declared metadata — no bytes ever moved...
+        $this->assertEmpty(Storage::disk('tmp-for-tests')->allFiles());
+    }
+
+    public function test_upload_is_rejected_from_declared_metadata_when_it_violates_the_property_mimes_rule()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->create('document.pdf', 100, 'application/pdf');
+
+        $test = Livewire::test(FileUploadWithMimesRuleComponent::class)
+            ->set('photo', $file);
+
+        $this->assertEquals(
+            ['The photo field must be a file of type: png, jpg.'],
+            $test->errors()->get('photo')
+        );
+
+        $test->assertSetStrict('photo', null);
+
+        $this->assertEmpty(Storage::disk('tmp-for-tests')->allFiles());
+    }
+
+    public function test_upload_is_rejected_from_declared_metadata_when_it_violates_the_property_extensions_rule()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->create('photo.gif', 100, 'image/gif');
+
+        $test = Livewire::test(FileUploadWithExtensionsRuleComponent::class)
+            ->set('photo', $file);
+
+        $this->assertEquals(
+            ['The photo field must have one of the following extensions: png, jpg.'],
+            $test->errors()->get('photo')
+        );
+
+        $test->assertSetStrict('photo', null);
+
+        $this->assertEmpty(Storage::disk('tmp-for-tests')->allFiles());
+    }
+
+    public function test_upload_is_rejected_from_declared_metadata_when_it_violates_the_property_mimetypes_rule()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->create('document.txt', 100, 'text/plain');
+
+        $test = Livewire::test(FileUploadWithMimetypesRuleComponent::class)
+            ->set('photo', $file);
+
+        $this->assertEquals(
+            ['The photo field must be a file of type: image/png, image/jpeg.'],
+            $test->errors()->get('photo')
+        );
+
+        $test->assertSetStrict('photo', null);
+
+        $this->assertEmpty(Storage::disk('tmp-for-tests')->allFiles());
+    }
+
+    public function test_type_preflight_lets_files_through_when_the_declared_metadata_cannot_prove_a_violation()
+    {
+        // Content rules are authoritative only against the real uploaded file —
+        // a missing extension and empty MIME type prove nothing, so the plan
+        // must not reject (the server-side check still runs after upload)...
+        $plan = app(UploadPlanner::class)->plan(
+            [['name' => 'photo', 'size' => 100 * 1024, 'type' => '']],
+            false,
+            ['types' => [['rule' => 'image', 'parameters' => []]]],
+        );
+
+        $this->assertNotEquals('reject', $plan['strategy']);
+
+        // Same for a recognized extension paired with a generic browser MIME
+        // type (browsers report octet-stream for plenty of legitimate files)...
+        $plan = app(UploadPlanner::class)->plan(
+            [['name' => 'photo.png', 'size' => 100 * 1024, 'type' => 'application/octet-stream']],
+            false,
+            ['types' => [['rule' => 'image', 'parameters' => []]]],
+        );
+
+        $this->assertNotEquals('reject', $plan['strategy']);
+    }
+
+    public function test_upload_that_fails_property_rules_after_upload_is_deleted_and_never_attached()
+    {
+        Storage::fake('tmp-for-tests');
+
+        // Passes the declared preflight (the filename claims png, and one
+        // matching signal means no provable violation), but fails the "image"
+        // rule against the stored file after upload...
+        $file = UploadedFile::fake()->create('photo.png', 100, 'application/pdf');
+
+        $test = Livewire::test(FileUploadWithValidateAttributeComponent::class)
+            ->set('photo', $file)
+            ->assertHasErrors('photo')
+            ->assertSetStrict('photo', null)
+            ->assertDispatched('upload:errored');
+
+        // The rejected temporary file (and its metadata sidecar) are cleaned up...
+        $this->assertEmpty(Storage::disk('tmp-for-tests')->allFiles());
+    }
+
+    public function test_upload_that_passes_property_rules_is_attached()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->image('photo.png')->size(500);
+
+        $test = Livewire::test(FileUploadWithValidateAttributeComponent::class)
+            ->set('photo', $file)
+            ->assertHasNoErrors()
+            ->assertDispatched('upload:finished');
+
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $test->viewData('photo'));
+    }
+
+    public function test_a_failed_upload_clears_when_a_valid_file_is_uploaded_after_it()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $test = Livewire::test(FileUploadWithValidateAttributeComponent::class)
+            ->set('photo', UploadedFile::fake()->create('photo.png', 2048, 'image/png'))
+            ->assertHasErrors('photo')
+            ->set('photo', UploadedFile::fake()->image('photo.png')->size(500))
+            ->assertHasNoErrors();
+
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $test->viewData('photo'));
+    }
+}
+
+class FileUploadWithValidateAttributeComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[Validate('image|max:1024')]
+    public $photo;
+}
+
+class FileUploadWithMinRuleComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[Validate('file|min:100')]
+    public $photo;
+}
+
+class FileUploadWithMimesRuleComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[Validate('mimes:png,jpg')]
+    public $photo;
+}
+
+class FileUploadWithExtensionsRuleComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[Validate('extensions:png,jpg')]
+    public $photo;
+}
+
+class FileUploadWithMimetypesRuleComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[Validate('mimetypes:image/png,image/jpeg')]
+    public $photo;
+}
+
+class MultipleFileUploadWithValidateAttributeComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[Validate(['photos.*' => 'image|max:1024'])]
+    public $photos = [];
 }
 
 class FileUploadToDefaultDiskComponent extends TestComponent
