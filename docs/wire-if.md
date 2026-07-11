@@ -19,11 +19,12 @@ The `<template>` tag itself is never displayed — when the expression is truthy
 Here's an example of using `wire:if` to reveal a delete confirmation prompt:
 
 ```php
+<?php
+
 use Livewire\Component;
 use App\Models\Post;
 
-class ShowPost extends Component
-{
+new class extends Component {
     public Post $post;
 
     public $confirmingDelete = false;
@@ -36,12 +37,12 @@ class ShowPost extends Component
 
         return $this->redirect('/posts');
     }
-}
+};
 ```
 
 ```blade
 <div>
-    <button x-on:click="$wire.confirmingDelete = true">Delete Post</button>
+    <button wire:click="confirmingDelete = true">Delete Post</button>
 
     <template wire:if="confirmingDelete">
         <div>
@@ -49,13 +50,13 @@ class ShowPost extends Component
 
             <button wire:click="delete">Yes, delete it</button>
 
-            <button x-on:click="$wire.confirmingDelete = false">Cancel</button>
+            <button wire:click="confirmingDelete = false">Cancel</button>
         </div>
     </template>
 </div>
 ```
 
-When the "Delete Post" button is clicked, the confirmation prompt is added to the page instantly — no server round-trip. When cancelled, it's removed from the DOM entirely.
+When the "Delete Post" button is clicked, the confirmation prompt is added to the page instantly — property assignments like `wire:click="confirmingDelete = true"` update client-side state directly, without a server round-trip. When cancelled, it's removed from the DOM entirely.
 
 > [!info] Single root element
 > Like `x-if`, the `<template>` tag must contain a single root element.

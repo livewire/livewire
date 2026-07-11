@@ -19,10 +19,11 @@ The `<template>` tag itself is never displayed — an element is rendered direct
 Here's an example of rendering a list of tasks:
 
 ```php
+<?php
+
 use Livewire\Component;
 
-class TaskList extends Component
-{
+new class extends Component {
     public $tasks = [
         ['id' => 1, 'title' => 'Write the docs'],
         ['id' => 2, 'title' => 'Ship the feature'],
@@ -34,7 +35,7 @@ class TaskList extends Component
             array_filter($this->tasks, fn ($task) => $task['id'] !== $id)
         );
     }
-}
+};
 ```
 
 ```blade

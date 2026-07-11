@@ -86,7 +86,7 @@ class BrowserTest extends BrowserTestCase
             {
                 return <<<'HTML'
                 <div>
-                    <button x-on:click="$wire.show = ! $wire.show" dusk="toggle">Toggle</button>
+                    <button wire:click="show = ! show" dusk="toggle">Toggle</button>
 
                     <template wire:if="show">
                         <div dusk="content">Hello</div>
