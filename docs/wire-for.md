@@ -7,7 +7,7 @@ Unlike Blade's `@foreach`, which renders the list on the server, `wire:for` rend
 Because the loop contents serve as a repeatable template, `wire:for` must be used on a `<template>` tag:
 
 ```blade
-<template wire:for="item in items" wire:key="item.id">
+<template wire:for="item in items" wire:for:key="item.id">
     <div>...</div>
 </template>
 ```
@@ -42,7 +42,7 @@ class TaskList extends Component
 ```blade
 <div>
     <ul>
-        <template wire:for="task in tasks" wire:key="task.id">
+        <template wire:for="task in tasks" wire:for:key="task.id">
             <li>
                 <span wire:text="task.title"></span>
 
@@ -60,10 +60,10 @@ Inside the loop, the iterated item (`task` above) is available to any Livewire o
 
 ## Keying items
 
-Always provide a key so the list can be re-ordered and updated efficiently without recreating every element. Use `wire:key` with an expression that uniquely identifies each item:
+Always provide a key so the list can be re-ordered and updated efficiently without recreating every element. Use `wire:for:key` with an expression that uniquely identifies each item:
 
 ```blade
-<template wire:for="task in tasks" wire:key="task.id">
+<template wire:for="task in tasks" wire:for:key="task.id">
 ```
 
 Alpine's `:key` syntax is also supported and behaves identically:
@@ -74,12 +74,15 @@ Alpine's `:key` syntax is also supported and behaves identically:
 
 If no key is provided, items are keyed by their index in the list.
 
+> [!warning] wire:for:key, not wire:key
+> Elsewhere in Livewire, `wire:key` holds a static string rendered by Blade. A template loop needs a *per-item expression* instead, which is why the key lives on a dedicated attribute. Using `wire:key` on a `wire:for` template logs a console warning and is otherwise ignored.
+
 ## Accessing the index
 
 Like `x-for`, you can destructure the loop's index alongside the item:
 
 ```blade
-<template wire:for="(task, index) in tasks" wire:key="task.id">
+<template wire:for="(task, index) in tasks" wire:for:key="task.id">
     <li wire:text="(index + 1) + '. ' + task.title"></li>
 </template>
 ```
@@ -89,11 +92,11 @@ Like `x-for`, you can destructure the loop's index alongside the item:
 `wire:for` templates can be nested — inner loops can reference the outer loop's item:
 
 ```blade
-<template wire:for="column in columns" wire:key="column.id">
+<template wire:for="column in columns" wire:for:key="column.id">
     <div>
         <h2 wire:text="column.title"></h2>
 
-        <template wire:for="card in column.cards" wire:key="card.id">
+        <template wire:for="card in column.cards" wire:for:key="card.id">
             <p wire:text="card.title"></p>
         </template>
     </div>
@@ -109,7 +112,7 @@ Because the content of `wire:for` is rendered on the client, it isn't present in
 ## Reference
 
 ```blade
-<template wire:for="item in items" wire:key="item.id">
+<template wire:for="item in items" wire:for:key="item.id">
     <div>...</div>
 </template>
 ```

@@ -137,14 +137,22 @@ function getMorphConfig(component) {
 
             if (isntElement(el)) return
 
-            // Elements rendered by `x-if`/`x-for` templates (`wire:if`/`wire:for`) only
-            // exist on the client, so they aren't in the incoming server HTML. Skip
-            // over them on the "from" side so they don't get diffed against
-            // unrelated incoming siblings...
-            let templateGenerated = templateGeneratedEls(el)
+            // Content rendered by `x-if`/`x-for` templates (`wire:if`/`wire:for`) is
+            // owned by Alpine, not the server, so morphing leaves it alone entirely.
+            // Skipping the template pair itself prevents morph's clone-seeding from
+            // rendering the incoming template's content into the "to" tree (stray
+            // clones that would get inserted as duplicate/ghost rows), and skipUntil
+            // hops over the live rendered content so it doesn't get diffed against
+            // unrelated incoming siblings. Alpine re-renders it reactively when
+            // `$wire` state lands after the morph...
+            if (isTemplateDirectiveEl(el)) {
+                let generated = templateGeneratedEls(el)
 
-            if (templateGenerated.length > 0) {
-                skipUntil(node => ! templateGenerated.includes(node))
+                if (generated.length > 0) {
+                    skipUntil(node => ! generated.includes(node))
+                }
+
+                return skip()
             }
 
             trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil })
@@ -219,8 +227,16 @@ function isntElement(el) {
     return typeof el.hasAttribute !== 'function'
 }
 
+function isTemplateDirectiveEl(el) {
+    if (el.tagName !== 'TEMPLATE') return false
+
+    return Array.from(el.attributes).some(({ name }) =>
+        name === 'x-if' || name === 'x-for' || name.startsWith('wire:if') || name.startsWith('wire:for')
+    )
+}
+
 function templateGeneratedEls(el) {
-    if (el.tagName !== 'TEMPLATE') return []
+    if (! el || el.tagName !== 'TEMPLATE') return []
 
     // `x-if` tracks its rendered element as `_x_currentIfEl`...
     if (el._x_currentIfEl) return [el._x_currentIfEl]

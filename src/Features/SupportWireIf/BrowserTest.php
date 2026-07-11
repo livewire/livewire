@@ -166,4 +166,36 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewire()->click('@increment')
         ->assertSeeIn('@count', '1');
     }
+    public function test_plain_x_if_templates_survive_server_updates()
+    {
+        Livewire::visit(new class extends Component {
+            public $show = true;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="$refresh" dusk="refresh">Refresh</button>
+                    <button wire:click="$toggle('show')" dusk="toggle">Toggle</button>
+
+                    <div dusk="zone">
+                        <template x-if="$wire.show">
+                            <div>Hello</div>
+                        </template>
+                    </div>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@zone', 'Hello')
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@zone', 'Hello')
+        ->assertScript("document.querySelectorAll('[dusk=zone] div').length", 1)
+        ->waitForLivewire()->click('@toggle')
+        ->assertDontSeeIn('@zone', 'Hello')
+        ->assertScript("document.querySelectorAll('[dusk=zone] div').length", 0)
+        ->waitForLivewire()->click('@toggle')
+        ->assertSeeIn('@zone', 'Hello')
+        ->assertScript("document.querySelectorAll('[dusk=zone] div').length", 1);
+    }
 }

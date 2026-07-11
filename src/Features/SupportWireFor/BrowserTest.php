@@ -37,6 +37,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@list', 'banana')
         ->waitForLivewire()->click('@add')
         ->assertSeeIn('@list', 'mango')
+        ->assertScript("document.querySelectorAll('[dusk=list] li').length", 3)
         ->waitForLivewire()->click('@remove')
         ->assertDontSeeIn('@list', 'apple')
         ->assertSeeIn('@list', 'banana')
@@ -103,7 +104,7 @@ class BrowserTest extends BrowserTestCase
                     <button wire:click="$refresh" dusk="refresh">Refresh</button>
 
                     <ul dusk="list">
-                        <template wire:for="fruit in fruits" wire:key="fruit">
+                        <template wire:for="fruit in fruits" wire:for:key="fruit">
                             <li><input type="text" dusk="input"></li>
                         </template>
                     </ul>
@@ -138,7 +139,7 @@ class BrowserTest extends BrowserTestCase
                 return <<<'HTML'
                 <div>
                     <ul dusk="list">
-                        <template wire:for="fruit in fruits" wire:key="fruit">
+                        <template wire:for="fruit in fruits" wire:for:key="fruit">
                             <li>
                                 <span wire:text="fruit"></span>
                                 <button wire:click="remove(fruit)" dusk="remove">Remove</button>
@@ -168,11 +169,11 @@ class BrowserTest extends BrowserTestCase
                 return <<<'HTML'
                 <div>
                     <div dusk="lists">
-                        <template wire:for="list in lists" wire:key="list.name">
+                        <template wire:for="list in lists" wire:for:key="list.name">
                             <div>
                                 <h2 wire:text="list.name"></h2>
 
-                                <template wire:for="item in list.items" wire:key="item">
+                                <template wire:for="item in list.items" :key="item">
                                     <p wire:text="item"></p>
                                 </template>
                             </div>
@@ -187,5 +188,76 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@lists', 'banana')
         ->assertSeeIn('@lists', 'veggies')
         ->assertSeeIn('@lists', 'carrot');
+    }
+    public function test_plain_x_for_templates_survive_server_updates_without_ghost_rows()
+    {
+        Livewire::visit(new class extends Component {
+            public $fruits = ['apple', 'banana'];
+
+            public function add() { $this->fruits[] = 'mango'; }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="add" dusk="add">Add</button>
+                    <button wire:click="$refresh" dusk="refresh">Refresh</button>
+
+                    <ul dusk="list">
+                        <template x-for="fruit in $wire.fruits">
+                            <li x-text="fruit"></li>
+                        </template>
+                    </ul>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@list', 'apple')
+        ->assertScript("document.querySelectorAll('[dusk=list] li').length", 2)
+        // Growing the list on the server used to leave behind an extra empty
+        // row: morph would insert the raw clone that Alpine's seeding rendered
+        // into the incoming tree, alongside the real row the live `x-for`
+        // effect created...
+        ->waitForLivewire()->click('@add')
+        ->assertSeeIn('@list', 'mango')
+        ->assertScript("document.querySelectorAll('[dusk=list] li').length", 3)
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@list', 'apple')
+        ->assertSeeIn('@list', 'mango')
+        ->assertScript("document.querySelectorAll('[dusk=list] li').length", 3)
+        ->assertScript("[...document.querySelectorAll('[dusk=list] li')].every(li => li.innerText.trim() !== '')", true);
+    }
+    public function test_wire_for_keyed_items_keep_their_dom_state_when_reordered()
+    {
+        Livewire::visit(new class extends Component {
+            public $fruits = ['apple', 'banana'];
+
+            public function reverse() { $this->fruits = array_reverse($this->fruits); }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="reverse" dusk="reverse">Reverse</button>
+
+                    <ul dusk="list">
+                        <template wire:for="fruit in fruits" wire:for:key="fruit">
+                            <li>
+                                <span wire:text="fruit"></span>
+                                <input type="text" x-bind:data-fruit="fruit">
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+                HTML;
+            }
+        })
+        ->assertScript("document.querySelector('[dusk=list] li:nth-of-type(1) input').dataset.fruit", 'apple')
+        ->tap(fn ($b) => $b->script("document.querySelector('[data-fruit=apple]').value = 'typed into apple'"))
+        ->waitForLivewire()->click('@reverse')
+        // With keyed items, reordering moves the existing elements instead of
+        // rewriting them in place — the input's typed value travels with its row...
+        ->assertScript("document.querySelector('[dusk=list] li:nth-of-type(1) input').dataset.fruit", 'banana')
+        ->assertScript("document.querySelector('[data-fruit=apple]').value", 'typed into apple');
     }
 }
