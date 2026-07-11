@@ -1,4 +1,6 @@
-import { getCsrfToken } from '@/utils'
+import Alpine from 'alpinejs'
+import { getCsrfToken, dataGet, dataSet } from '@/utils'
+import { TemporaryUpload, stashObjectUrl, releaseObjectUrl } from './synth'
 import form from './strategies/form'
 import chunked from './strategies/chunked'
 import s3 from './strategies/s3'
@@ -8,6 +10,12 @@ let strategies = { form, chunked, s3 }
 let uploadManagers = new WeakMap
 
 export function getUploadManager(component) {
+    // Rich upload objects living in reactive state reach for their component
+    // through Alpine's proxies — unwrap so every caller resolves the same
+    // manager instance (a duplicate would register duplicate listeners and
+    // track uploads the original never sees)...
+    component = Alpine.raw(component)
+
     if (! uploadManagers.has(component)) {
         let manager = new UploadManager(component)
 
@@ -43,6 +51,15 @@ export class UploadManager {
     }
 
     upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+        // Uploading a single file into an array property has always meant
+        // "append" on the server — treat it as a multiple upload on the
+        // client too, so the pending phase appends a rich object to the
+        // array instead of swapping the array out for a bare object
+        // mid-upload (which would break x-for loops over the property)...
+        if (Array.isArray(dataGet(this.component.ephemeral, name))) {
+            return this.uploadMultiple(name, [file], tmpFilenames => finishCallback(tmpFilenames[0]), errorCallback, progressCallback, cancelledCallback)
+        }
+
         this.setUpload(name, {
             files: [file],
             multiple: false,
@@ -71,7 +88,27 @@ export class UploadManager {
             tmpFilename, finishCallback
         })
 
+        releaseObjectUrl(tmpFilename)
+
+        // Optimistically detach the upload so the UI responds instantly.
+        // Canonical is updated in lockstep so the detachment isn't echoed
+        // to the server as a property update — _removeUpload runs against
+        // the property as the server last knew it (keeping its gated,
+        // property-scoped delete) and the response snapshot reconciles...
+        this.detachUpload(this.component.reactive, name, tmpFilename)
+        this.detachUpload(this.component.canonical, name, tmpFilename)
+
         this.component.$wire.call('_removeUpload', name, tmpFilename)
+    }
+
+    detachUpload(tree, name, tmpFilename) {
+        let value = dataGet(tree, name)
+
+        if (Array.isArray(value)) {
+            dataSet(tree, name, value.filter(upload => ! (upload instanceof TemporaryUpload && upload.filename === tmpFilename)))
+        } else if (value instanceof TemporaryUpload && value.filename === tmpFilename) {
+            dataSet(tree, name, null)
+        }
     }
 
     setUpload(name, uploadObject) {
@@ -86,6 +123,8 @@ export class UploadManager {
         let fileInfos = uploadObject.files.map(file => {
             return { name: file.name, size: file.size, type: file.type, lastModified: file.lastModified }
         })
+
+        this.setPendingUploads(name, uploadObject)
 
         // Return the roundtrip so refreshPlan() can release its waiter if the
         // call itself fails (network drop, expired session) rather than hang...
@@ -169,6 +208,45 @@ export class UploadManager {
         }
     }
 
+    // Optimistically place pending rich upload objects on the property so
+    // frontends get reactive progress/isUploading/previewUrl state while
+    // the upload is still in flight...
+    setPendingUploads(name, uploadObject) {
+        // Mid-upload re-handshakes call startUpload() again for the same
+        // upload — only seed the pending objects once...
+        if (uploadObject.pendings) return
+
+        let context = { component: this.component, path: name }
+
+        let pendings = uploadObject.files.map(file => TemporaryUpload.pending(file, context))
+
+        uploadObject.previousValue = dataGet(this.component.ephemeral, name)
+
+        if (uploadObject.multiple) {
+            let existing = uploadObject.append ? (dataGet(this.component.ephemeral, name) || []) : []
+
+            dataSet(this.component.reactive, name, [...existing, ...pendings])
+
+            // Re-read through the reactive proxy so progress mutations trigger effects...
+            uploadObject.pendings = dataGet(this.component.reactive, name).slice(-pendings.length)
+        } else {
+            dataSet(this.component.reactive, name, pendings[0])
+
+            uploadObject.pendings = [dataGet(this.component.reactive, name)]
+        }
+    }
+
+    // Restore the property to its pre-upload value (upload errored or was cancelled)...
+    revertPendingUploads(name, uploadObject) {
+        if (! uploadObject || ! uploadObject.pendings) return
+
+        uploadObject.pendings.forEach(pending => {
+            if (pending._objectUrl) URL.revokeObjectURL(pending._objectUrl)
+        })
+
+        dataSet(this.component.reactive, name, uploadObject.previousValue === undefined ? null : uploadObject.previousValue)
+    }
+
     refreshPlan(name, uploadObject) {
         return new Promise((resolve, reject) => {
             // Backstop: if the fresh plan never arrives (a dropped event, a
@@ -219,6 +297,8 @@ export class UploadManager {
                 let loaded = Math.max(0, Math.min(tracker.base + inFlightBytes, total))
                 let progress = Math.floor((loaded * 100) / total)
 
+                ;(uploadObject.pendings || []).forEach(pending => pending._progress = progress)
+
                 uploadObject.progressCallback({
                     loaded, total, detail: { progress, loaded, total },
                 })
@@ -254,6 +334,18 @@ export class UploadManager {
         unsetUploadLoading(this.component)
 
         let uploadObject = this.uploadBag.shift(name)
+
+        // Graduate the pending objects: give them their wire value (flips
+        // isUploading reactively) and keep their local blob URLs available
+        // for previews after the server swaps in hydrated instances...
+        ;(uploadObject.pendings || []).forEach((pending, i) => {
+            if (! tmpFilenames[i]) return
+
+            if (pending._objectUrl) stashObjectUrl(tmpFilenames[i], pending._objectUrl)
+
+            pending.serialized = 'livewire-file:' + tmpFilenames[i]
+        })
+
         uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0])
 
         if (this.uploadBag.get(name).length > 0) this.startUpload(name, this.uploadBag.last(name))
@@ -262,7 +354,11 @@ export class UploadManager {
     markUploadErrored(name) {
         unsetUploadLoading(this.component)
 
-        this.uploadBag.shift(name).errorCallback()
+        let uploadObject = this.uploadBag.shift(name)
+
+        this.revertPendingUploads(name, uploadObject)
+
+        uploadObject.errorCallback()
 
         if (this.uploadBag.get(name).length > 0) this.startUpload(name, this.uploadBag.last(name))
     }
@@ -283,7 +379,11 @@ export class UploadManager {
                 uploadItem.request.abort()
             }
 
-            this.uploadBag.shift(name).cancelledCallback()
+            this.uploadBag.shift(name)
+
+            this.revertPendingUploads(name, uploadItem)
+
+            uploadItem.cancelledCallback()
 
             if (cancelledCallback) cancelledCallback()
         }

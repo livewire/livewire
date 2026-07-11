@@ -1,4 +1,5 @@
 import { getUploadManager, MessageBag } from './manager'
+import './synth'
 
 export function handleFileUpload(el, property, component, cleanup) {
     let manager = getUploadManager(component)

@@ -124,9 +124,13 @@ new class extends Component {
 </form>
 ```
 
+If a file input bound to an array property is missing the `multiple` attribute, Livewire still treats each upload as a multiple upload and appends it to the array — the property's shape wins. The `multiple` attribute's job is telling the browser to allow selecting more than one file at a time.
+
 ## File validation
 
 Like we've discussed, validating file uploads with Livewire is the same as handling file uploads from a standard Laravel controller.
+
+As a courtesy, Livewire fails fast when it can: size rules (`max`, `min`, `size`, `between`) and type rules (`image`, `mimes`, `mimetypes`, `extensions`) declared on a property are checked against the selected file's metadata _before_ the upload starts, so choosing a 200MB video against an `image|max:1024` rule shows a validation error instantly instead of after a long upload. This preflight only rejects files whose declared name or type provably violate the rule — the authoritative validation always runs server-side against the real file after upload.
 
 > [!warning] Ensure S3 is properly configured
 > Many of the validation rules relating to files require access to the file. When [storing temporary uploads directly in S3](#using-s3), these validation rules will fail if the S3 file object is not publicly accessible.
@@ -183,6 +187,65 @@ This URL is protected against showing files in directories above the temporary d
 
 > [!tip] S3 temporary signed URLs
 > If you've configured Livewire to use S3 for temporary file storage, calling `->temporaryUrl()` will generate a temporary, signed URL to S3 directly so that image previews aren't loaded from your Laravel application server.
+
+## Rich upload objects in JavaScript
+
+File properties aren't just useful on the server — on the frontend, `$wire.photo` is a rich upload object rather than an opaque string. This unlocks instant, fully client-side previews and upload state without waiting on a server round trip:
+
+```blade
+<form wire:submit="save">
+    <div x-show="$wire.photo"> <!-- [tl! highlight:5] -->
+        <img x-bind:src="$wire.photo?.previewUrl">
+
+        <progress max="100" x-bind:value="$wire.photo?.progress" x-show="$wire.photo?.isUploading"></progress>
+
+        <button type="button" x-on:click="$wire.photo.remove()">Remove</button>
+    </div>
+
+    <input type="file" wire:model="photo">
+
+    <button type="submit">Save photo</button>
+</form>
+```
+
+The moment a user selects a file, the property optimistically holds a pending upload object — before any bytes reach the server. Its `previewUrl` is a local blob URL created from the file already in the browser, so previews appear instantly and never re-download the file, and its `progress` state updates reactively as the upload proceeds.
+
+The upload object exposes:
+
+Property | Description
+--- | ---
+`name` | The original filename from the user's machine
+`extension` | The file extension, derived from `name`
+`filename` | The hashed temporary filename on the server (`null` while uploading)
+`isUploading` | `true` while the upload is still in flight
+`progress` | Upload progress from 0 to 100 (settles at 100)
+`isPreviewable` | Whether a preview URL is available
+`previewUrl` | The best available preview URL: a local blob URL when possible, otherwise the signed server URL
+`temporaryUrl()` | The signed server-side preview URL (the JavaScript equivalent of PHP's `->temporaryUrl()`)
+`remove()` | Remove this upload from its property, instantly — the property updates optimistically and the server confirms in the background (in-flight uploads are cancelled instead)
+
+Properties holding multiple uploads hydrate into arrays of rich objects, so each file can be listed and removed individually:
+
+```blade
+<div>
+    <input type="file" wire:model="photos" multiple>
+
+    <template x-for="photo in $wire.photos" :key="photo.name">
+        <div>
+            <img x-bind:src="photo.previewUrl">
+
+            <span x-text="photo.name"></span>
+
+            <button type="button" x-on:click="photo.remove()">Remove</button>
+        </div>
+    </template>
+</div>
+```
+
+> [!info] Blob URLs and Content Security Policies
+> Local previews use `blob:` URLs. If your app enforces a Content Security Policy, make sure `img-src` includes `blob:`.
+
+Rich upload objects are powered by [JavaScript synthesizers](/docs/synthesizers#javascript-synthesizers). When sent back to the server or stringified via `JSON.stringify()`, they degrade to their raw wire value automatically.
 
 ## Testing file uploads
 

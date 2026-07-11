@@ -11,7 +11,7 @@ trait WithFileUploads
     function _startUpload($name, $fileInfo, $isMultiple)
     {
         $plan = app(UploadPlanner::class)->plan(
-            $fileInfo, $isMultiple, DeclaredSizeRules::for($this, $name, $isMultiple)
+            $fileInfo, $isMultiple, DeclaredRules::for($this, $name, $isMultiple)
         );
 
         $this->dispatch('upload:plan', name: $name, plan: $plan)->self();
