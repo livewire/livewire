@@ -137,6 +137,16 @@ function getMorphConfig(component) {
 
             if (isntElement(el)) return
 
+            // Elements rendered by `x-if`/`x-for` templates (`wire:if`/`wire:for`) only
+            // exist on the client, so they aren't in the incoming server HTML. Skip
+            // over them on the "from" side so they don't get diffed against
+            // unrelated incoming siblings...
+            let templateGenerated = templateGeneratedEls(el)
+
+            if (templateGenerated.length > 0) {
+                skipUntil(node => ! templateGenerated.includes(node))
+            }
+
             trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil })
 
             // bypass DOM diffing for children by overwriting the content
@@ -165,6 +175,11 @@ function getMorphConfig(component) {
 
         removing: (el, skip) => {
             if (isntElement(el)) return
+
+            // If the incoming HTML ends before reaching a template-generated element,
+            // it lands here instead of `skipUntil` above. Leave it alone — Alpine
+            // removes it itself when its template is removed or goes falsy...
+            if (isElGeneratedByTemplate(el)) return skip()
 
             trigger('morph.removing', { el, component, skip })
         },
@@ -202,6 +217,38 @@ function getMorphConfig(component) {
 
 function isntElement(el) {
     return typeof el.hasAttribute !== 'function'
+}
+
+function templateGeneratedEls(el) {
+    if (el.tagName !== 'TEMPLATE') return []
+
+    // `x-if` tracks its rendered element as `_x_currentIfEl`...
+    if (el._x_currentIfEl) return [el._x_currentIfEl]
+
+    // `x-for` tracks its rendered elements in a `_x_lookup` map
+    // (a plain object in older Alpine versions)...
+    if (el._x_lookup) {
+        return el._x_lookup instanceof Map
+            ? Array.from(el._x_lookup.values())
+            : Object.values(el._x_lookup)
+    }
+
+    return []
+}
+
+function isElGeneratedByTemplate(el) {
+    // Template-generated elements are always the contiguous siblings directly
+    // after their template, so the first template found walking backwards
+    // is the only candidate owner...
+    let prev = el.previousElementSibling
+
+    while (prev) {
+        if (prev.tagName === 'TEMPLATE') return templateGeneratedEls(prev).includes(el)
+
+        prev = prev.previousElementSibling
+    }
+
+    return false
 }
 
 function isComponentRootEl(el) {
