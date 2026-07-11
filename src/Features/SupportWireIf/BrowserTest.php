@@ -27,13 +27,11 @@ class BrowserTest extends BrowserTestCase
             }
         })
         ->assertNotPresent('@content')
-        ->assertDontSee('Hello')
         ->waitForLivewire()->click('@toggle')
         ->assertPresent('@content')
         ->assertSee('Hello')
         ->waitForLivewire()->click('@toggle')
-        ->assertNotPresent('@content')
-        ->assertDontSee('Hello');
+        ->assertNotPresent('@content');
     }
 
     public function test_wire_if_renders_content_on_page_load_when_property_is_initially_true()

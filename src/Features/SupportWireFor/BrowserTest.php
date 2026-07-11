@@ -224,6 +224,42 @@ class BrowserTest extends BrowserTestCase
         ->assertScript("document.querySelector('[data-fruit=apple]').value", 'typed into apple');
     }
 
+    public function test_wire_for_items_that_are_themselves_conditional_templates_survive_updates()
+    {
+        Livewire::visit(new class extends Component {
+            public $fruits = ['apple', 'banana'];
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="$refresh" dusk="refresh">Refresh</button>
+
+                    <ul dusk="list">
+                        <template wire:for="fruit in fruits">
+                            <template x-if="fruit !== 'banana'">
+                                <li x-text="fruit"></li>
+                            </template>
+                        </template>
+                    </ul>
+
+                    <p dusk="after">After</p>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@list', 'apple')
+        ->assertDontSeeIn('@list', 'banana')
+        // Each item is itself an `x-if` template whose rendered element is
+        // another sibling in the same flow — all of it must survive a morph
+        // without being diffed against the trailing paragraph...
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@list', 'apple')
+        ->assertDontSeeIn('@list', 'banana')
+        ->assertScript("document.querySelectorAll('[dusk=list] li').length", 1)
+        ->assertSeeIn('@after', 'After');
+    }
+
     public function test_plain_x_for_templates_survive_server_updates_without_ghost_rows()
     {
         Livewire::visit(new class extends Component {
