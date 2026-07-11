@@ -6,7 +6,7 @@ import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeN
 import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
 import { finishAndHideProgressBar, removeAnyLeftOverStaleProgressBars, showAndStartProgressBar } from "./bar"
 import { packUpPersistedPopovers, unPackPersistedPopovers } from "./popover"
-import { enableViewTransitions, transitionPageSwap } from "./transition"
+import { transitionPageSwap } from "./transition"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
 
@@ -32,10 +32,6 @@ export default function (Alpine) {
 
     Alpine.navigate.disableProgressBar = () => {
         showProgressBar = false
-    }
-
-    Alpine.navigate.enableViewTransitions = () => {
-        enableViewTransitions()
     }
 
     Alpine.addInitSelector(() => `[${Alpine.prefixed('navigate')}]`)

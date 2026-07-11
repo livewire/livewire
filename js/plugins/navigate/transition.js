@@ -1,3 +1,5 @@
+import { skipTransitionWhenDialogOpens } from '@/directives/wire-transition'
+
 let useViewTransitions = false
 
 export function enableViewTransitions() {
@@ -19,5 +21,7 @@ export function transitionPageSwap(transition, update) {
     // would paint above the dialog during animation)...
     if (document.querySelector('dialog:modal')) return update()
 
-    document.startViewTransition(update)
+    skipTransitionWhenDialogOpens(
+        document.startViewTransition(update)
+    )
 }

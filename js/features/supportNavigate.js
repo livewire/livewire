@@ -1,6 +1,8 @@
+import { enableViewTransitions } from '@/plugins/navigate/transition'
+
 document.addEventListener('livewire:initialized', () => {
     shouldHideProgressBar() && Alpine.navigate.disableProgressBar()
-    shouldUseViewTransitions() && Alpine.navigate.enableViewTransitions()
+    shouldUseViewTransitions() && enableViewTransitions()
 })
 
 document.addEventListener('alpine:navigate', e => forwardEvent('livewire:navigate', e))
