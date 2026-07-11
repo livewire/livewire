@@ -130,6 +130,8 @@ If a file input bound to an array property is missing the `multiple` attribute, 
 
 Like we've discussed, validating file uploads with Livewire is the same as handling file uploads from a standard Laravel controller.
 
+As a courtesy, Livewire fails fast when it can: size rules (`max`, `min`, `size`, `between`) and type rules (`image`, `mimes`, `mimetypes`, `extensions`) declared on a property are checked against the selected file's metadata _before_ the upload starts, so choosing a 200MB video against an `image|max:1024` rule shows a validation error instantly instead of after a long upload. This preflight only rejects files whose declared name or type provably violate the rule — the authoritative validation always runs server-side against the real file after upload.
+
 > [!warning] Ensure S3 is properly configured
 > Many of the validation rules relating to files require access to the file. When [storing temporary uploads directly in S3](#using-s3), these validation rules will fail if the S3 file object is not publicly accessible.
 

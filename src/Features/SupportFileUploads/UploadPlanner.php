@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportFileUploads;
 use Illuminate\Http\UploadedFile;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 use Livewire\Facades\S3MultipartUploadFacade;
+use Symfony\Component\Mime\MimeTypes;
 
 /**
  * Given the metadata of the files a user has selected, decide HOW they
@@ -14,11 +15,18 @@ use Livewire\Facades\S3MultipartUploadFacade;
  *   "form"    → POST all files to the signed upload endpoint (small files, non-S3 disks)
  *   "chunked" → slice each file and POST chunks to the chunk endpoint (large files, non-S3 disks)
  *   "s3"      → PUT each file to a presigned URL; large files use S3 multipart via per-part presigned URLs
- *   "reject"  → the declared file sizes already violate the configured rules, fail before any bytes move
+ *   "reject"  → the declared file metadata already violates the configured rules, fail before any bytes move
  */
 class UploadPlanner
 {
-    public function plan($fileInfos, $isMultiple, $sizeRules = [])
+    // Laravel's `image` rule content-sniffs the real file, and which extensions
+    // it allows varies by framework version (svg is excluded by default since
+    // Laravel 12) — preflight against the widest set any supported version
+    // allows so a file is never rejected here that the authoritative
+    // post-upload check would have accepted...
+    protected $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
+
+    public function plan($fileInfos, $isMultiple, $declaredRules = [])
     {
         $fileInfos = collect($fileInfos)->values()->map(fn ($info) => [
             'name' => is_string($info['name'] ?? null) ? $info['name'] : '',
@@ -27,7 +35,12 @@ class UploadPlanner
             'lastModified' => (int) ($info['lastModified'] ?? 0),
         ]);
 
-        if ($errors = $this->declaredSizeViolations($fileInfos, $sizeRules)) {
+        $errors = array_merge_recursive(
+            $this->declaredSizeViolations($fileInfos, $declaredRules['size'] ?? []) ?? [],
+            $this->declaredTypeViolations($fileInfos, $declaredRules['types'] ?? []) ?? [],
+        );
+
+        if ($errors) {
             return ['strategy' => 'reject', 'errors' => json_encode(['errors' => $errors])];
         }
 
@@ -153,5 +166,118 @@ class UploadPlanner
         }
 
         return null;
+    }
+
+    protected function declaredTypeViolations($fileInfos, $typeRules)
+    {
+        if (! $typeRules) return null;
+
+        $errors = [];
+
+        foreach ($fileInfos as $index => $info) {
+            foreach ($typeRules as $constraint) {
+                if ($message = $this->declaredTypeViolation($info, $constraint, 'files.'.$index)) {
+                    $errors['files.'.$index][] = $message;
+                }
+            }
+        }
+
+        return $errors ?: null;
+    }
+
+    protected function declaredTypeViolation($info, $constraint, $attribute)
+    {
+        $extension = strtolower(pathinfo($info['name'], PATHINFO_EXTENSION));
+        $mime = strtolower($info['type']);
+        $parameters = $constraint['parameters'];
+
+        switch ($constraint['rule']) {
+            case 'extensions':
+                // Laravel checks the client-supplied filename's extension —
+                // exactly what we have, so this preflight is an exact mirror...
+                if (! in_array($extension, $parameters)) {
+                    return trans('validation.extensions', ['attribute' => $attribute, 'values' => implode(', ', $parameters)]);
+                }
+
+                return null;
+
+            case 'image':
+                if ($this->declaredTypeMatches($extension, $mime, $this->imageExtensions)) return null;
+
+                return trans('validation.image', ['attribute' => $attribute]);
+
+            case 'mimes':
+                $allowed = $parameters;
+
+                // Laravel treats jpg and jpeg as interchangeable...
+                if (in_array('jpg', $allowed) || in_array('jpeg', $allowed)) {
+                    $allowed = array_unique(array_merge($allowed, ['jpg', 'jpeg']));
+                }
+
+                if ($this->declaredTypeMatches($extension, $mime, $allowed)) return null;
+
+                return trans('validation.mimes', ['attribute' => $attribute, 'values' => implode(', ', $parameters)]);
+
+            case 'mimetypes':
+                if ($this->declaredMimetypeMatches($extension, $mime, $parameters)) return null;
+
+                return trans('validation.mimetypes', ['attribute' => $attribute, 'values' => implode(', ', $parameters)]);
+        }
+
+        return null;
+    }
+
+    // The authoritative `image`/`mimes` check sniffs the uploaded file's
+    // contents — all we have here is the client-declared filename and MIME
+    // type. Only reject when every declared signal contradicts the allowed
+    // set; missing or unrecognized signals let the file through to the real
+    // server-side validation...
+    protected function declaredTypeMatches($extension, $mime, $allowedExtensions)
+    {
+        if ($extension === '' && $mime === '') return true;
+
+        if ($extension !== '' && in_array($extension, $allowedExtensions)) return true;
+
+        if ($mime !== '') {
+            $mimeTypes = MimeTypes::getDefault();
+
+            $extensionsForMime = array_map('strtolower', $mimeTypes->getExtensions($mime));
+
+            if (array_intersect($extensionsForMime, $allowedExtensions)) return true;
+
+            foreach ($allowedExtensions as $allowed) {
+                if (in_array($mime, array_map('strtolower', $mimeTypes->getMimeTypes($allowed)))) return true;
+            }
+
+            // A MIME type nothing recognizes can't prove a violation on its own...
+            if ($extension === '' && ! $extensionsForMime) return true;
+        }
+
+        return false;
+    }
+
+    protected function declaredMimetypeMatches($extension, $mime, $allowedMimetypes)
+    {
+        // Mirror Laravel's validateMimetypes, including `image/*`-style
+        // wildcard families...
+        $matches = fn ($candidate) => in_array($candidate, $allowedMimetypes)
+            || in_array(explode('/', $candidate)[0].'/*', $allowedMimetypes);
+
+        if ($extension === '' && $mime === '') return true;
+
+        if ($mime !== '' && $matches($mime)) return true;
+
+        if ($extension !== '') {
+            $mimesForExtension = array_map('strtolower', MimeTypes::getDefault()->getMimeTypes($extension));
+
+            foreach ($mimesForExtension as $candidate) {
+                if ($matches($candidate)) return true;
+            }
+
+            // An extension nothing recognizes can't prove a violation on its own...
+            if ($mime === '' && ! $mimesForExtension) return true;
+        }
+
+        return false;
     }
 }
