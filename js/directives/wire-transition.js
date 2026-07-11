@@ -8,7 +8,7 @@ globalDirective('transition', ({ el, directive, cleanup }) => {
     //
 })
 
-function setTransitionNames(root, options = {}) {
+export function setTransitionNames(root, options = {}) {
     root.querySelectorAll('[wire\\:transition]').forEach(el => {
         if (el.style.viewTransitionName) return
 
@@ -23,7 +23,7 @@ function setTransitionNames(root, options = {}) {
     })
 }
 
-function clearTransitionNames(root) {
+export function clearTransitionNames(root) {
     root.querySelectorAll('[wire\\:transition]').forEach(el => {
         el.style.viewTransitionName = ''
     })

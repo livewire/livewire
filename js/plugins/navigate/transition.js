@@ -1,4 +1,6 @@
-import { skipTransitionWhenDialogOpens } from '@/directives/wire-transition'
+import { setTransitionNames, clearTransitionNames, skipTransitionWhenDialogOpens } from '@/directives/wire-transition'
+
+let type = 'navigate'
 
 let useViewTransitions = false
 
@@ -21,7 +23,32 @@ export function transitionPageSwap(transition, update) {
     // would paint above the dialog during animation)...
     if (document.querySelector('dialog:modal')) return update()
 
-    skipTransitionWhenDialogOpens(
-        document.startViewTransition(update)
-    )
+    // Name [wire:transition="..."] elements on the outgoing page right before
+    // the browser snapshots it. Only explicitly named elements participate —
+    // matching names across pages morph, and unnamed elements stay part of
+    // the page snapshot (a shared default name would collide across pages)...
+    setTransitionNames(document.body, { type })
+
+    let updateAndNameNewPage = () => {
+        update()
+
+        // The incoming page's elements need their names set synchronously,
+        // before the browser captures the new snapshot...
+        setTransitionNames(document.body, { type })
+    }
+
+    let viewTransition
+
+    try {
+        viewTransition = document.startViewTransition({ update: updateAndNameNewPage, types: [type] })
+    } catch (e) {
+        // Firefox 144+ supports View Transitions but only with a callback, not a config object (no transition types support)
+        viewTransition = document.startViewTransition(updateAndNameNewPage)
+    }
+
+    skipTransitionWhenDialogOpens(viewTransition)
+
+    // Clear the names after the animation so they don't create permanent
+    // stacking contexts on the new page...
+    viewTransition.finished.finally(() => clearTransitionNames(document.body))
 }

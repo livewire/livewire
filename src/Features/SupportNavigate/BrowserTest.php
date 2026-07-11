@@ -64,6 +64,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             })->middleware('web');
             Route::get('/first-transition', FirstTransitionPage::class)->middleware('web');
             Route::get('/second-transition', SecondTransitionPage::class)->middleware('web');
+            Route::get('/first-animated-transition', FirstAnimatedTransitionPage::class)->middleware('web');
+            Route::get('/second-animated-transition', SecondAnimatedTransitionPage::class)->middleware('web');
             Route::get('/first-transition-global', function () {
                 config(['livewire.navigate.transitions' => true]);
 
@@ -378,6 +380,28 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForNavigate()->back()
                 ->assertSee('On first transition page')
                 ->assertScript('window.__viewTransitionCount', 2);
+        });
+    }
+
+    public function test_view_transitions_visibly_animate_in_the_browser()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-animated-transition')
+                ->assertSee('On first animated page')
+                ->click('@link.animated')
+                // The browser reports a genuinely running view transition, not just an API call...
+                ->waitUntil("document.documentElement.matches(':active-view-transition')")
+                // Named wire:transition elements on the incoming page get their
+                // view-transition-name assigned for the duration of the animation...
+                ->assertScript("document.querySelector('[dusk=hero-detail]').style.viewTransitionName", 'hero')
+                // ...but unnamed ones don't (a shared default name would collide across two full pages)...
+                ->assertScript("document.querySelector('[dusk=unnamed-detail]').style.viewTransitionName", '')
+                // When the animation completes, the names are cleared so they
+                // don't leave permanent stacking contexts behind...
+                ->waitUntil("! document.documentElement.matches(':active-view-transition')")
+                ->waitUntil("document.querySelector('[dusk=hero-detail]').style.viewTransitionName === ''")
+                ->assertSee('On second animated page');
         });
     }
 
@@ -1563,6 +1587,50 @@ class SecondTransitionPage extends Component
         return <<<'HTML'
         <div>
             <div>On second transition page</div>
+        </div>
+        HTML;
+    }
+}
+
+class FirstAnimatedTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first animated page</div>
+
+            <style>
+                ::view-transition-group(*), ::view-transition-old(root), ::view-transition-new(root) {
+                    animation-duration: 1.5s;
+                }
+            </style>
+
+            <h2 wire:transition="hero" dusk="hero">Hero title</h2>
+
+            <a href="/second-animated-transition" wire:navigate.transition dusk="link.animated">Go to second animated page</a>
+        </div>
+        HTML;
+    }
+}
+
+class SecondAnimatedTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On second animated page</div>
+
+            <style>
+                ::view-transition-group(*), ::view-transition-old(root), ::view-transition-new(root) {
+                    animation-duration: 1.5s;
+                }
+            </style>
+
+            <h1 wire:transition="hero" dusk="hero-detail">Hero title</h1>
+
+            <div wire:transition dusk="unnamed-detail">Unnamed transition element</div>
         </div>
         HTML;
     }
