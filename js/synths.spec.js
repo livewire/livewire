@@ -249,3 +249,99 @@ describe('hydrateValue', () => {
         expect(hydrateValue('foo', { s: 'cbn' })).toBe('foo')
     })
 })
+
+describe('hydration context', () => {
+    beforeEach(() => flushSynths())
+
+    it('passes the component and state path to hydrate', () => {
+        let contexts = []
+
+        registerSynth('cbn', {
+            match: (value) => value instanceof Date,
+            hydrate: (value, meta, context) => {
+                contexts.push(context)
+
+                return new Date(value)
+            },
+            dehydrate: (value) => value.toISOString(),
+        })
+
+        let component = { id: 'fake' }
+
+        extractData({
+            date: ['2021-01-01T00:00:00+00:00', { s: 'cbn' }],
+            items: [
+                [['2022-02-02T00:00:00+00:00', { s: 'cbn' }]],
+                { s: 'arr' },
+            ],
+        }, { component })
+
+        expect(contexts[0]).toEqual({ component, path: 'date' })
+        expect(contexts[1]).toEqual({ component, path: 'items.0' })
+    })
+
+    it('passes no context when extractData is called without one', () => {
+        let receivedContext = 'unset'
+
+        registerSynth('cbn', {
+            match: (value) => value instanceof Date,
+            hydrate: (value, meta, context) => {
+                receivedContext = context
+
+                return new Date(value)
+            },
+            dehydrate: (value) => value.toISOString(),
+        })
+
+        extractData({ date: ['2021-01-01T00:00:00+00:00', { s: 'cbn' }] })
+
+        expect(receivedContext).toBeUndefined()
+    })
+})
+
+describe('values that dehydrate to undefined (no wire representation)', () => {
+    class PendingThing {
+        constructor(serialized = null) { this.serialized = serialized }
+    }
+
+    let registerPendingSynth = () => registerSynth('thing', {
+        match: (value) => value instanceof PendingThing,
+        hydrate: (value) => new PendingThing(value),
+        dehydrate: (value) => value.serialized ?? undefined,
+    })
+
+    beforeEach(() => flushSynths())
+
+    it('never includes them in diffs', () => {
+        registerPendingSynth()
+
+        expect(diffAndConsolidate({ thing: null }, { thing: new PendingThing() })).toEqual({})
+        expect(diff({ thing: null }, { thing: new PendingThing() })).toEqual({})
+    })
+
+    it('omits them from arrays instead of sending null', () => {
+        registerPendingSynth()
+
+        let tree = { things: [new PendingThing('a'), new PendingThing()] }
+
+        expect(dehydrateTree(tree)).toEqual({ things: ['a'] })
+    })
+
+    it('drops consolidated diffs that only differ by pending values', () => {
+        registerPendingSynth()
+
+        let left = { things: [new PendingThing('a')] }
+        let right = { things: [new PendingThing('a'), new PendingThing()] }
+
+        expect(diffAndConsolidate(left, right)).toEqual({})
+    })
+
+    it('still diffs settled values alongside pending ones', () => {
+        registerPendingSynth()
+
+        let left = { things: [new PendingThing('a')] }
+        let right = { things: [new PendingThing('b'), new PendingThing()] }
+
+        expect(diffAndConsolidate(left, right)).toEqual({ things: ['b'] })
+    })
+})

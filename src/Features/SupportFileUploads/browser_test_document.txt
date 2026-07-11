@@ -1,0 +1,1 @@
+This is a plain text document used to test that non-image uploads are rejected before any bytes move.

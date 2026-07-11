@@ -132,7 +132,8 @@ return [
         'disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK'), // Example: 'local', 's3'             | Default: 'default'
         'rules' => null,                                      // Example: ['file', 'mimes:png,jpg'] | Default: ['required', 'file', 'max:12288'] (12MB)
         'directory' => null,                                  // Example: 'tmp'                     | Default: 'livewire-tmp'
-        'middleware' => null,                                 // Example: 'throttle:5,1'            | Default: 'throttle:60,1'
+        'middleware' => null,                                 // Example: 'throttle:5,1'            | Default: 'throttle:60,1' (chunk endpoint: 'throttle:600,1')
+        //                                                    // Note: a custom value also governs the chunk endpoint, where one file = many requests — throttle generously (or by bytes)...
         'preview_mimes' => [                                  // Supported file types for temporary pre-signed file URLs...
             'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
             'mov', 'avi', 'wmv', 'mp3', 'm4a',
@@ -140,6 +141,9 @@ return [
         ],
         'max_upload_time' => 5, // Max duration (in minutes) before an upload is invalidated...
         'cleanup' => true, // Should cleanup temporary uploads older than 24 hrs...
+        'chunking' => true,        // Upload large files in resumable chunks (S3 multipart on S3 disks)...
+        'chunk_size' => null,      // Example: 10 * 1024 * 1024 (bytes)  | Default: 1MB (5MB on S3 — the multipart minimum)
+        'chunk_threshold' => null, // Files larger than this are chunked | Default: chunk_size
     ],
 
     /*

@@ -296,6 +296,19 @@ class Testable
             $isMultiple,
         );
 
+        // Mirror the JavaScript: a "reject" plan means the declared file sizes
+        // already violate the rules, so the upload never starts...
+        $plan = collect(data_get($this->effects, 'dispatches', []))
+            ->filter(fn ($dispatch) => ($dispatch['name'] ?? null) === 'upload:plan' && data_get($dispatch, 'params.name') === $name)
+            ->map(fn ($dispatch) => data_get($dispatch, 'params.plan'))
+            ->last();
+
+        if (data_get($plan, 'strategy') === 'reject') {
+            $this->call('_uploadErrored', $name, data_get($plan, 'errors'), $isMultiple);
+
+            return $this;
+        }
+
         // This is where either the pre-signed S3 url or the regular Livewire signed
         // upload url would do its thing and return a hashed version of the uploaded
         // file in a tmp directory.

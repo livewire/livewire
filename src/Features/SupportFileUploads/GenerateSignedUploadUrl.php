@@ -4,10 +4,10 @@ namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Support\Facades\URL;
 
-use function Livewire\invade;
-
 class GenerateSignedUploadUrl
 {
+    use InteractsWithS3;
+
     public function forLocal()
     {
         return URL::temporarySignedRoute(
@@ -15,27 +15,30 @@ class GenerateSignedUploadUrl
         );
     }
 
+    public function forChunks()
+    {
+        return URL::temporarySignedRoute(
+            'livewire.upload-chunk', now()->addMinutes(FileUploadConfiguration::maxUploadTime())
+        );
+    }
+
+    public function forMultipart()
+    {
+        return URL::temporarySignedRoute(
+            'livewire.upload-multipart', now()->addMinutes(FileUploadConfiguration::maxUploadTime())
+        );
+    }
+
     public function forS3($file, $visibility = 'private')
     {
-        $storage = FileUploadConfiguration::storage();
-
-        $driver = $storage->getDriver();
-
-        // Flysystem V2+ doesn't allow direct access to adapter, so we need to invade instead.
-        $adapter = invade($driver)->adapter;
-
-        // Flysystem V2+ doesn't allow direct access to client, so we need to invade instead.
-        $client = invade($adapter)->client;
-
-        // Flysystem V2+ doesn't allow direct access to bucket, so we need to invade instead.
-        $bucket = invade($adapter)->bucket;
+        $client = $this->s3Client();
 
         $fileType = $file->getMimeType();
         $fileHashName = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
         $path = FileUploadConfiguration::path($fileHashName);
 
         $command = $client->getCommand('putObject', array_filter([
-            'Bucket' => $bucket,
+            'Bucket' => $this->s3Bucket(),
             'Key' => $path,
             'ACL' => $visibility,
             'ContentType' => $fileType ?: 'application/octet-stream',
@@ -48,15 +51,9 @@ class GenerateSignedUploadUrl
             '+' . FileUploadConfiguration::maxUploadTime() . ' minutes'
         );
 
-        $uri = $signedRequest->getUri();
-
-        if (filled($url = $storage->getConfig()['temporary_url'] ?? null)) {
-            $uri = invade($storage)->replaceBaseUrl($uri, $url);
-        }
-
         return [
             'path' => TemporaryUploadedFile::signPath($fileHashName),
-            'url' => (string) $uri,
+            'url' => $this->finalizeSignedUri($signedRequest->getUri()),
             'headers' => $this->headers($signedRequest, $fileType),
         ];
     }

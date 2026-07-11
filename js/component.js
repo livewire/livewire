@@ -33,9 +33,9 @@ export class Component {
         this.originalEffects = deepClone(this.effects)
 
         // "canonical" data represents the last known server state.
-        this.canonical = extractData(deepClone(this.snapshot.data))
+        this.canonical = extractData(deepClone(this.snapshot.data), { component: this })
         // "ephemeral" represents the most current state. (This can be freely manipulated by end users)
-        this.ephemeral = extractData(deepClone(this.snapshot.data))
+        this.ephemeral = extractData(deepClone(this.snapshot.data), { component: this })
         // "reactive" is just ephemeral, except when you mutate it, front-ends like Vue react.
         this.reactive = Alpine.reactive(this.ephemeral)
 
@@ -77,10 +77,10 @@ export class Component {
 
         // Canonical can contain rich synth values that don't survive JSON
         // cloning, so re-extract a fresh copy from the old raw snapshot...
-        let oldCanonical = extractData(deepClone(this.snapshot.data))
+        let oldCanonical = extractData(deepClone(this.snapshot.data), { component: this })
         let updatedOldCanonical = this.applyUpdates(oldCanonical, updates)
 
-        let newCanonical = extractData(deepClone(snapshot.data))
+        let newCanonical = extractData(deepClone(snapshot.data), { component: this })
 
         let dirty = diff(updatedOldCanonical, newCanonical)
 
@@ -90,9 +90,9 @@ export class Component {
 
         this.effects = effects
 
-        this.canonical = extractData(deepClone(snapshot.data))
+        this.canonical = extractData(deepClone(snapshot.data), { component: this })
 
-        let newData = extractData(deepClone(snapshot.data))
+        let newData = extractData(deepClone(snapshot.data), { component: this })
 
         // Diff old vs new and patch differences onto the reactive proxy. Walks
         // the trees directly, avoiding dot-notated paths which break when

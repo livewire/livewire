@@ -13,7 +13,44 @@ class FileUploadSynth extends Synth {
     }
 
     function dehydrate($target) {
-        return [$this->dehydratePropertyFromWithFileUploads($target), []];
+        $meta = $target instanceof TemporaryUploadedFile ? static::metaFor($target) : [];
+
+        return [$this->dehydratePropertyFromWithFileUploads($target), $meta];
+    }
+
+    public static function metaFor(TemporaryUploadedFile $file)
+    {
+        $meta = [];
+
+        try {
+            $name = $file->getClientOriginalName();
+
+            // Names extracted from hashed file paths can decode into binary
+            // garbage that would corrupt the snapshot's JSON encoding...
+            if (is_string($name) && mb_check_encoding($name, 'UTF-8')) {
+                $meta['name'] = $name;
+            }
+        } catch (\Throwable $e) {
+            //
+        }
+
+        try {
+            // Sign a preview URL eagerly so the frontend's rich upload object
+            // can preview the file without a Blade render ever asking for it...
+            $meta['url'] = $file->temporaryUrl();
+        } catch (\Throwable $e) {
+            // Not previewable, or the disk doesn't support temporary URLs...
+        }
+
+        // Carry the generated preview URL through the snapshot so the next
+        // request serves the same URL instead of signing a new one — a changed
+        // src would make the browser re-download the whole file...
+        if ($cached = $file->getCachedTemporaryUrl()) {
+            $meta['url'] = $cached['url'];
+            $meta['exp'] = $cached['exp'];
+        }
+
+        return $meta;
     }
 
     public function dehydratePropertyFromWithFileUploads($value)
@@ -58,9 +95,15 @@ class FileUploadSynth extends Synth {
         return $value;
     }
 
-    function hydrate($value) {
+    function hydrate($value, $meta) {
         if (TemporaryUploadedFile::canUnserialize($value)) {
-            return TemporaryUploadedFile::unserializeFromLivewireRequest($value);
+            $file = TemporaryUploadedFile::unserializeFromLivewireRequest($value);
+
+            if ($file instanceof TemporaryUploadedFile && isset($meta['url'], $meta['exp'])) {
+                $file->setCachedTemporaryUrl($meta['url'], $meta['exp']);
+            }
+
+            return $file;
         }
     }
 }

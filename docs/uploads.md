@@ -82,6 +82,8 @@ public function save()
 }
 ```
 
+If you're storing files in S3 — or an S3-compatible service like Cloudflare R2 or DigitalOcean Spaces — the [Using S3](#using-s3) section below walks through the entire setup from scratch.
+
 ## Handling multiple files
 
 Livewire automatically handles multiple file uploads by detecting the `multiple` attribute on the `<input>` tag.
@@ -122,12 +124,16 @@ new class extends Component {
 </form>
 ```
 
+If a file input bound to an array property is missing the `multiple` attribute, Livewire still treats each upload as a multiple upload and appends it to the array — the property's shape wins. The `multiple` attribute's job is telling the browser to allow selecting more than one file at a time.
+
 ## File validation
 
 Like we've discussed, validating file uploads with Livewire is the same as handling file uploads from a standard Laravel controller.
 
+As a courtesy, Livewire fails fast when it can: size rules (`max`, `min`, `size`, `between`) and type rules (`image`, `mimes`, `mimetypes`, `extensions`) declared on a property are checked against the selected file's metadata _before_ the upload starts, so choosing a 200MB video against an `image|max:1024` rule shows a validation error instantly instead of after a long upload. This preflight only rejects files whose declared name or type provably violate the rule — the authoritative validation always runs server-side against the real file after upload.
+
 > [!warning] Ensure S3 is properly configured
-> Many of the validation rules relating to files require access to the file. When [uploading directly to S3](#uploading-directly-to-amazon-s3), these validation rules will fail if the S3 file object is not publicly accessible.
+> Many of the validation rules relating to files require access to the file. When [storing temporary uploads directly in S3](#using-s3), these validation rules will fail if the S3 file object is not publicly accessible.
 
 For more information on file validation, consult [Laravel's file validation documentation](https://laravel.com/docs/validation#available-validation-rules).
 
@@ -181,6 +187,65 @@ This URL is protected against showing files in directories above the temporary d
 
 > [!tip] S3 temporary signed URLs
 > If you've configured Livewire to use S3 for temporary file storage, calling `->temporaryUrl()` will generate a temporary, signed URL to S3 directly so that image previews aren't loaded from your Laravel application server.
+
+## Rich upload objects in JavaScript
+
+File properties aren't just useful on the server — on the frontend, `$wire.photo` is a rich upload object rather than an opaque string. This unlocks instant, fully client-side previews and upload state without waiting on a server round trip:
+
+```blade
+<form wire:submit="save">
+    <div x-show="$wire.photo"> <!-- [tl! highlight:5] -->
+        <img x-bind:src="$wire.photo?.previewUrl">
+
+        <progress max="100" x-bind:value="$wire.photo?.progress" x-show="$wire.photo?.isUploading"></progress>
+
+        <button type="button" x-on:click="$wire.photo.remove()">Remove</button>
+    </div>
+
+    <input type="file" wire:model="photo">
+
+    <button type="submit">Save photo</button>
+</form>
+```
+
+The moment a user selects a file, the property optimistically holds a pending upload object — before any bytes reach the server. Its `previewUrl` is a local blob URL created from the file already in the browser, so previews appear instantly and never re-download the file, and its `progress` state updates reactively as the upload proceeds.
+
+The upload object exposes:
+
+Property | Description
+--- | ---
+`name` | The original filename from the user's machine
+`extension` | The file extension, derived from `name`
+`filename` | The hashed temporary filename on the server (`null` while uploading)
+`isUploading` | `true` while the upload is still in flight
+`progress` | Upload progress from 0 to 100 (settles at 100)
+`isPreviewable` | Whether a preview URL is available
+`previewUrl` | The best available preview URL: a local blob URL when possible, otherwise the signed server URL
+`temporaryUrl()` | The signed server-side preview URL (the JavaScript equivalent of PHP's `->temporaryUrl()`)
+`remove()` | Remove this upload from its property, instantly — the property updates optimistically and the server confirms in the background (in-flight uploads are cancelled instead)
+
+Properties holding multiple uploads hydrate into arrays of rich objects, so each file can be listed and removed individually:
+
+```blade
+<div>
+    <input type="file" wire:model="photos" multiple>
+
+    <template x-for="photo in $wire.photos" :key="photo.name">
+        <div>
+            <img x-bind:src="photo.previewUrl">
+
+            <span x-text="photo.name"></span>
+
+            <button type="button" x-on:click="photo.remove()">Remove</button>
+        </div>
+    </template>
+</div>
+```
+
+> [!info] Blob URLs and Content Security Policies
+> Local previews use `blob:` URLs. If your app enforces a Content Security Policy, make sure `img-src` includes `blob:`.
+
+Rich upload objects are powered by [JavaScript synthesizers](/docs/synthesizers#javascript-synthesizers). When sent back to the server or stringified via `JSON.stringify()`, they degrade to their raw wire value automatically.
 
 ## Testing file uploads
 
@@ -240,30 +305,122 @@ new class extends Component {
 
 For more information on testing file uploads, please consult [Laravel's file upload testing documentation](https://laravel.com/docs/http-tests#testing-file-uploads).
 
-## Uploading directly to Amazon S3
+## Using S3
 
-As previously discussed, Livewire stores all file uploads in a temporary directory until the developer permanently stores the file.
+Everything in this section applies equally to Amazon S3 and S3-compatible services like Cloudflare R2 and DigitalOcean Spaces.
 
-By default, Livewire uses the default filesystem disk configuration (usually `local`) and stores the files within a `livewire-tmp/` directory.
+Before configuring anything, it helps to know that every Livewire file upload makes two stops:
 
-Consequently, file uploads are always utilizing your application server, even if you choose to store the uploaded files in an S3 bucket later.
+1. **Temporary storage** — the moment a user selects a file, Livewire uploads it to a temporary directory (`livewire-tmp/`) so it can be validated and previewed. This part belongs to Livewire.
+2. **Permanent storage** — nothing is kept until your code calls `->store()`. Where that call puts the file is entirely up to you.
 
-If you wish to bypass your application server and instead store Livewire's temporary uploads in an S3 bucket, set the `LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK` environment variable in your `.env` file to `s3` (or another custom disk that uses the `s3` driver):
+These two stops are configured independently, and "using S3" can mean either or both:
+
+* If you just want your uploaded files to *end up* in S3, you only need steps 1 and 2.
+* If you also want the uploads themselves to bypass your server and go straight to your bucket, continue to step 3.
+
+### Step 1: Configure an S3 disk
+
+Laravel ships with an `s3` disk in `config/filesystems.php` that's wired to environment variables, so you rarely need to touch the config file itself.
+
+First, install the Flysystem S3 adapter — it isn't included with Laravel by default:
+
+```shell
+composer require league/flysystem-aws-s3-v3 "^3.0"
+```
+
+Then fill in the credentials in your `.env` file.
+
+For Amazon S3:
+
+```env
+AWS_ACCESS_KEY_ID=your-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=your-bucket-name
+```
+
+For an S3-compatible service, also set the service's `endpoint`. Cloudflare R2, for example:
+
+```env
+AWS_ACCESS_KEY_ID=your-r2-access-key-id
+AWS_SECRET_ACCESS_KEY=your-r2-secret-key
+AWS_DEFAULT_REGION=auto
+AWS_BUCKET=your-bucket-name
+AWS_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+```
+
+Or DigitalOcean Spaces:
+
+```env
+AWS_ACCESS_KEY_ID=your-spaces-key
+AWS_SECRET_ACCESS_KEY=your-spaces-secret
+AWS_DEFAULT_REGION=nyc3
+AWS_BUCKET=your-space-name
+AWS_ENDPOINT=https://nyc3.digitaloceanspaces.com
+```
+
+> [!tip] Verify the disk before going further
+> Run `php artisan tinker` and try writing a file:
+>
+> ```php
+> Storage::disk('s3')->put('connectivity-test.txt', 'hello');
+> ```
+>
+> If this returns `true`, your credentials work and everything below will too. Debugging a typo'd secret here takes seconds — debugging it through a failing file upload takes much longer.
+
+### Step 2: Store uploaded files in S3
+
+Where an upload ends up permanently is decided by your `->store()` call — not by any Livewire configuration. Pass the disk name to store the file in S3:
+
+```php
+public function save()
+{
+    $this->validate();
+
+    $this->photo->store(path: 'photos', options: 's3');
+}
+```
+
+Uploaded files now land in the `photos/` directory of your bucket. If that's all you were after, you're done.
+
+At this point, temporary uploads — the hop between the user selecting a file and your `save()` method running — are still stored on your application server. That's perfectly fine for most applications. If you'd like uploads to skip your server entirely, continue to step 3.
+
+### Step 3 (optional): Send temporary uploads directly to S3
+
+By default, Livewire keeps temporary uploads on a local disk, which means every upload passes through your application server — even if it's permanently stored in S3 afterwards.
+
+To bypass your server, point Livewire's temporary upload disk at S3 in your `.env` file:
 
 ```env
 LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK=s3
 ```
 
-Now, when a user uploads a file, the file will never actually be stored on your server. Instead, it will be uploaded directly to your S3 bucket within the `livewire-tmp/` sub-directory.
+Now, when a user selects a file, the browser uploads it straight to the `livewire-tmp/` directory of your bucket using a pre-signed URL — the file never touches your server. Image previews via `->temporaryUrl()` are served directly from S3 as well, and large files automatically use native S3 multipart uploads (see [chunked and resumable uploads](#chunked-and-resumable-uploads)).
+
+Because the browser now talks to your bucket directly, your bucket must allow cross-origin `PUT` requests from your application's domain. Add a CORS policy to the bucket:
+
+```json
+[
+    {
+        "AllowedOrigins": ["https://your-app.com"],
+        "AllowedMethods": ["PUT", "GET"],
+        "AllowedHeaders": ["*"],
+        "MaxAgeSeconds": 3000
+    }
+]
+```
+
+On Amazon S3 this lives under the bucket's **Permissions → Cross-origin resource sharing (CORS)**; on Cloudflare R2 it's under **Settings → CORS policy**. Without it, uploads will fail in the browser with CORS errors even though everything on the server is configured correctly.
 
 > [!tip]
-> Alternatively, you can publish Livewire's configuration file with `php artisan livewire:config` for full control over the `temporary_file_upload` config.
+> For full control over the temporary upload behavior — disk, directory, validation rules, and more — publish Livewire's config file with `php artisan livewire:config` and edit the `temporary_file_upload` section.
 
 ### Configuring automatic file cleanup
 
-Livewire's temporary upload directory will fill up with files quickly; therefore, it's essential to configure S3 to clean up files older than 24 hours.
+When temporary uploads are stored in S3, Livewire can't clean them up for you like it does locally, so your `livewire-tmp/` directory will fill up with files quickly. Instead, S3 itself should be configured to delete files older than 24 hours.
 
-To configure this behavior, run the following Artisan command from the environment that is utilizing an S3 bucket for file uploads:
+To set that up, run the following Artisan command from the environment that is using the S3 bucket for temporary uploads:
 
 ```shell
 php artisan livewire:configure-s3-upload-cleanup
@@ -272,7 +429,37 @@ php artisan livewire:configure-s3-upload-cleanup
 Now, any temporary files older than 24 hours will be cleaned up by S3 automatically.
 
 > [!info]
-> If you are not using S3 for file storage, Livewire will handle file cleanup automatically and there is no need to run the command above.
+> If you are not using S3 for temporary uploads, Livewire handles file cleanup automatically and there is no need to run the command above.
+
+## Chunked and resumable uploads
+
+Large files are uploaded in chunks automatically — no configuration or markup changes required.
+
+When a selected file is bigger than the configured chunk threshold, Livewire slices it in the browser and uploads the pieces one at a time, then reassembles and validates the file on the server. On S3 disks, Livewire uses native [S3 multipart uploads](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html) instead, so large files still bypass your application server entirely.
+
+Chunking solves two long-standing upload problems:
+
+* **PHP's upload limits no longer apply.** Because each chunk is smaller than a stock `php.ini`'s `upload_max_filesize`, users can upload files far bigger than your PHP configuration would normally allow. Your Livewire validation rules (like `max:`) remain the authority on how big is too big.
+* **Interrupted uploads are resumable.** If an upload is cancelled, interrupted, or the page is reloaded mid-flight, re-selecting the same file resumes from where it left off — Livewire fingerprints the file and only uploads the chunks the server doesn't already have.
+
+Chunked uploads are locked down the same way regular temporary uploads are: every chunk request carries a cryptographically signed reference encoding the upload's identity, chunk count, and chunk size — none of which a client can tamper with — and fingerprints are scoped to the user's session, so one user can never touch another user's in-flight upload.
+
+You can tune this behavior in the `temporary_file_upload` section of Livewire's config file:
+
+```php
+'temporary_file_upload' => [
+    // ...
+    'chunking' => true,        // Set to false to always upload files whole...
+    'chunk_size' => null,      // Bytes per chunk | Default: 1MB (5MB on S3 — the multipart minimum)
+    'chunk_threshold' => null, // Files larger than this are chunked | Default: chunk_size
+],
+```
+
+> [!warning] Custom upload middleware and throttling
+> A single chunked file is uploaded as many small requests, so the chunk endpoint uses a higher default throttle (`throttle:600,1`). If you set a custom `middleware` on `temporary_file_upload`, it governs the chunk endpoint too — a tight throttle like `throttle:60,1` will fail large uploads. Throttle generously, or disable `chunking` if you don't need it.
+
+> [!info] Abandoned S3 multipart uploads
+> Abandoned multipart uploads on S3 hold invisible storage until they are aborted. Add an [AbortIncompleteMultipartUpload lifecycle rule](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-abort-incomplete-mpu-lifecycle-config.html) to your bucket (one day is a good default) so they are cleaned up automatically. On non-S3 disks, Livewire cleans up stale chunks alongside other temporary uploads.
 
 ## Loading indicators
 
