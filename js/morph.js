@@ -138,13 +138,10 @@ function getMorphConfig(component) {
             if (isntElement(el)) return
 
             // Content rendered by `x-if`/`x-for` templates (`wire:if`/`wire:for`) is
-            // owned by Alpine, not the server, so morphing leaves it alone entirely.
-            // Skipping the template pair itself prevents morph's clone-seeding from
-            // rendering the incoming template's content into the "to" tree (stray
-            // clones that would get inserted as duplicate/ghost rows), and skipUntil
-            // hops over the live rendered content so it doesn't get diffed against
-            // unrelated incoming siblings. Alpine re-renders it reactively when
-            // `$wire` state lands after the morph...
+            // owned by Alpine, not the server, so morphing leaves it alone entirely:
+            // skipping the template pair prevents Alpine's clone-seeding from rendering
+            // stray content into the incoming tree, and skipUntil hops over the live
+            // rendered content. Alpine re-renders it reactively after the morph...
             if (isTemplateDirectiveEl(el)) {
                 let generated = templateGeneratedEls(el)
 
@@ -230,24 +227,15 @@ function isntElement(el) {
 function isTemplateDirectiveEl(el) {
     if (el.tagName !== 'TEMPLATE') return false
 
-    return Array.from(el.attributes).some(({ name }) =>
-        name === 'x-if' || name === 'x-for' || name.startsWith('wire:if') || name.startsWith('wire:for')
-    )
+    return ['x-if', 'x-for', 'wire:if', 'wire:for'].some(name => el.hasAttribute(name))
 }
 
-function templateGeneratedEls(el) {
-    if (! el || el.tagName !== 'TEMPLATE') return []
+function templateGeneratedEls(template) {
+    // `x-if` tracks its rendered element as `_x_currentIfEl`, and `x-for`
+    // tracks its rendered elements in the `_x_lookup` map...
+    if (template._x_currentIfEl) return [template._x_currentIfEl]
 
-    // `x-if` tracks its rendered element as `_x_currentIfEl`...
-    if (el._x_currentIfEl) return [el._x_currentIfEl]
-
-    // `x-for` tracks its rendered elements in a `_x_lookup` map
-    // (a plain object in older Alpine versions)...
-    if (el._x_lookup) {
-        return el._x_lookup instanceof Map
-            ? Array.from(el._x_lookup.values())
-            : Object.values(el._x_lookup)
-    }
+    if (template._x_lookup) return Array.from(template._x_lookup.values())
 
     return []
 }

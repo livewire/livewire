@@ -189,6 +189,41 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@lists', 'veggies')
         ->assertSeeIn('@lists', 'carrot');
     }
+
+    public function test_wire_for_keyed_items_keep_their_dom_state_when_reordered()
+    {
+        Livewire::visit(new class extends Component {
+            public $fruits = ['apple', 'banana'];
+
+            public function reverse() { $this->fruits = array_reverse($this->fruits); }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="reverse" dusk="reverse">Reverse</button>
+
+                    <ul dusk="list">
+                        <template wire:for="fruit in fruits" wire:for:key="fruit">
+                            <li>
+                                <span wire:text="fruit"></span>
+                                <input type="text" x-bind:data-fruit="fruit">
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+                HTML;
+            }
+        })
+        ->assertScript("document.querySelector('[dusk=list] li:nth-of-type(1) input').dataset.fruit", 'apple')
+        ->tap(fn ($b) => $b->script("document.querySelector('[data-fruit=apple]').value = 'typed into apple'"))
+        ->waitForLivewire()->click('@reverse')
+        // With keyed items, reordering moves the existing elements instead of
+        // rewriting them in place — the input's typed value travels with its row...
+        ->assertScript("document.querySelector('[dusk=list] li:nth-of-type(1) input').dataset.fruit", 'banana')
+        ->assertScript("document.querySelector('[data-fruit=apple]').value", 'typed into apple');
+    }
+
     public function test_plain_x_for_templates_survive_server_updates_without_ghost_rows()
     {
         Livewire::visit(new class extends Component {
@@ -226,38 +261,5 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@list', 'mango')
         ->assertScript("document.querySelectorAll('[dusk=list] li').length", 3)
         ->assertScript("[...document.querySelectorAll('[dusk=list] li')].every(li => li.innerText.trim() !== '')", true);
-    }
-    public function test_wire_for_keyed_items_keep_their_dom_state_when_reordered()
-    {
-        Livewire::visit(new class extends Component {
-            public $fruits = ['apple', 'banana'];
-
-            public function reverse() { $this->fruits = array_reverse($this->fruits); }
-
-            public function render()
-            {
-                return <<<'HTML'
-                <div>
-                    <button wire:click="reverse" dusk="reverse">Reverse</button>
-
-                    <ul dusk="list">
-                        <template wire:for="fruit in fruits" wire:for:key="fruit">
-                            <li>
-                                <span wire:text="fruit"></span>
-                                <input type="text" x-bind:data-fruit="fruit">
-                            </li>
-                        </template>
-                    </ul>
-                </div>
-                HTML;
-            }
-        })
-        ->assertScript("document.querySelector('[dusk=list] li:nth-of-type(1) input').dataset.fruit", 'apple')
-        ->tap(fn ($b) => $b->script("document.querySelector('[data-fruit=apple]').value = 'typed into apple'"))
-        ->waitForLivewire()->click('@reverse')
-        // With keyed items, reordering moves the existing elements instead of
-        // rewriting them in place — the input's typed value travels with its row...
-        ->assertScript("document.querySelector('[dusk=list] li:nth-of-type(1) input').dataset.fruit", 'banana')
-        ->assertScript("document.querySelector('[data-fruit=apple]').value", 'typed into apple');
     }
 }

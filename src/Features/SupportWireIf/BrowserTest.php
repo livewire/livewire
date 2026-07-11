@@ -166,6 +166,7 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewire()->click('@increment')
         ->assertSeeIn('@count', '1');
     }
+
     public function test_plain_x_if_templates_survive_server_updates()
     {
         Livewire::visit(new class extends Component {

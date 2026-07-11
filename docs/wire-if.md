@@ -69,7 +69,7 @@ Both directives toggle content based on an expression, but they behave different
 
 ## `wire:if` vs. `@if`
 
-Blade's `@if` evaluates on the server — toggling it requires a network round-trip and a re-render. `wire:if` evaluates in the browser against your component's client-side state, so it responds instantly, even mid-request.
+Blade's `@if` evaluates on the server — toggling it requires a network round-trip and a re-render. `wire:if` evaluates in the browser against your component's client-side state, so it responds instantly.
 
 Because the content of `wire:if` is rendered on the client, it isn't present in the initial server-rendered HTML. If the content must be visible to search engines or before JavaScript loads, use `@if` or `wire:show` instead.
 

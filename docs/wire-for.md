@@ -23,12 +23,10 @@ use Livewire\Component;
 
 class TaskList extends Component
 {
-    public $tasks = [];
-
-    public function add($task)
-    {
-        $this->tasks[] = ['id' => uniqid(), 'title' => $task];
-    }
+    public $tasks = [
+        ['id' => 1, 'title' => 'Write the docs'],
+        ['id' => 2, 'title' => 'Ship the feature'],
+    ];
 
     public function remove($id)
     {
@@ -123,5 +121,7 @@ Supported expression forms:
 wire:for="item in items"
 wire:for="(item, index) in items"
 ```
+
+Key each item with `wire:for:key="expression"` (or Alpine's `:key`).
 
 This directive has no modifiers and must be used on a `<template>` tag containing a single root element.
