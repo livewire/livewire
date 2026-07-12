@@ -218,9 +218,20 @@ View Transitions are supported in Chrome 111+, Edge 111+, and Safari 18+. In bro
 
 [View browser support on caniuse.com →](https://caniuse.com/view-transitions)
 
+## Transitioning between page visits
+
+`wire:transition` animates elements during component updates. To animate elements between `wire:navigate` page visits instead, use the `.navigate` modifier:
+
+```blade
+<h2 wire:transition.navigate="post-title-{{ $post->id }}">{{ $post->title }}</h2>
+```
+
+The presence of a `wire:transition.navigate` element opts navigations to and from that page into a view transition — the same way `wire:transition`'s presence opts component updates in. Read more in the [Navigate documentation](/docs/4.x/navigate#animating-page-visits-with-view-transitions).
+
 ## See also
 
 - **[wire:show](/docs/4.x/wire-show)** — Toggle visibility with CSS display
+- **[Navigate](/docs/4.x/navigate#animating-page-visits-with-view-transitions)** — Animate between page visits with `.navigate`
 - **[Loading States](/docs/4.x/loading-states)** — Show loading indicators during requests
 - **[Alpine Transitions](https://alpinejs.dev/directives/transition)** — For more complex animation needs
 
@@ -228,6 +239,7 @@ View Transitions are supported in Chrome 111+, Edge 111+, and Safari 18+. In bro
 
 ```blade
 wire:transition="name"
+wire:transition.navigate="name"
 ```
 
 | Expression | Description |
@@ -235,4 +247,6 @@ wire:transition="name"
 | (none) | Uses `match-element` as the view-transition-name |
 | `"name"` | Uses the provided string as the view-transition-name |
 
-This directive has no modifiers.
+| Modifier | Description |
+|----------|-------------|
+| `.navigate` | Transitions the element between page visits instead of component updates. Unnamed, it opts the page into a crossfade; named, it morphs into the matching element on the next page. |

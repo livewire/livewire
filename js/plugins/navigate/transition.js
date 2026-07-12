@@ -2,15 +2,23 @@ import { setTransitionNames, clearTransitionNames, skipTransitionWhenDialogOpens
 
 let type = 'navigate'
 
+let attribute = 'wire:transition.navigate'
+
 let useViewTransitions = false
 
 export function enableViewTransitions() {
     useViewTransitions = true
 }
 
-export function transitionPageSwap(transition, update) {
-    // Transition if enabled globally or requested for this navigation...
-    if (! transition && ! useViewTransitions) return update()
+export function transitionPageSwap(html, update) {
+    // Transition if enabled globally, or if either the outgoing or incoming
+    // page contains a [wire:transition.navigate] element — presence opts the
+    // navigation in, mirroring how [wire:transition] elements opt morphs in...
+    let shouldTransition = useViewTransitions
+        || document.body.querySelector('[wire\\:transition\\.navigate]')
+        || html.includes('wire:transition.navigate')
+
+    if (! shouldTransition) return update()
 
     // Check if the View Transitions API is supported...
     if (typeof document.startViewTransition !== 'function') return update()
@@ -23,18 +31,18 @@ export function transitionPageSwap(transition, update) {
     // would paint above the dialog during animation)...
     if (document.querySelector('dialog:modal')) return update()
 
-    // Name [wire:transition="..."] elements on the outgoing page right before
-    // the browser snapshots it. Only explicitly named elements participate —
-    // matching names across pages morph, and unnamed elements stay part of
-    // the page snapshot (a shared default name would collide across pages)...
-    setTransitionNames(document.body, { type })
+    // Name [wire:transition.navigate="..."] elements on the outgoing page
+    // right before the browser snapshots it. Only named elements morph —
+    // unnamed ones act as page-level opt-in markers and stay part of the
+    // page snapshot (a shared default name would collide across pages)...
+    setTransitionNames(document.body, { type, attribute })
 
     let updateAndNameNewPage = () => {
         update()
 
         // The incoming page's elements need their names set synchronously,
         // before the browser captures the new snapshot...
-        setTransitionNames(document.body, { type })
+        setTransitionNames(document.body, { type, attribute })
     }
 
     let viewTransition
@@ -50,5 +58,5 @@ export function transitionPageSwap(transition, update) {
 
     // Clear the names after the animation so they don't create permanent
     // stacking contexts on the new page...
-    viewTransition.finished.finally(() => clearTransitionNames(document.body))
+    viewTransition.finished.finally(() => clearTransitionNames(document.body, { attribute }))
 }

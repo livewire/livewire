@@ -9,10 +9,12 @@ globalDirective('transition', ({ el, directive, cleanup }) => {
 })
 
 export function setTransitionNames(root, options = {}) {
-    root.querySelectorAll('[wire\\:transition]').forEach(el => {
+    let attribute = options.attribute ?? 'wire:transition'
+
+    root.querySelectorAll(selectorForAttribute(attribute)).forEach(el => {
         if (el.style.viewTransitionName) return
 
-        let name = el.getAttribute('wire:transition')
+        let name = el.getAttribute(attribute)
 
         // When the developer orchestrates a typed swap (e.g. #[Transition('forward')]),
         // unnamed wire:transition elements stay unnamed so they ride with the parent's
@@ -23,10 +25,16 @@ export function setTransitionNames(root, options = {}) {
     })
 }
 
-export function clearTransitionNames(root) {
-    root.querySelectorAll('[wire\\:transition]').forEach(el => {
+export function clearTransitionNames(root, options = {}) {
+    let attribute = options.attribute ?? 'wire:transition'
+
+    root.querySelectorAll(selectorForAttribute(attribute)).forEach(el => {
         el.style.viewTransitionName = ''
     })
+}
+
+function selectorForAttribute(attribute) {
+    return `[${attribute.replace(/[:.]/g, '\\$&')}]`
 }
 
 export async function transitionDomMutation(fromEl, toEl, callback, options = {}) {

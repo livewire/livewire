@@ -64,6 +64,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             })->middleware('web');
             Route::get('/first-transition', FirstTransitionPage::class)->middleware('web');
             Route::get('/second-transition', SecondTransitionPage::class)->middleware('web');
+            Route::get('/first-marked-transition', FirstMarkedTransitionPage::class)->middleware('web');
+            Route::get('/second-marked-transition', SecondMarkedTransitionPage::class)->middleware('web');
             Route::get('/first-animated-transition', FirstAnimatedTransitionPage::class)->middleware('web');
             Route::get('/second-animated-transition', SecondAnimatedTransitionPage::class)->middleware('web');
             Route::get('/first-transition-global', function () {
@@ -336,7 +338,37 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    public function test_wire_navigate_transition_modifier_uses_view_transitions()
+    public function test_pages_containing_transition_elements_opt_navigations_into_view_transitions()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-marked-transition')
+                ->assertSee('On first marked page')
+                // Intercept document.startViewTransition to track if it gets called...
+                ->tap(fn ($b) => $b->script("
+                    window.__viewTransitionCount = 0;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__viewTransitionCount++;
+                        return orig.apply(document, arguments);
+                    };
+                "))
+                // Marked page -> marked page transitions...
+                ->waitForNavigate()->click('@link.to.marked')
+                ->assertSee('On second marked page')
+                ->assertScript('window.__viewTransitionCount', 1)
+                // ...and so does the back button, because the pages opt in, not the link...
+                ->waitForNavigate()->back()
+                ->assertSee('On first marked page')
+                ->assertScript('window.__viewTransitionCount', 2)
+                // Marked page -> unmarked page still transitions (the outgoing page opts in)...
+                ->waitForNavigate()->click('@link.to.unmarked')
+                ->assertSee('On second transition page')
+                ->assertScript('window.__viewTransitionCount', 3);
+        });
+    }
+
+    public function test_navigating_to_a_page_containing_transition_elements_opts_the_visit_into_view_transitions()
     {
         $this->browse(function (Browser $browser) {
             $browser
@@ -351,8 +383,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                         return orig.apply(document, arguments);
                     };
                 "))
-                ->waitForNavigate()->click('@link.transition')
-                ->assertSee('On second transition page')
+                // Unmarked page -> marked page transitions (the incoming page opts in)...
+                ->waitForNavigate()->click('@link.to.marked')
+                ->assertSee('On second marked page')
                 ->assertScript('window.__viewTransitionCount', 1);
         });
     }
@@ -1573,8 +1606,35 @@ class FirstTransitionPage extends Component
             <div>On first transition page</div>
 
             <a href="/second-transition" wire:navigate dusk="link.plain">Plain link</a>
-            <a href="/second-transition" wire:navigate.transition dusk="link.transition">Transition link</a>
+            <a href="/second-marked-transition" wire:navigate dusk="link.to.marked">To marked page</a>
             <a href="/second-transition-global" wire:navigate dusk="link.plain.global">Plain link (global route)</a>
+        </div>
+        HTML;
+    }
+}
+
+class FirstMarkedTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div wire:transition.navigate>
+            <div>On first marked page</div>
+
+            <a href="/second-marked-transition" wire:navigate dusk="link.to.marked">To marked page</a>
+            <a href="/second-transition" wire:navigate dusk="link.to.unmarked">To unmarked page</a>
+        </div>
+        HTML;
+    }
+}
+
+class SecondMarkedTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div wire:transition.navigate>
+            <div>On second marked page</div>
         </div>
         HTML;
     }
@@ -1606,9 +1666,9 @@ class FirstAnimatedTransitionPage extends Component
                 }
             </style>
 
-            <h2 wire:transition="hero" dusk="hero">Hero title</h2>
+            <h2 wire:transition.navigate="hero" dusk="hero">Hero title</h2>
 
-            <a href="/second-animated-transition" wire:navigate.transition dusk="link.animated">Go to second animated page</a>
+            <a href="/second-animated-transition" wire:navigate dusk="link.animated">Go to second animated page</a>
         </div>
         HTML;
     }
@@ -1628,9 +1688,9 @@ class SecondAnimatedTransitionPage extends Component
                 }
             </style>
 
-            <h1 wire:transition="hero" dusk="hero-detail">Hero title</h1>
+            <h1 wire:transition.navigate="hero" dusk="hero-detail">Hero title</h1>
 
-            <div wire:transition dusk="unnamed-detail">Unnamed transition element</div>
+            <div wire:transition.navigate dusk="unnamed-detail">Unnamed marker element</div>
         </div>
         HTML;
     }

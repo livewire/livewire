@@ -17,7 +17,7 @@ let restoreScroll = true
 export default function (Alpine) {
 
     Alpine.navigate = (url, options = {}) => {
-        let { preserveScroll = false, transition = false } = options
+        let { preserveScroll = false } = options
 
         let destination = createUrlObjectFromString(url)
 
@@ -27,7 +27,7 @@ export default function (Alpine) {
 
         if (prevented) return
 
-        navigateTo(destination, { preserveScroll, transition })
+        navigateTo(destination, { preserveScroll })
     }
 
     Alpine.navigate.disableProgressBar = () => {
@@ -40,8 +40,6 @@ export default function (Alpine) {
         let shouldPrefetchOnHover = modifiers.includes('hover')
 
         let preserveScroll = modifiers.includes('preserve-scroll')
-
-        let transition = modifiers.includes('transition')
 
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
@@ -71,12 +69,12 @@ export default function (Alpine) {
 
                 if (prevented) return
 
-                navigateTo(destination, { preserveScroll, transition })
+                navigateTo(destination, { preserveScroll })
             })
         })
     })
 
-    function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true, transition = false }) {
+    function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
@@ -97,7 +95,7 @@ export default function (Alpine) {
             shouldPushToHistoryState && updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
-                transitionPageSwap(transition, () => {
+                transitionPageSwap(html, () => {
                     enablePersist && storePersistantElementsForLater(persistedEl => {
                         packUpPersistedTeleports(persistedEl)
                         packUpPersistedPopovers(persistedEl)
@@ -181,7 +179,7 @@ export default function (Alpine) {
             updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageKey, currentPageUrl)
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
-                transitionPageSwap(false, () => {
+                transitionPageSwap(html, () => {
                     enablePersist && storePersistantElementsForLater(persistedEl => {
                         packUpPersistedTeleports(persistedEl)
                         packUpPersistedPopovers(persistedEl)
