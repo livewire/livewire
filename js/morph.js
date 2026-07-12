@@ -137,6 +137,19 @@ function getMorphConfig(component) {
 
             if (isntElement(el)) return
 
+            // Content rendered by `x-if`/`x-for` templates (`wire:if`/`wire:for`) is
+            // owned by Alpine, not the server, so morphing leaves it alone entirely:
+            // skipping the template pair prevents Alpine's clone-seeding from rendering
+            // stray content into the incoming tree, and skipUntil hops over the live
+            // rendered content. Alpine re-renders it reactively after the morph...
+            if (isTemplateDirectiveEl(el)) {
+                let generated = new Set(templateGeneratedEls(el))
+
+                skipUntil(node => ! generated.has(node))
+
+                return skip()
+            }
+
             trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil })
 
             // bypass DOM diffing for children by overwriting the content
@@ -165,6 +178,11 @@ function getMorphConfig(component) {
 
         removing: (el, skip) => {
             if (isntElement(el)) return
+
+            // If the incoming HTML ends before reaching a template-generated element,
+            // it lands here instead of `skipUntil` above. Leave it alone — Alpine
+            // removes it itself when its template is removed or goes falsy...
+            if (isElGeneratedByTemplate(el)) return skip()
 
             trigger('morph.removing', { el, component, skip })
         },
@@ -202,6 +220,48 @@ function getMorphConfig(component) {
 
 function isntElement(el) {
     return typeof el.hasAttribute !== 'function'
+}
+
+function isTemplateDirectiveEl(el) {
+    if (el.tagName !== 'TEMPLATE') return false
+
+    // Runtime markers catch templates whose directive was bound
+    // programmatically rather than via a literal attribute...
+    if (el._x_currentIfEl || el._x_lookup) return true
+
+    return ['x-if', 'x-for', 'wire:if', 'wire:for'].some(name => el.hasAttribute(name))
+}
+
+function templateGeneratedEls(template) {
+    // `x-if` tracks its rendered element as `_x_currentIfEl`...
+    if (template._x_currentIfEl) return [template._x_currentIfEl]
+
+    // `x-for` tracks its rendered elements in the `_x_lookup` map...
+    if (template._x_lookup) {
+        let els = []
+
+        template._x_lookup.forEach(el => {
+            els.push(el)
+
+            // An `x-for` item can itself be an `x-if` template whose rendered
+            // element is inserted alongside it as another sibling...
+            if (el._x_currentIfEl) els.push(el._x_currentIfEl)
+        })
+
+        return els
+    }
+
+    return []
+}
+
+function isElGeneratedByTemplate(el) {
+    // `x-for` stamps every rendered element with a scope-refresh callback...
+    if (el._x_refreshXForScope) return true
+
+    // ...and `x-if` keeps its rendered element directly after its template...
+    let prev = el.previousElementSibling
+
+    return !! (prev && prev.tagName === 'TEMPLATE' && prev._x_currentIfEl === el)
 }
 
 function isComponentRootEl(el) {

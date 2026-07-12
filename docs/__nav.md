@@ -48,6 +48,8 @@ HTML Directives:
     wire:ref: { uri: /docs/4.x/wire-ref, file: /wire-ref.md }
     wire:replace: { uri: /docs/4.x/wire-replace, file: /wire-replace.md }
     wire:show: { uri: /docs/4.x/wire-show, file: /wire-show.md }
+    wire:for: { uri: /docs/4.x/wire-for, file: /wire-for.md }
+    wire:if: { uri: /docs/4.x/wire-if, file: /wire-if.md }
     wire:sort: { uri: /docs/4.x/wire-sort, file: /wire-sort.md }
     wire:stream: { uri: /docs/4.x/wire-stream, file: /wire-stream.md }
     wire:text: { uri: /docs/4.x/wire-text, file: /wire-text.md }
