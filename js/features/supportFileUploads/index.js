@@ -1,6 +1,8 @@
 import { getUploadManager, MessageBag } from './manager'
 import './synth'
 
+export { uploadAction } from './action'
+
 export function handleFileUpload(el, property, component, cleanup) {
     let manager = getUploadManager(component)
 
@@ -73,27 +75,6 @@ export function handleFileUpload(el, property, component, cleanup) {
 }
 
 export default MessageBag
-
-export function upload(
-    component,
-    name,
-    file,
-    finishCallback = () => { },
-    errorCallback = () => { },
-    progressCallback = () => { },
-    cancelledCallback = () => { },
-) {
-    let uploadManager = getUploadManager(component)
-
-    uploadManager.upload(
-        name,
-        file,
-        finishCallback,
-        errorCallback,
-        progressCallback,
-        cancelledCallback,
-    )
-}
 
 export function uploadMultiple(
     component,

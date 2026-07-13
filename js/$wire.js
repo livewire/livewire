@@ -1,4 +1,4 @@
-import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
+import { cancelUpload, removeUpload, uploadAction, uploadMultiple } from './features/supportFileUploads'
 import { dispatch, dispatchEl, dispatchRef, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { findComponentByEl } from '@/store'
@@ -328,7 +328,7 @@ wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(compone
 wireProperty('$dispatchTo', () => (...params) => dispatchTo(...params))
 wireProperty('$dispatchEl', (component) => (...params) => dispatchEl(component, ...params))
 wireProperty('$dispatchRef', (component) => (...params) => dispatchRef(component, ...params))
-wireProperty('$upload', (component) => (...params) => upload(component, ...params))
+wireProperty('$upload', (component) => (...params) => uploadAction(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
 wireProperty('$cancelUpload', (component) => (...params) => cancelUpload(component, ...params))

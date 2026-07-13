@@ -39,6 +39,13 @@ describe('Contextualize expressions', () => {
         expect(contextualizeExpression("{ fooBar: foo }")).toBe('{ fooBar: $wire.foo }')
     })
 
+    it('arrow function parameters', () => {
+        expect(contextualizeExpression('files.some(file => file.isUploading)')).toBe('$wire.files.some(file => file.isUploading)')
+        expect(contextualizeExpression('files.map((file, index) => file.name + index)')).toBe('$wire.files.map((file, index) => file.name + index)')
+        expect(contextualizeExpression('files.filter(file => file.size > threshold)')).toBe('$wire.files.filter(file => file.size > $wire.threshold)')
+        expect(contextualizeExpression('items.map(({ id }) => id)')).toBe('$wire.items.map(({ id }) => id)')
+    })
+
     it('alpine scope variables are skipped', () => {
         let mockEl = {
             _x_dataStack: [{ user: {}, index: 0 }],

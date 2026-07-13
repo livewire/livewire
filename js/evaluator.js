@@ -78,6 +78,16 @@ export function contextualizeExpression(expression, el) {
         return `___${strings.length - 1}___`
     })
 
+    // 1.5. Skip arrow-function parameters ('file' in 'files.some(file => ...)')
+    //      so they don't get prefixed with $wire...
+    for (let match of result.matchAll(/(\(([^()]*)\)|[a-zA-Z_$][\w$]*)\s*=>/g)) {
+        for (let param of (match[2] ?? match[1]).split(',')) {
+            let name = param.replace(/[{}\[\]]/g, '').trim().split(/[=:\s]/)[0]
+
+            if (name && ! SKIP.includes(name)) SKIP.push(name)
+        }
+    }
+
     // 2. Prefix identifiers not after a dot (skip placeholders from step 1)
     //    Also skip object keys (identifiers immediately followed by colon)
     result = result.replace(/(^|[^.\w$])(\$?[a-zA-Z_]\w*)/g, (m, pre, ident, offset) => {
