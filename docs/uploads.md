@@ -247,6 +247,119 @@ Properties holding multiple uploads hydrate into arrays of rich objects, so each
 
 Rich upload objects are powered by [JavaScript synthesizers](/docs/synthesizers#javascript-synthesizers). When sent back to the server or stringified via `JSON.stringify()`, they degrade to their raw wire value automatically.
 
+## Uploading beyond file inputs
+
+Modern interfaces accept files from more than a file input: users paste screenshots into a message box, drag files onto the page, and click "Attach" buttons that open the system's file picker.
+
+Livewire supports all of these through a single action: `$upload`. Use it inside any event listener — most commonly `wire:paste`, [`wire:drop`](/docs/wire-drop), and `wire:click`:
+
+```blade
+<textarea wire:paste="$upload('photos')"></textarea>
+
+<div wire:drop="$upload('photos')">Drop files here</div>
+
+<button type="button" wire:click="$upload('photos')">Attach files</button>
+```
+
+`$upload` follows one rule: **it takes files from the argument, else from the event, else from the user.**
+
+* When the triggering event carries files — pasted screenshots, dropped files — those files upload into the property
+* When the event *can* carry files but doesn't — a plain text paste — nothing happens, and the browser's default behavior proceeds untouched
+* When the event *can't* carry files — a click — the browser's file picker opens and the user's selection uploads instead
+
+Uploads started this way are ordinary Livewire uploads: they flow through the same temporary-upload pipeline as `wire:model` file inputs, respect your validation rules, and hydrate into [rich upload objects](#rich-upload-objects-in-javascript) for instant previews and progress.
+
+Here's a complete chat-style message box that accepts attachments from all three gestures:
+
+```php
+<?php // resources/views/components/⚡message-box.blade.php
+
+use Livewire\Attributes\Validate;
+use Livewire\WithFileUploads;
+use Livewire\Component;
+
+new class extends Component {
+    use WithFileUploads;
+
+    public $message = '';
+
+    #[Validate(['attachments.*' => 'file|max:10240'])]
+    public $attachments = [];
+
+    public function send()
+    {
+        // ...
+    }
+};
+```
+
+```blade
+<div class="group relative" wire:drop.window="$upload('attachments')">
+    {{-- A full-screen overlay, shown while files are dragged over the page... --}}
+    <div class="hidden group-data-dragging:grid fixed inset-0 place-items-center bg-black/50 text-white">
+        Drop files to attach
+    </div>
+
+    <form wire:submit="send">
+        {{-- Pending and finished attachments, powered by rich upload objects... --}}
+        <template x-for="file in $wire.attachments" :key="file.name">
+            <div>
+                <img x-show="file.isPreviewable" x-bind:src="file.previewUrl">
+
+                <span x-text="file.name"></span>
+
+                <progress x-show="file.isUploading" x-bind:value="file.progress" max="100"></progress>
+
+                <button type="button" x-on:click="file.remove()">&times;</button>
+            </div>
+        </template>
+
+        <textarea wire:model="message" wire:paste="$upload('attachments')"></textarea>
+
+        <button type="button" wire:click="$upload('attachments', { accept: 'image/*,.pdf' })">
+            Add photos & files
+        </button>
+
+        <button type="submit" x-bind:disabled="$wire.attachments.some(file => file.isUploading)">
+            Send
+        </button>
+    </form>
+</div>
+```
+
+A few things worth noticing:
+
+* `wire:paste` sits on elements — paste events bubble, so placing it on the `<form>` would cover every input inside it
+* `wire:drop.window` accepts drops anywhere on the page, and the `data-dragging` attribute it applies powers the overlay with plain CSS — no JavaScript required
+* The "Add photos & files" button is a real `<button>`, so keyboards and screen readers work for free — no hidden `<input type="file">` hacks
+
+### Options
+
+`$upload` accepts an options object as its final argument:
+
+```blade
+<button type="button" wire:click="$upload('attachments', { accept: 'image/*', multiple: true })">
+    Add photos
+</button>
+```
+
+Option | Description
+--- | ---
+`accept` | Filter incoming files like a native file input's `accept` attribute — comma-separated mime types (with wildcards) or extensions. Applies to pasted and dropped files as well as the file picker
+`multiple` | Whether to accept multiple files. Defaults to `true` when the property currently holds an array, `false` otherwise
+`append` | Whether multiple uploads append to the property's existing files (`true`, the default) or replace them
+
+> [!warning] Client-side filtering is a convenience, not a guard
+> Like a native file input's `accept` attribute, `$upload`'s filtering only improves the experience for honest users. Always enforce file rules with [server-side validation](#file-validation).
+
+### Explicit files and events
+
+`$upload` also accepts files — or an event to pull files from — as its second argument, for when you're wiring things up manually:
+
+```blade
+<textarea x-on:paste="$wire.$upload('photos', $event)"></textarea>
+```
+
 ## Testing file uploads
 
 You can use Laravel's existing file upload testing helpers to test file uploads.
@@ -560,10 +673,33 @@ These functions exist on a JavaScript component object, which can be accessed us
 
 ```blade
 <script>
-    let file = $wire.el.querySelector('input[type="file"]').files[0]
+    // Open the file picker and upload the user's selection...
+    await $wire.$upload('photos')
 
-    // Upload a file...
-    $wire.upload('photo', file, (uploadedFilename) => {
+    // Upload specific File objects (or a FileList, or an array of Files)...
+    await $wire.$upload('photos', files)
+
+    // Pull files out of a paste, drop, or change event...
+    await $wire.$upload('photos', event)
+
+    // Pass picker and filtering options...
+    await $wire.$upload('photos', { accept: 'image/*', multiple: true })
+
+    // Remove single file from multiple uploaded files...
+    $wire.$removeUpload('photos', uploadedFilename)
+
+    // Cancel an upload...
+    $wire.$cancelUpload('photos')
+</script>
+```
+
+`$wire.$upload()` returns a promise that resolves when the upload finishes (or with `null` if the picker is dismissed or the upload is cancelled) and rejects if it fails. For upload state while in flight — progress, previews — read the property's [rich upload objects](#rich-upload-objects-in-javascript) reactively.
+
+The legacy callback signature from earlier versions of Livewire continues to work:
+
+```blade
+<script>
+    $wire.$upload('photo', file, (uploadedFilename) => {
         // Success callback...
     }, () => {
         // Error callback...
@@ -575,13 +711,7 @@ These functions exist on a JavaScript component object, which can be accessed us
     })
 
     // Upload multiple files...
-    $wire.uploadMultiple('photos', [file], successCallback, errorCallback, progressCallback, cancelledCallback)
-
-    // Remove single file from multiple uploaded files...
-    $wire.removeUpload('photos', uploadedFilename, successCallback)
-
-    // Cancel an upload...
-    $wire.cancelUpload('photos')
+    $wire.$uploadMultiple('photos', [file], successCallback, errorCallback, progressCallback, cancelledCallback)
 </script>
 ```
 
