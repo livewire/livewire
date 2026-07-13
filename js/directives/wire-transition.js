@@ -41,10 +41,17 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
         return callback()
     }
 
-    // Skip entirely if a modal dialog is already open (transitions behind
-    // a dialog are invisible to the user and the ::view-transition pseudo-
-    // elements would paint above the dialog during animation)...
-    if (document.querySelector('dialog:modal')) return callback()
+    let dialogs = Array.from(document.querySelectorAll('dialog:modal'))
+    let transitionRoot = document
+
+    // A document-scoped transition paints above the browser's top layer. When
+    // supported, scope the transition to the component so open dialogs remain
+    // in the top layer above the transition. Otherwise, skip the transition...
+    if (dialogs.length > 0) {
+        if (typeof fromEl.startViewTransition !== 'function') return callback()
+
+        transitionRoot = fromEl
+    }
 
     // Set transition names right before the transition starts (not permanently)...
     setTransitionNames(fromEl, options)
@@ -102,7 +109,10 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
     // and skips the transition before the browser paints a frame...
     let skipOnDialog = (transition) => {
         let observer = new MutationObserver(() => {
-            if (document.querySelector('dialog:modal')) {
+            let uncapturedDialogOpened = Array.from(document.querySelectorAll('dialog:modal'))
+                .some(dialog => ! dialogs.includes(dialog))
+
+            if (uncapturedDialogOpened) {
                 transition.skipTransition()
                 observer.disconnect()
             }
@@ -118,7 +128,7 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
     }
 
     try {
-        let transition = document.startViewTransition(transitionConfig)
+        let transition = transitionRoot.startViewTransition(transitionConfig)
 
         skipOnDialog(transition)
 
@@ -127,7 +137,7 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
         await transition.updateCallbackDone
     } catch (e) {
         // Firefox 144+ supports View Transitions but only with a callback, not a config object (no transition types support)
-        let transition = document.startViewTransition(update)
+        let transition = transitionRoot.startViewTransition(update)
 
         skipOnDialog(transition)
 
