@@ -41,6 +41,7 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
         return callback()
     }
 
+    // Capture native modal dialogs that are already open before the transition starts...
     let dialogs = Array.from(document.querySelectorAll('dialog:modal'))
     let transitionRoot = document
 
@@ -109,6 +110,8 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
     // and skips the transition before the browser paints a frame...
     let skipOnDialog = (transition) => {
         let observer = new MutationObserver(() => {
+            // Ignore dialogs that were open when the transition started and
+            // only skip when a new dialog opens during the transition...
             let uncapturedDialogOpened = Array.from(document.querySelectorAll('dialog:modal'))
                 .some(dialog => ! dialogs.includes(dialog))
 
