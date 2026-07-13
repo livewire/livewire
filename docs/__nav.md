@@ -33,6 +33,7 @@ HTML Directives:
     wire:click: { uri: /docs/4.x/wire-click, file: /wire-click.md }
     wire:submit: { uri: /docs/4.x/wire-submit, file: /wire-submit.md }
     wire:model: { uri: /docs/4.x/wire-model, file: /wire-model.md }
+    wire:drop: { uri: /docs/4.x/wire-drop, file: /wire-drop.md }
     wire:loading: { uri: /docs/4.x/wire-loading, file: /wire-loading.md }
     wire:navigate: { uri: /docs/4.x/wire-navigate, file: /wire-navigate.md }
     wire:current: { uri: /docs/4.x/wire-current, file: /wire-current.md }
