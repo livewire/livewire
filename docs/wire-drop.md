@@ -48,11 +48,11 @@ While files are dragged over the dropzone, Livewire applies a `data-dragging` at
 </div>
 ```
 
-Or target it from a parent using Tailwind's `group` utilities:
+Or target it from a descendant using Tailwind's `in-*` variants:
 
 ```blade
-<div class="group" wire:drop="$upload('photos')">
-    <div class="opacity-0 group-data-dragging:opacity-100">
+<div wire:drop="$upload('photos')">
+    <div class="opacity-0 in-data-dragging:opacity-100">
         Release to upload
     </div>
 </div>
@@ -63,9 +63,9 @@ Or target it from a parent using Tailwind's `group` utilities:
 Chat and editor interfaces often accept drops anywhere in the window rather than on one specific region. Add the `.window` modifier to listen at the window level:
 
 ```blade
-<div class="group" wire:drop.window="$upload('attachments')">
+<div wire:drop.window="$upload('attachments')">
     {{-- A full-screen overlay, shown while files are dragged over the page... --}}
-    <div class="hidden group-data-dragging:grid fixed inset-0 place-items-center bg-black/50 text-white">
+    <div class="hidden in-data-dragging:grid fixed inset-0 place-items-center bg-black/50 text-white">
         Drop files to attach
     </div>
 

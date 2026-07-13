@@ -294,23 +294,23 @@ new class extends Component {
 ```
 
 ```blade
-<div class="group relative" wire:drop.window="$upload('attachments')">
+<div class="relative" wire:drop.window="$upload('attachments')">
     {{-- A full-screen overlay, shown while files are dragged over the page... --}}
-    <div class="hidden group-data-dragging:grid fixed inset-0 place-items-center bg-black/50 text-white">
+    <div class="hidden in-data-dragging:grid fixed inset-0 place-items-center bg-black/50 text-white">
         Drop files to attach
     </div>
 
     <form wire:submit="send">
         {{-- Pending and finished attachments, powered by rich upload objects... --}}
-        <template x-for="file in $wire.attachments" :key="file.name">
+        <template wire:for="file in attachments" wire:for:key="file.name">
             <div>
-                <img x-show="file.isPreviewable" x-bind:src="file.previewUrl">
+                <img wire:show="file.isPreviewable" wire:bind:src="file.previewUrl">
 
-                <span x-text="file.name"></span>
+                <span wire:text="file.name"></span>
 
-                <progress x-show="file.isUploading" x-bind:value="file.progress" max="100"></progress>
+                <progress wire:show="file.isUploading" wire:bind:value="file.progress" max="100"></progress>
 
-                <button type="button" x-on:click="file.remove()">&times;</button>
+                <button type="button" wire:click="file.remove()">&times;</button>
             </div>
         </template>
 
@@ -320,7 +320,7 @@ new class extends Component {
             Add photos & files
         </button>
 
-        <button type="submit" x-bind:disabled="$wire.attachments.some(file => file.isUploading)">
+        <button type="submit" wire:bind:disabled="attachments.some(file => file.isUploading)">
             Send
         </button>
     </form>
@@ -693,7 +693,15 @@ These functions exist on a JavaScript component object, which can be accessed us
 </script>
 ```
 
-`$wire.$upload()` returns a promise that resolves when the upload finishes (or with `null` if the picker is dismissed or the upload is cancelled) and rejects if it fails. For upload state while in flight — progress, previews — read the property's [rich upload objects](#rich-upload-objects-in-javascript) reactively.
+`$wire.$upload()` returns a promise that resolves with the [rich upload object](#rich-upload-objects-in-javascript) now living on the property — or an array of them when uploading multiple files (just the files from this upload, not the property's previously uploaded ones). If the picker is dismissed or the upload is cancelled it resolves with `null`, and if the upload fails it rejects:
+
+```blade
+<script>
+    let photo = await $wire.$upload('photo')
+
+    photo.previewUrl // Instant local preview...
+</script>
+```
 
 The legacy callback signature from earlier versions of Livewire continues to work:
 

@@ -114,7 +114,7 @@ function uploadFiles(component, name, files, options, callbacks) {
     if (! multiple) files = files.slice(0, 1)
 
     return new Promise((resolve, reject) => {
-        let finish = result => { callbacks.finish(result); resolve(result) }
+        let finish = result => { callbacks.finish(result); resolve(uploadedObjects(component, name, multiple, result)) }
         let error = () => { callbacks.error(); reject(new Error(`Livewire upload to [${name}] failed`)) }
         let cancelled = () => { callbacks.cancelled(); resolve(null) }
 
@@ -124,6 +124,20 @@ function uploadFiles(component, name, files, options, callbacks) {
             manager.upload(name, files[0], finish, error, callbacks.progress, cancelled)
         }
     })
+}
+
+// Resolve the promise with the reactive rich upload object(s) now living
+// on the property, mirroring the upload's shape: a single upload resolves
+// one object, a multiple upload resolves an array holding just this
+// batch (not the property's previously uploaded files)...
+function uploadedObjects(component, name, multiple, tmpFilenames) {
+    let value = dataGet(component.reactive, name)
+
+    if (! multiple) return value
+
+    let filenames = Array.isArray(tmpFilenames) ? tmpFilenames : [tmpFilenames]
+
+    return (value || []).filter(upload => filenames.includes(upload?.filename))
 }
 
 // Open the browser's file picker and resolve with the chosen files
