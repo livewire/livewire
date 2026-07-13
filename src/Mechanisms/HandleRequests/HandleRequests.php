@@ -2,6 +2,8 @@
 
 namespace Livewire\Mechanisms\HandleRequests;
 
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
@@ -206,7 +208,7 @@ class HandleRequests extends Mechanism
             } catch (\TypeError $e) {
                 report($e);
 
-                if (config('app.debug')) throw $e;
+                if (config('app.debug') || app(ExceptionHandler::class) instanceof WithoutExceptionHandlingHandler) throw $e;
 
                 abort(419);
             }
