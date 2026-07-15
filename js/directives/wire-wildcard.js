@@ -1,5 +1,6 @@
 import { callAndClearComponentDebounces } from '@/debounce'
 import { customDirectiveHasBeenRegistered } from '@/directives'
+import { filesFromEvent } from '@/utils'
 import { on } from '@/hooks'
 import { setNextActionOrigin, setNextActionInterceptor } from '@/request'
 import Alpine from 'alpinejs'
@@ -36,8 +37,17 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
         attribute = attribute.replace('.append', '')
     }
 
+    // Strip .file from Alpine expression because it only concerns Livewire and trips up Alpine...
+    if (directive.modifiers.includes('file')) {
+        attribute = attribute.replace('.file', '')
+    }
+
     let cleanupBinding = Alpine.bind(el, {
         [attribute](e) {
+            // The .file modifier filters the listener to events carrying
+            // files — a plain text paste on wire:paste.file does nothing...
+            if (directive.modifiers.includes('file') && ! filesFromEvent(e)?.length) return
+
             directive.eventContext = e
             directive.wire = component.$wire
 

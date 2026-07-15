@@ -84,7 +84,7 @@ class UploadActionBrowserTest extends \Tests\BrowserTestCase
 
             function render() { return <<<'HTML'
             <div>
-                <div dusk="zone" wire:drop="$upload('photos')" style="width: 300px; height: 100px">Drop files here</div>
+                <div dusk="zone" wire:drop.file="$upload('photos')" style="width: 300px; height: 100px">Drop files here</div>
 
                 <div dusk="elsewhere" style="width: 300px; height: 100px">Somewhere else</div>
 
@@ -108,7 +108,7 @@ class UploadActionBrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_text_drags_are_ignored_by_dropzones()
+    public function test_file_modifier_scopes_dropzones_to_file_drags()
     {
         Storage::persistentFake('tmp-for-tests');
 
@@ -119,7 +119,7 @@ class UploadActionBrowserTest extends \Tests\BrowserTestCase
 
             function render() { return <<<'HTML'
             <div>
-                <div dusk="zone" wire:drop="$upload('photos')" style="width: 300px; height: 100px">Drop files here</div>
+                <div dusk="zone" wire:drop.file="$upload('photos')" style="width: 300px; height: 100px">Drop files here</div>
 
                 <span dusk="count" x-text="$wire.photos.length"></span>
             </div>
@@ -130,6 +130,70 @@ class UploadActionBrowserTest extends \Tests\BrowserTestCase
         ->pause(300)
         ->assertAttributeMissing('@zone', 'data-dragging')
         ->assertSeeIn('@count', '0')
+        ;
+    }
+
+    public function test_bare_dropzones_are_general_and_evaluate_any_drop()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $dropped = '';
+
+            function handleDrop($text)
+            {
+                $this->dropped = $text;
+            }
+
+            function render() { return <<<'HTML'
+            <div>
+                <div dusk="zone" wire:drop="handleDrop($event.dataTransfer.getData('text/plain'))" style="width: 300px; height: 100px">Drop anything here</div>
+
+                <span dusk="dropped">{{ $dropped }}</span>
+            </div>
+            HTML; }
+        })
+        // Without .file, any drag engages the zone...
+        ->tap(fn ($b) => $this->dispatchDrag($b, 'dragEnter', '@zone', [], [['mimeType' => 'text/plain', 'data' => 'dragged text']]))
+        ->waitUntil('document.querySelector(\'[dusk="zone"]\').hasAttribute(\'data-dragging\')')
+        // ...and any drop evaluates the expression, with $event in scope...
+        ->tap(fn ($b) => $this->dispatchDrag($b, 'drop', '@zone', [], [['mimeType' => 'text/plain', 'data' => 'dragged text']]))
+        ->waitForTextIn('@dropped', 'dragged text')
+        ->waitUntil('! document.querySelector(\'[dusk="zone"]\').hasAttribute(\'data-dragging\')')
+        ;
+    }
+
+    public function test_file_modifier_filters_pastes_to_files()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $body = '';
+            public $pastes = 0;
+
+            function render() { return <<<'HTML'
+            <div>
+                <textarea dusk="box" wire:model="body" wire:paste.file="$set('pastes', pastes + 1)"></textarea>
+
+                <span dusk="pastes" x-text="$wire.pastes"></span>
+            </div>
+            HTML; }
+        })
+        // A real text paste doesn't trigger the filtered listener...
+        ->tap(fn ($b) => $this->putTextOnClipboard($b, 'just some text'))
+        ->click('@box')
+        ->keys('@box', [$this->pasteChord(), 'v'])
+        ->waitUntil('document.querySelector(\'[dusk="box"]\').value === "just some text"')
+        ->assertSeeIn('@pastes', '0')
+        // A real file paste does...
+        ->tap(fn ($b) => $this->putImageOnClipboard($b))
+        ->click('@box')
+        ->keys('@box', [$this->pasteChord(), 'v'])
+        ->waitForTextIn('@pastes', '1')
         ;
     }
 
@@ -144,7 +208,7 @@ class UploadActionBrowserTest extends \Tests\BrowserTestCase
 
             function render() { return <<<'HTML'
             <div>
-                <div dusk="overlay" wire:drop.window="$upload('photos')">Drop anywhere</div>
+                <div dusk="overlay" wire:drop.file.window="$upload('photos')">Drop anywhere</div>
 
                 <p dusk="outside" style="margin-top: 100px">Somewhere else entirely on the page</p>
 

@@ -2,13 +2,19 @@ import { callAndClearComponentDebounces } from '@/debounce'
 import { evaluateActionExpression } from '@/evaluator'
 import { setNextActionOrigin } from '@/request'
 import { directive } from '@/directives'
+import { filesFromEvent } from '@/utils'
 
 // A first-class dropzone. A plain `drop` listener never fires unless
 // `dragover` is cancelled, so this directive owns the full drag lifecycle:
-// it only engages for drags carrying files (dragging selected text over
-// the element does nothing), reflects the drag state as a `data-dragging`
-// attribute for styling, and evaluates the expression on drop...
+// it reflects the drag state as a `data-dragging` attribute for styling
+// and evaluates the expression on drop.
+//
+// The `.file` modifier scopes the whole directive to drags carrying files:
+// only file drags show `data-dragging`, and only file drops evaluate —
+// dragging selected text over the element does nothing...
 directive('drop', ({ el, directive, component, cleanup }) => {
+    let fileOnly = directive.modifiers.includes('file')
+
     // The `.window` modifier accepts drops anywhere on the page —
     // `data-dragging` still lands on this element so overlays have
     // a styling anchor...
@@ -18,12 +24,16 @@ directive('drop', ({ el, directive, component, cleanup }) => {
     // track depth and only clear the attribute when the drag truly leaves...
     let depth = 0
 
-    let hasFiles = e => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')
+    let engages = e => {
+        if (! e.dataTransfer) return false
+
+        return fileOnly ? Array.from(e.dataTransfer.types || []).includes('Files') : true
+    }
 
     let clearDragging = () => { depth = 0; el.removeAttribute('data-dragging') }
 
     let onDragenter = e => {
-        if (! hasFiles(e)) return
+        if (! engages(e)) return
 
         e.preventDefault()
 
@@ -34,13 +44,13 @@ directive('drop', ({ el, directive, component, cleanup }) => {
 
     // Cancelling dragover is what makes the element a valid drop target...
     let onDragover = e => {
-        if (! hasFiles(e)) return
+        if (! engages(e)) return
 
         e.preventDefault()
     }
 
     let onDragleave = e => {
-        if (! hasFiles(e)) return
+        if (! engages(e)) return
 
         depth = Math.max(0, depth - 1)
 
@@ -50,9 +60,12 @@ directive('drop', ({ el, directive, component, cleanup }) => {
     let onDrop = e => {
         clearDragging()
 
-        if (! hasFiles(e)) return
+        if (! engages(e)) return
 
-        e.preventDefault()
+        // A dropped file's default is "navigate away and open it" — always
+        // cancel that. Other drops keep their default (text drops into
+        // inputs, for example) unless the expression prevents it...
+        if (filesFromEvent(e)?.length > 0) e.preventDefault()
 
         directive.eventContext = e
         directive.wire = component.$wire
