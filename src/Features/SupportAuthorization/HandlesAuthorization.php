@@ -65,14 +65,14 @@ trait HandlesAuthorization
         return data_get($this, $arg);
     }
 
-protected function resolveAbilityAndArgument($method, $ability, $arguments)
-{
-    $ability = enum_value($ability);
+    protected function resolveAbilityAndArgument($method, $ability, $arguments)
+    {
+        $ability = enum_value($ability);
 
-    if (is_string($ability) && ! str_contains($ability, '\\')) {
-        return [$ability, $arguments];
+        if (is_string($ability) && ! str_contains($ability, '\\')) {
+            return [$ability, $arguments];
+        }
+
+        return [$this->normalizeGuessedAbilityName($method), $ability];
     }
-
-    return [$this->normalizeGuessedAbilityName($method), $ability];
-}
 }
