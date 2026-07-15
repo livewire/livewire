@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportAuthorization;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Gate;
@@ -893,6 +894,56 @@ class UnitTest extends TestCase
             })
             ->dispatch('some-event')
             ->assertForbidden();
+    }
+
+    public function test_authorize_attribute_trigger_exception_hook()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[BaseAuthorize(AuthorizationPost::class)]
+                public function store() : bool
+                {
+                    return true;
+                }
+
+                public function exception($e, $stopPropagation)
+                {
+                    $stopPropagation();
+
+                    Session::put('authorization-denied', $e->getMessage());
+                }
+            })
+            ->call('store')
+            ->assertOk();
+
+        $this->assertTrue(Session::has('authorization-denied'));
+        $this->assertSame('This action is unauthorized.', Session::pull('authorization-denied'));
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[BaseAuthorize('edit', 'post')]
+                public function store(AuthorizationPost $post) : bool
+                {
+                    return true;
+                }
+
+                public function exception($e, $stopPropagation)
+                {
+                    $stopPropagation();
+
+                    Session::put('model-not-found', $e->getMessage());
+                }
+            })
+            ->call('store', post: 3)
+            ->assertOk();
+
+        $this->assertTrue(Session::has('model-not-found'));
+        $this->assertSame(
+            'No query results for model [Livewire\Features\SupportAuthorization\AuthorizationPost] 3', 
+            Session::pull('model-not-found')
+        );
     }
 }
 

@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportAuthorization;
 
 use Attribute;
+use Closure;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Arr;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
@@ -10,23 +11,30 @@ use Livewire\ImplicitlyBoundMethod;
 use UnitEnum;
 
 use function Illuminate\Support\enum_value;
+use function Livewire\trigger;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class BaseAuthorize extends LivewireAttribute
 {
     use AuthorizesRequests;
 
+    private ?Closure $exceptionHandler = null;
+
     public function __construct(
         public UnitEnum|string $ability,
         public array|string|null $argument = null,
     ) {}
 
-    public function call(array $parameters) : void
+    public function call(array $parameters): void
+    {
+        $this->withExceptionHandling(fn () => $this->handleAuthorization($parameters));
+    }
+
+    protected function handleAuthorization(array $parameters): void
     {
         // Action that does not require a model or class...
         if (is_null($this->argument)) {
             $this->authorize($this->ability);
-
             return;
         }
 
@@ -54,7 +62,7 @@ class BaseAuthorize extends LivewireAttribute
     /**
      * Resolve a single argument.
      */
-    protected function resolveArgument(string $arg, array $parameters, \Closure $resolveMethodDependencies): mixed
+    protected function resolveArgument(string $arg, array $parameters, Closure $resolveMethodDependencies): mixed
     {
         // Action that does not require a model, for example a 'create' action...
         if (class_exists($arg)) {
@@ -64,12 +72,11 @@ class BaseAuthorize extends LivewireAttribute
         // Try method parameter first (prioritized per rules)
         $methodArgument = Arr::first(
             (new \ReflectionObject($this->component))->getMethod($this->getName())->getParameters(),
-            fn (\ReflectionParameter $parameter) : bool => $parameter->getName() === $arg,
+            fn (\ReflectionParameter $parameter): bool => $parameter->getName() === $arg,
         );
 
         if ($methodArgument instanceof \ReflectionParameter) {
             $methodDependencies = $resolveMethodDependencies();
-
             return $methodDependencies['named'][$arg];
         }
 
@@ -86,5 +93,28 @@ class BaseAuthorize extends LivewireAttribute
         }
 
         return [$this->normalizeGuessedAbilityName($this->getName()), $ability];
+    }
+
+    protected function withExceptionHandling(Closure $operation): void
+    {
+        $handler = $this->exceptionHandler ??= function (Closure $expression) {
+            try {
+                return $expression();
+            } catch (\Throwable $e) {
+                $shouldPropagate = true;
+
+                $stopPropagation = function () use (&$shouldPropagate) {
+                    $shouldPropagate = false;
+                };
+
+                trigger('exception', $this->component, $e, $stopPropagation);
+
+                if ($shouldPropagate) {
+                    throw $e;
+                }
+            }
+        };
+
+        $handler($operation);
     }
 }
