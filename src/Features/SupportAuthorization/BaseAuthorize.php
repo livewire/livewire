@@ -35,6 +35,7 @@ class BaseAuthorize extends LivewireAttribute
         // Action that does not require a model or class...
         if (is_null($this->argument)) {
             $this->authorize($this->ability);
+
             return;
         }
 
@@ -77,6 +78,7 @@ class BaseAuthorize extends LivewireAttribute
 
         if ($methodArgument instanceof \ReflectionParameter) {
             $methodDependencies = $resolveMethodDependencies();
+
             return $methodDependencies['named'][$arg];
         }
 
@@ -95,7 +97,7 @@ class BaseAuthorize extends LivewireAttribute
         return [$this->normalizeGuessedAbilityName($this->getName()), $ability];
     }
 
-    protected function withExceptionHandling(Closure $operation): void
+    protected function withExceptionHandling(Closure $operation)
     {
         $handler = $this->exceptionHandler ??= function (Closure $expression) {
             try {
