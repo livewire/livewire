@@ -256,7 +256,7 @@ Livewire supports all of these through a single action: `$upload`. Use it inside
 ```blade
 <textarea wire:paste="$upload('photos')"></textarea>
 
-<div wire:drop="$upload('photos')">Drop files here</div>
+<div wire:drop.file="$upload('photos')">Drop files here</div>
 
 <button type="button" wire:click="$upload('photos')">Attach files</button>
 ```
@@ -266,6 +266,10 @@ Livewire supports all of these through a single action: `$upload`. Use it inside
 * When the triggering event carries files — pasted screenshots, dropped files — those files upload into the property
 * When the event *can* carry files but doesn't — a plain text paste — nothing happens, and the browser's default behavior proceeds untouched
 * When the event *can't* carry files — a click — the browser's file picker opens and the user's selection uploads instead
+
+Because `$upload` filters for itself, the listeners stay ordinary events you can use however you like. The `.file` modifier on `wire:drop` above is a listener-level filter — like `wire:keydown.enter` — that additionally scopes the *dropzone* to drags carrying files, so dragging selected text over it never engages it. More on that in the [`wire:drop` documentation](/docs/wire-drop).
+
+`.file` works on any event listener carrying files — `wire:paste.file="handlePastedFiles"` only fires for pastes whose clipboard contains files, which is handy for custom handlers that would otherwise need their own guard.
 
 Uploads started this way are ordinary Livewire uploads: they flow through the same temporary-upload pipeline as `wire:model` file inputs, respect your validation rules, and hydrate into [rich upload objects](#rich-upload-objects-in-javascript) for instant previews and progress.
 
@@ -294,7 +298,7 @@ new class extends Component {
 ```
 
 ```blade
-<div class="relative" wire:drop.window="$upload('attachments')">
+<div class="relative" wire:drop.file.window="$upload('attachments')">
     {{-- A full-screen overlay, shown while files are dragged over the page... --}}
     <div class="hidden in-data-dragging:grid fixed inset-0 place-items-center bg-black/50 text-white">
         Drop files to attach
@@ -330,7 +334,8 @@ new class extends Component {
 A few things worth noticing:
 
 * `wire:paste` sits on elements — paste events bubble, so placing it on the `<form>` would cover every input inside it
-* `wire:drop.window` accepts drops anywhere on the page, and the `data-dragging` attribute it applies powers the overlay with plain CSS — no JavaScript required
+* `wire:drop`'s `.file` modifier scopes the dropzone to drags carrying files — dragging selected text across the page never flashes the overlay
+* `.window` accepts drops anywhere on the page, and the `data-dragging` attribute it applies powers the overlay with plain CSS — no JavaScript required
 * The "Add photos & files" button is a real `<button>`, so keyboards and screen readers work for free — no hidden `<input type="file">` hacks
 
 ### Options

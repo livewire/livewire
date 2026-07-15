@@ -1,5 +1,5 @@
 import { getUploadManager } from './manager'
-import { dataGet } from '@/utils'
+import { dataGet, filesFromEvent } from '@/utils'
 
 // The smart `$upload` action behind `$wire.$upload()` and template
 // expressions like `wire:paste="$upload('photos')"`. Files are acquired
@@ -83,21 +83,6 @@ function parseArguments(args) {
     callbacks.cancelled ??= () => {}
 
     return { files, event, options, callbacks }
-}
-
-// Pull files out of a paste, drop, or file-input change event. Returns
-// null for events that can't carry files (like clicks), so callers can
-// fall back to opening the file picker...
-function filesFromEvent(event) {
-    if (! event) return null
-
-    let source = event.clipboardData || event.dataTransfer || (event.target?.files ? event.target : null)
-
-    if (! source) return null
-
-    let files = Array.from(source.files || [])
-
-    return files
 }
 
 function uploadFiles(component, name, files, options, callbacks) {

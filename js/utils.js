@@ -52,6 +52,19 @@ export function listen(target, name, handler) {
     return () => target.removeEventListener(name, handler)
 }
 
+// Pull files out of a paste, drop, or file-input change event. Returns
+// null for events that can't carry files (like clicks), so callers can
+// distinguish "no files attached" from "not a file-capable event"...
+export function filesFromEvent(event) {
+    if (! event) return null
+
+    let source = event.clipboardData || event.dataTransfer || (event.target?.files ? event.target : null)
+
+    if (! source) return null
+
+    return Array.from(source.files || [])
+}
+
 /**
  * Type-checking in JS is weird and annoying, these are better.
  */
