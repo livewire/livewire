@@ -20,6 +20,6 @@ class BaseAuthorize extends LivewireAttribute
     {
         $this->component->setMethodAndParameters($this->getName(), $parameters);
 
-        wrap($this->component)->handleAuthorization($this->ability, $this->argument);
+        wrap($this->component)->authorize($this->ability, $this->argument);
     }
 }

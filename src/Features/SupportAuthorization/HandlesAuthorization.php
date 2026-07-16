@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportAuthorization;
 
-use Illuminate\Auth\Access\Response;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Arr;
 use Livewire\ImplicitlyBoundMethod;
@@ -11,7 +10,9 @@ use function Illuminate\Support\enum_value;
 
 trait HandlesAuthorization
 {
-    use AuthorizesRequests;
+    use AuthorizesRequests {
+        authorize as public baseAuthorize;
+    }
 
     protected ?string $method = null;
     protected ?array $parameters = null;
@@ -22,18 +23,27 @@ trait HandlesAuthorization
         $this->parameters = $parameters;
     }
 
-    public function handleAuthorization($ability, $argument): Response
+    /**
+     * Authorize a given action for the current user.
+     *
+     * @param  mixed  $ability
+     * @param  mixed  $arguments
+     * @return \Illuminate\Auth\Access\Response
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function authorize($ability, $arguments = [])
     {
         if (! $this->method && ! $this->parameters) {
-            return $this->authorize($ability, $argument);
+            return $this->baseAuthorize($ability, $arguments);
         }
 
         // Action that does not require a model or class...
-        if (is_null($argument)) {
-            return $this->authorize($ability);
+        if (is_null($arguments)) {
+            return $this->baseAuthorize($ability);
         }
 
-        $arguments = Arr::wrap($argument);
+        $arguments = Arr::wrap($arguments);
 
         // Resolve method dependencies lazily, then reuse them for multi-argument authorization checks...
         $methodDependencies = null;
@@ -51,7 +61,7 @@ trait HandlesAuthorization
             $resolved[] = $this->resolveArgument($arg, $resolveMethodDependencies);
         }
 
-        return $this->authorize($ability, $resolved);
+        return $this->baseAuthorize($ability, $resolved);
     }
 
     protected function resolveArgument(string $arg, \Closure $resolveMethodDependencies): mixed
