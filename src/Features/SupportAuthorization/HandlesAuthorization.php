@@ -34,7 +34,7 @@ trait HandlesAuthorization
      */
     public function authorize($ability, $arguments = [])
     {
-        if (! $this->method && ! $this->parameters) {
+        if (is_null($this->method ) || is_null($this->parameters)) {
             return $this->baseAuthorize($ability, $arguments);
         }
 
