@@ -4,6 +4,7 @@ import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
 import { setNextActionOrigin } from '@/request'
+import { isSha256Hash, supportsHtmlDeltaVerification } from '@/htmlDelta'
 
 export class Component {
     constructor(el) {
@@ -31,6 +32,13 @@ export class Component {
 
         this.effects = JSON.parse(el.getAttribute('wire:effects'))
         this.originalEffects = deepClone(this.effects)
+
+        // The delta update engine needs the exact server-rendered string, not
+        // the browser-normalized DOM. A full update seeds this baseline before
+        // later requests can ask the server for deltas.
+        this.serverRenderedHtml = null
+        this.serverRenderedHtmlHash = null
+        this.htmlResyncPending = false
 
         // "canonical" data represents the last known server state.
         this.canonical = extractData(deepClone(this.snapshot.data), { component: this })
@@ -132,6 +140,44 @@ export class Component {
         let propertiesDiff = diffAndConsolidate(this.canonical, this.ephemeral)
 
         return this.mergeQueuedUpdates(propertiesDiff)
+    }
+
+    getRenderMetadata() {
+        if (! supportsHtmlDeltaVerification()
+            || this.serverRenderedHtml === null
+            || this.serverRenderedHtmlHash === null
+        ) return {}
+
+        return { htmlHash: this.serverRenderedHtmlHash }
+    }
+
+    rememberServerRenderedHtml(html, hash) {
+        if (typeof html !== 'string' || ! isSha256Hash(hash)) {
+            return this.forgetServerRenderedHtml()
+        }
+
+        this.serverRenderedHtml = html
+        this.serverRenderedHtmlHash = hash
+        this.htmlResyncPending = false
+    }
+
+    forgetServerRenderedHtml() {
+        this.serverRenderedHtml = null
+        this.serverRenderedHtmlHash = null
+    }
+
+    requestHtmlResync() {
+        this.forgetServerRenderedHtml()
+
+        if (this.htmlResyncPending) return
+
+        this.htmlResyncPending = true
+
+        queueMicrotask(() => {
+            this.$wire.$refresh().finally(() => {
+                this.htmlResyncPending = false
+            })
+        })
     }
 
     applyUpdates(object, updates) {

@@ -13,6 +13,8 @@ class ComponentState
         protected $html,
         protected $snapshot,
         protected $effects,
+        protected $serverRenderedHtml = null,
+        protected $serverRenderedHtmlHash = null,
     ) {}
 
     function getComponent() {
@@ -32,6 +34,23 @@ class ComponentState
     function getEffects()
     {
         return $this->effects;
+    }
+
+    function getServerRenderedHtml()
+    {
+        return $this->serverRenderedHtml;
+    }
+
+    function getServerRenderedHtmlHash()
+    {
+        return $this->serverRenderedHtmlHash;
+    }
+
+    function getRenderMetadata()
+    {
+        if ($this->serverRenderedHtml === null || $this->serverRenderedHtmlHash === null) return [];
+
+        return ['htmlHash' => $this->serverRenderedHtmlHash];
     }
 
     function getView()

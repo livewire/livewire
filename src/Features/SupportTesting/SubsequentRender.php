@@ -2,6 +2,8 @@
 
 namespace Livewire\Features\SupportTesting;
 
+use Livewire\Mechanisms\HandleComponents\UpdateEngines\HtmlDelta;
+
 class SubsequentRender extends Render
 {
     function __construct(
@@ -27,6 +29,7 @@ class SubsequentRender extends Render
                     'snapshot' => $encodedSnapshot,
                     'calls' => $calls,
                     'updates' => $updates,
+                    'render' => $this->lastState->getRenderMetadata(),
                 ],
             ],
         ];
@@ -61,8 +64,7 @@ class SubsequentRender extends Render
 
         $effects = $componentResponsePayload['effects'];
 
-        // If no new HTML has been rendered, let's forward the last known HTML...
-        $html = $effects['html'] ?? $this->lastState->getHtml(stripInitialData: true);
+        [ $html, $serverRenderedHtml, $serverRenderedHtmlHash ] = $this->resolveRenderedHtml($effects);
         $view = $componentView ?? $this->lastState->getView();
 
         return new ComponentState(
@@ -72,6 +74,47 @@ class SubsequentRender extends Render
             $html,
             $snapshot,
             $effects,
+            $serverRenderedHtml,
+            $serverRenderedHtmlHash,
         );
+    }
+
+    protected function resolveRenderedHtml(array $effects): array
+    {
+        $previousHtml = $this->lastState->getServerRenderedHtml();
+        $previousHash = $this->lastState->getServerRenderedHtmlHash();
+
+        if (is_string($effects['html'] ?? null)) {
+            return [
+                $effects['html'],
+                $effects['html'],
+                is_string($effects['htmlHash'] ?? null) ? $effects['htmlHash'] : null,
+            ];
+        }
+
+        if (is_array($effects['htmlDelta'] ?? null)
+            && is_string($previousHtml)
+            && is_string($previousHash)
+            && is_string($effects['htmlDelta']['base'] ?? null)
+            && is_string($effects['htmlHash'] ?? null)
+            && hash_equals($previousHash, $effects['htmlDelta']['base'])
+        ) {
+            $serverRenderedHtml = app(HtmlDelta::class)->apply(
+                $previousHtml,
+                $effects['htmlDelta']['patches'] ?? $effects['htmlDelta']['patch'] ?? [],
+            );
+
+            return [
+                $serverRenderedHtml,
+                $serverRenderedHtml,
+                $effects['htmlHash'],
+            ];
+        }
+
+        return [
+            $this->lastState->getHtml(stripInitialData: true),
+            $previousHtml,
+            $previousHash,
+        ];
     }
 }

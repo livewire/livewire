@@ -127,9 +127,9 @@ class LivewireManager
         return app(HandleSynths::class)->find($keyOrTarget, $component);
     }
 
-    function update($snapshot, $diff, $calls)
+    function update($snapshot, $diff, $calls, $renderMetadata = [])
     {
-        return app(HandleComponents::class)->update($snapshot, $diff, $calls);
+        return app(HandleComponents::class)->update($snapshot, $diff, $calls, $renderMetadata);
     }
 
     function updateProperty($component, $path, $value)

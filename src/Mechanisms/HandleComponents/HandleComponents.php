@@ -5,6 +5,7 @@ namespace Livewire\Mechanisms\HandleComponents;
 use function Livewire\{on, store, trigger, wrap };
 use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleSynths\HandleSynths;
+use Livewire\Mechanisms\HandleComponents\UpdateEngines\UpdateEngineManager;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\MaxNestingDepthExceededException;
@@ -20,7 +21,10 @@ class HandleComponents extends Mechanism
     public static $renderStack = [];
     public static $componentStack = [];
 
-    public function __construct(protected HandleSynths $synths) {}
+    public function __construct(
+        protected HandleSynths $synths,
+        protected UpdateEngineManager $updateEngines,
+    ) {}
 
     public function boot()
     {
@@ -62,6 +66,8 @@ class HandleComponents extends Mechanism
             if (config('app.debug')) $start = microtime(true);
             $html = $this->render($component, '<div></div>');
             if (config('app.debug')) trigger('profile', 'render', $component->getId(), [$start, microtime(true)]);
+
+            $this->updateEngines->current()->mount($component, $html, $context);
 
             if (config('app.debug')) $start = microtime(true);
             trigger('dehydrate', $component, $context);
@@ -180,7 +186,7 @@ class HandleComponents extends Mechanism
         return $newHtml;
     }
 
-    public function update($snapshot, $updates, $calls)
+    public function update($snapshot, $updates, $calls, $renderMetadata = [])
     {
         if (! is_array($snapshot)
             || ! is_array($snapshot['data'] ?? null)
@@ -222,10 +228,11 @@ class HandleComponents extends Mechanism
             $this->callMethods($component, $calls, $context);
 
             if (config('app.debug')) $start = microtime(true);
-            if ($html = $this->render($component)) {
-                $context->addEffect('html', $html);
-                if (config('app.debug')) trigger('profile', 'render', $component->getId(), [$start, microtime(true)]);
-            }
+            $html = $this->render($component);
+
+            $this->updateEngines->current()->update($component, $html, $memo, $context, $renderMetadata);
+
+            if ($html && config('app.debug')) trigger('profile', 'render', $component->getId(), [$start, microtime(true)]);
 
             if (config('app.debug')) $start = microtime(true);
             trigger('dehydrate', $component, $context);

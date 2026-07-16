@@ -24,9 +24,11 @@ export async function morph(component, el, html) {
     // mismatch or problem the component will able to be re-initialized...
     to.setAttribute('wire:snapshot', component.snapshotEncoded)
 
-    // Remove the 'html' key from the effects as the html will be morphed...
+    // Remove transport-only render effects as the HTML will be morphed...
     let effects = { ...component.effects }
     delete effects.html
+    delete effects.htmlDelta
+    delete effects.htmlHash
     to.setAttribute('wire:effects', JSON.stringify(effects))
 
     to.__livewire = component

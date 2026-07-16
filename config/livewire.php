@@ -216,6 +216,33 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Update Engine
+    |---------------------------------------------------------------------------
+    |
+    | The default "morph" engine returns the component's full rendered HTML
+    | after each update. The "delta" engine caches eligible renders and sends
+    | only the bytes that changed, as long as the render is big enough and the
+    | saving is worth it. It verifies a SHA-256 hash on both ends and falls back
+    | to full HTML whenever a baseline can't be trusted.
+    |
+    */
+
+    'update_engine' => env('LIVEWIRE_UPDATE_ENGINE', 'morph'),
+
+    'delta' => [
+        'store' => env('LIVEWIRE_DELTA_STORE'),
+        'ttl' => env('LIVEWIRE_DELTA_TTL', 300),
+        'minimum_html_bytes' => env('LIVEWIRE_DELTA_MINIMUM_HTML_BYTES', 8192),
+        'minimum_savings' => env('LIVEWIRE_DELTA_MINIMUM_SAVINGS', 0.1),
+        'minimum_compressed_savings_bytes' => env(
+            'LIVEWIRE_DELTA_MINIMUM_COMPRESSED_SAVINGS_BYTES',
+            1024,
+        ),
+        'compression_aware' => env('LIVEWIRE_DELTA_COMPRESSION_AWARE', true),
+    ],
+
+    /*
+    |---------------------------------------------------------------------------
     | Smart Wire Keys
     |---------------------------------------------------------------------------
     |

@@ -273,11 +273,15 @@ function sendMessages() {
                 metadata: i.metadata,
             }))
 
+            let render = message.component.getRenderMetadata?.() || {}
+
             message.payload = {
                 snapshot: message.snapshot,
                 updates: message.updates,
                 calls: message.calls,
             }
+
+            if (Object.keys(render).length > 0) message.payload.render = render
         })
     })
 

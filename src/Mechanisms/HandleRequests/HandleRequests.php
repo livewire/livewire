@@ -167,6 +167,8 @@ class HandleRequests extends Mechanism
                 || ! is_string($component['snapshot'] ?? null)
                 || ! is_array($component['updates'] ?? null)
                 || ! is_array($component['calls'] ?? null)
+                || (array_key_exists('render', $component) && ! is_array($component['render']))
+                || (isset($component['render']['htmlHash']) && ! is_string($component['render']['htmlHash']))
             ) {
                 abort(404);
             }
@@ -189,6 +191,7 @@ class HandleRequests extends Mechanism
             $snapshot = json_decode($componentPayload['snapshot'], associative: true);
             $updates = $componentPayload['updates'];
             $calls = $componentPayload['calls'];
+            $renderMetadata = $componentPayload['render'] ?? [];
 
             // If this is a reactive child whose props didn't change,
             // skip its entire lifecycle (hydrate, render, dehydrate)...
@@ -202,7 +205,7 @@ class HandleRequests extends Mechanism
             }
 
             try {
-                [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
+                [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls, $renderMetadata);
             } catch (\TypeError $e) {
                 report($e);
 
