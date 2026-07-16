@@ -2,7 +2,7 @@ import { cancelUpload, removeUpload, uploadAction, uploadMultiple } from './feat
 import { dispatch, dispatchEl, dispatchRef, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { findComponentByEl } from '@/store'
-import { dataGet, dataSet } from '@/utils'
+import { dataGet, dataSet, isEmpty } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
 import { fireAction, setNextActionMetadata, interceptComponentAction, interceptComponentMessage, interceptComponentRequest } from '@/request'
@@ -142,6 +142,10 @@ Alpine.magic('wire', (el, { cleanup }) => {
 wireProperty('__instance', (component) => component)
 
 wireProperty('$get', (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property))
+
+// Reads through the reactive proxy so expressions like wire:show="$empty('items')"
+// re-evaluate as the property changes — including client-side-only mutations...
+wireProperty('$empty', (component) => (property) => isEmpty(dataGet(component.reactive, property)))
 
 wireProperty('$el', (component) => {
     return component.el

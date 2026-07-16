@@ -75,6 +75,21 @@ export function isFunction(subject) { return typeof subject === 'function' }
 export function isPrimitive(subject) { return typeof subject !== 'object' || subject === null }
 
 /**
+ * Determine if a value is "empty" — mirroring PHP's empty() so component
+ * properties feel the same on both sides of the wire: null, undefined,
+ * false, 0, '', '0', empty arrays, and key-less objects (how empty PHP
+ * associative arrays arrive on the client) are all empty.
+ */
+export function isEmpty(subject) {
+    if (subject === null || subject === undefined) return true
+    if (subject === false || subject === 0 || subject === '' || subject === '0') return true
+    if (isArray(subject)) return subject.length === 0
+    if (isObject(subject)) return Object.keys(subject).length === 0
+
+    return false
+}
+
+/**
  * Clone an object deeply to wipe out any shared references.
  */
 export function deepClone(obj) { return JSON.parse(JSON.stringify(obj)) }
