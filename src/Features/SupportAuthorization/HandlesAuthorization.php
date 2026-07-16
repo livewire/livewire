@@ -10,9 +10,7 @@ use function Illuminate\Support\enum_value;
 
 trait HandlesAuthorization
 {
-    use AuthorizesRequests {
-        authorize as public baseAuthorize;
-    }
+    use AuthorizesRequests;
 
     protected ?string $method = null;
     protected ?array $parameters = null;
@@ -23,27 +21,16 @@ trait HandlesAuthorization
         $this->parameters = $parameters;
     }
 
-    /**
-     * Authorize a given action for the current user.
-     *
-     * @param  mixed  $ability
-     * @param  mixed  $arguments
-     * @return \Illuminate\Auth\Access\Response
-     *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function authorize($ability, $arguments = [])
+    public function handleAuthorization($ability, $argument)
     {
-        if (is_null($this->method ) || is_null($this->parameters)) {
-            return $this->baseAuthorize($ability, $arguments);
-        }
+        if (is_null($this->method) || is_null($this->parameters)) return;
 
         // Action that does not require a model or class...
-        if (is_null($arguments)) {
-            return $this->baseAuthorize($ability);
+        if (is_null($argument)) {
+            return $this->authorize($ability);
         }
 
-        $arguments = Arr::wrap($arguments);
+        $arguments = Arr::wrap($argument);
 
         // Resolve method dependencies lazily, then reuse them for multi-argument authorization checks...
         $methodDependencies = null;
@@ -61,7 +48,7 @@ trait HandlesAuthorization
             $resolved[] = $this->resolveArgument($arg, $resolveMethodDependencies);
         }
 
-        return $this->baseAuthorize($ability, $resolved);
+        return $this->authorize($ability, $resolved);
     }
 
     protected function resolveArgument(string $arg, \Closure $resolveMethodDependencies): mixed
@@ -94,6 +81,11 @@ trait HandlesAuthorization
         if (is_string($ability) && ! str_contains($ability, '\\')) {
             return [$ability, $arguments];
         }
+
+        // Because this method override the original method,
+        // we need to make sure it gets the right method name
+        // if its called from `$this->authorize()` inside component action
+        $this->method ??= debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2]['function'];
 
         return [$this->normalizeGuessedAbilityName($this->method), $ability];
     }
