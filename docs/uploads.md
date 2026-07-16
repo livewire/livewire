@@ -216,6 +216,8 @@ Property | Description
 --- | ---
 `name` | The original filename from the user's machine
 `extension` | The file extension, derived from `name`
+`kind` | The coarse category of the file: `'image'`, `'audio'`, `'video'`, or `'file'` — from the browser's MIME type while uploading, the filename's extension after
+`isImage` / `isAudio` / `isVideo` | Shorthand predicates over `kind`, e.g. `wire:show="photo.isImage"`
 `filename` | The hashed temporary filename on the server (`null` while uploading)
 `isUploading` | `true` while the upload is still in flight
 `progress` | Upload progress from 0 to 100 (settles at 100)

@@ -1,5 +1,6 @@
 import { registerSynth } from '@/synths'
 import { getUploadManager } from './manager'
+import { kindFromMime, kindFromName } from './kind'
 
 // Client-side blob URLs for uploaded files, keyed by their temporary server
 // filename. Lets previews keep using the local file after the upload
@@ -57,6 +58,17 @@ export class TemporaryUpload {
     get filename() { return this.serialized === null ? null : this.serialized.replace('livewire-file:', '') }
 
     get extension() { return this.name?.split('.').pop() }
+
+    // The coarse category of the file — 'image', 'audio', 'video', or 'file'.
+    // While the native File object is around, its MIME type is the authority;
+    // afterwards the filename's extension is the best signal left...
+    get kind() { return this.file?.type ? kindFromMime(this.file.type) : kindFromName(this.name) }
+
+    get isImage() { return this.kind === 'image' }
+
+    get isAudio() { return this.kind === 'audio' }
+
+    get isVideo() { return this.kind === 'video' }
 
     get isPreviewable() { return this.meta.url !== undefined || this.file !== null }
 
