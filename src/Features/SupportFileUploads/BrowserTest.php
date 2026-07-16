@@ -93,6 +93,37 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitUntil('document.querySelector(\'[dusk="preview"]\').naturalWidth > 0');
     }
 
+    public function test_rich_upload_objects_expose_a_file_kind_and_shorthand_predicates()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+            public $document;
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photo" dusk="upload-photo">
+                <input type="file" wire:model="document" dusk="upload-document">
+
+                <span dusk="photo-kind" wire:text="photo?.kind"></span>
+                <span dusk="photo-is-image" wire:show="photo?.isImage">is an image</span>
+
+                <span dusk="document-kind" wire:text="document?.kind"></span>
+                <span dusk="document-is-image" wire:show="document?.isImage">is an image</span>
+            </div>
+            HTML; }
+        })
+        ->attach('@upload-photo', __DIR__ . '/browser_test_image.png')
+        ->waitForTextIn('@photo-kind', 'image')
+        ->assertVisible('@photo-is-image')
+        ->attach('@upload-document', __DIR__ . '/browser_test_document.txt')
+        ->waitForTextIn('@document-kind', 'file')
+        ->assertMissing('@document-is-image');
+    }
+
     public function test_rich_upload_objects_expose_reactive_progress_state_and_client_side_previews()
     {
         Storage::persistentFake('tmp-for-tests');
