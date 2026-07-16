@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportAuthorization;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Gate;

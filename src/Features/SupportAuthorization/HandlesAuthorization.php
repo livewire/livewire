@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportAuthorization;
 
+use Illuminate\Auth\Access\Response;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Arr;
 use Livewire\ImplicitlyBoundMethod;
@@ -11,17 +12,17 @@ use function Illuminate\Support\enum_value;
 trait HandlesAuthorization
 {
     use AuthorizesRequests;
-    
+
     protected ?string $method = null;
     protected ?array $parameters = null;
 
-    public function setMethodAndParameters($method, $parameters)
+    public function setMethodAndParameters($method, $parameters): void
     {
         $this->method = $method;
         $this->parameters = $parameters;
     }
 
-    public function handleAuthorization($ability, $argument)
+    public function handleAuthorization($ability, $argument): Response
     {
         if (! $this->method && ! $this->parameters) {
             return $this->authorize($ability, $argument);
@@ -76,7 +77,7 @@ trait HandlesAuthorization
         return data_get($this, $arg);
     }
 
-    protected function parseAbilityAndArguments($ability, $arguments)
+    protected function parseAbilityAndArguments($ability, $arguments): array
     {
         $ability = enum_value($ability);
 
