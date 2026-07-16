@@ -11,38 +11,49 @@ use function Illuminate\Support\enum_value;
 trait HandlesAuthorization
 {
     use AuthorizesRequests;
+    
+    protected ?string $method = null;
+    protected ?array $parameters = null;
 
-    public function handleAuthorization($method, $parameters, $ability, $argument)
+    public function setMethodAndParameters($method, $parameters)
     {
+        $this->method = $method;
+        $this->parameters = $parameters;
+    }
+
+    public function handleAuthorization($ability, $argument)
+    {
+        if (! $this->method && ! $this->parameters) {
+            return $this->authorize($ability, $argument);
+        }
+
         // Action that does not require a model or class...
         if (is_null($argument)) {
-            [$ability, $arguments] = $this->resolveAbilityAndArgument($method, $ability, $argument);
-            
-            return $this->authorize($ability, $arguments);
+            return $this->authorize($ability);
         }
 
         $arguments = Arr::wrap($argument);
 
         // Resolve method dependencies lazily, then reuse them for multi-argument authorization checks...
         $methodDependencies = null;
-        $resolveMethodDependencies = function () use (&$methodDependencies, $method, $parameters): array {
+        $resolveMethodDependencies = function () use (&$methodDependencies): array {
             return $methodDependencies ??= ImplicitlyBoundMethod::resolveMethodDependencies(
                 app(),
-                [$this, $method],
-                $parameters,
+                [$this, $this->method],
+                $this->parameters,
             );
         };
 
         // Resolve each argument (prioritize method parameters first, then component properties)
         $resolved = [];
         foreach ($arguments as $arg) {
-            $resolved[] = $this->resolveArgument($arg, $method, $parameters, $resolveMethodDependencies);
+            $resolved[] = $this->resolveArgument($arg, $resolveMethodDependencies);
         }
 
         return $this->authorize($ability, $resolved);
     }
 
-    protected function resolveArgument(string $arg, string $method, array $parameters, \Closure $resolveMethodDependencies): mixed
+    protected function resolveArgument(string $arg, \Closure $resolveMethodDependencies): mixed
     {
         // Action that does not require a model, for example a 'create' action...
         if (class_exists($arg)) {
@@ -51,7 +62,7 @@ trait HandlesAuthorization
 
         // Try method parameter first (prioritized per rules)
         $methodArgument = Arr::first(
-            (new \ReflectionObject($this))->getMethod($method)->getParameters(),
+            (new \ReflectionObject($this))->getMethod($this->method)->getParameters(),
             fn (\ReflectionParameter $parameter): bool => $parameter->getName() === $arg,
         );
 
@@ -65,7 +76,7 @@ trait HandlesAuthorization
         return data_get($this, $arg);
     }
 
-    protected function resolveAbilityAndArgument($method, $ability, $arguments)
+    protected function parseAbilityAndArguments($ability, $arguments)
     {
         $ability = enum_value($ability);
 
@@ -73,6 +84,6 @@ trait HandlesAuthorization
             return [$ability, $arguments];
         }
 
-        return [$this->normalizeGuessedAbilityName($method), $ability];
+        return [$this->normalizeGuessedAbilityName($this->method), $ability];
     }
 }
