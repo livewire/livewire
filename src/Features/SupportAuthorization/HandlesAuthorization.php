@@ -11,7 +11,7 @@ use function Illuminate\Support\enum_value;
 trait HandlesAuthorization
 {
     use AuthorizesRequests {
-        authorize as baseAuthorize;
+        authorize as private baseAuthorize;
     }
 
     protected ?string $method = null;
