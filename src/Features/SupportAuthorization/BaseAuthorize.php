@@ -3,19 +3,16 @@
 namespace Livewire\Features\SupportAuthorization;
 
 use Attribute;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Arr;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\ImplicitlyBoundMethod;
 use UnitEnum;
 
-use function Illuminate\Support\enum_value;
+use function Livewire\wrap;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class BaseAuthorize extends LivewireAttribute
 {
-    use AuthorizesRequests;
-
     public function __construct(
         public UnitEnum|string $ability,
         public array|string|null $argument = null,
@@ -23,9 +20,11 @@ class BaseAuthorize extends LivewireAttribute
 
     public function call(array $parameters) : void
     {
+        $this->component->setAuthorizationMethod($this->getName());
+
         // Action that does not require a model or class...
         if (is_null($this->argument)) {
-            $this->authorize($this->ability);
+            wrap($this->component)->authorize($this->ability);
 
             return;
         }
@@ -45,16 +44,16 @@ class BaseAuthorize extends LivewireAttribute
         // Resolve each argument (prioritize method parameters first, then component properties)
         $resolved = [];
         foreach ($arguments as $arg) {
-            $resolved[] = $this->resolveArgument($arg, $parameters, $resolveMethodDependencies);
+            $resolved[] = $this->resolveArgument($arg, $resolveMethodDependencies);
         }
 
-        $this->authorize($this->ability, $resolved);
+        wrap($this->component)->authorize($this->ability, $resolved);
     }
 
     /**
      * Resolve a single argument.
      */
-    protected function resolveArgument(string $arg, array $parameters, \Closure $resolveMethodDependencies): mixed
+    protected function resolveArgument(string $arg, \Closure $resolveMethodDependencies): mixed
     {
         // Action that does not require a model, for example a 'create' action...
         if (class_exists($arg)) {
@@ -75,16 +74,5 @@ class BaseAuthorize extends LivewireAttribute
 
         // Fall back to component property
         return data_get($this->component, $arg);
-    }
-
-    protected function parseAbilityAndArguments($ability, $arguments)
-    {
-        $ability = enum_value($ability);
-
-        if (is_string($ability) && ! str_contains($ability, '\\')) {
-            return [$ability, $arguments];
-        }
-
-        return [$this->normalizeGuessedAbilityName($this->getName()), $ability];
     }
 }

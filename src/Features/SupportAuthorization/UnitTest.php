@@ -2,7 +2,9 @@
 
 namespace Livewire\Features\SupportAuthorization;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Gate;
@@ -41,6 +43,29 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_can_authorize_defined_basic_gates_using_trait_method()
+    {
+        Gate::define('can-open-post', fn () : bool => true);
+        Gate::define('cannot-open-post', fn () : bool => false);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function canOpenPost()
+                {
+                    $this->authorize('can-open-post');
+                }
+
+                public function cannotOpenPost()
+                {
+                    $this->authorize('cannot-open-post');
+                }
+            })
+            ->call('canOpenPost')
+            ->assertOk()
+            ->call('cannotOpenPost')
+            ->assertForbidden();
+    }
+
     public function test_can_authorize_defined_gates_without_arguments()
     {
         Gate::define('can-open-post', function (AuthorizationUser $user) : bool
@@ -65,6 +90,34 @@ class UnitTest extends TestCase
                 public function canOpenPost() : bool
                 {
                     return true;
+                }
+            })
+            ->call('canOpenPost')
+            ->assertForbidden();
+    }
+
+    public function test_can_authorize_defined_gates_without_arguments_using_trait_method()
+    {
+        Gate::define('can-open-post', function (AuthorizationUser $user) : bool
+        {
+            return (int) $user->id === 1;
+        });
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function canOpenPost()
+                {
+                    $this->authorize('can-open-post');
+                }
+            })
+            ->call('canOpenPost')
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                public function canOpenPost()
+                {
+                    $this->authorize('can-open-post');
                 }
             })
             ->call('canOpenPost')
@@ -115,6 +168,48 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_can_authorize_defined_gates_with_model_argument_using_trait_method()
+    {
+        Gate::define('can-open-post', function (AuthorizationUser $user, AuthorizationPost $post) : bool
+        {
+            return (int) $post->user_id === (int) $user->id;
+        });
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount() : void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                public function canOpenPost()
+                {
+                    $this->authorize('can-open-post', $this->post);
+                }
+            })
+            ->call('canOpenPost')
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount() : void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                public function canOpenPost()
+                {
+                    $this->authorize('can-open-post', $this->post);
+                }
+            })
+            ->call('canOpenPost')
+            ->assertForbidden();
+    }
+
     public function test_can_authorize_policy_with_class()
     {
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
@@ -136,6 +231,31 @@ class UnitTest extends TestCase
                 public function createPost() : bool
                 {
                     return true;
+                }
+            })
+            ->call('createPost')
+            ->assertForbidden();
+    }
+
+    public function test_can_authorize_policy_with_class_using_trait_method()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function createPost()
+                {
+                    $this->authorize('create', AuthorizationPost::class);
+                }
+            })
+            ->call('createPost')
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                public function createPost()
+                {
+                    $this->authorize('create', AuthorizationPost::class);
                 }
             })
             ->call('createPost')
@@ -183,6 +303,45 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_can_authorize_policy_with_model_argument_using_trait_method()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount() : void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                public function editPost()
+                {
+                    $this->authorize('edit', $this->post);
+                }
+            })
+            ->call('editPost')
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount() : void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                public function editPost()
+                {
+                    $this->authorize('edit', $this->post);
+                }
+            })
+            ->call('editPost')
+            ->assertForbidden();
+    }
+
     public function test_can_authorize_policy_with_positional_model_id_argument()
     {
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
@@ -204,6 +363,31 @@ class UnitTest extends TestCase
                 public function editPost(AuthorizationPost $post) : bool
                 {
                     return true;
+                }
+            })
+            ->call('editPost', 1)
+            ->assertForbidden();
+    }
+
+    public function test_can_authorize_policy_with_positional_model_id_argument_using_trait_method()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function editPost(AuthorizationPost $post)
+                {
+                    $this->authorize('edit', $post);
+                }
+            })
+            ->call('editPost', 1)
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                public function editPost(AuthorizationPost $post)
+                {
+                    $this->authorize('edit', $post);
                 }
             })
             ->call('editPost', 1)
@@ -237,6 +421,31 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_can_authorize_policy_with_model_id_argument_using_trait_method()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function editPost(AuthorizationPost $post)
+                {
+                    $this->authorize('edit', $post);
+                }
+            })
+            ->call('editPost', post: 1)
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                public function editPost(AuthorizationPost $post)
+                {
+                    $this->authorize('edit', $post);
+                }
+            })
+            ->call('editPost', post: 1)
+            ->assertForbidden();
+    }
+
     public function test_can_authorize_policy_with_dependency_injection_and_positional_model_id_argument()
     {
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
@@ -264,6 +473,35 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_can_authorize_policy_with_dependency_injection_and_positional_model_id_argument_using_trait_method()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function editPost(UrlGenerator $generator, AuthorizationPost $post)
+                {
+                    $this->authorize('edit', $post);
+
+                    return $generator->to('/some-url') !== '';
+                }
+            })
+            ->call('editPost', 1)
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                public function editPost(UrlGenerator $generator, AuthorizationPost $post)
+                {
+                    $this->authorize('edit', $post);
+
+                    return $generator->to('/some-url') !== '';
+                }
+            })
+            ->call('editPost', 1)
+            ->assertForbidden();
+    }
+
     public function test_can_authorize_policy_with_dependency_injection_and_named_model_id_argument()
     {
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
@@ -284,6 +522,35 @@ class UnitTest extends TestCase
                 #[Authorize('edit', 'post')]
                 public function editPost(UrlGenerator $generator, AuthorizationPost $post) : bool
                 {
+                    return $generator->to('/some-url') !== '';
+                }
+            })
+            ->call('editPost', post: 1)
+            ->assertForbidden();
+    }
+
+    public function test_can_authorize_policy_with_dependency_injection_and_named_model_id_argument_using_trait_method()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function editPost(UrlGenerator $generator, AuthorizationPost $post)
+                {
+                    $this->authorize('edit', $post);
+
+                    return $generator->to('/some-url') !== '';
+                }
+            })
+            ->call('editPost', post: 1)
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                public function editPost(UrlGenerator $generator, AuthorizationPost $post)
+                {
+                    $this->authorize('edit', $post);
+
                     return $generator->to('/some-url') !== '';
                 }
             })
@@ -394,6 +661,65 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_can_authorize_multiple_policies_using_trait_method()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount() : void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                public function createPost() 
+                {
+                    $this->authorize('create', AuthorizationPost::class);
+                    $this->authorize('edit', $this->post);
+                }
+            })
+            ->call('createPost')
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount() : void
+                {
+                    $this->post = AuthorizationPost::find(2);
+                }
+
+                public function createPost() 
+                {
+                    $this->authorize('create', AuthorizationPost::class);
+                    $this->authorize('edit', $this->post);
+                }
+            })
+            ->call('createPost')
+            ->assertForbidden();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount() : void
+                {
+                    $this->post = AuthorizationPost::find(2);
+                }
+
+                public function createPost() 
+                {
+                    $this->authorize('create', AuthorizationPost::class);
+                    $this->authorize('edit', $this->post);
+                }
+            })
+            ->call('createPost')
+            ->assertForbidden();
+    }
+
     public function test_it_does_not_perform_any_action_when_denied()
     {
         Gate::define('cannot-open-post', fn () => false);
@@ -405,6 +731,27 @@ class UnitTest extends TestCase
                 #[Authorize('cannot-open-post')]
                 public function cannotOpenPost() : void
                 {
+                    Session::put('should-never-be-set', true);
+                }
+            })
+            ->call('cannotOpenPost')
+            ->assertForbidden();
+
+        $this->assertFalse(Session::has('should-never-be-set'));
+    }
+
+    public function test_it_does_not_perform_any_action_when_denied_using_trait_method()
+    {
+        Gate::define('cannot-open-post', fn () => false);
+
+        $this->assertFalse(Session::has('should-never-be-set'));
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function cannotOpenPost() : void
+                {
+                    $this->authorize('cannot-open-post');
+
                     Session::put('should-never-be-set', true);
                 }
             })
@@ -433,6 +780,26 @@ class UnitTest extends TestCase
         $this->assertFalse(Session::has('should-never-be-set'));
     }
 
+    public function test_authorize_is_enforced_on_event_listeners_using_trait_method()
+    {
+        Gate::define('cannot-open-post', fn () => false);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[\Livewire\Attributes\On('some-event')]
+                public function handleEvent() : void
+                {
+                    $this->authorize('cannot-open-post');
+
+                    Session::put('should-never-be-set', true);
+                }
+            })
+            ->dispatch('some-event')
+            ->assertForbidden();
+
+        $this->assertFalse(Session::has('should-never-be-set'));
+    }
+
     public function test_authorize_allows_authorized_event_listeners()
     {
         Gate::define('can-open-post', fn () => true);
@@ -443,6 +810,26 @@ class UnitTest extends TestCase
                 #[Authorize('can-open-post')]
                 public function handleEvent() : void
                 {
+                    Session::put('event-was-handled', true);
+                }
+            })
+            ->dispatch('some-event')
+            ->assertOk();
+
+        $this->assertTrue(Session::has('event-was-handled'));
+    }
+
+    public function test_authorize_allows_authorized_event_listeners_using_trait_method()
+    {
+        Gate::define('can-open-post', fn () => true);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[\Livewire\Attributes\On('some-event')]
+                public function handleEvent() : void
+                {
+                    $this->authorize('can-open-post');
+
                     Session::put('event-was-handled', true);
                 }
             })
@@ -475,6 +862,33 @@ class UnitTest extends TestCase
                 public function editPost(AuthorizationPost $post) : bool
                 {
                     return true;
+                }
+            })
+            ->dispatch('edit-post', post: 1)
+            ->assertForbidden();
+    }
+
+    public function test_authorize_allows_authorized_event_listeners_with_named_argument_using_trait_method()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[\Livewire\Attributes\On('edit-post')]
+                public function editPost(AuthorizationPost $post)
+                {
+                    $this->authorize('edit', $post);
+                }
+            })
+            ->dispatch('edit-post', post: 1)
+            ->assertOk();
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[\Livewire\Attributes\On('edit-post')]
+                public function editPost(AuthorizationPost $post)
+                {
+                    $this->authorize('edit', $post);
                 }
             })
             ->dispatch('edit-post', post: 1)
@@ -588,6 +1002,71 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_can_authorize_defined_gates_with_array_as_argument_using_trait_method()
+    {
+        Gate::define('create-comment', function (AuthorizationUser $user, string $commentClass, AuthorizationPost $post) {
+            return (int) $user->id === 1 && $post->id === 1;
+        });
+
+        // AssertOk using class name and method argument
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function createComment(AuthorizationPost $post)
+                {
+                    $this->authorize('create-comment', [AuthorizationComment::class, $post]);
+                }
+            })
+            ->call('createComment', post: 1)
+            ->assertOk();
+
+        // AssertOk using class name and component property
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                public function createComment()
+                {
+                    $this->authorize('create-comment', [AuthorizationComment::class, $this->post]);
+                }
+            })
+            ->call('createComment')
+            ->assertOk();
+
+        // AssertForbidden using class name and method argument
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function createComment(AuthorizationPost $post)
+                {
+                    $this->authorize('create-comment', [AuthorizationComment::class, $post]);
+                }
+            })
+            ->call('createComment', post: 2)
+            ->assertForbidden();
+
+        // AssertForbidden using class name and component property
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->post = AuthorizationPost::find(2);
+                }
+
+                public function createComment()
+                {
+                    $this->authorize('create-comment', [AuthorizationComment::class, $this->post]);
+                }
+            })
+            ->call('createComment')
+            ->assertForbidden();
+    }
+
     public function test_can_authorize_policy_with_array_of_class_and_model()
     {
         Gate::policy(AuthorizationComment::class, AuthorizationCommentPolicy::class);
@@ -690,6 +1169,69 @@ class UnitTest extends TestCase
                 }
             })
             ->call('createComment', post: 2)
+            ->assertForbidden();
+    }
+
+    public function test_can_authorize_policy_with_array_of_class_and_model_using_trait_method()
+    {
+        Gate::policy(AuthorizationComment::class, AuthorizationCommentPolicy::class);
+
+        // AssertOk using class name and method argument
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function createComment(AuthorizationPost $post)
+                {
+                    $this->authorize('create', [AuthorizationComment::class, $post]);
+                }
+            })
+            ->call('createComment', post: 1)
+            ->assertOk();
+
+        // AssertOk using class name and component property
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                public function createComment()
+                {
+                    $this->authorize('create', [AuthorizationComment::class, $this->post]);
+                }
+            })
+            ->call('createComment')
+            ->assertOk();
+
+        // AssertForbidden using class name and method argument
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function createComment(AuthorizationPost $post)
+                {
+                    $this->authorize('create', [AuthorizationComment::class, $post]);
+                }
+            })
+            ->call('createComment', post: 2)
+            ->assertForbidden();
+
+        // AssertForbidden using class name and component property
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->post = AuthorizationPost::find(2);
+                }
+
+                public function createComment()
+                {
+                    $this->authorize('create', [AuthorizationComment::class, $this->post]);
+                }
+            })
+            ->call('createComment')
             ->assertForbidden();
     }
 
@@ -810,6 +1352,75 @@ class UnitTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_can_authorize_policy_with_array_of_models_using_trait_method()
+    {
+        Gate::policy(AuthorizationComment::class, AuthorizationCommentPolicy::class);
+
+        // AssertOk using method arguments
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function editComment(AuthorizationComment $comment, AuthorizationPost $post)
+                {
+                    $this->authorize('edit', [$comment, $post]);
+                }
+            })
+            ->call('editComment', comment: 1, post: 1)
+            ->assertOk();
+
+        // AssertOk using component properties
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationComment $comment;
+
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->comment = AuthorizationComment::find(1);
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                public function editComment()
+                {
+                    $this->authorize('edit', [$this->comment, $this->post]);
+                }
+            })
+            ->call('editComment')
+            ->assertOk();
+
+        // AssertForbidden using method arguments
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function editComment(AuthorizationComment $comment, AuthorizationPost $post)
+                {
+                    $this->authorize('edit', [$comment, $post]);
+                }
+            })
+            ->call('editComment', comment: 1, post: 2)
+            ->assertForbidden();
+
+        // AssertForbidden using component properties
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationComment $comment;
+
+                public AuthorizationPost $post;
+
+                public function mount(): void
+                {
+                    $this->comment = AuthorizationComment::find(1);
+                    $this->post = AuthorizationPost::find(2);
+                }
+
+                public function editComment()
+                {
+                    $this->authorize('edit', [$this->comment, $this->post]);
+                }
+            })
+            ->call('editComment')
+            ->assertForbidden();
+    }
+
     public function test_can_authorize_using_defined_gate_with_only_class_name_as_argument()
     {
         Gate::define('create', function (AuthorizationUser $user) : bool
@@ -823,6 +1434,24 @@ class UnitTest extends TestCase
                 public function create() : bool
                 {
                     return true;
+                }
+            })
+            ->call('create')
+            ->assertOk();
+    }
+
+    public function test_can_authorize_using_defined_gate_with_only_class_name_as_argument_using_trait_method()
+    {
+        Gate::define('create', function (AuthorizationUser $user) : bool
+        {
+            return (int) $user->id === 1;
+        });
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function create()
+                {
+                    $this->authorize(AuthorizationPost::class);
                 }
             })
             ->call('create')
@@ -845,6 +1474,21 @@ class UnitTest extends TestCase
             ->assertOk();
     }
 
+    public function test_can_authorize_using_policy_with_only_class_name_and_no_arguments_using_trait_method()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function create()
+                {
+                    $this->authorize(AuthorizationPost::class);
+                }
+            })
+            ->call('create')
+            ->assertOk();
+    }
+
     public function test_can_authorize_using_policy_resource_ability_mapping_with_only_class_name()
     {
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
@@ -855,6 +1499,21 @@ class UnitTest extends TestCase
                 public function store() : bool
                 {
                     return true;
+                }
+            })
+            ->call('store')
+            ->assertOk();
+    }
+
+    public function test_can_authorize_using_policy_resource_ability_mapping_with_only_class_name_using_trait_method()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public function store()
+                {
+                    $this->authorize(AuthorizationPost::class);
                 }
             })
             ->call('store')
@@ -893,6 +1552,91 @@ class UnitTest extends TestCase
             })
             ->dispatch('some-event')
             ->assertForbidden();
+    }
+
+    public function test_authorize_attribute_trigger_exception_hook()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        $this->expectException(AuthorizationException::class);
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[BaseAuthorize(AuthorizationPost::class)]
+                public function store() : bool
+                {
+                    return true;
+                }
+
+                public function exception($e, $stopPropagation)
+                {
+                    $stopPropagation();
+
+                    Session::put('authorization-denied', $e->getMessage());
+                }
+            })
+            ->call('store')
+            ->assertOk();
+
+        $this->assertTrue(Session::has('authorization-denied'));
+        $this->assertSame('This action is unauthorized.', Session::pull('authorization-denied'));
+
+        $this->expectException(ModelNotFoundException::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[BaseAuthorize('edit', 'post')]
+                public function store(AuthorizationPost $post) : bool
+                {
+                    return true;
+                }
+
+                public function exception($e, $stopPropagation)
+                {
+                    $stopPropagation();
+
+                    Session::put('model-not-found', $e->getMessage());
+                }
+            })
+            ->call('store', post: 3)
+            ->assertOk();
+
+        $this->assertTrue(Session::has('model-not-found'));
+        $this->assertSame(
+            'No query results for model [Livewire\Features\SupportAuthorization\AuthorizationPost] 3', 
+            Session::pull('model-not-found')
+        );
+    }
+
+    public function test_can_authorize_using_attribute_and_trait_method_at_the_same_time()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount() : void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                #[Authorize('create', AuthorizationPost::class)]
+                public function createPost()
+                {
+                    $this->authorize('edit', $this->post);
+                }
+
+                #[Authorize('edit', 'post')]
+                public function anotherCreatePost()
+                {
+                    $this->authorize('create', AuthorizationPost::class);
+                }
+            })
+            ->call('createPost')
+            ->assertOk()
+            ->call('anotherCreatePost')
+            ->assertOk();
     }
 }
 
