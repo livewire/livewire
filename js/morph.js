@@ -29,6 +29,11 @@ export async function morph(component, el, html) {
     delete effects.html
     delete effects.htmlDelta
     delete effects.htmlHash
+    delete effects.render
+    delete effects.renderRecovery
+    if (component.renderTransportConfig) {
+        effects.renderTransport = component.renderTransportConfig
+    }
     to.setAttribute('wire:effects', JSON.stringify(effects))
 
     to.__livewire = component

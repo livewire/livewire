@@ -1,47 +1,39 @@
-import { reconstructHtmlDelta } from '@/htmlDelta'
-import { interceptMessage } from '@/request'
+import { fireAction, interceptMessage } from '@/request'
 import { morph } from '@/morph'
 
 interceptMessage(({ message, onSuccess }) => {
     onSuccess(({ payload, onMorph }) => {
         onMorph(async () => {
             let html = payload.effects.html
-            let delta = payload.effects.htmlDelta
-            let hash = payload.effects.htmlHash
+            let render = payload.effects.render
+            let hash = render?.target || payload.effects.htmlHash
 
-            if (typeof html === 'string') {
+            if (payload.effects.renderRecovery) {
+                await message.component.requestHtmlResync(() => {
+                    return fireAction(
+                        message.component,
+                        '$refresh',
+                        [],
+                        { async: true, transportRecovery: true },
+                    )
+                })
+
+                return
+            }
+
+            if (typeof html !== 'string') return
+
+            if (message.component.serverRenderedHtmlHash !== hash) {
                 await morph(message.component, message.component.el, html)
-
-                message.component.rememberServerRenderedHtml(html, hash)
-
-                return
             }
 
-            if (! delta) return
-
-            if (message.component.serverRenderedHtml === null
-                || message.component.serverRenderedHtmlHash !== delta.base
-            ) {
-                message.component.requestHtmlResync()
-
-                return
-            }
-
-            try {
-                html = await reconstructHtmlDelta(
-                    message.component.serverRenderedHtml,
-                    delta.patches ?? delta.patch,
-                    hash,
-                )
-            } catch (error) {
-                message.component.requestHtmlResync()
-
-                return
-            }
-
-            await morph(message.component, message.component.el, html)
-
-            message.component.rememberServerRenderedHtml(html, hash)
+            message.component.rememberServerRenderedHtml(
+                html,
+                hash,
+                render,
+                message.renderBaseline,
+                message.renderAttemptedPortable,
+            )
         })
     })
 })

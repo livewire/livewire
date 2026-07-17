@@ -14,10 +14,11 @@ class BrowserTest extends \Tests\BrowserTestCase
             config()->set('livewire.delta.store', 'file');
             config()->set('livewire.delta.minimum_html_bytes', 0);
             config()->set('livewire.delta.minimum_compressed_savings_bytes', 0);
+            config()->set('livewire.delta.compression_aware', false);
         };
     }
 
-    public function test_global_delta_engine_updates_a_component_across_multiple_requests()
+    public function test_global_delta_engine_materializes_full_and_cached_splice_responses()
     {
         Livewire::visit(new class extends Component {
             public int $count = 0;
@@ -50,17 +51,21 @@ class BrowserTest extends \Tests\BrowserTestCase
             JS))
             ->waitForLivewire()->click('@increment')
             ->assertSeeIn('@count', '1')
+            ->assertScript("window.deltaRenderEffects[0].render.mode", 'full')
             ->assertScript("typeof window.deltaRenderEffects[0].html === 'string'", true)
+            ->assertScript("typeof window.deltaRenderEffects[0].htmlHash === 'undefined'", true)
             ->waitForLivewire()->click('@increment')
             ->assertSeeIn('@count', '2')
-            ->assertScript("typeof window.deltaRenderEffects[1].htmlDelta === 'object'", true)
-            ->assertScript("Array.isArray(window.deltaRenderEffects[1].htmlDelta.patches)", true)
-            ->assertScript("typeof window.deltaRenderEffects[1].html === 'undefined'", true)
+            ->assertScript("window.deltaRenderEffects[1].render.mode", 'splice')
+            ->assertScript("Array.isArray(window.deltaRenderEffects[1].render.patches)", true)
+            ->assertScript("typeof window.deltaRenderEffects[1].html === 'string'", true)
+            ->assertScript("window.deltaRenderEffects[1].render.stats.saved > 0", true)
             ->tap(fn ($browser) => $browser->script(
-                "Livewire.first().__instance.serverRenderedHtmlHash = 'tampered'"
+                'Livewire.first().__instance.forgetServerRenderedHtml()'
             ))
             ->waitForLivewire()->click('@increment')
             ->assertSeeIn('@count', '3')
+            ->assertScript("window.deltaRenderEffects[2].render.mode", 'full')
             ->assertScript("typeof window.deltaRenderEffects[2].html === 'string'", true)
         ;
     }
@@ -125,19 +130,25 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewire()->click('@move')
             ->assertDontSeeIn('@todo', 'Deploy application')
             ->assertSeeIn('@done', 'Deploy application')
-            ->assertScript("window.kanbanDeltaEffects[1].htmlDelta.patches.length >= 2", true)
-            ->assertScript("typeof window.kanbanDeltaEffects[1].html === 'undefined'", true)
+            ->assertScript("window.kanbanDeltaEffects[0].render.mode", 'full')
+            ->assertScript("typeof window.kanbanDeltaEffects[0].html === 'string'", true)
+            ->assertScript("window.kanbanDeltaEffects[1].render.mode", 'splice')
+            ->assertScript("window.kanbanDeltaEffects[1].render.patches.length >= 2", true)
+            ->assertScript("typeof window.kanbanDeltaEffects[1].html === 'string'", true)
         ;
     }
 
-    public function test_tampered_delta_is_rejected_before_morphing_and_triggers_a_full_resync()
+    public function test_corrupted_splice_triggers_full_resync_without_replaying_the_action()
     {
         Livewire::visit(new class extends Component {
             public int $count = 0;
 
+            public int $incrementCalls = 0;
+
             public function increment()
             {
                 $this->count++;
+                $this->incrementCalls++;
             }
 
             public function render()
@@ -146,6 +157,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 <div>
                     <button dusk="increment" wire:click="increment">Increment</button>
                     <span dusk="count">{{ $count }}</span>
+                    <span dusk="increment-calls">{{ $incrementCalls }}</span>
                     <p style="display: none">{{ str_repeat('stable-content-', 1000) }}</p>
                 </div>
                 HTML;
@@ -153,27 +165,70 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
             ->tap(fn ($browser) => $browser->script(<<<'JS'
                 window.deltaIntegrityEffects = []
-                window.tamperNextDelta = false
+                window.tamperNextSplice = false
+                window.livewireOriginalFetch = window.fetch.bind(window)
+
+                window.fetch = async (input, options = {}) => {
+                    let response = await window.livewireOriginalFetch(input, options)
+
+                    if (! window.tamperNextSplice) return response
+
+                    let json
+
+                    try {
+                        json = await response.clone().json()
+                    } catch (error) {
+                        return response
+                    }
+
+                    let component = json.components?.[0]
+                    let render = component?.effects?.render
+
+                    if (render?.mode !== 'splice' || ! render.patches?.length) return response
+
+                    render.patches[0].insert = btoa('corrupted-render')
+                    window.tamperNextSplice = false
+
+                    let headers = new Headers(response.headers)
+                    headers.delete('content-length')
+                    headers.delete('content-encoding')
+
+                    return new Response(JSON.stringify(json), {
+                        status: response.status,
+                        statusText: response.statusText,
+                        headers,
+                    })
+                }
 
                 Livewire.interceptMessage(({ onSuccess }) => {
                     onSuccess(({ payload }) => {
-                        window.deltaIntegrityEffects.push(payload.effects)
-
-                        if (! window.tamperNextDelta || ! payload.effects.htmlDelta) return
-
-                        payload.effects.htmlDelta.patches[0].insert = btoa('tampered')
-                        window.tamperNextDelta = false
+                        window.deltaIntegrityEffects.push({
+                            mode: payload.effects.renderRecovery
+                                ? 'recovery'
+                                : payload.effects.render?.mode
+                                    || (typeof payload.effects.html === 'string' ? 'full' : null),
+                            renderMode: payload.effects.render?.mode,
+                            hasHtml: typeof payload.effects.html === 'string',
+                        })
                     })
                 })
             JS))
             ->waitForLivewire()->click('@increment')
             ->assertSeeIn('@count', '1')
-            ->tap(fn ($browser) => $browser->script('window.tamperNextDelta = true'))
+            ->assertSeeIn('@increment-calls', '1')
+            ->assertScript("window.deltaIntegrityEffects[0].mode", 'full')
+            ->tap(fn ($browser) => $browser->script('window.tamperNextSplice = true'))
             ->waitForLivewire()->click('@increment')
             ->waitForTextIn('@count', '2')
+            ->assertSeeIn('@increment-calls', '2')
             ->waitUntil('window.deltaIntegrityEffects.length >= 3')
-            ->assertScript("typeof window.deltaIntegrityEffects[1].htmlDelta === 'object'", true)
-            ->assertScript("typeof window.deltaIntegrityEffects[2].html === 'string'", true)
+            ->assertScript("window.deltaIntegrityEffects[1].mode", 'recovery')
+            ->assertScript("window.deltaIntegrityEffects[1].renderMode", 'splice')
+            ->assertScript("window.deltaIntegrityEffects[1].hasHtml", false)
+            ->assertScript("window.deltaIntegrityEffects[2].mode", 'full')
+            ->assertScript("window.deltaIntegrityEffects[2].hasHtml", true)
+            ->assertScript("Livewire.first().count", 2)
+            ->assertScript("Livewire.first().incrementCalls", 2)
         ;
     }
 }

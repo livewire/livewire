@@ -7,6 +7,12 @@ import { showHtmlModal } from '@/utils/modal.js'
 import { MessageBus, scopeSymbolFromMessage } from './messageBus.js'
 import Message from './message.js'
 import Action from './action.js'
+import { reconstructHtmlDelta } from '@/htmlDelta'
+import {
+    createGzipBody,
+    materializeRender,
+    materializeSnapshotDelta,
+} from '@/renderTransport'
 
 let outstandingActionOrigin = null
 let outstandingActionMetadata = {}
@@ -16,6 +22,7 @@ let messageBus = new MessageBus()
 let actionInterceptors = []
 let partitionInterceptors = []
 let sessionExpired = false
+let requestEncoder = new TextEncoder()
 
 export function sessionIsExpired() {
     return sessionExpired
@@ -266,6 +273,8 @@ function sendMessages() {
     requests.forEach(request => {
         request.messages.forEach(message => {
             message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn()
+            message.snapshotBaseline = message.snapshot
+            message.renderBaseline = message.component.captureRenderBaseline?.() || null
             message.updates = message.component.getUpdates()
             message.calls = Array.from(message.actions).map(i => ({
                 method: i.name,
@@ -273,7 +282,15 @@ function sendMessages() {
                 metadata: i.metadata,
             }))
 
-            let render = message.component.getRenderMetadata?.() || {}
+            let render = message.component.getRenderMetadata?.(message.renderBaseline) || {}
+            let allowsSnapshotReferences = render.capabilities?.includes('snapshot-ref') || false
+
+            message.renderAttemptedPortable = render.chunks !== undefined
+                || render.fragments !== undefined
+            message.snapshotReference = message.component.captureSnapshotReference?.(
+                allowsSnapshotReferences,
+                message.snapshot,
+            ) || null
 
             message.payload = {
                 snapshot: message.snapshot,
@@ -312,9 +329,10 @@ function sendMessages() {
 
                 cachedOptions = {
                     method: 'POST',
-                    body: JSON.stringify(request.payload),
+                    body: JSON.stringify(buildNetworkPayload(request)),
                     headers: {
                         'Content-type': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken(),
                         'X-Livewire': '1', // This '1' value means nothing, but it stops Cloudflare from stripping the header...
                     },
                     signal: request.controller.signal,
@@ -415,74 +433,268 @@ function sendMessages() {
                 showHtmlModal(html)
             },
             success: async ({ response, responseBody, responseJson }) => {
+                await materializeResponseTransport(request, responseJson)
+
                 request.invokeOnSuccess({ response, body: responseBody, json: responseJson })
 
                 await triggerAsync('payload.intercept', responseJson)
 
                 let messageResponsePayloads = responseJson.components
+                let pendingMessages = []
 
                 request.messages.forEach(message => {
-                    messageResponsePayloads.forEach(payload => {
-                        if (message.isCancelled()) return
+                    if (message.isCancelled()) return
 
-                        // Server skipped this child (unchanged reactive props)...
-                        if (payload.skip) {
-                            if (payload.id === message.component.id) {
-                                message.responsePayload = payload
-                                message.markSkipped()
-                                message.invokeOnSkipped()
-                                message.resolveActionPromises([], [])
-                                message.invokeOnFinish()
-                            }
+                    let payload = findResponsePayload(message, messageResponsePayloads)
 
-                            return
-                        }
+                    if (! payload) return
 
-                        let { snapshot: snapshotEncoded, effects } = payload
-                        let snapshot = JSON.parse(snapshotEncoded)
+                    // Server skipped this child (unchanged reactive props)...
+                    if (payload.skip) {
+                        message.responsePayload = payload
+                        message.markSkipped()
+                        message.invokeOnSkipped()
+                        message.resolveActionPromises([], [])
+                        message.invokeOnFinish()
 
-                        if (snapshot.memo.id === message.component.id) {
-                            message.responsePayload = { snapshot, effects }
+                        return
+                    }
 
-                            message.invokeOnSuccess()
-                            if (message.isCancelled()) return
-
-                            // Use Alpine.transaction to batch data updates and DOM morphing
-                            // This prevents effects from firing before the morph cleanup runs
-                            Alpine.transaction(async () => {
-                                message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
-
-                                message.invokeOnSync()
-                                if (message.isCancelled()) return
-
-                                // Trigger any side effects from the payload like "morph" and "dispatch event"...
-                                message.component.processEffects(effects, request)
-
-                                message.invokeOnEffect()
-                                if (message.isCancelled()) return
-
-                                await message.invokeOnMorph()
-                            }).then(() => {
-                                // Resolve promises & finish AFTER morph completes
-                                if (! message.isCancelled()) {
-                                    message.resolveActionPromises(
-                                        message.pendingReturns,
-                                        message.pendingReturnsMeta
-                                    )
-                                    message.invokeOnFinish()
-                                }
-
-                                requestAnimationFrame(() => {
-                                    if (message.isCancelled()) return
-
-                                    message.invokeOnRender()
-                                })
-                            })
-                        }
-                    })
+                    pendingMessages.push(processMessageResponse(message, payload, request))
                 })
+
+                await Promise.all(pendingMessages)
             },
         })
+    })
+}
+
+function buildNetworkPayload(request, forceFullSnapshotIds = null) {
+    if (forceFullSnapshotIds === null) {
+        request.snapshotReferencesRetryable = snapshotReferenceFallbackFits(request)
+        request.usedSnapshotReferenceIds = new Set()
+    }
+
+    return {
+        _token: getCsrfToken(),
+        components: Array.from(request.messages, message => {
+            let payload = { ...message.payload }
+            let forceFullSnapshot = forceFullSnapshotIds?.has(
+                message.component.id,
+            ) || false
+
+            if (! forceFullSnapshot
+                && request.snapshotReferencesRetryable !== false
+                && message.snapshotReference !== null
+            ) {
+                delete payload.snapshot
+
+                payload.id = message.component.id
+                payload.snapshotRef = message.snapshotReference
+
+                if (forceFullSnapshotIds === null) {
+                    request.usedSnapshotReferenceIds.add(message.component.id)
+                }
+            }
+
+            return payload
+        }),
+    }
+}
+
+function snapshotReferenceFallbackFits(request) {
+    let referencedMessages = Array.from(request.messages).filter(message => {
+        return message.snapshotReference !== null
+    })
+
+    if (referencedMessages.length === 0) return true
+
+    let limits = referencedMessages
+        .map(message => message.component.getMaximumRequestBytes?.() ?? null)
+        .filter(limit => Number.isSafeInteger(limit) && limit >= 0)
+
+    if (limits.length === 0) return true
+
+    let fullPayload = {
+        _token: getCsrfToken(),
+        components: Array.from(request.messages, message => ({
+            ...message.payload,
+        })),
+    }
+    let fullBody = JSON.stringify(fullPayload)
+
+    return requestEncoder.encode(fullBody).length <= Math.min(...limits)
+}
+
+async function materializeResponseTransport(request, responseJson) {
+    if (! Array.isArray(responseJson.components)) {
+        throw new Error('Invalid Livewire response payload')
+    }
+
+    let hasResponseCompressionNegotiation = responseJson.transport?.v === 1
+
+    if (hasResponseCompressionNegotiation) {
+        request.messages.forEach(message => {
+            message.component.rememberRequestCompression?.(
+                responseJson.transport.requestGzip,
+            )
+        })
+    }
+
+    for (let payload of responseJson.components) {
+        if (payload.skip) continue
+
+        let message = findMessageForPayload(request, payload)
+
+        if (! message) continue
+
+        if (payload.snapshotDelta !== undefined) {
+            payload.snapshot = await materializeSnapshotDelta(
+                payload.snapshotDelta,
+                message.snapshotBaseline,
+            )
+
+            delete payload.snapshotDelta
+        }
+
+        let effects = payload.effects
+
+        if (! effects || typeof effects !== 'object') continue
+
+        if (effects.render !== undefined) {
+            try {
+                effects.html = await materializeRender(
+                    effects.render,
+                    effects.html ?? null,
+                    message.renderBaseline,
+                )
+
+                if (! hasResponseCompressionNegotiation) {
+                    message.component.rememberRequestCompression?.(
+                        effects.render.requestGzip,
+                    )
+                }
+            } catch (error) {
+                if (message.isTransportRecovery()) throw error
+
+                delete effects.html
+                delete effects.htmlDelta
+
+                effects.renderRecovery = true
+            }
+
+            continue
+        }
+
+        if (effects.htmlDelta !== undefined) {
+            try {
+                let baseline = message.renderBaseline
+                let delta = effects.htmlDelta
+
+                if (! baseline || baseline.hash !== delta.base) {
+                    throw new Error('Livewire render baseline does not match its legacy descriptor')
+                }
+
+                effects.html = await reconstructHtmlDelta(
+                    baseline.html,
+                    delta.patches ?? delta.patch,
+                    effects.htmlHash,
+                )
+
+                delete effects.htmlDelta
+            } catch (error) {
+                if (message.isTransportRecovery()) throw error
+
+                delete effects.html
+                delete effects.htmlDelta
+
+                effects.renderRecovery = true
+            }
+        }
+    }
+}
+
+function findMessageForPayload(request, payload) {
+    let componentId = payload.id
+
+    if (typeof componentId !== 'string' && typeof payload.snapshot === 'string') {
+        try {
+            componentId = JSON.parse(payload.snapshot).memo.id
+        } catch (error) {}
+    }
+
+    return Array.from(request.messages).find(message => {
+        return message.component.id === componentId
+    })
+}
+
+function findResponsePayload(message, payloads) {
+    return payloads.find(payload => {
+        if (payload.id === message.component.id) return true
+        if (typeof payload.snapshot !== 'string') return false
+
+        try {
+            return JSON.parse(payload.snapshot).memo.id === message.component.id
+        } catch (error) {
+            return false
+        }
+    })
+}
+
+async function processMessageResponse(message, payload, request) {
+    let { snapshot: snapshotEncoded, effects } = payload
+    let snapshot = JSON.parse(snapshotEncoded)
+
+    if (snapshot.memo.id !== message.component.id) return
+
+    message.responsePayload = { snapshot, effects }
+
+    message.invokeOnSuccess()
+    if (message.isCancelled()) return
+
+    try {
+        // Use Alpine.transaction to batch data updates and DOM morphing
+        // This prevents effects from firing before the morph cleanup runs
+        await Alpine.transaction(async () => {
+            message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
+            message.component.rememberSnapshotReference?.(payload.snapshotRef, snapshotEncoded)
+
+            message.invokeOnSync()
+            if (message.isCancelled()) return
+
+            // Trigger any side effects from the payload like "morph" and "dispatch event"...
+            message.component.processEffects(effects, request)
+
+            message.invokeOnEffect()
+            if (message.isCancelled()) return
+
+            if (! effects.renderRecovery) await message.invokeOnMorph()
+        })
+
+        if (effects.renderRecovery && ! message.isCancelled()) {
+            await message.invokeOnMorph()
+        }
+    } catch (error) {
+        console.error(error)
+
+        if (! message.isCancelled()) message.invokeOnFailure(error)
+
+        return
+    }
+
+    // Resolve promises & finish AFTER morph completes
+    if (! message.isCancelled()) {
+        message.resolveActionPromises(
+            message.pendingReturns,
+            message.pendingReturnsMeta
+        )
+        message.invokeOnFinish()
+    }
+
+    requestAnimationFrame(() => {
+        if (message.isCancelled()) return
+
+        message.invokeOnRender()
     })
 }
 
@@ -492,7 +704,7 @@ async function sendRequest(request, handlers) {
     try {
         if (request.isCancelled()) return
 
-        let responsePromise = fetch(request.uri, request.options)
+        let responsePromise = fetchWithSnapshotReferenceRetry(request)
 
         if (request.isCancelled()) return
         handlers.send({ responsePromise })
@@ -566,8 +778,93 @@ async function sendRequest(request, handlers) {
         return
     }
 
-    handlers.success({ response, responseBody, responseJson })
+    try {
+        await handlers.success({ response, responseBody, responseJson })
+    } catch (error) {
+        if (! request.isCancelled()) handlers.failure({ error })
+
+        handlers.finish()
+
+        return
+    }
+
     handlers.finish()
+}
+
+async function fetchWithSnapshotReferenceRetry(request) {
+    await prepareRequestOptions(request)
+
+    let response = await fetch(request.uri, request.options)
+    let messagesWithReferences = Array.from(request.messages).filter(message => {
+        return request.usedSnapshotReferenceIds?.has(message.component.id) || false
+    })
+
+    if (response.status !== 409
+        || response.headers.get('X-Livewire-Snapshot-Missing') !== '1'
+        || messagesWithReferences.length === 0
+    ) return response
+
+    let inspectionResponse = typeof response.clone === 'function'
+        ? response.clone()
+        : response
+    let responseBody = await inspectionResponse.text()
+    let missingIds = []
+
+    try {
+        let payload = JSON.parse(responseBody)
+
+        if (Array.isArray(payload.snapshotMissing)) missingIds = payload.snapshotMissing
+    } catch (error) {}
+
+    let retryableMessages = messagesWithReferences.filter(message => {
+        return missingIds.length === 0 || missingIds.includes(message.component.id)
+    })
+
+    if (retryableMessages.length === 0) return response
+
+    retryableMessages.forEach(message => {
+        message.component.rejectSnapshotReference?.(message.snapshotReference)
+    })
+
+    let referencedMessageIds = new Set(
+        messagesWithReferences.map(message => message.component.id),
+    )
+
+    await prepareRequestOptions(request, referencedMessageIds)
+
+    return await fetch(request.uri, request.options)
+}
+
+async function prepareRequestOptions(request, forceFullSnapshotIds = null) {
+    let options = request.options
+    let body = forceFullSnapshotIds !== null
+        ? JSON.stringify(buildNetworkPayload(request, forceFullSnapshotIds))
+        : options.body
+
+    delete options.headers['Content-Encoding']
+
+    options.body = body
+
+    if (typeof body !== 'string') return
+
+    let compressionThresholds = Array.from(request.messages, message => {
+        return message.component.getRequestCompressionMinimumBytes?.() ?? null
+    }).filter(value => Number.isSafeInteger(value) && value >= 0)
+
+    if (compressionThresholds.length === 0) return
+
+    let compressionThreshold = Math.min(...compressionThresholds)
+
+    let bodyBytes = requestEncoder.encode(body).length
+
+    if (bodyBytes < compressionThreshold) return
+
+    let compressed = await createGzipBody(body)
+
+    if (! compressed || compressed.length >= bodyBytes) return
+
+    options.body = compressed
+    options.headers['Content-Encoding'] = 'gzip'
 }
 
 async function interceptStreamAndReturnFinalResponse(response, callback) {

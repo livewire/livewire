@@ -3,6 +3,8 @@
 namespace Livewire\Features\SupportTesting;
 
 use Livewire\Drawer\Utils;
+use Livewire\Mechanisms\HandleComponents\UpdateEngines\RenderFragmentTree;
+use Livewire\Mechanisms\HandleComponents\UpdateEngines\StatelessHtmlChunks;
 
 class ComponentState
 {
@@ -15,6 +17,7 @@ class ComponentState
         protected $effects,
         protected $serverRenderedHtml = null,
         protected $serverRenderedHtmlHash = null,
+        protected int $renderRevision = 0,
     ) {}
 
     function getComponent() {
@@ -46,11 +49,100 @@ class ComponentState
         return $this->serverRenderedHtmlHash;
     }
 
+    function getRenderRevision()
+    {
+        return $this->renderRevision;
+    }
+
     function getRenderMetadata()
     {
-        if ($this->serverRenderedHtml === null || $this->serverRenderedHtmlHash === null) return [];
+        if (config('livewire.update_engine', 'morph') !== 'delta') return [];
 
-        return ['htmlHash' => $this->serverRenderedHtmlHash];
+        $blockSize = max(256, min(65536, (int) config('livewire.delta.block_size', 2048)));
+        $metadata = [
+            'v' => 1,
+            'capabilities' => ['same'],
+        ];
+
+        if (config('livewire.delta.snapshot_delta', true)) {
+            $metadata['capabilities'][] = 'snapshot-delta';
+        }
+
+        if (config('livewire.delta.snapshot_references', false)) {
+            $metadata['capabilities'][] = 'snapshot-ref';
+        }
+
+        if ($this->serverRenderedHtml === null || $this->serverRenderedHtmlHash === null) {
+            return $metadata;
+        }
+
+        $metadata['base'] = [
+            'hash' => $this->serverRenderedHtmlHash,
+            'bytes' => strlen($this->serverRenderedHtml),
+            'revision' => $this->renderRevision,
+        ];
+
+        $minimumBytes = min(
+            67108864,
+            max(0, (int) config('livewire.delta.minimum_html_bytes', 8192)),
+        );
+        $maximumBytes = min(
+            67108864,
+            max($minimumBytes, (int) config('livewire.delta.maximum_html_bytes', 4194304)),
+        );
+        $htmlBytes = strlen($this->serverRenderedHtml);
+
+        if ($htmlBytes < $minimumBytes || $htmlBytes > $maximumBytes) {
+            return $metadata;
+        }
+
+        if (config('livewire.delta.cache_accelerator', true)) {
+            $metadata['capabilities'][] = 'splice';
+        }
+
+        try {
+            $blocks = app(StatelessHtmlChunks::class)->manifest(
+                $this->serverRenderedHtml,
+                $blockSize,
+            );
+
+            $maximumManifestBytes = min(
+                65536,
+                max(0, (int) config('livewire.delta.maximum_manifest_bytes', 65536)),
+            );
+
+            if (strlen($blocks) <= $maximumManifestBytes) {
+                $metadata['chunks'] = [
+                    'blockSize' => $blockSize,
+                    'blocks' => $blocks,
+                ];
+                $metadata['capabilities'][] = 'chunks';
+            }
+        } catch (\InvalidArgumentException) {
+            // The testing client mirrors the browser by omitting manifests it cannot safely bound.
+        }
+
+        try {
+            $fragments = app(RenderFragmentTree::class)->manifest($this->serverRenderedHtml);
+
+            $maximumFragments = min(
+                1024,
+                max(0, (int) config('livewire.delta.maximum_fragments', 1024)),
+            );
+
+            if (count($fragments['nodes'] ?? []) > $maximumFragments) {
+                $fragments = null;
+            }
+        } catch (\InvalidArgumentException) {
+            $fragments = null;
+        }
+
+        if ($fragments !== null && ($fragments['nodes'] ?? []) !== []) {
+            $metadata['fragments'] = $fragments;
+            $metadata['capabilities'][] = 'fragments';
+        }
+
+        return $metadata;
     }
 
     function getView()

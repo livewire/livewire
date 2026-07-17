@@ -5,10 +5,29 @@ namespace Livewire\Mechanisms\HandleComponents\UpdateEngines;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\HandleRequests\SnapshotStateStore;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        config()->set('livewire.update_engine', 'delta');
+        config()->set('livewire.delta.store', 'array');
+        config()->set('livewire.delta.snapshot_store', 'array');
+        config()->set('livewire.delta.minimum_html_bytes', 0);
+        config()->set('livewire.delta.minimum_savings', 0);
+        config()->set('livewire.delta.minimum_compressed_savings_bytes', 0);
+        config()->set('livewire.delta.compression_aware', false);
+        config()->set('livewire.delta.request_compression', true);
+        config()->set('livewire.delta.request_compression_minimum_bytes', 1024);
+        config()->set('livewire.delta.snapshot_delta', true);
+        config()->set('livewire.delta.snapshot_references', true);
+        config()->set('livewire.delta.snapshot_reference_minimum_bytes', 0);
+    }
+
     public function test_it_encodes_replacements_as_reversible_byte_deltas()
     {
         $delta = new HtmlDelta;
@@ -71,360 +90,500 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame($to, $delta->apply($from, $patches));
     }
 
-    public function test_delta_engine_seeds_with_full_html_then_sends_compact_json_deltas()
+    public function test_response_transport_preserves_custom_non_array_responses()
     {
-        config()->set('livewire.update_engine', 'delta');
-        config()->set('livewire.delta.store', 'array');
-        config()->set('livewire.delta.minimum_savings', 0.1);
-        config()->set('livewire.delta.minimum_compressed_savings_bytes', 0);
-
-        $component = Livewire::test(new class extends Component {
-            public int $count = 0;
-
-            public function increment()
-            {
-                $this->count++;
-            }
-
-            public function render()
-            {
-                return <<<'HTML'
-                <div>
-                    <button wire:click="increment">Increment</button>
-                    <span>Count: {{ $count }}</span>
-                    <p>{{ str_repeat('stable-content-', 1000) }}</p>
-                </div>
-                HTML;
-            }
-        });
-
-        $component->call('increment')->assertSee('Count: 1');
-
-        $this->assertArrayHasKey('html', $component->effects);
-        $this->assertArrayNotHasKey('htmlDelta', $component->effects);
-
-        $fullHtmlSize = strlen($component->effects['html']);
-
-        $component->call('increment')->assertSee('Count: 2');
-
-        $this->assertArrayNotHasKey('html', $component->effects);
-        $this->assertArrayHasKey('htmlDelta', $component->effects);
-        $this->assertIsArray($component->effects['htmlDelta']['patches']);
-        $this->assertLessThan($fullHtmlSize / 10, strlen(json_encode($component->effects['htmlDelta'])));
-    }
-
-    public function test_delta_engine_rejects_a_delta_that_is_larger_after_gzip()
-    {
-        if (! function_exists('gzencode')) {
-            $this->markTestSkipped('The zlib extension is not available.');
-        }
-
-        config()->set('livewire.delta.minimum_savings', 0.1);
-        config()->set('livewire.delta.compression_aware', true);
-        config()->set('livewire.delta.minimum_compressed_savings_bytes', 0);
-
-        $deltas = new HtmlDelta;
-        $randomLooking = implode('', array_map(
-            fn ($index) => hash('sha256', (string) $index),
-            range(1, 16),
-        ));
-        $from = '<div>'.str_repeat('A', 5000).'</div>';
-        $to = '<div>'.str_repeat('A', 2000).$randomLooking.str_repeat('A', 1976).'</div>';
-        $hash = $deltas->hash($to);
-        $effect = [
-            'base' => $deltas->hash($from),
-            'patches' => $deltas->encode($from, $to),
-        ];
-        $deltaPayload = json_encode([
-            'htmlDelta' => $effect,
-            'htmlHash' => $hash,
-        ], JSON_THROW_ON_ERROR);
-        $fullPayload = json_encode([
-            'html' => $to,
-            'htmlHash' => $hash,
-        ], JSON_THROW_ON_ERROR);
-        $engine = new InspectableDeltaUpdateEngine(
-            new UnavailableRenderStateStore,
-            $deltas,
+        $this->assertSame(
+            'custom-response',
+            app(ResponseTransport::class)->encode('custom-response', []),
         );
-
-        $this->assertLessThan(strlen($fullPayload) * 0.9, strlen($deltaPayload));
-        $this->assertGreaterThanOrEqual(strlen(gzencode($fullPayload, 1)) * 0.9, strlen(gzencode($deltaPayload, 1)));
-        $this->assertFalse($engine->canSendDelta($effect, $to, $hash));
-
-        config()->set('livewire.delta.compression_aware', false);
-
-        $this->assertTrue($engine->canSendDelta($effect, $to, $hash));
     }
 
-    public function test_delta_engine_requires_minimum_absolute_compressed_savings()
+    public function test_renderless_responses_advertise_the_top_level_request_transport()
     {
-        if (! function_exists('gzencode')) {
-            $this->markTestSkipped('The zlib extension is not available.');
-        }
+        $payload = app(ResponseTransport::class)->encode([
+            'components' => [[
+                'id' => 'component-id',
+                'snapshot' => '{}',
+                'effects' => [],
+            ]],
+        ], [
+            'component-id' => [[
+                'snapshot' => '{}',
+                'render' => ['v' => 1, 'capabilities' => []],
+            ]],
+        ]);
 
-        config()->set('livewire.delta.minimum_savings', 0.1);
-        config()->set('livewire.delta.compression_aware', true);
-
-        $deltas = new HtmlDelta;
-        $rows = implode('', array_map(
-            fn ($index) => '<tr><td>'.$index.'</td><td>'.hash('sha256', (string) $index).'</td></tr>',
-            range(1, 200),
-        ));
-        $from = '<table>'.$rows.'<tfoot><tr><td>pending</td></tr></tfoot></table>';
-        $to = '<table>'.$rows.'<tfoot><tr><td>running</td></tr></tfoot></table>';
-        $hash = $deltas->hash($to);
-        $effect = [
-            'base' => $deltas->hash($from),
-            'patches' => $deltas->encode($from, $to),
-        ];
-        $deltaPayload = json_encode([
-            'htmlDelta' => $effect,
-            'htmlHash' => $hash,
-        ], JSON_THROW_ON_ERROR);
-        $fullPayload = json_encode([
-            'html' => $to,
-            'htmlHash' => $hash,
-        ], JSON_THROW_ON_ERROR);
-        $compressedSavings = strlen(gzencode($fullPayload, 1))
-            - strlen(gzencode($deltaPayload, 1));
-        $engine = new InspectableDeltaUpdateEngine(
-            new UnavailableRenderStateStore,
-            $deltas,
-        );
-
-        $this->assertGreaterThan(0, $compressedSavings);
-
-        config()->set('livewire.delta.minimum_compressed_savings_bytes', $compressedSavings + 1);
-
-        $this->assertFalse($engine->canSendDelta($effect, $to, $hash));
-
-        config()->set('livewire.delta.minimum_compressed_savings_bytes', $compressedSavings);
-
-        $this->assertTrue($engine->canSendDelta($effect, $to, $hash));
+        $this->assertSame([
+            'v' => 1,
+            'requestGzip' => 1024,
+        ], $payload['transport']);
+        $this->assertArrayNotHasKey('html', $payload['components'][0]['effects']);
     }
 
-    public function test_small_renders_use_morph_without_touching_render_state()
+    public function test_top_level_request_transport_explicitly_disables_gzip_negotiation()
     {
-        config()->set('livewire.delta.minimum_html_bytes', 8192);
+        config()->set('livewire.delta.request_compression', false);
 
-        $states = new TrackingRenderStateStore;
-        $deltas = new HtmlDelta;
-        $engine = new DeltaUpdateEngine($states, $deltas);
-        $component = new DeltaCounter;
-        $component->setId('component-id');
-        $mountContext = new ComponentContext($component, mounting: true);
-        $previousHtml = '<div>Count: 1</div>';
-        $previousHash = $deltas->hash($previousHtml);
+        $payload = app(ResponseTransport::class)->encode(['components' => []], []);
 
-        $engine->mount($component, $previousHtml, $mountContext);
-
-        $this->assertArrayNotHasKey('delta', $mountContext->memo);
-
-        $context = new ComponentContext($component);
-
-        $engine->update(
-            $component,
-            '<div>Count: 2</div>',
-            ['delta' => ['revision' => 1, 'hash' => $previousHash]],
-            $context,
-            ['htmlHash' => $previousHash],
-        );
-
-        $this->assertSame('<div>Count: 2</div>', $context->effects['html']);
-        $this->assertArrayNotHasKey('htmlHash', $context->effects);
-        $this->assertArrayNotHasKey('delta', $context->memo);
-        $this->assertSame(0, $states->getCalls);
-        $this->assertSame(0, $states->putCalls);
+        $this->assertSame([
+            'v' => 1,
+            'requestGzip' => null,
+        ], $payload['transport']);
     }
 
-    public function test_components_can_cross_the_hybrid_size_boundary()
+    public function test_delta_mount_advertises_bounded_client_transport_configuration()
     {
-        config()->set('livewire.update_engine', 'delta');
-        config()->set('livewire.delta.store', 'array');
-        config()->set('livewire.delta.minimum_html_bytes', 1024);
-        config()->set('livewire.delta.minimum_compressed_savings_bytes', 0);
-
-        $component = Livewire::test(new class extends Component {
-            public int $count = 0;
-
-            public bool $large = false;
-
-            public function increment()
-            {
-                $this->count++;
-            }
-
-            public function grow()
-            {
-                $this->large = true;
-            }
-
-            public function shrink()
-            {
-                $this->large = false;
-            }
-
-            public function render()
-            {
-                return <<<'HTML'
-                <div>
-                    <span>Count: {{ $count }}</span>
-                    @if ($large)
-                        <p>{{ str_repeat('stable-content-', 1000) }}</p>
-                    @endif
-                </div>
-                HTML;
-            }
-        });
-
-        $component->call('grow');
-
-        $this->assertArrayHasKey('html', $component->effects);
-        $this->assertArrayHasKey('htmlHash', $component->effects);
-
-        $component->call('increment')->assertSee('Count: 1');
-
-        $this->assertArrayHasKey('htmlDelta', $component->effects);
-
-        $component->call('shrink');
-
-        $this->assertArrayHasKey('html', $component->effects);
-        $this->assertArrayNotHasKey('htmlDelta', $component->effects);
-        $this->assertArrayNotHasKey('htmlHash', $component->effects);
-
-        $component->call('grow');
-
-        $this->assertArrayHasKey('html', $component->effects);
-        $this->assertArrayNotHasKey('htmlDelta', $component->effects);
-        $this->assertArrayHasKey('htmlHash', $component->effects);
-    }
-
-    public function test_delta_engine_falls_back_to_full_html_after_the_render_state_expires()
-    {
-        config()->set('livewire.update_engine', 'delta');
-        config()->set('livewire.delta.store', 'array');
-        config()->set('livewire.delta.minimum_html_bytes', 0);
+        config()->set('livewire.delta.block_size', 512);
+        config()->set('livewire.delta.maximum_manifest_bytes', 2048);
+        config()->set('livewire.delta.maximum_fragments', 10);
+        config()->set('livewire.delta.cache_accelerator', false);
+        config()->set('livewire.delta.snapshot_delta', false);
+        config()->set('livewire.delta.snapshot_references', false);
 
         $component = Livewire::test(DeltaCounter::class);
+        $transport = $component->effects['renderTransport'];
 
-        $component->call('increment');
-
-        Cache::store('array')->flush();
-
-        $component->call('increment')->assertSee('Count: 2');
-
-        $this->assertArrayHasKey('html', $component->effects);
-        $this->assertArrayNotHasKey('htmlDelta', $component->effects);
+        $this->assertSame(1, $transport['v']);
+        $this->assertSame(512, $transport['blockSize']);
+        $this->assertSame(2048, $transport['maximumManifestBytes']);
+        $this->assertSame(10, $transport['maximumFragments']);
+        $this->assertFalse($transport['cacheAccelerator']);
+        $this->assertFalse($transport['snapshotDelta']);
+        $this->assertFalse($transport['snapshotReferences']);
+        $this->assertSame(1024 * 1024, $transport['maximumRequestBytes']);
     }
 
-    public function test_delta_engine_falls_back_to_full_html_when_the_cached_render_fails_integrity()
+    public function test_v1_transport_sends_full_html_without_a_usable_baseline()
     {
-        config()->set('livewire.update_engine', 'delta');
-        config()->set('livewire.delta.store', 'array');
-        config()->set('livewire.delta.minimum_html_bytes', 0);
+        $html = '<div>'.str_repeat('full-', 1000).'</div>';
+        $response = $this->encodeRender($html, [
+            'v' => 1,
+            'capabilities' => [],
+        ]);
 
-        $component = Livewire::test(DeltaCounter::class);
+        $this->assertSame('full', $response['effects']['render']['mode']);
+        $this->assertSame($html, $response['effects']['html']);
+        $this->assertSame(strlen($html), $response['effects']['render']['bytes']);
+        $this->assertSame(hash('sha256', $html), $response['effects']['render']['target']);
+        $this->assertSame(1024, $response['effects']['render']['requestGzip']);
+    }
 
-        $component->call('increment');
+    public function test_v1_transport_can_disable_request_compression_negotiation()
+    {
+        config()->set('livewire.delta.request_compression', false);
 
-        Cache::store('array')->put(
-            'livewire:delta:'.$component->instance()->getId(),
-            [
-                'hash' => $component->effects['htmlHash'],
-                'html' => '<div>Tampered render</div>',
+        $response = $this->encodeRender('<div>full</div>', [
+            'v' => 1,
+            'capabilities' => [],
+        ]);
+
+        $this->assertArrayNotHasKey('requestGzip', $response['effects']['render']);
+    }
+
+    public function test_legacy_delta_client_is_seeded_when_it_has_no_render_hash_yet()
+    {
+        $html = '<div>'.str_repeat('legacy-', 1000).'</div>';
+        $hash = hash('sha256', $html);
+        $response = $this->encodeRender($html, []);
+
+        $this->assertSame($html, $response['effects']['html']);
+        $this->assertSame($hash, $response['effects']['htmlHash']);
+        $this->assertArrayNotHasKey('render', $response['effects']);
+        $this->assertSame(
+            $html,
+            app(RenderStateStore::class)->get('component-id', $hash),
+        );
+    }
+
+    public function test_v1_transport_sends_same_when_the_render_is_unchanged()
+    {
+        $html = '<div>'.str_repeat('same-', 1000).'</div>';
+        $response = $this->encodeRender($html, $this->metadata($html, ['same']));
+
+        $this->assertSame('same', $response['effects']['render']['mode']);
+        $this->assertArrayNotHasKey('html', $response['effects']);
+        $this->assertSame(hash('sha256', $html), $response['effects']['render']['base']);
+    }
+
+    public function test_v1_transport_uses_cached_splice_as_an_optional_accelerator()
+    {
+        $base = '<div>'.str_repeat('stable-content-', 2000).'<span>old</span></div>';
+        $target = str_replace('<span>old</span>', '<span>new</span>', $base);
+        $hash = hash('sha256', $base);
+
+        app(RenderStateStore::class)->put('component-id', $hash, $base);
+
+        $response = $this->encodeRender($target, $this->metadata($base, ['splice']));
+        $render = $response['effects']['render'];
+
+        $this->assertSame('splice', $render['mode']);
+        $this->assertArrayNotHasKey('html', $response['effects']);
+        $this->assertSame($target, app(HtmlDelta::class)->apply($base, $render['patches']));
+    }
+
+    public function test_v1_transport_builds_stateless_chunk_recipes_without_server_memory()
+    {
+        config()->set('livewire.delta.cache_accelerator', false);
+
+        $base = '<main>'.str_repeat('0123456789abcdef', 2000).'<b>old</b></main>';
+        $target = str_replace('<b>old</b>', '<b>new</b>', $base);
+        $blockSize = 256;
+        $metadata = $this->metadata($base, ['chunks']) + [
+            'chunks' => [
+                'blockSize' => $blockSize,
+                'blocks' => app(StatelessHtmlChunks::class)->manifest($base, $blockSize),
             ],
-            300,
-        );
+        ];
 
-        $component->call('increment')->assertSee('Count: 2');
+        $response = $this->encodeRender($target, $metadata);
+        $render = $response['effects']['render'];
 
-        $this->assertArrayHasKey('html', $component->effects);
-        $this->assertArrayNotHasKey('htmlDelta', $component->effects);
+        $this->assertSame('chunks', $render['mode']);
+        $this->assertSame($target, app(StatelessHtmlChunks::class)->apply($base, $render['ops']));
+        $this->assertSame(hash('sha256', $target), $render['target']);
     }
 
-    public function test_delta_engine_falls_back_to_full_html_when_the_store_is_unavailable()
+    public function test_v1_transport_replaces_explicit_fragments_without_server_memory()
     {
-        config()->set('livewire.delta.minimum_html_bytes', 0);
+        config()->set('livewire.delta.cache_accelerator', false);
 
-        $deltas = new HtmlDelta;
-        $engine = new DeltaUpdateEngine(new UnavailableRenderStateStore, $deltas);
-        $component = new DeltaCounter;
-        $component->setId('component-id');
-        $context = new ComponentContext($component);
-        $previousHtml = '<div>Count: 1</div>';
-        $previousHash = $deltas->hash($previousHtml);
+        $marker = 'type=transport|name=counter|token=0123456789abcdef|mode=morph';
+        $open = '<!--[if FRAGMENT:'.$marker.']><![endif]-->';
+        $close = '<!--[if ENDFRAGMENT:'.$marker.']><![endif]-->';
+        $stable = str_repeat('<p>stable-content</p>', 1000);
+        $base = '<main>'.$stable.$open.'old'.$close.$stable.'</main>';
+        $target = '<main>'.$stable.$open.'new'.$close.$stable.'</main>';
+        $manifest = app(RenderFragmentTree::class)->manifest($base);
 
-        $engine->update(
-            $component,
-            '<div>Count: 2</div>',
-            ['delta' => ['revision' => 1, 'hash' => $previousHash]],
-            $context,
-            ['htmlHash' => $previousHash],
-        );
+        $response = $this->encodeRender($target, $this->metadata($base, ['fragments']) + [
+            'fragments' => $manifest,
+        ]);
+        $render = $response['effects']['render'];
 
-        $this->assertSame('<div>Count: 2</div>', $context->effects['html']);
-        $this->assertArrayNotHasKey('htmlDelta', $context->effects);
+        $this->assertSame('fragments', $render['mode']);
+        $this->assertSame([['0123456789abcdef', 'new']], $render['ops']);
+        $this->assertSame($target, app(RenderFragmentTree::class)->apply($base, $render['ops']));
     }
 
-    public function test_cache_store_only_retains_the_latest_render_for_a_component()
+    public function test_configured_manifest_limits_silently_fall_back_to_full_html()
     {
-        config()->set('livewire.delta.store', 'array');
+        config()->set('livewire.delta.cache_accelerator', false);
 
+        $base = '<main>'.str_repeat('stable-content-', 1000).'<b>old</b></main>';
+        $target = str_replace('<b>old</b>', '<b>new</b>', $base);
+        $blockSize = 256;
+        $chunks = [
+            'blockSize' => $blockSize,
+            'blocks' => app(StatelessHtmlChunks::class)->manifest($base, $blockSize),
+        ];
+
+        config()->set('livewire.delta.maximum_manifest_bytes', 0);
+
+        $chunkResponse = $this->encodeRender(
+            $target,
+            $this->metadata($base, ['chunks']) + ['chunks' => $chunks],
+        );
+
+        $this->assertSame('full', $chunkResponse['effects']['render']['mode']);
+        $this->assertSame($target, $chunkResponse['effects']['html']);
+
+        $marker = 'type=transport|name=counter|token=0123456789abcdef|mode=morph';
+        $open = '<!--[if FRAGMENT:'.$marker.']><![endif]-->';
+        $close = '<!--[if ENDFRAGMENT:'.$marker.']><![endif]-->';
+        $fragmentBase = '<main>'.str_repeat('stable-', 1000).$open.'old'.$close.'</main>';
+        $fragmentTarget = str_replace('old', 'new', $fragmentBase);
+
+        config()->set('livewire.delta.maximum_fragments', 0);
+
+        $fragmentResponse = $this->encodeRender(
+            $fragmentTarget,
+            $this->metadata($fragmentBase, ['fragments']) + [
+                'fragments' => app(RenderFragmentTree::class)->manifest($fragmentBase),
+            ],
+        );
+
+        $this->assertSame('full', $fragmentResponse['effects']['render']['mode']);
+        $this->assertSame($fragmentTarget, $fragmentResponse['effects']['html']);
+    }
+
+    public function test_full_fallback_statistics_include_the_manifest_request_cost()
+    {
+        config()->set('livewire.delta.cache_accelerator', false);
+
+        $marker = 'type=transport|name=counter|token=0123456789abcdef|mode=morph';
+        $open = '<!--[if FRAGMENT:'.$marker.']><![endif]-->';
+        $close = '<!--[if ENDFRAGMENT:'.$marker.']><![endif]-->';
+        $base = '<main>'.str_repeat('stable-', 1000).$open.'old'.$close.'</main>';
+        $target = '<section>'.str_repeat('different-', 1000).$open.'new'.$close.'</section>';
+        $response = $this->encodeRender(
+            $target,
+            $this->metadata($base, ['fragments']) + [
+                'fragments' => app(RenderFragmentTree::class)->manifest($base),
+            ],
+        );
+        $render = $response['effects']['render'];
+
+        $this->assertSame('full', $render['mode']);
+        $this->assertGreaterThan($render['stats']['full'], $render['stats']['selected']);
+    }
+
+    public function test_snapshot_delta_is_verified_and_reversible()
+    {
+        config()->set('livewire.delta.snapshot_references', false);
+
+        $previous = json_encode(['data' => ['body' => str_repeat('stable-', 2000), 'count' => 1]], JSON_THROW_ON_ERROR);
+        $target = json_encode(['data' => ['body' => str_repeat('stable-', 2000), 'count' => 2]], JSON_THROW_ON_ERROR);
+        $response = $this->encodeRender('<div>ok</div>', [
+            'v' => 1,
+            'capabilities' => ['snapshot-delta'],
+        ], $previous, $target);
+
+        $this->assertArrayNotHasKey('snapshot', $response);
+        $this->assertSame(1, $response['snapshotDelta']['v']);
+        $this->assertSame(hash('sha256', $previous), $response['snapshotDelta']['base']);
+
+        $reconstructed = app(HtmlDelta::class)->apply($previous, $response['snapshotDelta']['patches']);
+
+        $this->assertSame($target, $reconstructed);
+        $this->assertSame(hash('sha256', $reconstructed), $response['snapshotDelta']['target']);
+        $this->assertSame(strlen($reconstructed), $response['snapshotDelta']['bytes']);
+    }
+
+    public function test_snapshot_references_keep_the_full_snapshot_as_a_client_fallback()
+    {
+        config()->set('livewire.delta.snapshot_delta', false);
+
+        $snapshot = json_encode(['data' => ['count' => 2]], JSON_THROW_ON_ERROR);
+        $response = $this->encodeRender('<div>ok</div>', [
+            'v' => 1,
+            'capabilities' => ['snapshot-ref'],
+        ], '{}', $snapshot);
+
+        $this->assertSame($snapshot, $response['snapshot']);
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9_-]{24}$/', $response['snapshotRef']);
+        $this->assertSame(
+            $snapshot,
+            app(SnapshotStateStore::class)->get($response['snapshotRef'], 'component-id'),
+        );
+    }
+
+    public function test_snapshot_references_are_not_issued_when_a_full_retry_would_exceed_the_safe_payload_budget()
+    {
+        config()->set('livewire.delta.snapshot_delta', false);
+        config()->set('livewire.payload.max_size', 1024);
+
+        $snapshot = json_encode([
+            'data' => str_repeat('A', 600),
+        ], JSON_THROW_ON_ERROR);
+        $response = $this->encodeRender('<div>ok</div>', [
+            'v' => 1,
+            'capabilities' => ['snapshot-ref'],
+        ], '{}', $snapshot);
+
+        $this->assertGreaterThan(512, strlen($snapshot));
+        $this->assertSame($snapshot, $response['snapshot']);
+        $this->assertArrayNotHasKey('snapshotRef', $response);
+    }
+
+    #[DataProvider('persistentCacheStores')]
+    public function test_render_and_snapshot_state_work_with_memory_and_file_cache_stores(string $storeName)
+    {
+        config()->set('livewire.delta.store', $storeName);
+        config()->set('livewire.delta.snapshot_store', $storeName);
+
+        $componentId = 'component-'.str()->random(12);
+        $html = '<div>'.str_repeat('cacheable-', 1000).'</div>';
+        $hash = hash('sha256', $html);
+        $snapshot = json_encode(['memo' => ['id' => $componentId], 'data' => ['value' => 1]], JSON_THROW_ON_ERROR);
+
+        app(RenderStateStore::class)->put($componentId, $hash, $html);
+        $reference = app(SnapshotStateStore::class)->put($componentId, $snapshot);
+
+        $this->assertSame($html, app(RenderStateStore::class)->get($componentId, $hash));
+        $this->assertSame($snapshot, app(SnapshotStateStore::class)->get($reference, $componentId));
+        $this->assertNull(app(SnapshotStateStore::class)->get($reference, 'another-component'));
+        $this->assertSame($snapshot, app(SnapshotStateStore::class)->get($reference, $componentId));
+    }
+
+    public static function persistentCacheStores(): array
+    {
+        return [
+            'memory' => ['array'],
+            'file' => ['file'],
+        ];
+    }
+
+    public function test_render_cache_preserves_concurrent_immutable_baselines()
+    {
         $store = app(RenderStateStore::class);
+        $first = '<div>First</div>';
+        $second = '<div>Second</div>';
+        $firstHash = hash('sha256', $first);
+        $secondHash = hash('sha256', $second);
 
-        $store->put('component-id', 'first-hash', '<div>First</div>');
-        $store->put('component-id', 'second-hash', '<div>Second</div>');
+        $store->put('component-id', $firstHash, $first);
+        $store->put('component-id', $secondHash, $second);
 
-        $this->assertNull($store->get('component-id', 'first-hash'));
-        $this->assertSame('<div>Second</div>', $store->get('component-id', 'second-hash'));
+        $this->assertSame($first, $store->get('component-id', $firstHash));
+        $this->assertSame($second, $store->get('component-id', $secondHash));
     }
 
-    public function test_cache_store_rejects_rendered_html_that_does_not_match_its_hash()
+    public function test_render_cache_rejects_and_forgets_tampered_content()
     {
-        config()->set('livewire.delta.store', 'array');
-
         $html = '<div>Original render</div>';
-        $hash = app(HtmlDelta::class)->hash($html);
-        $key = 'livewire:delta:component-id';
+        $hash = hash('sha256', $html);
+        $key = 'livewire:render:'.hash('sha256', 'component-id'."\0".$hash);
 
         Cache::store('array')->put($key, [
             'hash' => $hash,
-            'html' => '<div>Tampered render</div>',
+            'bytes' => strlen($html),
+            'encoding' => 'identity',
+            'payload' => '<div>Tampered render</div>',
         ], 300);
 
         $this->assertNull(app(RenderStateStore::class)->get('component-id', $hash));
         $this->assertFalse(Cache::store('array')->has($key));
     }
 
-    public function test_renderless_updates_preserve_the_last_render_baseline()
+    public function test_testable_livewire_materializes_same_and_snapshot_delta_responses()
     {
-        config()->set('livewire.update_engine', 'delta');
-        config()->set('livewire.delta.store', 'array');
-        config()->set('livewire.delta.minimum_html_bytes', 0);
-        config()->set('livewire.delta.minimum_compressed_savings_bytes', 0);
-
         $component = Livewire::test(DeltaCounter::class)
             ->call('increment')
-            ->call('incrementRenderless')
+            ->commit()
             ->assertSee('Count: 1');
+
+        $this->assertSame('same', $component->effects['render']['mode']);
+        $this->assertArrayHasKey('html', $component->effects);
+        $component->assertJsonPath('components.0.snapshotDelta.v', 1);
+        $this->assertSame(1, $component->get('count'));
+    }
+
+    public function test_testable_livewire_materializes_stateless_chunk_responses()
+    {
+        config()->set('livewire.delta.cache_accelerator', false);
+
+        $component = Livewire::test(new class extends Component {
+            public int $count = 0;
+
+            public function increment(): void
+            {
+                $this->count++;
+            }
+
+            public function render()
+            {
+                return '<div><b>Count: {{ $count }}</b>'.str_repeat('<span>stable-content</span>', 2000).'</div>';
+            }
+        });
+
+        $component->call('increment');
+        $component->call('increment')->assertSee('Count: 2');
+
+        $this->assertSame('chunks', $component->effects['render']['mode']);
+        $this->assertArrayHasKey('html', $component->effects);
+        $this->assertSame(2, $component->get('count'));
+    }
+
+    public function test_testable_livewire_materializes_explicit_fragment_responses()
+    {
+        config()->set('livewire.delta.cache_accelerator', false);
+
+        $component = Livewire::test(new class extends Component {
+            public int $count = 0;
+
+            public function increment(): void
+            {
+                $this->count++;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <main>
+                    {{ str_repeat('stable-content-', 2000) }}
+                    @fragment('counter')
+                        <b>Count: {{ $count }}</b>
+                    @endfragment
+                </main>
+                HTML;
+            }
+        });
+
+        $component->call('increment');
+        $component->call('increment')->assertSee('Count: 2');
+
+        $this->assertSame('fragments', $component->effects['render']['mode']);
+        $this->assertArrayHasKey('html', $component->effects);
+    }
+
+    public function test_renderless_updates_preserve_the_last_render_baseline()
+    {
+        $component = Livewire::test(DeltaCounter::class)
+            ->call('increment')
+            ->call('increment')
+            ->call('incrementRenderless')
+            ->assertSee('Count: 2');
 
         $this->assertArrayNotHasKey('html', $component->effects);
         $this->assertArrayNotHasKey('htmlDelta', $component->effects);
 
-        $component->call('increment')->assertSee('Count: 3');
+        $component->call('increment')->assertSee('Count: 4');
 
-        $this->assertArrayHasKey('htmlDelta', $component->effects);
+        $this->assertArrayHasKey('render', $component->effects);
+        $this->assertSame('splice', $component->effects['render']['mode']);
     }
 
     public function test_morph_remains_the_default_update_engine()
     {
-        $component = Livewire::test(DeltaCounter::class)
+        config()->set('livewire.update_engine', 'morph');
+
+        $component = Livewire::test(DeltaCounter::class);
+
+        $this->assertArrayNotHasKey('renderTransport', $component->effects);
+
+        $component
             ->call('increment')
             ->call('increment');
 
         $this->assertArrayHasKey('html', $component->effects);
-        $this->assertArrayNotHasKey('htmlDelta', $component->effects);
+        $this->assertArrayNotHasKey('render', $component->effects);
+    }
+
+    protected function metadata(string $html, array $capabilities): array
+    {
+        return [
+            'v' => 1,
+            'capabilities' => $capabilities,
+            'base' => [
+                'hash' => hash('sha256', $html),
+                'bytes' => strlen($html),
+                'revision' => 1,
+            ],
+        ];
+    }
+
+    protected function encodeRender(
+        string $html,
+        array $metadata,
+        string $previousSnapshot = '{}',
+        string $snapshot = '{}',
+    ): array {
+        $payload = [
+            'components' => [[
+                'id' => 'component-id',
+                'snapshot' => $snapshot,
+                'effects' => ['html' => $html],
+            ]],
+        ];
+        $contexts = [
+            'component-id' => [
+                'snapshot' => $previousSnapshot,
+                'render' => $metadata,
+            ],
+        ];
+
+        return app(ResponseTransport::class)->encode($payload, $contexts)['components'][0];
     }
 }
 
@@ -446,45 +605,5 @@ class DeltaCounter extends Component
     public function render()
     {
         return '<div>Count: {{ $count }}'.str_repeat('<span>stable</span>', 100).'</div>';
-    }
-}
-
-class UnavailableRenderStateStore implements RenderStateStore
-{
-    public function get(string $componentId, string $hash): ?string
-    {
-        throw new \RuntimeException('Render state store unavailable.');
-    }
-
-    public function put(string $componentId, string $hash, string $html): void
-    {
-        throw new \RuntimeException('Render state store unavailable.');
-    }
-}
-
-class TrackingRenderStateStore implements RenderStateStore
-{
-    public int $getCalls = 0;
-
-    public int $putCalls = 0;
-
-    public function get(string $componentId, string $hash): ?string
-    {
-        $this->getCalls++;
-
-        return null;
-    }
-
-    public function put(string $componentId, string $hash, string $html): void
-    {
-        $this->putCalls++;
-    }
-}
-
-class InspectableDeltaUpdateEngine extends DeltaUpdateEngine
-{
-    public function canSendDelta(array $effect, string $html, string $hash): bool
-    {
-        return $this->shouldSendDelta($effect, $html, $hash);
     }
 }

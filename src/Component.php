@@ -11,6 +11,7 @@ use Livewire\Features\SupportRedirects\HandlesRedirects;
 use Livewire\Features\SupportPageComponents\HandlesPageComponents;
 use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
 use Livewire\Features\SupportIslands\HandlesIslands;
+use Livewire\Features\SupportTransportFragments\HandlesTransportFragments;
 use Livewire\Features\SupportFormObjects\HandlesFormObjects;
 use Livewire\Features\SupportEvents\HandlesEvents;
 use Livewire\Features\SupportHtmlAttributeForwarding\HandlesHtmlAttributeForwarding;
@@ -31,6 +32,7 @@ abstract class Component
     use InteractsWithProperties;
     use HandlesEvents;
     use HandlesIslands;
+    use HandlesTransportFragments;
     use HandlesRedirects;
     use HandlesTransitions;
     use HandlesStreaming;

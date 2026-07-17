@@ -3,12 +3,15 @@
 namespace Livewire\Mechanisms\HandleRequests;
 
 use Illuminate\Http\Response;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 use Livewire\Features\SupportReactiveProps\SupportReactiveProps;
+use Livewire\Mechanisms\HandleComponents\UpdateEngines\ResponseTransport;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Exceptions\PayloadTooLargeException;
 use Livewire\Exceptions\TooManyComponentsException;
+use Symfony\Component\HttpFoundation\InputBag;
 
 use Livewire\Mechanisms\Mechanism;
 
@@ -20,12 +23,25 @@ class HandleRequests extends Mechanism
 
     function boot()
     {
+        // Compressed JSON has to be decoded before every other global
+        // middleware so auth, tenancy, logging, and user middleware can inspect
+        // the same request input that the Livewire controller will execute.
+        $kernel = app()->make(HttpKernel::class);
+
+        if (! $kernel->hasMiddleware(DecodeGzipRequests::class)) {
+            $kernel->prependMiddleware(DecodeGzipRequests::class);
+        }
+
         // Register the default route immediately (before routes files load)
         // so it's positioned before any catch-all routes.
         if (! $this->updateRoute && ! $this->updateRouteExists()) {
             app($this::class)->setUpdateRoute(function ($handle, $path) {
                 return Route::post($path, $handle)
-                    ->middleware(['web', RequireLivewireHeaders::class])
+                    ->middleware([
+                        DecodeGzipRequests::class,
+                        'web',
+                        RequireLivewireHeaders::class,
+                    ])
                     ->name('default-livewire.update');
             });
         }
@@ -92,6 +108,8 @@ class HandleRequests extends Mechanism
     {
         $route = $callback([self::class, 'handleUpdate'], EndpointResolver::updatePath());
 
+        $this->prependMiddleware($route, DecodeGzipRequests::class);
+
         // Ensure the route includes the `web` middleware group.
         // Without it, CSRF protection is lost entirely on the update endpoint.
         // Note: we use middleware() (not gatherMiddleware()) to avoid polluting
@@ -112,6 +130,18 @@ class HandleRequests extends Mechanism
         }
 
         $this->updateRoute = $route;
+    }
+
+    protected function prependMiddleware($route, string $middleware): void
+    {
+        $middlewareStack = $route->middleware();
+
+        if (in_array($middleware, $middlewareStack, true)) return;
+
+        $action = $route->getAction();
+        $action['middleware'] = [$middleware, ...$middlewareStack];
+        $route->setAction($action);
+        $route->computedMiddleware = null;
     }
 
     function isLivewireRequest()
@@ -145,41 +175,42 @@ class HandleRequests extends Mechanism
             abort(404);
         }
 
-        // Check payload size limit...
-        $maxSize = config('livewire.payload.max_size');
-
-        if ($maxSize !== null) {
-            $contentLength = request()->header('Content-Length', 0);
-
-            if ($contentLength > $maxSize) {
-                throw new PayloadTooLargeException($contentLength, $maxSize);
-            }
-        }
-
-        $requestPayload = request('components');
+        $requestPayload = $this->extractRequestPayload();
 
         if (! is_array($requestPayload) || empty($requestPayload)) {
             abort(404);
         }
 
-        foreach ($requestPayload as $component) {
-            if (! is_array($component)
-                || ! is_string($component['snapshot'] ?? null)
-                || ! is_array($component['updates'] ?? null)
-                || ! is_array($component['calls'] ?? null)
-                || (array_key_exists('render', $component) && ! is_array($component['render']))
-                || (isset($component['render']['htmlHash']) && ! is_string($component['render']['htmlHash']))
-            ) {
-                abort(404);
-            }
-        }
-
-        // Check max components limit...
+        // Reject oversized batches before validating individual components or
+        // touching optional external state stores.
         $maxComponents = config('livewire.payload.max_components');
 
         if ($maxComponents !== null && count($requestPayload) > $maxComponents) {
             throw new TooManyComponentsException(count($requestPayload), $maxComponents);
         }
+
+        foreach ($requestPayload as $component) {
+            if (! $this->isValidComponentPayload($component)) {
+                abort(404);
+            }
+        }
+
+        $missingSnapshots = $this->resolveSnapshotReferences($requestPayload);
+
+        if ($missingSnapshots) {
+            return response()->json(
+                ['snapshotMissing' => $missingSnapshots],
+                409,
+                ['X-Livewire-Snapshot-Missing' => '1'],
+            );
+        }
+
+        // Capture immutable wire baselines before request hooks can normalize
+        // or otherwise mutate the payload used by the component lifecycle.
+        $usesResponseTransport = $this->usesResponseTransport();
+        $transportContexts = $usesResponseTransport
+            ? $this->captureTransportContexts($requestPayload)
+            : [];
 
         $finish = trigger('request', $requestPayload);
 
@@ -188,7 +219,16 @@ class HandleRequests extends Mechanism
         $componentResponses = [];
 
         foreach ($requestPayload as $componentPayload) {
-            $snapshot = json_decode($componentPayload['snapshot'], associative: true);
+            try {
+                $snapshot = json_decode(
+                    $componentPayload['snapshot'],
+                    associative: true,
+                    flags: JSON_THROW_ON_ERROR,
+                );
+            } catch (\JsonException) {
+                abort(404);
+            }
+
             $updates = $componentPayload['updates'];
             $calls = $componentPayload['calls'];
             $renderMetadata = $componentPayload['render'] ?? [];
@@ -214,10 +254,16 @@ class HandleRequests extends Mechanism
                 abort(419);
             }
 
-            $componentResponses[] = [
+            $componentResponse = [
                 'snapshot' => json_encode($snapshot, JSON_THROW_ON_ERROR),
                 'effects' => $effects,
             ];
+
+            if ($usesResponseTransport) {
+                $componentResponse = ['id' => $snapshot['memo']['id']] + $componentResponse;
+            }
+
+            $componentResponses[] = $componentResponse;
         }
 
         $responsePayload = [
@@ -228,6 +274,10 @@ class HandleRequests extends Mechanism
         $finish = trigger('response', $responsePayload);
 
         $payload = $finish($responsePayload);
+
+        if ($usesResponseTransport) {
+            $payload = app(ResponseTransport::class)->encode($payload, $transportContexts);
+        }
 
         // When wire:stream is used, headers are sent early by SupportStreaming::ensureStreamResponseStarted().
         // The streaming content has already been output via echo/flush in SupportStreaming::streamContent().
@@ -245,5 +295,229 @@ class HandleRequests extends Mechanism
         }
 
         return $payload;
+    }
+
+    protected function extractRequestPayload(): mixed
+    {
+        if (request()->attributes->has(DecodeGzipRequests::PAYLOAD_ATTRIBUTE)) {
+            // Always read the current input bag. Middleware running after the
+            // decoder is allowed to merge or replace the component payload.
+            return request('components');
+        }
+
+        $configuredMaxSize = config('livewire.payload.max_size');
+        $maxSize = $configuredMaxSize === null
+            ? null
+            : max(0, (int) $configuredMaxSize);
+        $content = request()->getContent();
+        $actualContentLength = strlen($content);
+        $declaredContentLength = filter_var(
+            request()->header('Content-Length'),
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 0]],
+        );
+        $contentLength = max(
+            $actualContentLength,
+            $declaredContentLength === false ? 0 : $declaredContentLength,
+        );
+
+        if ($maxSize !== null && $contentLength > $maxSize) {
+            throw new PayloadTooLargeException($contentLength, $maxSize);
+        }
+
+        $encoding = strtolower(trim((string) request()->header('Content-Encoding', '')));
+
+        if ($encoding === '' || $encoding === 'identity') return request('components');
+
+        if ($encoding !== 'gzip') abort(415);
+
+        $payload = app(DecodeGzipRequests::class)->decodePayload(request());
+        request()->attributes->set(DecodeGzipRequests::PAYLOAD_ATTRIBUTE, true);
+        request()->setJson(new InputBag($payload));
+
+        return request('components');
+    }
+
+    protected function isValidComponentPayload(mixed $component): bool
+    {
+        if (! is_array($component)
+            || ! is_array($component['updates'] ?? null)
+            || ! is_array($component['calls'] ?? null)
+        ) {
+            return false;
+        }
+
+        $hasSnapshot = is_string($component['snapshot'] ?? null);
+        $hasSnapshotReference = is_string($component['snapshotRef'] ?? null)
+            && is_string($component['id'] ?? null)
+            && strlen($component['id']) >= 1
+            && strlen($component['id']) <= 255
+            && preg_match('/\A[A-Za-z0-9_-]{24}\z/', $component['snapshotRef']) === 1;
+
+        if (! $hasSnapshot && ! $hasSnapshotReference) return false;
+
+        if (! array_key_exists('render', $component)) return true;
+
+        return $this->isValidRenderMetadata($component['render']);
+    }
+
+    protected function isValidRenderMetadata(mixed $metadata): bool
+    {
+        if (! is_array($metadata)) return false;
+
+        if ($metadata === []) return true;
+
+        // Accept the first experimental client's legacy metadata during rolling upgrades.
+        if (array_key_exists('htmlHash', $metadata)) {
+            return is_string($metadata['htmlHash'])
+                && preg_match('/\A[a-f0-9]{64}\z/', $metadata['htmlHash']) === 1;
+        }
+
+        if (($metadata['v'] ?? null) !== 1) return false;
+
+        $capabilities = $metadata['capabilities'] ?? [];
+
+        if (! is_array($capabilities)
+            || ! array_is_list($capabilities)
+            || count($capabilities) > 12
+            || count($capabilities) !== count(array_unique($capabilities, SORT_REGULAR))
+        ) {
+            return false;
+        }
+
+        $allowed = ['same', 'splice', 'chunks', 'fragments', 'snapshot-delta', 'snapshot-ref'];
+
+        foreach ($capabilities as $capability) {
+            if (! is_string($capability) || ! in_array($capability, $allowed, true)) return false;
+        }
+
+        if (isset($metadata['base'])) {
+            $base = $metadata['base'];
+
+            if (! is_array($base)
+                || ! is_string($base['hash'] ?? null)
+                || preg_match('/\A[a-f0-9]{64}\z/', $base['hash']) !== 1
+                || ! is_int($base['bytes'] ?? null)
+                || $base['bytes'] < 0
+                || ! is_int($base['revision'] ?? null)
+                || $base['revision'] < 0
+            ) {
+                return false;
+            }
+        }
+
+        if (isset($metadata['chunks'])) {
+            $chunks = $metadata['chunks'];
+
+            if (! is_array($chunks)
+                || ! is_int($chunks['blockSize'] ?? null)
+                || $chunks['blockSize'] < 256
+                || $chunks['blockSize'] > 65536
+                || ! is_string($chunks['blocks'] ?? null)
+                || strlen($chunks['blocks']) > 65536
+            ) {
+                return false;
+            }
+        }
+
+        if (isset($metadata['fragments'])) {
+            $fragments = $metadata['fragments'];
+
+            if (! is_array($fragments)
+                || ! is_string($fragments['root'] ?? null)
+                || preg_match('/\A[a-f0-9]{16}\z/', $fragments['root']) !== 1
+                || ! is_array($fragments['nodes'] ?? null)
+                || count($fragments['nodes']) > 1024
+            ) {
+                return false;
+            }
+
+            foreach ($fragments['nodes'] as $node) {
+                if (! is_array($node)
+                    || count($node) !== 3
+                    || ! is_string($node[0] ?? null)
+                    || preg_match('/\A[a-f0-9]{16,64}\z/', $node[0]) !== 1
+                    || ! is_string($node[1] ?? null)
+                    || preg_match('/\A[a-f0-9]{16}\z/', $node[1]) !== 1
+                    || ! is_string($node[2] ?? null)
+                    || preg_match('/\A[a-f0-9]{16}\z/', $node[2]) !== 1
+                ) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    protected function resolveSnapshotReferences(array &$components): array
+    {
+        $missing = [];
+
+        foreach ($components as &$component) {
+            if (is_string($component['snapshot'] ?? null)) continue;
+
+            $reference = $component['snapshotRef'];
+            $componentId = $component['id'];
+
+            try {
+                $snapshot = app(SnapshotStateStore::class)->get($reference, $componentId);
+            } catch (\Throwable $e) {
+                report($e);
+
+                $snapshot = null;
+            }
+
+            if ($snapshot === null) {
+                $missing[] = $componentId;
+
+                continue;
+            }
+
+            $component['snapshot'] = $snapshot;
+        }
+
+        unset($component);
+
+        return $missing;
+    }
+
+    protected function captureTransportContexts(array $components): array
+    {
+        $contexts = [];
+
+        foreach ($components as $component) {
+            $snapshotEncoded = $component['snapshot'] ?? null;
+
+            if (! is_string($snapshotEncoded)) continue;
+
+            try {
+                $snapshot = json_decode(
+                    $snapshotEncoded,
+                    associative: true,
+                    flags: JSON_THROW_ON_ERROR,
+                );
+            } catch (\JsonException) {
+                continue;
+            }
+
+            $componentId = $snapshot['memo']['id'] ?? null;
+
+            if (! is_string($componentId)) continue;
+
+            $contexts[$componentId][] = [
+                'snapshot' => $snapshotEncoded,
+                'render' => is_array($component['render'] ?? null)
+                    ? $component['render']
+                    : [],
+            ];
+        }
+
+        return $contexts;
+    }
+
+    protected function usesResponseTransport(): bool
+    {
+        return config('livewire.update_engine', 'morph') === 'delta';
     }
 }
