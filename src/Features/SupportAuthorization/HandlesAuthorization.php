@@ -92,6 +92,9 @@ trait HandlesAuthorization
         $ability = enum_value($ability);
 
         if (is_string($ability) && ! str_contains($ability, '\\')) {
+            // Need to reset the properties in case attribute is used along with `$this->authorize()`
+            $this->setMethodAndParameters(null, null);
+
             return [$ability, $arguments];
         }
 
@@ -101,6 +104,11 @@ trait HandlesAuthorization
         // [3]action -> [2]authorize() -> [1]baseAuthorize() -> [0]parseAbilityAndArguments
         $this->method ??= debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4)[3]['function'];
 
-        return [$this->normalizeGuessedAbilityName($this->method), $ability];
+        $methodAndAbility = [$this->normalizeGuessedAbilityName($this->method), $ability];
+
+        // Need to reset the properties in case attribute is used along with `$this->authorize()`
+        $this->setMethodAndParameters(null, null);
+
+        return $methodAndAbility;
     }
 }

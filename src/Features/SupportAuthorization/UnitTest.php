@@ -1601,6 +1601,37 @@ class UnitTest extends TestCase
             Session::pull('model-not-found')
         );
     }
+
+    public function test_can_authorize_using_attribute_and_trait_method_at_the_same_time()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public AuthorizationPost $post;
+
+                public function mount() : void
+                {
+                    $this->post = AuthorizationPost::find(1);
+                }
+
+                #[Authorize('create', AuthorizationPost::class)]
+                public function createPost()
+                {
+                    $this->authorize('edit', $this->post);
+                }
+
+                #[Authorize('edit', 'post')]
+                public function anotherCreatePost()
+                {
+                    $this->authorize('create', AuthorizationPost::class);
+                }
+            })
+            ->call('createPost')
+            ->assertOk()
+            ->call('anotherCreatePost')
+            ->assertOk();
+    }
 }
 
 class AuthorizationUser extends AuthUser
