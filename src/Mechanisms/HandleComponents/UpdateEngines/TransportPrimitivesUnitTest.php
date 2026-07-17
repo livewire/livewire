@@ -22,12 +22,12 @@ class TransportPrimitivesUnitTest extends \Tests\TestCase
         $chunks = new StatelessHtmlChunks;
         $blockSize = 256;
         $base = '<main>'
-            .str_repeat('<p>foo 👋</p>', 20)
-            .'<p>bar baz</p>'
+            .str_repeat('<p>д字 👋</p>', 20)
+            .'<p>ж世 з本</p>'
             .str_repeat('<p>More stable content</p>', 20)
             .'</main>';
-        $target = '<main><h1>qux 🚀</h1>'
-            .str_repeat('<p>foo 👋</p>', 20)
+        $target = '<main><h1>ы語 🚀</h1>'
+            .str_repeat('<p>д字 👋</p>', 20)
             .str_repeat('<p>More stable content</p>', 20)
             .'</main>';
 

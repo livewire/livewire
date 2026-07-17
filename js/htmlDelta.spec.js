@@ -20,13 +20,13 @@ describe('HTML deltas', () => {
 
     it('uses UTF-8 byte offsets without corrupting unicode', () => {
         let prefix = '<div>'
-        let from = `${prefix}foo 👋</div>`
+        let from = `${prefix}д字 👋</div>`
 
         expect(applyHtmlDelta(from, {
             start: byteLength(prefix),
-            delete: byteLength('foo 👋'),
-            insert: encodeBase64('bar 🚀'),
-        })).toBe('<div>bar 🚀</div>')
+            delete: byteLength('д字 👋'),
+            insert: encodeBase64('ж世 🚀'),
+        })).toBe('<div>ж世 🚀</div>')
     })
 
     it('applies multiple patches using offsets from the original HTML', () => {
@@ -69,8 +69,8 @@ describe('HTML deltas', () => {
     })
 
     it('hashes the exact UTF-8 bytes used by the server', async () => {
-        expect(await hashHtml('<div>foo 🚀</div>'))
-            .toBe('fd5e37963f5a9f3bbfd8a5da40d73aa3c939b1866b2ef414302d89f2ed294e98')
+        expect(await hashHtml('<div>д字 🚀</div>'))
+            .toBe('aec6c9575dda2ec914dead7a34c741d7cfd1c305d0808fa88e85e95a0909029f')
     })
 
     it('verifies reconstructed HTML before returning it for morphing', async () => {

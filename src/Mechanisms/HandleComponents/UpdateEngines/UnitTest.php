@@ -46,8 +46,8 @@ class UnitTest extends \Tests\TestCase
     public function test_it_preserves_unicode_when_a_delta_boundary_is_inside_a_multibyte_character()
     {
         $delta = new HtmlDelta;
-        $from = '<div>foo 👋 — bar</div>';
-        $to = '<div>foo 🚀 — baz</div>';
+        $from = '<div>д字 👋 — ж世</div>';
+        $to = '<div>д字 🚀 — з本</div>';
 
         $patches = $delta->encode($from, $to);
 

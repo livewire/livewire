@@ -62,8 +62,8 @@ class LargeTransportDemoBrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewire()->click('@edit-middle')
             ->assertScript("window.largeTransportDemo.history[2].mode", 'fragments')
             ->assertSeeIn('@transport-mode', 'fragments')
-            ->assertScript("Livewire.first().rows.find(row => row.id === 200).name", 'foo 東京 — bar')
-            ->assertSeeIn('@row-name-200', 'foo 東京 — bar')
+            ->assertScript("Livewire.first().rows.find(row => row.id === 200).name", 'д字 東京 — ж世')
+            ->assertSeeIn('@row-name-200', 'д字 東京 — ж世')
             ->assertScript("window.largeTransportDemo.history[2].saved > 0", true)
 
             ->waitForLivewire()->click('@move-block')
@@ -114,7 +114,7 @@ class LargeTransportDemoComponent extends Component
     {
         $index = array_search(200, array_column($this->rows, 'id'), true);
 
-        $this->rows[$index]['name'] = 'foo 東京 — bar';
+        $this->rows[$index]['name'] = 'д字 東京 — ж世';
         $this->rows[$index]['status'] = 'unicode';
     }
 

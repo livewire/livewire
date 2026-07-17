@@ -37,10 +37,10 @@ describe('render transport chunk recipes', () => {
         let baseline = 'α--middle--ω'
         let prefix = 'α--'
         let suffix = '--ω'
-        let target = prefix + 'foo 🚀' + suffix
+        let target = prefix + 'д字 🚀' + suffix
         let ops = [
             ['c', 0, byteLength(prefix)],
-            ['a', encodeBase64('foo 🚀')],
+            ['a', encodeBase64('д字 🚀')],
             ['c', byteLength(prefix + 'middle'), byteLength(suffix)],
         ]
 
@@ -69,7 +69,7 @@ describe('render transport fragments', () => {
     it('parses nested transport markers and records UTF-8 byte ranges', () => {
         let outer = 'a'.repeat(64)
         let inner = 'b'.repeat(64)
-        let html = '<main>🚀' + fragment(outer, 'before' + fragment(inner, 'foo') + 'after') + '</main>'
+        let html = '<main>🚀' + fragment(outer, 'before' + fragment(inner, 'д字') + 'after') + '</main>'
         let fragments = parseTransportFragments(html)
 
         expect(fragments).toHaveLength(2)
@@ -84,7 +84,7 @@ describe('render transport fragments', () => {
             source.subarray(fragments[1].contentStart, fragments[1].contentEnd),
         )
 
-        expect(content).toBe('foo')
+        expect(content).toBe('д字')
     })
 
     it('builds content and skeleton digests that isolate nested changes', () => {
@@ -118,16 +118,16 @@ describe('render transport fragments', () => {
         let inner = 'b'.repeat(64)
         let baseline = '<main>' + fragment(
             outer,
-            'before' + fragment(inner, 'foo 👋') + 'after',
+            'before' + fragment(inner, 'д字 👋') + 'after',
         ) + '</main>'
         let target = '<main>' + fragment(
             outer,
-            'before' + fragment(inner, 'bar 🚀') + 'after',
+            'before' + fragment(inner, 'ж世 🚀') + 'after',
         ) + '</main>'
 
         expect(applyFragmentOps(
             baseline,
-            [[inner, 'bar 🚀']],
+            [[inner, 'ж世 🚀']],
             byteLength(target),
         )).toBe(target)
     })
@@ -154,7 +154,7 @@ describe('render transport fragments', () => {
 
 describe('render descriptor materialization', () => {
     it('verifies full HTML supplied separately from the descriptor', async () => {
-        let html = '<div>foo bar baz 🚀</div>'
+        let html = '<div>д字 ж世 з本 🚀</div>'
         let descriptor = {
             v: 1,
             mode: 'full',
@@ -189,8 +189,8 @@ describe('render descriptor materialization', () => {
     })
 
     it('materializes splice, chunk, and fragment modes', async () => {
-        let spliceBaseline = '<div>foo 👋</div>'
-        let spliceTarget = '<div>bar 🚀</div>'
+        let spliceBaseline = '<div>д字 👋</div>'
+        let spliceTarget = '<div>ж世 🚀</div>'
         let spliceState = await makeBaseline(spliceBaseline)
         let spliceDescriptor = {
             v: 1,
@@ -200,8 +200,8 @@ describe('render descriptor materialization', () => {
             bytes: byteLength(spliceTarget),
             patches: [{
                 start: byteLength('<div>'),
-                delete: byteLength('foo 👋'),
-                insert: encodeBase64('bar 🚀'),
+                delete: byteLength('д字 👋'),
+                insert: encodeBase64('ж世 🚀'),
             }],
         }
 
@@ -229,7 +229,7 @@ describe('render descriptor materialization', () => {
 
         let token = 'c'.repeat(64)
         let fragmentBaseline = '<div>' + fragment(token, 'old') + '</div>'
-        let fragmentTarget = '<div>' + fragment(token, 'baz') + '</div>'
+        let fragmentTarget = '<div>' + fragment(token, 'з本') + '</div>'
         let fragmentState = await makeBaseline(fragmentBaseline)
         let fragmentDescriptor = {
             v: 1,
@@ -237,7 +237,7 @@ describe('render descriptor materialization', () => {
             base: fragmentState.hash,
             target: await hashHtml(fragmentTarget),
             bytes: byteLength(fragmentTarget),
-            ops: [[token, 'baz']],
+            ops: [[token, 'з本']],
         }
 
         await expect(materializeRender(fragmentDescriptor, null, fragmentState))
@@ -296,16 +296,16 @@ describe('render descriptor materialization', () => {
 
 describe('snapshot deltas', () => {
     it('reconstructs and verifies a Unicode snapshot using byte patches', async () => {
-        let baseline = '{"memo":"foo 👋","count":1}'
-        let target = '{"memo":"bar 🚀","count":2}'
+        let baseline = '{"memo":"д字 👋","count":1}'
+        let target = '{"memo":"ж世 🚀","count":2}'
         let patches = [
             {
                 start: byteLength('{"memo":"'),
-                delete: byteLength('foo 👋'),
-                insert: encodeBase64('bar 🚀'),
+                delete: byteLength('д字 👋'),
+                insert: encodeBase64('ж世 🚀'),
             },
             {
-                start: byteLength('{"memo":"foo 👋","count":'),
+                start: byteLength('{"memo":"д字 👋","count":'),
                 delete: 1,
                 insert: encodeBase64('2'),
             },
