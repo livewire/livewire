@@ -34,13 +34,8 @@ trait HandlesAuthorization
      */
     public function authorize($ability, $arguments = [])
     {
-        if (is_null($this->method) || is_null($this->parameters)) {
+        if (is_null($this->method) || is_null($this->parameters) || is_null($arguments)) {
             return $this->baseAuthorize($ability, $arguments);
-        }
-
-        // Action that does not require a model or class...
-        if (is_null($arguments)) {
-            return $this->baseAuthorize($ability);
         }
 
         $arguments = Arr::wrap($arguments);
@@ -102,13 +97,11 @@ trait HandlesAuthorization
         // we need to make sure it gets the right method name
         // if its called from `$this->authorize()` inside component action where the 4 stacks comes from
         // [3]action -> [2]authorize() -> [1]baseAuthorize() -> [0]parseAbilityAndArguments
-        $this->method ??= debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4)[3]['function'];
-
-        $methodAndAbility = [$this->normalizeGuessedAbilityName($this->method), $ability];
+        $method = $this->method ?? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4)[3]['function'];
 
         // Need to reset the properties in case attribute is used along with `$this->authorize()`
         $this->setMethodAndParameters(null, null);
 
-        return $methodAndAbility;
+        return [$this->normalizeGuessedAbilityName($method), $ability];
     }
 }
