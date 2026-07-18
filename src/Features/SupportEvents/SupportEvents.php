@@ -8,7 +8,6 @@ use function Livewire\invade;
 use Livewire\Features\SupportAttributes\AttributeLevel;
 use Livewire\ComponentHook;
 use Livewire\Exceptions\EventHandlerDoesNotExist;
-use Livewire\Features\SupportActionMiddleware\BaseMiddleware;
 use Livewire\Features\SupportAuthorization\BaseAuthorize;
 use Livewire\Features\SupportRenderless\BaseRenderless;
 
