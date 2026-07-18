@@ -13,7 +13,7 @@ class Redirector extends BaseRedirector
     {
         $this->component->redirect($this->generator->to($path, [], $secure));
 
-        return $this;
+        return parent::to($path, $status, $headers, $secure);
     }
 
     public function away($path, $status = 302, $headers = [])

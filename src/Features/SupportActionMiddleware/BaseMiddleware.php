@@ -4,42 +4,58 @@ namespace Livewire\Features\SupportActionMiddleware;
 
 use Attribute;
 use Illuminate\Auth\Middleware\Authorize as AuthorizeMiddleware;
-use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
-use function Livewire\store;
+use function Livewire\on;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class BaseMiddleware extends LivewireAttribute
 {
+    protected $middlewareFromAttributes = [];
+
     public function __construct(public string $middleware)
     {
         //
     }
 
-    function call(array $parameters)
+    public function boot()
     {
-        $resolvedMiddleware = app('router')->resolveMiddleware([$this->middleware]);
+        on('flush-state', function () {
+            $this->middlewareFromAttributes = [];
+        });
 
-        if ($resolvedMiddleware === []) return;
-
-        $middleware = $this->filterMiddleware($resolvedMiddleware);
-
-        Utils::applyMiddleware(request(), $middleware);
+        // Only gather middleware attributes if request hitting Livewire update endpoint
+        // following how persistent middleware applied
+        if (app(HandleRequests::class)->isLivewireRoute()) {
+            $this->middlewareFromAttributes = $this->component
+                ->getAttributes()
+                ->filter(fn ($attr) => $attr instanceof BaseMiddleware)
+                ->filter(fn ($attr) => $attr->getName() === $this->getName())
+                ->map(fn ($attr) => $attr->middleware)
+                ->values()
+                ->all();
+        }
     }
 
-    protected function filterMiddleware(array $resolvedMiddleware)
+    function call()
     {
-        $filtered = [];
-        foreach ($resolvedMiddleware as $middleware) {
-            if (! is_string($middleware)) continue;
+        if (empty($this->middlewareFromAttributes)) return;
 
-            if (Str::before($middleware, ':') == AuthorizeMiddleware::class) continue;
+        if (empty($actionMiddleware = $this->resolveMiddleware())) return;
 
-            $filtered[] = $middleware;
-        }
+        Utils::applyMiddleware(request(), $actionMiddleware);
+    }
 
-        return $filtered;
+    protected function resolveMiddleware()
+    {
+        return collect(app('router')->resolveMiddleware($this->middlewareFromAttributes))
+            ->filter(fn ($m) => is_string($m))
+            // Exclude any authorization middleware since we already
+            // have `#[Authorize]` attribute
+            ->reject(fn ($m) => str_starts_with($m, AuthorizeMiddleware::class))
+            ->values()
+            ->all();
     }
 }
