@@ -29,13 +29,9 @@ class BaseMiddleware extends LivewireAttribute
         // Only gather middleware attributes if request hitting Livewire update endpoint
         // following how persistent middleware applied
         if (app(HandleRequests::class)->isLivewireRoute()) {
-            $this->middlewareFromAttributes = $this->component
-                ->getAttributes()
-                ->filter(fn ($attr) => $attr instanceof BaseMiddleware)
-                ->filter(fn ($attr) => $attr->getName() === $this->getName())
-                ->map(fn ($attr) => $attr->middleware)
-                ->values()
-                ->all();
+            $this->middlewareFromAttributes = array_unique(
+                array_merge($this->middlewareFromAttributes, [$this->middleware])
+            );
         }
     }
 
