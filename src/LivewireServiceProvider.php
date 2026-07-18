@@ -185,6 +185,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportTeleporting\SupportTeleporting::class,
             Features\SupportLazyLoading\SupportLazyLoading::class,
             Features\SupportFormObjects\SupportFormObjects::class,
+            Features\SupportSelection\SupportSelection::class,
             Features\SupportAttributes\SupportAttributes::class,
             Features\SupportPagination\SupportPagination::class,
             Features\SupportValidation\SupportValidation::class,
