@@ -13,6 +13,11 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(new class extends Component {
             public Selection $selection;
 
+            public function mount(): void
+            {
+                $this->selection = new Selection;
+            }
+
             public function render(): string
             {
                 return <<<'HTML'
@@ -46,6 +51,11 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         Livewire::visit(new class extends Component {
             public Selection $selection;
+
+            public function mount(): void
+            {
+                $this->selection = new Selection;
+            }
 
             public function render(): string
             {

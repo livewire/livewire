@@ -10,19 +10,15 @@ use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
-    function test_a_typed_selection_property_is_automatically_initialized()
-    {
-        Livewire::test(new class extends TestComponent {
-            public Selection $selection;
-        })
-        ->assertSet('selection', fn ($selection) => $selection instanceof Selection && $selection->isEmpty())
-        ;
-    }
-
     function test_a_selection_can_be_set_from_the_client_and_survives_a_round_trip()
     {
         $component = Livewire::test(new class extends TestComponent {
             public Selection $selection;
+
+            public function mount()
+            {
+                $this->selection = new Selection;
+            }
         });
 
         $component->set('selection', [1, 2, 3]);
@@ -39,6 +35,11 @@ class UnitTest extends \Tests\TestCase
             public Selection $selection;
 
             public $result;
+
+            public function mount()
+            {
+                $this->selection = new Selection;
+            }
 
             public function inspect()
             {
@@ -66,6 +67,11 @@ class UnitTest extends \Tests\TestCase
     {
         $component = Livewire::test(new class extends TestComponent {
             public Selection $selection;
+
+            public function mount()
+            {
+                $this->selection = new Selection;
+            }
         });
 
         $component->set('selection', [5]);
@@ -90,6 +96,14 @@ class UnitTest extends \Tests\TestCase
         $selection->deselect('1');
 
         Assert::assertSame([2], $selection->all());
+
+        $selection->toggle('2');
+
+        Assert::assertSame([], $selection->all());
+
+        $selection->toggle(3);
+
+        Assert::assertSame([3], $selection->all());
     }
 
     function test_a_hydrated_class_must_be_a_selection()
@@ -98,6 +112,11 @@ class UnitTest extends \Tests\TestCase
 
         $component = Livewire::test(new class extends TestComponent {
             public Selection $selection;
+
+            public function mount()
+            {
+                $this->selection = new Selection;
+            }
         });
 
         $synth = new SelectionSynth(

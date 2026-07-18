@@ -11,6 +11,8 @@ export class Selection extends Array {
 
     any() { return this.length > 0 }
 
+    isEmpty() { return ! this.any() }
+
     count() { return this.length }
 
     contains(key) {

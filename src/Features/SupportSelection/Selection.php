@@ -53,6 +53,13 @@ class Selection implements Arrayable, \Countable, \IteratorAggregate, \JsonSeria
         return $this;
     }
 
+    public function toggle($key): static
+    {
+        $this->contains($key) ? $this->deselect($key) : $this->select($key);
+
+        return $this;
+    }
+
     public function clear(): static
     {
         $this->keys = [];
