@@ -93,6 +93,81 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_select_page_selects_every_bound_checkbox_on_the_page()
+    {
+        Livewire::visit(new class extends Component {
+            public Selection $selection;
+
+            public function mount(): void
+            {
+                $this->selection = new Selection;
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+                    <input type="checkbox" dusk="two" wire:model="selection" value="2" />
+                    <input type="checkbox" dusk="three" wire:model="selection" value="3" />
+
+                    <span dusk="count" x-text="$wire.selection.count()"></span>
+
+                    <button dusk="select-page" type="button" wire:click="selection.selectPage()">Select page</button>
+
+                    <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
+
+                    <span dusk="server">{{ implode(',', $selection->all()) }}</span>
+                </div>
+                HTML;
+            }
+        })
+        ->click('@select-page')
+        ->assertChecked('@one')
+        ->assertChecked('@two')
+        ->assertChecked('@three')
+        ->assertSeeIn('@count', '3')
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@server', '1,2,3')
+        ;
+    }
+
+    public function test_select_page_still_works_after_a_manual_checkbox_toggle_replaces_the_selection()
+    {
+        Livewire::visit(new class extends Component {
+            public Selection $selection;
+
+            public function mount(): void
+            {
+                $this->selection = new Selection;
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+                    <input type="checkbox" dusk="two" wire:model="selection" value="2" />
+
+                    <span dusk="count" x-text="$wire.selection.count()"></span>
+
+                    <button dusk="select-page" type="button" wire:click="selection.selectPage()">Select page</button>
+                </div>
+                HTML;
+            }
+        })
+        // Checking (then unchecking) a box replaces the selection instance
+        // through Alpine's concat/filter — selectPage must survive that...
+        ->check('@one')
+        ->uncheck('@one')
+        ->assertSeeIn('@count', '0')
+        ->click('@select-page')
+        ->assertChecked('@one')
+        ->assertChecked('@two')
+        ->assertSeeIn('@count', '2')
+        ;
+    }
+
     public function test_a_server_side_selection_renders_checked_boxes_and_server_mutations_reach_the_client()
     {
         Livewire::visit(new class extends Component {
