@@ -28,6 +28,7 @@ class PersistentMiddleware extends Mechanism
     protected $method;
     protected $middlewareAppliedFor = [];
     protected $resolvedRouteModels = [];
+    protected $applicableMiddleware = [];
 
     function boot()
     {
@@ -53,6 +54,7 @@ class PersistentMiddleware extends Mechanism
             $this->method = null;
             $this->middlewareAppliedFor = [];
             $this->resolvedRouteModels = [];
+            $this->applicableMiddleware = [];
         });
     }
 
@@ -119,6 +121,8 @@ class PersistentMiddleware extends Mechanism
         if (is_null($middleware) || $middleware === []) return;
 
         Utils::applyMiddleware($request, $middleware);
+
+        $this->applicableMiddleware = $middleware;
 
         $this->middlewareAppliedFor[$routeKey] = true;
 
