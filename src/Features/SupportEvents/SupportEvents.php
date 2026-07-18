@@ -27,15 +27,6 @@ class SupportEvents extends ComponentHook
 
             $method = static::getListenerMethodName($this->component, $name);
 
-            // Run any middleware attribute on the listener method since
-            // its normal "call" hook doesn't get run when the method
-            // is called as an event listener...
-            $this->component->getAttributes()
-                ->filter(fn ($i) => $i instanceof BaseMiddleware)
-                ->filter(fn ($i) => $i->getName() === $method)
-                ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
-                ->each(fn ($i) => $i->call());
-
             // Run any authorization checks on the listener method since
             // its normal "call" hook doesn't get run when the method
             // is called as an event listener...
