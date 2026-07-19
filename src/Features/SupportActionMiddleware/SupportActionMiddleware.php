@@ -14,9 +14,17 @@ use function Livewire\on;
 
 class SupportActionMiddleware extends ComponentHook
 {
+    protected static $middlewareAttributes = [];
+
     public static function provide()
     {
+        on('flush-state', function () {
+            static::$middlewareAttributes = [];
+        });
+
         on('call', function ($component, $method, $params, $context, $earlyReturn, $metadata) {
+            if (! isset(static::$middlewareAttributes[$component->getName()])) return;
+
             $method = static::resolveMethodName($component, $method, $params);
 
             $actionMiddleware = static::gatherActionMiddleware($component, $method);
@@ -30,6 +38,30 @@ class SupportActionMiddleware extends ComponentHook
             // Gather all action middleware from method and apply it all at once
             Utils::applyMiddleware($request, $resolved);
         });
+    }
+
+    function skip()
+    {
+        return empty($this->middlewareAttributes());
+    }
+
+    function boot()
+    {
+        $componentName = $this->component->getName();
+
+        if (! isset(static::$middlewareAttributes[$componentName])) {
+            static::$middlewareAttributes[$componentName] = $this->middlewareAttributes();
+        }
+    }
+
+    protected function middlewareAttributes(): array
+    {
+        return $this->component
+            ->getAttributes()
+            ->filter(fn ($attr) => $attr instanceof BaseMiddleware)
+            ->groupBy(fn ($attr) => $attr->getName())
+            ->map(fn ($group) => $group->pluck('middleware')->all())
+            ->all();
     }
 
     protected static function resolveMethodName($component, $method, $params)
@@ -51,10 +83,9 @@ class SupportActionMiddleware extends ComponentHook
 
     protected static function gatherActionMiddleware($component, $method): array
     {
-        return $component->getAttributes()
-            ->filter(fn ($attr) => $attr instanceof BaseMiddleware)
-            ->filter(fn ($attr) => $attr->getName() === $method)
-            ->map(fn ($attr) => $attr->middleware)
+        return collect(static::$middlewareAttributes[$component->getName()])
+            ->filter(fn ($value, $key) => $key === $method)
+            ->flatten()
             ->values()
             ->all();
     }
