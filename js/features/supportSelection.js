@@ -47,7 +47,7 @@ export class Selection extends Array {
         this.__pageValues().forEach(value => this.deselect(value))
     }
 
-    pageSelected() {
+    isPageSelected() {
         let values = this.__pageValues()
 
         return values.length > 0 && values.every(value => this.contains(value))
@@ -76,7 +76,7 @@ export class Selection extends Array {
                 })
 
                 return {
-                    get: () => selection.pageSelected(),
+                    get: () => selection.isPageSelected(),
                     set: checked => checked ? selection.selectPage() : selection.deselectPage(),
                 }
             },

@@ -237,6 +237,41 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_the_indeterminate_state_survives_a_server_round_trip()
+    {
+        Livewire::visit(new class extends Component {
+            public Selection $selection;
+
+            public function mount(): void
+            {
+                $this->selection = new Selection;
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="checkbox" dusk="header" wire:model="selection.page" />
+
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+                    <input type="checkbox" dusk="two" wire:model="selection" value="2" />
+
+                    <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
+                </div>
+                HTML;
+            }
+        })
+        ->check('@one')
+        ->assertScript('document.querySelector(\'[dusk="header"]\').indeterminate', true)
+        // The morph rebuilds from server HTML that knows nothing about
+        // indeterminate — the property must survive untouched...
+        ->waitForLivewire()->click('@refresh')
+        ->assertScript('document.querySelector(\'[dusk="header"]\').indeterminate', true)
+        ->assertChecked('@one')
+        ->assertNotChecked('@header')
+        ;
+    }
+
     public function test_deselecting_the_page_keeps_off_page_selections()
     {
         Livewire::visit(new class extends Component {
