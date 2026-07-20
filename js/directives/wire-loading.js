@@ -48,11 +48,16 @@ function applyDelay(directive) {
         }
     })
 
+    let active = 0
     let timeout
     let started = false
 
     return [
         (callback) => { // Initiate delay...
+            active++
+
+            if (active > 1) return
+
             timeout = setTimeout(() => {
                 callback()
 
@@ -60,6 +65,12 @@ function applyDelay(directive) {
             }, duration)
         },
         async (callback) => { // Execute or abort...
+            if (active === 0) return
+
+            active--
+
+            if (active > 0) return
+
             if (started) {
                 await callback()
                 started = false
