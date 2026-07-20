@@ -9,6 +9,26 @@
  * JavaScript object when component state is hydrated on the frontend, and
  * converts it back to its raw wire format when state is diffed and sent to
  * the server.
+ *
+ * A synth may also define an optional bind(binding) function — its contract
+ * for how elements wire:model to its rich values. When an element's bound
+ * property holds a rich synth value and the synth defines bind(), wire:model
+ * delegates the element wiring to it (instead of Alpine's default x-model
+ * semantics), while keeping network timing (.live, .blur, debounce) for
+ * itself. The binding object provides:
+ *
+ *   el        — the bound element
+ *   component — the owning Livewire component
+ *   path      — the bound property path (the wire:model expression)
+ *   modifiers — the wire:model modifiers
+ *   get()     — read the current rich value (reactive; safe inside effects)
+ *   set(v)    — replace the bound value
+ *   notify()  — report a user-driven change so wire:model can apply its
+ *               network timing (call after every mutation via el events)
+ *   cleanup(fn) — register teardown for when the element is removed
+ *
+ * Return false to decline the element (wire:model falls back to its default
+ * handling) — bind every element type you understand, decline the rest.
  */
 
 let synths = {}
@@ -23,6 +43,10 @@ export function registerSynth(key, synth) {
         if (typeof synth[method] !== 'function') {
             throw `Livewire.synth('${key}') requires a "${method}" function`
         }
+    }
+
+    if (synth.bind !== undefined && typeof synth.bind !== 'function') {
+        throw `Livewire.synth('${key}') expects "bind" to be a function`
     }
 
     if (synths[key]) synthList = synthList.filter(i => i !== synths[key])

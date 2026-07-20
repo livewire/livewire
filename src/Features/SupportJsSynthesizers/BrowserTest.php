@@ -433,6 +433,59 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@call')
         ->assertSeeIn('@output', '2033-07-07');
     }
+
+    public function test_a_js_synth_can_own_wire_model_element_binding_through_its_bind_contract()
+    {
+        Livewire::visit(new class extends Component {
+            public Carbon $date;
+
+            public function mount(): void
+            {
+                $this->date = Carbon::parse('2021-01-01 00:00:00', 'UTC');
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <script>
+                        document.addEventListener('livewire:init', () => {
+                            Livewire.synth('cbn', {
+                                match: (value) => value instanceof Date,
+                                hydrate: (value) => new Date(value),
+                                dehydrate: (value) => value.toISOString(),
+                                bind({ el, get, set, notify }) {
+                                    Alpine.bind(el, {
+                                        ['x-effect']() { el.value = String(get().getUTCFullYear()) },
+                                        ['@input']() {
+                                            set(new Date(Date.UTC(Number(el.value), 0, 1)))
+
+                                            notify()
+                                        },
+                                    })
+                                },
+                            })
+                        })
+                    </script>
+
+                    <input type="text" dusk="input" x-ref="year" wire:model="date" />
+
+                    <button dusk="change" type="button" x-on:click="$refs.year.value = '2030'; $refs.year.dispatchEvent(new Event('input', { bubbles: true }))">Change</button>
+
+                    <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
+
+                    <span dusk="output">{{ $date->year }}</span>
+                </div>
+                HTML;
+            }
+        })
+        // The synth's bind owns the element: it renders the Date as a year
+        // instead of x-model's default string binding...
+        ->assertValue('@input', '2021')
+        ->click('@change')
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@output', '2030');
+    }
 }
 
 class AddressDto implements Wireable

@@ -36,6 +36,13 @@ describe('registerSynth', () => {
         expect(() => registerSynth('foo', {})).toThrow()
         expect(() => registerSynth('foo', { match: () => {}, hydrate: () => {} })).toThrow()
     })
+
+    it('allows an optional bind function', () => {
+        let synth = { match: () => {}, hydrate: () => {}, dehydrate: () => {} }
+
+        expect(() => registerSynth('foo', { ...synth, bind: () => {} })).not.toThrow()
+        expect(() => registerSynth('bar', { ...synth, bind: 'nope' })).toThrow()
+    })
 })
 
 describe('extractData', () => {

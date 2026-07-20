@@ -2,6 +2,7 @@ import { directive } from '@/directives'
 import { checkDirty } from '@/directives/wire-dirty'
 import { handleFileUpload } from '@/features/supportFileUploads'
 import { findComponentByEl } from '@/store'
+import { findSynthByValue } from '@/synths'
 import { dataGet, dataSet } from '@/utils'
 import { setNextActionMetadata, setNextActionOrigin } from '@/request'
 import Alpine from 'alpinejs'
@@ -117,6 +118,36 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     if (shouldSendNetwork && networkOnEnter) {
         bindings['@keydown.enter'] = () => update()
+    }
+
+    // Rich synth values can declare their own element binding contract.
+    // When the bound value's synth defines bind(), it owns the element
+    // wiring (instead of Alpine's x-model) while network timing —
+    // .live, triggers, debounce — stays wire:model's job...
+    let synth = findSynthByValue(dataGet(component.ephemeral, expression))
+
+    if (synth?.bind) {
+        let handled = synth.bind({
+            el,
+            component,
+            path: expression,
+            modifiers,
+            cleanup,
+            get: () => dataGet(component.$wire, expression),
+            set: value => dataSet(component.$wire, expression, value),
+            notify: () => {
+                if (shouldSendNetwork && ! hasNetworkTriggers) debouncedUpdate()
+            },
+        })
+
+        if (handled !== false) {
+            // Network trigger listeners (@blur/@change/@enter) still apply.
+            // They bind after the synth's own listeners, so a synth mutation
+            // on the same event lands before the network request fires...
+            Alpine.bind(el, bindings)
+
+            return
+        }
     }
 
     // Build x-model modifier tail from ephemeral modifiers
