@@ -28,6 +28,28 @@ directive('model', ({ el, directive, component, cleanup }) => {
         return handleFileUpload(el, expression, component, cleanup)
     }
 
+    // Bindable values: a rich value may define wireModel(el, helpers) to
+    // decide how an element binds to it. Three possible returns:
+    //   nothing      → not mine; the element binds like normal data
+    //   { get, set } → x-model binds the element to this accessor instead
+    //                  of the raw property (get feeds renders, set receives
+    //                  input) — network timing stays wire:model's job
+    //   false        → the value wired the element itself; do nothing more
+    let bound = dataGet(component.$wire, expression)
+
+    let accessor = typeof bound?.wireModel === 'function'
+        ? bound.wireModel(el, {
+            cleanup,
+            effect: callback => {
+                let handle = Alpine.effect(callback)
+
+                cleanup(() => Alpine.release(handle))
+            },
+        })
+        : undefined
+
+    if (accessor === false) return
+
     // Split modifiers at .live boundary
     // Modifiers BEFORE .live control client-side (x-model) sync timing
     // Modifiers AFTER .live control network request timing
@@ -119,49 +141,16 @@ directive('model', ({ el, directive, component, cleanup }) => {
         bindings['@keydown.enter'] = () => update()
     }
 
-    // Bindable values: a rich value anywhere in state may define
-    // bindTo(binding) — its contract for owning the element wiring
-    // (instead of Alpine's x-model) while network timing — .live,
-    // triggers, debounce — stays wire:model's job. Implementations
-    // should read state through binding.get(), never a captured `this`,
-    // so bindings survive the value being replaced. Return false to
-    // decline an element and fall back to default handling...
-    let bound = dataGet(component.ephemeral, expression)
-
-    if (typeof bound?.bindTo === 'function') {
-        let handled = bound.bindTo({
-            el,
-            component,
-            path: expression,
-            modifiers,
-            cleanup,
-            get: () => dataGet(component.$wire, expression),
-            set: value => dataSet(component.$wire, expression, value),
-            notify: () => {
-                if (shouldSendNetwork && ! hasNetworkTriggers) debouncedUpdate()
-            },
-        })
-
-        if (handled !== false) {
-            // Network trigger listeners (@blur/@change/@enter) still apply.
-            // They bind after the value's own listeners, so a mutation on
-            // the same event lands before the network request fires...
-            Alpine.bind(el, bindings)
-
-            return
-        }
-    }
-
     // Build x-model modifier tail from ephemeral modifiers
     let xModelTail = getModifierTail(ephemeralModifiers)
 
     bindings['x-model' + xModelTail] = () => {
         return {
             get() {
-                return dataGet(component.$wire, expression)
+                return accessor ? accessor.get() : dataGet(component.$wire, expression)
             },
             set(value) {
-                dataSet(component.$wire, expression, value)
+                accessor ? accessor.set(value) : dataSet(component.$wire, expression, value)
 
                 // If .live is present and no specific network triggers, fire on every ephemeral sync
                 if (shouldSendNetwork && ! hasNetworkTriggers) {

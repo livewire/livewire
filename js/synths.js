@@ -19,8 +19,8 @@
  * still replaces; that's the user's call.)
  *
  * Element binding is a contract on the VALUE, not the synth: a rich value
- * anywhere in state may define bindTo(binding) to own how elements
- * wire:model to it — see wire-model.js for the binding shape.
+ * anywhere in state may define wireModel(el, helpers) to decide how
+ * elements wire:model to it — see wire-model.js for the contract.
  */
 
 let synths = {}
