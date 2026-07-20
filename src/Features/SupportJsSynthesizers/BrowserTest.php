@@ -434,7 +434,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@output', '2033-07-07');
     }
 
-    public function test_a_js_synth_can_own_wire_model_element_binding_through_its_bind_contract()
+    public function test_a_rich_value_can_own_wire_model_element_binding_through_its_bind_to_contract()
     {
         Livewire::visit(new class extends Component {
             public Carbon $date;
@@ -452,18 +452,23 @@ class BrowserTest extends \Tests\BrowserTestCase
                         document.addEventListener('livewire:init', () => {
                             Livewire.synth('cbn', {
                                 match: (value) => value instanceof Date,
-                                hydrate: (value) => new Date(value),
-                                dehydrate: (value) => value.toISOString(),
-                                bind({ el, get, set, notify }) {
-                                    Alpine.bind(el, {
-                                        ['x-effect']() { el.value = String(get().getUTCFullYear()) },
-                                        ['@input']() {
-                                            set(new Date(Date.UTC(Number(el.value), 0, 1)))
+                                hydrate: (value) => {
+                                    let date = new Date(value)
 
-                                            notify()
-                                        },
-                                    })
+                                    date.bindTo = ({ el, get, set, notify }) => {
+                                        Alpine.bind(el, {
+                                            ['x-effect']() { el.value = String(get().getUTCFullYear()) },
+                                            ['@input']() {
+                                                set(new Date(Date.UTC(Number(el.value), 0, 1)))
+
+                                                notify()
+                                            },
+                                        })
+                                    }
+
+                                    return date
                                 },
+                                dehydrate: (value) => value.toISOString(),
                             })
                         })
                     </script>

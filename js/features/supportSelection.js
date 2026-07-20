@@ -2,31 +2,33 @@ import { registerSynth } from '@/synths'
 import { findComponent } from '@/store'
 import Alpine from 'alpinejs'
 
-// Every element bound to a selection, registered through the synth's bind
-// contract: component -> path -> Set(el). The registry IS the current page —
-// teleported elements stay covered because registration doesn't care where
-// an element lives...
-let bindings = new WeakMap()
+// Every binding attached to a selection, registered through the bindTo
+// contract: component -> path -> Set(binding). Each binding knows how to
+// read its element's value — the registry IS the current page, and it's
+// queryable (unlike events), which is what page-level affordances like
+// selectPage() and a future select-all facet need...
+let registry = new WeakMap()
 
-function register(component, path, el, cleanup) {
-    let byPath = bindings.get(component)
+function register(component, path, binding, cleanup) {
+    let byPath = registry.get(component)
 
-    if (! byPath) bindings.set(component, byPath = new Map())
+    if (! byPath) registry.set(component, byPath = new Map())
 
-    let els = byPath.get(path)
+    let bindings = byPath.get(path)
 
-    if (! els) byPath.set(path, els = new Set())
+    if (! bindings) byPath.set(path, bindings = new Set())
 
-    els.add(el)
+    bindings.add(binding)
 
-    cleanup(() => els.delete(el))
+    cleanup(() => bindings.delete(binding))
 }
 
 /**
  * The rich client-side counterpart to PHP's Livewire\Selection. Checkbox
- * wiring goes through the synth's bind contract below — Alpine's array
- * x-model semantics never touch it, so every user interaction is an
- * in-place mutation and the instance is never replaced...
+ * wiring goes through the bindTo contract below — Alpine's array x-model
+ * semantics never touch it, so every user interaction is an in-place
+ * mutation — and the synth's merge() keeps this instance's identity
+ * across server-driven changes...
  */
 export class Selection extends Array {
     all() { return [...this] }
@@ -57,13 +59,11 @@ export class Selection extends Array {
         this.contains(key) ? this.deselect(key) : this.select(key)
     }
 
-    // The current "page" is whatever is rendered: every element bound to
-    // this selection, straight from the binding registry...
+    // The current "page" is whatever is rendered: every binding attached
+    // to this selection, each asked for its element's value...
     selectPage() {
-        for (let el of this.__boundEls()) {
-            if (! el.isConnected) continue
-
-            let value = elValue(el)
+        for (let binding of this.__bindings()) {
+            let value = binding.value()
 
             if (value !== undefined && value !== null && value !== '') this.select(value)
         }
@@ -73,16 +73,42 @@ export class Selection extends Array {
         this.splice(0, this.length)
     }
 
-    __boundEls() {
+    // Selections own their element semantics: checked means "this value is
+    // selected", toggling mutates the selection in place. Reads go through
+    // binding.get() — never `this` — so the binding keeps working even if
+    // this instance is ever replaced...
+    bindTo({ el, component, path, get, notify, cleanup }) {
+        let isCheckbox = el.tagName === 'INPUT' && el.type === 'checkbox' && el.hasAttribute('value')
+
+        if (! isCheckbox) return false
+
+        let value = () => el.isConnected ? (el.getAttribute('value') ?? el.value) : undefined
+
+        register(component, path, { el, value }, cleanup)
+
+        Alpine.bind(el, {
+            ['x-effect']() {
+                el.checked = get().contains(value())
+            },
+
+            ['@change']() {
+                get().toggle(value())
+
+                notify()
+            },
+        })
+    }
+
+    __bindings() {
         let component = this.__componentId && findComponent(this.__componentId, false)
 
         if (! component) return []
 
-        return bindings.get(component)?.get(this.__path) ?? []
+        return registry.get(component)?.get(this.__path) ?? []
     }
 
     // Remember which component and property this selection belongs to so
-    // registry-aware methods like selectPage() can find their bound elements.
+    // registry-aware methods like selectPage() can find their bindings.
     // Non-enumerable so state walks (diff/dehydrate) never see them...
     __adopt(componentId, path) {
         Object.defineProperty(this, '__componentId', { value: componentId, enumerable: false, writable: true, configurable: true })
@@ -90,10 +116,6 @@ export class Selection extends Array {
 
         return this
     }
-}
-
-function elValue(el) {
-    return el.getAttribute('value') ?? el.value
 }
 
 registerSynth('sel', {
@@ -109,25 +131,9 @@ registerSynth('sel', {
 
     dehydrate: value => [...value],
 
-    // Selections own their checkbox semantics: checked means "this value is
-    // selected", toggling mutates the selection in place...
-    bind({ el, component, path, get, notify, cleanup }) {
-        let isCheckbox = el.tagName === 'INPUT' && el.type === 'checkbox' && el.hasAttribute('value')
-
-        if (! isCheckbox) return false
-
-        register(component, path, el, cleanup)
-
-        Alpine.bind(el, {
-            ['x-effect']() {
-                el.checked = get().contains(elValue(el))
-            },
-
-            ['@change']() {
-                get().toggle(elValue(el))
-
-                notify()
-            },
-        })
+    // Server-driven changes update the existing instance in place so its
+    // identity (and adopted context) survive the round-trip...
+    merge: (existing, incoming) => {
+        existing.splice(0, existing.length, ...incoming)
     },
 })

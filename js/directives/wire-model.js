@@ -2,7 +2,6 @@ import { directive } from '@/directives'
 import { checkDirty } from '@/directives/wire-dirty'
 import { handleFileUpload } from '@/features/supportFileUploads'
 import { findComponentByEl } from '@/store'
-import { findSynthByValue } from '@/synths'
 import { dataGet, dataSet } from '@/utils'
 import { setNextActionMetadata, setNextActionOrigin } from '@/request'
 import Alpine from 'alpinejs'
@@ -120,14 +119,17 @@ directive('model', ({ el, directive, component, cleanup }) => {
         bindings['@keydown.enter'] = () => update()
     }
 
-    // Rich synth values can declare their own element binding contract.
-    // When the bound value's synth defines bind(), it owns the element
-    // wiring (instead of Alpine's x-model) while network timing —
-    // .live, triggers, debounce — stays wire:model's job...
-    let synth = findSynthByValue(dataGet(component.ephemeral, expression))
+    // Bindable values: a rich value anywhere in state may define
+    // bindTo(binding) — its contract for owning the element wiring
+    // (instead of Alpine's x-model) while network timing — .live,
+    // triggers, debounce — stays wire:model's job. Implementations
+    // should read state through binding.get(), never a captured `this`,
+    // so bindings survive the value being replaced. Return false to
+    // decline an element and fall back to default handling...
+    let bound = dataGet(component.ephemeral, expression)
 
-    if (synth?.bind) {
-        let handled = synth.bind({
+    if (typeof bound?.bindTo === 'function') {
+        let handled = bound.bindTo({
             el,
             component,
             path: expression,
@@ -142,8 +144,8 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
         if (handled !== false) {
             // Network trigger listeners (@blur/@change/@enter) still apply.
-            // They bind after the synth's own listeners, so a synth mutation
-            // on the same event lands before the network request fires...
+            // They bind after the value's own listeners, so a mutation on
+            // the same event lands before the network request fires...
             Alpine.bind(el, bindings)
 
             return

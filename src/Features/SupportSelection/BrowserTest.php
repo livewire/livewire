@@ -168,6 +168,47 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_a_server_driven_change_merges_into_the_existing_selection_instance()
+    {
+        Livewire::visit(new class extends Component {
+            public Selection $selection;
+
+            public function mount(): void
+            {
+                $this->selection = new Selection(['1']);
+            }
+
+            public function selectTwo(): void
+            {
+                $this->selection->select('2');
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+                    <input type="checkbox" dusk="two" wire:model="selection" value="2" />
+
+                    <button dusk="store" type="button" x-on:click="window.__selectionRef = $wire.selection">Store</button>
+
+                    <button dusk="select-two" type="button" wire:click="selectTwo">Select two</button>
+
+                    <button dusk="compare" type="button" x-on:click="$refs.same.textContent = window.__selectionRef === $wire.selection ? 'same' : 'different'">Compare</button>
+
+                    <span x-ref="same" dusk="same"></span>
+                </div>
+                HTML;
+            }
+        })
+        ->click('@store')
+        ->waitForLivewire()->click('@select-two')
+        ->assertChecked('@two')
+        ->click('@compare')
+        ->assertSeeIn('@same', 'same')
+        ;
+    }
+
     public function test_a_server_side_selection_renders_checked_boxes_and_server_mutations_reach_the_client()
     {
         Livewire::visit(new class extends Component {
