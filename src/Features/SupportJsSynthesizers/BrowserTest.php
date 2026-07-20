@@ -434,7 +434,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@output', '2033-07-07');
     }
 
-    public function test_a_rich_value_can_remap_element_binding_through_its_wire_model_contract()
+    public function test_a_rich_value_can_remap_element_binding_through_its_intercept_wire_model_contract()
     {
         Livewire::visit(new class extends Component {
             public Carbon $date;
@@ -455,7 +455,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                                 hydrate: (value) => {
                                     let date = new Date(value)
 
-                                    date.wireModel = (el) => ({
+                                    date.interceptWireModel = (el) => ({
                                         get: () => String(date.getUTCFullYear()),
                                         set: (value) => date.setUTCFullYear(Number(value)),
                                     })
@@ -487,7 +487,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@output', '2030');
     }
 
-    public function test_a_rich_value_can_fully_take_over_an_element_by_returning_false_from_wire_model()
+    public function test_a_rich_value_can_fully_take_over_an_element_by_returning_false_from_intercept_wire_model()
     {
         Livewire::visit(new class extends Component {
             public Carbon $date;
@@ -508,7 +508,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                                 hydrate: (value) => {
                                     let date = new Date(value)
 
-                                    date.wireModel = (el) => {
+                                    date.interceptWireModel = (el) => {
                                         el.setAttribute('data-took-over', 'true')
 
                                         return false

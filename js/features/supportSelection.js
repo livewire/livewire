@@ -2,7 +2,7 @@ import { registerSynth } from '@/synths'
 
 /**
  * The rich client-side counterpart to PHP's Livewire\Selection. Checkboxes
- * bind to it through the wireModel contract below — each one models a
+ * bind to it through the interceptWireModel contract below — each one models a
  * boolean ("is my value selected?"), so Alpine's native checkbox handling
  * does all the element wiring and every interaction is an in-place
  * mutation. The synth's merge() keeps this instance's identity across
@@ -38,7 +38,7 @@ export class Selection extends Array {
     }
 
     // The current "page" is whatever is rendered: every bound checkbox
-    // registered a select callback in wireModel() — call them naively...
+    // registered a select callback in interceptWireModel() — call them naively...
     selectPage() {
         this.__page().forEach(select => select())
     }
@@ -51,7 +51,7 @@ export class Selection extends Array {
     // checkbox with a value attribute models a boolean — "is my value
     // selected?" — and Alpine handles the rest. Anything else binds
     // like normal data...
-    wireModel(el, { cleanup }) {
+    interceptWireModel(el, { cleanup }) {
         if (el.type !== 'checkbox' || ! el.hasAttribute('value')) return
 
         let select = () => el.isConnected && this.select(el.value)

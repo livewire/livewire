@@ -28,7 +28,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
         return handleFileUpload(el, expression, component, cleanup)
     }
 
-    // Bindable values: a rich value may define wireModel(el, helpers) to
+    // Bindable values: a rich value may define interceptWireModel(el, helpers) to
     // decide how an element binds to it. Three possible returns:
     //   nothing      → not mine; the element binds like normal data
     //   { get, set } → x-model binds the element to this accessor instead
@@ -37,8 +37,8 @@ directive('model', ({ el, directive, component, cleanup }) => {
     //   false        → the value wired the element itself; do nothing more
     let bound = dataGet(component.$wire, expression)
 
-    let accessor = typeof bound?.wireModel === 'function'
-        ? bound.wireModel(el, {
+    let accessor = typeof bound?.interceptWireModel === 'function'
+        ? bound.interceptWireModel(el, {
             cleanup,
             effect: callback => {
                 let handle = Alpine.effect(callback)

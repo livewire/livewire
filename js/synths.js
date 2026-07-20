@@ -19,7 +19,7 @@
  * still replaces; that's the user's call.)
  *
  * Element binding is a contract on the VALUE, not the synth: a rich value
- * anywhere in state may define wireModel(el, helpers) to decide how
+ * anywhere in state may define interceptWireModel(el, helpers) to decide how
  * elements wire:model to it — see wire-model.js for the contract.
  */
 
