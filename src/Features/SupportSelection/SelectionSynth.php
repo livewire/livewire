@@ -24,6 +24,13 @@ class SelectionSynth extends Synth {
         return new $type($keys, $mode);
     }
 
+    // Uninitialized `public Selection $selection` properties spring to
+    // life as empty selections — no mount() assignment needed...
+    function initialize($type, $assign)
+    {
+        $assign(new $type);
+    }
+
     function dehydrate($target)
     {
         // The total rides in META, not the value: meta comes back through

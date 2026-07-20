@@ -16,6 +16,34 @@ class FormObjectSynth extends Synth {
         return $target instanceof Form;
     }
 
+    static function matchByType($type)
+    {
+        return is_subclass_of($type, Form::class);
+    }
+
+    // Typed updates without snapshot meta pass through untouched — the
+    // same behavior as before forms were matchable by type...
+    function hydrateFromType($type, $value)
+    {
+        return $value;
+    }
+
+    // Uninitialized `public PostForm $form` properties spring to life.
+    // The form's boot runs AFTER the property assignment, preserving the
+    // ordering of the old per-boot reflection scan...
+    function initialize($type, $assign)
+    {
+        $component = $this->context->component;
+
+        $form = new $type($component, $this->path);
+
+        $callBootMethod = static::bootFormObject($component, $form, $this->path);
+
+        $assign($form);
+
+        $callBootMethod();
+    }
+
     function dehydrate($target, $dehydrateChild)
     {
         $data = $target->toArray();

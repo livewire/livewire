@@ -183,6 +183,15 @@ class HandleSynths extends Mechanism
         return new ($this->typeCache[$type])($context, $path);
     }
 
+    public function findSynthClassByType(string $type): ?string
+    {
+        foreach ($this->synthesizers as $synth) {
+            if ($synth::matchByType($type)) return $synth;
+        }
+
+        return null;
+    }
+
     protected function findByType($type, $context, $path)
     {
         foreach ($this->synthesizers as $synth) {

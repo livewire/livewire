@@ -11,12 +11,8 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_checkboxes_can_wire_model_to_a_selection_and_sync_to_the_server()
     {
         Livewire::visit(new class extends Component {
+            // No mount() — typed selections auto-initialize...
             public Selection $selection;
-
-            public function mount(): void
-            {
-                $this->selection = new Selection;
-            }
 
             public function render(): string
             {
