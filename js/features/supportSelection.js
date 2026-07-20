@@ -13,35 +13,59 @@ function isCheckbox(el) {
  * boolean ("is my value selected?"), so Alpine's native checkbox handling
  * does all the element wiring and every interaction is an in-place
  * mutation. The synth's merge() keeps this instance's identity across
- * server round-trips...
+ * server round-trips.
+ *
+ * A selection is dual-mode: the array contents are the selected keys in
+ * "include" mode, or the EXCEPTIONS in "except" mode (select-all across a
+ * result set too big to enumerate). Every method routes through
+ * contains()/select()/deselect(), so bound checkboxes and facets work
+ * identically in both modes...
  */
 export class Selection extends Array {
-    all() { return [...this] }
+    all() {
+        if (this.isAll()) throw 'Livewire: [all] is not available while a selection is in select-all mode — the selected keys cannot be enumerated. Check isAll() and use except() instead.'
 
-    any() { return this.length > 0 }
+        return [...this]
+    }
+
+    except() { return this.isAll() ? [...this] : [] }
+
+    isAll() { return this.__mode === 'except' }
+
+    isAllSelected() { return this.isAll() && this.length === 0 }
+
+    any() { return this.isAll() || this.length > 0 }
 
     isEmpty() { return ! this.any() }
 
-    count() { return this.length }
+    // In except mode the selected count is unknowable without the total —
+    // pair isAll() with a Blade-echoed total for display...
+    count() { return this.isAll() ? null : this.length }
 
     contains(key) {
         // Loose comparison — checkbox values are strings while server-side
         // keys are often integers...
-        return this.some(i => i == key)
+        let has = this.some(i => i == key)
+
+        return this.isAll() ? ! has : has
     }
 
     select(key) {
-        if (! this.contains(key)) this.push(key)
+        this.isAll() ? this.__removeKey(key) : this.__addKey(key)
     }
 
     deselect(key) {
-        let index = this.findIndex(i => i == key)
-
-        if (index !== -1) this.splice(index, 1)
+        this.isAll() ? this.__addKey(key) : this.__removeKey(key)
     }
 
     toggle(key) {
         this.contains(key) ? this.deselect(key) : this.select(key)
+    }
+
+    selectAll() {
+        this.splice(0, this.length)
+
+        this.__mode = 'except'
     }
 
     // The current "page" is whatever is rendered: every bound checkbox
@@ -62,6 +86,8 @@ export class Selection extends Array {
 
     clear() {
         this.splice(0, this.length)
+
+        this.__mode = 'include'
     }
 
     // A dedicated "select all" checkbox — the one at the top of a column —
@@ -109,6 +135,16 @@ export class Selection extends Array {
         }
     }
 
+    __addKey(key) {
+        if (! this.some(i => i == key)) this.push(key)
+    }
+
+    __removeKey(key) {
+        let index = this.findIndex(i => i == key)
+
+        if (index !== -1) this.splice(index, 1)
+    }
+
     __pageValues() {
         return [...this.__registry()]
             .map(value => value())
@@ -126,16 +162,42 @@ export class Selection extends Array {
     }
 }
 
+// Build a raw (pre-reactive) instance from wire format. __mode is defined
+// non-enumerable HERE — before the reactive proxy wraps the instance — so
+// later mode flips are plain (reactivity-triggering) assignments that
+// keep the descriptor...
+function fromWire(value) {
+    // A plain list means include mode...
+    let isList = Array.isArray(value)
+
+    let keys = isList ? value : (Array.isArray(value?.keys) ? value.keys : [])
+
+    let selection = Selection.from(keys)
+
+    Object.defineProperty(selection, '__mode', {
+        value: (! isList && value?.mode === 'except') ? 'except' : 'include',
+        writable: true,
+        configurable: true,
+    })
+
+    return selection
+}
+
 registerSynth('sel', {
     match: value => value instanceof Selection,
 
-    hydrate: value => Selection.from(Array.isArray(value) ? value : []),
+    hydrate: value => fromWire(value),
 
-    dehydrate: value => [...value],
+    dehydrate: value => ({
+        mode: value.isAll() ? 'except' : 'include',
+        keys: [...value],
+    }),
 
     // Server-driven changes update the existing instance in place so its
     // identity — and the page callbacks living on it — survive round-trips...
     merge: (existing, incoming) => {
         existing.splice(0, existing.length, ...incoming)
+
+        existing.__mode = incoming.isAll() ? 'except' : 'include'
     },
 })

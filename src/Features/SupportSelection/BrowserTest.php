@@ -305,6 +305,102 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_select_all_checks_every_box_and_unchecking_records_exceptions()
+    {
+        Livewire::visit(new class extends Component {
+            public Selection $selection;
+
+            public $result;
+
+            public function mount(): void
+            {
+                $this->selection = new Selection;
+            }
+
+            public function inspect(): void
+            {
+                $this->result = $this->selection->isAll()
+                    ? 'all-except:'.implode(',', $this->selection->except())
+                    : 'keys:'.implode(',', $this->selection->all());
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+                    <input type="checkbox" dusk="two" wire:model="selection" value="2" />
+
+                    <button dusk="select-all" type="button" wire:click="selection.selectAll()">Select all</button>
+
+                    <button dusk="inspect" type="button" wire:click="inspect">Inspect</button>
+
+                    <span dusk="result">{{ $result }}</span>
+                </div>
+                HTML;
+            }
+        })
+        ->click('@select-all')
+        // Every checkbox is checked — even though no keys are stored...
+        ->assertChecked('@one')
+        ->assertChecked('@two')
+        ->waitForLivewire()->click('@inspect')
+        ->assertSeeIn('@result', 'all-except:')
+        // Unchecking in all-mode records an exception instead of removing a key...
+        ->uncheck('@one')
+        ->assertNotChecked('@one')
+        ->assertChecked('@two')
+        ->waitForLivewire()->click('@inspect')
+        ->assertSeeIn('@result', 'all-except:1')
+        ;
+    }
+
+    public function test_all_mode_works_with_the_page_facet_and_clear()
+    {
+        Livewire::visit(new class extends Component {
+            public Selection $selection;
+
+            public function mount(): void
+            {
+                $this->selection = new Selection;
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="checkbox" dusk="header" wire:model="selection.page" />
+
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+                    <input type="checkbox" dusk="two" wire:model="selection" value="2" />
+
+                    <button dusk="select-all" type="button" wire:click="selection.selectAll()">Select all</button>
+                    <button dusk="clear" type="button" wire:click="selection.clear()">Clear</button>
+
+                    <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
+                </div>
+                HTML;
+            }
+        })
+        ->click('@select-all')
+        // The header reflects a fully selected page in all-mode...
+        ->assertChecked('@header')
+        // Excepting one row flips the header to indeterminate...
+        ->uncheck('@one')
+        ->assertScript('document.querySelector(\'[dusk="header"]\').indeterminate', true)
+        // The mode and exception survive a server round-trip...
+        ->waitForLivewire()->click('@refresh')
+        ->assertNotChecked('@one')
+        ->assertChecked('@two')
+        ->assertScript('document.querySelector(\'[dusk="header"]\').indeterminate', true)
+        // Clearing lands back in an empty include-mode selection...
+        ->click('@clear')
+        ->assertNotChecked('@one')
+        ->assertNotChecked('@two')
+        ->assertNotChecked('@header')
+        ;
+    }
+
     public function test_a_server_driven_change_merges_into_the_existing_selection_instance()
     {
         Livewire::visit(new class extends Component {

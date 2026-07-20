@@ -78,9 +78,89 @@ class UnitTest extends \Tests\TestCase
 
         [$value, $meta] = $component->snapshot['data']['selection'];
 
-        Assert::assertSame([5], $value);
+        Assert::assertSame(['mode' => 'include', 'keys' => [5]], $value);
         Assert::assertSame('sel', $meta['s']);
         Assert::assertSame(Selection::class, $meta['class']);
+    }
+
+    function test_select_all_flips_into_except_mode_and_flips_every_semantic()
+    {
+        $selection = new Selection([1, 2]);
+
+        $selection->selectAll();
+
+        Assert::assertTrue($selection->isAll());
+        Assert::assertTrue($selection->isAllSelected());
+        Assert::assertTrue($selection->any());
+        Assert::assertTrue($selection->contains(999));
+
+        // Deselecting in all-mode records an exception...
+        $selection->deselect(3);
+
+        Assert::assertFalse($selection->contains(3));
+        Assert::assertFalse($selection->isAllSelected());
+        Assert::assertTrue($selection->isAll());
+        Assert::assertSame([3], $selection->except());
+
+        // Re-selecting removes the exception...
+        $selection->select(3);
+
+        Assert::assertTrue($selection->contains(3));
+        Assert::assertSame([], $selection->except());
+
+        // Clearing returns to an empty include-mode selection...
+        $selection->clear();
+
+        Assert::assertFalse($selection->isAll());
+        Assert::assertFalse($selection->any());
+        Assert::assertSame([], $selection->all());
+    }
+
+    function test_enumerating_an_all_mode_selection_fails_loudly()
+    {
+        $selection = (new Selection)->selectAll();
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('select-all mode');
+
+        $selection->all();
+    }
+
+    function test_all_mode_survives_a_round_trip_through_the_wire_format()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public Selection $selection;
+
+            public function mount()
+            {
+                $this->selection = new Selection;
+            }
+
+            public function selectAll()
+            {
+                $this->selection->selectAll();
+            }
+
+            public function deselectOne()
+            {
+                $this->selection->deselect(1);
+            }
+        });
+
+        $component->call('selectAll');
+
+        [$value] = $component->snapshot['data']['selection'];
+
+        Assert::assertSame(['mode' => 'except', 'keys' => []], $value);
+
+        $component->call('deselectOne');
+
+        $selection = $component->get('selection');
+
+        Assert::assertTrue($selection->isAll());
+        Assert::assertSame([1], $selection->except());
+        Assert::assertFalse($selection->contains(1));
+        Assert::assertTrue($selection->contains(2));
     }
 
     function test_contains_uses_loose_comparison_for_checkbox_string_values()

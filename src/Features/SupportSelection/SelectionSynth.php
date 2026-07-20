@@ -19,12 +19,17 @@ class SelectionSynth extends Synth {
 
     function hydrateFromType($type, $value)
     {
-        return new $type(is_array($value) ? array_values($value) : []);
+        [$keys, $mode] = static::parseWireValue($value);
+
+        return new $type($keys, $mode);
     }
 
     function dehydrate($target)
     {
-        return [$target->all(), ['class' => get_class($target)]];
+        return [[
+            'mode' => $target->isAll() ? 'except' : 'include',
+            'keys' => $target->isAll() ? $target->except() : $target->all(),
+        ], ['class' => get_class($target)]];
     }
 
     function hydrate($value, $meta)
@@ -34,6 +39,21 @@ class SelectionSynth extends Synth {
             throw new \Exception('Livewire: Invalid selection class.');
         }
 
-        return new $meta['class'](is_array($value) ? array_values($value) : []);
+        [$keys, $mode] = static::parseWireValue($value);
+
+        return new $meta['class']($keys, $mode);
+    }
+
+    protected static function parseWireValue($value): array
+    {
+        if (! is_array($value)) return [[], 'include'];
+
+        // A plain list (e.g. wire:model sending raw keys) means include mode...
+        if (array_is_list($value)) return [array_values($value), 'include'];
+
+        return [
+            array_values($value['keys'] ?? []),
+            ($value['mode'] ?? null) === 'except' ? 'except' : 'include',
+        ];
     }
 }
