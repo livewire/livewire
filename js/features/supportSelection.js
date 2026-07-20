@@ -1,5 +1,12 @@
 import { registerSynth } from '@/synths'
 
+// Native checkboxes, plus Flux's ui-checkbox custom element — it honors
+// the same .value/.checked/.indeterminate contracts...
+function isCheckbox(el) {
+    return el.tagName === 'UI-CHECKBOX'
+        || (el.tagName === 'INPUT' && el.type === 'checkbox')
+}
+
 /**
  * The rich client-side counterpart to PHP's Livewire\Selection. Checkboxes
  * bind to it through the interceptWireModel contract below — each one models a
@@ -66,7 +73,7 @@ export class Selection extends Array {
 
         return {
             interceptWireModel(el, { effect }) {
-                if (el.type !== 'checkbox') return
+                if (! isCheckbox(el)) return
 
                 effect(() => {
                     let values = selection.__pageValues()
@@ -88,7 +95,7 @@ export class Selection extends Array {
     // selected?" — and Alpine handles the rest. Anything else binds
     // like normal data...
     interceptWireModel(el, { cleanup }) {
-        if (el.type !== 'checkbox' || ! el.hasAttribute('value')) return
+        if (! isCheckbox(el) || ! el.hasAttribute('value')) return
 
         let value = () => el.isConnected ? el.value : undefined
 
