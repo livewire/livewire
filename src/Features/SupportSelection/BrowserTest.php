@@ -29,7 +29,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                     <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
 
-                    <span dusk="server">{{ $selection->count() }}:{{ implode(',', $selection->all()) }}</span>
+                    <span dusk="server">{{ $selection->count() }}:{{ implode(',', $selection->keys()) }}</span>
                 </div>
                 HTML;
             }
@@ -117,7 +117,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                     <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
 
-                    <span dusk="server">{{ implode(',', $selection->all()) }}</span>
+                    <span dusk="server">{{ implode(',', $selection->keys()) }}</span>
                 </div>
                 HTML;
             }
@@ -321,7 +321,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             {
                 $this->result = $this->selection->isAll()
                     ? 'all-except:'.implode(',', $this->selection->except())
-                    : 'keys:'.implode(',', $this->selection->all());
+                    : 'keys:'.implode(',', $this->selection->keys());
             }
 
             public function render(): string

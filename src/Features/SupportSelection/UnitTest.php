@@ -26,7 +26,7 @@ class UnitTest extends \Tests\TestCase
         $selection = $component->get('selection');
 
         Assert::assertInstanceOf(Selection::class, $selection);
-        Assert::assertSame([1, 2, 3], $selection->all());
+        Assert::assertSame([1, 2, 3], $selection->keys());
     }
 
     function test_selection_methods_are_usable_from_component_actions()
@@ -113,7 +113,7 @@ class UnitTest extends \Tests\TestCase
 
         Assert::assertFalse($selection->isAll());
         Assert::assertFalse($selection->any());
-        Assert::assertSame([], $selection->all());
+        Assert::assertSame([], $selection->keys());
     }
 
     function test_enumerating_an_all_mode_selection_fails_loudly()
@@ -123,7 +123,7 @@ class UnitTest extends \Tests\TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('select-all mode');
 
-        $selection->all();
+        $selection->keys();
     }
 
     function test_all_mode_survives_a_round_trip_through_the_wire_format()
@@ -171,19 +171,19 @@ class UnitTest extends \Tests\TestCase
 
         $selection->select('2');
 
-        Assert::assertSame([1, 2], $selection->all());
+        Assert::assertSame([1, 2], $selection->keys());
 
         $selection->deselect('1');
 
-        Assert::assertSame([2], $selection->all());
+        Assert::assertSame([2], $selection->keys());
 
         $selection->toggle('2');
 
-        Assert::assertSame([], $selection->all());
+        Assert::assertSame([], $selection->keys());
 
         $selection->toggle(3);
 
-        Assert::assertSame([3], $selection->all());
+        Assert::assertSame([3], $selection->keys());
     }
 
     function test_a_hydrated_class_must_be_a_selection()

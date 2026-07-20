@@ -15,7 +15,7 @@ class Selection implements Arrayable, \Countable, \IteratorAggregate, \JsonSeria
         protected string $mode = 'include',
     ) {}
 
-    public function all(): array
+    public function keys(): array
     {
         $this->ensureIncludeMode(__FUNCTION__);
 

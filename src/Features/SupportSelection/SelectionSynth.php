@@ -28,7 +28,7 @@ class SelectionSynth extends Synth {
     {
         return [[
             'mode' => $target->isAll() ? 'except' : 'include',
-            'keys' => $target->isAll() ? $target->except() : $target->all(),
+            'keys' => $target->isAll() ? $target->except() : $target->keys(),
         ], ['class' => get_class($target)]];
     }
 

@@ -22,8 +22,8 @@ function isCheckbox(el) {
  * identically in both modes...
  */
 export class Selection extends Array {
-    all() {
-        if (this.isAll()) throw 'Livewire: [all] is not available while a selection is in select-all mode — the selected keys cannot be enumerated. Check isAll() and use except() instead.'
+    keys() {
+        if (this.isAll()) throw 'Livewire: [keys] is not available while a selection is in select-all mode — the selected keys cannot be enumerated. Check isAll() and use except() instead.'
 
         return [...this]
     }
