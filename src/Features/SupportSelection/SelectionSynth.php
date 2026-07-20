@@ -50,7 +50,7 @@ class SelectionSynth extends Synth {
 
         $selection = new $meta['class']($keys, $mode);
 
-        if (isset($meta['total'])) $selection->outOf((int) $meta['total']);
+        if (isset($meta['total'])) $selection->setTotal((int) $meta['total']);
 
         return $selection;
     }

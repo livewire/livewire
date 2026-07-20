@@ -186,11 +186,11 @@ class UnitTest extends \Tests\TestCase
         Assert::assertSame([3], $selection->keys());
     }
 
-    function test_out_of_makes_count_computable_in_all_mode()
+    function test_set_total_makes_count_computable_in_all_mode()
     {
         $selection = (new Selection)->selectAll();
 
-        $selection->outOf(100);
+        $selection->setTotal(100);
 
         Assert::assertSame(100, $selection->count());
 
@@ -213,13 +213,13 @@ class UnitTest extends \Tests\TestCase
         (new Selection)->selectAll()->count();
     }
 
-    function test_out_of_passes_a_paginator_through()
+    function test_set_total_reads_a_paginators_total()
     {
         $selection = new Selection;
 
         $paginator = new \Illuminate\Pagination\LengthAwarePaginator([1, 2], 50, 10);
 
-        Assert::assertSame($paginator, $selection->outOf($paginator));
+        Assert::assertSame($selection, $selection->setTotal($paginator));
         Assert::assertSame(50, $selection->total());
     }
 
@@ -236,7 +236,7 @@ class UnitTest extends \Tests\TestCase
             public function prime()
             {
                 $this->selection->selectAll();
-                $this->selection->outOf(100);
+                $this->selection->setTotal(100);
             }
 
             public function deselectOne()

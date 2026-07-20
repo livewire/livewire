@@ -17,19 +17,14 @@ class Selection implements Arrayable, \Countable, \IteratorAggregate, \JsonSeria
         protected string $mode = 'include',
     ) {}
 
-    // Tell the selection how many results exist so count() can be computed
-    // in select-all mode. Accepts a paginator (and passes it through, so a
-    // computed can return `$this->selection->outOf(Model::paginate())`) or
-    // a plain total...
-    public function outOf($total)
+    // Totals are deliberately opt-in: a selection works fine never knowing
+    // one ("All selected (3 excluded)" needs no total). Feed one when you
+    // want a computed all-mode count() — accepts a paginator or an int...
+    public function setTotal($total): static
     {
-        if ($total instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
-            $this->total = $total->total();
-
-            return $total;
-        }
-
-        $this->total = (int) $total;
+        $this->total = $total instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator
+            ? $total->total()
+            : (int) $total;
 
         return $this;
     }
@@ -82,7 +77,7 @@ class Selection implements Arrayable, \Countable, \IteratorAggregate, \JsonSeria
         if ($total === null) {
             throw new \RuntimeException(
                 'Livewire: [count] is unknowable while a selection is in select-all mode without a total. '.
-                'Feed one with outOf() (e.g. `$this->selection->outOf($paginator)`) or pass it: count($total).'
+                'Feed one with setTotal($paginator) or pass it directly: count($total).'
             );
         }
 
