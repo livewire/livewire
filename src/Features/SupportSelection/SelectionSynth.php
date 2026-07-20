@@ -26,10 +26,17 @@ class SelectionSynth extends Synth {
 
     function dehydrate($target)
     {
+        // The total rides in META, not the value: meta comes back through
+        // the checksummed snapshot, so a hostile client can't forge it —
+        // only the server (via outOf) ever writes it...
+        $meta = ['class' => get_class($target)];
+
+        if ($target->total() !== null) $meta['total'] = $target->total();
+
         return [[
             'mode' => $target->isAll() ? 'except' : 'include',
             'keys' => $target->isAll() ? $target->except() : $target->keys(),
-        ], ['class' => get_class($target)]];
+        ], $meta];
     }
 
     function hydrate($value, $meta)
@@ -41,7 +48,11 @@ class SelectionSynth extends Synth {
 
         [$keys, $mode] = static::parseWireValue($value);
 
-        return new $meta['class']($keys, $mode);
+        $selection = new $meta['class']($keys, $mode);
+
+        if (isset($meta['total'])) $selection->outOf((int) $meta['total']);
+
+        return $selection;
     }
 
     protected static function parseWireValue($value): array

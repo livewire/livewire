@@ -10,10 +10,34 @@ class Selection implements Arrayable, \Countable, \IteratorAggregate, \JsonSeria
     // In "except" mode the selection is every result EXCEPT $keys — the
     // shape "select all" needs on paginated sets, where enumerating every
     // key is impossible...
+    protected ?int $total = null;
+
     public function __construct(
         protected array $keys = [],
         protected string $mode = 'include',
     ) {}
+
+    // Tell the selection how many results exist so count() can be computed
+    // in select-all mode. Accepts a paginator (and passes it through, so a
+    // computed can return `$this->selection->outOf(Model::paginate())`) or
+    // a plain total...
+    public function outOf($total)
+    {
+        if ($total instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
+            $this->total = $total->total();
+
+            return $total;
+        }
+
+        $this->total = (int) $total;
+
+        return $this;
+    }
+
+    public function total(): ?int
+    {
+        return $this->total;
+    }
 
     public function keys(): array
     {
@@ -47,11 +71,22 @@ class Selection implements Arrayable, \Countable, \IteratorAggregate, \JsonSeria
         return ! $this->any();
     }
 
-    public function count(): int
+    public function count(?int $total = null): int
     {
-        $this->ensureIncludeMode(__FUNCTION__);
+        if (! $this->isAll()) return count($this->keys);
 
-        return count($this->keys);
+        $total ??= $this->total;
+
+        // Without a total, a select-all count is unknowable — blow up
+        // rather than report the exception count as the selection...
+        if ($total === null) {
+            throw new \RuntimeException(
+                'Livewire: [count] is unknowable while a selection is in select-all mode without a total. '.
+                'Feed one with outOf() (e.g. `$this->selection->outOf($paginator)`) or pass it: count($total).'
+            );
+        }
+
+        return max(0, $total - count($this->keys));
     }
 
     public function contains($key): bool

@@ -38,9 +38,16 @@ export class Selection extends Array {
 
     isEmpty() { return ! this.any() }
 
-    // In except mode the selected count is unknowable without the total —
-    // pair isAll() with a Blade-echoed total for display...
-    count() { return this.isAll() ? null : this.length }
+    // In except mode the count needs the total. The server feeds one via
+    // outOf() (it rides the snapshot meta), or pass one directly. Without
+    // either, the count is unknowable: null...
+    count(total = null) {
+        if (! this.isAll()) return this.length
+
+        total = total ?? this.__total ?? null
+
+        return total === null ? null : Math.max(0, total - this.length)
+    }
 
     contains(key) {
         // Loose comparison — checkbox values are strings while server-side
@@ -166,7 +173,7 @@ export class Selection extends Array {
 // non-enumerable HERE — before the reactive proxy wraps the instance — so
 // later mode flips are plain (reactivity-triggering) assignments that
 // keep the descriptor...
-function fromWire(value) {
+function fromWire(value, meta) {
     // A plain list means include mode...
     let isList = Array.isArray(value)
 
@@ -180,13 +187,20 @@ function fromWire(value) {
         configurable: true,
     })
 
+    // The total only ever arrives through server-owned meta...
+    Object.defineProperty(selection, '__total', {
+        value: meta?.total ?? null,
+        writable: true,
+        configurable: true,
+    })
+
     return selection
 }
 
 registerSynth('sel', {
     match: value => value instanceof Selection,
 
-    hydrate: value => fromWire(value),
+    hydrate: (value, meta) => fromWire(value, meta),
 
     dehydrate: value => ({
         mode: value.isAll() ? 'except' : 'include',
@@ -199,5 +213,6 @@ registerSynth('sel', {
         existing.splice(0, existing.length, ...incoming)
 
         existing.__mode = incoming.isAll() ? 'except' : 'include'
+        existing.__total = incoming.__total ?? null
     },
 })

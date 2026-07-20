@@ -186,6 +186,95 @@ class UnitTest extends \Tests\TestCase
         Assert::assertSame([3], $selection->keys());
     }
 
+    function test_out_of_makes_count_computable_in_all_mode()
+    {
+        $selection = (new Selection)->selectAll();
+
+        $selection->outOf(100);
+
+        Assert::assertSame(100, $selection->count());
+
+        $selection->deselect(5);
+
+        Assert::assertSame(99, $selection->count());
+
+        // An explicit total always wins over the fed one...
+        Assert::assertSame(49, $selection->count(50));
+
+        // Include mode never needs a total...
+        Assert::assertSame(0, (new Selection)->count());
+    }
+
+    function test_counting_an_all_mode_selection_without_a_total_fails_loudly()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('unknowable');
+
+        (new Selection)->selectAll()->count();
+    }
+
+    function test_out_of_passes_a_paginator_through()
+    {
+        $selection = new Selection;
+
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator([1, 2], 50, 10);
+
+        Assert::assertSame($paginator, $selection->outOf($paginator));
+        Assert::assertSame(50, $selection->total());
+    }
+
+    function test_the_total_rides_the_snapshot_meta_and_survives_round_trips()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public Selection $selection;
+
+            public function mount()
+            {
+                $this->selection = new Selection;
+            }
+
+            public function prime()
+            {
+                $this->selection->selectAll();
+                $this->selection->outOf(100);
+            }
+
+            public function deselectOne()
+            {
+                $this->selection->deselect(1);
+            }
+        });
+
+        $component->call('prime');
+
+        [$value, $meta] = $component->snapshot['data']['selection'];
+
+        Assert::assertSame(100, $meta['total']);
+
+        // The next request restores the total from meta — outOf is not re-run...
+        $component->call('deselectOne');
+
+        Assert::assertSame(99, $component->get('selection')->count());
+    }
+
+    function test_where_selected_constrains_a_query_by_mode()
+    {
+        $include = SelectionTestModel::query()->whereSelected(new Selection([1, 2]));
+
+        Assert::assertStringContainsString('"id" in', str_replace('`', '"', $include->toSql()));
+        Assert::assertSame([1, 2], $include->getBindings());
+
+        $except = SelectionTestModel::query()->whereSelected((new Selection)->selectAll()->deselect(3));
+
+        Assert::assertStringContainsString('"id" not in', str_replace('`', '"', $except->toSql()));
+        Assert::assertSame([3], $except->getBindings());
+
+        // It composes with (and never replaces) ownership scoping...
+        $scoped = SelectionTestModel::query()->where('user_id', 7)->whereSelected(new Selection([1]));
+
+        Assert::assertSame([7, 1], $scoped->getBindings());
+    }
+
     function test_a_hydrated_class_must_be_a_selection()
     {
         $this->expectExceptionMessage('Livewire: Invalid selection class.');
@@ -206,4 +295,9 @@ class UnitTest extends \Tests\TestCase
 
         $synth->hydrate([1], ['class' => \stdClass::class]);
     }
+}
+
+class SelectionTestModel extends \Illuminate\Database\Eloquent\Model
+{
+    protected $table = 'selection_test_models';
 }
