@@ -38,13 +38,49 @@ export class Selection extends Array {
     }
 
     // The current "page" is whatever is rendered: every bound checkbox
-    // registered a select callback in interceptWireModel() — call them naively...
+    // registered a value thunk in interceptWireModel()...
     selectPage() {
-        this.__page().forEach(select => select())
+        this.__pageValues().forEach(value => this.select(value))
+    }
+
+    deselectPage() {
+        this.__pageValues().forEach(value => this.deselect(value))
+    }
+
+    pageSelected() {
+        let values = this.__pageValues()
+
+        return values.length > 0 && values.every(value => this.contains(value))
     }
 
     clear() {
         this.splice(0, this.length)
+    }
+
+    // A dedicated "select all" checkbox — the one at the top of a column —
+    // binds to this facet: wire:model="selection.page". Checked models
+    // "the whole page is selected", indeterminate marks a partial page,
+    // and toggling selects or deselects every rendered row...
+    get page() {
+        let selection = this
+
+        return {
+            interceptWireModel(el, { effect }) {
+                if (el.type !== 'checkbox') return
+
+                effect(() => {
+                    let values = selection.__pageValues()
+                    let selected = values.filter(value => selection.contains(value))
+
+                    el.indeterminate = selected.length > 0 && selected.length < values.length
+                })
+
+                return {
+                    get: () => selection.pageSelected(),
+                    set: checked => checked ? selection.selectPage() : selection.deselectPage(),
+                }
+            },
+        }
     }
 
     // wire:model asks this value how an element should bind to it. A
@@ -54,11 +90,11 @@ export class Selection extends Array {
     interceptWireModel(el, { cleanup }) {
         if (el.type !== 'checkbox' || ! el.hasAttribute('value')) return
 
-        let select = () => el.isConnected && this.select(el.value)
+        let value = () => el.isConnected ? el.value : undefined
 
-        this.__page().add(select)
+        this.__registry().add(value)
 
-        cleanup(() => this.__page().delete(select))
+        cleanup(() => this.__registry().delete(value))
 
         return {
             get: () => this.contains(el.value),
@@ -66,11 +102,17 @@ export class Selection extends Array {
         }
     }
 
-    // Page callbacks live on the instance itself — merge() keeps the
+    __pageValues() {
+        return [...this.__registry()]
+            .map(value => value())
+            .filter(value => value !== undefined && value !== null && value !== '')
+    }
+
+    // Value thunks live on the instance itself — merge() keeps the
     // instance alive across round-trips, so the set persists. Defined
     // non-enumerable so state walks (diff/dehydrate) never see it, but
     // writable/configurable so reactive proxies can wrap it freely...
-    __page() {
+    __registry() {
         if (! this.__bindings) Object.defineProperty(this, '__bindings', { value: new Set(), writable: true, configurable: true })
 
         return this.__bindings

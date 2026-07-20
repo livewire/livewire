@@ -168,6 +168,108 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_a_header_checkbox_bound_to_the_page_facet_toggles_the_whole_page()
+    {
+        Livewire::visit(new class extends Component {
+            public Selection $selection;
+
+            public function mount(): void
+            {
+                $this->selection = new Selection;
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="checkbox" dusk="header" wire:model="selection.page" />
+
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+                    <input type="checkbox" dusk="two" wire:model="selection" value="2" />
+
+                    <span dusk="count" x-text="$wire.selection.count()"></span>
+                </div>
+                HTML;
+            }
+        })
+        ->assertNotChecked('@header')
+        ->check('@header')
+        ->assertChecked('@one')
+        ->assertChecked('@two')
+        ->assertChecked('@header')
+        ->assertSeeIn('@count', '2')
+        ->uncheck('@header')
+        ->assertNotChecked('@one')
+        ->assertNotChecked('@two')
+        ->assertSeeIn('@count', '0')
+        ;
+    }
+
+    public function test_the_header_checkbox_is_indeterminate_when_the_page_is_partially_selected()
+    {
+        Livewire::visit(new class extends Component {
+            public Selection $selection;
+
+            public function mount(): void
+            {
+                $this->selection = new Selection;
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="checkbox" dusk="header" wire:model="selection.page" />
+
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+                    <input type="checkbox" dusk="two" wire:model="selection" value="2" />
+                </div>
+                HTML;
+            }
+        })
+        ->assertScript('document.querySelector(\'[dusk="header"]\').indeterminate', false)
+        ->check('@one')
+        ->assertScript('document.querySelector(\'[dusk="header"]\').indeterminate', true)
+        ->assertNotChecked('@header')
+        ->check('@two')
+        ->assertScript('document.querySelector(\'[dusk="header"]\').indeterminate', false)
+        ->assertChecked('@header')
+        ;
+    }
+
+    public function test_deselecting_the_page_keeps_off_page_selections()
+    {
+        Livewire::visit(new class extends Component {
+            public Selection $selection;
+
+            public function mount(): void
+            {
+                $this->selection = new Selection(['99']);
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="checkbox" dusk="header" wire:model="selection.page" />
+
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+                    <input type="checkbox" dusk="two" wire:model="selection" value="2" />
+
+                    <span dusk="count" x-text="$wire.selection.count()"></span>
+                </div>
+                HTML;
+            }
+        })
+        ->assertNotChecked('@header')
+        ->check('@header')
+        ->assertSeeIn('@count', '3')
+        ->uncheck('@header')
+        // Only the page's values were deselected — 99 survives...
+        ->assertSeeIn('@count', '1')
+        ;
+    }
+
     public function test_a_server_driven_change_merges_into_the_existing_selection_instance()
     {
         Livewire::visit(new class extends Component {
