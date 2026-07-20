@@ -17,9 +17,24 @@ class SupportSelection extends ComponentHook
         // whereNotIn in except mode — so the mode branch can never be
         // written backwards by hand. Selection keys are client input:
         // apply this to an ownership-scoped query, never a global one...
-        Builder::macro('whereSelected', function (Selection $selection, ?string $column = null) {
+        Builder::macro('whereSelected', function (Selection $selection, ?string $column = null, bool $unscoped = false) {
             /** @var Builder $this */
             $column ??= $this->getModel()->getQualifiedKeyName();
+
+            // A select-all selection against a completely unconstrained
+            // query lets a forged payload target every row in the table.
+            // Require an existing constraint — or an explicit unscoped
+            // acknowledgment that leaves a marker in code review...
+            $isConstrained = count($this->getQuery()->wheres) > 0
+                || count($this->getModel()->getGlobalScopes()) > 0;
+
+            if ($selection->isAll() && ! $unscoped && ! $isConstrained) {
+                throw new \RuntimeException(
+                    'Livewire: Refusing to apply a select-all selection to an unscoped ['.get_class($this->getModel()).'] query — '.
+                    'a forged payload could target every row in the table. Scope the query first '.
+                    '(e.g. through its owner relationship), or acknowledge with whereSelected($selection, unscoped: true).'
+                );
+            }
 
             return $selection->isAll()
                 ? $this->whereNotIn($column, $selection->except())

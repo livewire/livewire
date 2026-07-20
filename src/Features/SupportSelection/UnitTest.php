@@ -264,7 +264,7 @@ class UnitTest extends \Tests\TestCase
         Assert::assertStringContainsString('"id" in', str_replace('`', '"', $include->toSql()));
         Assert::assertSame([1, 2], $include->getBindings());
 
-        $except = SelectionTestModel::query()->whereSelected((new Selection)->selectAll()->deselect(3));
+        $except = SelectionTestModel::query()->whereSelected((new Selection)->selectAll()->deselect(3), unscoped: true);
 
         Assert::assertStringContainsString('"id" not in', str_replace('`', '"', $except->toSql()));
         Assert::assertSame([3], $except->getBindings());
@@ -273,6 +273,44 @@ class UnitTest extends \Tests\TestCase
         $scoped = SelectionTestModel::query()->where('user_id', 7)->whereSelected(new Selection([1]));
 
         Assert::assertSame([7, 1], $scoped->getBindings());
+    }
+
+    function test_a_select_all_selection_refuses_an_unscoped_query()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('unscoped');
+
+        SelectionTestModel::query()->whereSelected((new Selection)->selectAll());
+    }
+
+    function test_the_unscoped_guard_can_be_acknowledged_or_satisfied_by_scoping()
+    {
+        // An existing constraint satisfies the guard...
+        $scoped = SelectionTestModel::query()->where('user_id', 7)->whereSelected((new Selection)->selectAll()->deselect(3));
+
+        Assert::assertSame([7, 3], $scoped->getBindings());
+
+        // As does an explicit acknowledgment...
+        $acknowledged = SelectionTestModel::query()->whereSelected((new Selection)->selectAll()->deselect(3), unscoped: true);
+
+        Assert::assertSame([3], $acknowledged->getBindings());
+
+        // A global scope counts as a constraint...
+        SelectionTestModel::addGlobalScope('tenant', fn ($query) => $query->where('tenant_id', 1));
+
+        try {
+            $globallyScoped = SelectionTestModel::query()->whereSelected((new Selection)->selectAll()->deselect(9));
+
+            Assert::assertStringContainsString('not in', $globallyScoped->toSql());
+        } finally {
+            SelectionTestModel::clearBootedModels();
+        }
+
+        // Include mode never trips the guard — forged keys there are bounded
+        // by whatever scoping the query has, same as any request input...
+        $include = SelectionTestModel::query()->whereSelected(new Selection([1]));
+
+        Assert::assertSame([1], $include->getBindings());
     }
 
     function test_a_hydrated_class_must_be_a_selection()
