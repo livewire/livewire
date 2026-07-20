@@ -21,14 +21,13 @@ use Livewire\Features\SupportRenderless\HandlesRenderless;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use BadMethodCallException;
+use Livewire\Features\SupportAuthorization\HandlesAuthorization;
 
 abstract class Component
 {
     use Macroable { __call as macroCall; }
 
-    use AuthorizesRequests;
     use InteractsWithProperties;
     use HandlesEvents;
     use HandlesIslands;
@@ -45,6 +44,7 @@ abstract class Component
     use HandlesSlots;
     use HandlesHtmlAttributeForwarding;
     use HandlesRenderless;
+    use HandlesAuthorization;
     use HandlesVirtualProperties;
 
     protected $__id;
