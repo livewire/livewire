@@ -44,6 +44,22 @@ class CreatePost extends Component
 
 When the "Create New Post" button is clicked, the modal appears without a server roundtrip. After successfully saving the post, the modal is hidden and the form is reset.
 
+## Checking for emptiness
+
+Rather than writing out emptiness checks like `items.length === 0` by hand, you can use the `$empty` magic. It mirrors PHP's `empty()`, so a property reads the same on both sides of the wire:
+
+```blade
+<div wire:show="$empty('items')">
+    No items yet — add your first one!
+</div>
+
+<div wire:show="! $empty('items')">
+    <!-- ... -->
+</div>
+```
+
+`$empty` is reactive — the element toggles as the property changes, even for client-side mutations that haven't reached the server yet.
+
 ## Using transitions
 
 You can combine `wire:show` with Alpine.js transitions to create smooth show/hide animations. Since `wire:show` only toggles the CSS `display` property, Alpine's `x-transition` directives work perfectly with it:
