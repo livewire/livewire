@@ -41,7 +41,7 @@ export class Selection extends Array {
     isEmpty() { return ! this.any() }
 
     // In except mode the count needs the total. The server feeds one via
-    // outOf() (it rides the snapshot meta), or pass one directly. Without
+    // setTotal() (it rides the snapshot meta), or pass one directly. Without
     // either, the count is unknowable: null...
     count(total = null) {
         if (! this.isAll()) return this.length
