@@ -11,51 +11,25 @@ use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
 use function Livewire\invade;
 use function Livewire\on;
+use function Livewire\store;
 
 class SupportActionMiddleware extends ComponentHook
 {
-    protected static $middlewareAttributes = [];
-
     public static function provide()
     {
-        on('flush-state', function () {
-            static::$middlewareAttributes = [];
-        });
-
         on('call', function ($component, $method, $params, $context, $earlyReturn, $metadata) {
             static::applyActionMiddleware($component, $method, $params);
         });
     }
 
-    function skip()
-    {
-        return empty($this->middlewareAttributes());
-    }
-
-    function boot()
-    {
-        if (empty(static::$middlewareAttributes)) {
-            static::$middlewareAttributes = $this->middlewareAttributes();
-        }
-    }
-
-    protected function middlewareAttributes(): array
-    {
-        return $this->component
-            ->getAttributes()
-            ->filter(fn ($attr) => $attr instanceof BaseMiddleware)
-            ->groupBy(fn ($attr) => $attr->getName())
-            ->map(fn ($group) => $group->pluck('middleware')->all())
-            ->all();
-    }
-
     protected static function applyActionMiddleware($component, $method, $params)
     {
-        if (empty(static::$middlewareAttributes)) return;
+        // Return early if there is no middleware attribute found in component
+        if (! $middlewareAttributes = store($component)->get('middlewareAttributes')) return;
 
         $method = static::resolveMethodName($component, $method, $params);
 
-        $actionMiddleware = static::gatherActionMiddleware($method);
+        $actionMiddleware = static::gatherActionMiddleware($method, $middlewareAttributes);
 
         if (empty($actionMiddleware)) return;
 
@@ -84,10 +58,10 @@ class SupportActionMiddleware extends ComponentHook
         return $method;
     }
 
-    protected static function gatherActionMiddleware($method): array
+    protected static function gatherActionMiddleware($method, $middlewareAttributes): array
     {
-        return collect(static::$middlewareAttributes)
-            ->filter(fn ($value, $key) => $key === $method)
+        return collect($middlewareAttributes)
+            ->filter(fn ($middleware, $methodName) => $methodName === $method)
             ->flatten()
             ->values()
             ->all();
