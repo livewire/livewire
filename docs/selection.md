@@ -160,6 +160,32 @@ Without a total, a select-all count is unknowable: `count()` throws in PHP and r
 <span wire:text="selected.isAll() ? 'All selected' : selected.count() + ' selected'"></span>
 ```
 
+## Beyond checkboxes
+
+Nothing about a selection is specific to checkboxes, or to table rows. It's a set of tracked keys, so it fits any interface where users mark items: favoriting products, expanding rows to reveal details, or adding items to a compare list.
+
+Here, clicking an invoice toggles its detail panel. There are no checkboxes involved, just `toggle()` and `contains()`:
+
+```php
+public Selection $expanded;
+```
+
+```blade
+@foreach ($this->invoices as $invoice)
+    <div wire:key="{{ $invoice->id }}">
+        <button wire:click="expanded.toggle({{ $invoice->id }})">
+            {{ $invoice->number }}
+        </button>
+
+        <template wire:if="expanded.contains({{ $invoice->id }})">
+            <p>{{ $invoice->description }}</p>
+        </template>
+    </div>
+@endforeach
+```
+
+The panels open instantly since both methods run client-side, and the expanded keys sync to the server and survive pagination like any other selection.
+
 ## Security
 
 Treat every selection as user input. The keys, and the select-all mode itself, arrive from the browser like any other `wire:model` value, so a hostile client can submit a payload claiming any keys are selected, or that everything is.
