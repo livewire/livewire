@@ -1,9 +1,11 @@
 import { registerSynth } from '@/synths'
 
-// Native checkboxes, plus Flux's ui-checkbox custom element — it honors
-// the same .value/.checked/.indeterminate contracts...
+// Native checkboxes, plus Flux's ui-checkbox/ui-switch custom elements —
+// they honor the same .value/.checked/.indeterminate contracts, and
+// Alpine's own isCheckbox() groups them the same way...
 function isCheckbox(el) {
     return el.tagName === 'UI-CHECKBOX'
+        || el.tagName === 'UI-SWITCH'
         || (el.tagName === 'INPUT' && el.type === 'checkbox')
 }
 
