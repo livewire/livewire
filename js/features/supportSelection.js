@@ -61,6 +61,10 @@ export class Selection extends Array {
         return this.isAll() ? ! has : has
     }
 
+    // Collections answer membership checks as both has() and contains() —
+    // same here, so whichever word users guess works...
+    has(key) { return this.contains(key) }
+
     select(key) {
         this.isAll() ? this.__removeKey(key) : this.__addKey(key)
     }

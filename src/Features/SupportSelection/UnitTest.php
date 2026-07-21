@@ -177,6 +177,21 @@ class UnitTest extends \Tests\TestCase
         Assert::assertTrue($selection->contains(2));
     }
 
+    function test_has_answers_membership_like_contains_in_both_modes()
+    {
+        $selection = new Selection([1, 2]);
+
+        Assert::assertTrue($selection->has(2));
+        Assert::assertTrue($selection->has('2'));
+        Assert::assertFalse($selection->has(3));
+
+        $selection->selectAll();
+        $selection->deselect(3);
+
+        Assert::assertTrue($selection->has(999));
+        Assert::assertFalse($selection->has(3));
+    }
+
     function test_contains_uses_loose_comparison_for_checkbox_string_values()
     {
         $selection = new Selection([1, 2]);

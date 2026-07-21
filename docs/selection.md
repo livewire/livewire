@@ -262,6 +262,7 @@ Available on `Livewire\Selection` in PHP and on the bound property in directive 
 | `deselect($key)` | Remove a key from the selection |
 | `toggle($key)` | Select the key if unselected, deselect it otherwise |
 | `contains($key)` | Whether the key is selected |
+| `has($key)` | Alias of `contains($key)`, matching the `has()` on collections |
 | `count($total = null)` | Number of selected keys. In select-all mode a total is required: without one it throws in PHP and returns `null` in JavaScript |
 | `any()` | Whether anything is selected |
 | `isEmpty()` | Whether nothing is selected |
