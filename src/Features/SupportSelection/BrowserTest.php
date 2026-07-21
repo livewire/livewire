@@ -471,4 +471,34 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertChecked('@two')
         ;
     }
+
+    public function test_a_server_fed_total_is_readable_on_the_client()
+    {
+        Livewire::visit(new class extends Component {
+            public Selection $selection;
+
+            public function mount(): void
+            {
+                $this->selection->setTotal(2500);
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+
+                    <button dusk="select-all" type="button" wire:click="selection.selectAll()">Select all</button>
+
+                    <span dusk="total" wire:text="selection.total()"></span>
+                    <span dusk="count" wire:text="selection.count()"></span>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@total', '2500')
+        ->click('@select-all')
+        ->assertSeeIn('@count', '2500')
+        ;
+    }
 }

@@ -51,6 +51,8 @@ export class Selection extends Array {
         return total === null ? null : Math.max(0, total - this.length)
     }
 
+    total() { return this.__total ?? null }
+
     contains(key) {
         // Loose comparison — checkbox values are strings while server-side
         // keys are often integers...
