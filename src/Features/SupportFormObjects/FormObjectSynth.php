@@ -21,16 +21,17 @@ class FormObjectSynth extends Synth {
         return is_subclass_of($type, Form::class);
     }
 
-    // Typed updates without snapshot meta pass through untouched — the
-    // same behavior as before forms were matchable by type...
+    // A form can't be rebuilt from a raw value alone (it needs its
+    // component and booted attribute state), so typed updates without
+    // snapshot meta pass through untouched...
     function hydrateFromType($type, $value)
     {
         return $value;
     }
 
     // Uninitialized `public PostForm $form` properties spring to life.
-    // The form's boot runs AFTER the property assignment, preserving the
-    // ordering of the old per-boot reflection scan...
+    // The form's boot runs after the property assignment so boot-time
+    // logic can reach the form through its component...
     function initialize($type, $assign)
     {
         $component = $this->context->component;

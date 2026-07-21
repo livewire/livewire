@@ -128,7 +128,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_select_page_still_works_after_a_manual_checkbox_toggle_replaces_the_selection()
+    public function test_select_page_composes_with_manual_toggles()
     {
         Livewire::visit(new class extends Component {
             public Selection $selection;
@@ -152,8 +152,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        // Checking (then unchecking) a box replaces the selection instance
-        // through Alpine's concat/filter — selectPage must survive that...
+        // Manual toggles and selectPage must compose cleanly...
         ->check('@one')
         ->uncheck('@one')
         ->assertSeeIn('@count', '0')

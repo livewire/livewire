@@ -183,13 +183,54 @@ class HandleSynths extends Mechanism
         return new ($this->typeCache[$type])($context, $path);
     }
 
-    public function findSynthClassByType(string $type): ?string
+    // Typed public properties whose synthesizer defines initialize() are
+    // filled automatically at boot. Discovery is cached per component
+    // class: one reflection pass per class per process, then each boot
+    // pays an array lookup plus an isInitialized() check per entry...
+    protected static array $initializable = [];
+
+    public function initializeProperties($component)
     {
-        foreach ($this->synthesizers as $synth) {
-            if ($synth::matchByType($type)) return $synth;
+        $entries = static::$initializable[$component::class] ??= $this->discoverInitializableProperties($component::class);
+
+        foreach ($entries as [$property, $typeName, $synthClass]) {
+            // Only fill properties nothing else has initialized (a default,
+            // a hydration, an earlier hook)...
+            if ($property->isInitialized($component)) continue;
+
+            $synth = new $synthClass(new ComponentContext($component), $property->getName());
+
+            // The synth assigns through the callback so it controls ordering
+            // around the assignment (e.g. form objects boot afterwards)...
+            $synth->initialize($typeName, fn ($value) => $property->setValue($component, $value));
+        }
+    }
+
+    protected function discoverInitializableProperties(string $class): array
+    {
+        $entries = [];
+
+        foreach ((new \ReflectionClass($class))->getProperties(\ReflectionProperty::IS_PUBLIC) as $property) {
+            if ($property->isStatic()) continue;
+
+            $type = $property->getType();
+
+            if (! $type instanceof \ReflectionNamedType) continue;
+
+            if ($type->isBuiltin()) continue;
+
+            foreach ($this->synthesizers as $synthClass) {
+                if (! $synthClass::matchByType($type->getName())) continue;
+
+                if (method_exists($synthClass, 'initialize')) {
+                    $entries[] = [$property, $type->getName(), $synthClass];
+                }
+
+                break;
+            }
         }
 
-        return null;
+        return $entries;
     }
 
     protected function findByType($type, $context, $path)
