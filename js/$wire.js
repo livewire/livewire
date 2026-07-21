@@ -299,6 +299,7 @@ wireProperty('$effect', (component) => (callback) => {
 })
 
 wireProperty('$refresh', (component) => () => {
+    // Keep the original action promise, but return synchronous errors as rejected promises...
     try {
         return fireAction(component, '$refresh')
     } catch (error) {
@@ -307,6 +308,7 @@ wireProperty('$refresh', (component) => () => {
 })
 
 wireProperty('$commit', (component) => () => {
+    // Keep the original action promise, but return synchronous errors as rejected promises...
     try {
         return fireAction(component, '$commit')
     } catch (error) {
