@@ -8,6 +8,19 @@ use Livewire\Component;
 
 class BrowserTest extends BrowserTestCase
 {
+    public function test_warns_when_a_poll_duration_uses_an_unsupported_unit()
+    {
+        Livewire::visit(new class extends Component {
+            public function render() { return <<<'HTML'
+            <div wire:poll.10m>
+                Polling
+            </div>
+            HTML; }
+        })
+        ->assertConsoleLogHasWarning('Livewire: [wire:poll.10m] uses an unsupported duration. Supported units are \"ms\" and \"s\". The default 2-second interval will be used.')
+        ;
+    }
+
     public function test_polling_requests_are_batched_by_default()
     {
         Livewire::visit([new class extends Component {
