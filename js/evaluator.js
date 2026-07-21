@@ -61,8 +61,8 @@ export function evaluateActionExpression(el, expression, options = {}) {
     }
 }
 
-export function contextualizeExpression(expression, el) {
-    let SKIP = ['JSON', 'true', 'false', 'null', 'undefined', 'this', '$wire', '$event']
+export function contextualizeExpression(expression, el, extraSkip = []) {
+    let SKIP = ['JSON', 'true', 'false', 'null', 'undefined', 'this', '$wire', '$event', ...extraSkip]
 
     // If an element is provided, collect Alpine scope keys between
     // this element and the Livewire component root so they don't
@@ -88,6 +88,12 @@ export function contextualizeExpression(expression, el) {
         }
     }
 
+    // 1.75. Contextualize interpolations inside template literals so
+    //       `${count} selected` becomes `${$wire.count} selected`...
+    strings = strings.map(string => {
+        return string.startsWith('`') ? contextualizeTemplateLiteral(string, el, SKIP) : string
+    })
+
     // 2. Prefix identifiers not after a dot (skip placeholders from step 1)
     //    Also skip object keys (identifiers immediately followed by colon)
     result = result.replace(/(^|[^.\w$])(\$?[a-zA-Z_]\w*)/g, (m, pre, ident, offset) => {
@@ -98,4 +104,51 @@ export function contextualizeExpression(expression, el) {
 
     // 3. Restore strings
     return result.replace(/___(\d+)___/g, (m, i) => strings[i])
+}
+
+function contextualizeTemplateLiteral(literal, el, skip) {
+    let result = ''
+    let i = 0
+
+    while (i < literal.length) {
+        if (literal[i] === '\\') {
+            result += literal[i] + (literal[i + 1] ?? '')
+            i += 2
+        } else if (literal[i] === '$' && literal[i + 1] === '{') {
+            // Find the interpolation's closing brace, balancing nested
+            // braces and skipping over nested string literals...
+            let start = i + 2
+            let j = start
+            let depth = 1
+
+            while (j < literal.length) {
+                let char = literal[j]
+
+                if (char === '\\') {
+                    j++
+                } else if (char === '"' || char === "'" || char === '`') {
+                    j++
+                    while (j < literal.length && literal[j] !== char) {
+                        if (literal[j] === '\\') j++
+                        j++
+                    }
+                } else if (char === '{') {
+                    depth++
+                } else if (char === '}') {
+                    depth--
+                    if (depth === 0) break
+                }
+
+                j++
+            }
+
+            result += '${' + contextualizeExpression(literal.slice(start, j), el, skip) + '}'
+            i = j + 1
+        } else {
+            result += literal[i]
+            i++
+        }
+    }
+
+    return result
 }

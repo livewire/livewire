@@ -46,6 +46,33 @@ describe('Contextualize expressions', () => {
         expect(contextualizeExpression('items.map(({ id }) => id)')).toBe('$wire.items.map(({ id }) => id)')
     })
 
+    it('template literal interpolations', () => {
+        expect(contextualizeExpression('`${count} selected`')).toBe('`${$wire.count} selected`')
+        expect(contextualizeExpression('`${selection.count()} selected`')).toBe('`${$wire.selection.count()} selected`')
+        expect(contextualizeExpression('`${first} of ${total}`')).toBe('`${$wire.first} of ${$wire.total}`')
+        expect(contextualizeExpression("`${foo ? 'yes' : 'no'}`")).toBe("`${$wire.foo ? 'yes' : 'no'}`")
+        expect(contextualizeExpression("`${foo ? '}' : name}`")).toBe("`${$wire.foo ? '}' : $wire.name}`")
+        expect(contextualizeExpression('`${JSON.stringify({ foo: foo })}`')).toBe('`${JSON.stringify({ foo: $wire.foo })}`')
+        expect(contextualizeExpression('`${files.filter(file => file.size > threshold).length} big`')).toBe('`${$wire.files.filter(file => file.size > $wire.threshold).length} big`')
+        expect(contextualizeExpression('`no interpolation`')).toBe('`no interpolation`')
+        expect(contextualizeExpression('`\\${count} escaped`')).toBe('`\\${count} escaped`')
+        expect(contextualizeExpression('save(`${name}`)')).toBe('$wire.save(`${$wire.name}`)')
+    })
+
+    it('template literal interpolations respect arrow function parameters', () => {
+        expect(contextualizeExpression('files.map(file => `${file.name}`)')).toBe('$wire.files.map(file => `${file.name}`)')
+    })
+
+    it('template literal interpolations respect alpine scope variables', () => {
+        let mockEl = {
+            _x_dataStack: [{ user: {} }],
+            hasAttribute: () => false,
+            parentElement: null,
+        }
+
+        expect(contextualizeExpression('`${user.name} and ${other}`', mockEl)).toBe('`${user.name} and ${$wire.other}`')
+    })
+
     it('alpine scope variables are skipped', () => {
         let mockEl = {
             _x_dataStack: [{ user: {}, index: 0 }],
