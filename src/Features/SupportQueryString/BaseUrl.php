@@ -5,6 +5,8 @@ namespace Livewire\Features\SupportQueryString;
 use Illuminate\Support\Arr;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportFormObjects\Form;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\HandleSynths\HandleSynths;
 use ReflectionClass;
 
 #[\Attribute]
@@ -90,8 +92,21 @@ class BaseUrl extends LivewireAttribute
         try {
             $this->setValue($value, $this->nullable);
         } catch (\TypeError $e) {
-            // Silently ignore invalid query string types and keep the default.
-            return;
+            // A synth-typed property (Selection, Sort, ...) can't accept the
+            // raw query string value directly — offer it to the property's
+            // synthesizer, the same conversion wire updates receive...
+            $hydrated = app(HandleSynths::class)->hydrateForUpdate(
+                null, $this->getName(), $value, new ComponentContext($this->getComponent())
+            );
+
+            if ($hydrated === $value) return;
+
+            try {
+                $this->setValue($hydrated, $this->nullable);
+            } catch (\TypeError) {
+                // Silently ignore invalid query string types and keep the default.
+                return;
+            }
         }
     }
 
