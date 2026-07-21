@@ -259,6 +259,17 @@ export function diffAndConsolidate(left, right) {
     return diffs
 }
 
+// Whether a value tree holds any rich synth value. Used to veto diff
+// consolidation: rich values must stay at their own dot-notated paths
+// because that's where the server finds their synth meta...
+function containsSynthValue(value) {
+    if (typeof value !== 'object' || value === null) return false
+
+    if (findSynthByValue(value)) return true
+
+    return Object.values(value).some(containsSynthValue)
+}
+
 function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     // Are they the same?
     if (left === right) return { changed: false, consolidated: false }
@@ -331,10 +342,17 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     let leftKeys = Object.keys(left)
     let rightKeys = Object.keys(right)
 
+    // Consolidation is off the table anywhere the subtree holds rich synth values:
+    // the server resolves each rich value's synthesizer from the snapshot meta stored
+    // at its OWN path, so a consolidated parent update would hydrate them as plain
+    // data and silently strip their type. Fall through to granular child diffs
+    // instead (with explicit removals, which consolidation used to imply)...
+    let hasRichValues = hasSynths() && (containsSynthValue(left) || containsSynthValue(right))
+
     // If the size changed, consolidate at this level
     // BUT if we converted to object, don't consolidate - we're adding new items
     // and should produce granular diffs for query string handling
-    if (leftKeys.length !== rightKeys.length && !convertedToObject) {
+    if (leftKeys.length !== rightKeys.length && !convertedToObject && !hasRichValues) {
         // For root level, we can't consolidate to a single key, so diff each root property
         if (path === '') {
             Object.keys(right).forEach(key => {
@@ -349,7 +367,7 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     }
 
     // Did the key order change?
-    if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i])) {
+    if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i]) && !hasRichValues) {
         if (path !== '') {
             diffs[path] = dataGet(rootRight, path)
             return { changed: true, consolidated: true }
@@ -359,7 +377,7 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     // Check if all keys are the same (no additions/removals)
     let keysMatch = leftKeys.every(k => rightKeys.includes(k))
 
-    if (!keysMatch && !convertedToObject) {
+    if (!keysMatch && !convertedToObject && !hasRichValues) {
         // Keys differ (some added, some removed) - consolidate
         if (path !== '') {
             diffs[path] = dataGet(rootRight, path)
@@ -385,7 +403,7 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     // ALSO skip consolidation if we converted to object - we're adding new items, not replacing
     // Only consolidate if there are MULTIPLE children - single property changes should remain granular
     // for wire:target to work correctly (e.g., wire:target="form.text" needs "form.text" not "form")
-    if (path !== '' && totalChildren > 1 && changedCount === totalChildren && consolidatedCount === 0 && !convertedToObject) {
+    if (path !== '' && totalChildren > 1 && changedCount === totalChildren && consolidatedCount === 0 && !convertedToObject && !hasRichValues) {
         diffs[path] = dataGet(rootRight, path)
         return { changed: true, consolidated: true }
     }
@@ -393,10 +411,23 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     // Otherwise, add individual child diffs
     Object.assign(diffs, childDiffs)
 
+    // Removed keys normally ride along inside a consolidated parent update - when rich
+    // values vetoed consolidation, they need explicit removal markers instead...
+    let removedCount = 0
+
+    if (hasRichValues) {
+        leftKeys.filter(key => !rightKeys.includes(key)).forEach(key => {
+            let childPath = path === '' ? key : `${path}.${key}`
+            if (diffs[childPath] === undefined) diffs[childPath] = '__rm__'
+            removedCount++
+        })
+    }
+
     // If any child was consolidated, bubble that up to prevent further consolidation
     // Also bubble up convertedToObject to prevent parent consolidation from
     // JSON-serializing arrays with non-numeric keys (which JSON.stringify ignores)
-    return { changed: changedCount > 0, consolidated: consolidatedCount > 0 || convertedToObject }
+    // Rich-value subtrees report consolidated so ancestors never re-swallow them
+    return { changed: changedCount > 0 || removedCount > 0, consolidated: consolidatedCount > 0 || convertedToObject || hasRichValues }
 }
 
 /**
