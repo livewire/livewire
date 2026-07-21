@@ -100,23 +100,31 @@ class Selection implements Arrayable, \Countable, \IteratorAggregate, \JsonSeria
         return $this->contains($key);
     }
 
+    // Each mutator accepts a single key or an array of keys — selecting
+    // straight from data is one call: select($rows->pluck('id')->all())...
     public function select($key): static
     {
-        $this->isAll() ? $this->removeKey($key) : $this->addKey($key);
+        foreach (is_array($key) ? $key : [$key] as $single) {
+            $this->isAll() ? $this->removeKey($single) : $this->addKey($single);
+        }
 
         return $this;
     }
 
     public function deselect($key): static
     {
-        $this->isAll() ? $this->addKey($key) : $this->removeKey($key);
+        foreach (is_array($key) ? $key : [$key] as $single) {
+            $this->isAll() ? $this->addKey($single) : $this->removeKey($single);
+        }
 
         return $this;
     }
 
     public function toggle($key): static
     {
-        $this->contains($key) ? $this->deselect($key) : $this->select($key);
+        foreach (is_array($key) ? $key : [$key] as $single) {
+            $this->contains($single) ? $this->deselect($single) : $this->select($single);
+        }
 
         return $this;
     }

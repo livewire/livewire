@@ -117,6 +117,39 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_an_array_of_keys_can_be_selected_from_a_directive_expression()
+    {
+        Livewire::visit(new class extends Component {
+            public Selection $selection;
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+                    <input type="checkbox" dusk="two" wire:model="selection" value="2" />
+
+                    <button dusk="select-both" type="button" wire:click="selection.select(['1', '2'])">Select both</button>
+                    <button dusk="toggle-both" type="button" wire:click="selection.toggle(['2', '3'])">Toggle two and three</button>
+
+                    <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
+
+                    <span dusk="server">{{ $selection->count() }}:{{ implode(',', $selection->keys()) }}</span>
+                </div>
+                HTML;
+            }
+        })
+        ->click('@select-both')
+        ->assertChecked('@one')
+        ->assertChecked('@two')
+        ->click('@toggle-both')
+        ->assertChecked('@one')
+        ->assertNotChecked('@two')
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@server', '2:1,3')
+        ;
+    }
+
     public function test_select_page_selects_every_bound_checkbox_on_the_page()
     {
         Livewire::visit(new class extends Component {

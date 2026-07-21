@@ -105,6 +105,8 @@ This checkbox is fully wired up automatically:
 <button wire:click="selected.selectPage()">Select page</button>
 ```
 
+The page methods only see checkboxes bound with `wire:model` — if your interface doesn't use them, pass an array of keys to `select()` instead.
+
 ## Selecting all results
 
 Selecting the current page is often just the first step. When a user wants to select all 2,500 matching records, enumerating every key in the browser would be impractical. Instead, `selectAll()` flips the selection into *select-all* mode: the selection now represents every result, and tracks only the *exceptions* (rows that have been unchecked since).
@@ -258,9 +260,9 @@ Available on `Livewire\Selection` in PHP and on the bound property in directive 
 
 | Method | Description |
 |--------|-------------|
-| `select($key)` | Add a key to the selection |
-| `deselect($key)` | Remove a key from the selection |
-| `toggle($key)` | Select the key if unselected, deselect it otherwise |
+| `select($key)` | Add a key to the selection. Accepts a single key or an array of keys |
+| `deselect($key)` | Remove a key from the selection. Accepts a single key or an array of keys |
+| `toggle($key)` | Select the key if unselected, deselect it otherwise. Accepts a single key or an array — each key toggles independently |
 | `contains($key)` | Whether the key is selected |
 | `has($key)` | Alias of `contains($key)`, matching the `has()` on collections |
 | `count($total = null)` | Number of selected keys. In select-all mode a total is required: without one it throws in PHP and returns `null` in JavaScript |
