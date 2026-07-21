@@ -775,6 +775,10 @@ let $wire = {
     // Usage: $wire.$get('count')
     $get(name) { ... },
 
+    // Determine if a property is empty — mirrors PHP's empty()...
+    // Usage: $wire.$empty('items'), wire:show="$empty('items')"
+    $empty(name) { ... },
+
     // Set a property on the component by name...
     // Usage: $wire.$set('count', 5)
     $set(name, value, live = true) { ... },
