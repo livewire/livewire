@@ -240,17 +240,30 @@ describe('diffing rich values', () => {
         expect(diffAndConsolidate(left, right)).toEqual({ price: { amount: 200, currency: 'USD' } })
     })
 
-    it('dehydrates rich values nested inside consolidated diffs', () => {
+    it('keeps rich values granular in their dehydrated wire format when an array grows', () => {
         registerDateSynth()
 
         let left = { dates: [new Date('2021-01-01T00:00:00Z')] }
         let right = { dates: [new Date('2021-01-01T00:00:00Z'), new Date('2022-02-02T00:00:00Z')] }
 
-        // The array grew, so the diff consolidates to the parent level and
-        // must contain wire-format values, not rich ones...
+        // Rich values veto consolidation to the parent level — the server
+        // resolves each one's synthesizer from meta stored at its own path,
+        // so a consolidated parent update would strip their type. The diff
+        // stays granular, in wire format...
         expect(diffAndConsolidate(left, right)).toEqual({
-            dates: ['2021-01-01T00:00:00.000Z', '2022-02-02T00:00:00.000Z'],
+            'dates.1': '2022-02-02T00:00:00.000Z',
         })
+    })
+
+    it('emits explicit removal markers when an array holding rich values shrinks', () => {
+        registerDateSynth()
+
+        let left = { dates: [new Date('2021-01-01T00:00:00Z'), new Date('2022-02-02T00:00:00Z')] }
+        let right = { dates: [new Date('2021-01-01T00:00:00Z')] }
+
+        // Removals normally ride along inside a consolidated parent update —
+        // with consolidation vetoed they surface as explicit markers instead...
+        expect(diffAndConsolidate(left, right)).toEqual({ 'dates.1': '__rm__' })
     })
 })
 
@@ -413,6 +426,8 @@ describe('values that dehydrate to undefined (no wire representation)', () => {
         let left = { things: [new PendingThing('a')] }
         let right = { things: [new PendingThing('b'), new PendingThing()] }
 
-        expect(diffAndConsolidate(left, right)).toEqual({ things: ['b'] })
+        // Granular because rich values veto consolidation: the settled value
+        // syncs at its own path while the pending one stays off the wire...
+        expect(diffAndConsolidate(left, right)).toEqual({ 'things.0': 'b' })
     })
 })
