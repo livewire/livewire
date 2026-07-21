@@ -10,6 +10,8 @@ use Livewire\Mechanisms\HandleComponents\Synthesizers;
 use Livewire\Drawer\Utils;
 use ReflectionUnionType;
 
+use function Livewire\on;
+
 class HandleSynths extends Mechanism
 {
     protected array $synthesizers = [
@@ -188,6 +190,13 @@ class HandleSynths extends Mechanism
     // class: one reflection pass per class per process, then each boot
     // pays an array lookup plus an isInitialized() check per entry...
     protected static array $initializable = [];
+
+    public function boot()
+    {
+        on('flush-state', function () {
+            static::$initializable = [];
+        });
+    }
 
     public function initializeProperties($component)
     {

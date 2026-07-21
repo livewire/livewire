@@ -9,6 +9,15 @@ use Livewire\Selection;
 use PHPUnit\Framework\Assert;
 use Tests\TestComponent;
 
+/**
+ * Typed public properties whose synthesizer knows how to initialize them
+ * (an initialize() method on the synth) spring to life automatically:
+ *
+ *     public Selection $selection;   // no mount() assignment needed
+ *
+ * The machinery lives in the synth system — see
+ * HandleSynths::initializeProperties().
+ */
 class UnitTest extends \Tests\TestCase
 {
     function test_a_typed_selection_property_is_automatically_initialized()
