@@ -3,7 +3,7 @@ import { setNextActionMetadata, setNextActionOrigin, sessionIsExpired } from '@/
 import { evaluateActionExpression } from '../evaluator'
 
 directive('poll', ({ el, directive, component }) => {
-    let interval = extractDurationFrom(el, directive, 2000)
+    let interval = extractDurationFrom(directive.modifiers, 2000)
 
     let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
         triggerComponentRequest(el, directive, component)
@@ -124,8 +124,7 @@ export function theElementIsDisconnected(el) {
     return el.isConnected === false
 }
 
-export function extractDurationFrom(el, directive, defaultDuration) {
-    let modifiers = directive.modifiers
+export function extractDurationFrom(modifiers, defaultDuration) {
     let durationInMilliSeconds
     let durationInMilliSecondsString = modifiers.find(mod => mod.match(/([0-9]+)ms/))
     let durationInSecondsString = modifiers.find(mod => mod.match(/([0-9]+)s/))
@@ -140,10 +139,7 @@ export function extractDurationFrom(el, directive, defaultDuration) {
         let unsupportedDuration = modifiers.find(mod => mod.match(/^[0-9]+[a-z]+$/))
 
         if (unsupportedDuration) {
-            console.warn(
-                `Livewire: [${directive.rawName}] uses an unsupported duration. Supported units are "ms" and "s". The default 2-second interval will be used.`,
-                el,
-            )
+            console.warn(`Livewire: [wire:poll.${unsupportedDuration}] uses an unsupported duration. Supported units are "ms" and "s". The default 2-second interval will be used.`)
         }
 
         return defaultDuration
