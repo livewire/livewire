@@ -61,6 +61,10 @@ export class Selection extends Array {
         return this.isAll() ? ! has : has
     }
 
+    // Collections answer membership checks as both has() and contains() —
+    // same here, so whichever word users guess works...
+    has(key) { return this.contains(key) }
+
     select(key) {
         this.isAll() ? this.__removeKey(key) : this.__addKey(key)
     }
@@ -99,6 +103,12 @@ export class Selection extends Array {
         this.splice(0, this.length)
 
         this.__mode = 'include'
+    }
+
+    // Form objects call this operation reset() — same word here so either
+    // primitive answers to the vocabulary users already know...
+    reset() {
+        this.clear()
     }
 
     // A dedicated "select all" checkbox — the one at the top of a column —

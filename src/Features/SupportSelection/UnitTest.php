@@ -116,6 +116,20 @@ class UnitTest extends \Tests\TestCase
         Assert::assertSame([], $selection->keys());
     }
 
+    function test_reset_returns_to_an_empty_include_mode_selection_like_clear()
+    {
+        $selection = new Selection([1, 2]);
+
+        $selection->selectAll();
+        $selection->deselect(3);
+
+        $selection->reset();
+
+        Assert::assertFalse($selection->isAll());
+        Assert::assertFalse($selection->any());
+        Assert::assertSame([], $selection->keys());
+    }
+
     function test_enumerating_an_all_mode_selection_fails_loudly()
     {
         $selection = (new Selection)->selectAll();
@@ -161,6 +175,21 @@ class UnitTest extends \Tests\TestCase
         Assert::assertSame([1], $selection->except());
         Assert::assertFalse($selection->contains(1));
         Assert::assertTrue($selection->contains(2));
+    }
+
+    function test_has_answers_membership_like_contains_in_both_modes()
+    {
+        $selection = new Selection([1, 2]);
+
+        Assert::assertTrue($selection->has(2));
+        Assert::assertTrue($selection->has('2'));
+        Assert::assertFalse($selection->has(3));
+
+        $selection->selectAll();
+        $selection->deselect(3);
+
+        Assert::assertTrue($selection->has(999));
+        Assert::assertFalse($selection->has(3));
     }
 
     function test_contains_uses_loose_comparison_for_checkbox_string_values()

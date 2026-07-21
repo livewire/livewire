@@ -89,6 +89,34 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_reset_clears_the_selection_from_a_directive_expression()
+    {
+        Livewire::visit(new class extends Component {
+            public Selection $selection;
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+
+                    <button dusk="reset" type="button" wire:click="selection.reset()">Reset selection</button>
+
+                    <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
+
+                    <span dusk="server">{{ $selection->count() }}</span>
+                </div>
+                HTML;
+            }
+        })
+        ->check('@one')
+        ->click('@reset')
+        ->assertNotChecked('@one')
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@server', '0')
+        ;
+    }
+
     public function test_select_page_selects_every_bound_checkbox_on_the_page()
     {
         Livewire::visit(new class extends Component {
