@@ -93,6 +93,13 @@ class Selection implements Arrayable, \Countable, \IteratorAggregate, \JsonSeria
         return $this->isAll() ? ! $has : $has;
     }
 
+    // Collections answer membership checks as both has() and contains() —
+    // same here, so whichever word users guess works...
+    public function has($key): bool
+    {
+        return $this->contains($key);
+    }
+
     public function select($key): static
     {
         $this->isAll() ? $this->removeKey($key) : $this->addKey($key);
@@ -128,6 +135,13 @@ class Selection implements Arrayable, \Countable, \IteratorAggregate, \JsonSeria
         $this->mode = 'include';
 
         return $this;
+    }
+
+    // Form objects call this operation reset() — same word here so either
+    // primitive answers to the vocabulary users already know...
+    public function reset(): static
+    {
+        return $this->clear();
     }
 
     public function toArray(): array
