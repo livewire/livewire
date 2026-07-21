@@ -23,20 +23,7 @@ class SupportActionMiddleware extends ComponentHook
         });
 
         on('call', function ($component, $method, $params, $context, $earlyReturn, $metadata) {
-            if (! isset(static::$middlewareAttributes[$component->getName()])) return;
-
-            $method = static::resolveMethodName($component, $method, $params);
-
-            $actionMiddleware = static::gatherActionMiddleware($component, $method);
-
-            if (empty($actionMiddleware)) return;
-
-            [$request, $resolved] = static::resolveMiddleware($actionMiddleware);
-
-            if (empty($resolved)) return;
-
-            // Gather all action middleware from method and apply it all at once
-            Utils::applyMiddleware($request, $resolved);
+            static::applyActionMiddleware($component, $method, $params);
         });
     }
 
@@ -62,6 +49,24 @@ class SupportActionMiddleware extends ComponentHook
             ->groupBy(fn ($attr) => $attr->getName())
             ->map(fn ($group) => $group->pluck('middleware')->all())
             ->all();
+    }
+
+    protected static function applyActionMiddleware($component, $method, $params)
+    {
+        if (! isset(static::$middlewareAttributes[$component->getName()])) return;
+
+        $method = static::resolveMethodName($component, $method, $params);
+
+        $actionMiddleware = static::gatherActionMiddleware($component, $method);
+
+        if (empty($actionMiddleware)) return;
+
+        [$request, $resolved] = static::resolveMiddleware($actionMiddleware);
+
+        if (empty($resolved)) return;
+
+        // Gather all action middleware from method and apply it all at once
+        Utils::applyMiddleware($request, $resolved);
     }
 
     protected static function resolveMethodName($component, $method, $params)
