@@ -101,6 +101,12 @@ export class Selection extends Array {
         this.__mode = 'include'
     }
 
+    // Form objects call this operation reset() — same word here so either
+    // primitive answers to the vocabulary users already know...
+    reset() {
+        this.clear()
+    }
+
     // A dedicated "select all" checkbox — the one at the top of a column —
     // binds to this facet: wire:model="selection.page". Checked models
     // "the whole page is selected", indeterminate marks a partial page,

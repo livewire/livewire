@@ -272,6 +272,7 @@ Available on `Livewire\Selection` in PHP and on the bound property in directive 
 | `except()` | The exception keys while in select-all mode |
 | `total()` | The stored total, or `null` if one was never set |
 | `clear()` | Deselect everything and leave select-all mode |
+| `reset()` | Alias of `clear()`, matching the `reset()` on form objects |
 
 Keys are compared loosely, since checkbox values arrive as strings while database keys are often integers, so `'1'` and `1` refer to the same row.
 

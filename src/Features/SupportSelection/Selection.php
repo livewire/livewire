@@ -130,6 +130,13 @@ class Selection implements Arrayable, \Countable, \IteratorAggregate, \JsonSeria
         return $this;
     }
 
+    // Form objects call this operation reset() — same word here so either
+    // primitive answers to the vocabulary users already know...
+    public function reset(): static
+    {
+        return $this->clear();
+    }
+
     public function toArray(): array
     {
         $this->ensureIncludeMode(__FUNCTION__);

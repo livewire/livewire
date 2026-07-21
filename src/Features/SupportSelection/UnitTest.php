@@ -116,6 +116,20 @@ class UnitTest extends \Tests\TestCase
         Assert::assertSame([], $selection->keys());
     }
 
+    function test_reset_returns_to_an_empty_include_mode_selection_like_clear()
+    {
+        $selection = new Selection([1, 2]);
+
+        $selection->selectAll();
+        $selection->deselect(3);
+
+        $selection->reset();
+
+        Assert::assertFalse($selection->isAll());
+        Assert::assertFalse($selection->any());
+        Assert::assertSame([], $selection->keys());
+    }
+
     function test_enumerating_an_all_mode_selection_fails_loudly()
     {
         $selection = (new Selection)->selectAll();
