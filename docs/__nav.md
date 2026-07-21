@@ -81,6 +81,7 @@ Blade Directives:
     '@teleport': { uri: /docs/4.x/directive-teleport, file: /directive-teleport.md }
 Advanced:
     Morphing: { uri: /docs/4.x/morphing, file: /morph.md }
+    Delta Updates: { uri: /docs/4.x/delta-updates, file: /delta-updates.md }
     Hydration: { uri: /docs/4.x/hydration, file: /hydration.md }
     Nesting: { uri: /docs/4.x/understanding-nesting, file: /understanding-nesting.md }
     Troubleshooting: { uri: /docs/4.x/troubleshooting, file: /troubleshooting.md }

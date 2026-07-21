@@ -7,6 +7,10 @@ use Livewire\Compiler\Compiler;
 use Illuminate\Foundation\Console\AboutCommand;
 use Composer\InstalledVersions;
 use Livewire\Compiler\CacheManager;
+use Livewire\Mechanisms\HandleRequests\CacheSnapshotStateStore;
+use Livewire\Mechanisms\HandleRequests\SnapshotStateStore;
+use Livewire\Mechanisms\HandleComponents\UpdateEngines\CacheRenderStateStore;
+use Livewire\Mechanisms\HandleComponents\UpdateEngines\RenderStateStore;
 
 class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 {
@@ -29,6 +33,9 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         $this->app->alias(LivewireManager::class, 'livewire');
         $this->app->singleton(LivewireManager::class);
+
+        $this->app->bind(RenderStateStore::class, CacheRenderStateStore::class);
+        $this->app->bind(SnapshotStateStore::class, CacheSnapshotStateStore::class);
 
         app('livewire')->setProvider($this);
 
@@ -202,6 +209,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportLocales\SupportLocales::class,
             Features\SupportTesting\SupportTesting::class,
             Features\SupportIslands\SupportIslands::class,
+            Features\SupportTransportFragments\SupportTransportFragments::class,
             Features\SupportModels\SupportModels::class,
             Features\SupportEvents\SupportEvents::class,
             Features\SupportSlots\SupportSlots::class,

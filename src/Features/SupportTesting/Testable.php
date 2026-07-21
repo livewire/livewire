@@ -409,6 +409,9 @@ class Testable
                 $this->lastState->getHtml(),
                 $value,
                 $this->lastState->getEffects(),
+                $this->lastState->getServerRenderedHtml(),
+                $this->lastState->getServerRenderedHtmlHash(),
+                $this->lastState->getRenderRevision(),
             );
             return;
         }

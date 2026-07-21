@@ -216,6 +216,50 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Update Engine
+    |---------------------------------------------------------------------------
+    |
+    | The default "morph" engine returns the component's full rendered HTML
+    | after each update. The experimental "delta" transport negotiates exact,
+    | stateless chunk and explicit fragment updates, with an optional cache
+    | accelerator. Every reconstructed snapshot and render is verified with
+    | SHA-256 and falls back safely whenever optional state is unavailable.
+    |
+    */
+
+    'update_engine' => env('LIVEWIRE_UPDATE_ENGINE', 'morph'),
+
+    'delta' => [
+        'store' => env('LIVEWIRE_DELTA_STORE'),
+        'ttl' => env('LIVEWIRE_DELTA_TTL', 300),
+        'cache_accelerator' => env('LIVEWIRE_DELTA_CACHE_ACCELERATOR', true),
+        'minimum_html_bytes' => env('LIVEWIRE_DELTA_MINIMUM_HTML_BYTES', 8192),
+        'minimum_savings' => env('LIVEWIRE_DELTA_MINIMUM_SAVINGS', 0.1),
+        'minimum_compressed_savings_bytes' => env(
+            'LIVEWIRE_DELTA_MINIMUM_COMPRESSED_SAVINGS_BYTES',
+            1024,
+        ),
+        'compression_aware' => env('LIVEWIRE_DELTA_COMPRESSION_AWARE', true),
+        // Stateful rollout-sensitive optimizations are off until explicitly enabled.
+        'request_compression' => env('LIVEWIRE_DELTA_REQUEST_COMPRESSION', false),
+        'request_compression_minimum_bytes' => env(
+            'LIVEWIRE_DELTA_REQUEST_COMPRESSION_MINIMUM_BYTES',
+            1024,
+        ),
+        'block_size' => env('LIVEWIRE_DELTA_BLOCK_SIZE', 2048),
+        'maximum_manifest_bytes' => env('LIVEWIRE_DELTA_MAXIMUM_MANIFEST_BYTES', 65536),
+        'maximum_fragments' => env('LIVEWIRE_DELTA_MAXIMUM_FRAGMENTS', 1024),
+        'maximum_html_bytes' => env('LIVEWIRE_DELTA_MAXIMUM_HTML_BYTES', 4 * 1024 * 1024),
+        'snapshot_delta' => env('LIVEWIRE_SNAPSHOT_DELTA', true),
+        'snapshot_references' => env('LIVEWIRE_SNAPSHOT_REFERENCES', false),
+        'maximum_snapshot_bytes' => env('LIVEWIRE_SNAPSHOT_MAXIMUM_BYTES', 4 * 1024 * 1024),
+        'snapshot_reference_minimum_bytes' => env('LIVEWIRE_SNAPSHOT_REFERENCE_MINIMUM_BYTES', 1024),
+        'snapshot_store' => env('LIVEWIRE_SNAPSHOT_STORE'),
+        'snapshot_reference_ttl' => env('LIVEWIRE_SNAPSHOT_REFERENCE_TTL', 300),
+    ],
+
+    /*
+    |---------------------------------------------------------------------------
     | Smart Wire Keys
     |---------------------------------------------------------------------------
     |

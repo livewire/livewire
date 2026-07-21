@@ -4,6 +4,10 @@ import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
 import { setNextActionOrigin } from '@/request'
+import { isSha256Hash, supportsHtmlDeltaVerification } from '@/htmlDelta'
+import { buildBlockManifest, buildFragmentManifest } from '@/renderTransport'
+
+let transportEncoder = new TextEncoder()
 
 export class Component {
     constructor(el) {
@@ -30,7 +34,27 @@ export class Component {
         this.name = this.snapshot.memo.name
 
         this.effects = JSON.parse(el.getAttribute('wire:effects'))
+        this.renderTransportConfig = normalizeRenderTransportConfig(
+            this.effects.renderTransport,
+        )
+        delete this.effects.renderTransport
         this.originalEffects = deepClone(this.effects)
+
+        // The delta update engine needs the exact server-rendered string, not
+        // the browser-normalized DOM. A full update seeds this baseline before
+        // later requests can ask the server for deltas.
+        this.serverRenderedHtml = null
+        this.serverRenderedHtmlHash = null
+        this.renderBaseline = null
+        this.renderRevision = 0
+        this.transportFullLosses = 0
+        this.transportManifestCooldown = 0
+        this.snapshotReference = null
+        this.snapshotReferenceSnapshot = null
+        this.snapshotReferenceCooldown = 0
+        this.requestCompressionMinimumBytes = null
+        this.htmlResyncPending = false
+        this.htmlResyncPromise = null
 
         // "canonical" data represents the last known server state.
         this.canonical = extractData(deepClone(this.snapshot.data), { component: this })
@@ -132,6 +156,246 @@ export class Component {
         let propertiesDiff = diffAndConsolidate(this.canonical, this.ephemeral)
 
         return this.mergeQueuedUpdates(propertiesDiff)
+    }
+
+    getRenderMetadata(baseline = this.captureRenderBaseline()) {
+        if (! supportsHtmlDeltaVerification()) return {}
+
+        let config = this.renderTransportConfig
+
+        // A page rendered by the original experimental delta server has no
+        // mount handshake. Keep speaking its htmlHash protocol during rolling
+        // deployments instead of sending v1 metadata it cannot understand.
+        if (! config) {
+            return baseline ? { htmlHash: baseline.hash } : {}
+        }
+
+        let capabilities = ['same']
+        let canSendPortableManifests = this.transportManifestCooldown === 0
+        let canUseSnapshotReferences = this.snapshotReferenceCooldown === 0
+
+        if (this.transportManifestCooldown > 0) this.transportManifestCooldown--
+        if (this.snapshotReferenceCooldown > 0) this.snapshotReferenceCooldown--
+
+        if (config.snapshotDelta) capabilities.push('snapshot-delta')
+        if (config.snapshotReferences && canUseSnapshotReferences) {
+            capabilities.push('snapshot-ref')
+        }
+
+        let metadata = {
+            v: 1,
+            capabilities,
+        }
+
+        if (! baseline) return metadata
+
+        if (baseline.portable && config.cacheAccelerator) {
+            capabilities.push('splice')
+        }
+
+        metadata.base = {
+            hash: baseline.hash,
+            bytes: baseline.bytes,
+            revision: baseline.revision,
+        }
+
+        if (canSendPortableManifests && baseline.chunks) {
+            capabilities.push('chunks')
+            metadata.chunks = baseline.chunks
+        }
+
+        if (canSendPortableManifests
+            && baseline.fragments
+            && baseline.fragments.nodes.length > 0
+        ) {
+            capabilities.push('fragments')
+            metadata.fragments = baseline.fragments
+        }
+
+        return metadata
+    }
+
+    captureRenderBaseline() {
+        let baseline = this.renderBaseline
+
+        if (! baseline
+            || baseline.html !== this.serverRenderedHtml
+            || baseline.hash !== this.serverRenderedHtmlHash
+        ) return null
+
+        return baseline
+    }
+
+    captureSnapshotReference(allowed = true, snapshot = null) {
+        if (! allowed
+            || typeof this.snapshotReference !== 'string'
+            || ! /^[A-Za-z0-9_-]{24}$/.test(this.snapshotReference)
+            || typeof snapshot !== 'string'
+            || snapshot !== this.snapshotReferenceSnapshot
+        ) return null
+
+        return this.snapshotReference
+    }
+
+    rememberServerRenderedHtml(
+        html,
+        hash,
+        render = null,
+        requestBaseline = null,
+        attemptedPortable = false,
+    ) {
+        if (typeof html !== 'string' || ! isSha256Hash(hash)) {
+            return this.forgetServerRenderedHtml()
+        }
+
+        if (render?.target && render.target !== hash) {
+            return this.forgetServerRenderedHtml()
+        }
+
+        let previous = this.captureRenderBaseline()
+
+        if (previous && previous.html === html && previous.hash === hash) {
+            this.htmlResyncPending = false
+            this.recordRenderTransportOutcome(render, requestBaseline, attemptedPortable)
+
+            return
+        }
+
+        let bytes = transportEncoder.encode(html).length
+        let chunks = null
+        let fragments = null
+        let config = this.renderTransportConfig
+        let portable = config !== null
+            && bytes >= config.minimumBytes
+            && bytes <= config.maximumBytes
+
+        if (portable) {
+            try {
+                chunks = buildBlockManifest(html, config.blockSize)
+
+                if (chunks.blocks.length > config.maximumManifestBytes) {
+                    chunks = null
+                }
+            } catch (error) {}
+
+            try {
+                fragments = buildFragmentManifest(html)
+
+                if (fragments.nodes.length > config.maximumFragments) {
+                    fragments = null
+                }
+            } catch (error) {}
+        }
+
+        let revision = ++this.renderRevision
+
+        this.serverRenderedHtml = html
+        this.serverRenderedHtmlHash = hash
+        this.renderBaseline = Object.freeze({
+            html,
+            hash,
+            bytes,
+            revision,
+            portable,
+            chunks,
+            fragments,
+        })
+        this.htmlResyncPending = false
+
+        this.recordRenderTransportOutcome(render, requestBaseline, attemptedPortable)
+    }
+
+    forgetServerRenderedHtml() {
+        this.serverRenderedHtml = null
+        this.serverRenderedHtmlHash = null
+        this.renderBaseline = null
+    }
+
+    requestHtmlResync(start) {
+        if (this.htmlResyncPromise) return this.htmlResyncPromise
+
+        this.forgetServerRenderedHtml()
+        this.htmlResyncPending = true
+
+        this.htmlResyncPromise = Promise.resolve()
+            .then(start)
+            .finally(() => {
+                this.htmlResyncPending = false
+                this.htmlResyncPromise = null
+            })
+
+        return this.htmlResyncPromise
+    }
+
+    rememberSnapshotReference(reference, snapshot) {
+        this.snapshotReference = null
+        this.snapshotReferenceSnapshot = null
+
+        if (this.snapshotReferenceCooldown > 0
+            || typeof reference !== 'string'
+            || ! /^[A-Za-z0-9_-]{24}$/.test(reference)
+            || typeof snapshot !== 'string'
+        ) return
+
+        this.snapshotReference = reference
+        this.snapshotReferenceSnapshot = snapshot
+    }
+
+    rejectSnapshotReference(reference) {
+        if (reference === null || this.snapshotReference === reference) {
+            this.snapshotReference = null
+            this.snapshotReferenceSnapshot = null
+        }
+
+        this.snapshotReferenceCooldown = Math.max(this.snapshotReferenceCooldown, 5)
+    }
+
+    rememberRequestCompression(minimumBytes) {
+        if (minimumBytes === undefined || minimumBytes === null) {
+            this.requestCompressionMinimumBytes = null
+
+            return
+        }
+
+        if (! Number.isSafeInteger(minimumBytes)
+            || minimumBytes < 1
+            || minimumBytes > 16 * 1024 * 1024
+        ) return
+
+        this.requestCompressionMinimumBytes = minimumBytes
+    }
+
+    getRequestCompressionMinimumBytes() {
+        return this.requestCompressionMinimumBytes
+    }
+
+    getMaximumRequestBytes() {
+        return this.renderTransportConfig?.maximumRequestBytes ?? null
+    }
+
+    recordRenderTransportOutcome(render, requestBaseline, attemptedPortable) {
+        if (! render || render.v !== 1) return
+
+        let lost = render.mode === 'full'
+
+        if (Number.isSafeInteger(render.stats?.full)
+            && Number.isSafeInteger(render.stats?.selected)
+        ) {
+            lost = render.stats.selected >= render.stats.full
+        }
+
+        if (lost && requestBaseline && attemptedPortable) {
+            this.transportFullLosses++
+
+            if (this.transportFullLosses >= 3) {
+                this.transportFullLosses = 0
+                this.transportManifestCooldown = Math.max(this.transportManifestCooldown, 5)
+            }
+
+            return
+        }
+
+        if (! lost) this.transportFullLosses = 0
     }
 
     applyUpdates(object, updates) {
@@ -280,6 +544,12 @@ export class Component {
             effects.scripts = this.originalEffects.scripts;
         }
 
+        // Preserve the opt-in handshake when this DOM is stored in the
+        // wire:navigate back/forward cache and initialized again later.
+        if (this.renderTransportConfig) {
+            effects.renderTransport = this.renderTransportConfig
+        }
+
         el.setAttribute('wire:effects', JSON.stringify(effects))
 
         el.setAttribute('wire:key', this.key)
@@ -337,4 +607,48 @@ export class Component {
             this.cleanups.pop()()
         }
     }
+}
+
+function normalizeRenderTransportConfig(value) {
+    let maximumRequestBytes = value?.maximumRequestBytes ?? null
+
+    if (value === null
+        || typeof value !== 'object'
+        || Array.isArray(value)
+        || value.v !== 1
+        || ! Number.isSafeInteger(value.minimumBytes)
+        || value.minimumBytes < 0
+        || ! Number.isSafeInteger(value.maximumBytes)
+        || value.maximumBytes < value.minimumBytes
+        || value.maximumBytes > 64 * 1024 * 1024
+        || ! Number.isSafeInteger(value.blockSize)
+        || value.blockSize < 256
+        || value.blockSize > 65536
+        || ! Number.isSafeInteger(value.maximumManifestBytes)
+        || value.maximumManifestBytes < 0
+        || value.maximumManifestBytes > 65536
+        || ! Number.isSafeInteger(value.maximumFragments)
+        || value.maximumFragments < 0
+        || value.maximumFragments > 1024
+        || typeof value.cacheAccelerator !== 'boolean'
+        || typeof value.snapshotDelta !== 'boolean'
+        || typeof value.snapshotReferences !== 'boolean'
+        || (maximumRequestBytes !== null
+            && (! Number.isSafeInteger(maximumRequestBytes)
+                || maximumRequestBytes < 0
+                || maximumRequestBytes > 2147483647))
+    ) return null
+
+    return Object.freeze({
+        v: 1,
+        minimumBytes: value.minimumBytes,
+        maximumBytes: value.maximumBytes,
+        blockSize: value.blockSize,
+        maximumManifestBytes: value.maximumManifestBytes,
+        maximumFragments: value.maximumFragments,
+        cacheAccelerator: value.cacheAccelerator,
+        snapshotDelta: value.snapshotDelta,
+        snapshotReferences: value.snapshotReferences,
+        maximumRequestBytes,
+    })
 }

@@ -3,6 +3,10 @@ import { MessageInterceptor } from "./interceptor"
 export default class Message {
     actions = new Set()
     snapshot = null
+    snapshotBaseline = null
+    snapshotReference = null
+    renderBaseline = null
+    renderAttemptedPortable = false
     updates = null
     calls = null
     payload = null
@@ -121,6 +125,10 @@ export default class Message {
 
     isAsync() {
         return Array.from(this.actions).every(action => action.isAsync())
+    }
+
+    isTransportRecovery() {
+        return Array.from(this.actions).some(action => action.metadata.transportRecovery)
     }
 
     /**
