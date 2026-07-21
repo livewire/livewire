@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportFileUploads;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class FileUploadController implements HasMiddleware
 {
@@ -37,9 +38,13 @@ class FileUploadController implements HasMiddleware
 
     public function validateAndStore($files, $disk)
     {
-        Validator::make(['files' => $files], [
-            'files.*' => FileUploadConfiguration::rules()
-        ])->validate();
+        try {
+            Validator::make(['files' => $files], [
+                'files.*' => FileUploadConfiguration::rules()
+            ])->validate();
+        } catch (ValidationException $e) {
+            abort(response()->json(['errors' => $e->errors()], 422));
+        }
 
         $fileHashPaths = collect($files)->map(function ($file) use ($disk) {
             return FileUploadConfiguration::storeTemporaryFile($file, $disk);
