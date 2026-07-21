@@ -23,6 +23,7 @@ Features:
     Validation: { uri: /docs/4.x/validation, file: /validation.md }
     File Uploads: { uri: /docs/4.x/uploads, file: /uploads.md }
     Pagination: { uri: /docs/4.x/pagination, file: /pagination.md }
+    Selection: { uri: /docs/4.x/selection, file: /selection.md }
     URL Query Parameters: { uri: /docs/4.x/url, file: /url.md }
     Computed Properties: { uri: /docs/4.x/computed-properties, file: /computed-properties.md }
     Redirecting: { uri: /docs/4.x/redirecting, file: /redirecting.md }

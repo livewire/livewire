@@ -37,6 +37,8 @@ class HandleComponents extends Mechanism
 
         $component = app('livewire')->new($name);
 
+        $this->synths->initializeProperties($component);
+
         // Separate params into component properties and HTML attributes...
         [$componentParams, $htmlAttributes] = $this->separateParamsAndAttributes($component, $params);
 
@@ -252,6 +254,8 @@ class HandleComponents extends Mechanism
         $id   = $snapshot['memo']['id'];
 
         $component = app('livewire')->new($name, id: $id);
+
+        $this->synths->initializeProperties($component);
 
         $context = new ComponentContext($component);
 
