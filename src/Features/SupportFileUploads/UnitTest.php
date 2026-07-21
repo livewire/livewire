@@ -596,6 +596,44 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue($photo->isPreviewable());
     }
 
+    public function test_temporary_preview_url_without_options_uses_temporary_filename_for_content_disposition()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        // Due to Livewire object still being in memory, we need to
+        // reset the "shouldDisableBackButtonCache" property back to its default
+        // which is false to ensure it's not applied to the below route
+        \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+
+        $this->get($photo->temporaryUrl())
+            ->assertDownload($photo->getFilename());
+    }
+
+    public function test_temporary_preview_url_can_use_original_filename_for_content_disposition()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        // Due to Livewire object still being in memory, we need to
+        // reset the "shouldDisableBackButtonCache" property back to its default
+        // which is false to ensure it's not applied to the below route
+        \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+
+        $this->get($photo->temporaryUrl(useOriginalFilename: true))
+            ->assertDownload('avatar.jpg');
+    }
+
     public function test_file_is_not_sent_on_cache_hit()
     {
         Storage::fake('avatars');

@@ -118,7 +118,7 @@ class TemporaryUploadedFile extends UploadedFile
         return @getimagesize(stream_get_meta_data($tmpFile)['uri']);
     }
 
-    public function temporaryUrl()
+    public function temporaryUrl(bool $useOriginalFilename = false)
     {
         if (!$this->isPreviewable()) {
             throw new FileNotPreviewableException($this);
@@ -152,8 +152,14 @@ class TemporaryUploadedFile extends UploadedFile
             return $this->storage->temporaryUrl($this->path, now()->addDay());
         }
 
+        $parameters = ['filename' => $this->getFilename()];
+
+        if ($useOriginalFilename) {
+            $parameters['useOriginalFilename'] = true;
+        }
+
         return URL::temporarySignedRoute(
-            'livewire.preview-file', now()->addMinutes(30)->endOfHour(), ['filename' => $this->getFilename()]
+            'livewire.preview-file', now()->addMinutes(30)->endOfHour(), $parameters
         );
     }
 
