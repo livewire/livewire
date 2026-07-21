@@ -49,6 +49,8 @@ The best way to reduce requests in this scenario is simply to make the polling i
 You can manually control how often the component will poll by appending the desired duration to `wire:poll` like so:
 
 ```blade
+<div wire:poll.1m> <!-- In minutes... -->
+
 <div wire:poll.15s> <!-- In seconds... -->
 
 <div wire:poll.15000ms> <!-- In milliseconds... -->
