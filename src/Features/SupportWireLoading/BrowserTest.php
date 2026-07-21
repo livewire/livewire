@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportWireLoading;
 
+use Livewire\Attributes\Async;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
@@ -182,6 +183,32 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertDontSee('Loading...')
         ->type('@input', 'Bye Caleb')
         ->pause(500) // wait for the loader to show when it shouldn't (second request is fast)
+        ->assertDontSee('Loading...')
+        ;
+    }
+
+    function test_wire_loading_delay_is_removed_after_concurrent_requests()
+    {
+        Livewire::visit(new class extends Component {
+            #[Async]
+            public function doSomething() {}
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button x-on:click="$wire.doSomething(); $wire.doSomething()" dusk="button">Run</button>
+
+                        <div wire:loading.delay.longest wire:target="doSomething">
+                            Loading...
+                        </div>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertDontSee('Loading...')
+        ->click('@button')
+        ->pause(1200)
         ->assertDontSee('Loading...')
         ;
     }
