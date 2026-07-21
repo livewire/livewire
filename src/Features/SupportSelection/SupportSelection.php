@@ -31,8 +31,10 @@ class SupportSelection extends ComponentHook
             if ($selection->isAll() && ! $unscoped && ! $isConstrained) {
                 throw new \RuntimeException(
                     'Livewire: Refusing to apply a select-all selection to an unscoped ['.get_class($this->getModel()).'] query — '.
-                    'a forged payload could target every row in the table. Scope the query first '.
-                    '(e.g. through its owner relationship), or acknowledge with whereSelected($selection, unscoped: true).'
+                    'a forged payload could target every row in the table. Scope the query to the current user\'s own records '.
+                    '(e.g. through an owner relationship) — a filter like where(\'status\', ...) narrows the query but does not '.
+                    'bound it to the user, so reach for that, not unscoped: true. Only acknowledge with '.
+                    'whereSelected($selection, unscoped: true) when a table-wide query is genuinely intended.'
                 );
             }
 

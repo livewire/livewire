@@ -164,7 +164,7 @@ Without a total, a select-all count is unknowable: `count()` throws in PHP and r
 
 Treat every selection as user input. The keys, and the select-all mode itself, arrive from the browser like any other `wire:model` value, so a hostile client can submit a payload claiming any keys are selected, or that everything is.
 
-The rule: only apply a selection to a query that is already scoped to what the current user is allowed to touch.
+The rule: only apply a selection to a query that is already scoped to the records the current user owns.
 
 ```php
 // Safe: scoped through the owner relationship...
@@ -174,9 +174,20 @@ auth()->user()->invoices()->whereSelected($this->selected)->delete();
 Invoice::whereSelected($this->selected)->delete();
 ```
 
-With a scoped query, a forged selection can never reach more rows than the user could select by clicking every checkbox themselves.
+With an ownership-scoped query, a forged selection can never reach more rows than the user could select by clicking every checkbox themselves.
 
-As a backstop, `whereSelected()` refuses to apply a select-all selection to a completely unconstrained query (no where clauses, no global scopes), since that combination would let a forged payload target the entire table. If a table-wide query is genuinely what you want, in an admin panel for example, you can acknowledge it explicitly:
+The scoping has to be by ownership specifically. A filter that narrows the query by something else does not protect the query's boundary:
+
+```php
+// Unsafe: "paid" narrows the results, but not to the current user's records.
+// A forged select-all selection resolves to "every paid invoice, minus none" —
+// across every user...
+Invoice::where('status', 'paid')->whereSelected($this->selected)->delete();
+```
+
+As a backstop, `whereSelected()` refuses to apply a select-all selection to a completely unconstrained query (no where clauses, no global scopes), since that combination would let a forged payload target the entire table. This is only a last line of defense against the most catastrophic case: it can see that a query is constrained, but not whether the constraint scopes to the current user. Scoping through the owner relationship remains your responsibility.
+
+If a table-wide query is genuinely what you want, in an admin panel for example, you can acknowledge it explicitly:
 
 ```php
 Invoice::whereSelected($this->selected, unscoped: true)->update(['archived_at' => now()]);
