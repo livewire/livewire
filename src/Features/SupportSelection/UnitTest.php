@@ -192,6 +192,41 @@ class UnitTest extends \Tests\TestCase
         Assert::assertFalse($selection->has(3));
     }
 
+    function test_select_deselect_and_toggle_accept_arrays_of_keys()
+    {
+        $selection = new Selection;
+
+        $selection->select([1, 2, 3]);
+
+        Assert::assertSame([1, 2, 3], $selection->keys());
+
+        $selection->deselect([1, 3]);
+
+        Assert::assertSame([2], $selection->keys());
+
+        // Each key in a toggled array flips independently...
+        $selection->toggle([2, 4]);
+
+        Assert::assertFalse($selection->contains(2));
+        Assert::assertTrue($selection->contains(4));
+    }
+
+    function test_arrays_of_keys_route_through_the_mode_branch_in_select_all_mode()
+    {
+        $selection = (new Selection)->selectAll();
+
+        // Deselecting in all-mode records exceptions...
+        $selection->deselect([1, 2]);
+
+        Assert::assertSame([1, 2], $selection->except());
+
+        // Re-selecting removes them...
+        $selection->select([1, 2]);
+
+        Assert::assertSame([], $selection->except());
+        Assert::assertTrue($selection->isAllSelected());
+    }
+
     function test_contains_uses_loose_comparison_for_checkbox_string_values()
     {
         $selection = new Selection([1, 2]);

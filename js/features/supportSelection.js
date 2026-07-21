@@ -65,16 +65,24 @@ export class Selection extends Array {
     // same here, so whichever word users guess works...
     has(key) { return this.contains(key) }
 
+    // Each mutator accepts a single key or an array of keys — selecting
+    // straight from data is one call: select(files.map(f => f.id))...
     select(key) {
-        this.isAll() ? this.__removeKey(key) : this.__addKey(key)
+        for (let single of Array.isArray(key) ? key : [key]) {
+            this.isAll() ? this.__removeKey(single) : this.__addKey(single)
+        }
     }
 
     deselect(key) {
-        this.isAll() ? this.__addKey(key) : this.__removeKey(key)
+        for (let single of Array.isArray(key) ? key : [key]) {
+            this.isAll() ? this.__addKey(single) : this.__removeKey(single)
+        }
     }
 
     toggle(key) {
-        this.contains(key) ? this.deselect(key) : this.select(key)
+        for (let single of Array.isArray(key) ? key : [key]) {
+            this.contains(single) ? this.deselect(single) : this.select(single)
+        }
     }
 
     selectAll() {
@@ -86,10 +94,14 @@ export class Selection extends Array {
     // The current "page" is whatever is rendered: every bound checkbox
     // registered a value thunk in interceptWireModel()...
     selectPage() {
+        this.__warnIfPageIsUnbound('selectPage')
+
         this.__pageValues().forEach(value => this.select(value))
     }
 
     deselectPage() {
+        this.__warnIfPageIsUnbound('deselectPage')
+
         this.__pageValues().forEach(value => this.deselect(value))
     }
 
@@ -170,6 +182,15 @@ export class Selection extends Array {
         return [...this.__registry()]
             .map(value => value())
             .filter(value => value !== undefined && value !== null && value !== '')
+    }
+
+    // The page is defined by wire:model-bound checkboxes. A custom UI that
+    // never binds any has no page — surface that instead of silently
+    // doing nothing...
+    __warnIfPageIsUnbound(method) {
+        if (this.__registry().size > 0) return
+
+        console.warn('Livewire: ['+method+'] found no checkboxes bound to this selection with wire:model, so there is no page to operate on. In a custom UI, select from your data instead: selection.select(keys)')
     }
 
     // Value thunks live on the instance itself — merge() keeps the
