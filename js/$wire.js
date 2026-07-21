@@ -298,12 +298,20 @@ wireProperty('$effect', (component) => (callback) => {
     return effect
 })
 
-wireProperty('$refresh', (component) => async () => {
-    return fireAction(component, '$refresh')
+wireProperty('$refresh', (component) => () => {
+    try {
+        return fireAction(component, '$refresh')
+    } catch (error) {
+        return Promise.reject(error)
+    }
 })
 
-wireProperty('$commit', (component) => async () => {
-    return fireAction(component, '$commit')
+wireProperty('$commit', (component) => () => {
+    try {
+        return fireAction(component, '$commit')
+    } catch (error) {
+        return Promise.reject(error)
+    }
 })
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
