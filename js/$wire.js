@@ -167,6 +167,15 @@ wireProperty('$js', (component) => {
             return true
         },
         get(target, property) {
+            // Actions are stored on the component, not on this proxy's target.
+            // The target is only a snapshot from when this proxy was created,
+            // so always prefer the live action registry — otherwise a $js
+            // function can't see actions registered after the proxy was made
+            // (like a script's $js functions calling each other)...
+            if (component.hasJsAction(property)) {
+                return component.getJsAction(property)
+            }
+
             // Scripts in view-based components are imported dynamically,
             // which means they run asynchronously. This causes issues with
             // things like wire:text="$js.foo()" not being available on page load.

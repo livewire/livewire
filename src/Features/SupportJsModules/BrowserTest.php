@@ -44,6 +44,19 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@target', 'js-import-loaded');
     }
 
+    public function test_js_actions_can_call_other_js_actions()
+    {
+        // The $js object passed into a component's script module is created
+        // before the script's own $js functions are registered. Reads must
+        // consult the component's live action registry so that one $js
+        // function can call another (e.g. $js.outer() calling $js.inner()).
+        // Regression test for $js actions not seeing each other in SFC scripts.
+        Livewire::visit('testns::sfc-with-js-actions')
+            ->waitForLivewireToLoad()
+            ->pause(100)
+            ->assertSeeIn('@target', 'js-actions-composed');
+    }
+
     public function test_multi_file_component_js_supports_es_imports()
     {
         // This tests that ES module import statements work in multi-file
