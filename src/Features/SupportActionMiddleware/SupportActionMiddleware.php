@@ -34,10 +34,8 @@ class SupportActionMiddleware extends ComponentHook
 
     function boot()
     {
-        $componentName = $this->component->getName();
-
-        if (! isset(static::$middlewareAttributes[$componentName])) {
-            static::$middlewareAttributes[$componentName] = $this->middlewareAttributes();
+        if (empty(static::$middlewareAttributes)) {
+            static::$middlewareAttributes = $this->middlewareAttributes();
         }
     }
 
@@ -53,11 +51,11 @@ class SupportActionMiddleware extends ComponentHook
 
     protected static function applyActionMiddleware($component, $method, $params)
     {
-        if (! isset(static::$middlewareAttributes[$component->getName()])) return;
+        if (empty(static::$middlewareAttributes)) return;
 
         $method = static::resolveMethodName($component, $method, $params);
 
-        $actionMiddleware = static::gatherActionMiddleware($component, $method);
+        $actionMiddleware = static::gatherActionMiddleware($method);
 
         if (empty($actionMiddleware)) return;
 
@@ -86,9 +84,9 @@ class SupportActionMiddleware extends ComponentHook
         return $method;
     }
 
-    protected static function gatherActionMiddleware($component, $method): array
+    protected static function gatherActionMiddleware($method): array
     {
-        return collect(static::$middlewareAttributes[$component->getName()])
+        return collect(static::$middlewareAttributes)
             ->filter(fn ($value, $key) => $key === $method)
             ->flatten()
             ->values()
