@@ -3,9 +3,7 @@ import { setNextActionMetadata, setNextActionOrigin, sessionIsExpired } from '@/
 import { evaluateActionExpression } from '../evaluator'
 
 directive('poll', ({ el, directive, component }) => {
-    warnIfPollDurationIsUnsupported(el, directive)
-
-    let interval = extractDurationFrom(directive.modifiers, 2000)
+    let interval = extractDurationFrom(el, directive, 2000)
 
     let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
         triggerComponentRequest(el, directive, component)
@@ -126,10 +124,11 @@ export function theElementIsDisconnected(el) {
     return el.isConnected === false
 }
 
-export function extractDurationFrom(modifiers, defaultDuration) {
+export function extractDurationFrom(el, directive, defaultDuration) {
+    let modifiers = directive.modifiers
     let durationInMilliSeconds
-    let durationInMilliSecondsString = modifiers.find(mod => mod.match(/^([0-9]+)ms$/))
-    let durationInSecondsString = modifiers.find(mod => mod.match(/^([0-9]+)s$/))
+    let durationInMilliSecondsString = modifiers.find(mod => mod.match(/([0-9]+)ms/))
+    let durationInSecondsString = modifiers.find(mod => mod.match(/([0-9]+)s/))
 
     if (durationInMilliSecondsString) {
         durationInMilliSeconds = Number(durationInMilliSecondsString.replace('ms', ''))
@@ -137,18 +136,18 @@ export function extractDurationFrom(modifiers, defaultDuration) {
         durationInMilliSeconds = Number(durationInSecondsString.replace('s', '')) * 1000
     }
 
-    return durationInMilliSeconds || defaultDuration
-}
+    if (! durationInMilliSeconds) {
+        let unsupportedDuration = modifiers.find(mod => mod.match(/^[0-9]+[a-z]+$/))
 
-function warnIfPollDurationIsUnsupported(el, directive) {
-    let unsupportedDuration = directive.modifiers.find(mod => {
-        return mod.match(/^[0-9]+[a-z]+$/) && ! mod.match(/^([0-9]+)(ms|s)$/)
-    })
+        if (unsupportedDuration) {
+            console.warn(
+                `Livewire: [${directive.rawName}] uses an unsupported duration. Supported units are "ms" and "s". The default 2-second interval will be used.`,
+                el,
+            )
+        }
 
-    if (! unsupportedDuration) return
+        return defaultDuration
+    }
 
-    console.warn(
-        `Livewire: [${directive.rawName}] uses an unsupported duration. Supported units are "ms" and "s". The default 2-second interval will be used.`,
-        el,
-    )
+    return durationInMilliSeconds
 }
