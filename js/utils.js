@@ -423,9 +423,17 @@ export function diffAndPatchRecursive(left, right, target) {
         if (deeplyEqual(left?.[key], right[key])) return
 
         // Rich synth values are atomic: replace them wholesale instead of
-        // recursing into and merging their internals...
+        // recursing into and merging their internals — unless the synth
+        // defines merge(), which updates the existing instance in place
+        // so its identity survives server-driven changes...
         if (hasSynths() && (findSynthByValue(left?.[key]) || findSynthByValue(right[key]) || findSynthByValue(target[key]))) {
-            target[key] = right[key]
+            let synth = findSynthByValue(target[key])
+
+            if (synth?.merge && findSynthByValue(right[key]) === synth) {
+                synth.merge(target[key], right[key])
+            } else {
+                target[key] = right[key]
+            }
 
             return
         }

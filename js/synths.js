@@ -9,10 +9,26 @@
  * JavaScript object when component state is hydrated on the frontend, and
  * converts it back to its raw wire format when state is diffed and sent to
  * the server.
+ *
+ * A synth may also define an optional merge(existing, incoming) function.
+ * When a server round-trip changes a rich value, the patcher normally
+ * replaces the existing instance with the freshly hydrated one. A synth
+ * that defines merge() instead updates the existing instance in place, so
+ * its identity survives server-driven changes for the lifetime of the
+ * component. (Explicit userland replacement — `$wire.foo = new Thing` —
+ * still replaces; that's the user's call.)
+ *
+ * Element binding is a contract on the VALUE, not the synth: a rich value
+ * anywhere in state may define interceptWireModel(el, helpers) to decide how
+ * elements wire:model to it — see wire-model.js for the contract.
  */
 
 let synths = {}
 let synthList = []
+
+// Which synth produced (or matched) each rich value — an O(1) shortcut so
+// hot paths (diffing, dehydration) don't re-run every synth's match()...
+let synthByValue = new WeakMap()
 
 export function registerSynth(key, synth) {
     if (typeof key !== 'string' || key === '') {
@@ -25,6 +41,10 @@ export function registerSynth(key, synth) {
         }
     }
 
+    if (synth.merge !== undefined && typeof synth.merge !== 'function') {
+        throw `Livewire.synth('${key}') expects "merge" to be a function`
+    }
+
     if (synths[key]) synthList = synthList.filter(i => i !== synths[key])
 
     synths[key] = synth
@@ -34,6 +54,7 @@ export function registerSynth(key, synth) {
 export function flushSynths() {
     synths = {}
     synthList = []
+    synthByValue = new WeakMap()
 }
 
 export function hasSynths() {
@@ -48,8 +69,16 @@ export function hasSynths() {
 export function findSynthByValue(value) {
     if (typeof value !== 'object' || value === null) return
 
+    let memo = synthByValue.get(value)
+
+    if (memo) return memo
+
     for (let i = 0; i < synthList.length; i++) {
-        if (synthList[i].match(value)) return synthList[i]
+        if (synthList[i].match(value)) {
+            synthByValue.set(value, synthList[i])
+
+            return synthList[i]
+        }
     }
 }
 
@@ -61,7 +90,13 @@ export function findSynthByValue(value) {
 export function hydrateValue(value, meta, context = undefined) {
     let synth = meta && synths[meta.s]
 
-    return synth ? synth.hydrate(value, meta, context) : value
+    if (! synth) return value
+
+    let rich = synth.hydrate(value, meta, context)
+
+    if (typeof rich === 'object' && rich !== null) synthByValue.set(rich, synth)
+
+    return rich
 }
 
 /**

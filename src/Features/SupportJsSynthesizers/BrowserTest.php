@@ -433,6 +433,109 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@call')
         ->assertSeeIn('@output', '2033-07-07');
     }
+
+    public function test_a_rich_value_can_remap_element_binding_through_its_intercept_wire_model_contract()
+    {
+        Livewire::visit(new class extends Component {
+            public Carbon $date;
+
+            public function mount(): void
+            {
+                $this->date = Carbon::parse('2021-01-01 00:00:00', 'UTC');
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <script>
+                        document.addEventListener('livewire:init', () => {
+                            Livewire.synth('cbn', {
+                                match: (value) => value instanceof Date,
+                                hydrate: (value) => {
+                                    let date = new Date(value)
+
+                                    date.interceptWireModel = (el) => ({
+                                        get: () => String(date.getUTCFullYear()),
+                                        set: (value) => date.setUTCFullYear(Number(value)),
+                                    })
+
+                                    return date
+                                },
+                                dehydrate: (value) => value.toISOString(),
+                            })
+                        })
+                    </script>
+
+                    <input type="text" dusk="input" x-ref="year" wire:model="date" />
+
+                    <button dusk="change" type="button" x-on:click="$refs.year.value = '2030'; $refs.year.dispatchEvent(new Event('input', { bubbles: true }))">Change</button>
+
+                    <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
+
+                    <span dusk="output">{{ $date->year }}</span>
+                </div>
+                HTML;
+            }
+        })
+        // The value's accessor remaps the model channel: the input renders
+        // the Date as a year instead of x-model's default string binding,
+        // and input events mutate the Date in place...
+        ->assertValue('@input', '2021')
+        ->click('@change')
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@output', '2030');
+    }
+
+    public function test_a_rich_value_can_fully_take_over_an_element_by_returning_false_from_intercept_wire_model()
+    {
+        Livewire::visit(new class extends Component {
+            public Carbon $date;
+
+            public function mount(): void
+            {
+                $this->date = Carbon::parse('2021-01-01 00:00:00', 'UTC');
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <script>
+                        document.addEventListener('livewire:init', () => {
+                            Livewire.synth('cbn', {
+                                match: (value) => value instanceof Date,
+                                hydrate: (value) => {
+                                    let date = new Date(value)
+
+                                    date.interceptWireModel = (el) => {
+                                        el.setAttribute('data-took-over', 'true')
+
+                                        return false
+                                    }
+
+                                    return date
+                                },
+                                dehydrate: (value) => value.toISOString(),
+                            })
+                        })
+                    </script>
+
+                    <input type="text" dusk="input" wire:model="date" />
+
+                    <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
+
+                    <span dusk="output">{{ $date->toDateString() }}</span>
+                </div>
+                HTML;
+            }
+        })
+        ->assertAttribute('@input', 'data-took-over', 'true')
+        // x-model stood down entirely — typing must not touch the model...
+        ->type('@input', 'not-a-date')
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@output', '2021-01-01');
+    }
 }
 
 class AddressDto implements Wireable

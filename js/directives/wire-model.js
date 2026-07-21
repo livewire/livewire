@@ -28,6 +28,28 @@ directive('model', ({ el, directive, component, cleanup }) => {
         return handleFileUpload(el, expression, component, cleanup)
     }
 
+    // Bindable values: a rich value may define interceptWireModel(el, helpers) to
+    // decide how an element binds to it. Three possible returns:
+    //   nothing      → not mine; the element binds like normal data
+    //   { get, set } → x-model binds the element to this accessor instead
+    //                  of the raw property (get feeds renders, set receives
+    //                  input) — network timing stays wire:model's job
+    //   false        → the value wired the element itself; do nothing more
+    let bound = dataGet(component.$wire, expression)
+
+    let accessor = typeof bound?.interceptWireModel === 'function'
+        ? bound.interceptWireModel(el, {
+            cleanup,
+            effect: callback => {
+                let handle = Alpine.effect(callback)
+
+                cleanup(() => Alpine.release(handle))
+            },
+        })
+        : undefined
+
+    if (accessor === false) return
+
     // Split modifiers at .live boundary
     // Modifiers BEFORE .live control client-side (x-model) sync timing
     // Modifiers AFTER .live control network request timing
@@ -125,10 +147,10 @@ directive('model', ({ el, directive, component, cleanup }) => {
     bindings['x-model' + xModelTail] = () => {
         return {
             get() {
-                return dataGet(component.$wire, expression)
+                return accessor ? accessor.get() : dataGet(component.$wire, expression)
             },
             set(value) {
-                dataSet(component.$wire, expression, value)
+                accessor ? accessor.set(value) : dataSet(component.$wire, expression, value)
 
                 // If .live is present and no specific network triggers, fire on every ephemeral sync
                 if (shouldSendNetwork && ! hasNetworkTriggers) {

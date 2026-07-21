@@ -20,6 +20,7 @@ import './supportRedirects';
 import './supportIslands';
 import './supportNavigate';
 import './supportEntangle';
+import './supportSelection';
 import './supportSlots';
 import './supportDataLoading';
 import './supportDataCurrent';
