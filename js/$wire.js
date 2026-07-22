@@ -311,12 +311,22 @@ wireProperty('$effect', (component) => (callback) => {
     return effect
 })
 
-wireProperty('$refresh', (component) => async () => {
-    return fireAction(component, '$refresh')
+wireProperty('$refresh', (component) => () => {
+    // Keep the original action promise, but return synchronous errors as rejected promises...
+    try {
+        return fireAction(component, '$refresh')
+    } catch (error) {
+        return Promise.reject(error)
+    }
 })
 
-wireProperty('$commit', (component) => async () => {
-    return fireAction(component, '$commit')
+wireProperty('$commit', (component) => () => {
+    // Keep the original action promise, but return synchronous errors as rejected promises...
+    try {
+        return fireAction(component, '$commit')
+    } catch (error) {
+        return Promise.reject(error)
+    }
 })
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
