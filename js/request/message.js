@@ -174,6 +174,10 @@ export default class Message {
         // Invoke action-level onError callbacks
         Array.from(this.actions).forEach(action => action.invokeOnError({ response, body, preventDefault }))
 
+        // The server rejected this message's property updates, so revert them
+        // to keep them from being re-sent on every subsequent request...
+        if (! this.isCancelled()) this.component.revertUpdates(this.updates ?? {})
+
         // Try to parse body as JSON for the rejection payload
         let json = null
         try { json = JSON.parse(body) } catch (e) {}
