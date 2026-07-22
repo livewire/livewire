@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Number;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
@@ -59,6 +60,11 @@ class TemporaryUploadedFile extends UploadedFile
         }
 
         return (int) $this->storage->size($this->path);
+    }
+
+    public function sizeForHumans(): string
+    {
+        return Number::fileSize($this->getSize(), maxPrecision: 1);
     }
 
     public function getMimeType(): string

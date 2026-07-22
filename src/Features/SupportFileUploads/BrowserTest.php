@@ -124,6 +124,43 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertMissing('@document-is-image');
     }
 
+    public function test_rich_upload_objects_expose_size_in_bytes_and_a_display_version()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+
+            function render() { return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photo" dusk="upload">
+
+                <button wire:click="$refresh" dusk="refresh">Refresh</button>
+
+                <span dusk="size" wire:text="photo?.size"></span>
+                <span dusk="size-for-humans" wire:text="photo?.sizeForHumans"></span>
+
+                @if ($photo)
+                    <span dusk="php-size-for-humans">{{ $photo->sizeForHumans() }}</span>
+                @endif
+            </div>
+            HTML; }
+        })
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        // The pending upload answers from the native File object immediately...
+        ->waitForTextIn('@size-for-humans', '2.7 KB')
+        ->assertSeeIn('@size', '2749')
+        // The PHP door renders the identical string once the upload lands...
+        ->waitForTextIn('@php-size-for-humans', '2.7 KB')
+        // A round trip rebuilds the rich object from snapshot meta — the byte
+        // count must survive without the native File object...
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@size', '2749')
+        ->assertSeeIn('@size-for-humans', '2.7 KB');
+    }
+
     public function test_rich_upload_objects_expose_reactive_progress_state_and_client_side_previews()
     {
         Storage::persistentFake('tmp-for-tests');
