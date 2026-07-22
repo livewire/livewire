@@ -24,14 +24,10 @@ class SupportActionMiddleware extends ComponentHook
 
     protected static function applyActionMiddleware($component, $method, $params)
     {
-        // Return early if there is no middleware attribute found in component
-        if (! $middlewareAttributes = store($component)->get('middlewareAttributes')) return;
-
         $method = static::resolveMethodName($component, $method, $params);
 
-        $actionMiddleware = static::gatherActionMiddleware($method, $middlewareAttributes);
-
-        if (empty($actionMiddleware)) return;
+        // Return early if there is no middleware attribute on called method
+        if (! $actionMiddleware = store($component)->find('middlewareAttributes', $method)) return;
 
         [$request, $resolved] = static::resolveMiddleware($actionMiddleware);
 
@@ -56,15 +52,6 @@ class SupportActionMiddleware extends ComponentHook
         }
 
         return $method;
-    }
-
-    protected static function gatherActionMiddleware($method, $middlewareAttributes): array
-    {
-        return collect($middlewareAttributes)
-            ->filter(fn ($middleware, $methodName) => $methodName === $method)
-            ->flatten()
-            ->values()
-            ->all();
     }
 
     protected static function resolveMiddleware(array $middleware): array
