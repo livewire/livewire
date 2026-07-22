@@ -206,7 +206,10 @@ wireProperty('$js', (component) => {
     })
 })
 
-wireProperty('$set', (component) => async (property, value, live = true) => {
+// These return the action's own promise (instead of wrapping it in an async
+// function) so fire-and-forget callers don't create an extra promise chain
+// that surfaces server errors as unhandled rejections...
+wireProperty('$set', (component) => (property, value, live = true) => {
     dataSet(component.reactive, property, value)
 
     // If "live", send a request, queueing the property update to happen first
@@ -311,11 +314,11 @@ wireProperty('$effect', (component) => (callback) => {
     return effect
 })
 
-wireProperty('$refresh', (component) => async () => {
+wireProperty('$refresh', (component) => () => {
     return fireAction(component, '$refresh')
 })
 
-wireProperty('$commit', (component) => async () => {
+wireProperty('$commit', (component) => () => {
     return fireAction(component, '$commit')
 })
 
