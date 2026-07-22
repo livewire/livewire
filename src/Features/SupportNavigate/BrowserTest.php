@@ -62,6 +62,20 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 return (new FirstPage)();
             })->middleware('web');
+            Route::get('/first-transition', FirstTransitionPage::class)->middleware('web');
+            Route::get('/second-transition', SecondTransitionPage::class)->middleware('web');
+            Route::get('/first-animated-transition', FirstAnimatedTransitionPage::class)->middleware('web');
+            Route::get('/second-animated-transition', SecondAnimatedTransitionPage::class)->middleware('web');
+            Route::get('/first-transition-global', function () {
+                config(['livewire.navigate.transitions' => true]);
+
+                return (new FirstTransitionPage)();
+            })->middleware('web');
+            Route::get('/second-transition-global', function () {
+                config(['livewire.navigate.transitions' => true]);
+
+                return (new SecondTransitionPage)();
+            })->middleware('web');
             Route::get('/first-outside', FirstPageWithLinkOutside::class)->middleware('web');
             Route::get('/redirect-to-second', fn () => redirect()->to('/second'));
             Route::get('/second', SecondPage::class)->middleware('web');
@@ -298,6 +312,96 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitFor('@link.to.second')
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first');
+        });
+    }
+
+    public function test_wire_navigate_does_not_use_view_transitions_by_default()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-transition')
+                ->assertSee('On first transition page')
+                // Intercept document.startViewTransition to track if it gets called...
+                ->tap(fn ($b) => $b->script("
+                    window.__viewTransitionCount = 0;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__viewTransitionCount++;
+                        return orig.apply(document, arguments);
+                    };
+                "))
+                ->waitForNavigate()->click('@link.plain')
+                ->assertSee('On second transition page')
+                ->assertScript('window.__viewTransitionCount', 0);
+        });
+    }
+
+    public function test_wire_navigate_transition_modifier_uses_view_transitions()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-transition')
+                ->assertSee('On first transition page')
+                // Intercept document.startViewTransition to track if it gets called...
+                ->tap(fn ($b) => $b->script("
+                    window.__viewTransitionCount = 0;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__viewTransitionCount++;
+                        return orig.apply(document, arguments);
+                    };
+                "))
+                ->waitForNavigate()->click('@link.transition')
+                ->assertSee('On second transition page')
+                ->assertScript('window.__viewTransitionCount', 1);
+        });
+    }
+
+    public function test_view_transitions_can_be_enabled_globally_for_all_navigations()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-transition-global')
+                ->assertSee('On first transition page')
+                // Intercept document.startViewTransition to track if it gets called...
+                ->tap(fn ($b) => $b->script("
+                    window.__viewTransitionCount = 0;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__viewTransitionCount++;
+                        return orig.apply(document, arguments);
+                    };
+                "))
+                // A plain wire:navigate link transitions when enabled globally...
+                ->waitForNavigate()->click('@link.plain.global')
+                ->assertSee('On second transition page')
+                ->assertScript('window.__viewTransitionCount', 1)
+                // So does the back button...
+                ->waitForNavigate()->back()
+                ->assertSee('On first transition page')
+                ->assertScript('window.__viewTransitionCount', 2);
+        });
+    }
+
+    public function test_view_transitions_visibly_animate_in_the_browser()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-animated-transition')
+                ->assertSee('On first animated page')
+                ->click('@link.animated')
+                // The browser reports a genuinely running view transition, not just an API call...
+                ->waitUntil("document.documentElement.matches(':active-view-transition')")
+                // Named wire:transition elements on the incoming page get their
+                // view-transition-name assigned for the duration of the animation...
+                ->assertScript("document.querySelector('[dusk=hero-detail]').style.viewTransitionName", 'hero')
+                // ...but unnamed ones don't (a shared default name would collide across two full pages)...
+                ->assertScript("document.querySelector('[dusk=unnamed-detail]').style.viewTransitionName", '')
+                // When the animation completes, the names are cleared so they
+                // don't leave permanent stacking contexts behind...
+                ->waitUntil("! document.documentElement.matches(':active-view-transition')")
+                ->waitUntil("document.querySelector('[dusk=hero-detail]').style.viewTransitionName === ''")
+                ->assertSee('On second animated page');
         });
     }
 
@@ -1457,6 +1561,78 @@ class BrowserTest extends \Tests\BrowserTestCase
                 return app('livewire')->new($name)();
             })->middleware('web');
         }
+    }
+}
+
+class FirstTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first transition page</div>
+
+            <a href="/second-transition" wire:navigate dusk="link.plain">Plain link</a>
+            <a href="/second-transition" wire:navigate.transition dusk="link.transition">Transition link</a>
+            <a href="/second-transition-global" wire:navigate dusk="link.plain.global">Plain link (global route)</a>
+        </div>
+        HTML;
+    }
+}
+
+class SecondTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On second transition page</div>
+        </div>
+        HTML;
+    }
+}
+
+class FirstAnimatedTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first animated page</div>
+
+            <style>
+                ::view-transition-group(*), ::view-transition-old(root), ::view-transition-new(root) {
+                    animation-duration: 1.5s;
+                }
+            </style>
+
+            <h2 wire:transition="hero" dusk="hero">Hero title</h2>
+
+            <a href="/second-animated-transition" wire:navigate.transition dusk="link.animated">Go to second animated page</a>
+        </div>
+        HTML;
+    }
+}
+
+class SecondAnimatedTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On second animated page</div>
+
+            <style>
+                ::view-transition-group(*), ::view-transition-old(root), ::view-transition-new(root) {
+                    animation-duration: 1.5s;
+                }
+            </style>
+
+            <h1 wire:transition="hero" dusk="hero-detail">Hero title</h1>
+
+            <div wire:transition dusk="unnamed-detail">Unnamed transition element</div>
+        </div>
+        HTML;
     }
 }
 

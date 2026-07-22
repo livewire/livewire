@@ -1,5 +1,8 @@
+import { enableViewTransitions } from '@/plugins/navigate/transition'
+
 document.addEventListener('livewire:initialized', () => {
     shouldHideProgressBar() && Alpine.navigate.disableProgressBar()
+    shouldUseViewTransitions() && enableViewTransitions()
 })
 
 document.addEventListener('alpine:navigate', e => forwardEvent('livewire:navigate', e))
@@ -30,6 +33,14 @@ function shouldHideProgressBar() {
     if (!! document.querySelector('[data-no-progress-bar]')) return true
 
     if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === 'data-no-progress-bar') return true
+
+    return false
+}
+
+function shouldUseViewTransitions() {
+    if (!! document.querySelector('script[data-navigate-transitions]')) return true
+
+    if (window.livewireScriptConfig && window.livewireScriptConfig.navigateTransitions === 'data-navigate-transitions') return true
 
     return false
 }

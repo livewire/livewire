@@ -277,6 +277,69 @@ In addition to `wire:navigate`, you can manually call the `Livewire.navigate()` 
 </script>
 ```
 
+## Animating page visits with view transitions
+
+By default, `wire:navigate` swaps in the new page instantly. If you'd like page visits to animate instead, Livewire supports the browser's [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API).
+
+To animate a single link's navigation, add the `.transition` modifier:
+
+```blade
+<a href="/posts" wire:navigate.transition>Posts</a>
+```
+
+Now, when this link is clicked, the browser will smoothly crossfade between the old and new page.
+
+If you'd like to enable transitions for every navigation in your application—including browser back and forward button visits—you can enable them globally in your application's `config/livewire.php` file:
+
+```php
+'navigate' => [
+    // ...
+
+    'transitions' => true,
+],
+```
+
+You can also trigger a transition when navigating programmatically:
+
+```js
+Livewire.navigate('/posts', { transition: true })
+```
+
+### Customizing transitions
+
+Because Livewire uses the native View Transitions API, you can customize animations entirely in CSS. Navigation transitions are typed as `navigate`, so you can scope customizations to page visits without affecting any other view transitions on the page (like [wire:transition](/docs/4.x/wire-transition) morphs). For example, here's how you would swap the default crossfade for a quick slide-up effect:
+
+```css
+@keyframes slide-up {
+    from { transform: translateY(1rem); opacity: 0; }
+}
+
+html:active-view-transition-type(navigate)::view-transition-new(root) {
+    animation: slide-up 0.2s ease-out;
+}
+```
+
+### Morphing elements between pages
+
+You can "morph" a specific element from one page into an element on the next page by giving them both the same `wire:transition` name — the same API used for [animating morphs within a component](/docs/4.x/wire-transition). For example, to animate a post's title from an index page onto its detail page:
+
+```blade
+<!-- /posts -->
+<h2 wire:transition="post-title-{{ $post->id }}">{{ $post->title }}</h2>
+
+<!-- /posts/1 -->
+<h1 wire:transition="post-title-{{ $post->id }}">{{ $post->title }}</h1>
+```
+
+Now, when a user navigates between these pages, the title will visually glide from its old position into its new one — and hitting the back button morphs it in reverse.
+
+Livewire assigns the underlying `view-transition-name` just before the transition starts and clears it when the animation finishes, so the names never linger. Only named `wire:transition` elements participate in page transitions — a bare `wire:transition` attribute animates morphs within a component, but stays part of the regular page snapshot during navigation.
+
+> [!warning] Transition names must be unique per page
+> Like an `id` attribute, a transition name can only appear once per page. If two elements on the same page share a name, the browser will skip the transition entirely. When rendering names inside loops, always include a unique identifier like `$post->id`.
+
+In browsers that don't support the View Transitions API, and for users who have enabled their operating system's reduced motion setting, Livewire will skip the animation and swap the page instantly.
+
 ## Using with analytics software
 
 When navigating pages using `wire:navigate` in your app, any `<script>` tags in the `<head>` only evaluate when the page is initially loaded.
