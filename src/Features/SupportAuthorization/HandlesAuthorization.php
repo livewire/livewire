@@ -14,9 +14,11 @@ trait HandlesAuthorization
 
     protected ?string $method = null;
 
-    public function setAuthorizationMethod($method = null): void
+    public function setAuthorizationMethod(string $method): void
     {
-        $this->method = $method;
+        if (method_exists($this, $method)) {
+            $this->method = $method;
+        }
     }
 
     public function resolveArgument(array $arguments, array $parameters): mixed
@@ -70,7 +72,7 @@ trait HandlesAuthorization
 
         if (is_string($ability) && ! str_contains($ability, '\\')) {
             // Need to reset the property in case attribute is used along with `$this->authorize()`
-            $this->setAuthorizationMethod();
+            $this->method = null;
 
             return [$ability, $arguments];
         }
@@ -81,7 +83,7 @@ trait HandlesAuthorization
         $method = $this->method ?? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2]['function'];
 
         // Need to reset the property in case attribute is used along with `$this->authorize()`
-        $this->setAuthorizationMethod();
+        $this->method = null;
 
         return [$this->normalizeGuessedAbilityName($method), $ability];
     }
