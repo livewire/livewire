@@ -8,6 +8,48 @@ use Livewire\Component;
 
 class BrowserTest extends BrowserTestCase
 {
+    public function test_poll_duration_can_be_in_minutes()
+    {
+        Livewire::visit(new class extends Component {
+            public $pollCount = 0;
+            public $polling = false;
+
+            public function startPolling()
+            {
+                $this->polling = true;
+            }
+
+            public function poll()
+            {
+                $this->pollCount++;
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button wire:click="startPolling" dusk="start-polling">Start polling</button>
+                <span dusk="poll-count">{{ $pollCount }}</span>
+
+                @if ($polling)
+                    <div wire:poll.1m="poll"></div>
+                @endif
+            </div>
+            HTML; }
+        })
+        ->tap(fn ($b) => $b->script(<<<'JS'
+            window.originalSetInterval = window.setInterval
+            window.setInterval = (callback, duration) => {
+                window.pollDuration = duration
+                window.setInterval = window.originalSetInterval
+
+                return window.setTimeout(callback)
+            }
+            JS))
+        ->waitForLivewire()->click('@start-polling')
+        ->assertScript('window.pollDuration', 60000)
+        ->waitForTextIn('@poll-count', '1')
+        ;
+    }
+
     public function test_polling_requests_are_batched_by_default()
     {
         Livewire::visit([new class extends Component {
