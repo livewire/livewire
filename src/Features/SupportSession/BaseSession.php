@@ -3,6 +3,9 @@
 namespace Livewire\Features\SupportSession;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\HandleSynths\HandleSynths;
+use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Session;
 use Attribute;
 
@@ -34,12 +37,34 @@ class BaseSession extends LivewireAttribute
 
     protected function read()
     {
-        return Session::get($this->key());
+        $value = Session::get($this->key());
+
+        // If a synth tuple was stored (because the session is JSON serialized),
+        // hydrate it back into its original type (Collection, Carbon, etc.)...
+        if (Utils::isSyntheticTuple($value)) {
+            $value = app(HandleSynths::class)->hydrate($value, new ComponentContext($this->component), $this->getName());
+        }
+
+        return $value;
     }
 
     protected function write()
     {
-        Session::put($this->key(), $this->getValue());
+        $value = $this->getValue();
+
+        // JSON serialized sessions can't store PHP objects, so dehydrate the
+        // value into a JSON-safe synth tuple that `read()` can restore later.
+        // PHP serialized sessions store objects natively, so skip the overhead...
+        if ($this->sessionIsJsonSerialized() && ! Utils::isAPrimitive($value)) {
+            $value = app(HandleSynths::class)->dehydrate($value, new ComponentContext($this->component), $this->getName());
+        }
+
+        Session::put($this->key(), $value);
+    }
+
+    protected function sessionIsJsonSerialized()
+    {
+        return config('session.serialization', 'php') === 'json';
     }
 
     protected function key()
