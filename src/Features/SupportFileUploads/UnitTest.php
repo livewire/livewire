@@ -1216,6 +1216,33 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertInstanceOf(TemporaryUploadedFile::class, $test->viewData('photo'));
     }
+
+    public function test_mime_type_is_detected_from_file_contents_and_not_from_the_mime_type_stored_on_the_disk()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 'tmp-for-tests');
+
+        $adapter = new \League\Flysystem\Local\LocalFilesystemAdapter(
+            $root = storage_path('framework/testing/disks/tmp-for-tests'),
+            null,
+            LOCK_EX,
+            \League\Flysystem\Local\LocalFilesystemAdapter::DISALLOW_LINKS,
+            // Like S3, this detector reports a mime type based on the file's name
+            // rather than sniffing the actual bytes...
+            new \League\MimeTypeDetection\ExtensionMimeTypeDetector()
+        );
+
+        $disk = new FilesystemAdapter(new \League\Flysystem\Filesystem($adapter), $adapter, ['root' => $root]);
+
+        Storage::set('tmp-for-tests', $disk);
+
+        $disk->put('livewire-tmp/png-disguised-as.webp', file_get_contents(__DIR__.'/browser_test_image.png'));
+
+        $this->assertEquals('image/webp', $disk->mimeType('livewire-tmp/png-disguised-as.webp'));
+
+        $file = TemporaryUploadedFile::createFromLivewire('png-disguised-as.webp');
+
+        $this->assertEquals('image/png', $file->getMimeType());
+    }
 }
 
 class FileUploadWithValidateAttributeComponent extends TestComponent
