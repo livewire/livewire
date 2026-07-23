@@ -560,6 +560,28 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertReturned(fn ($data) => $data === 'bar');
     }
 
+    function test_type_errors_thrown_from_component_actions_are_rethrown()
+    {
+        config()->set('app.debug', false);
+
+        $this->expectException(\TypeError::class);
+        $this->expectExceptionMessage('array_merge(): Argument #1 must be of type array, Illuminate\Support\Collection given');
+
+        Livewire::test(ComponentWithActionThatThrowsTypeError::class)
+            ->call('save');
+    }
+
+    function test_type_errors_thrown_while_binding_component_action_parameters_are_rethrown()
+    {
+        config()->set('app.debug', false);
+
+        $this->expectException(\TypeError::class);
+        $this->expectExceptionMessage('must be of type array, string given');
+
+        Livewire::test(ComponentWithActionThatThrowsTypeError::class)
+            ->call('saveItems', 'not-an-array');
+    }
+
     public function test_can_set_cookies_for_use_with_testing()
     {
         // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
@@ -804,6 +826,18 @@ class ComponentWithMethodThatReturnsData extends TestComponent
     function foo()
     {
         return 'bar';
+    }
+}
+
+class ComponentWithActionThatThrowsTypeError extends TestComponent
+{
+    function save()
+    {
+        array_merge(collect(), []);
+    }
+
+    function saveItems(array $items)
+    {
     }
 }
 
