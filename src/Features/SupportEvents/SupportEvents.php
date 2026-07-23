@@ -29,7 +29,7 @@ class SupportEvents extends ComponentHook
             // Run any authorization checks on the listener method since
             // its normal "call" hook doesn't get run when the method
             // is called as an event listener...
-            $this->component->getAttributes()
+            $this->getLivewireAttributes()
                 ->filter(fn ($i) => $i instanceof BaseAuthorize)
                 ->filter(fn ($i) => $i->getName() === $method)
                 ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
@@ -42,7 +42,7 @@ class SupportEvents extends ComponentHook
             // Here we have to manually check to see if the event listener method
             // is "renderless" as it's normal "call" hook doesn't get run when
             // the method is called as an event listener...
-            $isRenderless = $this->component->getAttributes()
+            $isRenderless = $this->getLivewireAttributes()
                 ->filter(fn ($i) => $i instanceof BaseRenderless)
                 ->filter(fn ($i) => $i->getName() === $method)
                 ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)

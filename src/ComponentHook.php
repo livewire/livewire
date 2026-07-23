@@ -11,6 +11,13 @@ abstract class ComponentHook
         $this->component = $component;
     }
 
+    function getLivewireAttributes()
+    {
+        return $this->component
+            ->getAttributes()
+            ->whereInstanceOf(LivewireAttribute::class);
+    }
+
     function callBoot(...$params) {
         if (method_exists($this, 'boot')) $this->boot(...$params);
     }
