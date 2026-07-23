@@ -15,8 +15,8 @@ class SupportIsolating extends ComponentHook
 
     public function shouldIsolate()
     {
-        return $this->component->getAttributes()
-            ->filter(fn ($i) => is_subclass_of($i, BaseIsolate::class))
+        return $this->getLivewireAttributes()
+            ->filter(fn ($i) => $i instanceof BaseIsolate)
             ->count() > 0;
     }
 }

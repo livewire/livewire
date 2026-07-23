@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportAttributes;
 
-use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\ComponentHook;
 
 class SupportAttributes extends ComponentHook
@@ -114,12 +113,5 @@ class SupportAttributes extends ComponentHook
                 $attribute->exception(...$params);
             }
         });
-    }
-
-    protected function getLivewireAttributes()
-    {
-        return $this->component
-            ->getAttributes()
-            ->whereInstanceOf(LivewireAttribute::class);
     }
 }

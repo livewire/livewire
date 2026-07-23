@@ -2,6 +2,8 @@
 
 namespace Livewire;
 
+use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+
 abstract class ComponentHook
 {
     protected $component;
@@ -9,6 +11,13 @@ abstract class ComponentHook
     function setComponent($component)
     {
         $this->component = $component;
+    }
+
+    function getLivewireAttributes()
+    {
+        return $this->component
+            ->getAttributes()
+            ->whereInstanceOf(LivewireAttribute::class);
     }
 
     function callBoot(...$params) {
