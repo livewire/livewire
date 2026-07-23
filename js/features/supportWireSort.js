@@ -1,31 +1,30 @@
 import { setNextActionOrigin } from '@/request'
 import { evaluateActionExpression } from '../evaluator'
 import Alpine from 'alpinejs'
-import { extractDirective } from '@/directives'
+import { on } from '@/hooks'
 
-Alpine.interceptInit(el => {
-    for (let i = 0; i < el.attributes.length; i++) {
-        if (el.attributes[i].name.startsWith('wire:sort:item')) {
-            let directive = extractDirective(el, el.attributes[i].name)
+on('directive.init', ({ el, directive, cleanup }) => {
+    if (! directive.rawName.startsWith('wire:sort')) return
 
+    if (directive.rawName.startsWith('wire:sort:item')) {
             let modifierString = directive.modifiers.join('.')
 
             let expression = directive.expression
 
-            Alpine.bind(el, {
+            let cleanupBinding = Alpine.bind(el, {
                 ['x-sort:item' + modifierString]() {
                     return expression
                 }
             })
-        } else if (el.attributes[i].name.startsWith('wire:sort:group-id')) {
-            // This will get read by the wire:sort handler below...
-            continue
-        } else if (el.attributes[i].name.startsWith('wire:sort:group')) {
-            // This will get picked up by Alpine's x-sort source...
-            return
-        } else if (el.attributes[i].name.startsWith('wire:sort')) {
-            let directive = extractDirective(el, el.attributes[i].name)
 
+            cleanup(cleanupBinding)
+    } else if (directive.rawName.startsWith('wire:sort:group-id')) {
+        // This will get read by the wire:sort handler below...
+        return
+    } else if (directive.rawName.startsWith('wire:sort:group')) {
+        // This will get picked up by Alpine's x-sort source...
+        return
+    } else if (directive.rawName.startsWith('wire:sort')) {
             let attribute = directive.rawName.replace('wire:', 'x-')
 
             // Strip .async from Alpine expression because it only concerns Livewire and trips up Alpine...
@@ -50,7 +49,7 @@ Alpine.interceptInit(el => {
 
             let expression = directive.expression
 
-            Alpine.bind(el, {
+            let cleanupBinding = Alpine.bind(el, {
                 [attribute]() {
                     setNextActionOrigin({ el, directive })
 
@@ -77,6 +76,7 @@ Alpine.interceptInit(el => {
                     evaluateActionExpression(el, expression, { scope, params })
                 }
             })
-        }
+
+            cleanup(cleanupBinding)
     }
 })
