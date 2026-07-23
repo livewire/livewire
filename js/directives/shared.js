@@ -11,11 +11,22 @@ export function toggleBooleanStateDirective(el, directive, isTruthy, cachedDispl
             el.classList.remove(...classes)
         }
     } else if (directive.modifiers.includes('attr')) {
+        let attribute = directive.expression
+        let hadAttribute = el.hasAttribute(attribute)
+        let value = el.getAttribute(attribute)
+
+        // A callback that puts the attribute back exactly as it was before loading...
+        let restore = hadAttribute
+            ? () => el.setAttribute(attribute, value)
+            : () => el.removeAttribute(attribute)
+
         if (isTruthy) {
-            el.setAttribute(directive.expression, true)
+            el.setAttribute(attribute, true)
         } else {
-            el.removeAttribute(directive.expression)
+            el.removeAttribute(attribute)
         }
+
+        return restore
     } else {
         let cache = cachedDisplay ?? window
             .getComputedStyle(el, null)
