@@ -7,6 +7,7 @@ use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use function Livewire\store;
 use PHPUnit\Framework\Assert as PHPUnit;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Arr;
@@ -48,6 +49,18 @@ trait TestsValidation
                 $this->makeErrorAssertion($key, $value);
             }
         }
+
+        return $this;
+    }
+
+    public function assertOnlyHasErrors($keys = [])
+    {
+        $this->assertHasErrors($keys);
+
+        $expectedErrorKeys = (new Collection($keys))->map(fn ($value, $key) => is_int($key) ? $value : $key)->all();
+        $unexpectedErrorKeys = Arr::except($this->errors()->toArray(), $expectedErrorKeys);
+
+        PHPUnit::assertTrue(count($unexpectedErrorKeys) === 0, "Component has unexpected errors: ".implode(', ', array_keys($unexpectedErrorKeys)));
 
         return $this;
     }
