@@ -2,6 +2,8 @@
 
 namespace Livewire;
 
+use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+
 abstract class ComponentHook
 {
     protected $component;
