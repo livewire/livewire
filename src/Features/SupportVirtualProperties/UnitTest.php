@@ -101,6 +101,22 @@ class UnitTest extends \Tests\TestCase
         })->call('selected');
     }
 
+    function test_a_snake_case_virtual_property_method_cannot_be_called_as_an_action()
+    {
+        // The direct-call block must hold regardless of method casing — a
+        // #[Virtual] method whose raw name doesn't survive camelCasing
+        // (snake_case, PascalCase) must still be unreachable as an action...
+        $this->expectException(\Livewire\Exceptions\MethodNotFoundException::class);
+
+        Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function select_all(): Selection
+            {
+                return new Selection;
+            }
+        })->call('select_all');
+    }
+
     function test_a_virtual_property_method_must_declare_a_return_type()
     {
         $this->assertThrowsDeep(VirtualPropertyMissingReturnTypeException::class, function () {
@@ -127,6 +143,90 @@ class UnitTest extends \Tests\TestCase
                 }
             });
         });
+    }
+
+    function test_a_virtual_property_method_must_declare_a_class_return_type()
+    {
+        $this->assertThrowsDeep(\LogicException::class, function () {
+            Livewire::test(new class extends TestComponent {
+                #[Virtual]
+                public function count(): int
+                {
+                    return 5;
+                }
+            });
+        });
+    }
+
+    function test_a_virtual_property_method_cannot_declare_required_parameters()
+    {
+        $this->assertThrowsDeep(\LogicException::class, function () {
+            Livewire::test(new class extends TestComponent {
+                #[Virtual]
+                public function selected(string $required): Selection
+                {
+                    return new Selection;
+                }
+            });
+        });
+    }
+
+    function test_two_virtual_property_methods_resolving_to_the_same_name_throw()
+    {
+        $this->assertThrowsDeep(\LogicException::class, function () {
+            Livewire::test(new class extends TestComponent {
+                #[Virtual]
+                public function selected_items(): Selection
+                {
+                    return new Selection;
+                }
+
+                #[Virtual]
+                public function selectedItems(): Selection
+                {
+                    return new Selection;
+                }
+            });
+        });
+    }
+
+    function test_property_level_attributes_cannot_target_a_virtual_method()
+    {
+        // #[Locked] on a virtual method used to silently no-op (false
+        // sense of protection). Property-level attributes are now
+        // target-restricted, so it fails loudly instead...
+        $this->assertThrowsDeep(\Error::class, function () {
+            Livewire::test(new class extends TestComponent {
+                #[\Livewire\Attributes\Locked]
+                #[Virtual]
+                public function selected(): Selection
+                {
+                    return new Selection;
+                }
+            });
+        });
+    }
+
+    function test_validation_errors_on_a_virtual_property_survive_a_round_trip()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function items(): Collection
+            {
+                return collect();
+            }
+
+            public function save()
+            {
+                $this->validate(['items' => 'array|min:1']);
+            }
+        })
+            ->call('save')
+            ->assertHasErrors('items')
+            // The error survives dehydration into the snapshot memo and is
+            // still present after a subsequent request...
+            ->call('$refresh')
+            ->assertHasErrors('items');
     }
 
     // Mount-time exceptions surface wrapped in a ViewException — walk the

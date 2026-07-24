@@ -597,8 +597,10 @@ class HandleComponents extends Mechanism
 
             $methods = Utils::getPublicMethodsDefinedBySubClass($root);
 
-            // Also remove "render" from the list...
-            $methods =  array_values(array_diff($methods, ['render']));
+            // Remove "render" and any #[Virtual] property methods from the
+            // list — virtual methods are property constructors, never
+            // actions, regardless of their casing...
+            $methods = array_values(array_diff($methods, ['render'], $root->getVirtualPropertyMethodNames()));
 
             // @todo: put this in a better place:
             $methods[] = '__dispatch';
