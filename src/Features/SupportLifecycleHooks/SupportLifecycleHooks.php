@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportLifecycleHooks;
 
-use function Livewire\store;
 use function Livewire\wrap;
 use function Livewire\on;
 use Livewire\ComponentHook;
@@ -25,7 +24,7 @@ class SupportLifecycleHooks extends ComponentHook
 
     public function mount($params)
     {
-        if (store($this->component)->has('skipMount')) { return; }
+        if ($this->storeHas('skipMount')) { return; }
 
         $this->callHook('boot');
         $this->callTraitHook('boot');
@@ -41,7 +40,7 @@ class SupportLifecycleHooks extends ComponentHook
 
     public function hydrate()
     {
-        if (store($this->component)->has('skipHydrate')) { return; }
+        if ($this->storeHas('skipHydrate')) { return; }
 
         $this->callHook('boot');
         $this->callTraitHook('boot');
