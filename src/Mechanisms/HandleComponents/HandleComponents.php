@@ -11,6 +11,7 @@ use Livewire\Exceptions\MaxNestingDepthExceededException;
 use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Drawer\Utils;
 use Livewire\Features\SupportFormObjects\Form;
+use Livewire\Features\SupportPropertyFactories\SupportPropertyFactories;
 use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -259,6 +260,11 @@ class HandleComponents extends Mechanism
 
         $context = new ComponentContext($component);
 
+        // Keep the raw dehydrated data around so features that manage
+        // properties without a backing declaration (property factories)
+        // can hydrate themselves from it later in the request...
+        $context->snapshotData = $data;
+
         $this->hydrateProperties($component, $data, $context);
 
         return [ $component, $context ];
@@ -286,7 +292,10 @@ class HandleComponents extends Mechanism
 
     protected function dehydrateProperties($component, $context)
     {
-        $data = Utils::getPublicPropertiesDefinedOnSubclass($component);
+        $data = [
+            ...Utils::getPublicPropertiesDefinedOnSubclass($component),
+            ...SupportPropertyFactories::getFactoryProperties($component),
+        ];
 
         foreach ($data as $key => $value) {
             $data[$key] = $this->synths->dehydrate($value, $context, $key);
@@ -372,7 +381,10 @@ class HandleComponents extends Mechanism
             $viewOrString = View::file($viewPath . '/' . $fileName . '.blade.php');
         }
 
-        $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
+        $properties = [
+            ...Utils::getPublicPropertiesDefinedOnSubclass($component),
+            ...SupportPropertyFactories::getFactoryProperties($component),
+        ];
 
         $view = Utils::generateBladeView($viewOrString, $properties);
 
@@ -444,7 +456,9 @@ class HandleComponents extends Mechanism
         $finish = trigger('update', $component, $path, $value);
 
         // Ensure that it's a public property, not on the base class first...
-        if (! in_array($property, array_keys(Utils::getPublicPropertiesDefinedOnSubclass($component)))) {
+        if (! in_array($property, array_keys(Utils::getPublicPropertiesDefinedOnSubclass($component)))
+            && ! SupportPropertyFactories::isFactoryProperty($component, $property)
+        ) {
             throw new PublicPropertyNotFoundException($property, $component->getName());
         }
 
@@ -504,14 +518,28 @@ class HandleComponents extends Mechanism
 
     protected function setComponentPropertyAwareOfTypes($component, $property, $value)
     {
+        $isFactoryProperty = SupportPropertyFactories::isFactoryProperty($component, $property);
+
         try {
-           $component->$property = $value;
+            // Factory properties have no backing declaration — their value
+            // lives in the component's store instead...
+            if ($isFactoryProperty) {
+                SupportPropertyFactories::setFactoryProperty($component, $property, $value);
+            } else {
+                $component->$property = $value;
+            }
         } catch (\TypeError $e) {
             // If an "int" is being set to empty string, unset the property (making it null).
             // This is common in the case of `wire:model`ing an int to a text field...
             // If a value is being set to "null", do the same...
             if ($value === '' || $value === null) {
-                unset($component->$property);
+                // An unset factory property springs back as a freshly
+                // constructed factory instance on next access...
+                if ($isFactoryProperty) {
+                    SupportPropertyFactories::forgetFactoryProperty($component, $property);
+                } else {
+                    unset($component->$property);
+                }
 
                 return;
             }

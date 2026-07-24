@@ -101,6 +101,32 @@ class HandleSynths extends Mechanism
         });
     }
 
+    // Hydrate raw wire data INTO an existing instance instead of building
+    // a fresh one from class + meta. Synths opt in by defining
+    // hydrateInto($target, $value, $meta) — anything the instance carries
+    // that doesn't serialize (closures, configuration) survives the trip.
+    // Synths without it fall back to a plain hydrate...
+    public function hydrateInto($instance, $valueOrTuple, $context, $path)
+    {
+        if (! Utils::isSyntheticTuple($tuple = $valueOrTuple)) return $valueOrTuple;
+
+        [$value, $meta] = $tuple;
+
+        if (isset($meta['class'])) {
+            SecurityPolicy::validateClass($meta['class']);
+        }
+
+        $synth = $this->resolve($meta['s'], $context, $path);
+
+        if (method_exists($synth, 'hydrateInto')) {
+            return $synth->hydrateInto($instance, $value, $meta) ?? $instance;
+        }
+
+        return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path) {
+            return $this->hydrate($child, $context, "{$path}.{$name}");
+        });
+    }
+
     public function hydrateForUpdate($raw, $path, $value, $context)
     {
         $meta = $this->getMetaForPath($raw, $path);

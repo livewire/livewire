@@ -9,6 +9,7 @@ class ComponentContext
 {
     public $effects = [];
     public $memo = [];
+    public $snapshotData = [];
 
     public function __construct(
         public $component,
