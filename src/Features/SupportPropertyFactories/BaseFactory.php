@@ -9,14 +9,14 @@ use Livewire\Features\SupportAttributes\Attribute;
 use Livewire\Mechanisms\HandleSynths\HandleSynths;
 
 #[\Attribute]
-class BasePropertyFactory extends Attribute
+class BaseFactory extends Attribute
 {
     function boot()
     {
         $method = new \ReflectionMethod($this->component, parent::getName());
 
         if (! $method->hasReturnType()) {
-            throw new PropertyFactoryMissingReturnTypeException(
+            throw new FactoryMissingReturnTypeException(
                 $this->component->getName(), parent::getName(),
             );
         }
@@ -35,7 +35,7 @@ class BasePropertyFactory extends Attribute
 
     function call()
     {
-        throw new CannotCallPropertyFactoryDirectlyException(
+        throw new CannotCallFactoryDirectlyException(
             $this->component->getName(), $this->getName(),
         );
     }

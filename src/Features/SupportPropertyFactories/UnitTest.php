@@ -3,7 +3,7 @@
 namespace Livewire\Features\SupportPropertyFactories;
 
 use Illuminate\Support\Collection;
-use Livewire\Attributes\PropertyFactory;
+use Livewire\Attributes\Factory;
 use Livewire\Livewire;
 use Livewire\Selection;
 use PHPUnit\Framework\Assert;
@@ -14,7 +14,7 @@ class UnitTest extends \Tests\TestCase
     function test_a_factory_method_initializes_a_property_on_mount()
     {
         $component = Livewire::test(new class extends TestComponent {
-            #[PropertyFactory]
+            #[Factory]
             public function selected(): Selection
             {
                 return new Selection(keys: ['bar'], mode: 'except');
@@ -38,7 +38,7 @@ class UnitTest extends \Tests\TestCase
                 $this->countAtMount = count($this->items);
             }
 
-            #[PropertyFactory]
+            #[Factory]
             public function items(): Collection
             {
                 return collect(['a', 'b']);
@@ -57,7 +57,7 @@ class UnitTest extends \Tests\TestCase
     function test_a_factory_property_is_available_as_a_plain_variable_in_the_view()
     {
         Livewire::test(new class extends TestComponent {
-            #[PropertyFactory]
+            #[Factory]
             public function selected(): Selection
             {
                 return new Selection(keys: ['bar'], mode: 'except');
@@ -74,7 +74,7 @@ class UnitTest extends \Tests\TestCase
     function test_a_factory_property_dehydrates_into_snapshot_data_like_a_normal_property()
     {
         $component = Livewire::test(new class extends TestComponent {
-            #[PropertyFactory]
+            #[Factory]
             public function selected(): Selection
             {
                 return new Selection(keys: ['bar'], mode: 'except');
@@ -90,10 +90,10 @@ class UnitTest extends \Tests\TestCase
 
     function test_a_factory_method_cannot_be_called_as_an_action()
     {
-        $this->expectException(CannotCallPropertyFactoryDirectlyException::class);
+        $this->expectException(CannotCallFactoryDirectlyException::class);
 
         Livewire::test(new class extends TestComponent {
-            #[PropertyFactory]
+            #[Factory]
             public function selected(): Selection
             {
                 return new Selection;
@@ -103,9 +103,9 @@ class UnitTest extends \Tests\TestCase
 
     function test_a_factory_method_must_declare_a_return_type()
     {
-        $this->assertThrowsDeep(PropertyFactoryMissingReturnTypeException::class, function () {
+        $this->assertThrowsDeep(FactoryMissingReturnTypeException::class, function () {
             Livewire::test(new class extends TestComponent {
-                #[PropertyFactory]
+                #[Factory]
                 public function selected()
                 {
                     return new Selection;
@@ -120,7 +120,7 @@ class UnitTest extends \Tests\TestCase
             Livewire::test(new class extends TestComponent {
                 public $selected = [];
 
-                #[PropertyFactory]
+                #[Factory]
                 public function selected(): Selection
                 {
                     return new Selection;
@@ -155,7 +155,7 @@ class UnitTest extends \Tests\TestCase
     function test_a_factory_property_survives_a_round_trip()
     {
         Livewire::test(new class extends TestComponent {
-            #[PropertyFactory]
+            #[Factory]
             public function selected(): Selection
             {
                 return new Selection(keys: ['bar'], mode: 'except');
@@ -170,7 +170,7 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(new class extends TestComponent {
             public $runs = 0;
 
-            #[PropertyFactory]
+            #[Factory]
             public function selected(): Selection
             {
                 $this->runs++;
@@ -186,7 +186,7 @@ class UnitTest extends \Tests\TestCase
     function test_a_factory_property_can_be_updated_from_the_client()
     {
         $component = Livewire::test(new class extends TestComponent {
-            #[PropertyFactory]
+            #[Factory]
             public function selected(): Selection
             {
                 return new Selection;
@@ -208,7 +208,7 @@ class UnitTest extends \Tests\TestCase
         // BOTH the client's keys and the factory's total — proof the raw
         // state was hydrated INTO the factory instance...
         $component = Livewire::test(new class extends TestComponent {
-            #[PropertyFactory]
+            #[Factory]
             public function selected(): Selection
             {
                 return (new Selection)->setTotal(10);
@@ -224,10 +224,38 @@ class UnitTest extends \Tests\TestCase
         Assert::assertSame(10, $selected->total());
     }
 
+    function test_root_updates_are_hydrated_into_the_live_instance_rather_than_replacing_it()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $hydratedId;
+
+            public $sameInstance;
+
+            #[Factory]
+            public function selected(): Selection
+            {
+                return new Selection;
+            }
+
+            public function hydrate()
+            {
+                $this->hydratedId = spl_object_id($this->selected);
+            }
+
+            public function updatedSelected()
+            {
+                $this->sameInstance = spl_object_id($this->selected) === $this->hydratedId;
+            }
+        })
+            ->set('selected', ['a', 'b'])
+            ->assertSetStrict('sameInstance', true)
+            ->assertSet('selected', fn ($selected) => $selected->keys() === ['a', 'b']);
+    }
+
     function test_mutations_from_actions_persist_across_requests()
     {
         Livewire::test(new class extends TestComponent {
-            #[PropertyFactory]
+            #[Factory]
             public function selected(): Selection
             {
                 return new Selection;
@@ -246,7 +274,7 @@ class UnitTest extends \Tests\TestCase
     function test_unsetting_a_factory_property_resets_it_to_a_fresh_factory_instance()
     {
         Livewire::test(new class extends TestComponent {
-            #[PropertyFactory]
+            #[Factory]
             public function selected(): Selection
             {
                 return new Selection(keys: ['bar']);
@@ -266,7 +294,7 @@ class UnitTest extends \Tests\TestCase
     function test_synths_without_hydrate_into_fall_back_to_a_plain_hydrate()
     {
         $component = Livewire::test(new class extends TestComponent {
-            #[PropertyFactory]
+            #[Factory]
             public function items(): Collection
             {
                 return collect(['a', 'b']);
@@ -289,7 +317,7 @@ class UnitTest extends \Tests\TestCase
         // server-owned snapshot meta), so a hostile payload can never
         // change the property's type out from under the component...
         $component = Livewire::test(new class extends TestComponent {
-            #[PropertyFactory]
+            #[Factory]
             public function selected(): Selection
             {
                 return new Selection(keys: ['bar']);

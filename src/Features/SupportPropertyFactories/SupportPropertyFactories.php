@@ -37,7 +37,7 @@ class SupportPropertyFactories extends ComponentHook
 
     static function factoryAttributes($component)
     {
-        return $component->getAttributes()->whereInstanceOf(BasePropertyFactory::class);
+        return $component->getAttributes()->whereInstanceOf(BaseFactory::class);
     }
 
     static function findFactoryAttribute($component, $property)

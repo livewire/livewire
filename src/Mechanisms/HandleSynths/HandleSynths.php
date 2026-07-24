@@ -133,6 +133,18 @@ class HandleSynths extends Mechanism
 
         // If we have meta data already for this property, let's use that to get a synth...
         if ($meta) {
+            // A root update whose synth knows how to hydrate INTO an
+            // instance is applied onto the live one instead of replacing
+            // it — whatever construction configured on the instance
+            // survives the write...
+            if (! str($path)->contains('.')
+                && is_object($target = data_get($context->component, $path))
+                && method_exists($synth = $this->resolve($meta['s'], $context, $path), 'hydrateInto')
+                && $synth::match($target)
+            ) {
+                return $synth->hydrateInto($target, $value, $meta) ?? $target;
+            }
+
             return $this->hydratePropertyUpdate([$value, $meta], $context, $path);
         }
 

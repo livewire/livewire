@@ -4,12 +4,12 @@ namespace Livewire\Features\SupportPropertyFactories;
 
 use Exception;
 
-class CannotCallPropertyFactoryDirectlyException extends Exception
+class FactoryMissingReturnTypeException extends Exception
 {
     function __construct($componentName, $methodName)
     {
         parent::__construct(
-            "Cannot call [{$methodName}()] property factory method directly on component: {$componentName}"
+            "Property factory method [{$methodName}()] must declare a return type on component: {$componentName}"
         );
     }
 }
