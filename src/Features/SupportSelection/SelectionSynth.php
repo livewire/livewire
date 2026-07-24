@@ -46,6 +46,23 @@ class SelectionSynth extends Synth {
         ], $meta];
     }
 
+    // Property factories hand us the instance they just constructed —
+    // apply the client's raw state to it rather than building a fresh
+    // one, so anything the factory configured on it survives...
+    function hydrateInto($target, $value, $meta)
+    {
+        [$keys, $mode] = static::parseWireValue($value);
+
+        (function ($keys, $mode) {
+            $this->keys = $keys;
+            $this->mode = $mode;
+        })->call($target, $keys, $mode);
+
+        if (isset($meta['total'])) $target->setTotal((int) $meta['total']);
+
+        return $target;
+    }
+
     function hydrate($value, $meta)
     {
         // Verify class extends Selection even though checksum protects this...
