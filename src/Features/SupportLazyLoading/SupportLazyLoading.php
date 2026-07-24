@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportLazyLoading;
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\HandleComponents\ViewContext;
-use function Livewire\{ on, store, trigger, wrap };
+use function Livewire\{ on, trigger, wrap };
 use Illuminate\Routing\Route;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
@@ -96,8 +96,8 @@ class SupportLazyLoading extends ComponentHook
 
         $this->component->skipMount();
 
-        store($this->component)->set('isLazyLoadMounting', true);
-        store($this->component)->set('isLazyIsolated', $isolate);
+        $this->storeSet('isLazyLoadMounting', true);
+        $this->storeSet('isLazyIsolated', $isolate);
 
         $this->component->skipRender(
             $this->generatePlaceholderHtml($params, $isDeferred)
@@ -111,15 +111,15 @@ class SupportLazyLoading extends ComponentHook
 
         $this->component->skipHydrate();
 
-        store($this->component)->set('isLazyLoadHydrating', true);
+        $this->storeSet('isLazyLoadHydrating', true);
     }
 
     function dehydrate($context)
     {
-        if (store($this->component)->get('isLazyLoadMounting') === true) {
+        if ($this->storeGet('isLazyLoadMounting') === true) {
             $context->addMemo('lazyLoaded', false);
-            $context->addMemo('lazyIsolated', store($this->component)->get('isLazyIsolated'));
-        } elseif (store($this->component)->get('isLazyLoadHydrating') === true) {
+            $context->addMemo('lazyIsolated', $this->storeGet('isLazyIsolated'));
+        } elseif ($this->storeGet('isLazyLoadHydrating') === true) {
             $context->addMemo('lazyLoaded', true);
         }
     }
