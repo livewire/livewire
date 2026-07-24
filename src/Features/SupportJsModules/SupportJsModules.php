@@ -7,8 +7,6 @@ use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
-use function Livewire\store;
-
 class SupportJsModules extends ComponentHook
 {
     static function provide()
@@ -47,13 +45,13 @@ class SupportJsModules extends ComponentHook
         // Don't add scriptModule effect during lazy-loading placeholder mount.
         // The component's view isn't rendered yet, so @assets won't have run.
         // The scriptModule will be added when __lazyLoad triggers the real mount.
-        if (store($this->component)->get('isLazyLoadMounting') === true) return;
+        if ($this->storeGet('isLazyLoadMounting') === true) return;
 
         // Add scriptModule effect during:
         // 1. Normal component mounting ($context->isMounting())
         // 2. Lazy-loaded component hydration (when __lazyLoad runs)
         $isNormalMount = $context->isMounting();
-        $isLazyLoadHydration = store($this->component)->get('isLazyLoadHydrating') === true;
+        $isLazyLoadHydration = $this->storeGet('isLazyLoadHydrating') === true;
 
         if (! $isNormalMount && ! $isLazyLoadHydration) return;
 
