@@ -27,6 +27,7 @@ class HandleComponents extends Mechanism
         on('flush-state', function () {
             static::$renderStack = [];
             static::$componentStack = [];
+            static::$virtualPropertiesCache = new \WeakMap;
             Utils::flushReflectionCache();
         });
 
@@ -49,17 +50,31 @@ class HandleComponents extends Mechanism
         });
     }
 
+    // Memoized per attribute collection — this sits on hot paths (every
+    // magic __get, every property write), and keying on the collection
+    // instance is invalidation-safe because outside attribute merges
+    // always replace the collection...
+    protected static $virtualPropertiesCache;
+
     protected function virtualProperties($component)
     {
+        $attributes = $component->getAttributes();
+
+        static::$virtualPropertiesCache ??= new \WeakMap;
+
+        if (isset(static::$virtualPropertiesCache[$attributes])) {
+            return static::$virtualPropertiesCache[$attributes];
+        }
+
         $properties = [];
 
-        foreach ($component->getAttributes() as $attribute) {
+        foreach ($attributes as $attribute) {
             if ($attribute instanceof VirtualProperty) {
                 $properties[$attribute->getName()] = $attribute;
             }
         }
 
-        return $properties;
+        return static::$virtualPropertiesCache[$attributes] = $properties;
     }
 
     public function mount($name, $params = [], $key = null, $slots = [])
