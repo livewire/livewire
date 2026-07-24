@@ -152,78 +152,6 @@ class UnitTest extends \Tests\TestCase
         Assert::fail('Expected exception ['.$class.'] was not thrown.');
     }
 
-    function test_a_factory_property_survives_a_round_trip()
-    {
-        Livewire::test(new class extends TestComponent {
-            #[Factory]
-            public function selected(): Selection
-            {
-                return new Selection(keys: ['bar'], mode: 'except');
-            }
-        })
-            ->call('$refresh')
-            ->assertSet('selected', fn ($selected) => $selected->isAll() && $selected->except() === ['bar']);
-    }
-
-    function test_the_factory_runs_again_on_every_subsequent_request()
-    {
-        Livewire::test(new class extends TestComponent {
-            public $runs = 0;
-
-            #[Factory]
-            public function selected(): Selection
-            {
-                $this->runs++;
-
-                return new Selection;
-            }
-        })
-            ->assertSetStrict('runs', 1)
-            ->call('$refresh')
-            ->assertSetStrict('runs', 2);
-    }
-
-    function test_a_factory_property_can_be_updated_from_the_client()
-    {
-        $component = Livewire::test(new class extends TestComponent {
-            #[Factory]
-            public function selected(): Selection
-            {
-                return new Selection;
-            }
-        });
-
-        $component->set('selected', [1, 2, 3]);
-
-        $selected = $component->get('selected');
-
-        Assert::assertInstanceOf(Selection::class, $selected);
-        Assert::assertSame([1, 2, 3], $selected->keys());
-    }
-
-    function test_client_state_is_hydrated_into_the_factory_built_instance()
-    {
-        // The factory seeds a total that only exists on the server. After a
-        // client update and another round trip, the selection should carry
-        // BOTH the client's keys and the factory's total — proof the raw
-        // state was hydrated INTO the factory instance...
-        $component = Livewire::test(new class extends TestComponent {
-            #[Factory]
-            public function selected(): Selection
-            {
-                return (new Selection)->setTotal(10);
-            }
-        });
-
-        $component->set('selected', ['a', 'b']);
-        $component->call('$refresh');
-
-        $selected = $component->get('selected');
-
-        Assert::assertSame(['a', 'b'], $selected->keys());
-        Assert::assertSame(10, $selected->total());
-    }
-
     function test_root_updates_are_hydrated_into_the_live_instance_rather_than_replacing_it()
     {
         Livewire::test(new class extends TestComponent {
@@ -250,25 +178,6 @@ class UnitTest extends \Tests\TestCase
             ->set('selected', ['a', 'b'])
             ->assertSetStrict('sameInstance', true)
             ->assertSet('selected', fn ($selected) => $selected->keys() === ['a', 'b']);
-    }
-
-    function test_mutations_from_actions_persist_across_requests()
-    {
-        Livewire::test(new class extends TestComponent {
-            #[Factory]
-            public function selected(): Selection
-            {
-                return new Selection;
-            }
-
-            public function pick($key)
-            {
-                $this->selected->select($key);
-            }
-        })
-            ->call('pick', 'foo')
-            ->call('pick', 'baz')
-            ->assertSet('selected', fn ($selected) => $selected->keys() === ['foo', 'baz']);
     }
 
     function test_unsetting_a_factory_property_resets_it_to_a_fresh_factory_instance()

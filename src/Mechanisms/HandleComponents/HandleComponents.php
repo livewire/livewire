@@ -11,7 +11,6 @@ use Livewire\Exceptions\MaxNestingDepthExceededException;
 use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Drawer\Utils;
 use Livewire\Features\SupportFormObjects\Form;
-use Livewire\Features\SupportPropertyFactories\SupportPropertyFactories;
 use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -30,6 +29,37 @@ class HandleComponents extends Mechanism
             static::$componentStack = [];
             Utils::flushReflectionCache();
         });
+
+        // Virtual properties have no backing declaration, so plain access
+        // and unset() fall through to the magic methods — answer them...
+        on('__get', function ($target, $property, $returnValue) {
+            if (! method_exists($target, 'getAttributes')) return;
+
+            if ($virtual = $this->virtualProperties($target)[$property] ?? null) {
+                $returnValue($virtual->virtualValue());
+            }
+        });
+
+        on('__unset', function ($target, $property) {
+            if (! method_exists($target, 'getAttributes')) return;
+
+            if ($virtual = $this->virtualProperties($target)[$property] ?? null) {
+                $virtual->unsetVirtualValue();
+            }
+        });
+    }
+
+    protected function virtualProperties($component)
+    {
+        $properties = [];
+
+        foreach ($component->getAttributes() as $attribute) {
+            if ($attribute instanceof VirtualProperty) {
+                $properties[$attribute->getName()] = $attribute;
+            }
+        }
+
+        return $properties;
     }
 
     public function mount($name, $params = [], $key = null, $slots = [])
@@ -260,11 +290,6 @@ class HandleComponents extends Mechanism
 
         $context = new ComponentContext($component);
 
-        // Keep the raw dehydrated data around so features that manage
-        // properties without a backing declaration (property factories)
-        // can hydrate themselves from it later in the request...
-        $context->snapshotData = $data;
-
         $this->hydrateProperties($component, $data, $context);
 
         return [ $component, $context ];
@@ -292,10 +317,11 @@ class HandleComponents extends Mechanism
 
     protected function dehydrateProperties($component, $context)
     {
-        $data = [
-            ...Utils::getPublicPropertiesDefinedOnSubclass($component),
-            ...SupportPropertyFactories::getFactoryProperties($component),
-        ];
+        $data = Utils::getPublicPropertiesDefinedOnSubclass($component);
+
+        foreach ($this->virtualProperties($component) as $name => $virtual) {
+            $data[$name] = $virtual->virtualValue();
+        }
 
         foreach ($data as $key => $value) {
             $data[$key] = $this->synths->dehydrate($value, $context, $key);
@@ -306,8 +332,17 @@ class HandleComponents extends Mechanism
 
     protected function hydrateProperties($component, $data, $context)
     {
+        $virtualProperties = $this->virtualProperties($component);
+
         foreach ($data as $key => $value) {
-            if (! property_exists($component, $key)) continue;
+            if (! property_exists($component, $key)) {
+                // A key with no backing declaration may be a virtual
+                // property (e.g. a #[Factory] method) — let it hydrate
+                // itself from the raw wire value...
+                if (isset($virtualProperties[$key])) $virtualProperties[$key]->hydrateVirtualValue($value, $context);
+
+                continue;
+            }
 
             $child = $this->synths->hydrate($value, $context, $key);
 
@@ -381,10 +416,11 @@ class HandleComponents extends Mechanism
             $viewOrString = View::file($viewPath . '/' . $fileName . '.blade.php');
         }
 
-        $properties = [
-            ...Utils::getPublicPropertiesDefinedOnSubclass($component),
-            ...SupportPropertyFactories::getFactoryProperties($component),
-        ];
+        $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
+
+        foreach ($this->virtualProperties($component) as $name => $virtual) {
+            $properties[$name] = $virtual->virtualValue();
+        }
 
         $view = Utils::generateBladeView($viewOrString, $properties);
 
@@ -457,7 +493,7 @@ class HandleComponents extends Mechanism
 
         // Ensure that it's a public property, not on the base class first...
         if (! in_array($property, array_keys(Utils::getPublicPropertiesDefinedOnSubclass($component)))
-            && ! SupportPropertyFactories::isFactoryProperty($component, $property)
+            && ! isset($this->virtualProperties($component)[$property])
         ) {
             throw new PublicPropertyNotFoundException($property, $component->getName());
         }
@@ -518,13 +554,13 @@ class HandleComponents extends Mechanism
 
     protected function setComponentPropertyAwareOfTypes($component, $property, $value)
     {
-        $isFactoryProperty = SupportPropertyFactories::isFactoryProperty($component, $property);
+        $virtual = $this->virtualProperties($component)[$property] ?? null;
 
         try {
-            // Factory properties have no backing declaration — their value
-            // lives in the component's store instead...
-            if ($isFactoryProperty) {
-                SupportPropertyFactories::setFactoryProperty($component, $property, $value);
+            // Virtual properties have no backing declaration — the write
+            // goes to whatever is managing them instead...
+            if ($virtual) {
+                $virtual->setVirtualValue($value);
             } else {
                 $component->$property = $value;
             }
@@ -533,10 +569,8 @@ class HandleComponents extends Mechanism
             // This is common in the case of `wire:model`ing an int to a text field...
             // If a value is being set to "null", do the same...
             if ($value === '' || $value === null) {
-                // An unset factory property springs back as a freshly
-                // constructed factory instance on next access...
-                if ($isFactoryProperty) {
-                    SupportPropertyFactories::forgetFactoryProperty($component, $property);
+                if ($virtual) {
+                    $virtual->unsetVirtualValue();
                 } else {
                     unset($component->$property);
                 }

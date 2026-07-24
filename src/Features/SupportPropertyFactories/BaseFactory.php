@@ -6,10 +6,11 @@ use function Livewire\invade;
 use function Livewire\store;
 
 use Livewire\Features\SupportAttributes\Attribute;
+use Livewire\Mechanisms\HandleComponents\VirtualProperty;
 use Livewire\Mechanisms\HandleSynths\HandleSynths;
 
 #[\Attribute]
-class BaseFactory extends Attribute
+class BaseFactory extends Attribute implements VirtualProperty
 {
     function boot()
     {
@@ -30,7 +31,7 @@ class BaseFactory extends Attribute
 
     function mount()
     {
-        $this->handleMagicGet();
+        $this->virtualValue();
     }
 
     function call()
@@ -40,31 +41,31 @@ class BaseFactory extends Attribute
         );
     }
 
-    function handleHydrate($context)
-    {
-        $instance = $this->evaluateFactory();
-
-        if (array_key_exists($this->getName(), $context->snapshotData)) {
-            $instance = app(HandleSynths::class)->hydrateInto(
-                $instance, $context->snapshotData[$this->getName()], $context, $this->getName(),
-            );
-        }
-
-        $this->setStoredValue($instance);
-    }
-
-    function handleMagicGet()
+    function virtualValue()
     {
         $value = store($this->component)->find(
             'propertyFactories', $this->getName(), fn () => $this->evaluateFactory(),
         );
 
-        $this->setStoredValue($value);
+        store($this->component)->push('propertyFactories', $value, $this->getName());
 
         return $value;
     }
 
-    function setStoredValue($value)
+    // The factory supplies the configured instance fresh each request,
+    // then its synth hydrates the client's raw state into it...
+    function hydrateVirtualValue($valueOrTuple, $context)
+    {
+        $instance = $this->evaluateFactory();
+
+        $instance = app(HandleSynths::class)->hydrateInto(
+            $instance, $valueOrTuple, $context, $this->getName(),
+        );
+
+        $this->setVirtualValue($instance);
+    }
+
+    function setVirtualValue($value)
     {
         $type = (new \ReflectionMethod($this->component, parent::getName()))->getReturnType();
 
@@ -81,6 +82,12 @@ class BaseFactory extends Attribute
         }
 
         store($this->component)->push('propertyFactories', $value, $this->getName());
+    }
+
+    // Springs back as a freshly constructed factory instance on next access...
+    function unsetVirtualValue()
+    {
+        store($this->component)->unset('propertyFactories', $this->getName());
     }
 
     protected function evaluateFactory()

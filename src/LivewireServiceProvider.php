@@ -169,7 +169,6 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportHtmlAttributeForwarding\SupportHtmlAttributeForwarding::class,
             Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             Features\SupportComputed\SupportLegacyComputedPropertySyntax::class,
-            Features\SupportPropertyFactories\SupportPropertyFactories::class,
             Features\SupportNestingComponents\SupportNestingComponents::class,
             Features\SupportCompiledWireKeys\SupportCompiledWireKeys::class,
             Features\SupportScriptsAndAssets\SupportScriptsAndAssets::class,
