@@ -11,7 +11,9 @@ trait InteractsWithProperties
 {
     public function hasProperty($prop)
     {
-        return property_exists($this, Utils::beforeFirstDot($prop));
+        $prop = Utils::beforeFirstDot($prop);
+
+        return property_exists($this, $prop) || $this->hasVirtualProperty($prop);
     }
 
     public function getPropertyValue($name)
@@ -35,7 +37,13 @@ trait InteractsWithProperties
 
         foreach ($values as $key => $value) {
             if (in_array(Utils::beforeFirstDot($key), $publicProperties)) {
-                data_set($this, $key, $value);
+                // Root writes to virtual properties land in their lookup —
+                // deep writes mutate the instance in place either way...
+                if (! str_contains($key, '.') && $this->hasVirtualProperty($key)) {
+                    $this->setVirtualProperty($key, $value);
+                } else {
+                    data_set($this, $key, $value);
+                }
             }
         }
     }
@@ -55,6 +63,14 @@ trait InteractsWithProperties
 
         foreach ($properties as $property) {
             $property = str($property);
+
+            // Virtual properties reset by re-initializing — the method
+            // runs again and supplies a fresh instance...
+            if (! $property->contains('.') && $this->hasVirtualProperty((string) $property)) {
+                $this->unsetVirtualProperty((string) $property);
+
+                continue;
+            }
 
             // Check if the property contains a dot which means it is actually on a nested object like a FormObject
             if (str($property)->contains('.')) {
@@ -140,8 +156,13 @@ trait InteractsWithProperties
         return array_diff_key($this->all(), array_flip($properties));
     }
 
+    // Every property the component owns — declared AND virtual. Virtual
+    // ones always come last, so they also serialize last...
     public function all()
     {
-        return Utils::getPublicPropertiesDefinedOnSubclass($this);
+        return [
+            ...Utils::getPublicPropertiesDefinedOnSubclass($this),
+            ...$this->getVirtualProperties(),
+        ];
     }
 }

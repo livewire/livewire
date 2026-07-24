@@ -12,13 +12,9 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_virtual_property_state_reaches_the_browser_and_updates_sync_back()
     {
         Livewire::visit(new class extends Component {
-            public $runs = 0;
-
             #[Virtual]
             public function selection(): Selection
             {
-                $this->runs++;
-
                 return new Selection(keys: ['2']);
             }
 
@@ -38,7 +34,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <button dusk="pick-one" type="button" wire:click="pick('1')">Pick one</button>
                     <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
 
-                    <span dusk="server">{{ implode(',', $selection->keys()) }}:{{ $runs }}</span>
+                    <span dusk="server">{{ implode(',', $selection->keys()) }}</span>
                 </div>
                 HTML;
             }
@@ -46,16 +42,16 @@ class BrowserTest extends \Tests\BrowserTestCase
         // The method-built state hydrated into the browser like a normal property...
         ->assertNotChecked('@one')
         ->assertChecked('@two')
-        ->assertSeeIn('@server', '2:1')
-        // A checkbox update syncs back, and the virtual property method ran again server-side...
+        ->assertSeeIn('@server', '2')
+        // A checkbox update syncs back into the method-built instance...
         ->check('@three')
         ->waitForLivewire()->click('@refresh')
         ->assertChecked('@three')
-        ->assertSeeIn('@server', '2,3:2')
+        ->assertSeeIn('@server', '2,3')
         // A server-side mutation from an action reaches the checkboxes...
         ->waitForLivewire()->click('@pick-one')
         ->assertChecked('@one')
-        ->assertSeeIn('@server', '2,3,1:3')
+        ->assertSeeIn('@server', '2,3,1')
         ;
     }
 

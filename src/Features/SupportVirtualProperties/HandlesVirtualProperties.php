@@ -75,18 +75,6 @@ trait HandlesVirtualProperties
         $this->__virtualProperties[$name] = $this->{static::virtualPropertyMethods()[$name]['name']}();
     }
 
-    // Apply raw wire state to the freshly constructed instance. The synth
-    // mutates it in place via hydrateInto so everything the method
-    // configured on it (closures included) survives the trip...
-    function hydrateVirtualProperty($name, $valueOrTuple, $context)
-    {
-        $name = (string) str($name)->camel();
-
-        $this->__virtualProperties[$name] = app(\Livewire\Mechanisms\HandleSynths\HandleSynths::class)->hydrateInto(
-            $this->getVirtualProperty($name), $valueOrTuple, $context, $name,
-        );
-    }
-
     protected static function virtualPropertyMethods()
     {
         return static::$__virtualPropertyMethods[static::class] ??= static::discoverVirtualPropertyMethods();

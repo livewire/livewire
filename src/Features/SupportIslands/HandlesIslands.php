@@ -194,7 +194,7 @@ trait HandlesIslands
 
         app(ExtendBlade::class)->startLivewireRendering($this);
 
-        $properties = Utils::getPublicPropertiesDefinedOnSubclass($this);
+        $properties = $this->all();
 
         $scope = array_merge(['__livewire' => $this], $properties);
 

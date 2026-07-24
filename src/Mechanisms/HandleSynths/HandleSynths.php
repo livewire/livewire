@@ -256,6 +256,10 @@ class HandleSynths extends Mechanism
             // around the assignment (e.g. form objects boot afterwards)...
             $synth->initialize($typeName, fn ($value) => $property->setValue($component, $value));
         }
+
+        // Virtual properties initialize right alongside declared ones —
+        // each #[Virtual] method runs and its instance fills the lookup...
+        $component->initializeVirtualProperties();
     }
 
     protected function discoverInitializableProperties(string $class): array

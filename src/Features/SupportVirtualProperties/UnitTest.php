@@ -152,6 +152,47 @@ class UnitTest extends \Tests\TestCase
         Assert::fail('Expected exception ['.$class.'] was not thrown.');
     }
 
+    function test_the_method_runs_fresh_on_every_request()
+    {
+        $component = new class extends TestComponent {
+            public static $constructions = 0;
+
+            #[Virtual]
+            public function selected(): Selection
+            {
+                static::$constructions++;
+
+                return new Selection;
+            }
+        };
+
+        $component::$constructions = 0;
+
+        Livewire::test($component)->call('$refresh');
+
+        Assert::assertSame(2, $component::$constructions);
+    }
+
+    function test_reset_reinitializes_a_virtual_property()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function selected(): Selection
+            {
+                return new Selection(keys: ['bar']);
+            }
+
+            public function mutateAndReset()
+            {
+                $this->selected->select('extra');
+
+                $this->reset('selected');
+            }
+        })
+            ->call('mutateAndReset')
+            ->assertSet('selected', fn ($selected) => $selected->keys() === ['bar']);
+    }
+
     function test_root_updates_are_hydrated_into_the_live_instance_rather_than_replacing_it()
     {
         Livewire::test(new class extends TestComponent {

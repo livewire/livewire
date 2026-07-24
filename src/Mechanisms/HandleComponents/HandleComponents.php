@@ -39,8 +39,6 @@ class HandleComponents extends Mechanism
 
         $this->synths->initializeProperties($component);
 
-        $component->initializeVirtualProperties();
-
         // Separate params into component properties and HTML attributes...
         [$componentParams, $htmlAttributes] = $this->separateParamsAndAttributes($component, $params);
 
@@ -288,10 +286,7 @@ class HandleComponents extends Mechanism
 
     protected function dehydrateProperties($component, $context)
     {
-        $data = [
-            ...Utils::getPublicPropertiesDefinedOnSubclass($component),
-            ...$component->getVirtualProperties(),
-        ];
+        $data = $component->all();
 
         foreach ($data as $key => $value) {
             $data[$key] = $this->synths->dehydrate($value, $context, $key);
@@ -303,16 +298,19 @@ class HandleComponents extends Mechanism
     protected function hydrateProperties($component, $data, $context)
     {
         foreach ($data as $key => $value) {
-            if (! property_exists($component, $key)) {
-                // A key with no backing declaration may be a virtual
-                // property (a #[Virtual] method) — the method constructs
-                // the instance, then the raw wire value hydrates INTO it.
-                // Virtual keys always serialize after declared ones, so
-                // the method runs against fully-hydrated state...
-                if ($component->hasVirtualProperty($key)) $component->hydrateVirtualProperty($key, $value, $context);
+            // Virtual properties already hold their freshly constructed
+            // instance — the raw wire value hydrates INTO it rather than
+            // replacing it, so everything construction configured on the
+            // instance survives the trip...
+            if ($component->hasVirtualProperty($key)) {
+                $child = $this->synths->hydrateInto($component->getVirtualProperty($key), $value, $context, $key);
+
+                $component->setVirtualProperty($key, $child);
 
                 continue;
             }
+
+            if (! property_exists($component, $key)) continue;
 
             $child = $this->synths->hydrate($value, $context, $key);
 
@@ -386,10 +384,7 @@ class HandleComponents extends Mechanism
             $viewOrString = View::file($viewPath . '/' . $fileName . '.blade.php');
         }
 
-        $properties = [
-            ...Utils::getPublicPropertiesDefinedOnSubclass($component),
-            ...$component->getVirtualProperties(),
-        ];
+        $properties = $component->all();
 
         $view = Utils::generateBladeView($viewOrString, $properties);
 
@@ -460,10 +455,8 @@ class HandleComponents extends Mechanism
 
         $finish = trigger('update', $component, $path, $value);
 
-        // Ensure that it's a public property, not on the base class first...
-        if (! in_array($property, array_keys(Utils::getPublicPropertiesDefinedOnSubclass($component)))
-            && ! $component->hasVirtualProperty($property)
-        ) {
+        // Ensure that it's a public (or virtual) property, not on the base class first...
+        if (! array_key_exists($property, $component->all())) {
             throw new PublicPropertyNotFoundException($property, $component->getName());
         }
 
