@@ -103,9 +103,10 @@ class HandleSynths extends Mechanism
 
     // Hydrate raw wire data INTO an existing instance instead of building
     // a fresh one from class + meta. Synths opt in by defining
-    // hydrateInto($target, $value, $meta) — anything the instance carries
-    // that doesn't serialize (closures, configuration) survives the trip.
-    // Synths without it fall back to a plain hydrate...
+    // hydrateInto($target, $value, $meta), which mutates the instance in
+    // place — anything it carries that doesn't serialize (closures,
+    // configuration) survives the trip. Synths without it fall back to a
+    // plain hydrate and the instance gets replaced...
     public function hydrateInto($instance, $valueOrTuple, $context, $path)
     {
         if (! Utils::isSyntheticTuple($tuple = $valueOrTuple)) return $valueOrTuple;
@@ -119,7 +120,9 @@ class HandleSynths extends Mechanism
         $synth = $this->resolve($meta['s'], $context, $path);
 
         if (method_exists($synth, 'hydrateInto')) {
-            return $synth->hydrateInto($instance, $value, $meta) ?? $instance;
+            $synth->hydrateInto($instance, $value, $meta);
+
+            return $instance;
         }
 
         return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path) {
@@ -142,7 +145,9 @@ class HandleSynths extends Mechanism
                 && method_exists($synth = $this->resolve($meta['s'], $context, $path), 'hydrateInto')
                 && $synth::match($target)
             ) {
-                return $synth->hydrateInto($target, $value, $meta) ?? $target;
+                $synth->hydrateInto($target, $value, $meta);
+
+                return $target;
             }
 
             return $this->hydratePropertyUpdate([$value, $meta], $context, $path);

@@ -1,20 +1,20 @@
 <?php
 
-namespace Livewire\Features\SupportPropertyFactories;
+namespace Livewire\Features\SupportVirtualProperties;
 
-use Livewire\Attributes\Factory;
+use Livewire\Attributes\Virtual;
 use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\Selection;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    public function test_factory_state_reaches_the_browser_and_updates_sync_back()
+    public function test_virtual_property_state_reaches_the_browser_and_updates_sync_back()
     {
         Livewire::visit(new class extends Component {
             public $runs = 0;
 
-            #[Factory]
+            #[Virtual]
             public function selection(): Selection
             {
                 $this->runs++;
@@ -43,11 +43,11 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        // The factory-built state hydrated into the browser like a normal property...
+        // The method-built state hydrated into the browser like a normal property...
         ->assertNotChecked('@one')
         ->assertChecked('@two')
         ->assertSeeIn('@server', '2:1')
-        // A checkbox update syncs back, and the factory ran again server-side...
+        // A checkbox update syncs back, and the virtual property method ran again server-side...
         ->check('@three')
         ->waitForLivewire()->click('@refresh')
         ->assertChecked('@three')
@@ -59,14 +59,14 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_select_all_factory_config_and_server_totals_survive_round_trips()
+    public function test_select_all_virtual_config_and_server_totals_survive_round_trips()
     {
         Livewire::visit(new class extends Component {
-            #[Factory]
+            #[Virtual]
             public function selection(): Selection
             {
                 // The total only ever lives server-side — surviving round
-                // trips proves client state hydrates INTO the factory-built
+                // trips proves client state hydrates INTO the method-built
                 // instance rather than replacing it...
                 return (new Selection(keys: ['2'], mode: 'except'))->setTotal(5);
             }
@@ -85,7 +85,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        // Select-all-except-2 straight out of the factory...
+        // Select-all-except-2 straight out of the method...
         ->assertChecked('@one')
         ->assertNotChecked('@two')
         ->assertSeeIn('@server', 'all:2:4')

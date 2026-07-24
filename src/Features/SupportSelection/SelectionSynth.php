@@ -46,9 +46,9 @@ class SelectionSynth extends Synth {
         ], $meta];
     }
 
-    // Property factories hand us the instance they just constructed —
-    // apply the client's raw state to it rather than building a fresh
-    // one, so anything the factory configured on it survives...
+    // Apply the client's raw state to an existing instance in place
+    // rather than building a fresh one — anything construction configured
+    // on it survives (this is how virtual properties round-trip)...
     function hydrateInto($target, $value, $meta)
     {
         [$keys, $mode] = static::parseWireValue($value);
@@ -59,8 +59,6 @@ class SelectionSynth extends Synth {
         })->call($target, $keys, $mode);
 
         if (isset($meta['total'])) $target->setTotal((int) $meta['total']);
-
-        return $target;
     }
 
     function hydrate($value, $meta)

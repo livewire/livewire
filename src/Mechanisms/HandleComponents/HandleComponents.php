@@ -27,54 +27,8 @@ class HandleComponents extends Mechanism
         on('flush-state', function () {
             static::$renderStack = [];
             static::$componentStack = [];
-            static::$virtualPropertiesCache = new \WeakMap;
             Utils::flushReflectionCache();
         });
-
-        // Virtual properties have no backing declaration, so plain access
-        // and unset() fall through to the magic methods — answer them...
-        on('__get', function ($target, $property, $returnValue) {
-            if (! method_exists($target, 'getAttributes')) return;
-
-            if ($virtual = $this->virtualProperties($target)[$property] ?? null) {
-                $returnValue($virtual->virtualValue());
-            }
-        });
-
-        on('__unset', function ($target, $property) {
-            if (! method_exists($target, 'getAttributes')) return;
-
-            if ($virtual = $this->virtualProperties($target)[$property] ?? null) {
-                $virtual->unsetVirtualValue();
-            }
-        });
-    }
-
-    // Memoized per attribute collection — this sits on hot paths (every
-    // magic __get, every property write), and keying on the collection
-    // instance is invalidation-safe because outside attribute merges
-    // always replace the collection...
-    protected static $virtualPropertiesCache;
-
-    protected function virtualProperties($component)
-    {
-        $attributes = $component->getAttributes();
-
-        static::$virtualPropertiesCache ??= new \WeakMap;
-
-        if (isset(static::$virtualPropertiesCache[$attributes])) {
-            return static::$virtualPropertiesCache[$attributes];
-        }
-
-        $properties = [];
-
-        foreach ($attributes as $attribute) {
-            if ($attribute instanceof VirtualProperty) {
-                $properties[$attribute->getName()] = $attribute;
-            }
-        }
-
-        return static::$virtualPropertiesCache[$attributes] = $properties;
     }
 
     public function mount($name, $params = [], $key = null, $slots = [])
@@ -84,6 +38,8 @@ class HandleComponents extends Mechanism
         $component = app('livewire')->new($name);
 
         $this->synths->initializeProperties($component);
+
+        $component->initializeVirtualProperties();
 
         // Separate params into component properties and HTML attributes...
         [$componentParams, $htmlAttributes] = $this->separateParamsAndAttributes($component, $params);
@@ -332,11 +288,10 @@ class HandleComponents extends Mechanism
 
     protected function dehydrateProperties($component, $context)
     {
-        $data = Utils::getPublicPropertiesDefinedOnSubclass($component);
-
-        foreach ($this->virtualProperties($component) as $name => $virtual) {
-            $data[$name] = $virtual->virtualValue();
-        }
+        $data = [
+            ...Utils::getPublicPropertiesDefinedOnSubclass($component),
+            ...$component->getVirtualProperties(),
+        ];
 
         foreach ($data as $key => $value) {
             $data[$key] = $this->synths->dehydrate($value, $context, $key);
@@ -347,14 +302,14 @@ class HandleComponents extends Mechanism
 
     protected function hydrateProperties($component, $data, $context)
     {
-        $virtualProperties = $this->virtualProperties($component);
-
         foreach ($data as $key => $value) {
             if (! property_exists($component, $key)) {
                 // A key with no backing declaration may be a virtual
-                // property (e.g. a #[Factory] method) — let it hydrate
-                // itself from the raw wire value...
-                if (isset($virtualProperties[$key])) $virtualProperties[$key]->hydrateVirtualValue($value, $context);
+                // property (a #[Virtual] method) — the method constructs
+                // the instance, then the raw wire value hydrates INTO it.
+                // Virtual keys always serialize after declared ones, so
+                // the method runs against fully-hydrated state...
+                if ($component->hasVirtualProperty($key)) $component->hydrateVirtualProperty($key, $value, $context);
 
                 continue;
             }
@@ -431,11 +386,10 @@ class HandleComponents extends Mechanism
             $viewOrString = View::file($viewPath . '/' . $fileName . '.blade.php');
         }
 
-        $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
-
-        foreach ($this->virtualProperties($component) as $name => $virtual) {
-            $properties[$name] = $virtual->virtualValue();
-        }
+        $properties = [
+            ...Utils::getPublicPropertiesDefinedOnSubclass($component),
+            ...$component->getVirtualProperties(),
+        ];
 
         $view = Utils::generateBladeView($viewOrString, $properties);
 
@@ -508,7 +462,7 @@ class HandleComponents extends Mechanism
 
         // Ensure that it's a public property, not on the base class first...
         if (! in_array($property, array_keys(Utils::getPublicPropertiesDefinedOnSubclass($component)))
-            && ! isset($this->virtualProperties($component)[$property])
+            && ! $component->hasVirtualProperty($property)
         ) {
             throw new PublicPropertyNotFoundException($property, $component->getName());
         }
@@ -569,13 +523,13 @@ class HandleComponents extends Mechanism
 
     protected function setComponentPropertyAwareOfTypes($component, $property, $value)
     {
-        $virtual = $this->virtualProperties($component)[$property] ?? null;
+        $isVirtual = $component->hasVirtualProperty($property);
 
         try {
             // Virtual properties have no backing declaration — the write
-            // goes to whatever is managing them instead...
-            if ($virtual) {
-                $virtual->setVirtualValue($value);
+            // lands in the component's virtual property lookup instead...
+            if ($isVirtual) {
+                $component->setVirtualProperty($property, $value);
             } else {
                 $component->$property = $value;
             }
@@ -584,8 +538,10 @@ class HandleComponents extends Mechanism
             // This is common in the case of `wire:model`ing an int to a text field...
             // If a value is being set to "null", do the same...
             if ($value === '' || $value === null) {
-                if ($virtual) {
-                    $virtual->unsetVirtualValue();
+                // An unset virtual property re-initializes: the method
+                // runs again and supplies a fresh instance...
+                if ($isVirtual) {
+                    $component->unsetVirtualProperty($property);
                 } else {
                     unset($component->$property);
                 }

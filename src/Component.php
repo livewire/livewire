@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Livewire\Features\SupportVirtualProperties\HandlesVirtualProperties;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportTransitions\HandlesTransitions;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
@@ -44,6 +45,7 @@ abstract class Component
     use HandlesSlots;
     use HandlesHtmlAttributeForwarding;
     use HandlesRenderless;
+    use HandlesVirtualProperties;
 
     protected $__id;
     protected $__name;
@@ -124,6 +126,10 @@ abstract class Component
         $value = $finish($value);
 
         if ($value === 'noneset') {
+            if ($this->hasVirtualProperty($property)) {
+                return $this->getVirtualProperty($property);
+            }
+
             throw new PropertyNotFoundException($property, $this->getName());
         }
 
@@ -133,6 +139,10 @@ abstract class Component
     function __unset($property)
     {
         trigger('__unset', $this, $property);
+
+        if ($this->hasVirtualProperty($property)) {
+            $this->unsetVirtualProperty($property);
+        }
     }
 
     function __call($method, $params)

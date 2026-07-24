@@ -1,9 +1,9 @@
 <?php
 
-namespace Livewire\Features\SupportPropertyFactories;
+namespace Livewire\Features\SupportVirtualProperties;
 
 use Illuminate\Support\Collection;
-use Livewire\Attributes\Factory;
+use Livewire\Attributes\Virtual;
 use Livewire\Livewire;
 use Livewire\Selection;
 use PHPUnit\Framework\Assert;
@@ -11,10 +11,10 @@ use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
-    function test_a_factory_method_initializes_a_property_on_mount()
+    function test_a_virtual_property_method_initializes_a_property_on_mount()
     {
         $component = Livewire::test(new class extends TestComponent {
-            #[Factory]
+            #[Virtual]
             public function selected(): Selection
             {
                 return new Selection(keys: ['bar'], mode: 'except');
@@ -28,7 +28,7 @@ class UnitTest extends \Tests\TestCase
         Assert::assertSame(['bar'], $selected->except());
     }
 
-    function test_a_factory_property_is_accessible_from_mount_and_actions()
+    function test_a_virtual_property_is_accessible_from_mount_and_actions()
     {
         Livewire::test(new class extends TestComponent {
             public $countAtMount;
@@ -38,7 +38,7 @@ class UnitTest extends \Tests\TestCase
                 $this->countAtMount = count($this->items);
             }
 
-            #[Factory]
+            #[Virtual]
             public function items(): Collection
             {
                 return collect(['a', 'b']);
@@ -54,10 +54,10 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('items', fn ($items) => $items->all() === ['a', 'b', 'c']);
     }
 
-    function test_a_factory_property_is_available_as_a_plain_variable_in_the_view()
+    function test_a_virtual_property_is_available_as_a_plain_variable_in_the_view()
     {
         Livewire::test(new class extends TestComponent {
-            #[Factory]
+            #[Virtual]
             public function selected(): Selection
             {
                 return new Selection(keys: ['bar'], mode: 'except');
@@ -71,10 +71,10 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('all');
     }
 
-    function test_a_factory_property_dehydrates_into_snapshot_data_like_a_normal_property()
+    function test_a_virtual_property_dehydrates_into_snapshot_data_like_a_normal_property()
     {
         $component = Livewire::test(new class extends TestComponent {
-            #[Factory]
+            #[Virtual]
             public function selected(): Selection
             {
                 return new Selection(keys: ['bar'], mode: 'except');
@@ -88,12 +88,12 @@ class UnitTest extends \Tests\TestCase
         Assert::assertSame('sel', $meta['s']);
     }
 
-    function test_a_factory_method_cannot_be_called_as_an_action()
+    function test_a_virtual_property_method_cannot_be_called_as_an_action()
     {
-        $this->expectException(CannotCallFactoryDirectlyException::class);
+        $this->expectException(CannotCallVirtualPropertyDirectlyException::class);
 
         Livewire::test(new class extends TestComponent {
-            #[Factory]
+            #[Virtual]
             public function selected(): Selection
             {
                 return new Selection;
@@ -101,11 +101,11 @@ class UnitTest extends \Tests\TestCase
         })->call('selected');
     }
 
-    function test_a_factory_method_must_declare_a_return_type()
+    function test_a_virtual_property_method_must_declare_a_return_type()
     {
-        $this->assertThrowsDeep(FactoryMissingReturnTypeException::class, function () {
+        $this->assertThrowsDeep(VirtualPropertyMissingReturnTypeException::class, function () {
             Livewire::test(new class extends TestComponent {
-                #[Factory]
+                #[Virtual]
                 public function selected()
                 {
                     return new Selection;
@@ -114,13 +114,13 @@ class UnitTest extends \Tests\TestCase
         });
     }
 
-    function test_a_factory_method_cannot_share_a_name_with_a_declared_property()
+    function test_a_virtual_property_method_cannot_share_a_name_with_a_declared_property()
     {
         $this->assertThrowsDeep(\LogicException::class, function () {
             Livewire::test(new class extends TestComponent {
                 public $selected = [];
 
-                #[Factory]
+                #[Virtual]
                 public function selected(): Selection
                 {
                     return new Selection;
@@ -159,7 +159,7 @@ class UnitTest extends \Tests\TestCase
 
             public $sameInstance;
 
-            #[Factory]
+            #[Virtual]
             public function selected(): Selection
             {
                 return new Selection;
@@ -180,10 +180,10 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('selected', fn ($selected) => $selected->keys() === ['a', 'b']);
     }
 
-    function test_unsetting_a_factory_property_resets_it_to_a_fresh_factory_instance()
+    function test_unsetting_a_virtual_property_resets_it_to_a_freshly_constructed_instance()
     {
         Livewire::test(new class extends TestComponent {
-            #[Factory]
+            #[Virtual]
             public function selected(): Selection
             {
                 return new Selection(keys: ['bar']);
@@ -203,7 +203,7 @@ class UnitTest extends \Tests\TestCase
     function test_synths_without_hydrate_into_fall_back_to_a_plain_hydrate()
     {
         $component = Livewire::test(new class extends TestComponent {
-            #[Factory]
+            #[Virtual]
             public function items(): Collection
             {
                 return collect(['a', 'b']);
@@ -220,13 +220,13 @@ class UnitTest extends \Tests\TestCase
         Assert::assertSame(['c'], $component->get('items')->all());
     }
 
-    function test_a_garbage_client_update_still_lands_as_the_factory_type()
+    function test_a_garbage_client_update_still_lands_as_the_declared_type()
     {
         // Updates pass through the property's synthesizer (resolved from
         // server-owned snapshot meta), so a hostile payload can never
         // change the property's type out from under the component...
         $component = Livewire::test(new class extends TestComponent {
-            #[Factory]
+            #[Virtual]
             public function selected(): Selection
             {
                 return new Selection(keys: ['bar']);
