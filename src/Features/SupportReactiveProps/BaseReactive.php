@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportReactiveProps;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
-use function Livewire\store;
 
 #[\Attribute]
 class BaseReactive extends LivewireAttribute
@@ -16,7 +15,7 @@ class BaseReactive extends LivewireAttribute
     {
         $property = $this->getName();
 
-        store($this->component)->push('reactiveProps', $property);
+        $this->storePush('reactiveProps', $property);
 
         $this->originalValueHash = crc32(json_encode($this->getValue()));
     }

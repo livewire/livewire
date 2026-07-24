@@ -6,8 +6,6 @@ use Attribute;
 use Illuminate\Support\Arr;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
-use function Livewire\store;
-
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
 class BaseOn extends LivewireAttribute
 {
@@ -16,7 +14,7 @@ class BaseOn extends LivewireAttribute
     public function boot()
     {
         foreach (Arr::wrap($this->event) as $event) {
-            store($this->component)->push(
+            $this->storePush(
                 'listenersFromAttributes',
                 $this->getName() ?? '$refresh',
                 $event,
