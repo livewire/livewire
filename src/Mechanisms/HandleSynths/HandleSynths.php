@@ -136,13 +136,11 @@ class HandleSynths extends Mechanism
 
         // If we have meta data already for this property, let's use that to get a synth...
         if ($meta) {
-            // A root update to a VIRTUAL property is applied onto a CLONE of
-            // the live, method-constructed instance — so whatever the method
-            // configured on it (closures included) survives the write, while
-            // the original stays untouched until assignment. Cloning (rather
-            // than mutating in place) is what lets the update/updating hooks
-            // still see the old value during trigger('update'), matching how
-            // declared and nested-object updates behave...
+            // A root update to a VIRTUAL property applies onto a CLONE of its
+            // method-built instance: the clone keeps whatever the method
+            // configured (closures included), while the original stays put so
+            // update/updating hooks still see the old value during
+            // trigger('update') — same semantics as declared/nested updates...
             if (! str($path)->contains('.')
                 && $context->component->hasVirtualProperty($path)
                 && is_object($target = $context->component->getVirtualProperty($path))
@@ -263,13 +261,11 @@ class HandleSynths extends Mechanism
             $synth->initialize($typeName, fn ($value) => $property->setValue($component, $value));
         }
 
-        // Virtual properties are NOT constructed here on purpose. They
-        // materialize on first access (like #[Computed]) — which is always
-        // after mount()/hydration, so their methods can read sibling
-        // property state. Dehydration accesses them via all(), so they're
-        // still constructed and serialized every request; and a lazy
-        // component's placeholder never runs an expensive method body it
-        // doesn't touch...
+        // Virtual properties are deliberately NOT constructed here. They
+        // materialize on first access (like #[Computed]) — always after
+        // mount()/hydration, so a method can read sibling state, and a lazy
+        // placeholder never runs a body it doesn't touch. Dehydration still
+        // accesses them via all(), so they're serialized every request...
     }
 
     protected function discoverInitializableProperties(string $class): array

@@ -37,8 +37,6 @@ trait InteractsWithProperties
 
         foreach ($values as $key => $value) {
             if (in_array(Utils::beforeFirstDot($key), $publicProperties)) {
-                // Root writes to virtual properties land in their lookup —
-                // deep writes mutate the instance in place either way...
                 if (! str_contains($key, '.') && $this->hasVirtualProperty($key)) {
                     $this->setVirtualProperty($key, $value);
                 } else {
@@ -64,8 +62,6 @@ trait InteractsWithProperties
         foreach ($properties as $property) {
             $property = str($property);
 
-            // Virtual properties reset by re-initializing — the method
-            // runs again and supplies a fresh instance...
             if (! $property->contains('.') && $this->hasVirtualProperty((string) $property)) {
                 $this->unsetVirtualProperty((string) $property);
 
@@ -156,8 +152,9 @@ trait InteractsWithProperties
         return array_diff_key($this->all(), array_flip($properties));
     }
 
-    // Every property the component owns — declared AND virtual. Virtual
-    // ones always come last, so they also serialize last...
+    // Virtual properties come after declared ones so they dehydrate last —
+    // hydration relies on that ordering (declared state is in place before a
+    // virtual method runs against it)...
     public function all()
     {
         return [

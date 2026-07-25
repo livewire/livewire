@@ -3,10 +3,9 @@
 namespace Livewire\Features\SupportVirtualProperties;
 
 // A virtual property is a public method marked #[Virtual] that acts as a
-// property. The method is the property's constructor: it runs fresh each
-// request, and its instance lives in a lookup here on the component —
-// there is never a backing declaration. On the wire it's indistinguishable
-// from a normal property...
+// property. The method is its constructor — it materializes on first access
+// (like #[Computed]) into a lookup on the component; there's no backing
+// declaration. On the wire it's indistinguishable from a normal property...
 trait HandlesVirtualProperties
 {
     protected $__virtualProperties = [];
@@ -36,10 +35,8 @@ trait HandlesVirtualProperties
         );
     }
 
-    // The raw method names behind virtual properties. These are filtered
-    // out of the callable-action list so a #[Virtual] method can never be
-    // invoked as an action, whatever its casing (the attribute's own
-    // call() guard only catches names that survive camelCasing)...
+    // The raw (non-camelCased) method names, for excluding them from the
+    // callable-action list...
     function getVirtualPropertyMethodNames()
     {
         return array_column(static::virtualPropertyMethods(), 'name');
@@ -62,10 +59,10 @@ trait HandlesVirtualProperties
 
         $method = static::virtualPropertyMethods()[$name];
 
-        // Writes must land as the class the method promised — the same
-        // contract a typed public property enforces on assignment. The
-        // return type is always a concrete class (enforced at discovery),
-        // so this instanceof check is total...
+        // Writes must land as the class the method declared, the same way a
+        // typed public property enforces its type on assignment. Discovery
+        // guarantees a concrete class return type, so a plain instanceof
+        // covers every case — no builtin/union gaps to handle...
         if ($value === null ? ! $method['nullable'] : ! $value instanceof $method['type']) {
             throw new \TypeError(
                 'Virtual property ['.$name.'] on component ['.static::class.'] must be an instance of ['.$method['type'].'].'
@@ -75,8 +72,7 @@ trait HandlesVirtualProperties
         $this->__virtualProperties[$name] = $value;
     }
 
-    // Unsetting re-initializes: the method runs again and the fresh
-    // instance takes the old one's place in the lookup...
+    // A virtual property has no empty state — unsetting reconstructs it...
     function unsetVirtualProperty($name)
     {
         $name = (string) str($name)->camel();
@@ -149,12 +145,10 @@ trait HandlesVirtualProperties
             throw new VirtualPropertyMissingReturnTypeException(static::class, $method->getName());
         }
 
-        // Virtual properties construct objects that don't serialize well
-        // (they carry configuration, closures, etc.) — the return type
-        // must be a concrete class/interface. This keeps the write-time
-        // type guard total: a client update is always checked with a
-        // plain instanceof, with no builtin/union/void gaps to slip
-        // through. Scalars need no construction — use a real property...
+        // Virtual properties exist to construct rich objects (carrying config,
+        // closures, etc.); scalars need no construction and should be normal
+        // properties. Requiring a concrete class also keeps the write-time
+        // type guard a total instanceof — no builtin/union/void edge cases...
         if (! $type instanceof \ReflectionNamedType || $type->isBuiltin() || ! (class_exists($type->getName()) || interface_exists($type->getName()))) {
             throw new \LogicException(
                 'Livewire: virtual property method ['.$method->getName().'()] on component ['.static::class.'] must declare a class return type. Scalars and unions aren\'t supported — use a normal property for those.'

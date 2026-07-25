@@ -298,10 +298,8 @@ class HandleComponents extends Mechanism
     protected function hydrateProperties($component, $data, $context)
     {
         foreach ($data as $key => $value) {
-            // Virtual properties already hold their freshly constructed
-            // instance — the raw wire value hydrates INTO it rather than
-            // replacing it, so everything construction configured on the
-            // instance survives the trip...
+            // Hydrate the wire value INTO the virtual property's own instance
+            // (preserving its construction) rather than replacing it...
             if ($component->hasVirtualProperty($key)) {
                 $child = $this->synths->hydrateInto($component->getVirtualProperty($key), $value, $context, $key);
 
@@ -519,8 +517,8 @@ class HandleComponents extends Mechanism
         $isVirtual = $component->hasVirtualProperty($property);
 
         try {
-            // Virtual properties have no backing declaration — the write
-            // lands in the component's virtual property lookup instead...
+            // A virtual property has no backing declaration — its value
+            // lives in the component's lookup, not on a real property...
             if ($isVirtual) {
                 $component->setVirtualProperty($property, $value);
             } else {
@@ -531,8 +529,6 @@ class HandleComponents extends Mechanism
             // This is common in the case of `wire:model`ing an int to a text field...
             // If a value is being set to "null", do the same...
             if ($value === '' || $value === null) {
-                // An unset virtual property re-initializes: the method
-                // runs again and supplies a fresh instance...
                 if ($isVirtual) {
                     $component->unsetVirtualProperty($property);
                 } else {

@@ -46,9 +46,6 @@ class SelectionSynth extends Synth {
         ], $meta];
     }
 
-    // Apply the client's raw state to an existing instance in place
-    // rather than building a fresh one — anything construction configured
-    // on it survives (this is how virtual properties round-trip)...
     function hydrateInto($target, $value, $meta)
     {
         [$keys, $mode] = static::parseWireValue($value);

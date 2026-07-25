@@ -58,8 +58,6 @@ class SupportValidation extends ComponentHook
 
         // Only persist errors that were born from properties on the component
         // and not from custom validators (Validator::make) that were run.
-        // The component's own hasProperty() is virtual-property aware, so
-        // errors on virtual properties survive to the next request too...
         $context->addMemo('errors', collect($errors)
             ->filter(function ($value, $key) {
                 return $this->component->hasProperty($key);
