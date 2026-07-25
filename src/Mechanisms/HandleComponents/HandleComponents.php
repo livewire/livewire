@@ -286,7 +286,7 @@ class HandleComponents extends Mechanism
 
     protected function dehydrateProperties($component, $context)
     {
-        $data = Utils::getPublicPropertiesDefinedOnSubclass($component);
+        $data = $component->all();
 
         foreach ($data as $key => $value) {
             $data[$key] = $this->synths->dehydrate($value, $context, $key);
@@ -298,6 +298,16 @@ class HandleComponents extends Mechanism
     protected function hydrateProperties($component, $data, $context)
     {
         foreach ($data as $key => $value) {
+            // Hydrate the wire value INTO the virtual property's own instance
+            // (preserving its construction) rather than replacing it...
+            if ($component->hasVirtualProperty($key)) {
+                $child = $this->synths->hydrateInto($component->getVirtualProperty($key), $value, $context, $key);
+
+                $component->setVirtualProperty($key, $child);
+
+                continue;
+            }
+
             if (! property_exists($component, $key)) continue;
 
             $child = $this->synths->hydrate($value, $context, $key);
@@ -372,7 +382,7 @@ class HandleComponents extends Mechanism
             $viewOrString = View::file($viewPath . '/' . $fileName . '.blade.php');
         }
 
-        $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
+        $properties = $component->all();
 
         $view = Utils::generateBladeView($viewOrString, $properties);
 
@@ -443,8 +453,8 @@ class HandleComponents extends Mechanism
 
         $finish = trigger('update', $component, $path, $value);
 
-        // Ensure that it's a public property, not on the base class first...
-        if (! in_array($property, array_keys(Utils::getPublicPropertiesDefinedOnSubclass($component)))) {
+        // Ensure that it's a public (or virtual) property, not on the base class first...
+        if (! array_key_exists($property, $component->all())) {
             throw new PublicPropertyNotFoundException($property, $component->getName());
         }
 
@@ -504,14 +514,26 @@ class HandleComponents extends Mechanism
 
     protected function setComponentPropertyAwareOfTypes($component, $property, $value)
     {
+        $isVirtual = $component->hasVirtualProperty($property);
+
         try {
-           $component->$property = $value;
+            // A virtual property has no backing declaration — its value
+            // lives in the component's lookup, not on a real property...
+            if ($isVirtual) {
+                $component->setVirtualProperty($property, $value);
+            } else {
+                $component->$property = $value;
+            }
         } catch (\TypeError $e) {
             // If an "int" is being set to empty string, unset the property (making it null).
             // This is common in the case of `wire:model`ing an int to a text field...
             // If a value is being set to "null", do the same...
             if ($value === '' || $value === null) {
-                unset($component->$property);
+                if ($isVirtual) {
+                    $component->unsetVirtualProperty($property);
+                } else {
+                    unset($component->$property);
+                }
 
                 return;
             }
@@ -571,8 +593,10 @@ class HandleComponents extends Mechanism
 
             $methods = Utils::getPublicMethodsDefinedBySubClass($root);
 
-            // Also remove "render" from the list...
-            $methods =  array_values(array_diff($methods, ['render']));
+            // Remove "render" and any #[Virtual] property methods from the
+            // list — virtual methods are property constructors, never
+            // actions, regardless of their casing...
+            $methods = array_values(array_diff($methods, ['render'], $root->getVirtualPropertyMethodNames()));
 
             // @todo: put this in a better place:
             $methods[] = '__dispatch';
