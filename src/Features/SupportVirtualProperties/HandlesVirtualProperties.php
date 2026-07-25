@@ -2,10 +2,16 @@
 
 namespace Livewire\Features\SupportVirtualProperties;
 
+use function Livewire\trigger;
+
 // A virtual property is a public method marked #[Virtual] that acts as a
 // property. The method is its constructor — it materializes on first access
 // (like #[Computed]) into a lookup on the component; there's no backing
-// declaration. On the wire it's indistinguishable from a normal property...
+// declaration. On the wire it's indistinguishable from a normal property.
+//
+// Materializing announces itself (see materializeVirtualProperty) so the
+// instance's synthesizer can do the wire-up it would have done had it built
+// the instance itself — registering a form object's attributes, say...
 trait HandlesVirtualProperties
 {
     protected $__virtualProperties = [];
@@ -16,7 +22,7 @@ trait HandlesVirtualProperties
     {
         foreach (static::virtualPropertyMethods() as $name => $method) {
             if (! array_key_exists($name, $this->__virtualProperties)) {
-                $this->__virtualProperties[$name] = $this->{$method['name']}();
+                $this->materializeVirtualProperty($name);
             }
         }
     }
@@ -47,7 +53,7 @@ trait HandlesVirtualProperties
         $name = (string) str($name)->camel();
 
         if (! array_key_exists($name, $this->__virtualProperties)) {
-            $this->__virtualProperties[$name] = $this->{static::virtualPropertyMethods()[$name]['name']}();
+            return $this->materializeVirtualProperty($name);
         }
 
         return $this->__virtualProperties[$name];
@@ -75,9 +81,21 @@ trait HandlesVirtualProperties
     // A virtual property has no empty state — unsetting reconstructs it...
     function unsetVirtualProperty($name)
     {
-        $name = (string) str($name)->camel();
+        $this->materializeVirtualProperty((string) str($name)->camel());
+    }
 
-        $this->__virtualProperties[$name] = $this->{static::virtualPropertyMethods()[$name]['name']}();
+    // The one place a virtual property comes into being. The instance is
+    // stored before it's announced so anything the synth triggers (a form
+    // object's boot(), say) can already reach it as a property...
+    protected function materializeVirtualProperty($name)
+    {
+        $previous = $this->__virtualProperties[$name] ?? null;
+
+        $this->__virtualProperties[$name] = $instance = $this->{static::virtualPropertyMethods()[$name]['name']}();
+
+        trigger('virtual-property', $this, $name, $instance, $previous);
+
+        return $instance;
     }
 
     protected static function virtualPropertyMethods()

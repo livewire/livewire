@@ -428,7 +428,12 @@ class HandleComponents extends Mechanism
         $expanded = [];
 
         foreach ($updates as $path => $value) {
-            if (is_array($value) && property_exists($component, $path) && $component->$path instanceof Form) {
+            // A #[Virtual] method can return a form too, and it has no backing
+            // declaration for property_exists() to find...
+            $isRootProperty = ! str_contains($path, '.')
+                && (property_exists($component, $path) || $component->hasVirtualProperty($path));
+
+            if (is_array($value) && $isRootProperty && $component->$path instanceof Form) {
                 foreach ($value as $key => $child) {
                     $expanded["{$path}.{$key}"] = $child;
                 }

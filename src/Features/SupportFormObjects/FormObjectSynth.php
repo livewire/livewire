@@ -30,19 +30,33 @@ class FormObjectSynth extends Synth {
     }
 
     // Uninitialized `public PostForm $form` properties spring to life.
-    // The form's boot runs after the property assignment so boot-time
-    // logic can reach the form through its component...
+    // Adoption runs after the property assignment so boot-time logic can
+    // reach the form through its component...
     function initialize($type, $assign)
+    {
+        $assign($form = new $type($this->context->component, $this->path));
+
+        $this->adopt($form);
+    }
+
+    // A form built somewhere other than this synth — a #[Virtual] method
+    // returning a Form — still needs its attributes registered on the
+    // component and its boot() run. This is initialize() minus the
+    // construction, for instances that arrive already made...
+    function adopt($target, $previous = null)
     {
         $component = $this->context->component;
 
-        $form = new $type($component, $this->path);
+        // Replacing an earlier instance (an unset or a reset): its attributes
+        // still point at the old form, so drop them before registering the
+        // new ones. Otherwise rules and query-string effects double up...
+        if ($previous !== null) $component->forgetOutsideAttributes($previous);
 
-        $callBootMethod = static::bootFormObject($component, $form, $this->path);
+        $component->mergeOutsideAttributes(
+            AttributeCollection::fromComponent($component, $target, $this->path . '.')
+        );
 
-        $assign($form);
-
-        $callBootMethod();
+        wrap($target)->boot();
     }
 
     function dehydrate($target, $dehydrateChild)
@@ -63,10 +77,10 @@ class FormObjectSynth extends Synth {
             throw new \Exception('Livewire: Invalid form object class.');
         }
 
-        // If the form object already exists on the component (e.g. during a
-        // consolidated property update where the entire form is sent as one
-        // update), reuse it. Creating a new instance would discard the booted
-        // #[Validate] attribute state that was set up during hydration.
+        // The form object usually already exists by now — initialize() built
+        // declared ones, and a #[Virtual] method built its own. Reuse it:
+        // building a second instance would discard the booted #[Validate]
+        // state and leave the first one registered but orphaned...
         $existing = data_get($this->context->component, $this->path);
 
         if ($existing instanceof Form && $existing instanceof $meta['class']) {
@@ -75,11 +89,9 @@ class FormObjectSynth extends Synth {
 
         $form = new $meta['class']($this->context->component, $this->path);
 
-        $callBootMethod = static::bootFormObject($this->context->component, $form, $this->path);
-
         $this->hydrateFormProperties($form, $data, $hydrateChild);
 
-        $callBootMethod();
+        $this->adopt($form);
 
         return $form;
     }
@@ -91,17 +103,6 @@ class FormObjectSynth extends Synth {
         } else {
             $target->$key = $value;
         }
-    }
-
-    public static function bootFormObject($component, $form, $path)
-    {
-        $component->mergeOutsideAttributes(
-            AttributeCollection::fromComponent($component, $form, $path . '.')
-        );
-
-        return function () use ($form) {
-            wrap($form)->boot();
-        };
     }
 
     protected function hydrateFormProperties($form, $data, $hydrateChild)

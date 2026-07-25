@@ -211,6 +211,10 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
             Features\SupportLegacyModels\SupportLegacyModels::class,
             Features\SupportWireables\SupportWireables::class,
+
+            // Virtual properties materialize after every other hook has run,
+            // so their methods can read whatever mount() set...
+            Features\SupportVirtualProperties\SupportVirtualProperties::class,
         ] as $feature) {
             app('livewire')->componentHook($feature);
         }

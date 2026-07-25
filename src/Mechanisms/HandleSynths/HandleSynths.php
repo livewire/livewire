@@ -130,6 +130,29 @@ class HandleSynths extends Mechanism
         });
     }
 
+    // A virtual property's instance comes from the user's method, so the synth
+    // never gets asked to build it and never runs the wire-up initialize()
+    // would have done. Offer the instance to its synth after the fact —
+    // synths opt in by defining adopt($target, $previous)...
+    public function adopt($component, $path, $instance, $previous = null)
+    {
+        if (! is_object($instance)) return;
+
+        $context = new ComponentContext($component);
+
+        // An unsupported type throws at dehydration with a better message than
+        // we could give here, so stay quiet and let it get that far...
+        try {
+            $synth = $this->resolve($instance, $context, $path);
+        } catch (\Exception) {
+            return;
+        }
+
+        if (! method_exists($synth, 'adopt')) return;
+
+        $synth->adopt($instance, $previous);
+    }
+
     public function hydrateForUpdate($raw, $path, $value, $context)
     {
         $meta = $this->getMetaForPath($raw, $path);
@@ -262,10 +285,11 @@ class HandleSynths extends Mechanism
         }
 
         // Virtual properties are deliberately NOT constructed here. They
-        // materialize on first access (like #[Computed]) — always after
-        // mount()/hydration, so a method can read sibling state, and a lazy
-        // placeholder never runs a body it doesn't touch. Dehydration still
-        // accesses them via all(), so they're serialized every request...
+        // materialize on first access (like #[Computed]) so a method can read
+        // sibling state set in mount(). SupportVirtualProperties then forces
+        // any that nothing touched, at the end of the mount/hydrate phase —
+        // late enough for that, early enough for a form object's attributes
+        // to still catch the lifecycle...
     }
 
     protected function discoverInitializableProperties(string $class): array

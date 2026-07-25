@@ -135,4 +135,59 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@server', '2,1')
         ;
     }
+
+    public function test_a_virtual_form_object_validates_and_binds_like_a_declared_one()
+    {
+        Livewire::visit(new class extends Component {
+            #[Virtual]
+            public function form(): BrowserVirtualForm
+            {
+                return new BrowserVirtualForm($this, 'form');
+            }
+
+            public function save()
+            {
+                $this->form->validate();
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input dusk="title" wire:model.live="form.title" />
+
+                    <button dusk="save" type="button" wire:click="save">Save</button>
+
+                    <span dusk="booted">{{ $form->booted ? 'booted' : 'not booted' }}</span>
+                    <span dusk="error">@error('form.title') {{ $message }} @enderror</span>
+                    <span dusk="server">{{ $form->title }}</span>
+                </div>
+                HTML;
+            }
+        })
+        // boot() ran on the method-built form...
+        ->assertSeeIn('@booted', 'booted')
+        // #[Validate] rules registered, so saving an empty form errors...
+        ->waitForLivewire()->click('@save')
+        ->assertSeeIn('@error', 'The title field is required.')
+        // wire:model binds through to the form and clears the error...
+        ->waitForLivewire()->type('@title', 'Real title')
+        ->assertSeeIn('@server', 'Real title')
+        ->waitForLivewire()->click('@save')
+        ->assertSeeNothingIn('@error')
+        ;
+    }
+}
+
+class BrowserVirtualForm extends \Livewire\Form
+{
+    #[\Livewire\Attributes\Validate('required')]
+    public $title = '';
+
+    public $booted = false;
+
+    public function boot()
+    {
+        $this->booted = true;
+    }
 }
