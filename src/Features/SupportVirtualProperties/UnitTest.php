@@ -293,32 +293,71 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('selected', fn ($selected) => $selected->keys() === ['bar']);
     }
 
-    function test_root_updates_are_hydrated_into_the_live_instance_rather_than_replacing_it()
+    function test_root_updates_are_hydrated_into_the_method_configured_instance()
     {
+        // The method seeds a total that only exists server-side. After a
+        // client update, the selection carries BOTH the client's keys and
+        // the method's total — proving the update was applied onto the
+        // method-built instance, not a fresh-from-wire one...
         Livewire::test(new class extends TestComponent {
-            public $hydratedId;
+            #[Virtual]
+            public function selected(): Selection
+            {
+                return (new Selection)->setTotal(10);
+            }
+        })
+            ->set('selected', ['a', 'b'])
+            ->assertSet('selected', fn ($s) => $s->keys() === ['a', 'b'] && $s->total() === 10);
+    }
 
-            public $sameInstance;
+    function test_update_hooks_see_the_old_value_before_a_virtual_property_is_written()
+    {
+        // The write lands on a clone, so during updating() the live instance
+        // is still the old one — matching declared/nested-object semantics...
+        Livewire::test(new class extends TestComponent {
+            public $oldDuringUpdating;
+            public $newDuringUpdated;
 
             #[Virtual]
             public function selected(): Selection
             {
-                return new Selection;
+                return new Selection(keys: ['old']);
             }
 
-            public function hydrate()
+            public function updatingSelected($value)
             {
-                $this->hydratedId = spl_object_id($this->selected);
+                $this->oldDuringUpdating = $this->selected->keys();
             }
 
             public function updatedSelected()
             {
-                $this->sameInstance = spl_object_id($this->selected) === $this->hydratedId;
+                $this->newDuringUpdated = $this->selected->keys();
             }
         })
-            ->set('selected', ['a', 'b'])
-            ->assertSetStrict('sameInstance', true)
-            ->assertSet('selected', fn ($selected) => $selected->keys() === ['a', 'b']);
+            ->set('selected', ['new'])
+            ->assertSetStrict('oldDuringUpdating', ['old'])
+            ->assertSetStrict('newDuringUpdated', ['new']);
+    }
+
+    function test_a_virtual_method_can_read_sibling_property_state()
+    {
+        // Because construction is lazy (on first access, after mount and
+        // hydration), the method can depend on other properties...
+        Livewire::test(new class extends TestComponent {
+            public $seed = 'default';
+
+            public function mount()
+            {
+                $this->seed = 'mounted';
+            }
+
+            #[Virtual]
+            public function selected(): Selection
+            {
+                return new Selection(keys: [$this->seed]);
+            }
+        })
+            ->assertSet('selected', fn ($s) => $s->keys() === ['mounted']);
     }
 
     function test_unsetting_a_virtual_property_resets_it_to_a_freshly_constructed_instance()

@@ -136,21 +136,24 @@ class HandleSynths extends Mechanism
 
         // If we have meta data already for this property, let's use that to get a synth...
         if ($meta) {
-            // A root update to a VIRTUAL property is applied onto the live,
-            // method-constructed instance instead of replacing it — so
-            // whatever the method configured on it (closures included)
-            // survives the write. This is scoped to virtual properties on
-            // purpose: declared properties keep replace semantics so their
-            // update/locked hooks still see a clean before/after instance...
+            // A root update to a VIRTUAL property is applied onto a CLONE of
+            // the live, method-constructed instance — so whatever the method
+            // configured on it (closures included) survives the write, while
+            // the original stays untouched until assignment. Cloning (rather
+            // than mutating in place) is what lets the update/updating hooks
+            // still see the old value during trigger('update'), matching how
+            // declared and nested-object updates behave...
             if (! str($path)->contains('.')
                 && $context->component->hasVirtualProperty($path)
                 && is_object($target = $context->component->getVirtualProperty($path))
                 && method_exists($synth = $this->resolve($meta['s'], $context, $path), 'hydrateInto')
                 && $synth::match($target)
             ) {
-                $synth->hydrateInto($target, $value, $meta);
+                $clone = clone $target;
 
-                return $target;
+                $synth->hydrateInto($clone, $value, $meta);
+
+                return $clone;
             }
 
             return $this->hydratePropertyUpdate([$value, $meta], $context, $path);
@@ -260,9 +263,13 @@ class HandleSynths extends Mechanism
             $synth->initialize($typeName, fn ($value) => $property->setValue($component, $value));
         }
 
-        // Virtual properties initialize right alongside declared ones —
-        // each #[Virtual] method runs and its instance fills the lookup...
-        $component->initializeVirtualProperties();
+        // Virtual properties are NOT constructed here on purpose. They
+        // materialize on first access (like #[Computed]) — which is always
+        // after mount()/hydration, so their methods can read sibling
+        // property state. Dehydration accesses them via all(), so they're
+        // still constructed and serialized every request; and a lazy
+        // component's placeholder never runs an expensive method body it
+        // doesn't touch...
     }
 
     protected function discoverInitializableProperties(string $class): array

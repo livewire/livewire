@@ -95,4 +95,44 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@server', 'all:1:4')
         ;
     }
+
+    public function test_a_virtual_property_works_through_lazy_load()
+    {
+        Livewire::visit(new #[\Livewire\Attributes\Lazy] class extends Component {
+            #[Virtual]
+            public function selection(): Selection
+            {
+                return new Selection(keys: ['2']);
+            }
+
+            public function placeholder(): string
+            {
+                return '<div id="loading">Loading...</div>';
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div id="loaded">
+                    <input type="checkbox" dusk="one" wire:model="selection" value="1" />
+                    <input type="checkbox" dusk="two" wire:model="selection" value="2" />
+
+                    <button dusk="refresh" type="button" wire:click="$refresh">Refresh</button>
+
+                    <span dusk="server">{{ implode(',', $selection->keys()) }}</span>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSee('Loading...')
+        ->waitFor('#loaded')
+        // The virtual property's constructed state survives the lazy load...
+        ->assertChecked('@two')
+        ->assertSeeIn('@server', '2')
+        // ...and updates sync back after load like a normal property...
+        ->check('@one')
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@server', '2,1')
+        ;
+    }
 }
