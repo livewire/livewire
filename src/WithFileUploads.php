@@ -2,9 +2,9 @@
 
 namespace Livewire;
 
-use Livewire\Features\SupportFileUploads\WithFileUploads as BaseWithFileUploads;
+use Livewire\Features\SupportFileUploads\HandlesFileUploads;
 
 trait WithFileUploads
 {
-   use BaseWithFileUploads;
+   use HandlesFileUploads;
 }
