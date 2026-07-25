@@ -12,18 +12,17 @@ trait HandlesAuthorization
 {
     use AuthorizesRequests;
 
-    protected ?string $method = null;
+    protected $method = null;
 
-    public function setAuthorizationMethod(string $method): void
+    public function handleAuthorization(BaseAuthorize $attribute, array $parameters)
     {
-        if (method_exists($this, $method)) {
-            $this->method = $method;
+        $this->method = $attribute->getName();
+
+        [$ability, $argument] = [$attribute->ability, $attribute->argument];
+
+        if (is_null($argument)) {
+            return $this->authorize($ability);
         }
-    }
-
-    public function resolveArgument(array $arguments, array $parameters): mixed
-    {
-        if (is_null($this->method)) return null;
 
         // Resolve method dependencies lazily, then reuse them for multi-argument authorization checks...
         $methodDependencies = null;
@@ -35,35 +34,35 @@ trait HandlesAuthorization
             );
         };
 
-        // Resolve each argument (prioritize method parameters first, then component properties)
         $resolved = [];
-        foreach ($arguments as $arg) {
-            // Action that does not require a model, for example a 'create' action...
-            if (class_exists($arg)) {
-                $resolved[] = $arg;
-
-                continue;
-            }
-
-            // Try method parameter first (prioritized per rules)
-            $methodArgument = Arr::first(
-                (new \ReflectionObject($this))->getMethod($this->method)->getParameters(),
-                fn (\ReflectionParameter $parameter): bool => $parameter->getName() === $arg,
-            );
-
-            if ($methodArgument instanceof \ReflectionParameter) {
-                $methodDependencies = $resolveMethodDependencies();
-
-                $resolved[] = $methodDependencies['named'][$arg];
-
-                continue;
-            }
-
-            // Fall back to component property
-            $resolved[] = data_get($this, $arg);
+        foreach (Arr::wrap($argument) as $arg) {
+            $resolved[] = $this->resolveArgument($arg, $resolveMethodDependencies);
         }
 
-        return $resolved;
+        return $this->authorize($ability, $resolved);
+    }
+
+    protected function resolveArgument(string $arg, \Closure $resolveMethodDependencies): mixed
+    {
+        // Action that does not require a model, for example a 'create' action...
+        if (class_exists($arg)) {
+            return $arg;
+        }
+
+        // Try method parameter first (prioritized per rules)
+        $methodArgument = Arr::first(
+            (new \ReflectionObject($this))->getMethod($this->method)->getParameters(),
+            fn (\ReflectionParameter $parameter): bool => $parameter->getName() === $arg,
+        );
+
+        if ($methodArgument instanceof \ReflectionParameter) {
+            $methodDependencies = $resolveMethodDependencies();
+
+            return $methodDependencies['named'][$arg];
+        }
+
+        // Fall back to component property
+        return data_get($this, $arg);
     }
 
     protected function parseAbilityAndArguments($ability, $arguments): array
@@ -71,9 +70,6 @@ trait HandlesAuthorization
         $ability = enum_value($ability);
 
         if (is_string($ability) && ! str_contains($ability, '\\')) {
-            // Need to reset the property in case attribute is used along with `$this->authorize()`
-            $this->method = null;
-
             return [$ability, $arguments];
         }
 
@@ -81,9 +77,6 @@ trait HandlesAuthorization
         // we need to make sure it gets the right method name
         // if its called from `$this->authorize()` inside component action
         $method = $this->method ?? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2]['function'];
-
-        // Need to reset the property in case attribute is used along with `$this->authorize()`
-        $this->method = null;
 
         return [$this->normalizeGuessedAbilityName($method), $ability];
     }
