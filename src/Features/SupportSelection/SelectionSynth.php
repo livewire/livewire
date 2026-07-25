@@ -46,6 +46,18 @@ class SelectionSynth extends Synth {
         ], $meta];
     }
 
+    function hydrateInto($target, $value, $meta)
+    {
+        [$keys, $mode] = static::parseWireValue($value);
+
+        (function ($keys, $mode) {
+            $this->keys = $keys;
+            $this->mode = $mode;
+        })->call($target, $keys, $mode);
+
+        if (isset($meta['total'])) $target->setTotal((int) $meta['total']);
+    }
+
     function hydrate($value, $meta)
     {
         // Verify class extends Selection even though checksum protects this...

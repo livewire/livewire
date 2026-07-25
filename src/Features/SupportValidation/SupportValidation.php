@@ -60,7 +60,7 @@ class SupportValidation extends ComponentHook
         // and not from custom validators (Validator::make) that were run.
         $context->addMemo('errors', collect($errors)
             ->filter(function ($value, $key) {
-                return Utils::hasProperty($this->component, $key);
+                return $this->component->hasProperty($key);
             })
             ->toArray()
         );

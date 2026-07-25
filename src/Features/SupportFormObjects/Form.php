@@ -11,6 +11,7 @@ use Illuminate\Support\Arr;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
 use Livewire\Concerns\InteractsWithProperties;
+use Livewire\Features\SupportVirtualProperties\HandlesVirtualProperties;
 
 class Form implements Arrayable
 {
@@ -20,6 +21,7 @@ class Form implements Arrayable
     }
 
     use InteractsWithProperties;
+    use HandlesVirtualProperties;
 
     function __construct(
         protected Component $component,
