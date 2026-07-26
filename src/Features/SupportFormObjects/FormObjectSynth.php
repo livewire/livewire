@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportFormObjects;
 
 use Livewire\Drawer\Utils;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+use Livewire\Features\SupportAttributes\Attribute;
 use Livewire\Features\SupportAttributes\AttributeCollection;
 
 use function Livewire\wrap;
@@ -84,6 +85,16 @@ class FormObjectSynth extends Synth {
         return $form;
     }
 
+    // A form constructed outside the synth — returned from a #[Virtual]
+    // property method — still boots exactly like one constructed by
+    // initialize() or hydrate()...
+    function adopt($form)
+    {
+        $callBootMethod = static::bootFormObject($this->context->component, $form, $this->path);
+
+        $callBootMethod();
+    }
+
     function set(&$target, $key, $value)
     {
         if ($value === null && Utils::propertyIsTyped($target, $key) && ! Utils::getProperty($target, $key)->getType()->allowsNull()) {
@@ -93,8 +104,31 @@ class FormObjectSynth extends Synth {
         }
     }
 
+    // Booting is per-instance, not per-call: the same form can be presented
+    // for booting more than once (a #[Virtual] method that memoizes its
+    // instance, then a reset()). Doing it twice would register its
+    // attributes — and so its validation rules — twice...
+    protected static ?\WeakMap $booted = null;
+
     public static function bootFormObject($component, $form, $path)
     {
+        static::$booted ??= new \WeakMap;
+
+        if (isset(static::$booted[$form])) return fn () => null;
+
+        static::$booted[$form] = true;
+
+        // A reconstructed form at this path (reset/unset of a #[Virtual]
+        // property) REPLACES its predecessor's attributes — accumulating
+        // both sets would duplicate validation rules and leave attributes
+        // bound to a discarded instance...
+        $component->forgetAttributesWhere(function ($attribute) use ($form, $path) {
+            return $attribute instanceof Attribute
+                && ($subTarget = $attribute->getSubTarget()) instanceof Form
+                && $subTarget !== $form
+                && $subTarget->getPropertyName() === $path;
+        });
+
         $component->mergeOutsideAttributes(
             AttributeCollection::fromComponent($component, $form, $path . '.')
         );

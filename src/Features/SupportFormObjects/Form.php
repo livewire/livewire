@@ -31,6 +31,13 @@ class Form implements Arrayable
     public function getComponent() { return $this->component; }
     public function getPropertyName() { return $this->propertyName; }
 
+    // A virtual property on a form adopts against the owning component,
+    // under the form's own path...
+    protected function virtualPropertyOwner()
+    {
+        return [$this->component, $this->propertyName.'.'];
+    }
+
     public function validate($rules = null, $messages = [], $attributes = [])
     {
         try {

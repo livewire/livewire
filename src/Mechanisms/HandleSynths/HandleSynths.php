@@ -130,6 +130,21 @@ class HandleSynths extends Mechanism
         });
     }
 
+    // Declared properties get initialize(); a #[Virtual] property's method
+    // is a second birth path the synth never sees. adopt() closes that gap:
+    // when a virtual value materializes, its synthesizer may finish
+    // construction the way initialize() would have (booting a form object,
+    // for example). Synths opt in by defining adopt($value) — the same
+    // protocol shape as hydrateInto()...
+    public function adopt($component, $path, $value)
+    {
+        if (Utils::isAPrimitive($value)) return;
+
+        $synth = $this->resolve($value, new ComponentContext($component), $path);
+
+        if (method_exists($synth, 'adopt')) $synth->adopt($value);
+    }
+
     public function hydrateForUpdate($raw, $path, $value, $context)
     {
         $meta = $this->getMetaForPath($raw, $path);
