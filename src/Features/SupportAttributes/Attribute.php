@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportAttributes;
 
 use Livewire\Component;
+use Livewire\Drawer\Utils;
 
 use function Livewire\store;
 
@@ -10,7 +11,11 @@ abstract class Attribute
 {
     protected Component $component;
 
-    protected $subTarget;
+    // An attribute addresses a PATH on the component ($levelName). When the
+    // path lives inside a form-typed member, $subTargetClass names that form
+    // class — a static fact. The live instance is never bound at boot time;
+    // anything that needs it resolves it on demand via getSubTarget()...
+    protected $subTargetClass;
 
     protected $subName;
 
@@ -18,11 +23,11 @@ abstract class Attribute
 
     protected $levelName;
 
-    function __boot($component, AttributeLevel $level, $name = null, $subName = null, $subTarget = null)
+    function __boot($component, AttributeLevel $level, $name = null, $subName = null, $subTargetClass = null)
     {
         $this->component = $component;
         $this->subName = $subName;
-        $this->subTarget = $subTarget;
+        $this->subTargetClass = $subTargetClass;
         $this->level = $level;
         $this->levelName = $name;
     }
@@ -32,9 +37,19 @@ abstract class Attribute
         return $this->component;
     }
 
+    function getSubTargetClass()
+    {
+        return $this->subTargetClass;
+    }
+
+    // Resolve the live sub-target instance on demand. Reading a virtual
+    // member materializes it — callers should only reach for the instance in
+    // phases where it's guaranteed to exist (updates, calls, dehydration)...
     function getSubTarget()
     {
-        return $this->subTarget;
+        if (! $this->subTargetClass || $this->levelName === null) return null;
+
+        return data_get($this->component, Utils::beforeFirstDot($this->levelName));
     }
 
     function getSubName()
@@ -58,7 +73,15 @@ abstract class Attribute
             throw new \Exception('Can\'t get the value of a non-property attribute.');
         }
 
-        return data_get($this->component->all(), $this->levelName);
+        // Never force an unmaterialized virtual property into being just to
+        // read a value — birth timing belongs to the component's lifecycle...
+        $root = Utils::beforeFirstDot($this->levelName);
+
+        if ($this->component->hasVirtualProperty($root) && ! $this->component->virtualPropertyIsMaterialized($root)) {
+            return null;
+        }
+
+        return data_get($this->component, $this->levelName);
     }
 
     function setValue($value, ?bool $nullable = false)
@@ -77,6 +100,17 @@ abstract class Attribute
             }
         }
 
+        // A write into a virtual property that hasn't materialized yet is
+        // staged and applied the moment the property is born — so the value
+        // lands identically no matter when first access happens...
+        $root = Utils::beforeFirstDot($this->levelName);
+
+        if ($this->component->hasVirtualProperty($root) && ! $this->component->virtualPropertyIsMaterialized($root)) {
+            $this->component->stageVirtualPropertyWrite($this->levelName, $value);
+
+            return;
+        }
+
         data_set($this->component, $this->levelName, $value);
     }
 
@@ -84,7 +118,7 @@ abstract class Attribute
     {
         if (! is_string($subject) && ! is_int($subject)) return;
 
-        $target = $this->subTarget ?? $this->component;
+        $target = $this->subTargetClass ?? $this->component;
 
         $name = $this->subName ?? $this->levelName;
 

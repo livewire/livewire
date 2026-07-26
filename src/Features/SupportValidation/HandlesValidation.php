@@ -116,11 +116,39 @@ trait HandlesValidation
         $rulesFromOutside = array_merge_recursive(
             ...array_map(
                 fn($i) => value($i),
-                $this->rulesFromOutside
+                [...$this->validateAttributeProvisions('rules'), ...$this->rulesFromOutside]
             )
         );
 
         return array_merge($rulesFromComponent, $rulesFromOutside);
+    }
+
+    // #[Validate] attributes are facts read on demand, not registrations:
+    // the component reads its own; a form object reads the slice of its
+    // component's attribute tree that lives under its property path...
+    protected function validateAttributeProvisions($kind)
+    {
+        $provisions = store($this)->get('validateAttributeProvisions');
+
+        if ($provisions === null) {
+            $attributes = $this->isRootComponent() ? $this->getAttributes() : $this->getComponent()->getAttributes();
+
+            $provisions = ['rules' => [], 'messages' => [], 'attributes' => []];
+
+            foreach ($attributes as $attribute) {
+                if (! $attribute instanceof BaseValidate) continue;
+
+                if (! $attribute->providesFor($this)) continue;
+
+                $provisions['rules'][] = $attribute->rules();
+                $provisions['messages'][] = $attribute->messages();
+                $provisions['attributes'][] = $attribute->validationAttributes();
+            }
+
+            store($this)->set('validateAttributeProvisions', $provisions);
+        }
+
+        return $provisions[$kind];
     }
 
     protected function getMessages()
@@ -135,7 +163,7 @@ trait HandlesValidation
         $messagesFromOutside = array_merge(
             ...array_map(
                 fn($i) => value($i),
-                $this->messagesFromOutside
+                [...$this->validateAttributeProvisions('messages'), ...$this->messagesFromOutside]
             )
         );
 
@@ -154,7 +182,7 @@ trait HandlesValidation
         $validationAttributesFromOutside = array_merge(
             ...array_map(
                 fn($i) => value($i),
-                $this->validationAttributesFromOutside
+                [...$this->validateAttributeProvisions('attributes'), ...$this->validationAttributesFromOutside]
             )
         );
 

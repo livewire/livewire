@@ -428,7 +428,7 @@ class HandleComponents extends Mechanism
         $expanded = [];
 
         foreach ($updates as $path => $value) {
-            if (is_array($value) && property_exists($component, $path) && $component->$path instanceof Form) {
+            if (is_array($value) && $this->pathIsAFormObject($component, $path)) {
                 foreach ($value as $key => $child) {
                     $expanded["{$path}.{$key}"] = $child;
                 }
@@ -438,6 +438,24 @@ class HandleComponents extends Mechanism
         }
 
         return $expanded;
+    }
+
+    // Whether a root path holds a form object — answered from the class
+    // shape (declared property or virtual return type), so virtual forms
+    // count without being forced into existence...
+    protected function pathIsAFormObject($component, $path)
+    {
+        if (property_exists($component, $path)) {
+            return $component->$path instanceof Form;
+        }
+
+        if ($component->hasVirtualProperty($path)) {
+            $type = $component::virtualPropertyTypes()[(string) str($path)->camel()] ?? null;
+
+            return $type && is_a($type, Form::class, true);
+        }
+
+        return false;
     }
 
     public function updateProperty($component, $path, $value, $context)

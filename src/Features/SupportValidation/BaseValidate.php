@@ -7,6 +7,10 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 use function Livewire\wrap;
 
+// #[Validate] is a declarative fact: the rules, messages, and validation
+// attributes it carries are derived on demand by whoever validates (the
+// component, or the form object the property lives on) — nothing is
+// registered at a lifecycle moment, so there is no window to miss...
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_ALL)]
 class BaseValidate extends LivewireAttribute
 {
@@ -19,17 +23,45 @@ class BaseValidate extends LivewireAttribute
         protected bool $translate = true
     ) {}
 
-    function boot()
+    // Whether this attribute belongs to the given validation target: the
+    // component itself, or a form object addressed by its property path...
+    function providesFor($target)
     {
-        // If this attribute is added to a "form object", we want to add the rules
-        // to the actual form object, not the base component...
-        $target = $this->subTarget ?: $this->component;
-        $name = $this->subTarget ? $this->getSubName() : $this->getName();
+        if ($target instanceof \Livewire\Component) {
+            return $this->getSubTargetClass() === null;
+        }
+
+        $path = $target->getPropertyName();
+
+        return $this->getSubTargetClass() !== null
+            && ($this->getName() === $path || str($this->getName() ?? '')->startsWith($path.'.'));
+    }
+
+    function rules()
+    {
+        return $this->provisions()['rules'];
+    }
+
+    function messages()
+    {
+        return $this->provisions()['messages'];
+    }
+
+    function validationAttributes()
+    {
+        return $this->provisions()['attributes'];
+    }
+
+    protected function provisions()
+    {
+        $name = $this->getSubTargetClass() ? $this->getSubName() : $this->getName();
 
         $rules = [];
+        $messages = [];
+        $validationAttributes = [];
 
         if (is_null($this->rule)) {
-            // Allow "Rule" to be used without a given validation rule. It's purpose is to instead
+            // Allow "Validate" to be used without a given validation rule. Its purpose is to instead
             // trigger validation on property updates...
         } elseif (is_array($this->rule) && count($this->rule) > 0 && ! is_numeric(array_keys($this->rule)[0])) {
             // Support setting rules by key-value for this and other properties:
@@ -41,10 +73,9 @@ class BaseValidate extends LivewireAttribute
 
         if ($this->attribute) {
             if (is_array($this->attribute)) {
-                $target = $this->subTarget ?? $this->component;
-                $target->addValidationAttributesFromOutside($this->attribute);
+                $validationAttributes = array_merge($validationAttributes, $this->attribute);
             } else {
-                $target->addValidationAttributesFromOutside([$name => $this->attribute]);
+                $validationAttributes[$name] = $this->attribute;
             }
         }
 
@@ -54,19 +85,18 @@ class BaseValidate extends LivewireAttribute
                     ? array_map(fn ($i) => trans($i), $this->as)
                     : $this->as;
 
-                $target->addValidationAttributesFromOutside($as);
+                $validationAttributes = array_merge($validationAttributes, $as);
             } else {
-                $target->addValidationAttributesFromOutside([$name => $this->translate ? trans($this->as) : $this->as]);
+                $validationAttributes[$name] = $this->translate ? trans($this->as) : $this->as;
             }
         }
 
         if ($this->message) {
             if (is_array($this->message)) {
-                $messages = $this->translate
+                $messages = array_merge($messages, $this->translate
                     ? array_map(fn ($i) => trans($i), $this->message)
-                    : $this->message;
-
-                $target->addMessagesFromOutside($messages);
+                    : $this->message
+                );
             } else {
                 // If a single message was provided, apply it to the first given rule.
                 // There should have only been one rule provided in this case anyways...
@@ -75,11 +105,11 @@ class BaseValidate extends LivewireAttribute
                 // In the case of "min:5" or something, we only want "min"...
                 $rule = (string) str($rule)->before(':');
 
-                $target->addMessagesFromOutside([$name.'.'.$rule => $this->translate ? trans($this->message) : $this->message]);
+                $messages[$name.'.'.$rule] = $this->translate ? trans($this->message) : $this->message;
             }
         }
 
-        $target->addRulesFromOutside($rules);
+        return ['rules' => $rules, 'messages' => $messages, 'attributes' => $validationAttributes];
     }
 
     function update($fullPath, $newValue)
@@ -88,13 +118,15 @@ class BaseValidate extends LivewireAttribute
 
         return function () use ($fullPath) {
             // If this attribute is added to a "form object", we want to run
-            // the validateOnly method on the form object, not the base component...
-            $target = $this->subTarget ?: $this->component;
+            // the validateOnly method on the form object, not the base
+            // component. The live instance resolves on demand — by update
+            // time it's guaranteed to exist...
+            $target = $this->getSubTarget() ?: $this->component;
 
             // Use the full path so that wildcard rules (e.g. 'items.*') are matched
             // when validating nested properties (e.g. 'items.0'). For form objects,
             // strip the form prefix to get the path relative to the form.
-            $name = $this->subTarget
+            $name = $this->getSubTargetClass()
                 ? $this->getSubName() . str($fullPath)->after($this->getName())
                 : $fullPath;
 
