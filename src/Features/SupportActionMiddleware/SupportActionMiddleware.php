@@ -3,16 +3,15 @@
 namespace Livewire\Features\SupportActionMiddleware;
 
 use Illuminate\Auth\Middleware\Authorize as AuthorizeMiddleware;
+use Livewire\Attributes\Authorize;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
 use Livewire\Exceptions\EventHandlerDoesNotExist;
-use Livewire\Features\SupportAuthorization\BaseAuthorize;
 use Livewire\Features\SupportEvents\SupportEvents;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
-use function Livewire\invade;
-use function Livewire\on;
-use function Livewire\store;
+use function Livewire\{ invade, on, store};
 
 class SupportActionMiddleware extends ComponentHook
 {
@@ -28,23 +27,33 @@ class SupportActionMiddleware extends ComponentHook
     // See: HandlesAttributes::setMethodAttribute()
     function boot()
     {
+        if (! app(HandleRequests::class)->isLivewireRoute()) return;
+
         $middlewareAttributes = $this->storeGet('middlewareAttributes', []);
 
+        $resolved = [];
         foreach ($middlewareAttributes as $method => $attributeArguments) {
-            foreach ($attributeArguments as $key => $middleware) {
-                if ($this->isAuthorizeMiddleware($middleware)) {
-                    unset($middlewareAttributes[$method][$key]);
+            $resolved[$method] = app('router')->resolveMiddleware($attributeArguments);
+        }
 
-                    [$ability, $argument] = $this->parseMiddleware($middleware);
+        $filtered = [];
+        foreach ($resolved as $method => $values) {
+            foreach ($values as $middleware) {
+                if (str_starts_with($middleware, AuthorizeMiddleware::class)) {
+                    [$ability, $arguments] = $this->parseMiddleware($middleware);
 
-                    $attribute = new BaseAuthorize($ability, $argument);
-
+                    $attribute = new Authorize($ability, $arguments);
+    
                     $this->component->setMethodAttribute($method, $attribute);
+
+                    continue;
                 }
+
+                $filtered[$method][] = $middleware;
             }
         }
 
-        $this->storeSet('middlewareAttributes', $middlewareAttributes);
+        $this->storeSet('middlewareAttributes', $filtered);
     }
 
     protected static function applyActionMiddleware($component, $method, $params)
@@ -54,7 +63,7 @@ class SupportActionMiddleware extends ComponentHook
         // Return early if there is no middleware attribute on called method
         if (! $actionMiddleware = store($component)->find('middlewareAttributes', $method)) return;
 
-        [$request, $resolved] = static::resolveMiddleware($actionMiddleware);
+        [$request, $resolved] = static::filterMiddleware($actionMiddleware);
 
         if (empty($resolved)) return;
 
@@ -79,7 +88,7 @@ class SupportActionMiddleware extends ComponentHook
         return $method;
     }
 
-    protected static function resolveMiddleware(array $middleware): array
+    protected static function filterMiddleware(array $middleware): array
     {
         $mechanism = invade(app(PersistentMiddleware::class));
 
@@ -87,21 +96,10 @@ class SupportActionMiddleware extends ComponentHook
 
         $excludedMiddleware = $mechanism->getApplicablePersistentMiddleware($request);
 
-        // Since PersistentMiddleware runs first, 
-        // we need to exclude any middleware that has been applied from it
-        $resolved = collect(app('router')->resolveMiddleware($middleware, $excludedMiddleware))
-            ->filter(fn ($m) => is_string($m))
-            ->values()
-            ->all();
+        // Exclude any middleware that has been applied on route level
+        $resolved = array_diff($middleware, $excludedMiddleware);
 
         return [$request, $resolved];
-    }
-
-    protected function isAuthorizeMiddleware($middleware)
-    {
-        $name = explode(':', $middleware, 2)[0];
-
-        return $name === 'can' || $name === AuthorizeMiddleware::class;
     }
 
     protected function parseMiddleware($middleware)
