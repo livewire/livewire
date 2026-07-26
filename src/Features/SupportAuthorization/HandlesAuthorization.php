@@ -12,34 +12,39 @@ trait HandlesAuthorization
 {
     use AuthorizesRequests;
 
-    protected $method = null;
+    protected $authorizeMethod = null;
 
-    public function handleAuthorization(BaseAuthorize $attribute, array $parameters)
+    public function authorizeUsing(\Closure $authorizationCallback)
     {
-        $this->method = $attribute->getName();
+        return $authorizationCallback($this->getAuthorizationCallback());
+    }
 
-        [$ability, $argument] = [$attribute->ability, $attribute->argument];
+    protected function getAuthorizationCallback(): \Closure
+    {
+        return function ($method, $ability, $argument, $parameters) {
+            $this->authorizeMethod = $method;
 
-        if (is_null($argument)) {
-            return $this->authorize($ability);
-        }
+            if (is_null($argument)) {
+                return $this->authorize($ability);
+            }
 
-        // Resolve method dependencies lazily, then reuse them for multi-argument authorization checks...
-        $methodDependencies = null;
-        $resolveMethodDependencies = function () use (&$methodDependencies, $parameters): array {
-            return $methodDependencies ??= ImplicitlyBoundMethod::resolveMethodDependencies(
-                app(),
-                [$this, $this->method],
-                $parameters,
-            );
+            // Resolve method dependencies lazily, then reuse them for multi-argument authorization checks...
+            $methodDependencies = null;
+            $resolveMethodDependencies = function () use (&$methodDependencies, $parameters): array {
+                return $methodDependencies ??= ImplicitlyBoundMethod::resolveMethodDependencies(
+                    app(),
+                    [$this, $this->authorizeMethod],
+                    $parameters,
+                );
+            };
+
+            $resolved = [];
+            foreach (Arr::wrap($argument) as $arg) {
+                $resolved[] = $this->resolveArgument($arg, $resolveMethodDependencies);
+            }
+
+            return $this->authorize($ability, $resolved);
         };
-
-        $resolved = [];
-        foreach (Arr::wrap($argument) as $arg) {
-            $resolved[] = $this->resolveArgument($arg, $resolveMethodDependencies);
-        }
-
-        return $this->authorize($ability, $resolved);
     }
 
     protected function resolveArgument(string $arg, \Closure $resolveMethodDependencies): mixed
@@ -51,7 +56,7 @@ trait HandlesAuthorization
 
         // Try method parameter first (prioritized per rules)
         $methodArgument = Arr::first(
-            (new \ReflectionObject($this))->getMethod($this->method)->getParameters(),
+            (new \ReflectionObject($this))->getMethod($this->authorizeMethod)->getParameters(),
             fn (\ReflectionParameter $parameter): bool => $parameter->getName() === $arg,
         );
 
@@ -76,7 +81,7 @@ trait HandlesAuthorization
         // Because this method override the original method,
         // we need to make sure it gets the right method name
         // if its called from `$this->authorize()` inside component action
-        $method = $this->method ?? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2]['function'];
+        $method = $this->authorizeMethod ?? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2]['function'];
 
         return [$this->normalizeGuessedAbilityName($method), $ability];
     }
