@@ -11,6 +11,13 @@ trait HandlesAttributes
         return $this->attributes ??= AttributeCollection::fromComponent($this);
     }
 
+    function setMethodAttribute($method, $attribute)
+    {
+        $attribute->__boot($this, AttributeLevel::METHOD, $method);
+
+        $this->mergeOutsideAttributes(new AttributeCollection([$attribute]));
+    }
+
     function setPropertyAttribute($property, $attribute)
     {
         $attribute->__boot($this, AttributeLevel::PROPERTY, $property);

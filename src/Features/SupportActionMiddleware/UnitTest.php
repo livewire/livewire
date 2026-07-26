@@ -362,7 +362,7 @@ class UnitTest extends TestCase
         $this->assertFalse(Session::has('should-never-be-set'));
     }
 
-    public function test_authorize_middleware_excluded_from_middleware_attribute()
+    public function test_authorize_middleware_transformed_to_authorize_attribute()
     {
         Gate::define('interact', fn () => false);
 
@@ -376,12 +376,12 @@ class UnitTest extends TestCase
                 }
             })
             ->call('goSomewhere')
-            ->assertOk();
+            ->assertForbidden();
 
-        $this->assertTrue(Session::has('should-never-be-set'));
+        $this->assertFalse(Session::has('should-never-be-set'));
     }
 
-    public function test_authorize_middleware_excluded_from_middleware_attribute_with_event_listener()
+    public function test_authorize_middleware_transformed_to_authorize_attribute_with_event_listener()
     {
         Gate::define('interact', fn () => false);
 
@@ -396,9 +396,9 @@ class UnitTest extends TestCase
                 }
             })
             ->dispatch('go-somewhere')
-            ->assertOk();
+            ->assertForbidden();
 
-        $this->assertTrue(Session::has('should-never-be-set'));
+        $this->assertFalse(Session::has('should-never-be-set'));
     }
 
     public function test_unresolved_middleware_class_throws_exception()

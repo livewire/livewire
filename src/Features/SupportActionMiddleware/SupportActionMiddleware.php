@@ -6,6 +6,7 @@ use Illuminate\Auth\Middleware\Authorize as AuthorizeMiddleware;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
 use Livewire\Exceptions\EventHandlerDoesNotExist;
+use Livewire\Features\SupportAuthorization\BaseAuthorize;
 use Livewire\Features\SupportEvents\SupportEvents;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
@@ -20,6 +21,30 @@ class SupportActionMiddleware extends ComponentHook
         on('call', function ($component, $method, $params, $context, $earlyReturn, $metadata) {
             static::applyActionMiddleware($component, $method, $params);
         });
+    }
+
+    // Following how SupportPagination and SupportQueryString set property attribute,
+    // any authorize middleware will be convert into `#[Authorize]` attribute for that method
+    // See: HandlesAttributes::setMethodAttribute()
+    function boot()
+    {
+        $middlewareAttributes = $this->storeGet('middlewareAttributes', []);
+
+        foreach ($middlewareAttributes as $method => $attributeArguments) {
+            foreach ($attributeArguments as $key => $middleware) {
+                if ($this->isAuthorizeMiddleware($middleware)) {
+                    unset($middlewareAttributes[$method][$key]);
+
+                    [$ability, $argument] = $this->parseMiddleware($middleware);
+
+                    $attribute = new BaseAuthorize($ability, $argument);
+
+                    $this->component->setMethodAttribute($method, $attribute);
+                }
+            }
+        }
+
+        $this->storeSet('middlewareAttributes', $middlewareAttributes);
     }
 
     protected static function applyActionMiddleware($component, $method, $params)
@@ -60,16 +85,37 @@ class SupportActionMiddleware extends ComponentHook
 
         $request = $mechanism->makeFakeRequest();
 
-        $applicableMiddleware = $mechanism->getApplicablePersistentMiddleware($request);
+        $excludedMiddleware = $mechanism->getApplicablePersistentMiddleware($request);
 
-        // Since PersistentMiddleware runs first, we need to exclude any middleware
-        // that has been applied from it along with authorization middleware
-        $resolved = collect(app('router')->resolveMiddleware($middleware, $applicableMiddleware))
+        // Since PersistentMiddleware runs first, 
+        // we need to exclude any middleware that has been applied from it
+        $resolved = collect(app('router')->resolveMiddleware($middleware, $excludedMiddleware))
             ->filter(fn ($m) => is_string($m))
-            ->reject(fn ($m) => str_starts_with($m, AuthorizeMiddleware::class))
             ->values()
             ->all();
 
         return [$request, $resolved];
+    }
+
+    protected function isAuthorizeMiddleware($middleware)
+    {
+        $name = explode(':', $middleware, 2)[0];
+
+        return $name === 'can' || $name === AuthorizeMiddleware::class;
+    }
+
+    protected function parseMiddleware($middleware)
+    {
+        [$name, $parameters] = array_pad(explode(':', $middleware, 2), 2, []);
+
+        if (is_string($parameters)) {
+            $parameters = explode(',', $parameters);
+        }
+
+        $ability = array_shift($parameters);
+
+        $arguments = empty($parameters) ? null : $parameters;
+
+        return [$ability, $arguments];
     }
 }
