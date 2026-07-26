@@ -7,10 +7,12 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\MessageBag;
 use function Livewire\invade;
+use function Livewire\wrap;
 use Illuminate\Support\Arr;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
 use Livewire\Concerns\InteractsWithProperties;
+use Livewire\Features\SupportAttributes\AttributeCollection;
 use Livewire\Features\SupportVirtualProperties\HandlesVirtualProperties;
 
 class Form implements Arrayable
@@ -23,6 +25,8 @@ class Form implements Arrayable
     use InteractsWithProperties;
     use HandlesVirtualProperties;
 
+    protected $booted = false;
+
     function __construct(
         protected Component $component,
         protected $propertyName
@@ -30,6 +34,35 @@ class Form implements Arrayable
 
     public function getComponent() { return $this->component; }
     public function getPropertyName() { return $this->propertyName; }
+
+    // However a form comes into existence — a declared property, a #[Virtual]
+    // method, a reset — its attributes reach the component here...
+    public function bootIfNotBooted()
+    {
+        if ($this->booted) return;
+
+        $this->booted = true;
+
+        // A form replacing another at this path takes its attributes with it;
+        // otherwise hooks keep firing against a discarded instance...
+        $this->component->forgetAttributesWhere(function ($attribute) {
+            $subTarget = $attribute->getSubTarget();
+
+            return $subTarget instanceof Form
+                && $subTarget !== $this
+                && $subTarget->getPropertyName() === $this->propertyName;
+        });
+
+        $attributes = AttributeCollection::fromComponent($this->component, $this, $this->propertyName.'.');
+
+        $this->component->mergeOutsideAttributes($attributes);
+
+        // Not left to the component's boot hook — a form built after it (a
+        // reset mid-request) still needs its rules registered...
+        $attributes->each(fn ($attribute) => $attribute->callBoot());
+
+        wrap($this)->boot();
+    }
 
     public function validate($rules = null, $messages = [], $attributes = [])
     {

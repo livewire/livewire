@@ -261,11 +261,10 @@ class HandleSynths extends Mechanism
             $synth->initialize($typeName, fn ($value) => $property->setValue($component, $value));
         }
 
-        // Virtual properties are deliberately NOT constructed here. They
-        // materialize on first access (like #[Computed]) — always after
-        // mount()/hydration, so a method can read sibling state, and a lazy
-        // placeholder never runs a body it doesn't touch. Dehydration still
-        // accesses them via all(), so they're serialized every request...
+        // Virtual methods run here too: they're constructors, not callbacks —
+        // before mount(), and early enough for what they return to take part
+        // in the lifecycle hooks that follow...
+        $component->initializeVirtualProperties();
     }
 
     protected function discoverInitializableProperties(string $class): array

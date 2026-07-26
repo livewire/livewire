@@ -4,9 +4,6 @@ namespace Livewire\Features\SupportFormObjects;
 
 use Livewire\Drawer\Utils;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
-use Livewire\Features\SupportAttributes\AttributeCollection;
-
-use function Livewire\wrap;
 
 class FormObjectSynth extends Synth {
     public static $key = 'form';
@@ -30,19 +27,15 @@ class FormObjectSynth extends Synth {
     }
 
     // Uninitialized `public PostForm $form` properties spring to life.
-    // The form's boot runs after the property assignment so boot-time
-    // logic can reach the form through its component...
+    // The form boots after the property assignment so boot-time logic can
+    // reach the form through its component...
     function initialize($type, $assign)
     {
-        $component = $this->context->component;
-
-        $form = new $type($component, $this->path);
-
-        $callBootMethod = static::bootFormObject($component, $form, $this->path);
+        $form = new $type($this->context->component, $this->path);
 
         $assign($form);
 
-        $callBootMethod();
+        $form->bootIfNotBooted();
     }
 
     function dehydrate($target, $dehydrateChild)
@@ -75,11 +68,9 @@ class FormObjectSynth extends Synth {
 
         $form = new $meta['class']($this->context->component, $this->path);
 
-        $callBootMethod = static::bootFormObject($this->context->component, $form, $this->path);
-
         $this->hydrateFormProperties($form, $data, $hydrateChild);
 
-        $callBootMethod();
+        $form->bootIfNotBooted();
 
         return $form;
     }
@@ -91,17 +82,6 @@ class FormObjectSynth extends Synth {
         } else {
             $target->$key = $value;
         }
-    }
-
-    public static function bootFormObject($component, $form, $path)
-    {
-        $component->mergeOutsideAttributes(
-            AttributeCollection::fromComponent($component, $form, $path . '.')
-        );
-
-        return function () use ($form) {
-            wrap($form)->boot();
-        };
     }
 
     protected function hydrateFormProperties($form, $data, $hydrateChild)
