@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportActionMiddleware;
 
 use Illuminate\Auth\Middleware\Authorize as AuthorizeMiddleware;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Authorize;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
@@ -94,10 +95,24 @@ class SupportActionMiddleware extends ComponentHook
 
         $request = $mechanism->makeFakeRequest();
 
-        $excludedMiddleware = $mechanism->getApplicablePersistentMiddleware($request);
+        $excludedMiddleware = $mechanism->applicableMiddleware;
 
-        // Exclude any middleware that has been applied on route level
-        $resolved = array_diff($middleware, $excludedMiddleware);
+        // Exclude any middleware that has been applied by PersistentMiddleware.
+        // If middleware not registered as persistent middleware and applied
+        // on both route level and attribute, it will runs twice as intended behavior
+        // because middleware attribute only triggered if the request hit Livewire update endpoint.
+        $resolved = collect($middleware)
+            ->reject(function ($value, $key) use ($excludedMiddleware) {
+                return collect($excludedMiddleware)->contains(function ($iValue, $iKey) use ($value) {
+                    // Some middlewares can be closures.
+                    if (! is_string($value)) return true;
+
+                    // Ensure any middleware arguments aren't included in the comparison
+                    return Str::before($value, ':') == $iValue;
+                });
+            })
+            ->values()
+            ->all();
 
         return [$request, $resolved];
     }
