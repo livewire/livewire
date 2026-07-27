@@ -19,6 +19,8 @@ class SupportActionMiddleware extends ComponentHook
     public static function provide()
     {
         on('call', function ($component, $method, $params, $context, $earlyReturn, $metadata) {
+            if (! app(HandleRequests::class)->isLivewireRoute()) return;
+
             static::applyActionMiddleware($component, $method, $params);
         });
     }
@@ -44,7 +46,7 @@ class SupportActionMiddleware extends ComponentHook
                     [$ability, $arguments] = $this->parseMiddleware($middleware);
 
                     $attribute = new Authorize($ability, $arguments);
-    
+
                     $this->component->setMethodAttribute($method, $attribute);
 
                     continue;
