@@ -388,6 +388,12 @@ function sendMessages() {
                     return
                 }
 
+                if (response.ok && responseBody.trim() === '') {
+                    confirm('The server’s response was lost, refresh?') && window.location.reload()
+
+                    return
+                }
+
                 if (response.aborted) return
 
                 showHtmlModal(responseBody)
@@ -527,6 +533,13 @@ async function sendRequest(request, handlers) {
 
     if (response.redirected) {
         handlers.redirect(response.url)
+        handlers.finish()
+
+        return
+    }
+
+    if (responseBody.trim() === '') {
+        handlers.error({ response, responseBody })
         handlers.finish()
 
         return
