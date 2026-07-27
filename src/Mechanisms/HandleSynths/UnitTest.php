@@ -4,9 +4,13 @@ namespace Livewire\Mechanisms\HandleSynths;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Livewire\Attributes\Validate;
+use Livewire\Form;
+use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\CollectionSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+use Livewire\Selection;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -131,6 +135,82 @@ class UnitTest extends \Tests\TestCase
 
         $synths->hydratePropertyUpdate($tuple, $context, 'evil');
     }
+
+    /*
+     * Typed public properties whose synthesizer knows how to initialize
+     * them (an initialize() method on the synth) spring to life
+     * automatically: `public Selection $selection` needs no mount()
+     * assignment. See initializeProperties().
+     */
+
+    public function test_a_typed_selection_property_is_automatically_initialized()
+    {
+        Livewire::test(new class extends TestComponent {
+            public Selection $selection;
+        })
+        ->assertSet('selection', fn ($selection) => $selection instanceof Selection && $selection->isEmpty())
+        ;
+    }
+
+    public function test_a_selection_subclass_is_initialized_as_the_subclass()
+    {
+        Livewire::test(new class extends TestComponent {
+            public InitializableSelectionSubclass $selection;
+        })
+        ->assertSet('selection', fn ($selection) => $selection instanceof InitializableSelectionSubclass)
+        ;
+    }
+
+    public function test_a_mount_assignment_is_never_clobbered()
+    {
+        Livewire::test(new class extends TestComponent {
+            public Selection $selection;
+
+            public function mount()
+            {
+                $this->selection = new Selection(['9']);
+            }
+        })
+        ->assertSet('selection', fn ($selection) => $selection->keys() === ['9'])
+        ;
+    }
+
+    public function test_a_typed_form_object_initializes_through_the_shared_scan()
+    {
+        Livewire::test(new class extends TestComponent {
+            public InitializableFormStub $form;
+        })
+        ->assertSetStrict('form.title', '')
+        ->set('form.title', 'Some title')
+        ->assertSetStrict('form.title', 'Some title')
+        ;
+    }
+
+    public function test_untyped_and_builtin_properties_are_untouched()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $plain;
+
+            public string $string = 'default';
+
+            public Selection $selection;
+        })
+        ->assertSetStrict('plain', null)
+        ->assertSetStrict('string', 'default')
+        ->assertSet('selection', fn ($selection) => $selection instanceof Selection)
+        ;
+    }
+}
+
+class InitializableSelectionSubclass extends Selection
+{
+    //
+}
+
+class InitializableFormStub extends Form
+{
+    #[Validate('required')]
+    public $title = '';
 }
 
 class CustomThing

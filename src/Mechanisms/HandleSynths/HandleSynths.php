@@ -10,6 +10,8 @@ use Livewire\Mechanisms\HandleComponents\Synthesizers;
 use Livewire\Drawer\Utils;
 use ReflectionUnionType;
 
+use function Livewire\on;
+
 class HandleSynths extends Mechanism
 {
     protected array $synthesizers = [
@@ -99,12 +101,59 @@ class HandleSynths extends Mechanism
         });
     }
 
+    // Hydrate raw wire data INTO an existing instance instead of building
+    // a fresh one from class + meta. Synths opt in by defining
+    // hydrateInto($target, $value, $meta), which mutates the instance in
+    // place — anything it carries that doesn't serialize (closures,
+    // configuration) survives the trip. Synths without it fall back to a
+    // plain hydrate and the instance gets replaced...
+    public function hydrateInto($instance, $valueOrTuple, $context, $path)
+    {
+        if (! Utils::isSyntheticTuple($tuple = $valueOrTuple)) return $valueOrTuple;
+
+        [$value, $meta] = $tuple;
+
+        if (isset($meta['class'])) {
+            SecurityPolicy::validateClass($meta['class']);
+        }
+
+        $synth = $this->resolve($meta['s'], $context, $path);
+
+        if (method_exists($synth, 'hydrateInto')) {
+            $synth->hydrateInto($instance, $value, $meta);
+
+            return $instance;
+        }
+
+        return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path) {
+            return $this->hydrate($child, $context, "{$path}.{$name}");
+        });
+    }
+
     public function hydrateForUpdate($raw, $path, $value, $context)
     {
         $meta = $this->getMetaForPath($raw, $path);
 
         // If we have meta data already for this property, let's use that to get a synth...
         if ($meta) {
+            // A root update to a VIRTUAL property applies onto a CLONE of its
+            // method-built instance: the clone keeps whatever the method
+            // configured (closures included), while the original stays put so
+            // update/updating hooks still see the old value during
+            // trigger('update') — same semantics as declared/nested updates...
+            if (! str($path)->contains('.')
+                && $context->component->hasVirtualProperty($path)
+                && is_object($target = $context->component->getVirtualProperty($path))
+                && method_exists($synth = $this->resolve($meta['s'], $context, $path), 'hydrateInto')
+                && $synth::match($target)
+            ) {
+                $clone = clone $target;
+
+                $synth->hydrateInto($clone, $value, $meta);
+
+                return $clone;
+            }
+
             return $this->hydratePropertyUpdate([$value, $meta], $context, $path);
         }
 
@@ -181,6 +230,69 @@ class HandleSynths extends Mechanism
         }
 
         return new ($this->typeCache[$type])($context, $path);
+    }
+
+    // Typed public properties whose synthesizer defines initialize() are
+    // filled automatically at boot. Discovery is cached per component
+    // class: one reflection pass per class per process, then each boot
+    // pays an array lookup plus an isInitialized() check per entry...
+    protected static array $initializable = [];
+
+    public function boot()
+    {
+        on('flush-state', function () {
+            static::$initializable = [];
+        });
+    }
+
+    public function initializeProperties($component)
+    {
+        $entries = static::$initializable[$component::class] ??= $this->discoverInitializableProperties($component::class);
+
+        foreach ($entries as [$property, $typeName, $synthClass]) {
+            // Only fill properties nothing else has initialized (a default,
+            // a hydration, an earlier hook)...
+            if ($property->isInitialized($component)) continue;
+
+            $synth = new $synthClass(new ComponentContext($component), $property->getName());
+
+            // The synth assigns through the callback so it controls ordering
+            // around the assignment (e.g. form objects boot afterwards)...
+            $synth->initialize($typeName, fn ($value) => $property->setValue($component, $value));
+        }
+
+        // Virtual properties are deliberately NOT constructed here. They
+        // materialize on first access (like #[Computed]) — always after
+        // mount()/hydration, so a method can read sibling state, and a lazy
+        // placeholder never runs a body it doesn't touch. Dehydration still
+        // accesses them via all(), so they're serialized every request...
+    }
+
+    protected function discoverInitializableProperties(string $class): array
+    {
+        $entries = [];
+
+        foreach ((new \ReflectionClass($class))->getProperties(\ReflectionProperty::IS_PUBLIC) as $property) {
+            if ($property->isStatic()) continue;
+
+            $type = $property->getType();
+
+            if (! $type instanceof \ReflectionNamedType) continue;
+
+            if ($type->isBuiltin()) continue;
+
+            foreach ($this->synthesizers as $synthClass) {
+                if (! $synthClass::matchByType($type->getName())) continue;
+
+                if (method_exists($synthClass, 'initialize')) {
+                    $entries[] = [$property, $type->getName(), $synthClass];
+                }
+
+                break;
+            }
+        }
+
+        return $entries;
     }
 
     protected function findByType($type, $context, $path)

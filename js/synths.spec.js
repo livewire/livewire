@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { registerSynth, flushSynths, dehydrateTree, hydrateValue, findSynthByValue } from './synths'
 import { extractData, deeplyEqual, diff, diffAndConsolidate, diffAndPatchRecursive } from './utils'
 
@@ -35,6 +35,77 @@ describe('registerSynth', () => {
     it('requires match, hydrate, and dehydrate functions', () => {
         expect(() => registerSynth('foo', {})).toThrow()
         expect(() => registerSynth('foo', { match: () => {}, hydrate: () => {} })).toThrow()
+    })
+
+    it('allows an optional merge function', () => {
+        let synth = { match: () => {}, hydrate: () => {}, dehydrate: () => {} }
+
+        expect(() => registerSynth('foo', { ...synth, merge: () => {} })).not.toThrow()
+        expect(() => registerSynth('bar', { ...synth, merge: 'nope' })).toThrow()
+    })
+})
+
+describe('synth memo', () => {
+    beforeEach(() => flushSynths())
+
+    it('remembers which synth hydrated a value so match() is never re-run for it', () => {
+        let match = vi.fn((value) => value instanceof Money)
+
+        registerSynth('money', {
+            match,
+            hydrate: (value) => new Money(value.amount, value.currency),
+            dehydrate: (value) => ({ amount: value.amount, currency: value.currency }),
+        })
+
+        let rich = hydrateValue({ amount: 100, currency: 'USD' }, { s: 'money' })
+
+        expect(findSynthByValue(rich)).toBeDefined()
+        expect(match).not.toHaveBeenCalled()
+    })
+})
+
+describe('synth merge', () => {
+    beforeEach(() => flushSynths())
+
+    it('a server-driven change merges into the existing instance, preserving identity', () => {
+        registerSynth('money', {
+            match: (value) => value instanceof Money,
+            hydrate: (value) => new Money(value.amount, value.currency),
+            dehydrate: (value) => ({ amount: value.amount, currency: value.currency }),
+            merge: (existing, incoming) => {
+                existing.amount = incoming.amount
+                existing.currency = incoming.currency
+            },
+        })
+
+        let existing = new Money(100, 'USD')
+        let target = { price: existing }
+
+        diffAndPatchRecursive(
+            { price: new Money(100, 'USD') },
+            { price: new Money(250, 'EUR') },
+            target
+        )
+
+        expect(target.price).toBe(existing)
+        expect(target.price.amount).toBe(250)
+        expect(target.price.currency).toBe('EUR')
+    })
+
+    it('without merge, a changed rich value is replaced wholesale', () => {
+        registerMoneySynth()
+
+        let existing = new Money(100, 'USD')
+        let target = { price: existing }
+
+        diffAndPatchRecursive(
+            { price: new Money(100, 'USD') },
+            { price: new Money(250, 'EUR') },
+            target
+        )
+
+        expect(target.price).not.toBe(existing)
+        expect(target.price.amount).toBe(250)
     })
 })
 
@@ -169,17 +240,30 @@ describe('diffing rich values', () => {
         expect(diffAndConsolidate(left, right)).toEqual({ price: { amount: 200, currency: 'USD' } })
     })
 
-    it('dehydrates rich values nested inside consolidated diffs', () => {
+    it('keeps rich values granular in their dehydrated wire format when an array grows', () => {
         registerDateSynth()
 
         let left = { dates: [new Date('2021-01-01T00:00:00Z')] }
         let right = { dates: [new Date('2021-01-01T00:00:00Z'), new Date('2022-02-02T00:00:00Z')] }
 
-        // The array grew, so the diff consolidates to the parent level and
-        // must contain wire-format values, not rich ones...
+        // Rich values veto consolidation to the parent level — the server
+        // resolves each one's synthesizer from meta stored at its own path,
+        // so a consolidated parent update would strip their type. The diff
+        // stays granular, in wire format...
         expect(diffAndConsolidate(left, right)).toEqual({
-            dates: ['2021-01-01T00:00:00.000Z', '2022-02-02T00:00:00.000Z'],
+            'dates.1': '2022-02-02T00:00:00.000Z',
         })
+    })
+
+    it('emits explicit removal markers when an array holding rich values shrinks', () => {
+        registerDateSynth()
+
+        let left = { dates: [new Date('2021-01-01T00:00:00Z'), new Date('2022-02-02T00:00:00Z')] }
+        let right = { dates: [new Date('2021-01-01T00:00:00Z')] }
+
+        // Removals normally ride along inside a consolidated parent update —
+        // with consolidation vetoed they surface as explicit markers instead...
+        expect(diffAndConsolidate(left, right)).toEqual({ 'dates.1': '__rm__' })
     })
 })
 
@@ -342,6 +426,8 @@ describe('values that dehydrate to undefined (no wire representation)', () => {
         let left = { things: [new PendingThing('a')] }
         let right = { things: [new PendingThing('b'), new PendingThing()] }
 
-        expect(diffAndConsolidate(left, right)).toEqual({ things: ['b'] })
+        // Granular because rich values veto consolidation: the settled value
+        // syncs at its own path while the pending one stays off the wire...
+        expect(diffAndConsolidate(left, right)).toEqual({ 'things.0': 'b' })
     })
 })

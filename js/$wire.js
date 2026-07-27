@@ -2,7 +2,7 @@ import { cancelUpload, removeUpload, uploadAction, uploadMultiple } from './feat
 import { dispatch, dispatchEl, dispatchRef, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { findComponentByEl } from '@/store'
-import { dataGet, dataSet } from '@/utils'
+import { dataGet, dataSet, isEmpty } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
 import { fireAction, setNextActionMetadata, interceptComponentAction, interceptComponentMessage, interceptComponentRequest } from '@/request'
@@ -143,6 +143,10 @@ wireProperty('__instance', (component) => component)
 
 wireProperty('$get', (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property))
 
+// Reads through the reactive proxy so expressions like wire:show="$empty('items')"
+// re-evaluate as the property changes — including client-side-only mutations...
+wireProperty('$empty', (component) => (property) => isEmpty(dataGet(component.reactive, property)))
+
 wireProperty('$el', (component) => {
     return component.el
 })
@@ -167,6 +171,15 @@ wireProperty('$js', (component) => {
             return true
         },
         get(target, property) {
+            // Actions are stored on the component, not on this proxy's target.
+            // The target is only a snapshot from when this proxy was created,
+            // so always prefer the live action registry — otherwise a $js
+            // function can't see actions registered after the proxy was made
+            // (like a script's $js functions calling each other)...
+            if (component.hasJsAction(property)) {
+                return component.getJsAction(property)
+            }
+
             // Scripts in view-based components are imported dynamically,
             // which means they run asynchronously. This causes issues with
             // things like wire:text="$js.foo()" not being available on page load.

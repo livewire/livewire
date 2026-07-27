@@ -227,6 +227,36 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(['foo'], $component->instance()->test);
     }
 
+    function test_query_string_value_for_synth_typed_property_hydrates_through_its_synthesizer()
+    {
+        $component = Livewire::withQueryParams([
+            'selected' => ['5', '7'],
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public \Livewire\Selection $selected;
+        });
+
+        $component->assertStatus(200);
+        $this->assertInstanceOf(\Livewire\Selection::class, $component->instance()->selected);
+        $this->assertTrue($component->instance()->selected->contains(5));
+        $this->assertTrue($component->instance()->selected->contains(7));
+        $this->assertSame(2, $component->instance()->selected->count());
+    }
+
+    function test_garbage_query_string_value_for_synth_typed_property_keeps_a_valid_value()
+    {
+        $component = Livewire::withQueryParams([
+            'selected' => 'garbage',
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public \Livewire\Selection $selected;
+        });
+
+        $component->assertStatus(200);
+        $this->assertInstanceOf(\Livewire\Selection::class, $component->instance()->selected);
+        $this->assertTrue($component->instance()->selected->isEmpty());
+    }
+
     function test_valid_string_value_for_string_property_still_works()
     {
         $component = Livewire::withQueryParams([

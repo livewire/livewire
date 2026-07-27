@@ -506,7 +506,7 @@ trait HandlesValidation
 
     protected function getDataForValidation($rules)
     {
-        return Utils::getPublicPropertiesDefinedOnSubclass($this);
+        return $this->all();
     }
 
     protected function unwrapDataForValidation($data)

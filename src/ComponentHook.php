@@ -108,6 +108,11 @@ abstract class ComponentHook
         return store($this->component)->get($key, $default);
     }
 
+    function storeFind($key, $iKey = null, $default = null)
+    {
+        return store($this->component)->find($key, $iKey, $default);
+    }
+
     function storeHas($key)
     {
         return store($this->component)->has($key);
