@@ -16,7 +16,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Testing\FileFactory;
 use Illuminate\Support\Arr;
 use Livewire\Attributes\Validate;
-use Tests\FileUploadComponent;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase

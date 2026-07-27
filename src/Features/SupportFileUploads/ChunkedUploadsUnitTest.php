@@ -8,7 +8,6 @@ use Illuminate\Validation\Rule;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 use Livewire\Facades\S3MultipartUploadFacade;
 use Livewire\Livewire;
-use Tests\FileUploadComponent;
 use Tests\TestComponent;
 
 class ChunkedUploadsUnitTest extends \Tests\TestCase

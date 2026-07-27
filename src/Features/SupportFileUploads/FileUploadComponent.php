@@ -1,9 +1,10 @@
 <?php
 
-namespace Tests;
+namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Validation\Rule;
 use Livewire\WithFileUploads;
+use Tests\TestComponent;
 
 class FileUploadComponent extends TestComponent
 {
