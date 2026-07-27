@@ -8,10 +8,10 @@ use Livewire\Mechanisms\HandleSynths\HandleSynths;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\MaxNestingDepthExceededException;
-use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Drawer\Utils;
 use Livewire\Features\SupportFormObjects\Form;
 use Illuminate\Support\Facades\View;
+use Livewire\Mechanisms\HandleRequests\PayloadGuards;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -182,28 +182,9 @@ class HandleComponents extends Mechanism
 
     public function update($snapshot, $updates, $calls)
     {
-        if (! is_array($snapshot)
-            || ! is_array($snapshot['data'] ?? null)
-            || ! is_array($snapshot['memo'] ?? null)
-            || ! is_string($snapshot['checksum'] ?? null)
-            || ! is_string($snapshot['memo']['id'] ?? null)
-            || ! is_string($snapshot['memo']['name'] ?? null)
-        ) {
-            if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire snapshot structure: expected [data], [memo], [checksum], [memo.id], and [memo.name].');
+        PayloadGuards::verifySnapshotStructure($snapshot);
 
-            abort(404);
-        }
-
-        foreach ($calls as $call) {
-            if (! is_array($call)
-                || ! is_string($call['method'] ?? null)
-                || ! is_array($call['params'] ?? null)
-            ) {
-                if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire call structure: each call must contain [method] (string) and [params] (array).');
-
-                abort(404);
-            }
-        }
+        PayloadGuards::verifyCallsStructure($calls);
 
         $data = $snapshot['data'];
         $memo = $snapshot['memo'];
@@ -523,11 +504,7 @@ class HandleComponents extends Mechanism
 
     protected function callMethods($root, $calls, $componentContext)
     {
-        $maxCalls = config('livewire.payload.max_calls');
-
-        if ($maxCalls !== null && count($calls) > $maxCalls) {
-            throw new TooManyCallsException(count($calls), $maxCalls);
-        }
+        PayloadGuards::verifyPayloadMaxCalls($calls);
 
         $returns = [];
 
