@@ -81,11 +81,11 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_it_allows_the_empty_response_dialog_to_be_customised_using_the_error_response_hook(): void
+    public function test_it_allows_the_empty_response_dialog_to_be_customised_using_a_request_interceptor(): void
     {
         $this->returnEmptyUpdateResponses();
 
-        Livewire::withQueryParams(['useCustomEmptyResponseHook' => true])
+        Livewire::withQueryParams(['useCustomEmptyResponseInterceptor' => true])
             ->visit(Component::class)
             ->click('@refresh')
             ->waitForDialog()
@@ -108,12 +108,12 @@ class Component extends BaseComponent
 {
     public $useCustomPageExpiredHook = false;
     public $useCustomErrorResponseHook = false;
-    public bool $useCustomEmptyResponseHook = false;
+    public bool $useCustomEmptyResponseInterceptor = false;
 
     protected $queryString = [
         'useCustomPageExpiredHook' => ['except' => false],
         'useCustomErrorResponseHook' => ['except' => false],
-        'useCustomEmptyResponseHook' => ['except' => false],
+        'useCustomEmptyResponseInterceptor' => ['except' => false],
     ];
 
     public function regenerateSession()
@@ -144,12 +144,12 @@ class Component extends BaseComponent
     </script>
     @endif
 
-    @if($useCustomEmptyResponseHook)
+    @if($useCustomEmptyResponseInterceptor)
     <script>
         document.addEventListener('livewire:init', () => {
-            Livewire.hook('request', ({ fail }) => {
-                fail(({ status, content, preventDefault }) => {
-                    if (status === 200 && content === '') {
+            Livewire.interceptRequest(({ onError }) => {
+                onError(({ response, body, preventDefault }) => {
+                    if (response.ok && body === '') {
                         confirm('Empty Response - Custom Error Response')
 
                         preventDefault()
