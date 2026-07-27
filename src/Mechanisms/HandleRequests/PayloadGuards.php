@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\HandleRequests;
 
 use Livewire\Exceptions\PayloadTooLargeException;
+use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Exceptions\TooManyComponentsException;
 
 class PayloadGuards
@@ -44,5 +45,43 @@ class PayloadGuards
         }
 
         return $requestPayload;
+    }
+
+    public static function verifyPayloadMaxCalls($calls)
+    {
+        $maxCalls = config('livewire.payload.max_calls');
+
+        if ($maxCalls !== null && count($calls) > $maxCalls) {
+            throw new TooManyCallsException(count($calls), $maxCalls);
+        }
+    }
+
+    public static function verifySnapshotStructure($snapshot)
+    {
+        if (! is_array($snapshot)
+            || ! is_array($snapshot['data'] ?? null)
+            || ! is_array($snapshot['memo'] ?? null)
+            || ! is_string($snapshot['checksum'] ?? null)
+            || ! is_string($snapshot['memo']['id'] ?? null)
+            || ! is_string($snapshot['memo']['name'] ?? null)
+        ) {
+            if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire snapshot structure: expected [data], [memo], [checksum], [memo.id], and [memo.name].');
+
+            abort(404);
+        }
+    }
+
+    public static function verifyCallsStructure($calls)
+    {
+        foreach ($calls as $call) {
+            if (! is_array($call)
+                || ! is_string($call['method'] ?? null)
+                || ! is_array($call['params'] ?? null)
+            ) {
+                if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire call structure: each call must contain [method] (string) and [params] (array).');
+
+                abort(404);
+            }
+        }
     }
 }
