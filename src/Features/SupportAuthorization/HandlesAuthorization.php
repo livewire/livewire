@@ -6,6 +6,8 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Arr;
 use Livewire\ImplicitlyBoundMethod;
 
+use function Illuminate\Support\enum_value;
+
 trait HandlesAuthorization
 {
     use AuthorizesRequests;
@@ -13,6 +15,8 @@ trait HandlesAuthorization
     public function authorizeFromAttribute($method, $ability, $argument, $parameters)
     {
         if (is_null($argument)) {
+            $ability = enum_value($ability);
+
             // Check if its regular ability name, not class name
             if (is_string($ability) && ! str_contains($ability, '\\')) {
                 return $this->authorize($ability);
