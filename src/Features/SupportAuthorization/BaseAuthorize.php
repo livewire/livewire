@@ -18,10 +18,11 @@ class BaseAuthorize extends LivewireAttribute
 
     public function call(array $parameters)
     {
-        $boundCallback = function (\Closure $authorizationCallback) use ($parameters) {
-            return $authorizationCallback($this->getName(), $this->ability, $this->argument, $parameters);
-        };
-
-        wrap($this->component)->authorizeUsing($boundCallback);
+        wrap($this->component)->authorizeFromAttribute(
+            $this->getName(),
+            $this->ability,
+            $this->argument,
+            $parameters
+        );
     }
 }

@@ -14,37 +14,30 @@ trait HandlesAuthorization
 
     protected $authorizeMethod = null;
 
-    public function authorizeUsing(\Closure $authorizationCallback)
+    public function authorizeFromAttribute($method, $ability, $argument, $parameters)
     {
-        return $authorizationCallback($this->getAuthorizationCallback());
-    }
+        $this->authorizeMethod = $method;
 
-    protected function getAuthorizationCallback(): \Closure
-    {
-        return function ($method, $ability, $argument, $parameters) {
-            $this->authorizeMethod = $method;
+        if (is_null($argument)) {
+            return $this->authorize($ability);
+        }
 
-            if (is_null($argument)) {
-                return $this->authorize($ability);
-            }
-
-            // Resolve method dependencies lazily, then reuse them for multi-argument authorization checks...
-            $methodDependencies = null;
-            $resolveMethodDependencies = function () use (&$methodDependencies, $parameters): array {
-                return $methodDependencies ??= ImplicitlyBoundMethod::resolveMethodDependencies(
-                    app(),
-                    [$this, $this->authorizeMethod],
-                    $parameters,
-                );
-            };
-
-            $resolved = [];
-            foreach (Arr::wrap($argument) as $arg) {
-                $resolved[] = $this->resolveArgument($arg, $resolveMethodDependencies);
-            }
-
-            return $this->authorize($ability, $resolved);
+        // Resolve method dependencies lazily, then reuse them for multi-argument authorization checks...
+        $methodDependencies = null;
+        $resolveMethodDependencies = function () use (&$methodDependencies, $parameters): array {
+            return $methodDependencies ??= ImplicitlyBoundMethod::resolveMethodDependencies(
+                app(),
+                [$this, $this->authorizeMethod],
+                $parameters,
+            );
         };
+
+        $resolved = [];
+        foreach (Arr::wrap($argument) as $arg) {
+            $resolved[] = $this->resolveArgument($arg, $resolveMethodDependencies);
+        }
+
+        return $this->authorize($ability, $resolved);
     }
 
     protected function resolveArgument(string $arg, \Closure $resolveMethodDependencies): mixed
