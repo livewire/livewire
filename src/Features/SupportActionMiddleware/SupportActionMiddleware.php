@@ -34,14 +34,11 @@ class SupportActionMiddleware extends ComponentHook
 
         $middlewareAttributes = $this->storeGet('middlewareAttributes', []);
 
-        $resolved = [];
-        foreach ($middlewareAttributes as $method => $attributeArguments) {
-            $resolved[$method] = app('router')->resolveMiddleware($attributeArguments);
-        }
-
         $filtered = [];
-        foreach ($resolved as $method => $values) {
-            foreach ($values as $middleware) {
+        foreach ($middlewareAttributes as $method => $attributeArguments) {
+            $resolved = app('router')->resolveMiddleware($attributeArguments);
+
+            foreach ($resolved as $middleware) {
                 if (str_starts_with($middleware, AuthorizeMiddleware::class)) {
                     [$ability, $arguments] = $this->parseMiddleware($middleware);
 
@@ -66,12 +63,12 @@ class SupportActionMiddleware extends ComponentHook
         // Return early if there is no middleware attribute on called method
         if (! $actionMiddleware = store($component)->find('middlewareAttributes', $method)) return;
 
-        [$request, $resolved] = static::filterMiddleware($actionMiddleware);
+        [$request, $middleware] = static::filterMiddleware($actionMiddleware);
 
-        if (empty($resolved)) return;
+        if (empty($middleware)) return;
 
         // Gather all action middleware from method and apply it all at once
-        Utils::applyMiddleware($request, $resolved);
+        Utils::applyMiddleware($request, $middleware);
     }
 
     protected static function resolveMethodName($component, $method, $params)
@@ -102,7 +99,7 @@ class SupportActionMiddleware extends ComponentHook
         // Exclude any middleware that has been applied by PersistentMiddleware.
         // If middleware not registered as persistent middleware and applied
         // on both route level and attribute, it will runs twice as intended behavior
-        // because middleware attribute only triggered if the request hit Livewire update endpoint.
+        // because middleware attribute only applied on subsequent request that hit Livewire update endpoint.
         $resolved = collect($middleware)
             ->reject(function ($value, $key) use ($excludedMiddleware) {
                 return collect($excludedMiddleware)->contains(function ($iValue, $iKey) use ($value) {
