@@ -4,7 +4,7 @@ import { MessageRequest, PageRequest } from './request.js'
 import { InterceptorRegistry } from './interceptor.js'
 import { trigger, triggerAsync } from '@/hooks.js'
 import { showHtmlModal } from '@/utils/modal.js'
-import { MessageBus, scopeSymbolFromMessage } from './messageBus.js'
+import { getLiveVersionFor, incrementLiveVersionFor, MessageBus, scopeSymbolFromMessage } from './messageBus.js'
 import Message from './message.js'
 import Action from './action.js'
 
@@ -278,13 +278,13 @@ function sendMessages() {
                 updates: message.updates,
                 calls: message.calls,
             }
-        })
-    })
 
-    // Assign scope symbols to messages...
-    requests.forEach(request => {
-        request.messages.forEach(message => {
+            // Assign scope symbols & versions to messages...
             message.scope = scopeSymbolFromMessage(message)
+            let isModelLiveOnly = Array.from(message.actions).every(action => action.metadata.type === 'model.live')
+            if (isModelLiveOnly) {
+                message.liveVersion = incrementLiveVersionFor(message.component, message.scope)
+            }
         })
     })
 
@@ -438,6 +438,13 @@ function sendMessages() {
                         let snapshot = JSON.parse(snapshotEncoded)
 
                         if (snapshot.memo.id === message.component.id) {
+                            // Skip message if we have a newer version of the component already in-flight...
+                            if (message.liveVersion !== undefined && message.liveVersion < getLiveVersionFor(message.component, message.scope)) {
+                                message.resolveActionPromises([], [])
+                                message.invokeOnFinish()
+                                return
+                            }
+
                             message.responsePayload = { snapshot, effects }
 
                             message.invokeOnSuccess()

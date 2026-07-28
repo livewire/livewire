@@ -1,6 +1,28 @@
 
 let componentSymbols = new WeakMap
 let componentIslandSymbols = new WeakMap
+let componentLiveVersions = new WeakMap
+
+export function incrementLiveVersionFor(component, scope) {
+    let scopes = componentLiveVersions.get(component)
+
+    if (! scopes) {
+        scopes = new Map
+        componentLiveVersions.set(component, scopes)
+    }
+
+    let version = (scopes.get(scope) || 0) + 1
+    scopes.set(scope, version)
+    return version
+}
+
+export function getLiveVersionFor(component, scope) {
+    let scopes = componentLiveVersions.get(component)
+
+    if (! scopes) return 0
+
+    return scopes.get(scope) || 0
+}
 
 export function scopeSymbolFromMessage(message) {
     let component = message.component
