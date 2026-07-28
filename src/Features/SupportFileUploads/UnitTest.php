@@ -96,6 +96,30 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(1, $tmpFiles);
     }
 
+    public function test_can_remove_a_file_from_a_collection_of_files_property()
+    {
+        $file1 = UploadedFile::fake()->image('avatar1.jpg');
+        $file2 = UploadedFile::fake()->image('avatar2.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photos', [$file1, $file2]);
+
+        $tmpFiles = $component->viewData('photos');
+
+        // Convert the photos property into a Collection of TemporaryUploadedFile instances
+        $component->set('photos', collect($tmpFiles));
+
+        $this->assertInstanceOf(\Illuminate\Support\Collection::class, $component->viewData('photos'));
+
+        $component->call('_removeUpload', 'photos', $tmpFiles[1]->getFilename())
+            ->assertDispatched('upload:removed', name: 'photos', tmpFilename: $tmpFiles[1]->getFilename());
+
+        $remainingFiles = $component->call('$refresh')->viewData('photos');
+
+        $this->assertInstanceOf(\Illuminate\Support\Collection::class, $remainingFiles);
+        $this->assertCount(1, $remainingFiles);
+    }
+
     public function test_if_the_file_property_is_an_array_the_uploaded_file_will_append_to_the_array()
     {
         Storage::fake('avatars');
