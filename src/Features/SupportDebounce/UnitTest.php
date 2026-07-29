@@ -15,7 +15,6 @@ class UnitTest extends TestCase
             public $search = '';
         });
 
-        $this->assertTrue(isset($component->effects['debounce']));
         $this->assertSame(250, $component->effects['debounce']['search']);
     }
 
@@ -47,6 +46,16 @@ class UnitTest extends TestCase
         });
 
         $this->assertSame(500, $component->effects['debounce']['search']);
+    }
+
+    function test_debounce_effect_falls_back_to_150_for_non_numeric_string()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            #[BaseDebounce('fast')]
+            public $search = '';
+        });
+
+        $this->assertSame(150, $component->effects['debounce']['search']);
     }
 
     function test_debounce_effect_only_includes_annotated_properties()
@@ -88,16 +97,11 @@ class UnitTest extends TestCase
             }
         });
 
-        $this->assertTrue(isset($component->effects['debounce']));
+        $this->assertSame(250, $component->effects['debounce']['search']);
 
         $component->call('updateSearch', 'foo');
 
-        // Subsequent dehydrations are not mounting; effect should not be present again
-        // (matches BaseUrl: if (! $context->mounting) return;)
-        $this->assertTrue(
-            ! isset($component->effects['debounce'])
-            || $component->effects['debounce'] === []
-            || ! array_key_exists('search', $component->effects['debounce'] ?? [])
-        );
+        // Mount-only dehydrate (same contract as BaseUrl): effect must not reappear
+        $this->assertArrayNotHasKey('search', $component->effects['debounce'] ?? []);
     }
 }
