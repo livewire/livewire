@@ -102,23 +102,21 @@ trait WithFileUploads
 
         $isCollection = $uploads instanceof \Illuminate\Support\Collection;
 
-        if (is_array($uploads) || $isCollection) {
-            $items = $isCollection ? $uploads->all() : $uploads;
+        $items = $isCollection ? $uploads->all() : $uploads;
 
-            if (isset($items[0]) && $items[0] instanceof TemporaryUploadedFile) {
-                $this->dispatch('upload:removed', name: $name, tmpFilename: $tmpFilename)->self();
+        if (is_array($items) && isset($items[0]) && $items[0] instanceof TemporaryUploadedFile) {
+            $this->dispatch('upload:removed', name: $name, tmpFilename: $tmpFilename)->self();
 
-                $filtered = array_values(array_filter($items, function ($upload) use ($tmpFilename) {
-                    if ($upload->getFilename() === $tmpFilename) {
-                        $upload->delete();
-                        return false;
-                    }
+            $filtered = array_values(array_filter($items, function ($upload) use ($tmpFilename) {
+                if ($upload->getFilename() === $tmpFilename) {
+                    $upload->delete();
+                    return false;
+                }
 
-                    return true;
-                }));
+                return true;
+            }));
 
-                app('livewire')->updateProperty($this, $name, $isCollection ? collect($filtered) : $filtered);
-            }
+            app('livewire')->updateProperty($this, $name, $isCollection ? collect($filtered) : $filtered);
         } elseif ($uploads instanceof TemporaryUploadedFile && $uploads->getFilename() === $tmpFilename) {
             $uploads->delete();
 
