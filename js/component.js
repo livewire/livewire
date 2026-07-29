@@ -276,6 +276,11 @@ export class Component {
             effects.scripts = this.originalEffects.scripts;
         }
 
+        // We need to re-register property debounce defaults from #[Debounce]...
+        if (this.originalEffects.debounce) {
+            effects.debounce = this.originalEffects.debounce
+        }
+
         el.setAttribute('wire:effects', JSON.stringify(effects))
 
         el.setAttribute('wire:key', this.key)
