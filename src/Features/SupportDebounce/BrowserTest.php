@@ -221,4 +221,53 @@ class BrowserTest extends BrowserTestCase
             ->waitForTextIn('@output', 'final', 1)
         ;
     }
+
+    public function test_debounce_attribute_works_on_form_object_property()
+    {
+        Livewire::visit(new class extends Component {
+            public SearchForm $form;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="text" wire:model.live="form.q" dusk="input" />
+                    <span dusk="output">{{ $form->q }}</span>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@output', '')
+            ->type('@input', 'hello')
+            ->pause(150)
+            ->assertSeeIn('@output', '')
+            ->waitForTextIn('@output', 'hello')
+        ;
+    }
+
+    public function test_blade_debounce_modifier_overrides_attribute_on_form_object()
+    {
+        Livewire::visit(new class extends Component {
+            public SearchForm $form;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="text" wire:model.live.debounce.100ms="form.q" dusk="input" />
+                    <span dusk="output">{{ $form->q }}</span>
+                </div>
+                HTML;
+            }
+        })
+            ->type('@input', 'fast')
+            ->waitForTextIn('@output', 'fast', 1)
+        ;
+    }
+}
+
+class SearchForm extends \Livewire\Form
+{
+    #[BaseDebounce(2000)]
+    public string $q = '';
 }
