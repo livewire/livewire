@@ -24,18 +24,28 @@ class BaseDebounce extends LivewireAttribute
     protected function normalizeDuration(int|string $duration): int
     {
         if (is_int($duration)) {
-            return $duration;
+            return max(150, $duration);
         }
 
-        // Support "250ms", "250", "0.25s", etc.
+        $duration = strtolower(trim($duration));
+
         if (str_ends_with($duration, 'ms')) {
-            return (int) $duration;
+            return $this->normalizeNumber(substr($duration, 0, -2));
         }
 
         if (str_ends_with($duration, 's')) {
-            return (int) ((float) $duration * 1000);
+            return $this->normalizeNumber(substr($duration, 0, -1), 1000);
         }
 
-        return (int) $duration;
+        return $this->normalizeNumber($duration);
+    }
+
+    protected function normalizeNumber(string $value, int $multiplier = 1): int
+    {
+        if ($value === '' || ! is_numeric($value)) {
+            return 150;
+        }
+
+        return max(150, (int) ((float) $value * $multiplier));
     }
 }
