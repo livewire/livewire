@@ -24,7 +24,7 @@ class BaseDebounce extends LivewireAttribute
     protected function normalizeDuration(int|string $duration): int
     {
         if (is_int($duration)) {
-            return max(150, $duration);
+            return max(0, $duration);
         }
 
         $duration = strtolower(trim($duration));
@@ -46,6 +46,6 @@ class BaseDebounce extends LivewireAttribute
             return 150;
         }
 
-        return max(150, (int) ((float) $value * $multiplier));
+        return max(0, (int) ((float) $value * $multiplier));
     }
 }
