@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportDebounce;
 
 use Livewire\Component;
+use Livewire\Features\SupportQueryString\BaseUrl;
 use Livewire\Livewire;
 use Tests\BrowserTestCase;
 
@@ -106,6 +107,118 @@ class BrowserTest extends BrowserTestCase
             ->pause(200)
             ->assertSeeIn('@slow-out', '')
             ->waitForTextIn('@slow-out', 'b', 1)
+        ;
+    }
+
+    public function test_debounce_attribute_works_on_multiple_back_forward_navigations()
+    {
+        Livewire::visit(new class extends Component {
+            #[BaseUrl(history: true)]
+            public $page = '1';
+
+            #[BaseDebounce(500)]
+            public $search = '';
+
+            public function setPage($value)
+            {
+                $this->page = $value;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <input type="text" wire:model.live="search" dusk="input" />
+                        <button dusk="page2" wire:click="setPage('2')">Page 2</button>
+                        <button dusk="page3" wire:click="setPage('3')">Page 3</button>
+                        <button dusk="page4" wire:click="setPage('4')">Page 4</button>
+                        <span dusk="output">{{ $search }}</span>
+                        <span dusk="page">{{ $page }}</span>
+                    </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->assertSeeIn('@output', '')
+            ->assertSeeIn('@page', '1')
+
+            // Initial debounce
+            ->type('@input', 'one')
+            ->pause(150)
+            ->assertSeeIn('@output', '')
+            ->waitForTextIn('@output', 'one', 1)
+
+            // Page 2 — search is still "one"; type a new value
+            ->waitForLivewire()->click('@page2')
+            ->assertSeeIn('@page', '2')
+            ->assertSeeIn('@output', 'one')
+            ->type('@input', 'two')
+            ->pause(150)
+            ->assertSeeIn('@output', 'one')
+            ->waitForTextIn('@output', 'two', 1)
+
+            // Page 3
+            ->waitForLivewire()->click('@page3')
+            ->assertSeeIn('@page', '3')
+            ->assertSeeIn('@output', 'two')
+            ->type('@input', 'three')
+            ->pause(150)
+            ->assertSeeIn('@output', 'two')
+            ->waitForTextIn('@output', 'three', 1)
+
+            // Page 4
+            ->waitForLivewire()->click('@page4')
+            ->assertSeeIn('@page', '4')
+            ->assertSeeIn('@output', 'three')
+            ->type('@input', 'four')
+            ->pause(150)
+            ->assertSeeIn('@output', 'three')
+            ->waitForTextIn('@output', 'four', 1)
+
+            // Back → page 3 (history: true required)
+            ->back()
+            ->pause(100)
+            ->assertSeeIn('@page', '3')
+            ->type('@input', 'back-three')
+            ->pause(150)
+            ->assertDontSeeIn('@output', 'back-three')
+            ->waitForTextIn('@output', 'back-three', 1)
+
+            // Back → page 2
+            ->back()
+            ->pause(100)
+            ->assertSeeIn('@page', '2')
+            ->type('@input', 'back-two')
+            ->pause(150)
+            ->assertDontSeeIn('@output', 'back-two')
+            ->waitForTextIn('@output', 'back-two', 1)
+
+            // Forward → page 3
+            ->forward()
+            ->pause(100)
+            ->assertSeeIn('@page', '3')
+            ->type('@input', 'fwd-three')
+            ->pause(150)
+            ->assertDontSeeIn('@output', 'fwd-three')
+            ->waitForTextIn('@output', 'fwd-three', 1)
+
+            // Forward → page 4
+            ->forward()
+            ->pause(100)
+            ->assertSeeIn('@page', '4')
+            ->type('@input', 'fwd-four')
+            ->pause(150)
+            ->assertDontSeeIn('@output', 'fwd-four')
+            ->waitForTextIn('@output', 'fwd-four', 1)
+
+            // Back → page 3 again
+            ->back()
+            ->pause(100)
+            ->assertSeeIn('@page', '3')
+            ->type('@input', 'final')
+            ->pause(150)
+            ->assertDontSeeIn('@output', 'final')
+            ->waitForTextIn('@output', 'final', 1)
         ;
     }
 }
