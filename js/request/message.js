@@ -202,8 +202,16 @@ export default class Message {
         })
 
         // Store returns for later resolution (after morph)
-        this.pendingReturns = this.responsePayload.effects['returns'] || []
-        this.pendingReturnsMeta = this.responsePayload.effects['returnsMeta'] || {}
+        this.pendingReturns = []
+        this.pendingReturnsMeta = {}
+
+        if (Object.prototype.hasOwnProperty.call(this.responsePayload.effects, 'returns') && this.responsePayload.effects['returns']) {
+            this.pendingReturns = this.responsePayload.effects['returns']
+        }
+
+        if (Object.prototype.hasOwnProperty.call(this.responsePayload.effects, 'returnsMeta') && this.responsePayload.effects['returnsMeta']) {
+            this.pendingReturnsMeta = this.responsePayload.effects['returnsMeta']
+        }
     }
 
     invokeOnSync() {

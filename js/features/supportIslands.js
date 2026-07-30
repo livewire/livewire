@@ -55,7 +55,11 @@ interceptMessage(({ message, onSuccess, onStream }) => {
 
     onSuccess(({ payload, onMorph }) => {
         onMorph(async () => {
-            let fragments = payload.effects.islandFragments || []
+            let fragments = []
+
+            if (Object.prototype.hasOwnProperty.call(payload.effects, 'islandFragments') && payload.effects.islandFragments) {
+                fragments = payload.effects.islandFragments
+            }
 
             fragments.forEach(async fragmentHtml => {
                 await renderIsland(message.component, fragmentHtml)
