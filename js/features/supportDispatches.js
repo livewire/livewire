@@ -10,7 +10,13 @@ on('effect', ({ component, effects }) => {
     queueMicrotask(() => {
         queueMicrotask(() => {
             queueMicrotask(() => {
-                dispatchEvents(component, effects.dispatches || [])
+                let dispatches = []
+
+                if (Object.prototype.hasOwnProperty.call(effects, 'dispatches') && effects.dispatches) {
+                    dispatches = effects.dispatches
+                }
+
+                dispatchEvents(component, dispatches)
             })
         })
     })
