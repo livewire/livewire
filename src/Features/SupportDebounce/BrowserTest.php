@@ -12,75 +12,106 @@ class BrowserTest extends BrowserTestCase
     function test_debounce_attribute_delays_live_model_network_update()
     {
         Livewire::visit(new class extends Component {
-            #[BaseDebounce(500)]
-            public $search = '';
+            #[BaseDebounce(250)]
+            public $foo = '';
 
             public function render()
             {
                 return <<<'HTML'
-                <div>
-                    <input type="text" wire:model.live="search" dusk="input" />
-                    <span dusk="output">{{ $search }}</span>
+                <div x-init="window.requests = 0">
+                    <input type="text" wire:model.live="foo" dusk="input">
+                    <span wire:text="foo" dusk="client"></span>
+                    <span dusk="server">{{ $foo }}</span>
                 </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
                 HTML;
             }
         })
             ->waitForLivewireToLoad()
-            ->assertSeeIn('@output', '')
-            ->type('@input', 'hello')
-            ->pause(150)
-            ->assertSeeIn('@output', '')
-            ->waitForTextIn('@output', 'hello', 1)
-        ;
+            ->typeSlowly('@input', 'livewire', 50)
+            ->assertSeeIn('@client', 'livewire') // wire:text should update immediately
+            ->pause(300) // Wait for requests to be handled
+            ->assertSeeIn('@server', 'livewire') // server value should be updated
+            ->assertScript('window.requests', 1); 
     }
 
     function test_blade_debounce_modifier_overrides_attribute()
     {
         Livewire::visit(new class extends Component {
-            #[BaseDebounce(2000)]
-            public $search = '';
+            #[BaseDebounce(1000)]
+            public $foo = '';
 
             public function render()
             {
                 return <<<'HTML'
-                <div>
-                    <input type="text" wire:model.live.debounce.100ms="search" dusk="input" />
-                    <span dusk="output">{{ $search }}</span>
+                <div x-init="window.requests = 0">
+                    <input type="text" wire:model.live.debounce.250ms="foo" dusk="input">
+                    <span wire:text="foo" dusk="client"></span>
+                    <span dusk="server">{{ $foo }}</span>
                 </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
                 HTML;
             }
         })
             ->waitForLivewireToLoad()
-            ->type('@input', 'fast')
-            // Modifier 100ms must win over attribute 2000ms
-            ->waitForTextIn('@output', 'fast', 1)
-        ;
+            ->typeSlowly('@input', 'livewire', 50)
+            ->assertSeeIn('@client', 'livewire') // wire:text should update immediately
+            ->pause(300) // Wait for requests to be handled
+            ->assertSeeIn('@server', 'livewire') // server value should be updated
+            ->assertScript('window.requests', 1); 
     }
 
     function test_debounce_attribute_does_not_force_live_on_deferred_model()
     {
         Livewire::visit(new class extends Component {
-            #[BaseDebounce]
-            public $search = '';
+            #[BaseDebounce(250)]
+            public $foo = '';
 
             public function render()
             {
                 return <<<'HTML'
-                <div>
-                    <input type="text" wire:model="search" dusk="input" />
-                    <span dusk="output">{{ $search }}</span>
-                    <button type="button" wire:click="$refresh" dusk="refresh">Refresh</button>
+                <div x-init="window.requests = 0">
+                    <input type="text" wire:model="foo" dusk="input">
+                    <span wire:text="foo" dusk="client"></span>
+                    <span dusk="server">{{ $foo }}</span>
                 </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
                 HTML;
             }
         })
             ->waitForLivewireToLoad()
-            ->type('@input', 'deferred')
-            ->pause(200)
-            ->assertSeeIn('@output', '')
-            ->waitForLivewire()->click('@refresh')
-            ->assertSeeIn('@output', 'deferred')
-        ;
+            ->typeSlowly('@input', 'livewire', 50)
+            ->assertSeeIn('@client', 'livewire') // wire:text should update immediately
+            ->pause(300) // Wait for requests to be handled
+            ->assertSeeIn('@server', '') // server value should not updated
+            ->assertScript('window.requests', 0); 
     }
 
     function test_only_annotated_property_uses_attribute_debounce()
@@ -104,13 +135,13 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->type('@fast', 'a')
-            ->waitForTextIn('@fast-out', 'a', 1)
+            ->typeSlowly('@fast', 'livewire', 50)
+            ->pause(300)
+            ->assertSeeIn('@fast-out', 'livewire')
             ->assertSeeIn('@slow-out', '')
-            ->type('@slow', 'b')
-            ->pause(200)
+            ->typeSlowly('@slow', 'livewire', 50)
             ->assertSeeIn('@slow-out', '')
-            ->waitForTextIn('@slow-out', 'b', 1)
+            ->waitForTextIn('@slow-out', 'livewire', 1)
         ;
     }
 
@@ -242,11 +273,10 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
+            ->typeSlowly('@input', 'livewire', 50)
             ->assertSeeIn('@output', '')
-            ->type('@input', 'hello')
-            ->pause(150)
-            ->assertSeeIn('@output', '')
-            ->waitForTextIn('@output', 'hello')
+            ->pause(300)
+            ->waitForTextIn('@output', 'livewire')
         ;
     }
 
@@ -266,8 +296,9 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->type('@input', 'fast')
-            ->waitForTextIn('@output', 'fast', 1)
+            ->typeSlowly('@input', 'livewire', 50)
+            ->pause(300)
+            ->assertSeeIn('@output', 'livewire')
         ;
     }
 
@@ -289,11 +320,11 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->type('@input', 'hello')
-            ->pause(50)
+            ->typeSlowly('@input', 'livewire', 50)
+            ->pause(300)
             ->assertSeeIn('@output', '')
             ->waitForLivewire()->click('@blur-target')
-            ->assertSeeIn('@output', 'hello')
+            ->assertSeeIn('@output', 'livewire')
         ;
     }
 
@@ -315,11 +346,11 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->type('@input', 'hello')
-            ->pause(50)
+            ->typeSlowly('@input', 'livewire', 50)
+            ->pause(300)
             ->assertSeeIn('@output', '')
             ->waitForLivewire()->click('@blur-target')
-            ->assertSeeIn('@output', 'hello')
+            ->assertSeeIn('@output', 'livewire')
         ;
     }
 
@@ -341,16 +372,16 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->type('@input', 'hello')
-            ->pause(50)
+            ->typeSlowly('@input', 'livewire', 50)
+            ->pause(300)
             ->assertSeeIn('@output', '')
             // Blur alone must not commit (enter is the network trigger)
             ->click('@blur-target')
-            ->pause(200)
+            ->pause(300)
             ->assertSeeIn('@output', '')
             ->click('@input')
             ->waitForLivewire()->keys('@input', '{enter}')
-            ->assertSeeIn('@output', 'hello')
+            ->assertSeeIn('@output', 'livewire')
         ;
     }
 
@@ -373,11 +404,11 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->type('@input', 'hello')
-            ->pause(50)
+            ->typeSlowly('@input', 'livewire', 50)
+            ->pause(300)
             ->assertSeeIn('@output', '')
             ->waitForLivewire()->click('@blur-target')
-            ->assertSeeIn('@output', 'hello')
+            ->assertSeeIn('@output', 'livewire')
         ;
     }
 
@@ -398,11 +429,43 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->type('@input', 'fast')
-            ->pause(150)
+            ->typeSlowly('@input', 'livewire', 50)
             ->assertSeeIn('@output', '')
-            ->waitForTextIn('@output', 'fast', 1)
+            ->waitForTextIn('@output', 'livewire', 1)
         ;
+    }
+
+    public function test_debounces_requests_with_zero_duration()
+    {
+        Livewire::visit(new class extends Component {
+            #[BaseDebounce(0)]
+            public $foo;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div x-init="window.requests = 0">
+                    <input type="text" wire:model.live="foo" dusk="input">
+                    <span wire:text="foo" dusk="text"></span>
+                </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->typeSlowly('@input', 'ab', 50)
+            ->assertSeeIn('@text', 'ab') // wire:text should update immediately
+            ->pause(300) // Wait for requests to be handled
+            ->assertScript('window.requests', 2); // 0ms must not collapse like the default 150ms
     }
 
     public function test_debounce_modifier_on_blur_live_uses_explicit_duration_not_attribute()
@@ -425,13 +488,13 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->type('@input', 'hello')
-            ->pause(50)
+            ->typeSlowly('@input', 'livewire', 50)
             ->assertSeeIn('@output', '')
             ->click('@blur-target')
-            ->pause(50)
-            ->assertSeeIn('@output', '')              // still inside 100ms debounce
-            ->waitForTextIn('@output', 'hello', 1)    // not waiting for attribute 2000ms
+            ->pause(50)    // still debounced
+            ->assertSeeIn('@output', '')
+            ->pause(300)    // already pass debounce duration
+            ->assertSeeIn('@output', 'livewire')
         ;
     }
 
@@ -452,11 +515,9 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
+            ->typeSlowly('@input', 'livewire', 50)
             ->assertSeeIn('@output', '')
-            ->type('@input', 'nested')
-            ->pause(150)
-            ->assertSeeIn('@output', '')
-            ->waitForTextIn('@output', 'nested', 1)
+            ->waitForTextIn('@output', 'livewire', 1)
         ;
     }
 
@@ -489,9 +550,7 @@ class BrowserTest extends BrowserTestCase
             },
         ])
             ->waitForLivewireToLoad()
-            ->assertSeeIn('@output', '')
-            ->type('@input', 'from-child')
-            ->pause(150)
+            ->typeSlowly('@input', 'from-child', 50)
             ->assertSeeIn('@output', '')
             ->waitForTextIn('@output', 'from-child', 1)
         ;
