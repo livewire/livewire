@@ -148,6 +148,42 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.requests', 1); // Only one request was sent
     }
 
+    public function test_debounce_attribute_zero_duration_is_ignored()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div x-init="window.requests = 0">
+                    <input type="text" wire:model.live.debounce.0ms="foo" dusk="input">
+                    <span wire:text="foo" dusk="text"></span>
+                </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->typeSlowly('@input', 'livewire', 30)
+            ->assertSeeIn('@text', 'livewire') // wire:text should update immediately
+            ->pause(300) // Wait for the request to be handled
+
+            // Originally, '0' will be used as debounce duration so this will fails
+            // When `parseModifierDuration()` returns integer 0, this will passes
+            // because its will fallback to 150ms debounce duration, not 0
+            ->assertScript('window.requests', 1);
+    }
+
     public function test_throttles_requests_with_custom_duration()
     {
         Livewire::visit(new class extends Component {
