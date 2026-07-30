@@ -1,9 +1,9 @@
-name: Test Main
+name: Test 4.x
 
 on:
   push:
     branches:
-      - main
+      - 4.x
     paths-ignore:
       - "docs/**"
       - "README.md"
