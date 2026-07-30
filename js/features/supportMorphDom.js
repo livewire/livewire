@@ -2,7 +2,12 @@ import { morph } from '@/morph'
 import { on } from '@/hooks'
 
 on('effect', ({ component, effects }) => {
-    let html = effects.html
+    let html
+
+    if (Object.prototype.hasOwnProperty.call(effects, 'html')) {
+        html = effects.html
+    }
+
     if (! html) return
 
     // Wrapping this in a double queueMicrotask. The first one puts it after all

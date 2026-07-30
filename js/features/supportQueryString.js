@@ -4,7 +4,11 @@ import Alpine from 'alpinejs'
 import { track } from '@/plugins/history'
 
 on('effect', ({ component, effects, cleanup }) => {
-    let queryString = effects['url']
+    let queryString
+
+    if (Object.prototype.hasOwnProperty.call(effects, 'url')) {
+        queryString = effects['url']
+    }
 
     if (! queryString) return
 

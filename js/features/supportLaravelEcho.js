@@ -8,7 +8,11 @@ on('request', ({ options }) => {
 })
 
 on('effect', ({ component, effects }) => {
-    let listeners = effects.listeners || []
+    let listeners = []
+
+    if (Object.prototype.hasOwnProperty.call(effects, 'listeners') && effects.listeners) {
+        listeners = effects.listeners
+    }
 
     listeners.forEach(event => {
         if (event.startsWith('echo')) {

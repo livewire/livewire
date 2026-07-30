@@ -7,7 +7,11 @@ import { on } from '@/hooks'
 
 on('effect', ({ component, effects }) => {
     queueMicrotask(() => {
-        let files = effects.hotReload
+        let files
+
+        if (Object.prototype.hasOwnProperty.call(effects, 'hotReload')) {
+            files = effects.hotReload
+        }
 
         if (! files) return
 
