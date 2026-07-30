@@ -148,7 +148,7 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.requests', 1); // Only one request was sent
     }
 
-    public function test_debounce_requests_with_zero_duration_modifier_is_ignored()
+    public function test_debounce_requests_with_zero_duration_modifier_is_honored()
     {
         Livewire::visit(new class extends Component {
             public $foo;
@@ -174,14 +174,10 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->typeSlowly('@input', 'livewire', 30)
-            ->assertSeeIn('@text', 'livewire') // wire:text should update immediately
+            ->typeSlowly('@input', 'ab', 50)
+            ->assertSeeIn('@text', 'ab') // wire:text should update immediately
             ->pause(300) // Wait for the request to be handled
-
-            // Originally, '0' will be used as debounce duration so this will fails
-            // When `parseModifierDuration()` returns integer 0, this will passes
-            // because its will fallback to 150ms debounce duration, not 0
-            ->assertScript('window.requests', 1);
+            ->assertScript('window.requests', 2); // Should be two requests sent
     }
 
     public function test_throttles_requests_with_custom_duration()
