@@ -4,7 +4,11 @@ import { getModuleUrl } from '@/utils'
 let pendingComponentAssets = new WeakMap()
 
 on('effect', ({ component, effects }) => {
-    let scriptModuleHash = effects.scriptModule
+    let scriptModuleHash
+
+    if (Object.hasOwn(effects, 'scriptModule')) {
+        scriptModuleHash = effects.scriptModule
+    }
 
     if (scriptModuleHash) {
         let encodedName = component.name.replace(/\./g, '--').replace(/::/g, '---').replace(/:/g, '----')

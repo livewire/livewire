@@ -55,7 +55,11 @@ export async function morph(component, el, html) {
         }
     })
 
-    let transitionOptions = component.effects.transition || {}
+    let transitionOptions = {}
+
+    if (Object.hasOwn(component.effects, 'transition') && component.effects.transition) {
+        transitionOptions = component.effects.transition
+    }
 
     await transitionDomMutation(el, to, () => {
         Alpine.morph(el, to, getMorphConfig(component))
@@ -90,7 +94,11 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
 
     trigger('island.morph', { startNode, endNode, component })
 
-    let transitionOptions = component.effects.transition || {}
+    let transitionOptions = {}
+
+    if (Object.hasOwn(component.effects, 'transition') && component.effects.transition) {
+        transitionOptions = component.effects.transition
+    }
 
     // Check if the island's own content has [wire:transition] elements.
     // Without this, the parent element (which contains everything) would be

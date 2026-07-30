@@ -6,7 +6,11 @@ import { morphFragment } from '@/morph'
 interceptMessage(({ message, onSuccess, onStream }) => {
     onSuccess(({ payload, onMorph }) => {
         onMorph(async () => {
-            let fragments = payload.effects.slotFragments || []
+            let fragments = []
+
+            if (Object.hasOwn(payload.effects, 'slotFragments') && payload.effects.slotFragments) {
+                fragments = payload.effects.slotFragments
+            }
 
             fragments.forEach(async fragmentHtml => {
                 await renderSlot(message.component, fragmentHtml)

@@ -2,7 +2,7 @@ import { on } from "@/hooks"
 import { shouldRedirectUsingNavigateOr } from "./supportNavigate"
 
 on('effect', ({ effects, request }) => {
-    if (! effects['redirect']) return
+    if (! Object.hasOwn(effects, 'redirect') || ! effects['redirect']) return
 
     let preventDefault = false
 

@@ -1,7 +1,13 @@
 import { on as hook } from '@/hooks'
 
 hook('effect', ({ component, effects }) => {
-    registerListeners(component, effects.listeners || [])
+    let listeners = []
+
+    if (Object.hasOwn(effects, 'listeners') && effects.listeners) {
+        listeners = effects.listeners
+    }
+
+    registerListeners(component, listeners)
 })
 
 function registerListeners(component, listeners) {

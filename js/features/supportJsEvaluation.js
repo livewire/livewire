@@ -11,8 +11,16 @@ Alpine.magic('js', el => {
 })
 
 on('effect', ({ component, effects }) => {
-    let js = effects.js
-    let xjs = effects.xjs
+    let js
+    let xjs
+
+    if (Object.hasOwn(effects, 'js')) {
+        js = effects.js
+    }
+
+    if (Object.hasOwn(effects, 'xjs')) {
+        xjs = effects.xjs
+    }
 
     if (js) {
         Object.entries(js).forEach(([method, body]) => {

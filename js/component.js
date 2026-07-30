@@ -262,18 +262,20 @@ export class Component {
 
         el.setAttribute('wire:snapshot', this.snapshotEncoded)
 
+        let effects = {}
+
         // We need to re-register any event listeners that were originally registered...
-        let effects = this.originalEffects.listeners
-            ? { listeners: this.originalEffects.listeners }
-            : {}
+        if (Object.hasOwn(this.originalEffects, 'listeners') && this.originalEffects.listeners) {
+            effects.listeners = this.originalEffects.listeners
+        }
 
         // We need to re-register any url/query-string bindings...
-        if (this.originalEffects.url) {
+        if (Object.hasOwn(this.originalEffects, 'url') && this.originalEffects.url) {
             effects.url = this.originalEffects.url
         }
 
         // We need to re-register any scripts that were originally registered...
-        if (this.originalEffects.scripts) {
+        if (Object.hasOwn(this.originalEffects, 'scripts') && this.originalEffects.scripts) {
             effects.scripts = this.originalEffects.scripts;
         }
 

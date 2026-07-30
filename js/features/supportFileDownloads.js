@@ -2,7 +2,11 @@ import { on } from '@/hooks'
 
 on('commit', ({ succeed }) => {
     succeed(({ effects }) => {
-        let download = effects.download
+        let download
+
+        if (Object.hasOwn(effects, 'download')) {
+            download = effects.download
+        }
 
         if (! download) return
 
