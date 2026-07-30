@@ -116,6 +116,38 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.requests', 1); // Only one request was sent
     }
 
+    public function test_debounce_requests_with_zero_duration_modifier_is_honored()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div x-init="window.requests = 0">
+                    <input type="text" wire:model.live.debounce.0ms="foo" dusk="input">
+                    <span wire:text="foo" dusk="text"></span>
+                </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->typeSlowly('@input', 'ab') // Default 100ms between keystrokes, clearly exceeds the 0ms debounce duration
+            ->assertSeeIn('@text', 'ab') // wire:text should update immediately
+            ->pause(300) // Wait for the request to be handled
+            ->assertScript('window.requests', 2); // Should be eight requests sent (length of 'livewire')
+    }
+
     public function test_debounces_requests_with_custom_duration()
     {
         Livewire::visit(new class extends Component {
@@ -148,7 +180,11 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.requests', 1); // Only one request was sent
     }
 
+<<<<<<< HEAD
     public function test_pure_throttles_requests_not_auto_debounced_from_live_modifier()
+=======
+    public function test_throttle_requests_with_zero_duration_modifier_is_honored()
+>>>>>>> 604fe983 (Add debounce and throttle with zero duration browser tests)
     {
         Livewire::visit(new class extends Component {
             public $foo;
@@ -157,7 +193,11 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             {
                 return <<<'HTML'
                 <div x-init="window.requests = 0">
+<<<<<<< HEAD
                     <input type="text" wire:model.live.throttle.30ms="foo" dusk="input">
+=======
+                    <input type="text" wire:model.live.throttle.0ms="foo" dusk="input">
+>>>>>>> 604fe983 (Add debounce and throttle with zero duration browser tests)
                     <span wire:text="foo" dusk="text"></span>
                 </div>
 
@@ -174,11 +214,18 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
+<<<<<<< HEAD
             ->typeSlowly('@input', 'ab', 50)
             ->assertSeeIn('@text', 'ab') // wire:text should update immediately
             ->pause(300) // Wait for the trailing request to be handled
             // The requests will collapse into one if `.live` auto debounced applied
             ->assertScript('window.requests', 2);
+=======
+            ->typeSlowly('@input', 'ab') // Default 100ms between keystrokes, clearly exceeds the 0ms throttle window
+            ->assertSeeIn('@text', 'ab') // wire:text should update immediately
+            ->pause(300) // Wait for the trailing request to be handled
+            ->assertScript('window.requests', 2); // Two requests: one per throttle window
+>>>>>>> 604fe983 (Add debounce and throttle with zero duration browser tests)
     }
 
     public function test_throttles_requests_with_custom_duration()
