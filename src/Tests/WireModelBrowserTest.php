@@ -148,7 +148,7 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.requests', 1); // Only one request was sent
     }
 
-    public function test_debounce_attribute_zero_duration_is_ignored()
+    public function test_debounce_requests_with_zero_duration_modifier_is_ignored()
     {
         Livewire::visit(new class extends Component {
             public $foo;
