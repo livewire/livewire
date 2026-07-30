@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version number (e.g. 4.3.0)'
+        description: 'Version number (e.g. 5.0.0-alpha.1)'
         required: true
         type: string
       previous_tag:
-        description: 'Previous tag for generated release notes (e.g. v4.2.4)'
+        description: 'Previous tag for generated release notes (e.g. v4.3.3)'
         required: false
         type: string
 
