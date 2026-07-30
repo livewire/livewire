@@ -17,7 +17,11 @@ function forwardEvent(name, original) {
 }
 
 export function shouldRedirectUsingNavigateOr(effects, url, or) {
-    let forceNavigate = effects.redirectUsingNavigate
+    let forceNavigate
+
+    if (Object.prototype.hasOwnProperty.call(effects, 'redirectUsingNavigate')) {
+        forceNavigate = effects.redirectUsingNavigate
+    }
 
     if (forceNavigate) {
         Alpine.navigate(url)

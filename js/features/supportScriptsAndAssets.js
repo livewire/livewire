@@ -31,7 +31,11 @@ on('component.init', ({ component }) => {
 })
 
 on('effect', ({ component, effects }) => {
-    let scripts = effects.scripts
+    let scripts
+
+    if (Object.prototype.hasOwnProperty.call(effects, 'scripts')) {
+        scripts = effects.scripts
+    }
 
     if (scripts) {
         Object.entries(scripts).forEach(([key, content]) => {

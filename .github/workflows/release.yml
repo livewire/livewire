@@ -70,7 +70,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          args=(v${{ env.VERSION }} --title "v${{ env.VERSION }}" --generate-notes)
+          args=(v${{ env.VERSION }} --title "v${{ env.VERSION }}" --generate-notes --latest=false)
 
           if [ -n "${{ env.PREVIOUS_TAG }}" ]; then
             args+=(--notes-start-tag "${{ env.PREVIOUS_TAG }}")
