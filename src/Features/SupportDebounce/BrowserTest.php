@@ -516,8 +516,7 @@ class BrowserTest extends BrowserTestCase
         })
             ->waitForLivewireToLoad()
             ->typeSlowly('@input', 'livewire', 50)
-            ->assertSeeIn('@output', '')
-            ->waitForTextIn('@output', 'livewire', 1)
+            ->waitForTextIn('@output', 'livewire', 1) // Already passes 500ms
         ;
     }
 
