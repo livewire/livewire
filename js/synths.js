@@ -121,6 +121,8 @@ function dehydrateTreeRecursive(value) {
     let copy = null
 
     for (let key in value) {
+        if (! Object.prototype.hasOwnProperty.call(value, key)) continue
+
         let child = value[key]
 
         // Primitives can never be rich values, so skip recursing into them...
