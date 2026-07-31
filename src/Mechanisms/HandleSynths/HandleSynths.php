@@ -78,7 +78,7 @@ class HandleSynths extends Mechanism
         });
     }
 
-    public function hydratePropertyUpdate($valueOrTuple, $context, $path)
+    public function hydratePropertyUpdate($valueOrTuple, $context, $path, $raw = null)
     {
         if (! Utils::isSyntheticTuple($value = $tuple = $valueOrTuple)) return $value;
 
@@ -96,8 +96,24 @@ class HandleSynths extends Mechanism
 
         $synth = $this->resolve($meta['s'], $context, $path);
 
-        return $synth->hydrate($value, $meta, function ($name, $child) {
-            return $child;
+        return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path, $raw) {
+            // Updates carry values only — the browser strips synthesizer meta out
+            // of the payload — so nested values can only be reconstructed from the
+            // meta in the previous, checksum-verified snapshot...
+            if ($raw === null) return $child;
+
+            // Wire data is JSON: scalars, arrays, null. Anything already a PHP
+            // object was set server-side (the testing helpers do this) and is
+            // in its final form...
+            if (is_object($child)) return $child;
+
+            $childPath = "{$path}.{$name}";
+
+            // Children the snapshot has never seen — a freshly added repeater row,
+            // for example — have no meta to reconstruct them from...
+            if (! $childMeta = $this->getMetaForPath($raw, $childPath)) return $child;
+
+            return $this->hydratePropertyUpdate([$child, $childMeta], $context, $childPath, $raw);
         });
     }
 
@@ -154,7 +170,7 @@ class HandleSynths extends Mechanism
                 return $clone;
             }
 
-            return $this->hydratePropertyUpdate([$value, $meta], $context, $path);
+            return $this->hydratePropertyUpdate([$value, $meta], $context, $path, $raw);
         }
 
         // If we don't, let's check to see if it's a typed property and fetch the synth that way...
