@@ -19,9 +19,9 @@ class BaseAuthorize extends LivewireAttribute
     public function call(array $parameters)
     {
         wrap($this->component)->authorizeFromAttribute(
-            $this->getName(),
             $this->ability,
             $this->argument,
+            $this->getName(),
             $parameters
         );
     }

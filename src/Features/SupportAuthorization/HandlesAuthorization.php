@@ -12,8 +12,14 @@ trait HandlesAuthorization
 {
     use AuthorizesRequests;
 
-    public function authorizeFromAttribute($method, $ability, $argument, $parameters)
+    // This method can be called from component action so it should be prepared to act
+    // just like regular `$this->authorize()` method as a safety measure
+    public function authorizeFromAttribute($ability, $argument = null, $method = null, $parameters = [])
     {
+        // Get method name from backtrace if its not provided since we know for sure
+        // the method wouldn't be null if its called from attribute
+        $method ??= debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'];
+
         if (is_null($argument)) {
             $ability = enum_value($ability);
 
@@ -37,7 +43,11 @@ trait HandlesAuthorization
 
         $resolved = [];
         foreach (Arr::wrap($argument) as $arg) {
-            $resolved[] = $this->resolveArgument($arg, $method, $resolveMethodDependencies);
+            // Attribute arguments are stored as strings and need to be resolved.
+            // Objects passed directly by callers can be used as-is.
+            $resolved[] = is_object($arg)
+                ? $arg
+                : $this->resolveArgument($arg, $method, $resolveMethodDependencies);
         }
 
         return $this->authorize($ability, $resolved);
