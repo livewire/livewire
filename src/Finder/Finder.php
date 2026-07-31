@@ -356,6 +356,11 @@ class Finder
             if ($fullName->startsWith($namespace)) {
                 $name = (string) $fullName->substr(strlen($namespace) + 1);
 
+                // An index component at the namespace root collapses to an empty name, so restore 'index'...
+                if ($name === '') {
+                    $name = 'index';
+                }
+
                 return is_string($key) ? $key . '::' . $name : $name;
             }
         }

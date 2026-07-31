@@ -186,6 +186,21 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('Livewire\Finder\Fixtures\IndexComponent\Index', $class);
     }
 
+    public function test_can_resolve_location_class_root_index_component()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(classNamespace: 'Livewire\Finder\Fixtures\IndexComponent');
+
+        $name = $finder->normalizeName(Index::class);
+
+        $this->assertEquals('index', $name);
+
+        $class = $finder->resolveClassComponentClassName($name);
+
+        $this->assertEquals('Livewire\Finder\Fixtures\IndexComponent\Index', $class);
+    }
+
     public function test_can_resolve_location_class_self_named_component()
     {
         $finder = new Finder();
