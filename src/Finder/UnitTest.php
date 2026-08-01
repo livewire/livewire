@@ -177,11 +177,16 @@ class UnitTest extends \Tests\TestCase
 
         $finder->addLocation(classNamespace: 'Livewire\Finder\Fixtures\Nested');
 
-        // `...\NestedIndex` shares a character prefix with the registered `...\Nested`, but it
-        // is a different namespace, so the name should keep its leading segments...
-        $name = $finder->normalizeName(IndexViewComponent::class);
+        // `...\NestedSelfNamed` shares a character prefix with the registered `...\Nested`, but
+        // it is a different namespace, so the name should keep all of its leading segments
+        // and still resolve back to the class it came from...
+        $name = $finder->normalizeName(SelfNamedViewComponent::class);
 
-        $this->assertEquals('livewire.finder.fixtures.nested-index.index-view-component', $name);
+        $this->assertEquals('livewire.finder.fixtures.nested-self-named.self-named-view-component.self-named-view-component', $name);
+
+        $class = $finder->resolveClassComponentClassName($name);
+
+        $this->assertEquals('Livewire\Finder\Fixtures\NestedSelfNamed\SelfNamedViewComponent\SelfNamedViewComponent', $class);
     }
 
     public function test_namespace_class_namespace_only_matches_whole_segments()
@@ -190,9 +195,13 @@ class UnitTest extends \Tests\TestCase
 
         $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures\Nested');
 
-        $name = $finder->normalizeName(IndexViewComponent::class);
+        $name = $finder->normalizeName(SelfNamedViewComponent::class);
 
-        $this->assertEquals('livewire.finder.fixtures.nested-index.index-view-component', $name);
+        $this->assertEquals('livewire.finder.fixtures.nested-self-named.self-named-view-component.self-named-view-component', $name);
+
+        $class = $finder->resolveClassComponentClassName($name);
+
+        $this->assertEquals('Livewire\Finder\Fixtures\NestedSelfNamed\SelfNamedViewComponent\SelfNamedViewComponent', $class);
     }
 
     public function test_can_resolve_location_class_index_component()
