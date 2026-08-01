@@ -351,7 +351,10 @@ class Finder
                 ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
                 ->implode('.');
 
-            if ($fullName->startsWith($namespace)) {
+            // Match on the segment separator so a namespace only matches whole segments. Without the
+            // trailing dot, a sibling namespace that merely shares a character prefix would match
+            // and get cut mid-segment ('App\LivewireForms' against 'App\Livewire', for example)...
+            if ($fullName->startsWith($namespace . '.')) {
                 $name = $fullName->substr(strlen($namespace) + 1);
 
                 $prefix = is_string($key) ? $key . '::' : '';

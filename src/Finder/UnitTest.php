@@ -171,6 +171,30 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('Livewire\Finder\Fixtures\Nested\NestedComponent', $class);
     }
 
+    public function test_location_class_namespace_only_matches_whole_segments()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(classNamespace: 'Livewire\Finder\Fixtures\Nested');
+
+        // `...\NestedIndex` shares a character prefix with the registered `...\Nested`, but it
+        // is a different namespace, so the name should keep its leading segments...
+        $name = $finder->normalizeName(IndexViewComponent::class);
+
+        $this->assertEquals('livewire.finder.fixtures.nested-index.index-view-component', $name);
+    }
+
+    public function test_namespace_class_namespace_only_matches_whole_segments()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures\Nested');
+
+        $name = $finder->normalizeName(IndexViewComponent::class);
+
+        $this->assertEquals('livewire.finder.fixtures.nested-index.index-view-component', $name);
+    }
+
     public function test_can_resolve_location_class_index_component()
     {
         $finder = new Finder();
