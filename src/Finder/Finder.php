@@ -332,15 +332,13 @@ class Finder
             $fullName = $fullName->substr(1);
         }
 
-        // If using an index component in a sub folder, remove the '.index' so the name is the subfolder name...
-        if ($fullName->endsWith('.index')) {
-            $fullName = $fullName->replaceLast('.index', '');
-        }
-
         $classNamespaces = collect($this->classNamespaces)
             ->map(fn ($classNamespace) => $classNamespace['classNamespace'])
             ->merge($this->classLocations)
             ->toArray();
+
+        $name = $fullName;
+        $prefix = '';
 
         foreach ($classNamespaces as $key => $classNamespace) {
             $namespace = str_replace(
@@ -354,18 +352,22 @@ class Finder
                 ->implode('.');
 
             if ($fullName->startsWith($namespace)) {
-                $name = (string) $fullName->substr(strlen($namespace) + 1);
+                $name = $fullName->substr(strlen($namespace) + 1);
 
-                // An index component at the namespace root collapses to an empty name, so restore 'index'...
-                if ($name === '') {
-                    $name = 'index';
-                }
+                $prefix = is_string($key) ? $key . '::' : '';
 
-                return is_string($key) ? $key . '::' . $name : $name;
+                break;
             }
         }
 
-        return (string) $fullName;
+        // If using an index component in a sub folder, remove the '.index' so the name is the subfolder name.
+        // This has to happen after the namespace is stripped, otherwise an 'Index' at the root of a namespace
+        // would collapse into the namespace itself and leave nothing behind to name the component with...
+        if ($name->endsWith('.index')) {
+            $name = $name->replaceLast('.index', '');
+        }
+
+        return $prefix . $name;
     }
 
     protected function normalizeClassName(string $className): string
