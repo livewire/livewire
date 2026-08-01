@@ -142,10 +142,11 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->typeSlowly('@input', 'ab') // Default 100ms between keystrokes, clearly exceeds the 0ms debounce duration
-            ->assertSeeIn('@text', 'ab') // wire:text should update immediately
-            ->pause(300) // Wait for the request to be handled
-            ->assertScript('window.requests', 2); // Should be eight requests sent (length of 'livewire')
+            ->type('@input', 'a')
+            ->assertSeeIn('@text', 'a') // wire:text should update immediately
+            ->pause(50) // Wait for request to be handled
+            // Under default 150ms: a false fallback would still have requests === 0 here
+            ->assertScript('window.requests', 1);
     }
 
     public function test_debounces_requests_with_custom_duration()
