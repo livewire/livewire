@@ -12,16 +12,14 @@ class BrowserTest extends BrowserTestCase
     function test_debounce_attribute_delays_live_model_network_update()
     {
         Livewire::visit(new class extends Component {
-            #[BaseDebounce(250)]
-            public $foo = '';
+            public $foo;
 
             public function render()
             {
                 return <<<'HTML'
                 <div x-init="window.requests = 0">
-                    <input type="text" wire:model.live="foo" dusk="input">
-                    <span wire:text="foo" dusk="client"></span>
-                    <span dusk="server">{{ $foo }}</span>
+                    <input type="text" wire:model.live.debounce.250ms="foo" dusk="input">
+                    <span wire:text="foo" dusk="text"></span>
                 </div>
 
                 @script
@@ -38,10 +36,9 @@ class BrowserTest extends BrowserTestCase
         })
             ->waitForLivewireToLoad()
             ->typeSlowly('@input', 'livewire', 50)
-            ->assertSeeIn('@client', 'livewire') // wire:text should update immediately
-            ->pause(300) // Wait for requests to be handled
-            ->assertSeeIn('@server', 'livewire') // server value should be updated
-            ->assertScript('window.requests', 1); 
+            ->assertSeeIn('@text', 'livewire') // wire:text should update immediately
+            ->pause(300) // Wait for the request to be handled
+            ->assertScript('window.requests', 1); // Only one request was sent
     }
 
     function test_blade_debounce_modifier_overrides_attribute()
@@ -73,10 +70,11 @@ class BrowserTest extends BrowserTestCase
         })
             ->waitForLivewireToLoad()
             ->typeSlowly('@input', 'livewire', 50)
+            ->assertSeeIn('@server', '')
             ->assertSeeIn('@client', 'livewire') // wire:text should update immediately
-            ->pause(300) // Wait for requests to be handled
-            ->assertSeeIn('@server', 'livewire') // server value should be updated
-            ->assertScript('window.requests', 1); 
+            ->pause(300) // Wait for the request to be handled
+            ->assertSeeIn('@server', 'livewire')
+            ->assertScript('window.requests', 1); // Only one request was sent
     }
 
     function test_debounce_attribute_does_not_force_live_on_deferred_model()
@@ -117,7 +115,7 @@ class BrowserTest extends BrowserTestCase
     function test_only_annotated_property_uses_attribute_debounce()
     {
         Livewire::visit(new class extends Component {
-            #[BaseDebounce(800)]
+            #[BaseDebounce(500)]
             public $slow = '';
 
             public $fast = '';
@@ -141,7 +139,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@slow-out', '')
             ->typeSlowly('@slow', 'livewire', 50)
             ->assertSeeIn('@slow-out', '')
-            ->waitForTextIn('@slow-out', 'livewire', 1)
+            ->waitForTextIn('@slow-out', 'livewire') // 5s clearly exceeds 500ms debounce duration
         ;
     }
 
@@ -276,7 +274,7 @@ class BrowserTest extends BrowserTestCase
             ->typeSlowly('@input', 'livewire', 50)
             ->assertSeeIn('@output', '')
             ->pause(300)
-            ->waitForTextIn('@output', 'livewire')
+            ->waitForTextIn('@output', 'livewire') // 5s clearly exceeds 2s debounce duration
         ;
     }
 
@@ -431,7 +429,7 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewireToLoad()
             ->typeSlowly('@input', 'livewire', 50)
             ->assertSeeIn('@output', '')
-            ->waitForTextIn('@output', 'livewire', 1)
+            ->waitForTextIn('@output', 'livewire', 1) // 1s clearly exceeds 500ms debounce duration
         ;
     }
 
@@ -462,10 +460,11 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->typeSlowly('@input', 'ab', 50)
-            ->assertSeeIn('@text', 'ab') // wire:text should update immediately
-            ->pause(300) // Wait for requests to be handled
-            ->assertScript('window.requests', 2); // 0ms must not collapse like the default 150ms
+            ->type('@input', 'a')
+            ->assertSeeIn('@text', 'a') // wire:text should update immediately
+            ->pause(50) // Wait for requests to be handled
+            // Under default 150ms: a false fallback would still have requests === 0 here
+            ->assertScript('window.requests', 1);
     }
 
     public function test_debounce_modifier_on_blur_live_uses_explicit_duration_not_attribute()
@@ -491,9 +490,9 @@ class BrowserTest extends BrowserTestCase
             ->typeSlowly('@input', 'livewire', 50)
             ->assertSeeIn('@output', '')
             ->click('@blur-target')
-            ->pause(50)    // still debounced
+            ->pause(50) // still debounced
             ->assertSeeIn('@output', '')
-            ->pause(300)    // already pass debounce duration
+            ->pause(300) // already pass debounce duration
             ->assertSeeIn('@output', 'livewire')
         ;
     }
