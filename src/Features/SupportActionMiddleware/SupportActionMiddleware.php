@@ -93,9 +93,11 @@ class SupportActionMiddleware extends ComponentHook
         $mechanism = app(PersistentMiddleware::class);
 
         [$request, $excludedMiddleware] = (function () {
+            $request = $this->makeFakeRequest();
+
             return [
-                $this->makeFakeRequest(),
-                $this->applicableMiddleware,
+                $request,    
+                $this->getApplicablePersistentMiddleware($request)
             ];
         })->call($mechanism);
 
