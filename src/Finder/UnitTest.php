@@ -239,6 +239,28 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(__DIR__ . '/Fixtures/single-file-component-with-multiline-php-attribute.blade.php', $path);
     }
 
+    public function test_can_resolve_single_file_component_with_php_attribute_array_argument()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('single-file-component-with-php-attribute-array-argument');
+
+        $this->assertEquals(__DIR__ . '/Fixtures/single-file-component-with-php-attribute-array-argument.blade.php', $path);
+    }
+
+    public function test_can_resolve_single_file_component_with_php_attribute_nested_array_argument()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('single-file-component-with-php-attribute-nested-array-argument');
+
+        $this->assertEquals(__DIR__ . '/Fixtures/single-file-component-with-php-attribute-nested-array-argument.blade.php', $path);
+    }
+
     public function test_can_resolve_location_single_file_component_with_zap()
     {
         $finder = new Finder();
