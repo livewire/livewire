@@ -12,7 +12,7 @@ use Livewire\Features\SupportEvents\SupportEvents;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
-use function Livewire\{ invade, on, store};
+use function Livewire\{ on, store};
 
 class SupportActionMiddleware extends ComponentHook
 {
@@ -90,11 +90,14 @@ class SupportActionMiddleware extends ComponentHook
 
     protected static function filterMiddleware(array $middleware): array
     {
-        $mechanism = invade(app(PersistentMiddleware::class));
+        $mechanism = app(PersistentMiddleware::class);
 
-        $request = $mechanism->makeFakeRequest();
-
-        $excludedMiddleware = $mechanism->applicableMiddleware;
+        [$request, $excludedMiddleware] = (function () {
+            return [
+                $this->makeFakeRequest(),
+                $this->applicableMiddleware,
+            ];
+        })->call($mechanism);
 
         // Exclude any middleware that has been applied by PersistentMiddleware.
         // If middleware not registered as persistent middleware and applied
