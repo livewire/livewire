@@ -28,7 +28,6 @@ class PersistentMiddleware extends Mechanism
     protected $method;
     protected $middlewareAppliedFor = [];
     protected $resolvedRouteModels = [];
-    protected $applicableMiddleware = [];
 
     function boot()
     {
@@ -54,7 +53,6 @@ class PersistentMiddleware extends Mechanism
             $this->method = null;
             $this->middlewareAppliedFor = [];
             $this->resolvedRouteModels = [];
-            $this->applicableMiddleware = [];
         });
     }
 
@@ -121,10 +119,6 @@ class PersistentMiddleware extends Mechanism
         if (is_null($middleware) || $middleware === []) return;
 
         Utils::applyMiddleware($request, $middleware);
-
-        // Store any middleware so that middleware attribute can reuse it
-        // as a filter instead re-resolving with `getApplicablePersistentMiddleware()`
-        $this->applicableMiddleware = $middleware;
 
         $this->middlewareAppliedFor[$routeKey] = true;
 
