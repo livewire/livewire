@@ -69,4 +69,30 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewire()->click('@change')
         ->assertSeeIn('@label', 'bar');
     }
+
+    public function test_wire_text_does_not_call_component_method_repeatedly()
+    {
+        Livewire::visit(new class extends Component {
+            public $count = 0;
+
+            public function foo()
+            {
+                $this->count++;
+                return 'foo-result';
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div wire:text="foo" dusk="label"></div>
+                    <div dusk="count">{{ $count }}</div>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@count', '0')
+        ->pause(1000)
+        ->assertSeeIn('@count', '0');
+    }
 }

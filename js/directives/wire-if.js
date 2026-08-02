@@ -1,4 +1,4 @@
-import { evaluateActionExpression } from '../evaluator'
+import { evaluateReactiveExpression } from '../evaluator'
 import Alpine from 'alpinejs'
 
 // Skipped during clone-mode init (morphing seeds incoming trees that way) —
@@ -17,7 +17,7 @@ Alpine.interceptInit(
 
         Alpine.bind(el, {
             ['x-if']() {
-                return evaluateActionExpression(el, expression)
+                return evaluateReactiveExpression(el, expression)
             }
         })
     })
