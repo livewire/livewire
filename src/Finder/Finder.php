@@ -392,10 +392,14 @@ class Finder
             return false;
         }
 
+        // Ignore quoted strings and non-bracket content while balancing attribute brackets.
+        // This ignores the bracket in 'Dashboard ] overview' while matching nested arrays like ['meta' => ['title' => 'Dashboard']].
+        $contentIgnoredWhileMatchingBracketsPattern = '(?:(?>[^\[\]\'\"]+)|\'(?:\\\\.|[^\'\\\\])*\'|"(?:\\\\.|[^"\\\\])*")';
+
         // Light touch check: Look for the pattern that indicates an SFC
         // Pattern: <?php followed by 'new class' (with potential attributes/newlines between)
         // This distinguishes SFCs from regular Blade views
-        return preg_match('/\<\?php.*\bnew\s+(?:#\[[^\]]*\]\s*)*class\b/s', $contents) === 1;
+        return preg_match('/\<\?php.*\bnew\s+(?:#(\[(?:' . $contentIgnoredWhileMatchingBracketsPattern . '|(?1))*\])\s*)*class\b/s', $contents) === 1;
     }
 
     protected function hasValidMultiFileComponentSource(string $dir, string $fileBaseName): bool
