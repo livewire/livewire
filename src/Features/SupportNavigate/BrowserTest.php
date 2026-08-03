@@ -1291,7 +1291,6 @@ class BrowserTest extends \Tests\BrowserTestCase
             $browser
                 ->visit('/first')
                 ->assertSee('On first')
-                // Force the prefetch request to fail at the transport layer...
                 ->tap(fn ($b) => $b->script('window.fetch = () => Promise.reject(new TypeError("Failed to fetch"))'))
                 ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
                 ->pause(500)
