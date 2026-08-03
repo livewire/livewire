@@ -49,9 +49,6 @@ export class Component {
         el.$wire = this.$wire
 
         this.cleanups = []
-
-        // Effects will be processed after every request, but we'll also handle them on initialization.
-        this.processEffects(this.effects)
     }
 
     addActionContext(context) {

@@ -75,6 +75,33 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_can_evaluate_js_on_mount_that_calls_a_livewire_action()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function mount()
+                {
+                    $this->js('$wire.increment()');
+                }
+
+                public function increment()
+                {
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span dusk="count">{{ $count }}</span>
+                </div>
+                HTML; }
+        })
+        ->waitForText('1')
+        ->assertSeeIn('@count', '1')
+        ;
+    }
+
     public function test_can_define_js_actions_though_dollar_wire_on_a_component()
     {
         Livewire::visit(
