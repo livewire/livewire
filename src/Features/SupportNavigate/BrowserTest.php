@@ -1285,6 +1285,20 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_failed_navigate_prefetch_does_not_trigger_an_unhandled_promise_rejection()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                // Force the prefetch request to fail at the transport layer...
+                ->tap(fn ($b) => $b->script('window.fetch = () => Promise.reject(new TypeError("Failed to fetch"))'))
+                ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+                ->pause(500)
+                ->assertConsoleLogHasNoErrors();
+        });
+    }
+
     public function test_navigate_hover_prefetches_and_caches_for_a_default_30_seconds()
     {
         $this->browse(function ($browser) {
