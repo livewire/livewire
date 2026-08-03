@@ -148,6 +148,39 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.requests', 1); // Only one request was sent
     }
 
+    public function test_pure_throttles_requests_not_auto_debounced_from_live_modifier()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div x-init="window.requests = 0">
+                    <input type="text" wire:model.live.throttle.30ms="foo" dusk="input">
+                    <span wire:text="foo" dusk="text"></span>
+                </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->typeSlowly('@input', 'ab', 50)
+            ->assertSeeIn('@text', 'ab') // wire:text should update immediately
+            ->pause(300) // Wait for the trailing request to be handled
+            // The requests will collapse into one if `.live` auto debounced applied
+            ->assertScript('window.requests', 2);
+    }
+
     public function test_throttles_requests_with_custom_duration()
     {
         Livewire::visit(new class extends Component {
