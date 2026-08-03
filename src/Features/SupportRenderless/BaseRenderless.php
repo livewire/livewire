@@ -11,6 +11,7 @@ class BaseRenderless extends LivewireAttribute
     {
         $this->storeSet('skipIslandsRender', true);
 
-        $this->component->skipRender();
+        // Record the opt-out; the render is only skipped once every action in the request has (see HandleComponents::callMethods).
+        $this->storeSet('renderlessCallCount', $this->storeGet('renderlessCallCount', 0) + 1);
     }
 }

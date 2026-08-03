@@ -583,7 +583,7 @@ class HandleComponents extends Mechanism
 
                 // Support `.renderless` on magic actions like `wire:model.renderless.live`...
                 if ($metadata['renderless'] ?? false) {
-                    $root->skipRender();
+                    $this->markCallRenderless($root);
                 }
 
                 $returns[] = $return;
@@ -622,11 +622,24 @@ class HandleComponents extends Mechanism
 
             // Support `Wire:click.renderless`...
             if ($metadata['renderless'] ?? false) {
-                $root->skipRender();
+                $this->markCallRenderless($root);
             }
         }
 
+        // Only skip the render once EVERY action in the request has opted out of
+        // rendering. A renderless action batched alongside a non-renderless one
+        // (e.g. `$wire.renderlessAction(); $wire.normalAction()` collapsed into a
+        // single request) must not suppress the render the normal action needs.
+        if (count($calls) > 0 && store($root)->get('renderlessCallCount', 0) >= count($calls)) {
+            $root->skipRender();
+        }
+
         $componentContext->addEffect('returns', $returns);
+    }
+
+    protected function markCallRenderless($root)
+    {
+        store($root)->set('renderlessCallCount', store($root)->get('renderlessCallCount', 0) + 1);
     }
 
     protected function pushOntoComponentStack($component)
