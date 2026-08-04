@@ -260,12 +260,15 @@ function fromQueryString(search, queryKey) {
     let insertDotNotatedValueIntoData = (key, value, data) => {
         let [first, second, ...rest] = key.split('.')
 
+        // Only ever build and write into our own containers...
+        if (first === '__proto__' || first === 'constructor' || first === 'prototype') return
+
         // We're at a leaf node, let's make the assigment...
         if (! second) return data[key] = value
 
         // This is where we fill in empty arrays/objects allong the way to the assigment...
-        if (data[first] === undefined) {
-            data[first] = isNaN(second) ? {} : []
+        if (! Object.prototype.hasOwnProperty.call(data, first)) {
+            data[first] = isNaN(second) ? Object.create(null) : []
         }
 
         // Keep deferring assignment until the full key is built up...

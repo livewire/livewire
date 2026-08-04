@@ -119,7 +119,7 @@ export class Commit {
                 this.component.processEffects(this.component.effects)
             })
 
-            if (effects['returns']) {
+            if (Object.prototype.hasOwnProperty.call(effects, 'returns') && effects['returns']) {
                 let returns = effects['returns']
 
                 // Here we'll match up returned values with their method call handlers. We need to build up
