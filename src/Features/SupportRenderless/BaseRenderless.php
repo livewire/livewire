@@ -9,7 +9,7 @@ class BaseRenderless extends LivewireAttribute
 {
     function call()
     {
-        $this->storeSet('skipIslandsRender', true);
+        $this->component->skipIslandsRender();
 
         $this->component->skipRender();
     }
