@@ -129,8 +129,22 @@ export default function (Alpine) {
                     })
                 })
             })
-        }, () => {
+        }, (error) => {
             showProgressBar && finishAndHideProgressBar()
+
+            // We cancelled this request ourselves, so the user is already on their
+            // way somewhere else. Sending them to a destination they abandoned
+            // would be worse than doing nothing...
+            if (requestWasCancelled(error)) return
+
+            // A rejected fetch doesn't always mean the network is gone — following a
+            // redirect to another origin fails the same way, and we deliberately stay
+            // put for those. Only when the browser tells us we're offline do we hand
+            // the navigation back, so the user gets the browser's own offline page
+            // instead of a click that silently did nothing...
+            if (navigator.onLine) return
+
+            window.location.href = destination.href
         })
     }
 
@@ -218,6 +232,10 @@ function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback, errorCallback) 
     getPretchedHtmlOr(fromDestination, callback, () => {
         fetchHtml(fromDestination, callback, errorCallback)
     })
+}
+
+function requestWasCancelled(error) {
+    return error?.name === 'AbortError'
 }
 
 function preventAlpineFromPickingUpDomChanges(Alpine, callback) {
