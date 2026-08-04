@@ -102,6 +102,86 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_a_broken_js_expression_does_not_wedge_the_component()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                // Easy mistake: `record` here is a PHP action, not a registered
+                // `$js` action, so the expression blows up client-side...
+                public function breakIt()
+                {
+                    $this->js('increment');
+                }
+
+                public function increment()
+                {
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span dusk="count">{{ $count }}</span>
+                    <span wire:loading dusk="loading">Loading...</span>
+                    <button wire:click="breakIt" dusk="break">Break</button>
+                    <button wire:click="increment" dusk="increment">Increment</button>
+                </div>
+                HTML; }
+        })
+        ->waitForLivewire()->click('@break')
+        // The loading state must not stick around after the response...
+        ->assertDontSee('Loading...')
+        // ...and the component must still respond to further actions...
+        ->waitForLivewire()->click('@increment')
+        ->assertSeeIn('@count', '1')
+        ;
+    }
+
+    public function test_a_throwing_effect_hook_does_not_fire_the_render_hook()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function increment()
+                {
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span dusk="count">{{ $count }}</span>
+                    <button dusk="arm" x-on:click="window.armed = true">Arm</button>
+                    <button wire:click="increment" dusk="increment">Increment</button>
+                </div>
+
+                @script
+                <script>
+                    window.hooks = []
+
+                    Livewire.hook('effect', () => {
+                        if (window.armed) throw new Error('boom')
+                    })
+
+                    $wire.interceptMessage(({ onSuccess, onFinish }) => {
+                        onSuccess(({ onRender }) => onRender(() => window.hooks.push('onRender')))
+                        onFinish(() => window.hooks.push('onFinish'))
+                    })
+                </script>
+                @endscript
+                HTML; }
+        })
+        ->click('@arm')
+        ->waitForLivewire()->click('@increment')
+        ->pause(300)
+        // The morph never completed, so nothing was painted. `onFinish` still
+        // runs (it's documented to run on error), but `onRender` must not...
+        ->assertScript('window.hooks.includes("onFinish")')
+        ->assertScript('window.hooks.includes("onRender") === false')
+        ;
+    }
+
     public function test_can_define_js_actions_though_dollar_wire_on_a_component()
     {
         Livewire::visit(
