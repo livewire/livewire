@@ -24,4 +24,14 @@ trait HandlesRenderless
     {
         store($this)->set('skipIslandsRender', true);
     }
+
+    public function shouldSkipRender()
+    {
+        return store($this)->get('skipRender', false);
+    }
+
+    public function shouldSkipIslandsRender()
+    {
+        return store($this)->get('skipIslandsRender', false);
+    }
 }
