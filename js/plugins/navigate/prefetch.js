@@ -13,17 +13,21 @@ export function prefetchHtml(destination, callback, errorCallback) {
 
     if (prefetches[uri]) return
 
-    prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) }
+    prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration), whenFailed: () => {} }
 
     performFetch(uri, (html, routedUri, status) => {
         storeCurrentPageStatus(status)
 
         callback(html, routedUri)
     }, () => {
+        let whenFailed = prefetches[uri].whenFailed
+
         // If the fetch failed, remove the prefetch so it gets attempted again...
         delete prefetches[uri]
 
         errorCallback()
+
+        whenFailed()
     })
 }
 
@@ -56,6 +60,11 @@ export function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
 
             receive(html, finalDestination)
         }
+
+        // Someone is waiting on this in-flight prefetch. If it fails, they're
+        // left hanging with no navigation at all, so send them down the normal
+        // request path instead where a failure can be handled properly...
+        prefetches[uri].whenFailed = ifNoPrefetchExists
     }
 }
 
