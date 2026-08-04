@@ -10,6 +10,9 @@ on:
 env:
   ALPINE_BRANCH: main
 
+permissions:
+  contents: read
+
 jobs:
   build-assets:
     runs-on: ubuntu-latest
