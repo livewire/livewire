@@ -86,7 +86,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Apply debounce/throttle from network modifiers
     if ((shouldSendNetwork && ! hasNetworkTriggers && isRealtimeInput(el) && ! isDebounced && ! isThrottled) || isDebounced) {
-        debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(networkModifiers, 'debounce') || 150)
+        debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(networkModifiers, 'debounce') ?? 150)
     }
 
     if (isThrottled) {
