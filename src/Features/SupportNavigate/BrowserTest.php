@@ -1298,6 +1298,63 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_failed_navigate_prefetch_does_not_navigate_anywhere()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                ->tap(fn ($b) => $b->script('window.fetch = () => Promise.reject(new TypeError("Failed to fetch"))'))
+                ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+                ->pause(500)
+                // A prefetch is speculative — the user never asked to go anywhere,
+                // so a failed one should do nothing at all...
+                ->assertSee('On first')
+                ->assertPathIs('/first');
+        });
+    }
+
+    public function test_failed_navigate_falls_back_to_a_hard_browser_navigation()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->tap(fn ($b) => $b->script([
+                    'Object.defineProperty(navigator, "onLine", { get: () => false, configurable: true })',
+                    'window.fetch = () => Promise.reject(new TypeError("Failed to fetch"))',
+                ]))
+                ->click('@link.to.second')
+                ->waitForText('On second')
+                // The marker is gone, so the browser performed a full page load rather
+                // than swallowing the click and stranding the user on the first page...
+                ->assertScript('return window._lw_dusk_test', false);
+        });
+    }
+
+    public function test_navigate_falls_back_to_a_hard_browser_navigation_when_an_in_flight_prefetch_fails()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                // Failing slowly means the prefetch kicked off by pressing the link is
+                // still in flight when the click is released, so the navigation ends up
+                // waiting on a request that is about to fail...
+                ->tap(fn ($b) => $b->script([
+                    'Object.defineProperty(navigator, "onLine", { get: () => false, configurable: true })',
+                    'window.fetch = () => new Promise((resolve, reject) => setTimeout(() => reject(new TypeError("Failed to fetch")), 500))',
+                ]))
+                ->click('@link.to.second')
+                ->waitForText('On second')
+                ->assertScript('return window._lw_dusk_test', false);
+        });
+    }
+
     public function test_navigate_hover_prefetches_and_caches_for_a_default_30_seconds()
     {
         $this->browse(function ($browser) {
