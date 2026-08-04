@@ -19,4 +19,9 @@ trait HandlesRenderless
 
         store($this)->set('skipRender', $html ?: true);
     }
+
+    public function skipIslandsRender()
+    {
+        store($this)->set('skipIslandsRender', true);
+    }
 }
