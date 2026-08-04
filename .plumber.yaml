@@ -1,0 +1,26 @@
+# Plumber overlay: inherits every control from the CLI's built-in
+# baseline, only the differences for this repo are written here.
+# Run 'plumber config resolve' to see the full effective config.
+extends: plumber:default
+version: "2.0"
+
+github:
+  controls:
+    githubActionMustComeFromAuthorizedSources:
+      # Keep the curated default list and trust the PHP setup action
+      # this repo already uses on top of it.
+      includePlumberDefaults: true
+      trustedGithubActions:
+        - shivammathur/setup-php
+
+    # Off for now: the default branch has no protection rules, which is
+    # a repository settings choice, not something a PR can change.
+    # Enable this once branch protection is on.
+    branchMustBeProtected:
+      enabled: false
+
+    # Off for now: the release workflow restores the npm cache through
+    # setup-node on its release trigger. Scoping the cache key to the
+    # release ref is a good follow-up, but it is its own change.
+    releaseWorkflowsMustNotRestoreUntrustedCache:
+      enabled: false

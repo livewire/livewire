@@ -10,6 +10,9 @@
     <a href="https://packagist.org/packages/livewire/livewire">
         <img src="https://poser.pugx.org/livewire/livewire/license.svg" alt="License">
     </a>
+    <a href="https://score.getplumber.io/github.com/livewire/livewire">
+        <img src="https://score.getplumber.io/github.com/livewire/livewire.svg" alt="Plumber Score">
+    </a>
 </p>
 
 ## Introduction
