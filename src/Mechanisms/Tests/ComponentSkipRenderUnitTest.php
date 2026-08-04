@@ -47,6 +47,46 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
         Route::get('/403', ComponentSkipRenderOnRedirectHelperInMountStub::class);
         $this->get('/403')->assertRedirect('/bar');
     }
+
+    public function test_render_not_skipped_when_a_renderless_action_attribute_is_batched_with_a_normal_call()
+    {
+        $component = Livewire::test(ComponentRenderlessBatchStub::class);
+
+        $component->assertSee('foo');
+
+        // Simulate the browser batching two $wire calls into a single request,
+        // e.g. `$wire.renderlessAction(); $wire.updateName()`.
+        $component->update(calls: [
+            ['method' => 'renderlessActionAttribute', 'params' => [], 'path' => ''],
+            ['method' => 'updateName', 'params' => [], 'path' => ''],
+        ]);
+
+        // The non-renderless updateName() mutated state the view depends on...
+        $component->assertSetStrict('name', 'bar');
+
+        // ...so the component should re-render, despite the batched renderless call.
+        $component->assertSee('bar');
+    }
+
+    public function test_render_not_skipped_when_a_renderless_action_call_is_batched_with_a_normal_call()
+    {
+        $component = Livewire::test(ComponentRenderlessBatchStub::class);
+
+        $component->assertSee('foo');
+
+        // Simulate the browser batching two $wire calls into a single request,
+        // e.g. `$wire.renderlessAction(); $wire.updateName()`.
+        $component->update(calls: [
+            ['method' => 'renderlessActionCall', 'params' => [], 'path' => '', 'metadata' => ['renderless' => true]],
+            ['method' => 'updateName', 'params' => [], 'path' => ''],
+        ]);
+
+        // The non-renderless updateName() mutated state the view depends on...
+        $component->assertSetStrict('name', 'bar');
+
+        // ...so the component should re-render, despite the batched renderless call.
+        $component->assertSee('bar');
+    }
 }
 
 class ComponentSkipRenderStub extends Component
@@ -87,6 +127,34 @@ class ComponentSkipRenderAttributeStub extends Component
         }
 
         return app('view')->make('null-view');
+    }
+}
+
+class ComponentRenderlessBatchStub extends Component
+{
+    public $name = 'foo';
+
+    #[\Livewire\Attributes\Renderless]
+    public function renderlessActionAttribute()
+    {
+        //
+    }
+
+    public function renderlessActionCall()
+    {
+        //
+    }
+
+    public function updateName()
+    {
+        $this->name = 'bar';
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+            <div>{{ $name }}</div>
+        HTML;
     }
 }
 
