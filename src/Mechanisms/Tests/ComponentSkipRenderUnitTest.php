@@ -87,6 +87,26 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
         // ...so the component should re-render, despite the batched renderless call.
         $component->assertSee('bar');
     }
+
+    public function test_render_not_skipped_when_a_renderless_action_attribute_event_is_batched_with_a_normal_call()
+    {
+        $component = Livewire::test(ComponentRenderlessBatchStub::class);
+
+        $component->assertSee('foo');
+
+        // Simulate the browser batching two $wire calls into a single request,
+        // e.g. `$wire.renderlessAction(); $wire.updateName()`.
+        $component->update(calls: [
+            ['method' => '__dispatch', 'params' => ['some-event', []], 'path' => ''],
+            ['method' => 'updateName', 'params' => [], 'path' => ''],
+        ]);
+
+        // The non-renderless updateName() mutated state the view depends on...
+        $component->assertSetStrict('name', 'bar');
+
+        // ...so the component should re-render, despite the batched renderless call.
+        $component->assertSee('bar');
+    }
 }
 
 class ComponentSkipRenderStub extends Component
@@ -136,6 +156,13 @@ class ComponentRenderlessBatchStub extends Component
 
     #[\Livewire\Attributes\Renderless]
     public function renderlessActionAttribute()
+    {
+        //
+    }
+
+    #[\Livewire\Attributes\Renderless]
+    #[\Livewire\Attributes\On('some-event')]
+    public function renderlessActionEventAttribute()
     {
         //
     }
