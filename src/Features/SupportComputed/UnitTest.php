@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportComputed;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestComponent;
 use Tests\TestCase;
+use Livewire\EventBus;
 use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
@@ -371,6 +372,52 @@ class UnitTest extends TestCase
             ->assertSee('false');
     }
 
+    public function test_computed_attribute_takes_priority_over_legacy_get_property_syntax()
+    {
+        Livewire::test(new class extends TestComponent {
+            use HasLegacyComputedProperty;
+
+            #[Computed]
+            public function foo(): string
+            {
+                return 'computed';
+            }
+        })
+            ->assertSetStrict('foo', 'computed');
+    }
+
+    public function test_computed_attributes_do_not_accumulate_event_bus_listeners()
+    {
+        $countListeners = function () {
+            $eventBus = app(EventBus::class);
+            $reflection = new \ReflectionClass($eventBus);
+            $total = 0;
+
+            foreach (['listeners', 'listenersAfter', 'listenersBefore'] as $propertyName) {
+                $property = $reflection->getProperty($propertyName);
+                $property->setAccessible(true);
+
+                foreach ($property->getValue($eventBus) as $listeners) {
+                    $total += count($listeners);
+                }
+            }
+
+            return $total;
+        };
+
+        Livewire::test(ComputedAttributeMemoryLeakStub::class);
+        Livewire::flushState();
+
+        $baselineListeners = $countListeners();
+
+        for ($i = 0; $i < 20; $i++) {
+            Livewire::test(ComputedAttributeMemoryLeakStub::class);
+            Livewire::flushState();
+        }
+
+        $this->assertEquals($baselineListeners, $countListeners());
+    }
+
     public function test_it_supports_legacy_computed_properties()
     {
         Livewire::test(new class extends TestComponent {
@@ -526,6 +573,34 @@ class FalseIssetComputedPropertyStub extends Component{
             {{ var_dump(isset($this->foo)) }}
         </div>
         HTML;
+    }
+}
+
+trait HasLegacyComputedProperty
+{
+    public function getFooProperty(): string
+    {
+        return 'legacy';
+    }
+}
+
+class ComputedAttributeMemoryLeakStub extends Component
+{
+    #[Computed]
+    public function items(): array
+    {
+        return ['a', 'b', 'c'];
+    }
+
+    #[Computed]
+    public function total(): int
+    {
+        return count($this->items);
+    }
+
+    public function render()
+    {
+        return '<div>{{ $this->total }}</div>';
     }
 }
 
