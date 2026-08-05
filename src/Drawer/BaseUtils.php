@@ -2,6 +2,8 @@
 
 namespace Livewire\Drawer;
 
+use Illuminate\Support\Collection;
+
 class BaseUtils
 {
     protected static $reflectionCache = [];
@@ -40,7 +42,7 @@ class BaseUtils
 
     protected static function reflectAndCachePropertyMetadata($target, $filter = null)
     {
-        return collect((new \ReflectionObject($target))->getProperties())
+        return (new Collection((new \ReflectionObject($target))->getProperties()))
             ->filter(function ($property) {
                 return $property->isPublic() && ! $property->isStatic() && $property->isDefault();
             })
@@ -83,7 +85,7 @@ class BaseUtils
 
     static function getPublicProperties($target, $filter = null)
     {
-        return collect((new \ReflectionObject($target))->getProperties())
+        return (new Collection((new \ReflectionObject($target))->getProperties()))
             ->filter(function ($property) {
                 return $property->isPublic() && ! $property->isStatic() && $property->isDefault();
             })

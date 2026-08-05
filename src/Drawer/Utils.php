@@ -3,6 +3,7 @@
 namespace Livewire\Drawer;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Livewire\Exceptions\RootTagMissingFromViewException;
 
 use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
@@ -34,7 +35,7 @@ class Utils extends BaseUtils
 
     static function stringifyHtmlAttributes($attributes)
     {
-        return collect($attributes)
+        return (new Collection($attributes))
             ->mapWithKeys(function ($value, $key) {
                 return [$key => static::escapeStringForHtml($value)];
             })->map(function ($value, $key) {

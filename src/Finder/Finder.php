@@ -2,6 +2,7 @@
 
 namespace Livewire\Finder;
 
+use Illuminate\Support\Collection;
 use Livewire\Component;
 
 class Finder
@@ -298,7 +299,7 @@ class Finder
 
     protected function generateClassFromName($name, $classNamespaces = []): string
     {
-        $baseClass = collect(str($name)->explode('.'))
+        $baseClass = (new Collection(str($name)->explode('.')))
             ->map(fn ($segment) => (string) str($segment)->studly())
             ->join('\\');
 
@@ -324,7 +325,7 @@ class Finder
             $this->normalizePath($class)
         );
 
-        $fullName = str(collect(explode('.', $class))
+        $fullName = str((new Collection(explode('.', $class)))
             ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
             ->implode('.'));
 
@@ -332,7 +333,7 @@ class Finder
             $fullName = $fullName->substr(1);
         }
 
-        $classNamespaces = collect($this->classNamespaces)
+        $classNamespaces = (new Collection($this->classNamespaces))
             ->map(fn ($classNamespace) => $classNamespace['classNamespace'])
             ->merge($this->classLocations)
             ->toArray();
@@ -347,7 +348,7 @@ class Finder
                 $this->normalizePath($classNamespace)
             );
 
-            $namespace = collect(explode('.', $namespace))
+            $namespace = (new Collection(explode('.', $namespace)))
                 ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
                 ->implode('.');
 

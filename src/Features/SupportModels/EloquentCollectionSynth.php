@@ -7,6 +7,7 @@ use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 
 class EloquentCollectionSynth extends Synth {
     use SerializesAndRestoresModelIdentifiers, IsLazy;
@@ -84,7 +85,7 @@ class EloquentCollectionSynth extends Synth {
             $collection = $collection->keyBy->getKey();
 
             return new $meta['class'](
-                collect($meta['keys'])->map(function ($id) use ($collection) {
+                (new Collection($meta['keys']))->map(function ($id) use ($collection) {
                     return $collection[$id] ?? null;
                 })->filter()
             );

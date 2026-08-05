@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportSlots;
 
+use Illuminate\Support\Collection;
 use Livewire\ComponentHook;
 
 use function Livewire\on;
@@ -48,7 +49,7 @@ class SupportSlots extends ComponentHook
         // that they can be rendered and morph'd correctly. Full Slots are restored when
         // content was persisted from a skipped render (e.g. lazy components); otherwise
         // placeholders are used...
-        [$hydrated, $placeholders] = collect($memo['slots'] ?? [])
+        [$hydrated, $placeholders] = (new Collection($memo['slots'] ?? []))
             ->partition(fn ($s) => isset($s['content']));
 
         if ($hydrated->isNotEmpty()) $this->component->withHydratedSlots($hydrated->all());

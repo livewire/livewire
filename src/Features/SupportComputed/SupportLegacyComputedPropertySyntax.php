@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportComputed;
 
+use Illuminate\Support\Collection;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils as SyntheticUtils;
 
@@ -63,7 +64,7 @@ class SupportLegacyComputedPropertySyntax extends ComponentHook
 
     public static function getComputedProperties($target)
     {
-        return collect(static::getComputedPropertyNames($target))
+        return (new Collection(static::getComputedPropertyNames($target)))
             ->mapWithKeys(function ($property) use ($target) {
                 return [$property => static::getComputedProperty($target, $property)];
             })
@@ -102,7 +103,7 @@ class SupportLegacyComputedPropertySyntax extends ComponentHook
 
         $methodNames = SyntheticUtils::getPublicMethodsDefinedBySubClass($target);
 
-        $computedPropertyNames = collect($methodNames)
+        $computedPropertyNames = (new Collection($methodNames))
             ->filter(function ($method) {
                 return str($method)->startsWith('get')
                     && str($method)->endsWith('Property');

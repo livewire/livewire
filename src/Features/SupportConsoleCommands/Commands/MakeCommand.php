@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 
 #[AsCommand(name: 'make:livewire')]
 class MakeCommand extends Command
@@ -321,7 +322,7 @@ class MakeCommand extends Command
         }
 
         if (! empty($namespaceSegments)) {
-            $namespace .= '\\' . collect($namespaceSegments)
+            $namespace .= '\\' . (new Collection($namespaceSegments))
                 ->map(fn($segment) => Str::studly($segment))
                 ->implode('\\');
         }
@@ -329,7 +330,7 @@ class MakeCommand extends Command
         // Get the configured view path and extract the view namespace from it
         $viewNamespace = $this->extractViewNamespace($viewPath);
 
-        $viewName = collect($segments)
+        $viewName = (new Collection($segments))
             ->map(fn($segment) => Str::kebab($segment))
             ->prepend($viewNamespace)
             ->filter()
@@ -378,7 +379,7 @@ class MakeCommand extends Command
     {
         $stub = $this->files->get($this->getStubPath('livewire-mfc-test.stub'));
 
-        $componentName = collect(explode('.', $name))
+        $componentName = (new Collection(explode('.', $name)))
             ->map(fn($segment) => Str::kebab($segment))
             ->implode('.');
 
@@ -408,7 +409,7 @@ class MakeCommand extends Command
         // Use same stub as MFC, same format
         $stub = $this->files->get($this->getStubPath('livewire-mfc-test.stub'));
 
-        $componentName = collect(explode('.', $name))
+        $componentName = (new Collection(explode('.', $name)))
             ->map(fn($segment) => Str::kebab($segment))
             ->implode('.');
 
@@ -428,7 +429,7 @@ class MakeCommand extends Command
         $path = base_path('tests/Feature/Livewire');
 
         if (! empty($namespaceSegments)) {
-            $path .= '/' . collect($namespaceSegments)
+            $path .= '/' . (new Collection($namespaceSegments))
                 ->map(fn($segment) => Str::studly($segment))
                 ->implode('/');
         }
@@ -441,7 +442,7 @@ class MakeCommand extends Command
         // Use same Pest-style stub as MFC/SFC for consistency
         $stub = $this->files->get($this->getStubPath('livewire-mfc-test.stub'));
 
-        $componentName = collect(explode('.', $name))
+        $componentName = (new Collection(explode('.', $name)))
             ->map(fn($segment) => Str::kebab($segment))
             ->implode('.');
 

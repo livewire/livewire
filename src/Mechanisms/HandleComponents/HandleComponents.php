@@ -3,6 +3,8 @@
 namespace Livewire\Mechanisms\HandleComponents;
 
 use function Livewire\{on, trigger, wrap };
+
+use Illuminate\Support\Collection;
 use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleSynths\HandleSynths;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
@@ -490,8 +492,8 @@ class HandleComponents extends Mechanism
 
         $method = ($synths->isRemoval($leafValue) && $isLastSegment) ? 'unset' : 'set';
 
-        $pathThusFar = collect([$baseProperty, ...$segments])->slice(0, $index + 1)->join('.');
-        $fullPath = collect([$baseProperty, ...$segments])->join('.');
+        $pathThusFar = (new Collection([$baseProperty, ...$segments]))->slice(0, $index + 1)->join('.');
+        $fullPath = (new Collection([$baseProperty, ...$segments]))->join('.');
 
         $synth->$method($target, $property, $toSet, $pathThusFar, $fullPath);
 

@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Support\Arr;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 use League\MimeTypeDetection\FinfoMimeTypeDetector;
@@ -290,7 +291,7 @@ class TemporaryUploadedFile extends UploadedFile
         }
 
         if (is_array($subject)) {
-            return collect($subject)->contains(function ($value) {
+            return (new Collection($subject))->contains(function ($value) {
                 return static::canUnserialize($value);
             });
         }
@@ -308,7 +309,7 @@ class TemporaryUploadedFile extends UploadedFile
             if (str($subject)->startsWith('livewire-files:')) {
                 $paths = json_decode(str($subject)->after('livewire-files:'), true);
 
-                return collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
+                return (new Collection($paths))->map(function ($path) { return static::createFromLivewire($path); })->toArray();
             }
         }
 
@@ -328,6 +329,6 @@ class TemporaryUploadedFile extends UploadedFile
 
     public static function serializeMultipleForLivewireResponse($files)
     {
-        return 'livewire-files:'.json_encode(collect($files)->map->getFilename());
+        return 'livewire-files:'.json_encode((new Collection($files))->map->getFilename());
     }
 }

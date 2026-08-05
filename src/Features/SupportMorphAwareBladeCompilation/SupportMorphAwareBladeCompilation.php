@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportMorphAwareBladeCompilation;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Livewire\ComponentHook;
 use Livewire\Livewire;
 
@@ -380,7 +381,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
     protected static function directivesPattern($directives)
     {
         $directivesPattern = '('
-            .collect($directives)
+            .(new Collection($directives))
                 // Ensure longer directives are in the pattern before shorter ones...
                 ->sortBy(fn ($directive) => strlen($directive), descending: true)
                 // Only match directives that are an exact match and not ones that

@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportValidation;
 
+use Illuminate\Support\Collection;
 use Livewire\Drawer\Utils;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\ViewErrorBag;
@@ -58,7 +59,7 @@ class SupportValidation extends ComponentHook
 
         // Only persist errors that were born from properties on the component
         // and not from custom validators (Validator::make) that were run.
-        $context->addMemo('errors', collect($errors)
+        $context->addMemo('errors', (new Collection($errors))
             ->filter(function ($value, $key) {
                 return Utils::hasProperty($this->component, $key);
             })

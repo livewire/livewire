@@ -13,6 +13,7 @@ use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Form;
 
@@ -94,9 +95,9 @@ trait HandlesValidation
         $fields = (array) $field;
 
         return new MessageBag(
-            collect($this->getErrorBag())
+            (new Collection($this->getErrorBag()))
                 ->reject(function ($messages, $messageKey) use ($fields) {
-                    return collect($fields)->some(function ($field) use ($messageKey) {
+                    return (new Collection($fields))->some(function ($field) use ($messageKey) {
                         return str($messageKey)->is($field);
                     });
                 })
@@ -171,9 +172,9 @@ trait HandlesValidation
 
     public function rulesForModel($name)
     {
-        if (empty($this->getRules())) return collect();
+        if (empty($this->getRules())) return (new Collection());
 
-        return collect($this->getRules())
+        return (new Collection($this->getRules()))
             ->filter(function ($value, $key) use ($name) {
                 return Utils::beforeFirstDot($key) === $name;
             });
@@ -185,10 +186,10 @@ trait HandlesValidation
 
         // If property has numeric indexes in it,
         if ($dotNotatedProperty !== $propertyWithStarsInsteadOfNumbers) {
-            return collect($this->getRules())->keys()->contains($propertyWithStarsInsteadOfNumbers);
+            return (new Collection($this->getRules()))->keys()->contains($propertyWithStarsInsteadOfNumbers);
         }
 
-        return collect($this->getRules())
+        return (new Collection($this->getRules()))
             ->keys()
             ->map(function ($key) {
                 return (string) str($key)->before('.*');
@@ -224,7 +225,7 @@ trait HandlesValidation
 
     protected function checkRuleMatchesProperty($rules, $data)
     {
-        collect($rules)
+        (new Collection($rules))
             ->keys()
             ->each(function($ruleKey) use ($data) {
                 throw_unless(
@@ -347,7 +348,7 @@ trait HandlesValidation
         // Loop through rules and swap any wildcard '*' with keys from field, then filter down to only
         // rules that match the field, but return the rules without wildcard characters replaced,
         // so that custom attributes and messages still work as they need wildcards to work.
-        $rulesForField = collect($rules)
+        $rulesForField = (new Collection($rules))
             ->filter(function($value, $rule) use ($field) {
                 if(! str($field)->is($rule)) {
                     return false;
@@ -511,7 +512,7 @@ trait HandlesValidation
 
     protected function unwrapDataForValidation($data)
     {
-        return collect($data)->map(function ($value) {
+        return (new Collection($data))->map(function ($value) {
 
             $synth = app('livewire')->findSynth($value, $this);
 

@@ -12,6 +12,7 @@ use Livewire\Compiler\Parser\MultiFileParser;
 use Illuminate\Support\Str;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 
 #[AsCommand(name: 'livewire:convert')]
 class ConvertCommand extends Command
@@ -219,7 +220,7 @@ class ConvertCommand extends Command
     {
         $stub = $this->files->get($this->getStubPath('livewire-mfc-test.stub'));
 
-        $componentName = collect(explode('.', $name))
+        $componentName = (new Collection(explode('.', $name)))
             ->map(fn ($segment) => Str::kebab($segment))
             ->implode('.');
 

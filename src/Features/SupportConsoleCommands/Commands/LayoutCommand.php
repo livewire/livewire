@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -86,7 +87,7 @@ class LayoutCommand extends FileManipulationCommand
 
         $name = Str::kebab($directories->pop());
 
-        return $baseViewPath . DIRECTORY_SEPARATOR . collect()
+        return $baseViewPath . DIRECTORY_SEPARATOR . (new Collection())
             ->concat($directories)
             ->map([Str::class, 'kebab'])
             ->push("{$name}.blade.php")

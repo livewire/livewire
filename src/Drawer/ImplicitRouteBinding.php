@@ -60,7 +60,7 @@ class ImplicitRouteBinding
             return new Collection();
         }
 
-        return collect((new ReflectionMethod($component, 'mount'))->getParameters())
+        return (new Collection((new ReflectionMethod($component, 'mount'))->getParameters()))
             ->mapWithKeys(function ($parameter) {
                 return [$parameter->getName() => Reflector::getParameterClassName($parameter)];
             });
@@ -132,7 +132,7 @@ class ImplicitRouteBinding
 
     public function getPublicPropertyTypes($component)
     {
-        return collect(Utils::getPublicPropertiesDefinedOnSubclass($component))
+        return (new Collection(Utils::getPublicPropertiesDefinedOnSubclass($component)))
             ->map(function ($value, $name) use ($component) {
                 return Reflector::getParameterClassName(new \ReflectionProperty($component, $name));
             });

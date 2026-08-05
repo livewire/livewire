@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportCompiledWireKeys;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Blade;
 use Livewire\ComponentHook;
 
@@ -122,7 +123,7 @@ class SupportCompiledWireKeys extends ComponentHook
         $value = Blade::compileEchos($keyString);
 
         // Escape single quotes only outside of PHP blocks...
-        $value = collect(token_get_all('<'.'?php ?'.'>'.$value))
+        $value = (new Collection(token_get_all('<'.'?php ?'.'>'.$value)))
             ->slice(2)
             ->map(function ($token) {
                 if (! is_array($token)) {
