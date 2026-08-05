@@ -2,6 +2,8 @@
 
 namespace Livewire\Features\SupportVirtualProperties;
 
+use Livewire\Mechanisms\HandleSynths\HandleSynths;
+
 // A virtual property is a public method marked #[Virtual] that acts as a
 // property. The method is its constructor — it materializes on first access
 // (like #[Computed]) into a lookup on the component; there's no backing
@@ -16,7 +18,7 @@ trait HandlesVirtualProperties
     {
         foreach (static::virtualPropertyMethods() as $name => $method) {
             if (! array_key_exists($name, $this->__virtualProperties)) {
-                $this->__virtualProperties[$name] = $this->{$method['name']}();
+                $this->constructVirtualProperty($name);
             }
         }
     }
@@ -47,7 +49,7 @@ trait HandlesVirtualProperties
         $name = (string) str($name)->camel();
 
         if (! array_key_exists($name, $this->__virtualProperties)) {
-            $this->__virtualProperties[$name] = $this->{static::virtualPropertyMethods()[$name]['name']}();
+            $this->constructVirtualProperty($name);
         }
 
         return $this->__virtualProperties[$name];
@@ -77,7 +79,32 @@ trait HandlesVirtualProperties
     {
         $name = (string) str($name)->camel();
 
-        $this->__virtualProperties[$name] = $this->{static::virtualPropertyMethods()[$name]['name']}();
+        $this->constructVirtualProperty($name);
+    }
+
+    // Every construction runs through here: call the method, store the value
+    // (stored BEFORE adoption so re-entrant reads during adoption hit the
+    // lookup instead of re-running the method), then let the value's
+    // synthesizer finish construction — see HandleSynths::adopt()...
+    protected function constructVirtualProperty($name)
+    {
+        $value = $this->{static::virtualPropertyMethods()[$name]['name']}();
+
+        $this->__virtualProperties[$name] = $value;
+
+        if ($owner = $this->virtualPropertyOwner()) {
+            [$component, $prefix] = $owner;
+
+            app(HandleSynths::class)->adopt($component, $prefix.$name, $value);
+        }
+    }
+
+    // Adoption binds against a component. On a component that's $this; on a
+    // sub-object hosting its own virtuals it's the owning component, with
+    // the sub-object's path as a prefix — see Form's override...
+    protected function virtualPropertyOwner()
+    {
+        return $this instanceof \Livewire\Component ? [$this, ''] : null;
     }
 
     protected static function virtualPropertyMethods()

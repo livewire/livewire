@@ -9,6 +9,8 @@ class SupportAttributes extends ComponentHook
 {
     function boot(...$params)
     {
+        $this->recordWindow('boot', $params);
+
         $this->getLivewireAttributes()->each(function ($attribute) use ($params) {
             if (method_exists($attribute, 'boot')) {
                 $attribute->boot(...$params);
@@ -18,6 +20,8 @@ class SupportAttributes extends ComponentHook
 
     function mount(...$params)
     {
+        $this->recordWindow('mount', $params);
+
         $this->getLivewireAttributes()->each(function ($attribute) use ($params) {
             if (method_exists($attribute, 'mount')) {
                 $attribute->mount(...$params);
@@ -27,11 +31,24 @@ class SupportAttributes extends ComponentHook
 
     function hydrate(...$params)
     {
+        $this->recordWindow('hydrate', $params);
+
         $this->getLivewireAttributes()->each(function ($attribute) use ($params) {
             if (method_exists($attribute, 'hydrate')) {
                 $attribute->hydrate(...$params);
             }
         });
+    }
+
+    // Each one-shot lifecycle window records itself (BEFORE iterating, so
+    // attributes merged mid-window replay it without double-running — the
+    // iteration above reads a snapshot of the collection that doesn't
+    // include them). Attributes that arrive after a window has passed —
+    // a #[Virtual] form materializing mid-request — replay the missed
+    // windows in mergeOutsideAttributes()...
+    protected function recordWindow($window, $params)
+    {
+        $this->storePush('attributeWindows', [$window, $params]);
     }
 
     function update($propertyName, $fullPath, $newValue)
@@ -91,6 +108,8 @@ class SupportAttributes extends ComponentHook
 
     function dehydrate(...$params)
     {
+        $this->recordWindow('dehydrate', $params);
+
         $this->getLivewireAttributes()->each(function ($attribute) use ($params) {
             if (method_exists($attribute, 'dehydrate')) {
                 $attribute->dehydrate(...$params);

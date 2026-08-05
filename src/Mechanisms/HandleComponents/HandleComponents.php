@@ -405,7 +405,7 @@ class HandleComponents extends Mechanism
         // Form objects are special — they should never be fully replaced. Instead, decompose
         // the consolidated update into individual property updates so each goes through
         // the normal hydration path (which handles type casting for enums, etc.)...
-        $updates = $this->expandConsolidatedFormObjectUpdates($component, $updates);
+        $updates = $this->expandConsolidatedFormObjectUpdates($component, $updates, $data);
 
         $finishes = [];
 
@@ -423,13 +423,24 @@ class HandleComponents extends Mechanism
         }
     }
 
-    protected function expandConsolidatedFormObjectUpdates($component, $updates)
+    protected function expandConsolidatedFormObjectUpdates($component, $updates, $data)
     {
         $expanded = [];
 
         foreach ($updates as $path => $value) {
-            if (is_array($value) && property_exists($component, $path) && $component->$path instanceof Form) {
+            $form = is_array($value) ? $this->resolveFormObject($component, $path) : null;
+
+            if ($form) {
+                // A consolidated update echoes every field. The snapshot
+                // holds exactly what the client was given, so a field echoed
+                // back unchanged carries no information — expanding it would
+                // run update hooks (and trip #[Locked]) for a write that
+                // isn't one...
+                $snapshotFields = Utils::isSyntheticTuple($data[$path] ?? null) ? $data[$path][0] : [];
+
                 foreach ($value as $key => $child) {
+                    if (array_key_exists($key, $snapshotFields) && $this->wireValuesMatch($snapshotFields[$key], $child)) continue;
+
                     $expanded["{$path}.{$key}"] = $child;
                 }
             } else {
@@ -438,6 +449,40 @@ class HandleComponents extends Mechanism
         }
 
         return $expanded;
+    }
+
+    protected function resolveFormObject($component, $path)
+    {
+        // Exact key match only — hasVirtualProperty() camelCases its input,
+        // which would let an aliased path ([Form]) resolve the virtual [form]
+        // instead of failing as an unknown property...
+        $value = $component->all()[$path] ?? null;
+
+        return $value instanceof Form ? $value : null;
+    }
+
+    // Equality as the client sees it. The snapshot side carries synth tuples
+    // and one number type per value; the browser echoes back plain data and
+    // can't tell 1.0 from 1, or hold integer-like keys in order...
+    protected function wireValuesMatch($a, $b)
+    {
+        if (Utils::isSyntheticTuple($a)) $a = $a[0];
+
+        if (is_array($a) && is_array($b)) {
+            if (count($a) !== count($b)) return false;
+
+            foreach ($a as $key => $value) {
+                if (! array_key_exists($key, $b)) return false;
+
+                if (! $this->wireValuesMatch($value, $b[$key])) return false;
+            }
+
+            return true;
+        }
+
+        if ((is_int($a) || is_float($a)) && (is_int($b) || is_float($b))) return $a == $b;
+
+        return $a === $b;
     }
 
     public function updateProperty($component, $path, $value, $context)

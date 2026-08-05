@@ -77,7 +77,16 @@ abstract class Attribute
             }
         }
 
-        data_set($this->component, $this->levelName, $value);
+        // Write straight onto the sub-target when there is one. Routing
+        // through the component would re-enter Component::__get mid-write —
+        // and if the property is a #[Virtual] being materialized right now,
+        // PHP's magic-method recursion guard bypasses __get entirely and
+        // data_set would shadow it with a plain array property...
+        if ($this->subTarget) {
+            data_set($this->subTarget, $this->subName, $value);
+        } else {
+            data_set($this->component, $this->levelName, $value);
+        }
     }
 
     protected function tryingToSetStringOrIntegerToEnum($subject)
