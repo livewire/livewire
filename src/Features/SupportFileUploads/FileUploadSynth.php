@@ -35,6 +35,15 @@ class FileUploadSynth extends Synth {
         }
 
         try {
+            // Carry the byte count so the frontend's rich upload object can
+            // answer file.size and file.sizeForHumans without the native File
+            // object (which is gone once the upload finishes)...
+            $meta['size'] = $file->getSize();
+        } catch (\Throwable $e) {
+            //
+        }
+
+        try {
             // Sign a preview URL eagerly so the frontend's rich upload object
             // can preview the file without a Blade render ever asking for it...
             $meta['url'] = $file->temporaryUrl();
