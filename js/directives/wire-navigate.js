@@ -1,25 +1,31 @@
 import Alpine from 'alpinejs'
 
+let modifiers = ['hover', 'preserve-scroll', 'transition']
+
+// Build every ordered combination of modifiers (e.g. `.hover.transition` and
+// `.transition.hover`) so any authored order is picked up...
+let modifierCombos = (function build(remaining, current) {
+    return remaining.flatMap((modifier, i) => {
+        let combo = [...current, modifier]
+
+        return [combo, ...build([...remaining.slice(0, i), ...remaining.slice(i + 1)], combo)]
+    })
+})(modifiers, [])
+
 // Export all wire:navigate variations for use in other files
 export let wireNavigateSelectors = [
     '[wire\\:navigate]',
-    '[wire\\:navigate\\.hover]',
-    '[wire\\:navigate\\.preserve-scroll]',
-    '[wire\\:navigate\\.preserve-scroll\\.hover]',
-    '[wire\\:navigate\\.hover\\.preserve-scroll]',
+    ...modifierCombos.map(combo => `[wire\\:navigate\\.${combo.join('\\.')}]`),
 ]
 
 // Combined selector for querying all wire:navigate elements
 export let wireNavigateSelector = wireNavigateSelectors.join(', ')
 
 // Attribute to Alpine directive mapping
-let attributeMap = {
-    'wire:navigate': 'x-navigate',
-    'wire:navigate.hover': 'x-navigate.hover',
-    'wire:navigate.preserve-scroll': 'x-navigate.preserve-scroll',
-    'wire:navigate.preserve-scroll.hover': 'x-navigate.preserve-scroll.hover',
-    'wire:navigate.hover.preserve-scroll': 'x-navigate.hover.preserve-scroll',
-}
+let attributeMap = Object.fromEntries([
+    ['wire:navigate', 'x-navigate'],
+    ...modifierCombos.map(combo => [`wire:navigate.${combo.join('.')}`, `x-navigate.${combo.join('.')}`]),
+])
 
 // Register all selectors with Alpine
 wireNavigateSelectors.forEach(selector => {
