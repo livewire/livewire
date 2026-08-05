@@ -144,6 +144,24 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
             ->assertSeeText('Store ID: 2')
             ->assertSeeText('Book ID: 2');
     }
+
+    public function test_props_are_not_scoped_when_route_prevents_scoped_bindings()
+    {
+        Route::get('/unscoped-props/{store:name}/{book:name}', ComponentWithScopeBindings::class)->withoutScopedBindings();
+
+        $this->get('/unscoped-props/Second/Foo')
+            ->assertSeeText('Store ID: 2')
+            ->assertSeeText('Book ID: 1');
+    }
+
+    public function test_mount_params_are_not_scoped_when_route_prevents_scoped_bindings()
+    {
+        Route::get('/unscoped-mount/{store:name}/{book:name}', ComponentWithParentAndChildMountBindings::class)->withoutScopedBindings();
+
+        $this->get('/unscoped-mount/Second/Foo')
+            ->assertSeeText('Store ID: 2')
+            ->assertSeeText('Book ID: 1');
+    }
 }
 
 class PropBoundModel extends Model
