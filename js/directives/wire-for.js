@@ -13,7 +13,17 @@ Alpine.interceptInit(
             return
         }
 
-        let expression = contextualizeForExpression(el.getAttribute('wire:for').trim(), el)
+        let expression = el.getAttribute('wire:for').trim()
+
+        let contextualized = contextualizeForExpression(expression, el)
+
+        // Bail before an unparseable expression reaches Alpine, where it would
+        // surface as an opaque TypeError from deep inside x-for...
+        if (! contextualized) {
+            warnUnparseableForExpression(expression, el)
+
+            return
+        }
 
         let keyExpression = el.getAttribute('wire:for:key') || el.getAttribute(':key') || el.getAttribute('x-bind:key')
 
@@ -27,10 +37,33 @@ Alpine.interceptInit(
             // Alpine processes `bind` before `for`, storing the key expression
             // where `x-for` reads per-item keys from...
             ...(keyExpression ? { 'x-bind:key': keyExpression } : {}),
-            'x-for': expression,
+            'x-for': contextualized,
         })
     })
 )
+
+// The expression is JavaScript, so it follows x-for's "item in items" grammar —
+// but Blade muscle memory produces "items as item", so when that shape is
+// detected, hand back the exact corrected expression...
+function warnUnparseableForExpression(expression, el) {
+    let asMatch = expression.match(/^([\s\S]+?)\s+as\s+([\s\S]+)$/)
+
+    if (! asMatch) {
+        console.warn(`Livewire: wire:for expects an "item in items" expression (like x-for) and couldn't parse "${expression}"`, el)
+
+        return
+    }
+
+    let [, items, alias] = asMatch
+
+    let keyed = alias.match(/^([\s\S]+?)\s*=>\s*([\s\S]+)$/)
+
+    let suggestion = keyed
+        ? `(${keyed[2].trim()}, ${keyed[1].trim()}) in ${items.trim()}`
+        : `${alias.trim()} in ${items.trim()}`
+
+    console.warn(`Livewire: wire:for expressions use JavaScript's "item in items" syntax (like x-for), not Blade's "items as item". Change "${expression}" to "${suggestion}"`, el)
+}
 
 // Split on the same "aliases in items" grammar as Alpine's own x-for parser
 // (parseForExpression), then rewrite only the items half to target `$wire` —
@@ -38,7 +71,7 @@ Alpine.interceptInit(
 function contextualizeForExpression(expression, el) {
     let match = expression.match(/([\s\S]*?)\s+(in|of)\s+([\s\S]*)/)
 
-    if (! match) return expression
+    if (! match) return null
 
     let [, aliases, keyword, items] = match
 

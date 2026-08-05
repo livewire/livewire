@@ -298,4 +298,68 @@ class BrowserTest extends BrowserTestCase
         ->assertScript("document.querySelectorAll('[dusk=list] li').length", 3)
         ->assertScript("[...document.querySelectorAll('[dusk=list] li')].every(li => li.innerText.trim() !== '')", true);
     }
+
+    public function test_wire_for_warns_with_a_corrected_expression_when_given_blade_style_as_syntax()
+    {
+        Livewire::visit(new class extends Component {
+            public $fruits = ['apple', 'banana'];
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <ul dusk="list">
+                        <template wire:for="fruits as fruit">
+                            <li wire:text="fruit"></li>
+                        </template>
+                    </ul>
+                </div>
+                HTML;
+            }
+        })
+        ->assertConsoleLogHasWarning('Change \"fruits as fruit\" to \"fruit in fruits\"')
+        ->assertScript("document.querySelectorAll('[dusk=list] li').length", 0);
+    }
+
+    public function test_wire_for_warns_with_a_corrected_expression_when_given_blade_style_keyed_as_syntax()
+    {
+        Livewire::visit(new class extends Component {
+            public $fruits = ['apple', 'banana'];
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <ul dusk="list">
+                        <template wire:for="fruits as index => fruit">
+                            <li wire:text="fruit"></li>
+                        </template>
+                    </ul>
+                </div>
+                HTML;
+            }
+        })
+        ->assertConsoleLogHasWarning('Change \"fruits as index => fruit\" to \"(fruit, index) in fruits\"');
+    }
+
+    public function test_wire_for_warns_when_given_an_unparseable_expression()
+    {
+        Livewire::visit(new class extends Component {
+            public $fruits = ['apple', 'banana'];
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <ul dusk="list">
+                        <template wire:for="fruits">
+                            <li wire:text="fruit"></li>
+                        </template>
+                    </ul>
+                </div>
+                HTML;
+            }
+        })
+        ->assertConsoleLogHasWarning('couldn\'t parse \"fruits\"');
+    }
 }
