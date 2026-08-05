@@ -257,7 +257,8 @@ class HandleSynths extends Mechanism
             $synth = new $synthClass(new ComponentContext($component), $property->getName());
 
             // The synth assigns through the callback so it controls ordering
-            // around the assignment (e.g. form objects boot afterwards)...
+            // around the assignment (e.g. a form's boot() runs after its
+            // property is assigned, so boot-time logic can reach it)...
             $synth->initialize($typeName, fn ($value) => $property->setValue($component, $value));
         }
 

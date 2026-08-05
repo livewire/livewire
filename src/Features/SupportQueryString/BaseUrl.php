@@ -39,7 +39,7 @@ class BaseUrl extends LivewireAttribute
         // It's nullable if they passed it in like: #[Url(nullable: true)]
         if ($this->nullable !== null) return $this->nullable;
 
-        $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
+        $reflectionClass = new ReflectionClass($this->getSubTargetClass() ?? $this->getComponent());
 
         // It's nullable if there's a nullable typehint like: public ?string $foo;
         if ($this->getSubName() && $reflectionClass->hasProperty($this->getSubName())) {
@@ -139,9 +139,9 @@ class BaseUrl extends LivewireAttribute
 
     public function isOnFormObjectProperty()
     {
-        $subTarget = $this->getSubTarget();
+        $subTargetClass = $this->getSubTargetClass();
 
-        return $subTarget && is_subclass_of($subTarget, Form::class);
+        return $subTargetClass && is_subclass_of($subTargetClass, Form::class);
     }
 
     public function urlName()

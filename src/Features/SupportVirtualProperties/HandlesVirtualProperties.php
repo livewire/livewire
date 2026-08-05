@@ -2,6 +2,12 @@
 
 namespace Livewire\Features\SupportVirtualProperties;
 
+use Livewire\Drawer\Utils;
+use Livewire\Features\SupportFormObjects\Form;
+use Livewire\Features\SupportFormObjects\FormObjectSynth;
+
+use function Livewire\store;
+
 // A virtual property is a public method marked #[Virtual] that acts as a
 // property. The method is its constructor — it materializes on first access
 // (like #[Computed]) into a lookup on the component; there's no backing
@@ -16,7 +22,7 @@ trait HandlesVirtualProperties
     {
         foreach (static::virtualPropertyMethods() as $name => $method) {
             if (! array_key_exists($name, $this->__virtualProperties)) {
-                $this->__virtualProperties[$name] = $this->{$method['name']}();
+                $this->materializeVirtualProperty($name);
             }
         }
     }
@@ -35,6 +41,11 @@ trait HandlesVirtualProperties
         );
     }
 
+    function virtualPropertyIsMaterialized($name)
+    {
+        return array_key_exists((string) str($name)->camel(), $this->__virtualProperties);
+    }
+
     // The raw (non-camelCased) method names, for excluding them from the
     // callable-action list...
     function getVirtualPropertyMethodNames()
@@ -42,12 +53,20 @@ trait HandlesVirtualProperties
         return array_column(static::virtualPropertyMethods(), 'name');
     }
 
+    // The statically-declared return type of each virtual property, keyed by
+    // property name — the class-shape fact static attribute discovery and
+    // form-object detection are built on...
+    public static function virtualPropertyTypes()
+    {
+        return array_map(fn ($method) => $method['type'], static::virtualPropertyMethods());
+    }
+
     function getVirtualProperty($name)
     {
         $name = (string) str($name)->camel();
 
         if (! array_key_exists($name, $this->__virtualProperties)) {
-            $this->__virtualProperties[$name] = $this->{static::virtualPropertyMethods()[$name]['name']}();
+            $this->materializeVirtualProperty($name);
         }
 
         return $this->__virtualProperties[$name];
@@ -69,15 +88,91 @@ trait HandlesVirtualProperties
             );
         }
 
+        $isNewInstance = $value !== ($this->__virtualProperties[$name] ?? null);
+
         $this->__virtualProperties[$name] = $value;
+
+        // An explicitly assigned instance is a birth too (it needs the same
+        // rites, e.g. a form's boot()) — but the assigner's values are theirs:
+        // staged attribute writes only fill instances Livewire constructs...
+        if ($isNewInstance && $value !== null) {
+            $this->virtualPropertyWasBorn($name, $value, applyStagedWrites: false);
+        }
     }
 
-    // A virtual property has no empty state — unsetting reconstructs it...
+    // A virtual property has no empty state — unsetting reconstructs it.
+    // The replacement starts from the method's own defaults: staged
+    // attribute writes (e.g. #[Url] values) applied to a previous
+    // incarnation don't resurrect...
     function unsetVirtualProperty($name)
     {
         $name = (string) str($name)->camel();
 
-        $this->__virtualProperties[$name] = $this->{static::virtualPropertyMethods()[$name]['name']}();
+        $this->forgetStagedVirtualPropertyWrites($name);
+
+        $this->materializeVirtualProperty($name);
+    }
+
+    protected function materializeVirtualProperty($name)
+    {
+        $method = static::virtualPropertyMethods()[$name];
+
+        $value = $this->{$method['name']}();
+
+        $this->__virtualProperties[$name] = $value;
+
+        if ($value !== null) {
+            $this->virtualPropertyWasBorn($name, $value, applyStagedWrites: true);
+        }
+
+        return $value;
+    }
+
+    // The single birth rite for every way a virtual instance comes into
+    // being: form objects boot (idempotently) the moment they exist, and
+    // writes staged while the property didn't exist yet (e.g. #[Url] query
+    // string values) land on the newborn instance — so first-access timing
+    // never changes the outcome...
+    protected function virtualPropertyWasBorn($name, $value, $applyStagedWrites = true)
+    {
+        if ($value instanceof Form) {
+            FormObjectSynth::formObjectBorn($this, $name, static::virtualPropertyMethods()[$name]['type'], $value);
+        }
+
+        if ($applyStagedWrites) {
+            $this->applyStagedVirtualPropertyWrites($name, $value);
+        }
+    }
+
+    public function stageVirtualPropertyWrite($path, $value)
+    {
+        store($this)->push('stagedVirtualPropertyWrites', [$path, $value], $path);
+    }
+
+    protected function applyStagedVirtualPropertyWrites($name, $value)
+    {
+        $staged = store($this)->get('stagedVirtualPropertyWrites', []);
+
+        foreach ($staged as $path => [$fullPath, $stagedValue]) {
+            if (Utils::beforeFirstDot($fullPath) !== $name) continue;
+
+            // Write directly into the instance — never back through the
+            // component's magic __get, which is mid-materialization here...
+            data_set($value, Utils::afterFirstDot($fullPath), $stagedValue);
+
+            store($this)->unset('stagedVirtualPropertyWrites', $path);
+        }
+    }
+
+    protected function forgetStagedVirtualPropertyWrites($name)
+    {
+        $staged = store($this)->get('stagedVirtualPropertyWrites', []);
+
+        foreach ($staged as $path => $write) {
+            if (Utils::beforeFirstDot($path) === $name) {
+                store($this)->unset('stagedVirtualPropertyWrites', $path);
+            }
+        }
     }
 
     protected static function virtualPropertyMethods()
