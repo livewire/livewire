@@ -537,14 +537,15 @@ class HandleComponents extends Mechanism
             $params = $call['params'];
             $metadata = $call['metadata'] ?? [];
 
-            $root->markAsRenderless(false);
-
             $earlyReturnCalled = false;
             $earlyReturn = null;
             $returnEarly = function ($return = null) use (&$earlyReturnCalled, &$earlyReturn) {
                 $earlyReturnCalled = true;
                 $earlyReturn = $return;
             };
+
+            // Reset the mark before each call so one renderless call cannot poison the next
+            $root->markAsRenderless(false);
 
             $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $metadata, $idx);
 
@@ -601,6 +602,7 @@ class HandleComponents extends Mechanism
             }
         }
 
+        // Only skip render if all calls are renderless
         if (count($calls) > 0 && $skipRender >= count($calls)) {
             $root->skipRender();
         }
