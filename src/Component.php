@@ -22,6 +22,7 @@ use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use BadMethodCallException;
+use Livewire\Features\SupportLazyLoading\HandlesLazyLoading;
 
 abstract class Component
 {
@@ -44,6 +45,7 @@ abstract class Component
     use HandlesSlots;
     use HandlesHtmlAttributeForwarding;
     use HandlesRenderless;
+    use HandlesLazyLoading;
 
     protected $__id;
     protected $__name;

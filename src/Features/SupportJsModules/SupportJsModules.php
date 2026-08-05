@@ -45,13 +45,13 @@ class SupportJsModules extends ComponentHook
         // Don't add scriptModule effect during lazy-loading placeholder mount.
         // The component's view isn't rendered yet, so @assets won't have run.
         // The scriptModule will be added when __lazyLoad triggers the real mount.
-        if ($this->storeGet('isLazyLoadMounting') === true) return;
+        if ($this->component->isLazyLoadMounting()) return;
 
         // Add scriptModule effect during:
         // 1. Normal component mounting ($context->isMounting())
         // 2. Lazy-loaded component hydration (when __lazyLoad runs)
         $isNormalMount = $context->isMounting();
-        $isLazyLoadHydration = $this->storeGet('isLazyLoadHydrating') === true;
+        $isLazyLoadHydration = $this->component->isLazyLoadHydrating();
 
         if (! $isNormalMount && ! $isLazyLoadHydration) return;
 
