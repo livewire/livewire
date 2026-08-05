@@ -48,7 +48,7 @@ class SupportEvents extends ComponentHook
                 ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
                 ->count() > 0;
 
-            if ($isRenderless) $this->component->skipRender();
+            if ($isRenderless) $this->component->markAsRenderless();
         }
     }
 
