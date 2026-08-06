@@ -388,6 +388,14 @@ function sendMessages() {
                     return
                 }
 
+                if (response.ok && responseBody.trim() === '') {
+                    confirm(
+                        'The server returned an empty response.\nWould you like to refresh the page?'
+                    ) && window.location.reload()
+
+                    return
+                }
+
                 if (response.aborted) return
 
                 showHtmlModal(responseBody)
@@ -539,6 +547,13 @@ async function sendRequest(request, handlers) {
 
     if (response.redirected) {
         handlers.redirect(response.url)
+        handlers.finish()
+
+        return
+    }
+
+    if (responseBody.trim() === '') {
+        handlers.error({ response, responseBody })
         handlers.finish()
 
         return
