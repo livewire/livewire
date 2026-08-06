@@ -141,6 +141,10 @@ export async function sendRequest(pool) {
      */
     if (response.redirected) {
         window.location.href = response.url
+
+        finishProfile({ content, failed: false })
+
+        return
     }
 
     /**
