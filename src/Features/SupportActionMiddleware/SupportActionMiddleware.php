@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportActionMiddleware;
 
 use Illuminate\Auth\Middleware\Authorize as AuthorizeMiddleware;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Authorize;
 use Livewire\ComponentHook;
@@ -12,7 +13,7 @@ use Livewire\Features\SupportEvents\SupportEvents;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
-use function Livewire\{ on, store};
+use function Livewire\{on, store};
 
 class SupportActionMiddleware extends ComponentHook
 {
@@ -26,7 +27,7 @@ class SupportActionMiddleware extends ComponentHook
     }
 
     // Following how SupportPagination and SupportQueryString set property attribute,
-    // any authorize middleware will be convert into `#[Authorize]` attribute for that method
+    // any authorize middleware will be converted into `#[Authorize]` attribute for that method
     // See: HandlesAttributes::setMethodAttribute()
     function boot()
     {
@@ -105,9 +106,9 @@ class SupportActionMiddleware extends ComponentHook
         // If middleware not registered as persistent middleware and applied
         // on both route level and attribute, it will runs twice as intended behavior
         // because middleware attribute only applied on subsequent request that hit Livewire update endpoint.
-        $resolved = collect($middleware)
+        $resolved = (new Collection($middleware))
             ->reject(function ($value, $key) use ($excludedMiddleware) {
-                return collect($excludedMiddleware)->contains(function ($iValue, $iKey) use ($value) {
+                return (new Collection($excludedMiddleware))->contains(function ($iValue, $iKey) use ($value) {
                     // Some middlewares can be closures.
                     if (! is_string($value)) return true;
 
