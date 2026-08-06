@@ -62,7 +62,7 @@ class TemporaryUploadedFile extends UploadedFile
             return (string) $escapedMimeType->replace('_', '/');
         }
 
-        $mimeType = $this->storage->mimeType($this->path);
+        $mimeType = $this->detectMimeTypeFromContents() ?? $this->storage->mimeType($this->path);
 
         // Flysystem V2.0+ removed guess mimeType from extension support, so it has been re-added back
         // in here to ensure the correct mimeType is returned when using faked files in tests
@@ -73,6 +73,29 @@ class TemporaryUploadedFile extends UploadedFile
         }
 
         return $mimeType;
+    }
+
+    protected function detectMimeTypeFromContents()
+    {
+        try {
+            $stream = $this->storage->readStream($this->path);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        if (! is_resource($stream)) {
+            return null;
+        }
+
+        $contents = stream_get_contents($stream, 65536);
+
+        fclose($stream);
+
+        if ($contents === false || $contents === '') {
+            return null;
+        }
+
+        return (new FinfoMimeTypeDetector())->detectMimeTypeFromBuffer($contents) ?: null;
     }
 
     public function getFilename(): string
