@@ -18,6 +18,19 @@ abstract class Attribute
 
     protected $levelName;
 
+    protected $booted = false;
+
+    // A form object boots its own attributes as it merges them, which can
+    // land either side of the component's boot hook...
+    function callBoot(...$params)
+    {
+        if ($this->booted) return;
+
+        $this->booted = true;
+
+        if (method_exists($this, 'boot')) $this->boot(...$params);
+    }
+
     function __boot($component, AttributeLevel $level, $name = null, $subName = null, $subTarget = null)
     {
         $this->component = $component;

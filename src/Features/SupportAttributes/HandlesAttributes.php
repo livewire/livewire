@@ -22,4 +22,9 @@ trait HandlesAttributes
     {
         $this->attributes = $this->getAttributes()->concat($attributes);
     }
+
+    function forgetAttributesWhere($callback)
+    {
+        $this->attributes = $this->getAttributes()->reject($callback)->values();
+    }
 }

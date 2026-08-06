@@ -2,10 +2,13 @@
 
 namespace Livewire\Features\SupportVirtualProperties;
 
+use Livewire\Features\SupportFormObjects\Form;
+
 // A virtual property is a public method marked #[Virtual] that acts as a
-// property. The method is its constructor — it materializes on first access
-// (like #[Computed]) into a lookup on the component; there's no backing
-// declaration. On the wire it's indistinguishable from a normal property...
+// property. The method is its constructor — it runs alongside the synths that
+// initialize declared properties, into a lookup on the component; there's no
+// backing declaration. On the wire it's indistinguishable from a normal
+// property...
 trait HandlesVirtualProperties
 {
     protected $__virtualProperties = [];
@@ -16,7 +19,7 @@ trait HandlesVirtualProperties
     {
         foreach (static::virtualPropertyMethods() as $name => $method) {
             if (! array_key_exists($name, $this->__virtualProperties)) {
-                $this->__virtualProperties[$name] = $this->{$method['name']}();
+                $this->constructVirtualProperty($name);
             }
         }
     }
@@ -47,7 +50,7 @@ trait HandlesVirtualProperties
         $name = (string) str($name)->camel();
 
         if (! array_key_exists($name, $this->__virtualProperties)) {
-            $this->__virtualProperties[$name] = $this->{static::virtualPropertyMethods()[$name]['name']}();
+            $this->constructVirtualProperty($name);
         }
 
         return $this->__virtualProperties[$name];
@@ -70,14 +73,49 @@ trait HandlesVirtualProperties
         }
 
         $this->__virtualProperties[$name] = $value;
+
+        $this->bootVirtualFormObject($name, $value);
     }
 
     // A virtual property has no empty state — unsetting reconstructs it...
     function unsetVirtualProperty($name)
     {
-        $name = (string) str($name)->camel();
+        $this->constructVirtualProperty((string) str($name)->camel());
+    }
 
-        $this->__virtualProperties[$name] = $this->{static::virtualPropertyMethods()[$name]['name']}();
+    protected function constructVirtualProperty($name)
+    {
+        $method = static::virtualPropertyMethods()[$name]['name'];
+
+        try {
+            $value = $this->{$method}();
+        } catch (\Error $e) {
+            // Reading a sibling that mount() assigns is the usual trip-up,
+            // and PHP's error names neither the method nor the timing...
+            throw new VirtualPropertyConstructionException(static::class, $method, $e);
+        }
+
+        // In place before booting: a form's boot() can reach itself back
+        // through the component...
+        $this->__virtualProperties[$name] = $value;
+
+        $this->bootVirtualFormObject($name, $value);
+    }
+
+    protected function bootVirtualFormObject($name, $value)
+    {
+        if (! $value instanceof Form) return;
+
+        // A form registers its attributes under the name it was constructed
+        // with. If that doesn't match the property it backs, #[Locked] and
+        // #[Validate] end up guarding a path the client never sends...
+        if ($this instanceof \Livewire\Component && $value->getPropertyName() !== $name) {
+            throw new \LogicException(
+                'Livewire: virtual property ['.$name.'] on component ['.static::class.'] returned a form object constructed as ['.$value->getPropertyName().'] — it must be constructed with the name of the property it backs.'
+            );
+        }
+
+        $value->bootIfNotBooted();
     }
 
     protected static function virtualPropertyMethods()

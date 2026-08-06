@@ -10,9 +10,7 @@ class SupportAttributes extends ComponentHook
     function boot(...$params)
     {
         $this->getLivewireAttributes()->each(function ($attribute) use ($params) {
-            if (method_exists($attribute, 'boot')) {
-                $attribute->boot(...$params);
-            }
+            $attribute->callBoot(...$params);
         });
     }
 

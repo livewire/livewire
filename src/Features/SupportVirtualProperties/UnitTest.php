@@ -339,25 +339,33 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('newDuringUpdated', ['new']);
     }
 
-    function test_a_virtual_method_can_read_sibling_property_state()
+    function test_a_virtual_method_runs_before_mount_and_before_parameters_land()
     {
-        // Because construction is lazy (on first access, after mount and
-        // hydration), the method can depend on other properties...
+        // A virtual method is a constructor, not a callback: it runs
+        // alongside the synths that initialize declared properties — before
+        // parameters are assigned and before mount() can mutate anything.
+        // That's what puts the objects it returns in place early enough to
+        // take part in the lifecycle hooks that follow (see the form object
+        // tests below). Configure them from mount() instead of building them
+        // there, exactly as you would a declared form object...
         Livewire::test(new class extends TestComponent {
             public $seed = 'default';
 
+            public $mutated = 'default';
+
             public function mount()
             {
-                $this->seed = 'mounted';
+                $this->mutated = 'mounted';
             }
 
             #[Virtual]
             public function selected(): Selection
             {
-                return new Selection(keys: [$this->seed]);
+                return new Selection(keys: [$this->seed, $this->mutated]);
             }
-        })
-            ->assertSet('selected', fn ($s) => $s->keys() === ['mounted']);
+        }, ['seed' => 'from-parameter'])
+            ->assertSetStrict('seed', 'from-parameter')
+            ->assertSet('selected', fn ($s) => $s->keys() === ['default', 'default']);
     }
 
     function test_unsetting_a_virtual_property_resets_it_to_a_freshly_constructed_instance()
@@ -417,5 +425,311 @@ class UnitTest extends \Tests\TestCase
 
         Assert::assertInstanceOf(Selection::class, $component->get('selected'));
         Assert::assertSame([], $component->get('selected')->keys());
+    }
+
+    function test_a_form_object_from_a_virtual_property_runs_its_boot_method_once_per_request()
+    {
+        VirtualFormStub::$boots = 0;
+
+        Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function form(): VirtualFormStub
+            {
+                return new VirtualFormStub($this, 'form');
+            }
+
+            public function touch()
+            {
+                $this->form->title;
+                $this->form->title;
+            }
+        })
+            ->call('touch')
+            ->call('$refresh');
+
+        Assert::assertSame(3, VirtualFormStub::$boots);
+    }
+
+    function test_validate_attributes_on_a_form_object_from_a_virtual_property_are_registered()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function form(): VirtualFormStub
+            {
+                return new VirtualFormStub($this, 'form');
+            }
+
+            public function save()
+            {
+                $this->form->validate();
+            }
+        })
+            ->call('save')
+            ->assertHasErrors('form.title');
+    }
+
+    function test_validate_attributes_on_a_form_object_from_a_virtual_property_validate_on_update()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function form(): VirtualFormStub
+            {
+                return new VirtualFormStub($this, 'form');
+            }
+        })
+            ->set('form.title', 'ab')
+            ->assertHasErrors('form.title');
+    }
+
+    function test_locked_properties_on_a_form_object_from_a_virtual_property_cannot_be_updated()
+    {
+        $this->expectException(\Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException::class);
+
+        Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function form(): VirtualFormStub
+            {
+                return new VirtualFormStub($this, 'form');
+            }
+        })
+            ->set('form.secret', 'HACKED');
+    }
+
+    function test_url_attributes_on_a_form_object_from_a_virtual_property_read_the_query_string()
+    {
+        Livewire::withQueryParams(['q' => 'from-url'])
+            ->test(new class extends TestComponent {
+                #[Virtual]
+                public function form(): VirtualFormStub
+                {
+                    return new VirtualFormStub($this, 'form');
+                }
+            })
+            ->assertSetStrict('form.q', 'from-url');
+    }
+
+    function test_url_attributes_on_a_form_object_from_a_virtual_property_register_a_url_effect()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function form(): VirtualFormStub
+            {
+                return new VirtualFormStub($this, 'form');
+            }
+        });
+
+        Assert::assertArrayHasKey('form.q', $component->effects['url'] ?? []);
+    }
+
+    function test_a_whole_form_update_on_a_virtual_property_expands_into_per_field_updates()
+    {
+        // Sending the entire form as one consolidated update runs the same
+        // per-field update hooks as setting each field individually — the
+        // guarantee declared form objects already have...
+        Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function form(): VirtualFormStub
+            {
+                return new VirtualFormStub($this, 'form');
+            }
+        })
+            ->set('form', ['title' => 'ab', 'q' => 'searching'])
+            ->assertSetStrict('form.title', 'ab')
+            ->assertSetStrict('form.q', 'searching')
+            ->assertHasErrors('form.title');
+    }
+
+    function test_a_reset_virtual_form_object_is_booted_again()
+    {
+        // reset() reconstructs a virtual property, so the form that comes
+        // back is a different instance — it has to arrive booted even though
+        // the component's boot hook has long since run...
+        Livewire::test(new class extends TestComponent {
+            public $errorAfterReset;
+
+            public $bootsDuringReset;
+
+            #[Virtual]
+            public function form(): VirtualFormStub
+            {
+                return new VirtualFormStub($this, 'form');
+            }
+
+            public function resetAndValidate()
+            {
+                $before = VirtualFormStub::$boots;
+
+                $this->reset('form');
+
+                $this->bootsDuringReset = VirtualFormStub::$boots - $before;
+
+                try {
+                    $this->form->validate();
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    $this->errorAfterReset = $e->validator->errors()->first('form.title');
+                }
+            }
+        })
+            ->call('resetAndValidate')
+            ->assertSetStrict('bootsDuringReset', 1)
+            ->assertSetStrict('errorAfterReset', 'The title field is required.');
+    }
+
+    function test_resetting_a_virtual_form_object_does_not_accumulate_attributes()
+    {
+        // Each reconstruction replaces the previous form's attributes rather
+        // than stacking a new set on top of them...
+        Livewire::test(new class extends TestComponent {
+            public $countsMatch;
+
+            #[Virtual]
+            public function form(): VirtualFormStub
+            {
+                return new VirtualFormStub($this, 'form');
+            }
+
+            public function resetTwice()
+            {
+                $this->reset('form');
+                $after = $this->getAttributes()->count();
+
+                $this->reset('form');
+                $this->countsMatch = $after === $this->getAttributes()->count();
+            }
+        })
+            ->call('resetTwice')
+            ->assertSetStrict('countsMatch', true);
+    }
+
+    function test_a_virtual_method_that_memoizes_its_form_object_does_not_reregister_rules()
+    {
+        // A method free to return the same instance twice must not boot it
+        // twice — the rule would land in the form's rule set again...
+        Livewire::test(new class extends TestComponent {
+            protected $memo;
+
+            public $ruleCount;
+
+            #[Virtual]
+            public function form(): VirtualFormStub
+            {
+                return $this->memo ??= new VirtualFormStub($this, 'form');
+            }
+
+            public function resetAndCount()
+            {
+                $this->reset('form');
+
+                $this->ruleCount = count($this->form->getRules());
+            }
+        })
+            ->call('resetAndCount')
+            ->assertSetStrict('ruleCount', 1)
+            ->assertSet('form', fn ($form) => $form->getRules()['title'] === 'required|min:3');
+    }
+
+    function test_a_form_object_swapped_onto_a_virtual_property_is_booted()
+    {
+        // Assignment is a construction path too — the replacement has to
+        // arrive booted or it silently loses its rules...
+        Livewire::test(new class extends TestComponent {
+            public $ruleCount;
+
+            #[Virtual]
+            public function form(): VirtualFormStub
+            {
+                return new VirtualFormStub($this, 'form');
+            }
+
+            public function swap()
+            {
+                $this->fill(['form' => new VirtualFormStub($this, 'form')]);
+
+                $this->ruleCount = count($this->form->getRules());
+            }
+        })
+            ->call('swap')
+            ->assertSetStrict('ruleCount', 1);
+    }
+
+    function test_a_form_object_constructed_under_the_wrong_name_throws()
+    {
+        // Attributes are registered under the name the form was constructed
+        // with, so a mismatch would quietly disarm #[Locked] and #[Validate]
+        // rather than protecting anything...
+        $this->assertThrowsDeep(\LogicException::class, function () {
+            Livewire::test(new class extends TestComponent {
+                #[Virtual]
+                public function form(): VirtualFormStub
+                {
+                    return new VirtualFormStub($this, 'frm');
+                }
+            });
+        });
+    }
+
+    function test_a_virtual_method_that_reads_an_uninitialized_sibling_names_itself_in_the_error()
+    {
+        // The raw PHP error mentions neither the method nor the fact that
+        // virtual methods run before mount()...
+        $this->assertThrowsDeep(VirtualPropertyConstructionException::class, function () {
+            Livewire::test(new class extends TestComponent {
+                public VirtualSiblingStub $sibling;
+
+                public function mount()
+                {
+                    $this->sibling = new VirtualSiblingStub;
+                }
+
+                #[Virtual]
+                public function copied(): Selection
+                {
+                    return new Selection(keys: [$this->sibling->key]);
+                }
+            });
+        });
+    }
+
+    function test_a_form_object_assigned_to_a_declared_property_still_boots()
+    {
+        // The synth path is untouched by all of the above...
+        VirtualFormStub::$boots = 0;
+
+        Livewire::test(new class extends TestComponent {
+            public VirtualFormStub $form;
+
+            public function save()
+            {
+                $this->form->validate();
+            }
+        })
+            ->call('save')
+            ->assertHasErrors('form.title');
+
+        Assert::assertSame(2, VirtualFormStub::$boots);
+    }
+}
+
+class VirtualSiblingStub
+{
+    public $key = 'sibling';
+}
+
+class VirtualFormStub extends \Livewire\Form
+{
+    public static $boots = 0;
+
+    #[\Livewire\Attributes\Validate('required|min:3')]
+    public $title = '';
+
+    #[\Livewire\Attributes\Url]
+    public $q = '';
+
+    #[\Livewire\Attributes\Locked]
+    public $secret = 'original';
+
+    public function boot()
+    {
+        static::$boots++;
     }
 }
