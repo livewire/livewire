@@ -32,6 +32,11 @@ export default class Action {
             this.promiseResolution = { resolve, reject }
         })
 
+        // Fire-and-forget actions (wire:click, wire:model.live, etc.) never await
+        // this promise, so attach a no-op handler to keep rejections from
+        // surfacing as unhandled. Callers that do await still receive them...
+        this.promise.catch(() => {})
+
         this.promise._livewireAction = this
     }
 

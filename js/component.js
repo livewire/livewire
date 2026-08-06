@@ -1,4 +1,4 @@
-import { dataSet, deepClone, diff, diffAndConsolidate, diffAndPatchRecursive, extractData} from '@/utils'
+import { dataDelete, dataGet, dataSet, deepClone, diff, diffAndConsolidate, diffAndPatchRecursive, extractData} from '@/utils'
 import { dehydrateTree } from '@/synths'
 import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
@@ -132,6 +132,31 @@ export class Component {
         let propertiesDiff = diffAndConsolidate(this.canonical, this.ephemeral)
 
         return this.mergeQueuedUpdates(propertiesDiff)
+    }
+
+    revertUpdates(updates) {
+        // Updates the server rejected would otherwise linger in the diff between
+        // canonical and ephemeral state and be re-sent with every subsequent
+        // request, repeating the same server error and wedging the component...
+        Object.entries(updates).forEach(([path, sentValue]) => {
+            let currentValue = dehydrateTree(dataGet(this.ephemeral, path))
+
+            // Leave properties alone if the user has changed them again since
+            // the failed request was sent...
+            let stillMatchesSentValue = sentValue === '__rm__'
+                ? currentValue === undefined
+                : JSON.stringify(currentValue) === JSON.stringify(sentValue)
+
+            if (! stillMatchesSentValue) return
+
+            let canonicalValue = dataGet(this.canonical, path)
+
+            if (canonicalValue === undefined) {
+                dataDelete(this.reactive, path)
+            } else {
+                dataSet(this.reactive, path, deepClone(canonicalValue))
+            }
+        })
     }
 
     applyUpdates(object, updates) {
