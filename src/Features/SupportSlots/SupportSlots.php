@@ -87,7 +87,7 @@ class SupportSlots extends ComponentHook
 
             // If the slot has content and the render was skipped (e.g. lazy loading),
             // persist the content so it survives the dehydrate → hydrate cycle...
-            if ($slot instanceof Slot && $this->storeGet('skipRender', false)) {
+            if ($slot instanceof Slot && $this->component->shouldSkipRender()) {
                 $entry['content'] = $slot->content;
             }
 

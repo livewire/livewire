@@ -6,7 +6,6 @@ use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
 use Livewire\Exceptions\ModelableRootHasWireModelException;
 use function Livewire\on;
-use function Livewire\store;
 
 class SupportWireModelingNestedComponents extends ComponentHook
 {
@@ -39,8 +38,8 @@ class SupportWireModelingNestedComponents extends ComponentHook
         $directives = $memo['bindingsDirectives'];
 
         // Store the bindings for later dehydration...
-        store($this->component)->set('bindings', $bindings);
-        store($this->component)->set('bindings-directives', $directives);
+        $this->storeSet('bindings', $bindings);
+        $this->storeSet('bindings-directives', $directives);
 
         // If this child's parent already rendered its stub, retrieve
         // the memo'd value and set it.
@@ -49,7 +48,7 @@ class SupportWireModelingNestedComponents extends ComponentHook
         $outers = static::$outersByComponentId[$memo['id']];
 
         foreach ($bindings as $outer => $inner) {
-            store($this->component)->set('hasBeenSeeded', true);
+            $this->storeSet('hasBeenSeeded', true);
 
             $this->component->$inner = $outers[$outer];
         }
@@ -58,8 +57,8 @@ class SupportWireModelingNestedComponents extends ComponentHook
     public function render($view, $data)
     {
         return function ($html, $replaceHtml) {
-            $bindings = store($this->component)->get('bindings', false);
-            $directives = store($this->component)->get('bindings-directives', false);
+            $bindings = $this->storeGet('bindings', false);
+            $directives = $this->storeGet('bindings-directives', false);
 
             if (! $bindings) return;
 
@@ -94,11 +93,11 @@ class SupportWireModelingNestedComponents extends ComponentHook
 
     public function dehydrate($context)
     {
-        $bindings = store($this->component)->get('bindings', false);
+        $bindings = $this->storeGet('bindings', false);
 
         if (! $bindings) return;
 
-        $directives = store($this->component)->get('bindings-directives');
+        $directives = $this->storeGet('bindings-directives');
 
         // Add the bindings metadata to the paylad for later reference...
         $context->addMemo('bindings', $bindings);

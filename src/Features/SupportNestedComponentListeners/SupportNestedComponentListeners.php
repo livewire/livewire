@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportNestedComponentListeners;
 
-use function Livewire\store;
 use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
 
@@ -25,7 +24,7 @@ class SupportNestedComponentListeners extends ComponentHook
                 $attributeKey = 'x-on:'.$fullEvent;
                 $attributeValue = "\$wire.\$parent.".$value;
 
-                store($this->component)->push('generatedAttributes', $attributeValue, $attributeKey);
+                $this->storePush('generatedAttributes', $attributeValue, $attributeKey);
             }
         }
     }
@@ -33,7 +32,7 @@ class SupportNestedComponentListeners extends ComponentHook
     public function render($view, $data)
     {
         return function ($html, $replaceHtml) {
-            $attributes = store($this->component)->get('generatedAttributes', false);
+            $attributes = $this->storeGet('generatedAttributes', false);
 
             if (! $attributes) return;
 
@@ -43,7 +42,7 @@ class SupportNestedComponentListeners extends ComponentHook
 
     public function dehydrate($context)
     {
-        $attributes = store($this->component)->get('generatedAttributes', false);
+        $attributes = $this->storeGet('generatedAttributes', false);
 
         if (! $attributes) return;
 
@@ -57,6 +56,6 @@ class SupportNestedComponentListeners extends ComponentHook
         $attributes = $memo['generatedAttributes'];
 
         // Store the attributes for later dehydration...
-        store($this->component)->set('generatedAttributes', $attributes);
+        $this->storeSet('generatedAttributes', $attributes);
     }
 }

@@ -453,6 +453,8 @@ function sendMessages() {
 
                             // Use Alpine.transaction to batch data updates and DOM morphing
                             // This prevents effects from firing before the morph cleanup runs
+                            let morphed = false
+
                             Alpine.transaction(async () => {
                                 message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
 
@@ -466,7 +468,13 @@ function sendMessages() {
                                 if (message.isCancelled()) return
 
                                 await message.invokeOnMorph()
-                            }).then(() => {
+
+                                morphed = true
+                            }).finally(() => {
+                                // Using `finally` so a broken effect or morph can't strand the
+                                // component with a stuck loading state and an action promise
+                                // that never settles. The rejection still propagates...
+                                //
                                 // Resolve promises & finish AFTER morph completes
                                 if (! message.isCancelled()) {
                                     message.resolveActionPromises(
@@ -475,6 +483,10 @@ function sendMessages() {
                                     )
                                     message.invokeOnFinish()
                                 }
+
+                                // ...but nothing was painted if the morph never finished, so
+                                // skip the render hook the same way a skipped message does...
+                                if (! morphed) return
 
                                 requestAnimationFrame(() => {
                                     if (message.isCancelled()) return
