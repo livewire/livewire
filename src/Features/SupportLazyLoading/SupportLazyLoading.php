@@ -96,8 +96,8 @@ class SupportLazyLoading extends ComponentHook
 
         $this->component->skipMount();
 
-        $this->storeSet('isLazyLoadMounting', true);
-        $this->storeSet('isLazyIsolated', $isolate);
+        $this->markLazyLoadMounting();
+        $this->markLazyIsolated($isolate);
 
         $this->component->skipRender(
             $this->generatePlaceholderHtml($params, $isDeferred)
@@ -111,15 +111,15 @@ class SupportLazyLoading extends ComponentHook
 
         $this->component->skipHydrate();
 
-        $this->storeSet('isLazyLoadHydrating', true);
+        $this->markLazyLoadHydrating();
     }
 
     function dehydrate($context)
     {
-        if ($this->storeGet('isLazyLoadMounting') === true) {
+        if ($this->isLazyLoadMounting()) {
             $context->addMemo('lazyLoaded', false);
-            $context->addMemo('lazyIsolated', $this->storeGet('isLazyIsolated'));
-        } elseif ($this->storeGet('isLazyLoadHydrating') === true) {
+            $context->addMemo('lazyIsolated', $this->isLazyIsolated());
+        } elseif ($this->isLazyLoadHydrating()) {
             $context->addMemo('lazyLoaded', true);
         }
     }
