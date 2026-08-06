@@ -389,7 +389,9 @@ function sendMessages() {
                 }
 
                 if (response.ok && responseBody.trim() === '') {
-                    confirm('The server’s response was lost, refresh?') && window.location.reload()
+                    confirm(
+                        'The server returned an empty response.\nWould you like to refresh the page?'
+                    ) && window.location.reload()
 
                     return
                 }

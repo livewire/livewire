@@ -74,7 +74,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(Component::class)
             ->click('@refresh')
             ->waitForDialog()
-            ->assertDialogOpened('The server’s response was lost, refresh?')
+            ->assertDialogOpened("The server returned an empty response.\nWould you like to refresh the page?")
             ->dismissDialog()
             ->pause(100)
             ->assertMissing('#livewire-error')
