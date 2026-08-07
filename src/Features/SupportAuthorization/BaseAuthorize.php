@@ -2,37 +2,33 @@
 
 namespace Livewire\Features\SupportAuthorization;
 
-use Attribute;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Arr;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\ImplicitlyBoundMethod;
-use UnitEnum;
 
 use function Illuminate\Support\enum_value;
 use function Livewire\wrap;
 
-#[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
+#[\Attribute(\Attribute::IS_REPEATABLE | \Attribute::TARGET_METHOD)]
 class BaseAuthorize extends LivewireAttribute
 {
     use AuthorizesRequests;
 
     public function __construct(
-        public UnitEnum|string $ability,
+        public \UnitEnum|string $ability,
         public array|string|null $argument = null,
     ) {}
 
     public function call(array $parameters) : void
     {
         wrap($this->component)->tap(function () use ($parameters) {
-            // Action that does not require a model or class...
+            // Authorize defined gate or class name
             if (is_null($this->argument)) {
                 $this->authorize($this->ability);
     
                 return;
             }
-    
-            $arguments = Arr::wrap($this->argument);
     
             // Resolve method dependencies lazily, then reuse them for multi-argument authorization checks...
             $methodDependencies = null;
@@ -46,18 +42,15 @@ class BaseAuthorize extends LivewireAttribute
     
             // Resolve each argument (prioritize method parameters first, then component properties)
             $resolved = [];
-            foreach ($arguments as $arg) {
-                $resolved[] = $this->resolveArgument($arg, $parameters, $resolveMethodDependencies);
+            foreach (Arr::wrap($this->argument) as $arg) {
+                $resolved[] = $this->resolveArgument($arg, $resolveMethodDependencies);
             }
     
             $this->authorize($this->ability, $resolved);
         });
     }
 
-    /**
-     * Resolve a single argument.
-     */
-    protected function resolveArgument(string $arg, array $parameters, \Closure $resolveMethodDependencies): mixed
+    protected function resolveArgument(string $arg, \Closure $resolveMethodDependencies): mixed
     {
         // Action that does not require a model, for example a 'create' action...
         if (class_exists($arg)) {
