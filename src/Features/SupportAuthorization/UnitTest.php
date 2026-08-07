@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportAuthorization;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Routing\UrlGenerator;
@@ -893,6 +894,61 @@ class UnitTest extends TestCase
             })
             ->dispatch('some-event')
             ->assertForbidden();
+    }
+
+    public function test_authorize_attribute_trigger_component_exception_hook()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                #[BaseAuthorize(AuthorizationPost::class)]
+                public function store() : bool
+                {
+                    return true;
+                }
+
+                public function exception($e, $stopPropagation)
+                {
+                    if ($e instanceof AuthorizationException) {
+                        $stopPropagation();
+    
+                        Session::put('exception-hook-triggered', true);
+                    }
+                }
+            })
+            ->call('store')
+            ->assertOk();
+
+        $this->assertTrue(Session::has('exception-hook-triggered'));
+    }
+
+    public function test_can_authorize_using_attribute_and_trait_method_at_the_same_time()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[BaseAuthorize(AuthorizationPost::class)]
+                public function store(AuthorizationPost $post)
+                {
+                    $this->authorize(AuthorizationPost::class);
+                    $this->authorize('edit', $post);
+                }
+
+                public function exception($e, $stopPropagation)
+                {
+                    if ($e instanceof AuthorizationException) {
+                        $stopPropagation();
+    
+                        Session::put('exception-hook-triggered', true);
+                    }
+                }
+            })
+            ->call('store', post: 1)
+            ->assertOk();
+
+        $this->assertFalse(Session::has('exception-hook-triggered'));
     }
 }
 
