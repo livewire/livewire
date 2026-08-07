@@ -55,7 +55,7 @@ trait HandlesAuthorization
 
         // Try method parameter first (prioritized per rules)
         $methodArgument = Arr::first(
-            (new \ReflectionObject($this))->getMethod($method)->getParameters(),
+            (new \ReflectionMethod($this, $method))->getParameters(),
             fn (\ReflectionParameter $parameter) : bool => $parameter->getName() === $arg,
         );
 
