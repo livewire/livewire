@@ -414,23 +414,35 @@ class BrowserTest extends BrowserTestCase
     {
         Livewire::visit(new class extends Component {
             #[BaseDebounce(500)]
-            public $search = '';
+            public $foo;
 
             public function render()
             {
                 return <<<'HTML'
-                <div>
-                    <input type="text" wire:model.live.throttle.50ms="search" dusk="input" />
-                    <span dusk="output">{{ $search }}</span>
+                <div x-init="window.requests = 0">
+                    <input type="text" wire:model.live.throttle.250ms="foo" dusk="input">
+                    <span wire:text="foo" dusk="text"></span>
                 </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
                 HTML;
             }
         })
             ->waitForLivewireToLoad()
-            ->typeSlowly('@input', 'livewire', 50)
-            ->assertSeeIn('@output', '')
-            ->waitForTextIn('@output', 'livewire', 1) // 1s clearly exceeds 500ms debounce duration
-        ;
+            // 300ms between keystrokes, clearly exceeds the 250ms throttle window
+            // but still below 500ms debounce duration
+            ->typeSlowly('@input', 'ab', 300)
+            ->assertSeeIn('@text', 'ab') // wire:text should update immediately
+            ->pause(300) // Wait for the trailing request to be handled
+            ->assertScript('window.requests', 1); // Requests collapse into one
     }
 
     public function test_debounces_requests_with_zero_duration()

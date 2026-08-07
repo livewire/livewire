@@ -66,7 +66,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let networkOnChange = networkModifiers.includes('change') || networkModifiers.includes('lazy')
     let networkOnEnter = networkModifiers.includes('enter')
     let hasNetworkTriggers = networkOnBlur || networkOnChange || networkOnEnter
-    let isDebounced = networkModifiers.includes('debounce')
+    let isDebounced = networkModifiers.includes('debounce') || componentHasDebounceEffects(component, expression)
     let isThrottled = networkModifiers.includes('throttle')
 
     // Trigger a network request
@@ -86,7 +86,11 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Apply debounce/throttle from network modifiers
     if ((shouldSendNetwork && ! hasNetworkTriggers && isRealtimeInput(el) && ! isDebounced && ! isThrottled) || isDebounced) {
-        debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(networkModifiers, 'debounce') || 150)
+        let debounceDuration = parseModifierDuration(networkModifiers, 'debounce') 
+            ?? componentEffectsDuration(component, expression, 'debounce')
+            ?? 150
+
+        debouncedUpdate = debounce(debouncedUpdate, debounceDuration)
     }
 
     if (isThrottled) {
@@ -245,4 +249,28 @@ function parseModifierDuration(modifiers, key) {
     let duration = nextModifier.split('ms')[0]
 
     return ! isNaN(duration) ? duration : undefined
+}
+
+function componentEffectsDuration(component, expression, key) {
+    let target = component
+    let property = expression
+
+    // 1) wire:model.live="$parent.foo" commits on the parent — look up parent effects
+    if (expression.startsWith('$parent')) {
+        target = component.parent
+        property = expression.replace(/^\$parent\.?/, '')
+    }
+
+    // 2) Mount-time effect — prefer originalEffects because
+    //    mergeNewSnapshot replaces component.effects on subsequent requests
+    //    (same durability pattern as originalEffects.url / scripts)
+    let options = (target.originalEffects && target.originalEffects[key])
+        || target.effects[key]
+        || {}
+
+    return ! isNaN(options[property]) ? options[property] : undefined
+}
+
+function componentHasDebounceEffects(component, expression) {
+    return componentEffectsDuration(component, expression, 'debounce') !== undefined
 }
