@@ -11,6 +11,6 @@ class BaseRenderless extends LivewireAttribute
     {
         $this->component->skipIslandsRender();
 
-        $this->component->skipRender();
+        $this->component->markAsRenderless();
     }
 }
