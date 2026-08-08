@@ -210,6 +210,56 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_can_transition_an_element_behind_an_open_dialog()
+    {
+        $animationsRunning = 'document.getAnimations().some(a => a.playState === "running")';
+
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $items = ['Item A', 'Item B'];
+
+                public function removeItem()
+                {
+                    array_shift($this->items);
+                }
+
+                public function render() { return <<<'HTML'
+                <div dusk="root">
+                    <style>
+                        ::view-transition-old(*) { animation: 1s ease-out fade-out; }
+                        ::view-transition-new(*) { animation: 1s ease-in fade-in; }
+                        @keyframes fade-out { to { opacity: 0; } }
+                        @keyframes fade-in { from { opacity: 0; } }
+                    </style>
+
+                    @foreach ($items as $index => $item)
+                        <div
+                            wire:transition="card-{{ $index }}"
+                            wire:key="item-{{ $item }}"
+                            dusk="card-{{ $index }}"
+                        >
+                            {{ $item }}
+                        </div>
+                    @endforeach
+
+                    <dialog wire:ignore.self x-init="$el.showModal()" dusk="dialog">
+                        <p>Modal Content</p>
+                        <button wire:click="removeItem" dusk="remove">Remove item</button>
+                    </dialog>
+                </div>
+                HTML; }
+            }
+        )
+        ->waitFor('dialog[open]')
+        ->waitForLivewire()->click('@remove')
+        ->waitUntil($animationsRunning)
+        ->assertMissing('@card-1')
+        ->assertScript("document.querySelector('[dusk=dialog]').matches(':modal')", true)
+        ->assertScript("getComputedStyle(document.querySelector('[dusk=root]')).viewTransitionScope", 'all')
+        ->waitUntil("!$animationsRunning")
+        ;
+    }
+
     public function test_can_transition_dynamic_component_swap()
     {
         $animationsRunning = 'document.getAnimations().some(a => a.playState === "running")';
