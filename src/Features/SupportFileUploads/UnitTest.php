@@ -941,6 +941,79 @@ class UnitTest extends \Tests\TestCase
         Storage::disk('default-disk')->assertExists('images/avatar.jpg');
         Storage::disk('tmp-for-tests')->assertMissing('images/avatar.jpg');
     }
+
+    public function test_nested_uploads_survive_an_update_to_one_of_their_ancestor_paths()
+    {
+        // Nested repeaters (a Filament repeater inside a repeater, for
+        // example) update an ancestor path rather than the file's own leaf
+        // path. The browser strips synthesizer meta out of update payloads,
+        // so already-uploaded files arrive as their raw serialized strings
+        // and have to be re-hydrated from the previous snapshot's meta...
+        $component = Livewire::test(NestedFileUploadComponent::class)
+            ->set('data.sections.first.rows.one.image', UploadedFile::fake()->image('one.jpg'))
+            ->set('data.sections.first.rows.two.image', UploadedFile::fake()->image('two.jpg'));
+
+        $one = $component->viewData('data')['sections']['first']['rows']['one']['image'];
+        $two = $component->viewData('data')['sections']['first']['rows']['two']['image'];
+
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $one);
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $two);
+
+        // Typing into a caption of one row sends the whole section back...
+        $component->set('data.sections.first', [
+            'rows' => [
+                'one' => ['image' => $one->serializeForLivewireResponse(), 'caption' => 'Updated'],
+                'two' => ['image' => $two->serializeForLivewireResponse(), 'caption' => ''],
+            ],
+        ]);
+
+        $rows = $component->viewData('data')['sections']['first']['rows'];
+
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $rows['one']['image']);
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $rows['two']['image']);
+        $this->assertEquals('one.jpg', $rows['one']['image']->getClientOriginalName());
+        $this->assertEquals('two.jpg', $rows['two']['image']->getClientOriginalName());
+        $this->assertEquals('Updated', $rows['one']['caption']);
+    }
+
+    public function test_a_row_added_alongside_a_nested_upload_doesnt_disturb_it()
+    {
+        $component = Livewire::test(NestedFileUploadComponent::class)
+            ->set('data.sections.first.rows.one.image', UploadedFile::fake()->image('one.jpg'));
+
+        $one = $component->viewData('data')['sections']['first']['rows']['one']['image'];
+
+        // A brand new row has no counterpart in the previous snapshot, so
+        // there's no meta to hydrate it with — it stays plain data while its
+        // existing sibling is still reconstructed...
+        $component->set('data.sections.first', [
+            'rows' => [
+                'one' => ['image' => $one->serializeForLivewireResponse(), 'caption' => ''],
+                'three' => ['image' => null, 'caption' => 'New row'],
+            ],
+        ]);
+
+        $rows = $component->viewData('data')['sections']['first']['rows'];
+
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $rows['one']['image']);
+        $this->assertEquals(['image' => null, 'caption' => 'New row'], $rows['three']);
+    }
+}
+
+class NestedFileUploadComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    public $data = [
+        'sections' => [
+            'first' => [
+                'rows' => [
+                    'one' => ['image' => null, 'caption' => ''],
+                    'two' => ['image' => null, 'caption' => ''],
+                ],
+            ],
+        ],
+    ];
 }
 
 class FileUploadToDefaultDiskComponent extends TestComponent
