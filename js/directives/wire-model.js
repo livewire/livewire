@@ -86,11 +86,11 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Apply debounce/throttle from network modifiers
     if ((shouldSendNetwork && ! hasNetworkTriggers && isRealtimeInput(el) && ! isDebounced && ! isThrottled) || isDebounced) {
-        debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(networkModifiers, 'debounce') || 150)
+        debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(networkModifiers, 'debounce') ?? 150)
     }
 
     if (isThrottled) {
-        debouncedUpdate = throttle(debouncedUpdate, parseModifierDuration(networkModifiers, 'throttle') || 150)
+        debouncedUpdate = throttle(debouncedUpdate, parseModifierDuration(networkModifiers, 'throttle') ?? 150)
     }
 
     // Build the bindings object
@@ -244,5 +244,5 @@ function parseModifierDuration(modifiers, key) {
     let nextModifier = modifiers[modifiers.indexOf(key)+1] || 'invalid-wait'
     let duration = nextModifier.split('ms')[0]
 
-    return ! isNaN(duration) ? duration : undefined
+    return ! isNaN(duration) ? Number(duration) : undefined
 }

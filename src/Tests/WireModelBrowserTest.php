@@ -116,6 +116,39 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
             ->assertScript('window.requests', 1); // Only one request was sent
     }
 
+    public function test_debounce_requests_with_zero_duration_modifier_is_honored()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div x-init="window.requests = 0">
+                    <input type="text" wire:model.live.debounce.0ms="foo" dusk="input">
+                    <span wire:text="foo" dusk="text"></span>
+                </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->type('@input', 'a')
+            ->assertSeeIn('@text', 'a') // wire:text should update immediately
+            ->pause(50) // Wait for request to be handled
+            // Under default 150ms: a false fallback would still have requests === 0 here
+            ->assertScript('window.requests', 1);
+    }
+
     public function test_debounces_requests_with_custom_duration()
     {
         Livewire::visit(new class extends Component {
