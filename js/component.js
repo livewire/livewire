@@ -276,6 +276,12 @@ export class Component {
             effects.scripts = this.originalEffects.scripts;
         }
 
+        // We need to re-load the component's script module, otherwise its $js
+        // actions are gone after a back/forward navigation...
+        if (Object.prototype.hasOwnProperty.call(this.originalEffects, 'scriptModule') && this.originalEffects.scriptModule) {
+            effects.scriptModule = this.originalEffects.scriptModule
+        }
+
         el.setAttribute('wire:effects', JSON.stringify(effects))
 
         el.setAttribute('wire:key', this.key)
