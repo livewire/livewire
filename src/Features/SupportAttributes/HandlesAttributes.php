@@ -18,6 +18,13 @@ trait HandlesAttributes
         $this->mergeOutsideAttributes(new AttributeCollection([$attribute]));
     }
 
+    function setMethodAttribute($method, $attribute)
+    {
+        $attribute->__boot($this, AttributeLevel::METHOD, $method);
+
+        $this->mergeOutsideAttributes(new AttributeCollection([$attribute]));
+    }
+
     function mergeOutsideAttributes(AttributeCollection $attributes)
     {
         $this->attributes = $this->getAttributes()->concat($attributes);
