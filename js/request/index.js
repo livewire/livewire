@@ -7,6 +7,7 @@ import { showHtmlModal } from '@/utils/modal.js'
 import { MessageBus, scopeSymbolFromMessage } from './messageBus.js'
 import Message from './message.js'
 import Action from './action.js'
+import { isEvaluatingReactive } from '@/evaluator'
 
 let outstandingActionOrigin = null
 let outstandingActionMetadata = {}
@@ -119,6 +120,11 @@ queueMicrotask(() => {
 })
 
 export function fireAction(component, method, params = [], metadata = {}) {
+    if (isEvaluatingReactive()) {
+        console.warn(`Livewire: Cannot call server method "${method}" inside reactive bindings (e.g. wire:text, wire:show, wire:bind, wire:if).`, component?.el)
+        return Promise.resolve()
+    }
+
     if (component.__isWireProxy) component = component.__instance
 
     let action = constructAction(component, method, params, metadata)
