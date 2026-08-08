@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\CompileLivewireTags;
 
+use Illuminate\Support\Collection;
 use Illuminate\View\Compilers\ComponentTagCompiler;
 use Livewire\Drawer\Regexes;
 use Livewire\Exceptions\ComponentAttributeMissingOnDynamicComponentException;
@@ -189,7 +190,7 @@ class LivewireTagPrecompiler extends ComponentTagCompiler
 
     protected function attributesToString(array $attributes, $escapeBound = true)
     {
-        return collect($attributes)
+        return (new Collection($attributes))
                 ->map(function (string $value, string $attribute) use ($escapeBound) {
                     return $escapeBound && isset($this->boundAttributes[$attribute]) && $value !== 'true' && ! is_numeric($value)
                                 ? "'{$attribute}' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute({$value})"

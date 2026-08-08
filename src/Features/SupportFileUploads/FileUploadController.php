@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 
 class FileUploadController implements HasMiddleware
@@ -41,7 +42,7 @@ class FileUploadController implements HasMiddleware
             'files.*' => FileUploadConfiguration::rules()
         ])->validate();
 
-        $fileHashPaths = collect($files)->map(function ($file) use ($disk) {
+        $fileHashPaths = (new Collection($files))->map(function ($file) use ($disk) {
             return FileUploadConfiguration::storeTemporaryFile($file, $disk);
         });
 

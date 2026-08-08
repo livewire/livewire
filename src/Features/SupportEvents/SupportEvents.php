@@ -5,6 +5,8 @@ namespace Livewire\Features\SupportEvents;
 use function Livewire\wrap;
 use function Livewire\store;
 use function Livewire\invade;
+
+use Illuminate\Support\Collection;
 use Livewire\Features\SupportAttributes\AttributeLevel;
 use Livewire\ComponentHook;
 use Livewire\Exceptions\EventHandlerDoesNotExist;
@@ -72,7 +74,7 @@ class SupportEvents extends ComponentHook
     {
         $listeners = static::getComponentListeners($component);
 
-        return collect($listeners)
+        return (new Collection($listeners))
             ->map(fn ($value, $key) => is_numeric($key) ? $value : $key)
             ->values()
             ->toArray();
@@ -104,7 +106,7 @@ class SupportEvents extends ComponentHook
 
     function getServerDispatchedEvents($component)
     {
-        return collect(store($component)->get('dispatched', []))
+        return (new Collection(store($component)->get('dispatched', [])))
             ->map(fn ($event) => $event->serialize())
             ->toArray();
     }

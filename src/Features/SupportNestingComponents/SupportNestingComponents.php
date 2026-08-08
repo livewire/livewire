@@ -5,6 +5,8 @@ namespace Livewire\Features\SupportNestingComponents;
 use function Livewire\trigger;
 use function Livewire\store;
 use function Livewire\on;
+
+use Illuminate\Support\Collection;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
 
@@ -118,7 +120,7 @@ class SupportNestingComponents extends ComponentHook
     static function setParametersToMatchingProperties($component, $params)
     {
         // Assign all public component properties that have matching parameters.
-        collect(array_intersect_key($params, Utils::getPublicPropertiesDefinedOnSubclass($component)))
+        (new Collection(array_intersect_key($params, Utils::getPublicPropertiesDefinedOnSubclass($component))))
             ->each(function ($value, $property) use ($component) {
                 $component->{$property} = $value;
             });

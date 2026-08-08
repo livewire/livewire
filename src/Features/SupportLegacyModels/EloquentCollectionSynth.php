@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportLegacyModels;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use LogicException;
 
@@ -165,7 +166,7 @@ class EloquentCollectionSynth extends Synth
             $collection = $collection->keyBy->getKey();
 
             return new $meta['class'](
-                collect($meta['keys'])->map(function ($id) use ($collection) {
+                (new Collection($meta['keys']))->map(function ($id) use ($collection) {
                     return $collection[$id] ?? null;
                 })->filter()
             );

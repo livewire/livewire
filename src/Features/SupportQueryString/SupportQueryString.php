@@ -3,6 +3,8 @@
 namespace Livewire\Features\SupportQueryString;
 
 use function Livewire\invade;
+
+use Illuminate\Support\Collection;
 use Livewire\ComponentHook;
 
 class SupportQueryString extends ComponentHook
@@ -38,7 +40,7 @@ class SupportQueryString extends ComponentHook
         if (method_exists($component, 'queryString')) $componentQueryString = invade($component)->queryString();
         elseif (property_exists($component, 'queryString')) $componentQueryString = invade($component)->queryString;
 
-        return $this->queryString = collect(class_uses_recursive($class = $component::class))
+        return $this->queryString = (new Collection(class_uses_recursive($class = $component::class)))
             ->map(function ($trait) use ($class, $component) {
                 $member = 'queryString' . class_basename($trait);
 

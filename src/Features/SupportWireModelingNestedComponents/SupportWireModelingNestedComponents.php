@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportWireModelingNestedComponents;
 
+use Illuminate\Support\Collection;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
 use Livewire\Exceptions\ModelableRootHasWireModelException;
@@ -20,7 +21,7 @@ class SupportWireModelingNestedComponents extends ComponentHook
         // in a previous request, capture the value being passed in so we
         // can later set the child's property if it exists in this request.
         on('mount.stub', function ($tag, $id, $params, $parent, $key, $slots, $attributes) {
-            $outer = collect($attributes)->first(function ($value, $key) {
+            $outer = (new Collection($attributes))->first(function ($value, $key) {
                 return str($key)->startsWith('wire:model');
             });
 

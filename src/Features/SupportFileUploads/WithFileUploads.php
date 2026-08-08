@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Renderless;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 
@@ -32,7 +33,7 @@ trait WithFileUploads
         }
 
         // Verify and extract paths from signed references.
-        $tmpPath = collect($tmpPath)->map(function ($signedPath) {
+        $tmpPath = (new Collection($tmpPath))->map(function ($signedPath) {
             $path = TemporaryUploadedFile::extractPathFromSignedPath($signedPath);
 
             if ($path === false) {
@@ -43,10 +44,10 @@ trait WithFileUploads
         })->toArray();
 
         if ($isMultiple) {
-            $file = collect($tmpPath)->map(function ($i) {
+            $file = (new Collection($tmpPath))->map(function ($i) {
                 return TemporaryUploadedFile::createFromLivewire($i);
             })->toArray();
-            $this->dispatch('upload:finished', name: $name, tmpFilenames: collect($file)->map->getFilename()->toArray())->self();
+            $this->dispatch('upload:finished', name: $name, tmpFilenames: (new Collection($file))->map->getFilename()->toArray())->self();
 
             if ($append) {
                 $existing = $this->getPropertyValue($name);

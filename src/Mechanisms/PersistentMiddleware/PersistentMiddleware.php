@@ -4,6 +4,7 @@ namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Collection;
 use Livewire\Mechanisms\Mechanism;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use function Livewire\on;
@@ -196,9 +197,9 @@ class PersistentMiddleware extends Mechanism
 
     protected function filterMiddlewareByPersistentMiddleware($middleware)
     {
-        $middleware = collect($middleware);
+        $middleware = new Collection($middleware);
 
-        $persistentMiddleware = collect(app(PersistentMiddleware::class)->getPersistentMiddleware());
+        $persistentMiddleware = new Collection(app(PersistentMiddleware::class)->getPersistentMiddleware());
 
         return $middleware
             ->filter(function ($value, $key) use ($persistentMiddleware) {

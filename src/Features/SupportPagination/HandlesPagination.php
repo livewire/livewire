@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportPagination;
 
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 trait HandlesPagination
@@ -11,7 +12,7 @@ trait HandlesPagination
 
     public function queryStringHandlesPagination()
     {
-        return collect($this->paginators)->mapWithKeys(function ($page, $pageName) {
+        return (new Collection($this->paginators))->mapWithKeys(function ($page, $pageName) {
             return ['paginators.'.$pageName => ['history' => true, 'as' => $pageName, 'keep' => false]];
         })->toArray();
     }
