@@ -242,7 +242,7 @@ function parseModifierDuration(modifiers, key) {
     if (index === -1) return undefined
 
     let nextModifier = modifiers[modifiers.indexOf(key)+1] || 'invalid-wait'
-    let duration = parseInt(nextModifier.split('ms')[0], 10)
+    let duration = nextModifier.split('ms')[0]
 
-    return ! isNaN(duration) ? duration : undefined
+    return ! isNaN(duration) ? Number(duration) : undefined
 }
