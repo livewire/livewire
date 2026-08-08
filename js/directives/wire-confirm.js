@@ -2,7 +2,7 @@ import { directive } from "@/directives"
 
 directive('confirm', ({ el, directive }) => {
     let message = directive.expression
-    let shouldPrompt = directive.modifiers.includes('prompt')
+    let shouldPrompt = directive.hasModifier('prompt')
 
     // Convert sanitized linebreaks ("\n") to real line breaks...
     message = message.replaceAll('\\n', '\n')

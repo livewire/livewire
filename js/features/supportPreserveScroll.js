@@ -9,7 +9,7 @@ interceptMessage(({ message, onSuccess }) => {
 
             let directive = origin.directive
 
-            if (! directive.modifiers.includes('preserve-scroll')) return
+            if (! directive.hasModifier('preserve-scroll')) return
 
             let oldHeight
             let oldScroll

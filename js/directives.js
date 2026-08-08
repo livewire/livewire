@@ -107,6 +107,10 @@ export class Directive {
         return methods[0].params
     }
 
+    hasModifier(key) {
+        return this.modifiers.includes(key)
+    }
+
     parseOutMethodsAndParams(rawMethod) {
         let methods = []
 

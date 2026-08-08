@@ -13,9 +13,9 @@ globalDirective('current', ({ el, directive, cleanup }) => {
     let expression = directive.expression
 
     let options = {
-        exact: directive.modifiers.includes('exact'),
-        strict: directive.modifiers.includes('strict'),
-        ignore: directive.modifiers.includes('ignore'),
+        exact: directive.hasModifier('exact'),
+        strict: directive.hasModifier('strict'),
+        ignore: directive.hasModifier('ignore'),
     }
 
     if (options.ignore) return

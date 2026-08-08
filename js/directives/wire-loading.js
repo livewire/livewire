@@ -26,7 +26,7 @@ directive('loading', ({ el, directive, component, cleanup }) => {
 })
 
 function applyDelay(directive) {
-    if (! directive.modifiers.includes('delay') || directive.modifiers.includes('none')) return [i => i(), i => i()]
+    if (! directive.hasModifier('delay') || directive.hasModifier('none')) return [i => i(), i => i()]
 
     let duration = 200
 
@@ -41,7 +41,7 @@ function applyDelay(directive) {
     }
 
     Object.keys(delayModifiers).some(key => {
-        if (directive.modifiers.includes(key)) {
+        if (directive.hasModifier(key)) {
             duration = delayModifiers[key]
 
             return true
@@ -195,7 +195,7 @@ function getTargets(el) {
     if (directives.has('target')) {
         let directive = directives.get('target')
 
-        if (directive.modifiers.includes("except")) inverted = true
+        if (directive.hasModifier("except")) inverted = true
 
         directive.methods.forEach(({ method, params }) => {
             targets.push({
