@@ -2,8 +2,12 @@
 
 namespace Livewire;
 
+use Livewire\Concerns\InteractsWithLazyLoading;
+
 abstract class ComponentHook
 {
+    use InteractsWithLazyLoading;
+
     protected $component;
 
     function setComponent($component)
