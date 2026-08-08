@@ -86,11 +86,11 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Apply debounce/throttle from network modifiers
     if ((shouldSendNetwork && ! hasNetworkTriggers && isRealtimeInput(el) && ! isDebounced && ! isThrottled) || isDebounced) {
-        debouncedUpdate = debounce(debouncedUpdate, parseModifierDuration(networkModifiers, 'debounce') || 150)
+        debouncedUpdate = Alpine.debounce(debouncedUpdate, parseModifierDuration(networkModifiers, 'debounce') || 150)
     }
 
     if (isThrottled) {
-        debouncedUpdate = throttle(debouncedUpdate, parseModifierDuration(networkModifiers, 'throttle') || 150)
+        debouncedUpdate = Alpine.throttle(debouncedUpdate, parseModifierDuration(networkModifiers, 'throttle') || 150)
     }
 
     // Build the bindings object
@@ -179,14 +179,6 @@ function isRealtimeInput(el) {
         || el.tagName.toUpperCase() === 'UI-COMPOSER' // Flux UI
 }
 
-function isDirty(subject, dirty) {
-    // Check for exact match: wire:model="bob" in ['bob']
-    if (dirty.includes(subject)) return true
-
-    // Check case of parent: wire:model="bob.1" in ['bob']
-    return dirty.some(i => subject.startsWith(i))
-}
-
 function componentIsMissingProperty(component, property) {
     if (property.startsWith('$parent')) {
         let parent = findComponentByEl(component.el.parentElement, false)
@@ -201,40 +193,6 @@ function componentIsMissingProperty(component, property) {
     let baseProperty = match[1]
 
     return ! Object.keys(component.canonical).includes(baseProperty)
-}
-
-function debounce(func, wait) {
-    var timeout;
-
-    return function() {
-      var context = this, args = arguments;
-
-      var later = function() {
-            timeout = null
-
-            func.apply(context, args)
-      }
-
-      clearTimeout(timeout)
-
-      timeout = setTimeout(later, wait)
-    }
-}
-
-function throttle(func, limit) {
-    let inThrottle
-
-    return function() {
-        let context = this, args = arguments
-
-        if (! inThrottle) {
-            func.apply(context, args)
-
-            inThrottle = true
-
-            setTimeout(() => inThrottle = false, limit)
-        }
-    }
 }
 
 function parseModifierDuration(modifiers, key) {
