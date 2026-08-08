@@ -7,7 +7,7 @@ use Illuminate\Http\UploadedFile;
 use Livewire\Attributes\Renderless;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 
-trait WithFileUploads
+trait HandlesFileUploads
 {
     #[Renderless]
     function _startUpload($name, $fileInfo, $isMultiple)
