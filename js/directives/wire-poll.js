@@ -102,11 +102,11 @@ function theDirectiveIsOffTheElement(el) {
 }
 
 function theDirectiveIsMissingKeepAlive(directive) {
-    return ! directive.modifiers.includes('keep-alive')
+    return ! directive.hasModifier('keep-alive')
 }
 
 function theDirectiveHasVisible(directive) {
-    return directive.modifiers.includes('visible')
+    return directive.hasModifier('visible')
 }
 
 function theElementIsNotInTheViewport(el) {

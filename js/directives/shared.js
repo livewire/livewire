@@ -1,8 +1,8 @@
 
 export function toggleBooleanStateDirective(el, directive, isTruthy, cachedDisplay = null) {
-    isTruthy = directive.modifiers.includes('remove') ? ! isTruthy : isTruthy
+    isTruthy = directive.hasModifier('remove') ? ! isTruthy : isTruthy
 
-    if (directive.modifiers.includes('class')) {
+    if (directive.hasModifier('class')) {
         let classes = directive.expression.split(' ').filter(String)
 
         if (isTruthy) {
@@ -10,7 +10,7 @@ export function toggleBooleanStateDirective(el, directive, isTruthy, cachedDispl
         } else {
             el.classList.remove(...classes)
         }
-    } else if (directive.modifiers.includes('attr')) {
+    } else if (directive.hasModifier('attr')) {
         if (isTruthy) {
             el.setAttribute(directive.expression, true)
         } else {
@@ -22,11 +22,11 @@ export function toggleBooleanStateDirective(el, directive, isTruthy, cachedDispl
             .getPropertyValue('display')
 
         let display = (['inline', 'list-item', 'block', 'table', 'flex', 'grid', 'inline-flex']
-            .filter(i => directive.modifiers.includes(i))[0] || 'inline-block')
+            .filter(i => directive.hasModifier(i))[0] || 'inline-block')
 
         // If element is to be removed, set display to its current value...
-        // display = (directive.modifiers.includes('remove') && ! isTruthy)
-        display = (directive.modifiers.includes('remove') && ! isTruthy)
+        // display = (directive.hasModifier('remove') && ! isTruthy)
+        display = (directive.hasModifier('remove') && ! isTruthy)
             ? cache : display
 
         el.style.display = isTruthy ? display : 'none'

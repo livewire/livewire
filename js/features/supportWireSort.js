@@ -29,22 +29,22 @@ Alpine.interceptInit(el => {
             let attribute = directive.rawName.replace('wire:', 'x-')
 
             // Strip .async from Alpine expression because it only concerns Livewire and trips up Alpine...
-            if (directive.modifiers.includes('async')) {
+            if (directive.hasModifier('async')) {
                 attribute = attribute.replace('.async', '')
             }
 
             // Strip .renderless from Alpine expression because it only concerns Livewire and trips up Alpine...
-            if (directive.modifiers.includes('renderless')) {
+            if (directive.hasModifier('renderless')) {
                 attribute = attribute.replace('.renderless', '')
             }
 
             // Strip .prepend from Alpine expression because it only concerns Livewire and trips up Alpine...
-            if (directive.modifiers.includes('prepend')) {
+            if (directive.hasModifier('prepend')) {
                 attribute = attribute.replace('.prepend', '')
             }
 
             // Strip .append from Alpine expression because it only concerns Livewire and trips up Alpine...
-            if (directive.modifiers.includes('append')) {
+            if (directive.hasModifier('append')) {
                 attribute = attribute.replace('.append', '')
             }
 
