@@ -10,6 +10,59 @@ use Livewire\Attributes\Isolate;
 
 class BrowserTest extends BrowserTestCase
 {
+    public function test_components_can_be_marked_as_isolated_using_base_isolate()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<HTML
+            <div>
+                <livewire:child num="1" />
+                <livewire:child num="2" />
+                <livewire:child num="3" />
+
+                <button wire:click="\$dispatch('trigger')" dusk="trigger">Dispatch trigger</button>
+            </div>
+            HTML; }
+        }, 'child' => new #[BaseIsolate] class extends Component {
+            public $num;
+            public $time;
+            public function mount() {
+                $this->time = LARAVEL_START;
+            }
+            #[On('trigger')]
+            public function react() {
+                $this->time = LARAVEL_START;
+            }
+            public function render() { return <<<'HTML'
+            <div id="child">
+                Child {{ $num }}
+
+                <span dusk="time-{{ $num }}">{{ $time }}</span>
+            </div>
+            HTML; }
+        }])
+        ->waitForText('Child 1')
+        ->waitForText('Child 2')
+        ->waitForText('Child 3')
+        ->tap(function ($b) {
+            $time1 = (float) $b->text('@time-1');
+            $time2 = (float) $b->text('@time-2');
+            $time3 = (float) $b->text('@time-3');
+
+            $this->assertEquals($time1, $time2);
+            $this->assertEquals($time2, $time3);
+        })
+        ->waitForLivewire()->click('@trigger')
+        ->tap(function ($b) {
+            $time1 = (float) $b->waitFor('@time-1')->text('@time-1');
+            $time2 = (float) $b->waitFor('@time-2')->text('@time-2');
+            $time3 = (float) $b->waitFor('@time-3')->text('@time-3');
+
+            $this->assertNotEquals($time1, $time2);
+            $this->assertNotEquals($time2, $time3);
+        })
+        ;
+    }
+
     public function test_components_can_be_marked_as_isolated()
     {
         Livewire::visit([new class extends Component {
