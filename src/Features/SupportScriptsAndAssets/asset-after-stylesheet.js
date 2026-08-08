@@ -1,0 +1,1 @@
+window.assetAfterStylesheetLoaded = true
