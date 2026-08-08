@@ -104,6 +104,132 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    function test_wire_loading_attr_restores_pre_loading_attribute_state_after_renderless_action()
+    {
+        Livewire::visit(new class extends Component {
+            public bool $disabled = true;
+
+            #[\Livewire\Attributes\Renderless]
+            public function renderlessAction() {
+                usleep(250000);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <button type="button" wire:click="renderlessAction" dusk="renderless">
+                            Renderless action
+                        </button>
+
+                        <button
+                            type="button"
+                            x-bind:disabled="$wire.$get('disabled')"
+                            wire:loading.attr="disabled"
+                            dusk="some-action">
+                            Some action
+                        </button>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitUntil('document.querySelector(\'[dusk="some-action"]\').disabled === true')
+        ->assertScript('document.querySelector(\'[dusk="some-action"]\').disabled', true)
+        ->waitForLivewire()->click('@renderless')
+        ->assertScript('document.querySelector(\'[dusk="some-action"]\').disabled', true)
+        ;
+    }
+
+    function test_wire_loading_attr_is_removed_after_overlapping_loading_events()
+    {
+        Livewire::visit(new class extends Component {
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <button
+                            type="button"
+                            x-on:click="window.dispatchEvent(new CustomEvent('livewire-upload-start', { detail: { id: $wire.$id, property: 'file' } }))"
+                            dusk="start">
+                            Start loading
+                        </button>
+
+                        <button
+                            type="button"
+                            x-on:click="window.dispatchEvent(new CustomEvent('livewire-upload-finish', { detail: { id: $wire.$id, property: 'file' } }))"
+                            dusk="finish">
+                            Finish loading
+                        </button>
+
+                        <button
+                            type="button"
+                            wire:loading.attr="disabled"
+                            dusk="target">
+                            Target
+                        </button>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertAttributeMissing('@target', 'disabled')
+        ->click('@start')
+        ->assertAttribute('@target', 'disabled', 'true')
+        ->click('@start')
+        ->assertAttribute('@target', 'disabled', 'true')
+        ->click('@finish')
+        ->assertAttribute('@target', 'disabled', 'true')
+        ->click('@finish')
+        ->assertAttributeMissing('@target', 'disabled')
+        ;
+    }
+
+    function test_wire_loading_delay_attr_still_works_after_overlapping_loading_events()
+    {
+        Livewire::visit(new class extends Component {
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <button
+                            type="button"
+                            x-on:click="window.dispatchEvent(new CustomEvent('livewire-upload-start', { detail: { id: $wire.$id, property: 'file' } }))"
+                            dusk="start">
+                            Start loading
+                        </button>
+
+                        <button
+                            type="button"
+                            x-on:click="window.dispatchEvent(new CustomEvent('livewire-upload-finish', { detail: { id: $wire.$id, property: 'file' } }))"
+                            dusk="finish">
+                            Finish loading
+                        </button>
+
+                        <button
+                            type="button"
+                            wire:loading.delay.shortest.attr="disabled"
+                            dusk="target">
+                            Target
+                        </button>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertAttributeMissing('@target', 'disabled')
+        ->click('@start')
+        ->click('@start')
+        ->pause(150) // Wait for both delay timeouts to fire...
+        ->assertAttribute('@target', 'disabled', 'true')
+        ->click('@finish')
+        ->click('@finish')
+        ->assertAttributeMissing('@target', 'disabled')
+        // A fresh loading cycle should still apply the attribute...
+        ->click('@start')
+        ->pause(150)
+        ->assertAttribute('@target', 'disabled', 'true')
+        ->click('@finish')
+        ->assertAttributeMissing('@target', 'disabled')
+        ;
+    }
+
     function test_wire_loading_attr_doesnt_conflict_with_exist_one()
     {
         Livewire::visit(new class extends Component {

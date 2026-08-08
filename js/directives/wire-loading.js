@@ -9,14 +9,41 @@ directive('loading', ({ el, directive, component, cleanup }) => {
 
     let [delay, abortDelay] = applyDelay(directive)
 
+    let activeLoadingCount = 0
+    let restoreLoadingState
+
+    function startLoading() {
+        // Only capture the pre-loading attribute state on the first of any
+        // overlapping loading triggers, otherwise we'd capture the state
+        // that a previous overlapping trigger already set...
+        if (activeLoadingCount === 0) {
+            restoreLoadingState = toggleBooleanStateDirective(el, directive, true)
+        }
+
+        activeLoadingCount++
+    }
+
+    function endLoading() {
+        // Guard against unbalanced end triggers, otherwise a stray one would
+        // drive the count negative and stop the directive ever applying again...
+        if (activeLoadingCount === 0) return
+
+        activeLoadingCount--
+
+        // Only restore/remove once every overlapping loading trigger has finished...
+        if (activeLoadingCount === 0) {
+            restoreLoadingState ? restoreLoadingState() : toggleBooleanStateDirective(el, directive, false)
+        }
+    }
+
     let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
-        () => delay(() => toggleBooleanStateDirective(el, directive, true)),
-        () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
+        () => delay(startLoading),
+        () => abortDelay(endLoading),
     ])
 
     let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
-        () => delay(() => toggleBooleanStateDirective(el, directive, true)),
-        () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
+        () => delay(startLoading),
+        () => abortDelay(endLoading),
     ])
 
     cleanup(() => {
@@ -48,23 +75,31 @@ function applyDelay(directive) {
         }
     })
 
-    let timeout
-    let started = false
+    // Each delay cycle gets its own state, otherwise overlapping loading
+    // cycles would share one timeout and swallow each other's end callback...
+    let cycles = []
 
     return [
         (callback) => { // Initiate delay...
-            timeout = setTimeout(() => {
+            let cycle = { started: false }
+
+            cycle.timeout = setTimeout(() => {
                 callback()
 
-                started = true
+                cycle.started = true
             }, duration)
+
+            cycles.push(cycle)
         },
         async (callback) => { // Execute or abort...
-            if (started) {
+            let cycle = cycles.shift()
+
+            if (! cycle) return
+
+            if (cycle.started) {
                 await callback()
-                started = false
             } else {
-                clearTimeout(timeout)
+                clearTimeout(cycle.timeout)
             }
         },
     ]
