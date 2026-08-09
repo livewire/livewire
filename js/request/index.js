@@ -5,6 +5,7 @@ import { InterceptorRegistry } from './interceptor.js'
 import { trigger, triggerAsync } from '@/hooks.js'
 import { showHtmlModal } from '@/utils/modal.js'
 import { MessageBus, scopeSymbolFromMessage } from './messageBus.js'
+import { shouldDiscardLiveModelResponse, trackLiveModelRequest } from './responseOrdering.js'
 import Message from './message.js'
 import Action from './action.js'
 
@@ -285,6 +286,7 @@ function sendMessages() {
     requests.forEach(request => {
         request.messages.forEach(message => {
             message.scope = scopeSymbolFromMessage(message)
+            trackLiveModelRequest(message)
         })
     })
 
@@ -432,6 +434,13 @@ function sendMessages() {
                         // Server skipped this child (unchanged reactive props)...
                         if (payload.skip) {
                             if (payload.id === message.component.id) {
+                                if (shouldDiscardLiveModelResponse(message)) {
+                                    message.resolveActionPromises([], [])
+                                    message.invokeOnFinish()
+
+                                    return
+                                }
+
                                 message.responsePayload = payload
                                 message.markSkipped()
                                 message.invokeOnSkipped()
@@ -446,6 +455,13 @@ function sendMessages() {
                         let snapshot = JSON.parse(snapshotEncoded)
 
                         if (snapshot.memo.id === message.component.id) {
+                            if (shouldDiscardLiveModelResponse(message)) {
+                                message.resolveActionPromises([], [])
+                                message.invokeOnFinish()
+
+                                return
+                            }
+
                             message.responsePayload = { snapshot, effects }
 
                             message.invokeOnSuccess()
