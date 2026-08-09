@@ -10,6 +10,7 @@ use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\MaxNestingDepthExceededException;
 use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Drawer\Utils;
+use Livewire\Features\SupportEvents\SupportEvents;
 use Livewire\Features\SupportFormObjects\Form;
 use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -530,7 +531,7 @@ class HandleComponents extends Mechanism
         }
 
         $returns = [];
-        $shouldSkipRender = $root->shouldSkipRenderAfterCalls($calls);
+        $shouldSkipRender = $this->shouldSkipRenderAfterCalls($root, $calls);
 
         foreach ($calls as $idx => $call) {
             $method = $call['method'];
@@ -594,6 +595,37 @@ class HandleComponents extends Mechanism
         }
 
         $componentContext->addEffect('returns', $returns);
+    }
+
+    protected function shouldSkipRenderAfterCalls($root, $calls)
+    {
+        if (count($calls) === 0) return false;
+
+        return collect($calls)->every(
+            fn ($call) => $this->isCallRenderless($root, $call)
+        );
+    }
+
+    protected function isCallRenderless($root, $call)
+    {
+        return ($call['metadata']['renderless'] ?? false)
+            || $root->isRenderlessMethod($this->resolveCalledMethod($root, $call));
+    }
+
+    protected function resolveCalledMethod($root, $call)
+    {
+        if ($call['method'] !== '__dispatch' || ! isset($call['params'][0])) {
+            return $call['method'];
+        }
+
+        $event = $call['params'][0];
+
+        // Event listeners travel as __dispatch calls, but their attributes belong to the listener method...
+        if (! in_array($event, SupportEvents::getListenerEventNames($root))) {
+            return $call['method'];
+        }
+
+        return SupportEvents::getListenerMethodName($root, $event);
     }
 
     protected function pushOntoComponentStack($component)
