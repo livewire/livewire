@@ -530,7 +530,7 @@ class HandleComponents extends Mechanism
         }
 
         $returns = [];
-        $skipRender = 0;
+        $shouldSkipRender = $root->shouldSkipRenderAfterCalls($calls);
 
         foreach ($calls as $idx => $call) {
             $method = $call['method'];
@@ -544,9 +544,6 @@ class HandleComponents extends Mechanism
                 $earlyReturn = $return;
             };
 
-            // Reset the mark before each call so one renderless call cannot poison the next
-            $root->markAsRenderless(false);
-
             $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $metadata, $idx);
 
             if ($earlyReturnCalled) {
@@ -557,11 +554,6 @@ class HandleComponents extends Mechanism
                 // so we will just set it to `null` instead...
                 if ($return instanceof StreamedResponse || $return instanceof BinaryFileResponse) {
                     $return = null;
-                }
-
-                // Support `.renderless` on magic actions like `wire:model.renderless.live` and `#[Renderless]`...
-                if ($root->isRenderless() || ($metadata['renderless'] ?? false)) {
-                    $skipRender++;
                 }
 
                 $returns[] = $return;
@@ -595,15 +587,9 @@ class HandleComponents extends Mechanism
             }
 
             $returns[] = $return;
-
-            // Support `wire:click.renderless` and `#[Renderless]`...
-            if ($root->isRenderless() || ($metadata['renderless'] ?? false)) {
-                $skipRender++;
-            }
         }
 
-        // Only skip render if all calls are renderless
-        if (count($calls) > 0 && $skipRender >= count($calls)) {
+        if ($shouldSkipRender) {
             $root->skipRender();
         }
 
