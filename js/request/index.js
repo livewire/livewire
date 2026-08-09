@@ -7,6 +7,7 @@ import { showHtmlModal } from '@/utils/modal.js'
 import { MessageBus, scopeSymbolFromMessage } from './messageBus.js'
 import Message from './message.js'
 import Action from './action.js'
+import { Effects } from '@/effects.js'
 
 let outstandingActionOrigin = null
 let outstandingActionMetadata = {}
@@ -444,6 +445,8 @@ function sendMessages() {
 
                         let { snapshot: snapshotEncoded, effects } = payload
                         let snapshot = JSON.parse(snapshotEncoded)
+
+                        effects = effects instanceof Effects ? effects : new Effects(effects)
 
                         if (snapshot.memo.id === message.component.id) {
                             message.responsePayload = { snapshot, effects }

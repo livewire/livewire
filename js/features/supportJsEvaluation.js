@@ -14,11 +14,11 @@ on('effect', ({ component, effects }) => {
     let js
     let xjs
 
-    if (Object.prototype.hasOwnProperty.call(effects, 'js')) {
+    if (effects.has('js')) {
         js = effects.js
     }
 
-    if (Object.prototype.hasOwnProperty.call(effects, 'xjs')) {
+    if (effects.has('xjs')) {
         xjs = effects.xjs
     }
 

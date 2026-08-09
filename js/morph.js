@@ -57,7 +57,7 @@ export async function morph(component, el, html) {
 
     let transitionOptions = {}
 
-    if (Object.prototype.hasOwnProperty.call(component.effects, 'transition') && component.effects.transition) {
+    if (component.effects.hasValue('transition')) {
         transitionOptions = component.effects.transition
     }
 
@@ -96,7 +96,7 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
 
     let transitionOptions = {}
 
-    if (Object.prototype.hasOwnProperty.call(component.effects, 'transition') && component.effects.transition) {
+    if (component.effects.hasValue('transition')) {
         transitionOptions = component.effects.transition
     }
 

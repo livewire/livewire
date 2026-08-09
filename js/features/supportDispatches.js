@@ -12,7 +12,7 @@ on('effect', ({ component, effects }) => {
             queueMicrotask(() => {
                 let dispatches = []
 
-                if (Object.prototype.hasOwnProperty.call(effects, 'dispatches') && effects.dispatches) {
+                if (effects.hasValue('dispatches')) {
                     dispatches = effects.dispatches
                 }
 

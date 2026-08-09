@@ -6,7 +6,7 @@ interceptMessage(({ message, onSuccess }) => {
         onMorph(async () => {
             let html
 
-            if (Object.prototype.hasOwnProperty.call(payload.effects, 'html')) {
+            if (payload.effects.has('html')) {
                 html = payload.effects.html
             }
 

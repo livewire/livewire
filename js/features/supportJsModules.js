@@ -6,7 +6,7 @@ let pendingComponentAssets = new WeakMap()
 on('effect', ({ component, effects }) => {
     let scriptModuleHash
 
-    if (Object.prototype.hasOwnProperty.call(effects, 'scriptModule')) {
+    if (effects.has('scriptModule')) {
         scriptModuleHash = effects.scriptModule
     }
 

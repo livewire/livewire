@@ -33,7 +33,7 @@ on('component.init', ({ component }) => {
 on('effect', ({ component, effects }) => {
     let scripts
 
-    if (Object.prototype.hasOwnProperty.call(effects, 'scripts')) {
+    if (effects.has('scripts')) {
         scripts = effects.scripts
     }
 

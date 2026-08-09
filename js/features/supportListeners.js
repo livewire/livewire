@@ -3,7 +3,7 @@ import { on as hook } from '@/hooks'
 hook('effect', ({ component, effects }) => {
     let listeners = []
 
-    if (Object.prototype.hasOwnProperty.call(effects, 'listeners') && effects.listeners) {
+    if (effects.hasValue('listeners')) {
         listeners = effects.listeners
     }
 

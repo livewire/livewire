@@ -19,7 +19,7 @@ function forwardEvent(name, original) {
 export function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate
 
-    if (Object.prototype.hasOwnProperty.call(effects, 'redirectUsingNavigate')) {
+    if (effects.has('redirectUsingNavigate')) {
         forceNavigate = effects.redirectUsingNavigate
     }
 

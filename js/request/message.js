@@ -205,12 +205,12 @@ export default class Message {
         this.pendingReturns = []
         this.pendingReturnsMeta = {}
 
-        if (Object.prototype.hasOwnProperty.call(this.responsePayload.effects, 'returns') && this.responsePayload.effects['returns']) {
-            this.pendingReturns = this.responsePayload.effects['returns']
+        if (this.responsePayload.effects.hasValue('returns')) {
+            this.pendingReturns = this.responsePayload.effects.returns
         }
 
-        if (Object.prototype.hasOwnProperty.call(this.responsePayload.effects, 'returnsMeta') && this.responsePayload.effects['returnsMeta']) {
-            this.pendingReturnsMeta = this.responsePayload.effects['returnsMeta']
+        if (this.responsePayload.effects.hasValue('returnsMeta')) {
+            this.pendingReturnsMeta = this.responsePayload.effects.returnsMeta
         }
     }
 

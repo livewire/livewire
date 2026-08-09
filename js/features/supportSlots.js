@@ -8,7 +8,7 @@ interceptMessage(({ message, onSuccess, onStream }) => {
         onMorph(async () => {
             let fragments = []
 
-            if (Object.prototype.hasOwnProperty.call(payload.effects, 'slotFragments') && payload.effects.slotFragments) {
+            if (payload.effects.hasValue('slotFragments')) {
                 fragments = payload.effects.slotFragments
             }
 

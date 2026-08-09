@@ -3,6 +3,7 @@ import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
 import { setNextActionOrigin } from '@/request'
+import { Effects } from '@/effects'
 
 export class Component {
     constructor(el) {
@@ -28,8 +29,8 @@ export class Component {
 
         this.name = this.snapshot.memo.name
 
-        this.effects = JSON.parse(el.getAttribute('wire:effects'))
-        this.originalEffects = deepClone(this.effects)
+        this.effects = new Effects(JSON.parse(el.getAttribute('wire:effects') || {}))
+        this.originalEffects = new Effects(deepClone(this.effects))
 
         // "canonical" data represents the last known server state.
         this.canonical = extractData(deepClone(this.snapshot.data))
@@ -82,7 +83,7 @@ export class Component {
 
         this.snapshot = snapshot
 
-        this.effects = effects
+        this.effects = effects instanceof Effects ? effects : new Effects(effects)
 
         this.canonical = extractData(deepClone(snapshot.data))
 
@@ -137,11 +138,11 @@ export class Component {
     }
 
     replayUpdate(snapshot, html) {
-        let effects = { ...this.effects, html}
+        let effects = new Effects({ ...this.effects, html })
 
         this.mergeNewSnapshot(JSON.stringify(snapshot), effects)
 
-        this.processEffects({ html })
+        this.processEffects(new Effects({ html }))
     }
 
     /**
@@ -150,6 +151,8 @@ export class Component {
      * users interact with, triggering reactive effects.
      */
     processEffects(effects, request) {
+        effects = effects instanceof Effects ? effects : new Effects(effects)
+
         // This is for BC.
         trigger('effects', this, effects)
 
@@ -262,18 +265,18 @@ export class Component {
         let effects = {}
 
         // We need to re-register any event listeners that were originally registered...
-        if (Object.prototype.hasOwnProperty.call(this.originalEffects, 'listeners') && this.originalEffects.listeners) {
+        if (this.originalEffects.has('listeners')) {
             effects.listeners = this.originalEffects.listeners
         }
 
         // We need to re-register any url/query-string bindings...
-        if (Object.prototype.hasOwnProperty.call(this.originalEffects, 'url') && this.originalEffects.url) {
+        if (this.originalEffects.has('url')) {
             effects.url = this.originalEffects.url
         }
 
         // We need to re-register any scripts that were originally registered...
-        if (Object.prototype.hasOwnProperty.call(this.originalEffects, 'scripts') && this.originalEffects.scripts) {
-            effects.scripts = this.originalEffects.scripts;
+        if (this.originalEffects.has('scripts')) {
+            effects.scripts = this.originalEffects.scripts
         }
 
         el.setAttribute('wire:effects', JSON.stringify(effects))

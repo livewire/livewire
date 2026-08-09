@@ -2,15 +2,15 @@ import { on } from "@/hooks"
 import { shouldRedirectUsingNavigateOr } from "./supportNavigate"
 
 on('effect', ({ effects, request }) => {
-    if (! Object.prototype.hasOwnProperty.call(effects, 'redirect') || ! effects['redirect']) return
+    if (! effects.hasValue('redirect')) return
 
     let preventDefault = false
 
-    request.invokeOnRedirect({ url: effects['redirect'], preventDefault: () => preventDefault = true })
+    request.invokeOnRedirect({ url: effects.redirect, preventDefault: () => preventDefault = true })
 
     if (preventDefault) return
 
-    let url = effects['redirect']
+    let url = effects.redirect
 
     shouldRedirectUsingNavigateOr(effects, url, () => {
         window.location.href = url

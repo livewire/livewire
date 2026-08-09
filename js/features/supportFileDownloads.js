@@ -4,7 +4,7 @@ on('commit', ({ succeed }) => {
     succeed(({ effects }) => {
         let download
 
-        if (Object.prototype.hasOwnProperty.call(effects, 'download')) {
+        if (effects.has('download')) {
             download = effects.download
         }
 
