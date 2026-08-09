@@ -10,6 +10,7 @@ import { getErrorsObject } from '@/features/supportErrors'
 import { findRefEl } from '@/features/supportRefs'
 import { checkDirty } from './directives/wire-dirty'
 import { assetIsPendingFor, runAfterAssetIsLoadedFor } from './features/supportJsModules'
+import { isEvaluatingReactiveExpression } from '@/evaluator'
 
 let properties = {}
 let fallback
@@ -375,6 +376,11 @@ wireFallback((component) => (property) => (...params) => {
         if (typeof overrides[property] === 'function') {
             return overrides[property](params)
         }
+    }
+
+    if (isEvaluatingReactiveExpression()) {
+        console.warn(`Livewire: Cannot call server method "${property}" from a reactive binding like wire:text, wire:show, or wire:bind.`, component.el)
+        return Promise.resolve()
     }
 
     return fireAction(component, property, params)

@@ -63,7 +63,7 @@ class BrowserTest extends BrowserTestCase
                     <div wire:text="foo" dusk="implicit"></div>
                     <div wire:text="foo()" dusk="explicit"></div>
                     <div dusk="count">{{ $count }}</div>
-                    <button wire:click="foo" dusk="call">Call foo</button>
+                    <button wire:text="'Call foo'" wire:click="foo" dusk="call"></button>
                 </div>
                 HTML;
             }
@@ -71,6 +71,7 @@ class BrowserTest extends BrowserTestCase
         ->pause(250)
         ->assertScript("document.querySelector('[dusk=implicit]').textContent", '')
         ->assertScript("document.querySelector('[dusk=explicit]').textContent", '')
+        ->assertSeeIn('@call', 'Call foo')
         ->assertSeeIn('@count', '0')
         ->assertConsoleLogHasWarning('Cannot call server method')
         ->waitForLivewire()->click('@call')

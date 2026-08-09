@@ -43,8 +43,6 @@ When the button is clicked, `$wire.likes++` immediately updates the displayed co
 
 This pattern makes `wire:text` perfect for building optimistic UIs in Livewire.
 
-Because `wire:text` is evaluated reactively in the browser, it cannot call PHP component methods. Store values that need to be displayed in a public property, or use a client-side `$js` function.
-
 ## Reference
 
 ```blade
