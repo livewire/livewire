@@ -265,17 +265,17 @@ export class Component {
         let effects = {}
 
         // We need to re-register any event listeners that were originally registered...
-        if (this.originalEffects.has('listeners')) {
+        if (this.originalEffects.hasValue('listeners')) {
             effects.listeners = this.originalEffects.listeners
         }
 
         // We need to re-register any url/query-string bindings...
-        if (this.originalEffects.has('url')) {
+        if (this.originalEffects.hasValue('url')) {
             effects.url = this.originalEffects.url
         }
 
         // We need to re-register any scripts that were originally registered...
-        if (this.originalEffects.has('scripts')) {
+        if (this.originalEffects.hasValue('scripts')) {
             effects.scripts = this.originalEffects.scripts
         }
 

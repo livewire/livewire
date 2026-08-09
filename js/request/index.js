@@ -7,7 +7,7 @@ import { showHtmlModal } from '@/utils/modal.js'
 import { MessageBus, scopeSymbolFromMessage } from './messageBus.js'
 import Message from './message.js'
 import Action from './action.js'
-import { Effects } from '@/effects.js'
+import { Effects } from '@/effects'
 
 let outstandingActionOrigin = null
 let outstandingActionMetadata = {}
