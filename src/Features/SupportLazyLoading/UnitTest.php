@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Lazy;
 use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -42,6 +43,67 @@ class UnitTest extends \Tests\TestCase
         })
         ->assertDontSee('Loading...')
         ->assertSee('Hello world!');
+    }
+
+    public function test_a_lazy_component_loads_with_its_own_mount_params()
+    {
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        Livewire::component('lazy-alpha', LazyAlpha::class);
+
+        $html = html_entity_decode(Livewire::mount('lazy-alpha', ['level' => 5]));
+        preg_match("/__lazyLoad\('([^']+)'\)/", $html, $matches);
+
+        $this->assertNotEmpty($matches[1] ?? null);
+
+        Livewire::test('lazy-alpha')
+            ->call('__lazyLoad', $matches[1])
+            ->assertSee('level:5');
+    }
+
+    public function test_a_mount_params_container_is_scoped_to_its_own_component()
+    {
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        Livewire::component('lazy-alpha', LazyAlpha::class);
+        Livewire::component('lazy-beta', LazyBeta::class);
+
+        $html = html_entity_decode(Livewire::mount('lazy-alpha', ['level' => 1]));
+        preg_match("/__lazyLoad\('([^']+)'\)/", $html, $matches);
+
+        $this->assertNotEmpty($matches[1] ?? null);
+
+        $this->expectException(CorruptComponentPayloadException::class);
+
+        Livewire::test('lazy-beta')->call('__lazyLoad', $matches[1]);
+    }
+}
+
+#[Lazy]
+class LazyAlpha extends Component {
+    public $level = 0;
+
+    public function mount($level = 0) {
+        $this->level = $level;
+    }
+
+    public function placeholder() {
+        return '<div>Loading...</div>';
+    }
+
+    public function render() {
+        return '<div>level:'.$this->level.'</div>';
+    }
+}
+
+#[Lazy]
+class LazyBeta extends Component {
+    public function placeholder() {
+        return '<div>Loading...</div>';
+    }
+
+    public function render() {
+        return '<div>beta</div>';
     }
 }
 
