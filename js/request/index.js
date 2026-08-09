@@ -5,7 +5,6 @@ import { InterceptorRegistry } from './interceptor.js'
 import { trigger, triggerAsync } from '@/hooks.js'
 import { showHtmlModal } from '@/utils/modal.js'
 import { MessageBus, scopeSymbolFromMessage } from './messageBus.js'
-import { shouldDiscardLiveModelResponse, trackLiveModelRequest } from './responseOrdering.js'
 import Message from './message.js'
 import Action from './action.js'
 
@@ -286,7 +285,6 @@ function sendMessages() {
     requests.forEach(request => {
         request.messages.forEach(message => {
             message.scope = scopeSymbolFromMessage(message)
-            trackLiveModelRequest(message)
         })
     })
 
@@ -434,12 +432,9 @@ function sendMessages() {
                         // Server skipped this child (unchanged reactive props)...
                         if (payload.skip) {
                             if (payload.id === message.component.id) {
-                                if (shouldDiscardLiveModelResponse(message)) {
-                                    message.resolveActionPromises([], [])
-                                    message.invokeOnFinish()
+                                if (discardIfSuperseded(message)) return
 
-                                    return
-                                }
+                                supersedeOlderMessages(message)
 
                                 message.responsePayload = payload
                                 message.markSkipped()
@@ -455,12 +450,9 @@ function sendMessages() {
                         let snapshot = JSON.parse(snapshotEncoded)
 
                         if (snapshot.memo.id === message.component.id) {
-                            if (shouldDiscardLiveModelResponse(message)) {
-                                message.resolveActionPromises([], [])
-                                message.invokeOnFinish()
+                            if (discardIfSuperseded(message)) return
 
-                                return
-                            }
+                            supersedeOlderMessages(message)
 
                             message.responsePayload = { snapshot, effects }
 
@@ -515,6 +507,21 @@ function sendMessages() {
                 })
             },
         })
+    })
+}
+
+function discardIfSuperseded(message) {
+    if (! message.superseded) return false
+
+    message.resolveActionPromises([], [])
+    message.invokeOnFinish()
+
+    return true
+}
+
+function supersedeOlderMessages(message) {
+    message.actions.forEach(action => {
+        action.supersedes.forEach(olderMessage => olderMessage.superseded = true)
     })
 }
 
