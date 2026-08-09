@@ -29,7 +29,7 @@ export class Component {
 
         this.name = this.snapshot.memo.name
 
-        this.effects = new Effects(JSON.parse(el.getAttribute('wire:effects') || {}))
+        this.effects = new Effects(JSON.parse(el.getAttribute('wire:effects') ?? '{}'))
         this.originalEffects = new Effects(deepClone(this.effects))
 
         // "canonical" data represents the last known server state.
