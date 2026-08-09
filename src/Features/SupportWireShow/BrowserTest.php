@@ -118,4 +118,33 @@ class BrowserTest extends BrowserTestCase
         ->assertDontSee('Hello')
         ->assertAttributeContains('@hello', 'style', 'display: none !important;');
     }
+
+    public function test_wire_show_does_not_call_server_methods()
+    {
+        Livewire::visit(new class extends Component {
+            public $count = 0;
+
+            public function visible()
+            {
+                $this->count++;
+
+                return true;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div wire:show="visible" dusk="target">Hello</div>
+                    <div dusk="count">{{ $count }}</div>
+                    <button wire:click="visible" dusk="call">Call visible</button>
+                </div>
+                HTML;
+            }
+        })
+        ->assertMissing('@target')
+        ->assertSeeIn('@count', '0')
+        ->waitForLivewire()->click('@call')
+        ->assertSeeIn('@count', '1');
+    }
 }

@@ -46,22 +46,19 @@ export function evaluateExpression(el, expression, options = {}) {
     }
 }
 
-import { getCurrentWatcher } from '@vue/reactivity'
+let reactiveExpressionEvaluationDepth = 0
 
-let isEvaluatingReactiveExpression = false
-
-export function isEvaluatingReactive() {
-    return isEvaluatingReactiveExpression || getCurrentWatcher() !== undefined
+export function isEvaluatingReactiveExpression() {
+    return reactiveExpressionEvaluationDepth > 0
 }
 
 export function evaluateReactiveExpression(el, expression, options = {}) {
-    let prev = isEvaluatingReactiveExpression
-    isEvaluatingReactiveExpression = true
+    reactiveExpressionEvaluationDepth++
 
     try {
         return evaluateActionExpression(el, expression, options)
     } finally {
-        isEvaluatingReactiveExpression = prev
+        reactiveExpressionEvaluationDepth--
     }
 }
 
