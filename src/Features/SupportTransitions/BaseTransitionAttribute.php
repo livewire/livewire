@@ -4,8 +4,6 @@ namespace Livewire\Features\SupportTransitions;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
-use function Livewire\store;
-
 #[\Attribute(\Attribute::TARGET_METHOD)]
 class BaseTransitionAttribute extends LivewireAttribute
 {
@@ -17,11 +15,11 @@ class BaseTransitionAttribute extends LivewireAttribute
     function call()
     {
         if ($this->type) {
-            store($this->component)->set('transitionType', $this->type);
+            $this->storeSet('transitionType', $this->type);
         }
 
         if ($this->skip) {
-            store($this->component)->set('transitionSkip', true);
+            $this->storeSet('transitionSkip', true);
         }
     }
 }

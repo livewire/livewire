@@ -2,7 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use function Livewire\{on, store, trigger, wrap };
+use function Livewire\{on, trigger, wrap };
 use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleSynths\HandleSynths;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
@@ -10,6 +10,7 @@ use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\MaxNestingDepthExceededException;
 use Livewire\Exceptions\TooManyCallsException;
 use Livewire\Drawer\Utils;
+use Livewire\Features\SupportEvents\SupportEvents;
 use Livewire\Features\SupportFormObjects\Form;
 use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -307,7 +308,7 @@ class HandleComponents extends Mechanism
 
     protected function render($component, $default = null)
     {
-        if ($html = store($component)->get('skipRender', false)) {
+        if ($html = $component->shouldSkipRender()) {
             $html = value(is_string($html) ? $html : $default);
 
             if (! $html) return;
@@ -530,6 +531,7 @@ class HandleComponents extends Mechanism
         }
 
         $returns = [];
+        $shouldSkipRender = $this->shouldSkipRenderAfterCalls($root, $calls);
 
         foreach ($calls as $idx => $call) {
             $method = $call['method'];
@@ -553,11 +555,6 @@ class HandleComponents extends Mechanism
                 // so we will just set it to `null` instead...
                 if ($return instanceof StreamedResponse || $return instanceof BinaryFileResponse) {
                     $return = null;
-                }
-
-                // Support `.renderless` on magic actions like `wire:model.renderless.live`...
-                if ($metadata['renderless'] ?? false) {
-                    $root->skipRender();
                 }
 
                 $returns[] = $return;
@@ -591,14 +588,44 @@ class HandleComponents extends Mechanism
             }
 
             $returns[] = $return;
+        }
 
-            // Support `Wire:click.renderless`...
-            if ($metadata['renderless'] ?? false) {
-                $root->skipRender();
-            }
+        if ($shouldSkipRender) {
+            $root->skipRender();
         }
 
         $componentContext->addEffect('returns', $returns);
+    }
+
+    protected function shouldSkipRenderAfterCalls($root, $calls)
+    {
+        if (count($calls) === 0) return false;
+
+        return collect($calls)->every(
+            fn ($call) => $this->isCallRenderless($root, $call)
+        );
+    }
+
+    protected function isCallRenderless($root, $call)
+    {
+        return ($call['metadata']['renderless'] ?? false)
+            || $root->isRenderlessMethod($this->resolveCalledMethod($root, $call));
+    }
+
+    protected function resolveCalledMethod($root, $call)
+    {
+        if ($call['method'] !== '__dispatch' || ! isset($call['params'][0])) {
+            return $call['method'];
+        }
+
+        $event = $call['params'][0];
+
+        // Event listeners travel as __dispatch calls, but their attributes belong to the listener method...
+        if (! in_array($event, SupportEvents::getListenerEventNames($root))) {
+            return $call['method'];
+        }
+
+        return SupportEvents::getListenerMethodName($root, $event);
     }
 
     protected function pushOntoComponentStack($component)

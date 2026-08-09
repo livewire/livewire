@@ -9,7 +9,6 @@ use Livewire\Features\SupportAttributes\AttributeLevel;
 use Livewire\ComponentHook;
 use Livewire\Exceptions\EventHandlerDoesNotExist;
 use Livewire\Features\SupportAuthorization\BaseAuthorize;
-use Livewire\Features\SupportRenderless\BaseRenderless;
 
 class SupportEvents extends ComponentHook
 {
@@ -38,26 +37,15 @@ class SupportEvents extends ComponentHook
             $returnEarly(
                 wrap($this->component)->$method(...$params)
             );
-
-            // Here we have to manually check to see if the event listener method
-            // is "renderless" as it's normal "call" hook doesn't get run when
-            // the method is called as an event listener...
-            $isRenderless = $this->component->getAttributes()
-                ->filter(fn ($i) => $i instanceof BaseRenderless)
-                ->filter(fn ($i) => $i->getName() === $method)
-                ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
-                ->count() > 0;
-
-            if ($isRenderless) $this->component->skipRender();
         }
     }
 
     function dehydrate($context)
     {
         // Don't register listeners until a lazy component has fully mounted...
-        if (store($this->component)->get('isLazyLoadMounting') === true) return;
+        if ($this->storeGet('isLazyLoadMounting') === true) return;
 
-        if ($context->isMounting() || store($this->component)->get('isLazyLoadHydrating') === true) {
+        if ($context->isMounting() || $this->storeGet('isLazyLoadHydrating') === true) {
             $listeners = static::getListenerEventNames($this->component);
 
             $listeners && $context->addEffect('listeners', $listeners);

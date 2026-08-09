@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportScriptsAndAssets;
 
-use function Livewire\store;
 use Livewire\ComponentHook;
 
 use function Livewire\on;
@@ -129,20 +128,20 @@ class SupportScriptsAndAssets extends ComponentHook
     function hydrate($memo) {
         // Store the "scripts" and "assets" memos so they can be re-added later (persisted between requests)...
         if (isset($memo['scripts'])) {
-            store($this->component)->set('forwardScriptsToDehydrateMemo', $memo['scripts']);
+            $this->storeSet('forwardScriptsToDehydrateMemo', $memo['scripts']);
         }
 
         if (isset($memo['assets'])) {
-            store($this->component)->set('forwardAssetsToDehydrateMemo', $memo['assets']);
+            $this->storeSet('forwardAssetsToDehydrateMemo', $memo['assets']);
         }
     }
 
     function dehydrate($context)
     {
-        $alreadyRunScriptKeys = store($this->component)->get('forwardScriptsToDehydrateMemo', []);
+        $alreadyRunScriptKeys = $this->storeGet('forwardScriptsToDehydrateMemo', []);
 
         // Add any scripts to the payload that haven't been run yet for this component....
-        foreach (store($this->component)->get('scripts', []) as $key => $script) {
+        foreach ($this->storeGet('scripts', []) as $key => $script) {
             if (! in_array($key, $alreadyRunScriptKeys)) {
                 $context->pushEffect('scripts', $script, $key);
                 $alreadyRunScriptKeys[] = $key;
@@ -153,9 +152,9 @@ class SupportScriptsAndAssets extends ComponentHook
 
         // Add any assets to the payload that haven't been run yet for the entire page...
 
-        $alreadyRunAssetKeys = store($this->component)->get('forwardAssetsToDehydrateMemo', []);
+        $alreadyRunAssetKeys = $this->storeGet('forwardAssetsToDehydrateMemo', []);
 
-        foreach (store($this->component)->get('assets', []) as $key => $assets) {
+        foreach ($this->storeGet('assets', []) as $key => $assets) {
             if (! in_array($key, $alreadyRunAssetKeys)) {
 
                 // These will either get injected into the HTML if it's an initial page load

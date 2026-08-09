@@ -64,7 +64,7 @@ class SupportIslands extends ComponentHook
             }
 
             // If #[Renderless] attribute was used, don't render the island...
-            if ($this->storeGet('skipIslandsRender', false)) return;
+            if ($this->component->shouldSkipIslandsRender()) return;
 
             $this->component->skipRender();
 

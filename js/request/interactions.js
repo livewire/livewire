@@ -45,7 +45,8 @@ export function coordinateNetworkInteractions(messageBus) {
             action.metadata.renderless = true
         }
 
-        let message = messageBus.activeMessageMatchingScope(action)
+        let activeMessages = messageBus.activeMessagesMatchingScope(action)
+        let message = activeMessages[0]
 
         if (message) {
             // Wire:click.async:
@@ -82,7 +83,14 @@ export function coordinateNetworkInteractions(messageBus) {
                 let incomingHasBoundChildren = componentHasBoundChildren(action.component)
                 let outgoingHasBoundChildren = Array.from(message.actions).some(activeAction => componentHasBoundChildren(activeAction.component))
 
-                if (! incomingHasBoundChildren && ! outgoingHasBoundChildren) return
+                if (! incomingHasBoundChildren && ! outgoingHasBoundChildren) {
+                    // These older messages only become stale if this action's response lands...
+                    activeMessages
+                        .filter(message => Array.from(message.actions).every(action => action.metadata.type === 'model.live'))
+                        .forEach(message => action.supersedes.add(message))
+
+                    return
+                }
             }
 
             action.defer()

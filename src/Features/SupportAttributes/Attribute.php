@@ -4,6 +4,8 @@ namespace Livewire\Features\SupportAttributes;
 
 use Livewire\Component;
 
+use function Livewire\store;
+
 abstract class Attribute
 {
     protected Component $component;
@@ -103,5 +105,30 @@ abstract class Attribute
         }
 
         return false;
+    }
+
+    function storeSet($key, $value)
+    {
+        store($this->component)->set($key, $value);
+    }
+
+    function storePush($key, $value, $iKey = null)
+    {
+        store($this->component)->push($key, $value, $iKey);
+    }
+
+    function storeGet($key, $default = null)
+    {
+        return store($this->component)->get($key, $default);
+    }
+
+    function storeFind($key, $iKey = null, $default = null)
+    {
+        return store($this->component)->find($key, $iKey, $default);
+    }
+
+    function storeHas($key)
+    {
+        return store($this->component)->has($key);
     }
 }

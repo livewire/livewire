@@ -121,7 +121,11 @@ export class MessageBus {
     }
 
     activeMessageMatchingScope(action) {
-        return Array.from(this.activeMessages).find(message => this.matchesScope(message, action))
+        return this.activeMessagesMatchingScope(action)[0]
+    }
+
+    activeMessagesMatchingScope(action) {
+        return Array.from(this.activeMessages).filter(message => this.matchesScope(message, action))
     }
 
     matchesScope(message, action) {
