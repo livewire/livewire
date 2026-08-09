@@ -434,6 +434,7 @@ function sendMessages() {
                             if (payload.id === message.component.id) {
                                 if (discardIfSuperseded(message)) return
 
+                                // A skipped payload still counts as a response landing and can supersede older overlaps...
                                 supersedeOlderMessages(message)
 
                                 message.responsePayload = payload
@@ -452,6 +453,7 @@ function sendMessages() {
                         if (snapshot.memo.id === message.component.id) {
                             if (discardIfSuperseded(message)) return
 
+                            // This response has landed, so any older response it overlapped must not land later...
                             supersedeOlderMessages(message)
 
                             message.responsePayload = { snapshot, effects }
@@ -513,6 +515,8 @@ function sendMessages() {
 function discardIfSuperseded(message) {
     if (! message.superseded) return false
 
+    // A newer overlapping model.live response has already landed. Settle the
+    // action and loading-state lifecycle without applying this older payload...
     message.resolveActionPromises([], [])
     message.invokeOnFinish()
 
@@ -520,6 +524,8 @@ function discardIfSuperseded(message) {
 }
 
 function supersedeOlderMessages(message) {
+    // interactions.js recorded the active same-scope model.live messages on
+    // this action. Mark them only now, once this action's response has landed...
     message.actions.forEach(action => {
         action.supersedes.forEach(olderMessage => olderMessage.superseded = true)
     })
