@@ -1,6 +1,14 @@
 export class Effects {
     constructor(data = {}) {
-        Object.assign(this, data && typeof data === 'object' ? data : {})
+        let source = isObject(data) ? data : {}
+
+        for (let key of Object.keys(source)) {
+            if (! isReservedKey(key)) this[key] = source[key]
+        }
+    }
+
+    static from(data) {
+        return data instanceof Effects ? data : new Effects(data)
     }
 
     has(key) {
@@ -14,4 +22,14 @@ export class Effects {
     toJSON() {
         return { ...this }
     }
+}
+
+function isObject(source)
+{
+    return source !== null && typeof source === 'object' && ! Array.isArray(source)
+}
+
+function isReservedKey(key)
+{
+    return key === 'has' || key === 'hasValue' || key === 'toJSON'
 }

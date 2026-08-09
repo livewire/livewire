@@ -29,8 +29,8 @@ export class Component {
 
         this.name = this.snapshot.memo.name
 
-        this.effects = new Effects(JSON.parse(el.getAttribute('wire:effects') ?? '{}'))
-        this.originalEffects = new Effects(deepClone(this.effects))
+        this.effects = Effects.from(JSON.parse(el.getAttribute('wire:effects') ?? '{}'))
+        this.originalEffects = Effects.from(deepClone(this.effects))
 
         // "canonical" data represents the last known server state.
         this.canonical = extractData(deepClone(this.snapshot.data))
@@ -83,7 +83,7 @@ export class Component {
 
         this.snapshot = snapshot
 
-        this.effects = effects instanceof Effects ? effects : new Effects(effects)
+        this.effects = Effects.from(effects)
 
         this.canonical = extractData(deepClone(snapshot.data))
 
@@ -151,7 +151,7 @@ export class Component {
      * users interact with, triggering reactive effects.
      */
     processEffects(effects, request) {
-        effects = effects instanceof Effects ? effects : new Effects(effects)
+        effects = Effects.from(effects)
 
         // This is for BC.
         trigger('effects', this, effects)

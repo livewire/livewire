@@ -446,7 +446,7 @@ function sendMessages() {
                         let { snapshot: snapshotEncoded, effects } = payload
                         let snapshot = JSON.parse(snapshotEncoded)
 
-                        effects = effects instanceof Effects ? effects : new Effects(effects)
+                        effects = Effects.from(effects)
 
                         if (snapshot.memo.id === message.component.id) {
                             message.responsePayload = { snapshot, effects }
