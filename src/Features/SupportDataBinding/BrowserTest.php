@@ -110,12 +110,13 @@ class BrowserTest extends BrowserTestCase
                 BLADE;
             }
         })
+            ->waitForLivewireToLoad()
             ->assertNotVisible('@dirty-indicator')
             ->type('@input', 'Hello')
-            ->pause(50)
+            ->waitUntil("document.querySelector('[dusk=\"dirty-indicator\"]')?.offsetParent !== null")
             ->assertVisible('@dirty-indicator')
             ->waitForLivewire()->click('@commit')
-            ->pause(50)
+            ->waitUntil("document.querySelector('[dusk=\"dirty-indicator\"]')?.offsetParent === null")
             ->assertNotVisible('@dirty-indicator')
         ;
     }
