@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportErrorResponses;
 
+use Illuminate\Support\Facades\Route;
 use Livewire\Component as BaseComponent;
 use Livewire\Livewire;
 
@@ -65,16 +66,54 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertMissing('#livewire-error')
         ;
     }
+
+    public function test_it_shows_a_refresh_dialog_when_the_server_returns_an_empty_successful_response(): void
+    {
+        $this->returnEmptyUpdateResponses();
+
+        Livewire::visit(Component::class)
+            ->click('@refresh')
+            ->waitForDialog()
+            ->assertDialogOpened("The server returned an empty response.\nWould you like to refresh the page?")
+            ->dismissDialog()
+            ->pause(100)
+            ->assertMissing('#livewire-error')
+        ;
+    }
+
+    public function test_it_allows_the_empty_response_dialog_to_be_customised_using_a_request_interceptor(): void
+    {
+        $this->returnEmptyUpdateResponses();
+
+        Livewire::withQueryParams(['useCustomEmptyResponseInterceptor' => true])
+            ->visit(Component::class)
+            ->click('@refresh')
+            ->waitForDialog()
+            ->assertDialogOpened('Empty Response - Custom Error Response')
+            ->dismissDialog()
+            ->pause(100)
+            ->assertMissing('#livewire-error')
+        ;
+    }
+
+    protected function returnEmptyUpdateResponses(): void
+    {
+        Livewire::setUpdateRoute(function ($handle, $path) {
+            return Route::post($path, fn () => response('', 200, ['Content-Type' => 'application/json']));
+        });
+    }
 }
 
 class Component extends BaseComponent
 {
     public $useCustomPageExpiredHook = false;
     public $useCustomErrorResponseHook = false;
+    public bool $useCustomEmptyResponseInterceptor = false;
 
     protected $queryString = [
         'useCustomPageExpiredHook' => ['except' => false],
         'useCustomErrorResponseHook' => ['except' => false],
+        'useCustomEmptyResponseInterceptor' => ['except' => false],
     ];
 
     public function regenerateSession()
@@ -96,6 +135,22 @@ class Component extends BaseComponent
                 fail(({ status }) => {
                     if (status === 419) {
                         confirm('Page Expired - Error Response')
+
+                        preventDefault()
+                    }
+                })
+            })
+        })
+    </script>
+    @endif
+
+    @if($useCustomEmptyResponseInterceptor)
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.interceptRequest(({ onError }) => {
+                onError(({ response, body, preventDefault }) => {
+                    if (response.ok && body === '') {
+                        confirm('Empty Response - Custom Error Response')
 
                         preventDefault()
                     }

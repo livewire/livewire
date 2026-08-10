@@ -16,6 +16,9 @@ export function initComponent(el) {
 
     components[component.id] = component
 
+    // Process initial effects after registering so mount-time effects like `$this->js()` can resolve `$wire`...
+    component.processEffects(component.effects)
+
     return component
 }
 

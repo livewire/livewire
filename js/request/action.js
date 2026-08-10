@@ -2,6 +2,7 @@ import { dehydrateTree } from '@/synths'
 
 export default class Action {
     squashedActions = new Set()
+    supersedes = new Set()
 
     // Interceptor callbacks
     onSendCallbacks = []

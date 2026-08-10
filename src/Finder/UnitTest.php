@@ -186,6 +186,21 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('Livewire\Finder\Fixtures\IndexComponent\Index', $class);
     }
 
+    public function test_can_resolve_location_class_root_index_component()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(classNamespace: 'Livewire\Finder\Fixtures\IndexComponent');
+
+        $name = $finder->normalizeName(Index::class);
+
+        $this->assertEquals('index', $name);
+
+        $class = $finder->resolveClassComponentClassName($name);
+
+        $this->assertEquals('Livewire\Finder\Fixtures\IndexComponent\Index', $class);
+    }
+
     public function test_can_resolve_location_class_self_named_component()
     {
         $finder = new Finder();
@@ -237,6 +252,50 @@ class UnitTest extends \Tests\TestCase
         $path = $finder->resolveSingleFileComponentPath('single-file-component-with-multiline-php-attribute');
 
         $this->assertEquals(__DIR__ . '/Fixtures/single-file-component-with-multiline-php-attribute.blade.php', $path);
+    }
+
+    public function test_can_resolve_single_file_component_with_array_argument_php_attribute()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('single-file-component-with-array-argument-php-attribute');
+
+        $this->assertEquals(__DIR__ . '/Fixtures/single-file-component-with-array-argument-php-attribute.blade.php', $path);
+    }
+
+    public function test_can_resolve_single_file_component_with_nested_array_argument_php_attribute()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('single-file-component-with-nested-array-argument-php-attribute');
+
+        $this->assertEquals(__DIR__ . '/Fixtures/single-file-component-with-nested-array-argument-php-attribute.blade.php', $path);
+    }
+
+    public function test_can_resolve_single_file_component_with_closing_bracket_in_php_attribute_string()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('single-file-component-with-closing-bracket-in-attribute-string');
+
+        $this->assertEquals(__DIR__ . '/Fixtures/single-file-component-with-closing-bracket-in-attribute-string.blade.php', $path);
+    }
+
+    public function test_can_resolve_single_file_component_with_closing_bracket_in_class()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+
+        $path = $finder->resolveSingleFileComponentPath('single-file-component-with-closing-bracket-in-class');
+
+        $this->assertEquals(__DIR__ . '/Fixtures/single-file-component-with-closing-bracket-in-class.blade.php', $path);
     }
 
     public function test_can_resolve_location_single_file_component_with_zap()
@@ -418,6 +477,21 @@ class UnitTest extends \Tests\TestCase
         $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures');
 
         $class = $finder->resolveClassComponentClassName('admin::index-component');
+
+        $this->assertEquals('Livewire\Finder\Fixtures\IndexComponent\Index', $class);
+    }
+
+    public function test_can_resolve_namespace_class_root_index_component()
+    {
+        $finder = new Finder();
+
+        $finder->addNamespace('admin', classNamespace: 'Livewire\Finder\Fixtures\IndexComponent');
+
+        $name = $finder->normalizeName(Index::class);
+
+        $this->assertEquals('admin::index', $name);
+
+        $class = $finder->resolveClassComponentClassName($name);
 
         $this->assertEquals('Livewire\Finder\Fixtures\IndexComponent\Index', $class);
     }
@@ -709,6 +783,22 @@ class UnitTest extends \Tests\TestCase
         $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
 
         $this->assertNull($finder->resolveSingleFileComponentPath('volt-functional-component'));
+    }
+
+    public function test_non_single_file_component_with_closing_brackets_and_class_text_is_not_resolved_as_single_file_component()
+    {
+        $finder = new Finder();
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+
+        $this->assertNull($finder->resolveSingleFileComponentPath('non-single-file-component-with-closing-brackets-and-class-text'));
+    }
+
+    public function test_non_single_file_component_with_separated_closing_bracket_and_class_text_is_not_resolved_as_single_file_component()
+    {
+        $finder = new Finder();
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures');
+
+        $this->assertNull($finder->resolveSingleFileComponentPath('non-single-file-component-with-separated-closing-bracket-and-class-text'));
     }
 }
 
