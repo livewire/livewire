@@ -958,7 +958,7 @@ class BrowserTest extends BrowserTestCase
         })
         ->click('@deals')
         ->assertFragmentIs('deals')
-        ->assertSee('Post #1')
+        ->waitForText('Post #1')
         ->assertSee('Post #2')
         ->assertSee('Post #3')
         ->assertDontSee('Post #4')

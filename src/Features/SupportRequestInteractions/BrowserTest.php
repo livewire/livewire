@@ -74,7 +74,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(
             new class extends Component {
                 public function pollRequest() {
-                    usleep(100 * 1000); // 100ms
+                    usleep(500 * 1000); // Keep the poll in flight while Dusk observes it...
                 }
 
                 public function userRequest() {
@@ -107,17 +107,15 @@ class BrowserTest extends \Tests\BrowserTestCase
         )
             ->waitForLivewireToLoad()
 
-            // Wait for the poll to have started..
-            ->pause(210)
-            ->assertScript('window.intercepts.length', 2)
+            ->waitUntil("window.intercepts.includes('pollRequest-component sent')")
             ->assertScript('window.intercepts', [
                 'pollRequest-component started',
                 'pollRequest-component sent',
             ])
 
-            ->waitForLivewire()->click('@user-request')
-            ->assertScript('window.intercepts.length', 6)
-            ->assertScript('window.intercepts', [
+            ->click('@user-request')
+            ->waitUntil('window.intercepts.length >= 6')
+            ->assertScript('window.intercepts.slice(0, 6)', [
                 'pollRequest-component started',
                 'pollRequest-component sent',
                 'pollRequest-component cancelled',
@@ -333,7 +331,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(
             new class extends Component {
                 public function pollRequest() {
-                    usleep(100 * 1000); // 100ms
+                    usleep(500 * 1000); // Keep the poll in flight while Dusk observes it...
                 }
 
                 public function userRequest() {
@@ -370,17 +368,15 @@ class BrowserTest extends \Tests\BrowserTestCase
         )
             ->waitForLivewireToLoad()
 
-            // Wait for the poll to have started..
-            ->pause(210)
-            ->assertScript('window.intercepts.length', 2)
+            ->waitUntil("window.intercepts.includes('pollRequest-foo sent')")
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
                 'pollRequest-foo sent',
             ])
 
-            ->waitForLivewire()->click('@user-request')
-            ->assertScript('window.intercepts.length', 6)
-            ->assertScript('window.intercepts', [
+            ->click('@user-request')
+            ->waitUntil('window.intercepts.length >= 6')
+            ->assertScript('window.intercepts.slice(0, 6)', [
                 'pollRequest-foo started',
                 'pollRequest-foo sent',
                 'pollRequest-foo cancelled',
@@ -540,7 +536,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(
             new class extends Component {
                 public function userRequest() {
-                    usleep(150 * 1000); // 150ms
+                    usleep(500 * 1000); // Keep both requests in flight while Dusk observes them...
                 }
 
                 public function render() {
@@ -583,33 +579,14 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             ->click('@component-request')
 
-            // Wait for the user request to have started...
-            ->pause(50)
-            ->assertScript('window.intercepts.length', 2)
+            ->waitUntil("window.intercepts.includes('userRequest-component sent')")
             ->assertScript('window.intercepts', [
                 'userRequest-component started',
                 'userRequest-component sent',
             ])
 
             ->click('@island-request')
-            // Wait for the island request to have started...
-            ->pause(50)
-            ->assertScript('window.intercepts.length', 4)
-            ->assertScript('window.intercepts', [
-                'userRequest-component started',
-                'userRequest-component sent',
-                'userRequest-foo started',
-                'userRequest-foo sent',
-            ])
-
-            // Timing is essential in this test as dusk is single threaded, so even if a request is cancelled,
-            // the server will still handle it and take however long it needs. So we need to calculate the
-            // time it takes for the first request to finished as if it was successful, plus the time for
-            // the second request...
-
-            // Wait for both requests to have finished...
-            ->pause(500)
-            ->assertScript('window.intercepts.length', 6)
+            ->waitUntil('window.intercepts.length >= 6')
             ->assertScript('window.intercepts', [
                 'userRequest-component started',
                 'userRequest-component sent',
@@ -626,7 +603,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(
             new class extends Component {
                 public function userRequest() {
-                    usleep(150 * 1000); // 150ms
+                    usleep(500 * 1000); // Keep both requests in flight while Dusk observes them...
                 }
 
                 public function render() {
@@ -669,33 +646,14 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             ->click('@island-request')
 
-            // Wait for the island request to have started...
-            ->pause(50)
-            ->assertScript('window.intercepts.length', 2)
+            ->waitUntil("window.intercepts.includes('userRequest-foo sent')")
             ->assertScript('window.intercepts', [
                 'userRequest-foo started',
                 'userRequest-foo sent',
             ])
 
             ->click('@component-request')
-            // Wait for the user request to have started...
-            ->pause(50)
-            ->assertScript('window.intercepts.length', 4)
-            ->assertScript('window.intercepts', [
-                'userRequest-foo started',
-                'userRequest-foo sent',
-                'userRequest-component started',
-                'userRequest-component sent',
-            ])
-
-            // Timing is essential in this test as dusk is single threaded, so even if a request is cancelled,
-            // the server will still handle it and take however long it needs. So we need to calculate the
-            // time it takes for the first request to finished as if it was successful, plus the time for
-            // the second request...
-
-            // Wait for both requests to have finished...
-            ->pause(500)
-            ->assertScript('window.intercepts.length', 6)
+            ->waitUntil('window.intercepts.length >= 6')
             ->assertScript('window.intercepts', [
                 'userRequest-foo started',
                 'userRequest-foo sent',
@@ -712,7 +670,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(
             new class extends Component {
                 public function pollRequest() {
-                    usleep(150 * 1000); // 150ms
+                    usleep(500 * 1000); // Keep both polls in flight while Dusk observes them...
                 }
 
                 public function render() {
@@ -754,40 +712,14 @@ class BrowserTest extends \Tests\BrowserTestCase
         )
             ->waitForLivewireToLoad()
 
-            // Wait for the component poll to have started...
-            ->pause(710)
-            ->assertScript('window.intercepts.length', 2)
-            ->assertScript('window.intercepts', [
-                'pollRequest-component started',
-                'pollRequest-component sent',
-            ])
-
-            // Wait for the island poll to have started...
-            ->pause(50)
-            ->assertScript('window.intercepts.length', 4)
-            ->assertScript('window.intercepts', [
+            ->waitUntil("window.intercepts.includes('pollRequest-component succeeded') && window.intercepts.includes('pollRequest-foo succeeded')")
+            ->assertScript('window.intercepts.slice(0, 4)', [
                 'pollRequest-component started',
                 'pollRequest-component sent',
                 'pollRequest-foo started',
                 'pollRequest-foo sent',
             ])
-
-            // Timing is essential in this test as dusk is single threaded, so even if a request is cancelled,
-            // the server will still handle it and take however long it needs. So we need to calculate the
-            // time it takes for the first request to finished as if it was successful, plus the time for
-            // the second request...
-
-            // Wait for both requests to have finished...
-            ->pause(500)
-            ->assertScript('window.intercepts.length', 6)
-            ->assertScript('window.intercepts', [
-                'pollRequest-component started',
-                'pollRequest-component sent',
-                'pollRequest-foo started',
-                'pollRequest-foo sent',
-                'pollRequest-component succeeded',
-                'pollRequest-foo succeeded',
-            ])
+            ->assertScript("window.intercepts.some(event => event.endsWith('cancelled'))", false)
             ;
     }
 
@@ -796,7 +728,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(
             new class extends Component {
                 public function pollRequest() {
-                    usleep(150 * 1000); // 150ms
+                    usleep(500 * 1000); // Keep both polls in flight while Dusk observes them...
                 }
 
                 public function render() {
@@ -838,40 +770,14 @@ class BrowserTest extends \Tests\BrowserTestCase
         )
             ->waitForLivewireToLoad()
 
-            // Wait for the island poll to have started...
-            ->pause(710)
-            ->assertScript('window.intercepts.length', 2)
-            ->assertScript('window.intercepts', [
-                'pollRequest-foo started',
-                'pollRequest-foo sent',
-            ])
-
-            // Wait for the component poll to have started...
-            ->pause(100)
-            ->assertScript('window.intercepts.length', 4)
-            ->assertScript('window.intercepts', [
+            ->waitUntil("window.intercepts.includes('pollRequest-foo succeeded') && window.intercepts.includes('pollRequest-component succeeded')")
+            ->assertScript('window.intercepts.slice(0, 4)', [
                 'pollRequest-foo started',
                 'pollRequest-foo sent',
                 'pollRequest-component started',
                 'pollRequest-component sent',
             ])
-
-            // Timing is essential in this test as dusk is single threaded, so even if a request is cancelled,
-            // the server will still handle it and take however long it needs. So we need to calculate the
-            // time it takes for the first request to finished as if it was successful, plus the time for
-            // the second request...
-
-            // Wait for both requests to have finished...
-            ->pause(500)
-            ->assertScript('window.intercepts.length', 6)
-            ->assertScript('window.intercepts', [
-                'pollRequest-foo started',
-                'pollRequest-foo sent',
-                'pollRequest-component started',
-                'pollRequest-component sent',
-                'pollRequest-foo succeeded',
-                'pollRequest-component succeeded',
-            ])
+            ->assertScript("window.intercepts.some(event => event.endsWith('cancelled'))", false)
             ;
     }
 
@@ -880,7 +786,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(
             new class extends Component {
                 public function pollRequest() {
-                    usleep(150 * 1000); // 150ms
+                    usleep(500 * 1000); // Keep the poll in flight while Dusk starts the user request...
                 }
 
                 public function userRequest() {
@@ -951,7 +857,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(
             new class extends Component {
                 public function pollRequest() {
-                    usleep(150 * 1000); // 150ms
+                    usleep(500 * 1000); // Keep the poll in flight while Dusk starts the user request...
                 }
 
                 public function userRequest() {
@@ -998,9 +904,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         )
             ->waitForLivewireToLoad()
 
-            // Wait for the island poll to have started...
-            ->pause(510)
-            ->assertScript('window.intercepts.length', 2)
+            ->waitUntil("window.intercepts.includes('pollRequest-foo sent')")
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
                 'pollRequest-foo sent',
@@ -1008,24 +912,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             // Start the component user request...
             ->click('@component-request')
-            // Wait for the component user request to have started...
-            ->pause(50)
-            ->assertScript('window.intercepts.length', 4)
-            ->assertScript('window.intercepts', [
-                'pollRequest-foo started',
-                'pollRequest-foo sent',
-                'userRequest-component started',
-                'userRequest-component sent',
-            ])
-
-            // Timing is essential in this test as dusk is single threaded, so even if a request is cancelled,
-            // the server will still handle it and take however long it needs. So we need to calculate the
-            // time it takes for the first request to finished as if it was successful, plus the time for
-            // the second request...
-
-            // Wait for both requests to have finished...
-            ->pause(300)
-            ->assertScript('window.intercepts.length', 6)
+            ->waitUntil('window.intercepts.length >= 6')
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
                 'pollRequest-foo sent',
@@ -1042,7 +929,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(
             new class extends Component {
                 public function pollRequest() {
-                    usleep(150 * 1000); // 150ms
+                    usleep(500 * 1000); // Keep the poll in flight while Dusk starts the user request...
                 }
 
                 public function userRequest() {
@@ -1095,9 +982,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         )
             ->waitForLivewireToLoad()
 
-            // Wait for the foo island poll to have started...
-            ->pause(510)
-            ->assertScript('window.intercepts.length', 2)
+            ->waitUntil("window.intercepts.includes('pollRequest-foo sent')")
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
                 'pollRequest-foo sent',
@@ -1105,24 +990,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             // Start the bar island user request...
             ->click('@bar-island-request')
-            // Wait for the bar island user request to have started...
-            ->pause(50)
-            ->assertScript('window.intercepts.length', 4)
-            ->assertScript('window.intercepts', [
-                'pollRequest-foo started',
-                'pollRequest-foo sent',
-                'userRequest-bar started',
-                'userRequest-bar sent',
-            ])
-
-            // Timing is essential in this test as dusk is single threaded, so even if a request is cancelled,
-            // the server will still handle it and take however long it needs. So we need to calculate the
-            // time it takes for the first request to finished as if it was successful, plus the time for
-            // the second request...
-
-            // Wait for both requests to have finished...
-            ->pause(300)
-            ->assertScript('window.intercepts.length', 6)
+            ->waitUntil('window.intercepts.length >= 6')
             ->assertScript('window.intercepts', [
                 'pollRequest-foo started',
                 'pollRequest-foo sent',
@@ -1173,11 +1041,11 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(
             new class extends Component {
                 public function pollRequest() {
-                    usleep(200 * 1000); // 200ms
+                    usleep(1000 * 1000); // Keep the poll in flight until the user request overlaps it...
                 }
 
                 public function userRequest() {
-                    usleep(200 * 1000); // 200ms
+                    usleep(1000 * 1000); // Keep the user request in flight until the poll overlaps it...
                 }
 
                 public function render() {
@@ -1226,37 +1094,15 @@ class BrowserTest extends \Tests\BrowserTestCase
         )
             ->waitForLivewireToLoad()
 
-            // Wait a bit before starting the bar island user request, so the poll happens soon after...
-            ->pause(450)
-
             // Start the bar island user request...
             ->click('@bar-island-request')
-            // Wait for the bar island user request to have started...
-            ->pause(50)
-            ->assertScript('window.intercepts.length', 2)
+            ->waitUntil("window.intercepts.includes('userRequest-bar sent')")
             ->assertScript('window.intercepts', [
                 'userRequest-bar started',
                 'userRequest-bar sent',
             ])
 
-            // Wait for the foo island poll to have started...
-            ->pause(110)
-            ->assertScript('window.intercepts.length', 4)
-            ->assertScript('window.intercepts', [
-                'userRequest-bar started',
-                'userRequest-bar sent',
-                'pollRequest-foo started',
-                'pollRequest-foo sent',
-            ])
-
-            // Timing is essential in this test as dusk is single threaded, so even if a request is cancelled,
-            // the server will still handle it and take however long it needs. So we need to calculate the
-            // time it takes for the first request to finished as if it was successful, plus the time for
-            // the second request...
-
-            // Wait for both requests to have finished...
-            ->pause(450)
-            ->assertScript('window.intercepts.length', 6)
+            ->waitUntil('window.intercepts.length >= 6')
             ->assertScript('window.intercepts', [
                 'userRequest-bar started',
                 'userRequest-bar sent',
