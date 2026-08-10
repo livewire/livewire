@@ -159,6 +159,12 @@ When you have multiple islands with the same name, they're linked together and w
 
 Both islands will update together whenever one is triggered.
 
+## Batched island actions
+
+Livewire may batch multiple actions for the same named island into one request. Automatic island replacement behaves like component rendering: Livewire runs every action first, then morphs the island once using the final component state.
+
+The `#[Renderless]` attribute and `.renderless` modifier opt only their own action out of automatic rendering. If any other action in the batch is renderful, Livewire still performs the final island morph. Calling `$this->skipRender()` from an island action is a stronger, imperative choice—it vetoes automatic rendering for that named island group for the entire request.
+
 ## Append and prepend modes
 
 Instead of replacing content entirely, islands can append or prepend new content. This is perfect for pagination, infinite scroll, or real-time feeds:
@@ -204,6 +210,34 @@ new class extends Component {
 Available modes:
 - `wire:island.append` - Add to the end
 - `wire:island.prepend` - Add to the beginning
+
+Append and prepend are ordered output operations rather than final-state synchronization. When several append/prepend actions are batched, each renderful action produces its own fragment using state from that point in the action sequence. Mixed morph, append, and prepend operations are applied in action order.
+
+## Rendering islands explicitly
+
+Call `renderIsland()` when an action needs to emit an island fragment at a specific point rather than rely on the automatic render at the end of the action:
+
+```php
+public function importRecords()
+{
+    foreach ($this->batches as $batch) {
+        $this->import($batch);
+
+        $this->renderIsland('progress');
+    }
+}
+```
+
+Every explicit call is preserved in invocation order. Repeated morph calls replace the island in sequence, while repeated append/prepend calls retain every emitted fragment:
+
+```php
+$this->renderIsland('feed', mode: 'append');
+$this->renderIsland('feed', mode: 'prepend');
+```
+
+Explicit rendering is honored even inside a renderless action or after `skipRender()`. Those APIs suppress automatic rendering; they do not discard output the action requested explicitly.
+
+Use `streamIsland()` when the fragment must be sent to the browser immediately while the action is still running. Streamed fragments are not buffered or coalesced with the normal response.
 
 ## Nested islands
 

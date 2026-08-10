@@ -35,53 +35,17 @@ class SupportIslands extends ComponentHook
         });
     }
 
-    function call($method, $params, $returnEarly, $metadata, $componentContext)
-    {
-        if (! isset($metadata['island'])) return;
-
-        $island = $metadata['island'];
-
-        $mount = false;
-
-        if ($method === '__lazyLoadIsland') {
-            $mount = true;
-            $returnEarly();
-        }
-
-        // if metadata contains an island, then we should render it...
-        return function (...$params) use ($island, $componentContext, $mount, $metadata) {
-            ['name' => $name, 'mode' => $mode] = $island;
-
-            $islands = $this->component->getIslands();
-
-            $islands = array_filter($islands, fn ($island) => $island['name'] === $name);
-
-            if (empty($islands)) return;
-
-            // Support `Wire:click.renderless`...
-            if ($metadata['renderless'] ?? false) {
-                return;
-            }
-
-            // If #[Renderless] attribute was used, don't render the island...
-            if ($this->component->shouldSkipIslandsRender()) return;
-
-            $this->component->skipRender();
-
-            $this->component->renderIsland(
-                name: $name,
-                mode: $mode,
-                mount: $mount,
-            );
-        };
-    }
-
     public function dehydrate($context)
     {
         $context->addMemo('islands', $this->component->getIslands());
 
-        if ($this->component->hasRenderedIslandFragments()) {
-            $context->addEffect('islandFragments', $this->component->getRenderedIslandFragments());
+        $fragments = [
+            ...$this->component->getRenderedIslandFragments(),
+            ...($context->renderPlan?->islandFragments() ?? []),
+        ];
+
+        if (! empty($fragments)) {
+            $context->addEffect('islandFragments', $fragments);
         }
     }
 

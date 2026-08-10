@@ -7,7 +7,7 @@ use Livewire\Features\SupportStreaming\SupportStreaming;
 use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Livewire\Drawer\Utils;
 
-use function Livewire\trigger;
+use function Livewire\{store, trigger};
 
 trait HandlesIslands
 {
@@ -106,6 +106,22 @@ trait HandlesIslands
 
     public function renderIsland($name, $content = null, $mode = 'morph', $with = [], $mount = false)
     {
+        $fragments = $this->renderIslandFragments($name, $content, $mode, $with, $mount);
+
+        $renderPlan = store($this)->get('renderPlan');
+
+        if ($renderPlan) {
+            $renderPlan->recordExplicitIslandFragments($name, $fragments);
+
+            return;
+        }
+
+        array_push($this->renderedIslandFragments, ...$fragments);
+    }
+
+    protected function renderIslandFragments($name, $content = null, $mode = 'morph', $with = [], $mount = false)
+    {
+        $fragments = [];
         $islands = $this->getIslands();
 
         foreach ($islands as $island) {
@@ -114,9 +130,6 @@ trait HandlesIslands
                 $token = $island['token'];
 
                 if (! $token) continue;
-
-                // Skip if this island was already rendered in this request...
-                if ($this->islandAlreadyRendered($name, $token)) continue;
 
                 // If the island is lazy, we need to mount it, but to ensure any nested islands render,
                 // we need to set the `$islandsHaveMounted` flag to false and reset it back after the
@@ -133,22 +146,13 @@ trait HandlesIslands
                     'mode' => $mode,
                 ]);
 
-                $this->renderedIslandFragments[] = $renderedContent;
+                $fragments[] = $renderedContent;
 
                 $finish();
             }
         }
-    }
 
-    protected function islandAlreadyRendered($name, $token)
-    {
-        foreach ($this->renderedIslandFragments as $fragment) {
-            if (str_contains($fragment, "name={$name}|token={$token}")) {
-                return true;
-            }
-        }
-
-        return false;
+        return $fragments;
     }
 
     public function streamIsland($name, $content = null, $mode = 'morph', $with = [])

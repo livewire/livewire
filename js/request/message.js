@@ -196,7 +196,10 @@ export default class Message {
                 payload: this.responsePayload,
                 onSync: callback => interceptor.onSync = callback,
                 onEffect: callback => interceptor.onEffect = callback,
-                onMorph: callback => interceptor.onMorph = callback,
+                onMorph: (callback, { order = 0 } = {}) => {
+                    interceptor.onMorph = callback
+                    interceptor.morphOrder = order
+                },
                 onRender: callback => interceptor.onRender = callback
             })
         })
@@ -223,9 +226,13 @@ export default class Message {
     }
 
     async invokeOnMorph() {
-        await Promise.all(
-            this.interceptors.map(interceptor => interceptor.onMorph())
-        )
+        let orders = [...new Set(this.interceptors.map(interceptor => interceptor.morphOrder))].sort((a, b) => a - b)
+
+        for (let order of orders) {
+            let interceptors = this.interceptors.filter(interceptor => interceptor.morphOrder === order)
+
+            await Promise.all(interceptors.map(interceptor => interceptor.onMorph()))
+        }
     }
 
     invokeOnRender() {

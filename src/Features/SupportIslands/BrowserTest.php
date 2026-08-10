@@ -545,6 +545,137 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_batched_morph_actions_render_final_island_state_once()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function addTen()
+            {
+                $this->count += 10;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo')
+                        <div dusk="island-count">State {{ $count }}</div>
+                    @endisland
+
+                    <div wire:click="addTen" wire:island="foo">
+                        <button type="button" wire:click="increment" wire:island="foo" dusk="run">Run</button>
+                    </div>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'State 0')
+            ->waitForLivewire()->click('@run')
+            ->assertSeeIn('@island-count', 'State 11')
+            ;
+    }
+
+    public function test_batched_append_actions_are_applied_in_action_order()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function addTen()
+            {
+                $this->count += 10;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div dusk="island-output">
+                        @island(name: 'foo')<span>State {{ $count }}</span>@endisland
+                    </div>
+
+                    <div wire:click="addTen" wire:island.append="foo">
+                        <button type="button" wire:click="increment" wire:island.append="foo" dusk="run">Run</button>
+                    </div>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-output', 'State 0')
+            ->waitForLivewire()->click('@run')
+            ->assertSourceHas('State 0</span><span>State 1</span><span>State 11')
+            ;
+    }
+
+    public function test_repeated_explicit_island_renders_are_applied_in_order()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function renderThreeTimes()
+            {
+                foreach ([1, 2, 3] as $count) {
+                    $this->count = $count;
+                    $this->renderIsland('foo');
+                }
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo')
+                        <div dusk="island-count">State {{ $count }}</div>
+                    @endisland
+
+                    <button type="button" wire:click="renderThreeTimes" dusk="run">Run</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'State 0')
+            ->waitForLivewire()->click('@run')
+            ->assertSeeIn('@island-count', 'State 3')
+            ;
+    }
+
+    public function test_explicit_island_commands_run_before_the_final_root_morph()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function run()
+            {
+                $this->count++;
+                $this->renderIsland('foo');
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo', always: true)
+                        <div dusk="island-count">State {{ $count }}</div>
+                    @endisland
+
+                    <button type="button" wire:click="run" dusk="run">Run</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'State 0')
+            ->waitForLivewire()->click('@run')
+            ->assertSeeIn('@island-count', 'State 2')
+            ;
+    }
+
     public function test_streams_append_into_island_over_time()
     {
         Livewire::visit([new class extends \Livewire\Component {

@@ -12,6 +12,8 @@ export class MessageInterceptor {
     onSync = () => {}
     onEffect = () => {}
     onMorph = async () => {}
+    // Lower orders complete before higher orders; equal orders remain concurrent...
+    morphOrder = 0
     onRender = () => {}
 
     constructor(message, callback) {

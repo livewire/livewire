@@ -45,26 +45,31 @@ interceptAction(({ action }) => {
 })
 
 interceptMessage(({ message, onSuccess, onStream }) => {
+    let streamedFragments = Promise.resolve()
+
     onStream(({ json }) => {
         let { type, islandFragment } = json
 
         if (type !== 'island') return
 
-        renderIsland(message.component, islandFragment)
+        streamedFragments = streamedFragments.then(() => renderIsland(message.component, islandFragment))
     })
 
     onSuccess(({ payload, onMorph }) => {
         onMorph(async () => {
+            await streamedFragments
+
             let fragments = []
 
             if (Object.prototype.hasOwnProperty.call(payload.effects, 'islandFragments') && payload.effects.islandFragments) {
                 fragments = payload.effects.islandFragments
             }
 
-            fragments.forEach(async fragmentHtml => {
+            for (let fragmentHtml of fragments) {
                 await renderIsland(message.component, fragmentHtml)
-            })
-        })
+            }
+        // Explicit island commands happen during the action, before the final root render...
+        }, { order: -1 })
     })
 })
 

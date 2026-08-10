@@ -38,6 +38,8 @@ new class extends Component {
 
 The example above uses `wire:intersect` to call `incrementViewCount()` when the user scrolls to the bottom. Since `#[Renderless]` is applied, the view count is logged but the template doesn't re-render—no part of the page is affected.
 
+The attribute opts only this action out of automatic rendering. If Livewire batches the action with a normal action, Livewire still renders once after the entire batch and uses the final component state.
+
 ## When to use
 
 Use `#[Renderless]` when an action:
@@ -87,6 +89,8 @@ You can also skip rendering directly from the element using the `.renderless` mo
 ```
 
 This approach is useful for one-off cases where you don't want to add an attribute to the method.
+
+`#[Renderless]` and `.renderless` are equivalent per-action opt-outs. `skipRender()` is intentionally stronger: it vetoes automatic rendering for the current action's entire root or island target for that request. Use it when the decision is conditional or when no sibling action should cause that target to render.
 
 ## Learn more
 

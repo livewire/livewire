@@ -153,6 +153,38 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
         $component->assertSetStrict('name', 'bar');
         $component->assertSetStrict('renderShouldFail', true);
     }
+
+    public function test_imperative_skip_render_is_order_independent_in_a_mixed_batch()
+    {
+        $component = Livewire::test(ComponentRenderlessBatchStub::class);
+
+        $component->update(calls: [
+            ['method' => 'skipRenderImperatively', 'params' => [], 'path' => ''],
+            ['method' => 'updateName', 'params' => [], 'path' => ''],
+        ]);
+
+        $component->assertSetStrict('name', 'bar');
+        $component->assertSetStrict('renderShouldFail', true);
+    }
+
+    public function test_skip_render_can_still_supply_replacement_html_from_an_action()
+    {
+        Livewire::test(ComponentSkipRenderWithHtmlStub::class)
+            ->call('replace')
+            ->assertSee('replacement html')
+            ->assertDontSee('original html');
+    }
+
+    public function test_force_render_only_wins_when_it_precedes_skip_render()
+    {
+        Livewire::test(ComponentForceRenderStub::class)
+            ->call('forceThenSkip')
+            ->assertSee('rendered 1');
+
+        Livewire::test(ComponentForceRenderStub::class)
+            ->call('skipThenForce')
+            ->assertDontSee('rendered 1');
+    }
 }
 
 class ComponentSkipRenderStub extends Component
@@ -284,5 +316,42 @@ class ComponentSkipRenderOnRedirectHelperInMountStub extends Component
     public function render()
     {
         throw new \RuntimeException('Render should not be called on redirect');
+    }
+}
+
+class ComponentSkipRenderWithHtmlStub extends Component
+{
+    public function replace()
+    {
+        $this->skipRender('<div>replacement html</div>');
+    }
+
+    public function render()
+    {
+        return '<div>original html</div>';
+    }
+}
+
+class ComponentForceRenderStub extends Component
+{
+    public $count = 0;
+
+    public function forceThenSkip()
+    {
+        $this->count++;
+        $this->forceRender();
+        $this->skipRender();
+    }
+
+    public function skipThenForce()
+    {
+        $this->count++;
+        $this->skipRender();
+        $this->forceRender();
+    }
+
+    public function render()
+    {
+        return '<div>rendered {{ $count }}</div>';
     }
 }

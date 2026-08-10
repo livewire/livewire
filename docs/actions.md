@@ -703,6 +703,8 @@ The example above uses `wire:intersect` to call the action when the element ente
 
 As you can see, when a user scrolls to the bottom of the post, `incrementViewCount()` is invoked. Since `#[Renderless]` was added to the action, the view is logged, but the template doesn't re-render and no part of the page is affected.
 
+`#[Renderless]` is a per-action hint. If Livewire batches it with another action that does need rendering, the component renders once after all actions finish. The final render includes state changes made by every action in the batch.
+
 If you prefer to not utilize method attributes or need to conditionally skip rendering, you may invoke the `skipRender()` method in your component action:
 
 ```php
@@ -733,6 +735,8 @@ You can also skip render from an element directly using the `.renderless` modifi
 ```blade
 <button type="button" wire:click.renderless="incrementViewCount">
 ```
+
+The attribute and modifier have identical per-action behavior. By contrast, `skipRender()` is an imperative veto: when it is called, automatic rendering is skipped for the action's entire target in that request, even if another batched action would normally render it. For a root action the target is the component; for an [island-scoped action](/docs/4.x/islands) it is the named island group.
 
 ## Parallel execution with async
 

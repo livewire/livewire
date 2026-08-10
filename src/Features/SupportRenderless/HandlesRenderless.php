@@ -8,6 +8,7 @@ use function Livewire\store;
 
 trait HandlesRenderless
 {
+    /** @deprecated Use skipRender() for an imperative render veto. */
     public function renderless()
     {
         $this->skipRender();
@@ -19,12 +20,13 @@ trait HandlesRenderless
             return;
         }
 
-        store($this)->set('skipRender', $html ?: true);
-    }
+        $renderPlan = store($this)->get('renderPlan');
 
-    public function skipIslandsRender()
-    {
-        store($this)->set('skipIslandsRender', true);
+        if ($renderPlan?->vetoActiveTarget($html)) {
+            return;
+        }
+
+        store($this)->set('skipRender', $html ?: true);
     }
 
     public function shouldSkipRender()
@@ -38,10 +40,5 @@ trait HandlesRenderless
             ->whereInstanceOf(BaseRenderless::class)
             ->filter(fn ($attribute) => $attribute->getLevel() === AttributeLevel::METHOD)
             ->contains(fn ($attribute) => $attribute->getName() === $method);
-    }
-
-    public function shouldSkipIslandsRender()
-    {
-        return store($this)->get('skipIslandsRender', false);
     }
 }

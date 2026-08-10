@@ -2,7 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use function Livewire\{on, trigger, wrap };
+use function Livewire\{invade, on, store, trigger, wrap };
 use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleSynths\HandleSynths;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
@@ -238,6 +238,8 @@ class HandleComponents extends Mechanism
 
             return [ $snapshot, $context->effects ];
         } finally {
+            store($component)->unset('renderPlan');
+
             $this->popOffComponentStack();
         }
     }
@@ -531,24 +533,58 @@ class HandleComponents extends Mechanism
         }
 
         $returns = [];
-        $shouldSkipRender = $this->shouldSkipRenderAfterCalls($root, $calls);
+        $renderCalls = $this->normalizeRenderCalls($root, $calls);
+        $renderPlan = new RenderPlan($renderCalls);
+
+        $componentContext->renderPlan = $renderPlan;
+
+        store($root)->set('renderPlan', $renderPlan);
+
+        $renderIsland = fn ($name, $mode, $mount) => invade($root)
+            ->renderIslandFragments($name, null, $mode, [], $mount);
 
         foreach ($calls as $idx => $call) {
-            $method = $call['method'];
+            $renderCall = $renderCalls[$idx];
+            $method = $renderCall->method;
             $params = $call['params'];
             $metadata = $call['metadata'] ?? [];
+            $callIndex = $renderCall->index;
 
-            $earlyReturnCalled = false;
-            $earlyReturn = null;
-            $returnEarly = function ($return = null) use (&$earlyReturnCalled, &$earlyReturn) {
-                $earlyReturnCalled = true;
-                $earlyReturn = $return;
-            };
+            $renderPlan->activate($renderCall);
 
-            $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $metadata, $idx);
+            try {
+                $earlyReturnCalled = false;
+                $earlyReturn = null;
+                $returnEarly = function ($return = null) use (&$earlyReturnCalled, &$earlyReturn) {
+                    $earlyReturnCalled = true;
+                    $earlyReturn = $return;
+                };
 
-            if ($earlyReturnCalled) {
-                $return = $finish($earlyReturn);
+                if ($renderCall->mountIsland) $returnEarly();
+
+                $finish = trigger('call', $root, $method, $params, $componentContext, $returnEarly, $metadata, $callIndex);
+
+                if ($earlyReturnCalled) {
+                    $return = $earlyReturn;
+                } else {
+                    $methods = Utils::getPublicMethodsDefinedBySubClass($root);
+
+                    // Also remove "render" from the list...
+                    $methods =  array_values(array_diff($methods, ['render']));
+
+                    // @todo: put this in a better place:
+                    $methods[] = '__dispatch';
+
+                    if (! in_array($method, $methods)) {
+                        throw new MethodNotFoundException($method);
+                    }
+
+                    if (config('app.debug')) $start = microtime(true);
+                    $return = wrap($root)->{$method}(...$params);
+                    if (config('app.debug')) trigger('profile', 'call'.$callIndex, $root->getId(), [$start, microtime(true)]);
+                }
+
+                $return = $finish($return);
 
                 // File downloads are sent to the browser through the download effect, so we shouldn't add
                 // the response object as a return here. But we need to keep it's position in `returns`
@@ -559,57 +595,44 @@ class HandleComponents extends Mechanism
 
                 $returns[] = $return;
 
-                continue;
+                $renderPlan->completeActiveCall($renderIsland);
+            } finally {
+                $renderPlan->deactivate();
             }
-
-            $methods = Utils::getPublicMethodsDefinedBySubClass($root);
-
-            // Also remove "render" from the list...
-            $methods =  array_values(array_diff($methods, ['render']));
-
-            // @todo: put this in a better place:
-            $methods[] = '__dispatch';
-
-            if (! in_array($method, $methods)) {
-                throw new MethodNotFoundException($method);
-            }
-
-            if (config('app.debug')) $start = microtime(true);
-            $return = wrap($root)->{$method}(...$params);
-            if (config('app.debug')) trigger('profile', 'call'.$idx, $root->getId(), [$start, microtime(true)]);
-
-            $return = $finish($return);
-
-            // File downloads are sent to the browser through the download effect, so we shouldn't add
-            // the response object as a return here. But we need to keep it's position in `returns`
-            // so we will just set it to `null` instead...
-            if ($return instanceof StreamedResponse || $return instanceof BinaryFileResponse) {
-                $return = null;
-            }
-
-            $returns[] = $return;
         }
 
-        if ($shouldSkipRender) {
-            $root->skipRender();
+        $renderPlan->finalize($renderIsland);
+
+        if ($renderPlan->rootRenderWasVetoed()) {
+            store($root)->set('skipRender', $renderPlan->rootReplacementHtml() ?: true);
+        } elseif (! $renderPlan->shouldRenderRoot()) {
+            $root->skipRender($renderPlan->rootReplacementHtml());
         }
 
         $componentContext->addEffect('returns', $returns);
     }
 
-    protected function shouldSkipRenderAfterCalls($root, $calls)
+    protected function normalizeRenderCalls($root, $calls)
     {
-        if (count($calls) === 0) return false;
+        return collect($calls)
+            ->map(function ($call, $index) use ($root) {
+                $island = $call['metadata']['island'] ?? null;
+                $resolvedMethod = $this->resolveCalledMethod($root, $call);
 
-        return collect($calls)->every(
-            fn ($call) => $this->isCallRenderless($root, $call)
-        );
-    }
-
-    protected function isCallRenderless($root, $call)
-    {
-        return ($call['metadata']['renderless'] ?? false)
-            || $root->isRenderlessMethod($this->resolveCalledMethod($root, $call));
+                return new RenderCall(
+                    index: $index,
+                    method: $call['method'],
+                    resolvedMethod: $resolvedMethod,
+                    target: $island
+                        ? RenderTarget::island($island['name'])
+                        : RenderTarget::root(),
+                    mode: $island['mode'] ?? 'morph',
+                    renderless: ($call['metadata']['renderless'] ?? false)
+                        || $root->isRenderlessMethod($resolvedMethod),
+                    mountIsland: $call['method'] === '__lazyLoadIsland',
+                );
+            })
+            ->all();
     }
 
     protected function resolveCalledMethod($root, $call)
