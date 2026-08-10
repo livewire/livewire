@@ -183,12 +183,13 @@ class UploadActionBrowserTest extends \Tests\BrowserTestCase
             </div>
             HTML; }
         })
+        ->waitForLivewireToLoad()
         // A real text paste doesn't trigger the filtered listener...
         ->tap(fn ($b) => $this->putTextOnClipboard($b, 'just some text'))
         ->click('@box')
         ->keys('@box', [$this->pasteChord(), 'v'])
         ->waitUntil('document.querySelector(\'[dusk="box"]\').value === "just some text"')
-        ->assertSeeIn('@pastes', '0')
+        ->waitForTextIn('@pastes', '0')
         // A real file paste does...
         ->tap(fn ($b) => $this->putImageOnClipboard($b))
         ->click('@box')
@@ -409,6 +410,8 @@ class UploadActionBrowserTest extends \Tests\BrowserTestCase
         $this->cdp($browser, 'Browser.grantPermissions', ['permissions' => ['clipboardReadWrite', 'clipboardSanitizedWrite']]);
 
         $browser->script(<<<'JS'
+            window.__clipboardReady = false;
+
             (async () => {
                 let canvas = document.createElement('canvas')
                 canvas.width = canvas.height = 8
@@ -431,7 +434,7 @@ class UploadActionBrowserTest extends \Tests\BrowserTestCase
     {
         $this->cdp($browser, 'Browser.grantPermissions', ['permissions' => ['clipboardReadWrite', 'clipboardSanitizedWrite']]);
 
-        $browser->script("(async () => { await navigator.clipboard.writeText('{$text}'); window.__clipboardReady = true })()");
+        $browser->script("window.__clipboardReady = false; (async () => { await navigator.clipboard.writeText('{$text}'); window.__clipboardReady = true })()");
 
         $browser->waitUntil('window.__clipboardReady === true');
     }
