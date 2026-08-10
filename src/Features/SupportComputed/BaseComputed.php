@@ -76,10 +76,12 @@ class BaseComputed extends Attribute
 
         $closure = fn () => $this->evaluateComputed();
 
-        return match(Cache::supportsTags() && !empty($this->tags)) {
+        $value = match(Cache::supportsTags() && !empty($this->tags)) {
             true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
             default => Cache::remember($key, $this->seconds, $closure)
         };
+
+        return $this->wasNotFullyUnserialized($value) ? $closure() : $value;
     }
 
     protected function handleCachedGet()
@@ -88,10 +90,25 @@ class BaseComputed extends Attribute
 
         $closure = fn () => $this->evaluateComputed();
 
-        return match(Cache::supportsTags() && !empty($this->tags)) {
+        $value = match(Cache::supportsTags() && !empty($this->tags)) {
             true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
             default => Cache::remember($key, $this->seconds, $closure)
         };
+
+        return $this->wasNotFullyUnserialized($value) ? $closure() : $value;
+    }
+
+    protected function wasNotFullyUnserialized($value)
+    {
+        if ($value instanceof \__PHP_Incomplete_Class) return true;
+
+        if (! is_array($value)) return false;
+
+        foreach ($value as $item) {
+            if ($this->wasNotFullyUnserialized($item)) return true;
+        }
+
+        return false;
     }
 
     protected function handlePersistedUnset()

@@ -164,6 +164,9 @@ Livewire caches persisted values for 3600 seconds (one hour). You can override t
 #[Computed(persist: true, seconds: 7200)]
 ```
 
+> [!warning] Caching objects on Laravel 13
+> New Laravel 13 applications ship with `cache.serializable_classes` set to `false` in the `config/cache.php` file, meaning objects pulled back out of the cache are no longer restored to their original class. Livewire detects this and re-evaluates the method instead of handing your component a broken object, so the value stays correct but is never actually served from the cache. To get the caching back, add the classes you're caching to `cache.serializable_classes`.
+
 > [!tip] Calling `unset()` will clear both memo and cache
 > As previously discussed, you can clear a computed property's memo using PHP's `unset()` method. This also applies to computed properties using the `persist: true` parameter. When calling `unset()` on a persisted computed property, Livewire will clear not only the in-request memo, but also the underlying cached value in Laravel's cache.
 

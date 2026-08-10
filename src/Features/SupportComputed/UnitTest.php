@@ -209,6 +209,78 @@ class UnitTest extends TestCase
             ->assertSetStrict('count', 2);
     }
 
+    function test_cached_computed_property_is_recomputed_when_the_cached_value_cannot_be_unserialized()
+    {
+        config()->set('cache.serializable_classes', false);
+        config()->set('cache.stores.array.serialize', true);
+        Cache::purge('array');
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            #[Computed(cache: true)]
+            function foo() {
+                return (object) ['bar' => 'baz'];
+            }
+
+            function render() {
+                return <<<'HTML'
+                    <div>foo{{ $this->foo->bar }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobaz')
+            ->call('$refresh')
+            ->assertSee('foobaz');
+    }
+
+    function test_persisted_computed_property_is_recomputed_when_the_cached_value_cannot_be_unserialized()
+    {
+        config()->set('cache.serializable_classes', false);
+        config()->set('cache.stores.array.serialize', true);
+        Cache::purge('array');
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            #[Computed(persist: true)]
+            function foo() {
+                return (object) ['bar' => 'baz'];
+            }
+
+            function render() {
+                return <<<'HTML'
+                    <div>foo{{ $this->foo->bar }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobaz')
+            ->call('$refresh')
+            ->assertSee('foobaz');
+    }
+
+    function test_persisted_computed_property_is_recomputed_when_an_array_it_returns_holds_a_value_that_cannot_be_unserialized()
+    {
+        config()->set('cache.serializable_classes', false);
+        config()->set('cache.stores.array.serialize', true);
+        Cache::purge('array');
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            #[Computed(persist: true)]
+            function foo() {
+                return ['bar' => (object) ['baz' => 'bob']];
+            }
+
+            function render() {
+                return <<<'HTML'
+                    <div>foo{{ $this->foo['bar']->baz }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobob')
+            ->call('$refresh')
+            ->assertSee('foobob');
+    }
+
     function test_can_tag_cached_computed_property()
     {
         // need to set a cache driver, which can handle tags
