@@ -186,7 +186,7 @@ JS;
             ->assertDontSee('Protected Content')
             ->visit('/force-login/1')
             ->visit('/with-authorization/1/livewire-dusk/'.urlencode(Component::class))
-            ->assertSee('Protected Content')
+            ->waitForText('Protected Content')
             ->waitForLivewireToLoad()
             ->tap(function ($b) {
                 $script = <<<'JS'
