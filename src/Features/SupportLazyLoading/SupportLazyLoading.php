@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportLazyLoading;
 
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Livewire\Mechanisms\HandleComponents\ViewContext;
 use function Livewire\{ on, trigger, wrap };
 use Illuminate\Routing\Route;
@@ -13,6 +14,8 @@ use Livewire\Component;
 
 class SupportLazyLoading extends ComponentHook
 {
+    protected const MOUNT_PARAMS_CONTAINER = '__mountParamsContainer';
+
     static $disableWhileTesting = false;
 
     static function disableWhileTesting()
@@ -124,9 +127,13 @@ class SupportLazyLoading extends ComponentHook
         }
     }
 
+    // Resume a deferred lazy load once the browser requests it.
     function call($method, $params, $returnEarly)
     {
         if ($method !== '__lazyLoad') return;
+
+        // Only applies while a lazy load is being resumed.
+        if ($this->storeGet('isLazyLoadHydrating') !== true) return;
 
         [ $encoded ] = $params;
 
@@ -137,13 +144,17 @@ class SupportLazyLoading extends ComponentHook
         $returnEarly();
     }
 
+    // Render the placeholder and capture the mount params for the resume request.
     public function generatePlaceholderHtml($params, $isDeferred = false)
     {
         $this->registerContainerComponent();
 
-        $container = app('livewire')->new('__mountParamsContainer');
+        $container = app('livewire')->new(static::MOUNT_PARAMS_CONTAINER);
 
         $container->forMount = array_diff_key($params, array_flip(['lazy', 'defer']));
+
+        // Remember which component these params belong to.
+        $container->forComponent = $this->component->getName();
 
         $context = new ComponentContext($container, mounting: true);
 
@@ -202,6 +213,7 @@ class SupportLazyLoading extends ComponentHook
         return $view;
     }
 
+    // Rebuild the captured mount params from the container snapshot.
     function resurrectMountParams($encoded)
     {
         $snapshot = json_decode(base64_decode($encoded), associative: true);
@@ -209,6 +221,10 @@ class SupportLazyLoading extends ComponentHook
         $this->registerContainerComponent();
 
         [ $container ] = app('livewire')->fromSnapshot($snapshot);
+
+        if ($container->forComponent !== $this->component->getName()) {
+            throw new CorruptComponentPayloadException;
+        }
 
         return $container->forMount;
     }
@@ -222,10 +238,12 @@ class SupportLazyLoading extends ComponentHook
         $hook->mount($params);
     }
 
+    // A throwaway component used to carry mount params across the round-trip.
     public function registerContainerComponent()
     {
-        app('livewire')->component('__mountParamsContainer', new class extends Component {
+        app('livewire')->component(static::MOUNT_PARAMS_CONTAINER, new class extends Component {
             public $forMount;
+            public $forComponent;
         });
     }
 }
