@@ -1,4 +1,4 @@
-name: Release
+name: Draft Release
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ on:
         type: string
 
 jobs:
-  release:
+  draft-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -29,6 +29,13 @@ jobs:
         if: env.PREVIOUS_TAG != ''
         run: echo "PREVIOUS_TAG=v${PREVIOUS_TAG#v}" >> $GITHUB_ENV
 
+      - name: Validate version
+        run: |
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Error: Version must be a semantic version such as 4.3.0 or 4.3.0-beta.1"
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -42,8 +49,8 @@ jobs:
 
       - name: Verify tag does not exist
         run: |
-          if git rev-parse "v${{ env.VERSION }}" >/dev/null 2>&1; then
-            echo "Error: Tag v${{ env.VERSION }} already exists"
+          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" >/dev/null 2>&1; then
+            echo "Error: Tag v${VERSION} already exists"
             exit 1
           fi
 
@@ -56,24 +63,38 @@ jobs:
       - name: Run JS tests
         run: npm run test:run
 
-      - name: Create release tag
+      - name: Create release branch
         run: |
+          branch="release/v${VERSION}"
+
+          if git ls-remote --exit-code --heads origin "refs/heads/${branch}" >/dev/null 2>&1; then
+            echo "Error: Branch ${branch} already exists"
+            exit 1
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git switch --create "${branch}"
           git add -f dist/
-          git commit -m "Build assets for v${{ env.VERSION }}"
-          git tag v${{ env.VERSION }}
-          git push origin v${{ env.VERSION }}
+          git commit -m "Build assets for v${VERSION}"
+          git push --set-upstream origin "${branch}"
+          echo "RELEASE_TARGET=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
-      - name: Create GitHub release
+      - name: Create draft release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          args=(v${{ env.VERSION }} --title "v${{ env.VERSION }}" --generate-notes)
+          args=(
+            "v${VERSION}"
+            --draft
+            --target "${RELEASE_TARGET}"
+            --title "v${VERSION}"
+            --generate-notes
+          )
 
-          if [ -n "${{ env.PREVIOUS_TAG }}" ]; then
-            args+=(--notes-start-tag "${{ env.PREVIOUS_TAG }}")
+          if [[ -n "${PREVIOUS_TAG}" ]]; then
+            args+=(--notes-start-tag "${PREVIOUS_TAG}")
           fi
 
           gh release create "${args[@]}"
