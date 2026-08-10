@@ -186,6 +186,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
         ->attach('@upload', __DIR__ . '/browser_test_image.png')
         ->waitForTextIn('@status', 'browser_test_image.png')
+        ->waitUntil('window.Livewire.all()[0].$wire.photo?.isUploading === false')
         ->tap(fn ($b) => $b->script('window.__errs = []; window.addEventListener("error", e => window.__errs.push(e.message)); window.__removed = false'))
         // Removal is optimistic: the property nulls in the same synchronous
         // frame as the click — no server round trip could have completed...
