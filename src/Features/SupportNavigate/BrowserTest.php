@@ -1366,7 +1366,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForLivewireToLoad()
                 ->tap(fn ($b) => $b->script('window._lw_dusk_navigated_started = false; document.addEventListener("livewire:navigate", () => { window._lw_dusk_navigated_started = true })'))
                 ->click('@link')
-                ->assertScript('return window._lw_dusk_navigated_started')
+                ->waitForScript('window._lw_dusk_navigated_started')
 
                 // We can't listen for a navigate request, as it will fail, so just pause for a bit and make sure the progress bar is removed...
                 ->pause(300)

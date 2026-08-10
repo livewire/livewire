@@ -1016,13 +1016,11 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertMissing('@island-loading')
 
             ->click('@island-slow-request')
-            // Wait for the island request to start...
-            ->pause(10)
             ->assertMissing('@component-loading')
-            ->assertVisible('@island-loading')
+            ->waitUntil("document.querySelector('[dusk=\"island-loading\"]')?.offsetParent !== null")
 
-            // The request is scheduled to be cancelled after 200ms, so we pause for a bit longer than that...
-            ->pause(300)
+            // The request is scheduled to be cancelled after 200ms...
+            ->waitUntil("document.querySelector('[dusk=\"island-loading\"]')?.offsetParent === null")
             ->assertMissing('@component-loading')
             ->assertMissing('@island-loading')
             ;
