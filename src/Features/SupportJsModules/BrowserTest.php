@@ -27,10 +27,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         // Regression test for: https://github.com/livewire/livewire/discussions/9614
         Livewire::visit('testns::nested.component.index')
             ->waitForLivewireToLoad()
-            // Pause for a moment to allow the script to be loaded...
-            ->pause(100)
             // If the JS loaded correctly, it will have set the text to 'js-loaded'
-            ->assertSeeIn('@target', 'js-loaded');
+            ->waitForTextIn('@target', 'js-loaded');
     }
 
     public function test_single_file_component_js_supports_es_imports()
@@ -40,8 +38,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         // export function run() wrapper so they remain at the module top level.
         Livewire::visit('testns::sfc-with-imports')
             ->waitForLivewireToLoad()
-            ->pause(100)
-            ->assertSeeIn('@target', 'js-import-loaded');
+            ->waitForTextIn('@target', 'js-import-loaded');
     }
 
     public function test_js_actions_can_call_other_js_actions()
@@ -53,8 +50,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         // Regression test for $js actions not seeing each other in SFC scripts.
         Livewire::visit('testns::sfc-with-js-actions')
             ->waitForLivewireToLoad()
-            ->pause(100)
-            ->assertSeeIn('@target', 'js-actions-composed');
+            ->waitForTextIn('@target', 'js-actions-composed');
     }
 
     public function test_multi_file_component_js_supports_es_imports()
@@ -65,7 +61,6 @@ class BrowserTest extends \Tests\BrowserTestCase
         // Regression test for: https://github.com/livewire/livewire/discussions/10163
         Livewire::visit('testns::mfc-with-imports')
             ->waitForLivewireToLoad()
-            ->pause(100)
-            ->assertSeeIn('@target', 'js-import-loaded');
+            ->waitForTextIn('@target', 'js-import-loaded');
     }
 }
