@@ -30,13 +30,20 @@ function getAlpineScopeKeys(el) {
 export function evaluateExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 
-    let result = Alpine.evaluateRaw(el, expression, options)
+    // Bad expressions here arrive from the server as effects (`$this->js()`),
+    // so they're evaluated mid-response. Letting one throw would tear down
+    // the rest of the response handling, so report it and move on...
+    try {
+        let result = Alpine.evaluateRaw(el, expression, options)
 
-    if (result instanceof Promise) {
-        result.catch(() => {})
+        if (result instanceof Promise) {
+            result.catch(() => {})
+        }
+
+        return result
+    } catch (error) {
+        reportExpressionError(error, expression, el)
     }
-
-    return result
 }
 
 export function evaluateActionExpression(el, expression, options = {}) {
@@ -55,10 +62,14 @@ export function evaluateActionExpression(el, expression, options = {}) {
 
         return result
     } catch (error) {
-        console.warn(`Livewire Expression Error: ${error.message}\n\n${ expression ? 'Expression: \"' + expression + '\"\n\n' : '' }`, el)
-
-        console.error(error)
+        reportExpressionError(error, expression, el)
     }
+}
+
+function reportExpressionError(error, expression, el) {
+    console.warn(`Livewire Expression Error: ${error.message}\n\n${ expression ? 'Expression: \"' + expression + '\"\n\n' : '' }`, el)
+
+    console.error(error)
 }
 
 export function contextualizeExpression(expression, el, extraSkip = []) {

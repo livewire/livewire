@@ -388,6 +388,14 @@ function sendMessages() {
                     return
                 }
 
+                if (response.ok && responseBody.trim() === '') {
+                    confirm(
+                        'The server returned an empty response.\nWould you like to refresh the page?'
+                    ) && window.location.reload()
+
+                    return
+                }
+
                 if (response.aborted) return
 
                 showHtmlModal(responseBody)
@@ -424,6 +432,11 @@ function sendMessages() {
                         // Server skipped this child (unchanged reactive props)...
                         if (payload.skip) {
                             if (payload.id === message.component.id) {
+                                if (discardIfSuperseded(message)) return
+
+                                // A skipped payload still counts as a response landing and can supersede older overlaps...
+                                supersedeOlderMessages(message)
+
                                 message.responsePayload = payload
                                 message.markSkipped()
                                 message.invokeOnSkipped()
@@ -438,6 +451,11 @@ function sendMessages() {
                         let snapshot = JSON.parse(snapshotEncoded)
 
                         if (snapshot.memo.id === message.component.id) {
+                            if (discardIfSuperseded(message)) return
+
+                            // This response has landed, so any older response it overlapped must not land later...
+                            supersedeOlderMessages(message)
+
                             message.responsePayload = { snapshot, effects }
 
                             message.invokeOnSuccess()
@@ -445,6 +463,8 @@ function sendMessages() {
 
                             // Use Alpine.transaction to batch data updates and DOM morphing
                             // This prevents effects from firing before the morph cleanup runs
+                            let morphed = false
+
                             Alpine.transaction(async () => {
                                 message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
 
@@ -458,7 +478,13 @@ function sendMessages() {
                                 if (message.isCancelled()) return
 
                                 await message.invokeOnMorph()
-                            }).then(() => {
+
+                                morphed = true
+                            }).finally(() => {
+                                // Using `finally` so a broken effect or morph can't strand the
+                                // component with a stuck loading state and an action promise
+                                // that never settles. The rejection still propagates...
+                                //
                                 // Resolve promises & finish AFTER morph completes
                                 if (! message.isCancelled()) {
                                     message.resolveActionPromises(
@@ -467,6 +493,10 @@ function sendMessages() {
                                     )
                                     message.invokeOnFinish()
                                 }
+
+                                // ...but nothing was painted if the morph never finished, so
+                                // skip the render hook the same way a skipped message does...
+                                if (! morphed) return
 
                                 requestAnimationFrame(() => {
                                     if (message.isCancelled()) return
@@ -479,6 +509,25 @@ function sendMessages() {
                 })
             },
         })
+    })
+}
+
+function discardIfSuperseded(message) {
+    if (! message.superseded) return false
+
+    // A newer overlapping model.live response has already landed. Settle the
+    // action and loading-state lifecycle without applying this older payload...
+    message.resolveActionPromises([], [])
+    message.invokeOnFinish()
+
+    return true
+}
+
+function supersedeOlderMessages(message) {
+    // interactions.js recorded the active same-scope model.live messages on
+    // this action. Mark them only now, once this action's response has landed...
+    message.actions.forEach(action => {
+        action.supersedes.forEach(olderMessage => olderMessage.superseded = true)
     })
 }
 
@@ -527,6 +576,13 @@ async function sendRequest(request, handlers) {
 
     if (response.redirected) {
         handlers.redirect(response.url)
+        handlers.finish()
+
+        return
+    }
+
+    if (responseBody.trim() === '') {
+        handlers.error({ response, responseBody })
         handlers.finish()
 
         return

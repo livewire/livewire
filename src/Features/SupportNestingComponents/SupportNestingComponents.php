@@ -72,9 +72,9 @@ class SupportNestingComponents extends ComponentHook
 
     function dehydrate($context)
     {
-        $skipRender = $this->storeGet('skipRender');
-
-        if ($skipRender) $this->keepRenderedChildren();
+        if ($this->component->shouldSkipRender()) {
+            $this->keepRenderedChildren();
+        }
 
         $this->storeRemovedChildrenToReferenceWhenThoseChildrenHydrateSoWeCanSkipTheirRenderAndAvoideUselessWork();
 

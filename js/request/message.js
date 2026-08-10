@@ -12,6 +12,7 @@ export default class Message {
     interceptors = []
     cancelled = false
     skipped = false
+    superseded = false
     request = null
     _scope = null
 

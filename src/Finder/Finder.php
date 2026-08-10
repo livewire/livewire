@@ -332,15 +332,13 @@ class Finder
             $fullName = $fullName->substr(1);
         }
 
-        // If using an index component in a sub folder, remove the '.index' so the name is the subfolder name...
-        if ($fullName->endsWith('.index')) {
-            $fullName = $fullName->replaceLast('.index', '');
-        }
-
         $classNamespaces = collect($this->classNamespaces)
             ->map(fn ($classNamespace) => $classNamespace['classNamespace'])
             ->merge($this->classLocations)
             ->toArray();
+
+        $name = $fullName;
+        $prefix = '';
 
         foreach ($classNamespaces as $key => $classNamespace) {
             $namespace = str_replace(
@@ -354,13 +352,22 @@ class Finder
                 ->implode('.');
 
             if ($fullName->startsWith($namespace)) {
-                $name = (string) $fullName->substr(strlen($namespace) + 1);
+                $name = $fullName->substr(strlen($namespace) + 1);
 
-                return is_string($key) ? $key . '::' . $name : $name;
+                $prefix = is_string($key) ? $key . '::' : '';
+
+                break;
             }
         }
 
-        return (string) $fullName;
+        // If using an index component in a sub folder, remove the '.index' so the name is the subfolder name.
+        // This has to happen after the namespace is stripped, otherwise an 'Index' at the root of a namespace
+        // would collapse into the namespace itself and leave nothing behind to name the component with...
+        if ($name->endsWith('.index')) {
+            $name = $name->replaceLast('.index', '');
+        }
+
+        return $prefix . $name;
     }
 
     protected function normalizeClassName(string $className): string
@@ -392,10 +399,14 @@ class Finder
             return false;
         }
 
+        // Ignore quoted strings and non-bracket content while balancing attribute brackets.
+        // This ignores the bracket in 'Dashboard ] overview' while matching nested arrays like ['meta' => ['title' => 'Dashboard']].
+        $contentIgnoredWhileMatchingBracketsPattern = '(?:(?>[^\[\]\'\"]+)|\'(?:\\\\.|[^\'\\\\])*\'|"(?:\\\\.|[^"\\\\])*")';
+
         // Light touch check: Look for the pattern that indicates an SFC
         // Pattern: <?php followed by 'new class' (with potential attributes/newlines between)
         // This distinguishes SFCs from regular Blade views
-        return preg_match('/\<\?php.*\bnew\s+(?:#\[[^\]]*\]\s*)*class\b/s', $contents) === 1;
+        return preg_match('/\<\?php.*\bnew\s+(?:#(\[(?:' . $contentIgnoredWhileMatchingBracketsPattern . '|(?1))*\])\s*)*class\b/s', $contents) === 1;
     }
 
     protected function hasValidMultiFileComponentSource(string $dir, string $fileBaseName): bool

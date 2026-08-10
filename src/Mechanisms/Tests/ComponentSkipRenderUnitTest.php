@@ -47,6 +47,112 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
         Route::get('/403', ComponentSkipRenderOnRedirectHelperInMountStub::class);
         $this->get('/403')->assertRedirect('/bar');
     }
+
+    public function test_render_not_skipped_when_a_renderless_action_attribute_is_batched_with_a_normal_call()
+    {
+        $component = Livewire::test(ComponentRenderlessBatchStub::class);
+
+        $component->assertSee('foo');
+
+        $component->update(calls: [
+            ['method' => 'renderlessActionAttribute', 'params' => [], 'path' => ''],
+            ['method' => 'updateName', 'params' => [], 'path' => ''],
+        ]);
+
+        $component->assertSetStrict('name', 'bar');
+        $component->assertSee('bar');
+    }
+
+    public function test_render_not_skipped_when_a_renderless_action_call_is_batched_with_a_normal_call()
+    {
+        $component = Livewire::test(ComponentRenderlessBatchStub::class);
+
+        $component->assertSee('foo');
+
+        $component->update(calls: [
+            ['method' => 'renderlessActionCall', 'params' => [], 'path' => '', 'metadata' => ['renderless' => true]],
+            ['method' => 'updateName', 'params' => [], 'path' => ''],
+        ]);
+
+        $component->assertSetStrict('name', 'bar');
+        $component->assertSee('bar');
+    }
+
+    public function test_render_not_skipped_when_a_renderless_action_attribute_event_is_batched_with_a_normal_call()
+    {
+        $component = Livewire::test(ComponentRenderlessBatchStub::class);
+
+        $component->assertSee('foo');
+
+        $component->update(calls: [
+            ['method' => '__dispatch', 'params' => ['some-event', []], 'path' => ''],
+            ['method' => 'updateName', 'params' => [], 'path' => ''],
+        ]);
+
+        $component->assertSetStrict('name', 'bar');
+        $component->assertSee('bar');
+    }
+
+    public function test_renderless_batching_is_order_independent()
+    {
+        $component = Livewire::test(ComponentRenderlessBatchStub::class);
+
+        $component->update(calls: [
+            ['method' => 'updateName', 'params' => [], 'path' => ''],
+            ['method' => 'renderlessActionAttribute', 'params' => [], 'path' => ''],
+        ]);
+
+        $component->assertSee('bar');
+    }
+
+    public function test_render_is_skipped_when_all_batched_calls_are_renderless()
+    {
+        $component = Livewire::test(ComponentRenderlessBatchStub::class);
+
+        $component->update(calls: [
+            ['method' => 'preventRender', 'params' => [], 'path' => ''],
+            ['method' => 'renderlessActionCall', 'params' => [], 'path' => '', 'metadata' => ['renderless' => true]],
+        ]);
+
+        $component->assertSetStrict('renderShouldFail', true);
+    }
+
+    public function test_renderless_event_is_counted_as_a_renderless_call()
+    {
+        $component = Livewire::test(ComponentRenderlessBatchStub::class);
+
+        $component->update(calls: [
+            ['method' => '__dispatch', 'params' => ['some-event', []], 'path' => ''],
+            ['method' => 'preventRender', 'params' => [], 'path' => ''],
+        ]);
+
+        $component->assertSetStrict('renderShouldFail', true);
+    }
+
+    public function test_magic_action_makes_a_renderless_batch_render()
+    {
+        $component = Livewire::test(ComponentRenderlessBatchStub::class);
+
+        $component->update(calls: [
+            ['method' => 'renderlessUpdateName', 'params' => [], 'path' => ''],
+            ['method' => '$refresh', 'params' => [], 'path' => ''],
+        ]);
+
+        $component->assertSee('bar');
+    }
+
+    public function test_imperative_skip_render_still_skips_a_mixed_batch()
+    {
+        $component = Livewire::test(ComponentRenderlessBatchStub::class);
+
+        $component->update(calls: [
+            ['method' => 'updateName', 'params' => [], 'path' => ''],
+            ['method' => 'skipRenderImperatively', 'params' => [], 'path' => ''],
+        ]);
+
+        $component->assertSetStrict('name', 'bar');
+        $component->assertSetStrict('renderShouldFail', true);
+    }
 }
 
 class ComponentSkipRenderStub extends Component
@@ -87,6 +193,65 @@ class ComponentSkipRenderAttributeStub extends Component
         }
 
         return app('view')->make('null-view');
+    }
+}
+
+class ComponentRenderlessBatchStub extends Component
+{
+    public $name = 'foo';
+    public $renderShouldFail = false;
+
+    #[\Livewire\Attributes\Renderless]
+    public function renderlessActionAttribute()
+    {
+        //
+    }
+
+    #[\Livewire\Attributes\Renderless]
+    #[\Livewire\Attributes\On('some-event')]
+    public function renderlessActionEventAttribute()
+    {
+        //
+    }
+
+    public function renderlessActionCall()
+    {
+        //
+    }
+
+    #[\Livewire\Attributes\Renderless]
+    public function renderlessUpdateName()
+    {
+        $this->name = 'bar';
+    }
+
+    #[\Livewire\Attributes\Renderless]
+    public function preventRender()
+    {
+        $this->renderShouldFail = true;
+    }
+
+    public function updateName()
+    {
+        $this->name = 'bar';
+    }
+
+    public function skipRenderImperatively()
+    {
+        $this->renderShouldFail = true;
+
+        $this->skipRender();
+    }
+
+    public function render()
+    {
+        if ($this->renderShouldFail) {
+            throw new \RuntimeException('Render should have been skipped');
+        }
+
+        return <<<'HTML'
+            <div>{{ $name }}</div>
+        HTML;
     }
 }
 
