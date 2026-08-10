@@ -20,9 +20,9 @@ trait HandlesRenderless
             return;
         }
 
-        $renderPlan = store($this)->get('renderPlan');
+        $requestRendering = store($this)->get('requestRendering');
 
-        if ($renderPlan?->vetoActiveTarget($html)) {
+        if ($requestRendering?->preventAutomaticRenderingForTheEntireTargetScopeOfTheCurrentCall($html)) {
             return;
         }
 

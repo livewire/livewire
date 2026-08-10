@@ -14,7 +14,6 @@ trait HandlesIslands
     protected $islands = [];
     protected $islandsHaveMounted = false;
     protected $islandIsTopLevelRender = false;
-    protected $renderedIslandFragments = [];
 
     public function islandIsMounting()
     {
@@ -34,16 +33,6 @@ trait HandlesIslands
     public function setIslands($islands)
     {
         $this->islands = $islands;
-    }
-
-    public function getRenderedIslandFragments()
-    {
-        return $this->renderedIslandFragments;
-    }
-
-    public function hasRenderedIslandFragments()
-    {
-        return ! empty($this->renderedIslandFragments);
     }
 
     public function renderIslandDirective($name = null, $token = null, $lazy = false, $defer = false, $always = false, $skip = false, $with = [])
@@ -106,20 +95,17 @@ trait HandlesIslands
 
     public function renderIsland($name, $content = null, $mode = 'morph', $with = [], $mount = false)
     {
-        $fragments = $this->renderIslandFragments($name, $content, $mode, $with, $mount);
-
-        $renderPlan = store($this)->get('renderPlan');
-
-        if ($renderPlan) {
-            $renderPlan->recordExplicitIslandFragments($name, $fragments);
-
-            return;
-        }
-
-        array_push($this->renderedIslandFragments, ...$fragments);
+        store($this)->get('requestRendering')
+            ?->renderExplicitIslandOutputRightNowAndRememberItCannotBeVetoed(
+                $name,
+                $content,
+                $mode,
+                $with,
+                $mount,
+            );
     }
 
-    protected function renderIslandFragments($name, $content = null, $mode = 'morph', $with = [], $mount = false)
+    protected function renderFragmentsForEveryIslandTokenNamed($name, $content = null, $mode = 'morph', $with = [], $mount = false)
     {
         $fragments = [];
         $islands = $this->getIslands();

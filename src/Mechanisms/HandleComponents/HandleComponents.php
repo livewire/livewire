@@ -2,7 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use function Livewire\{invade, on, store, trigger, wrap };
+use function Livewire\{on, store, trigger, wrap };
 use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleSynths\HandleSynths;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
@@ -54,6 +54,8 @@ class HandleComponents extends Mechanism
         $this->pushOntoComponentStack($component);
 
         try {
+            $this->startRequestRenderingFor($component);
+
             $context = new ComponentContext($component, mounting: true);
 
             if (config('app.debug')) $start = microtime(true);
@@ -79,6 +81,8 @@ class HandleComponents extends Mechanism
 
             return $finish($html, $snapshot);
         } finally {
+            store($component)->unset('requestRendering');
+
             $this->popOffComponentStack();
         }
     }
@@ -215,12 +219,24 @@ class HandleComponents extends Mechanism
         $this->pushOntoComponentStack($component);
 
         try {
+            $requestRendering = $this->startRequestRenderingFor($component);
+
             trigger('hydrate', $component, $memo, $context);
 
             $this->updateProperties($component, $updates, $data, $context);
             if (config('app.debug')) trigger('profile', 'hydrate', $component->getId(), [$start, microtime(true)]);
 
-            $this->callMethods($component, $calls, $context);
+            $requestRendering->prepareToHandleTheCallBatch(
+                $this->normalizeRenderCalls($component, $calls),
+            );
+
+            $this->callMethods($component, $calls, $context, $requestRendering);
+
+            $requestRendering
+                ->renderFinalStateForAutomaticIslandTargetsThatDidNotRequirePreservingCallOrder();
+
+            $requestRendering
+                ->applyTheFinalRootRenderingDecisionToTheComponent();
 
             if (config('app.debug')) $start = microtime(true);
             if ($html = $this->render($component)) {
@@ -238,7 +254,7 @@ class HandleComponents extends Mechanism
 
             return [ $snapshot, $context->effects ];
         } finally {
-            store($component)->unset('renderPlan');
+            store($component)->unset('requestRendering');
 
             $this->popOffComponentStack();
         }
@@ -524,7 +540,7 @@ class HandleComponents extends Mechanism
         }
     }
 
-    protected function callMethods($root, $calls, $componentContext)
+    protected function callMethods($root, $calls, $componentContext, $requestRendering)
     {
         $maxCalls = config('livewire.payload.max_calls');
 
@@ -533,24 +549,15 @@ class HandleComponents extends Mechanism
         }
 
         $returns = [];
-        $renderCalls = $this->normalizeRenderCalls($root, $calls);
-        $renderPlan = new RenderPlan($renderCalls);
-
-        $componentContext->renderPlan = $renderPlan;
-
-        store($root)->set('renderPlan', $renderPlan);
-
-        $renderIsland = fn ($name, $mode, $mount) => invade($root)
-            ->renderIslandFragments($name, null, $mode, [], $mount);
 
         foreach ($calls as $idx => $call) {
-            $renderCall = $renderCalls[$idx];
+            $renderCall = $requestRendering->callAtIndex($idx);
             $method = $renderCall->method;
             $params = $call['params'];
             $metadata = $call['metadata'] ?? [];
             $callIndex = $renderCall->index;
 
-            $renderPlan->activate($renderCall);
+            $requestRendering->startHandlingCall($renderCall);
 
             try {
                 $earlyReturnCalled = false;
@@ -595,21 +602,23 @@ class HandleComponents extends Mechanism
 
                 $returns[] = $return;
 
-                $renderPlan->completeActiveCall($renderIsland);
+                $requestRendering
+                    ->renderAutomaticIslandOutputForTheCurrentCallNowIfItsModeRequiresPreservingCallOrder();
             } finally {
-                $renderPlan->deactivate();
+                $requestRendering->stopHandlingTheCurrentCall();
             }
         }
 
-        $renderPlan->finalize($renderIsland);
-
-        if ($renderPlan->rootRenderWasVetoed()) {
-            store($root)->set('skipRender', $renderPlan->rootReplacementHtml() ?: true);
-        } elseif (! $renderPlan->shouldRenderRoot()) {
-            $root->skipRender($renderPlan->rootReplacementHtml());
-        }
-
         $componentContext->addEffect('returns', $returns);
+    }
+
+    protected function startRequestRenderingFor($component)
+    {
+        $requestRendering = new RequestRendering($component);
+
+        store($component)->set('requestRendering', $requestRendering);
+
+        return $requestRendering;
     }
 
     protected function normalizeRenderCalls($root, $calls)

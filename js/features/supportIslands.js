@@ -68,7 +68,7 @@ interceptMessage(({ message, onSuccess, onStream }) => {
             for (let fragmentHtml of fragments) {
                 await renderIsland(message.component, fragmentHtml)
             }
-        // Explicit island commands happen during the action, before the final root render...
+        // Island fragment effects represent server work that happened before the final root render...
         }, { order: -1 })
     })
 })

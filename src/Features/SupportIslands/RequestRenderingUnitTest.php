@@ -6,7 +6,7 @@ use Livewire\Attributes\Renderless;
 use Livewire\Livewire;
 use Tests\TestCase;
 
-class RenderPlanUnitTest extends TestCase
+class RequestRenderingUnitTest extends TestCase
 {
     public function test_automatic_morph_batches_render_final_component_state_once()
     {
@@ -222,6 +222,21 @@ class RenderPlanUnitTest extends TestCase
         ]);
     }
 
+    public function test_explicit_rendering_before_the_call_batch_uses_the_same_fragment_collection()
+    {
+        $component = $this->testComponent();
+
+        $component->update(
+            calls: [$this->islandCall('increment')],
+            updates: ['count' => 1],
+        );
+
+        $this->assertFragments($component, [
+            ['mode=morph', 'State 1'],
+            ['mode=morph', 'State 2'],
+        ]);
+    }
+
     public function test_one_logical_render_updates_every_linked_island_token()
     {
         $component = $this->testComponent();
@@ -292,6 +307,11 @@ class RenderPlanUnitTest extends TestCase
                 $this->count++;
                 $this->renderIsland('counter');
                 $this->count++;
+            }
+
+            public function updatedCount()
+            {
+                $this->renderIsland('counter');
             }
 
             public function render()

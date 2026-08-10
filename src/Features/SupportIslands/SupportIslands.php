@@ -6,6 +6,8 @@ use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Illuminate\Support\Facades\Blade;
 use Livewire\ComponentHook;
 
+use function Livewire\store;
+
 class SupportIslands extends ComponentHook
 {
     public static function provide()
@@ -39,10 +41,9 @@ class SupportIslands extends ComponentHook
     {
         $context->addMemo('islands', $this->component->getIslands());
 
-        $fragments = [
-            ...$this->component->getRenderedIslandFragments(),
-            ...($context->renderPlan?->islandFragments() ?? []),
-        ];
+        $fragments = store($this->component)
+            ->get('requestRendering')
+            ?->islandFragmentsThatShouldBeSentToTheBrowser() ?? [];
 
         if (! empty($fragments)) {
             $context->addEffect('islandFragments', $fragments);

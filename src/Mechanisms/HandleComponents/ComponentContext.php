@@ -9,7 +9,6 @@ class ComponentContext
 {
     public $effects = [];
     public $memo = [];
-    public $renderPlan = null;
 
     public function __construct(
         public $component,
