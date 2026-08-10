@@ -228,6 +228,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->pause(250)
         ->waitForLivewire()
         ->click('@resetFileInput')
+        ->waitUntil("document.querySelector('[dusk=\"upload\"]')?.value === ''")
         ->assertInputValue('@upload', null)
         ;
     }
@@ -269,6 +270,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->pause(250)
         ->waitForLivewire()
         ->click('@resetFileInput')
+        ->waitUntil("document.querySelector('[dusk=\"upload\"]')?.value === ''")
         ->assertInputValue('@upload', null)
         ;
     }
