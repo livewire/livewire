@@ -12,7 +12,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(
             new class extends Component {
                 public function firstRequest() {
-                    usleep(500 * 1000); // 500ms
+                    usleep(1000 * 1000); // Keep the first request in flight while Dusk queues the second...
                 }
 
                 public function secondRequest() {
@@ -48,17 +48,15 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             ->click('@first-request')
 
-            // Wait for the first request to have started before checking the intercepts...
-            ->pause(10)
-            ->assertScript('window.intercepts.length', 2)
-            ->assertScript('window.intercepts', [
+            ->waitUntil("window.intercepts.includes('firstRequest-component sent')")
+            ->assertScript('window.intercepts.slice(0, 2)', [
                 'firstRequest-component started',
                 'firstRequest-component sent',
             ])
 
-            ->waitForLivewire()->click('@second-request')
-            ->assertScript('window.intercepts.length', 6)
-            ->assertScript('window.intercepts', [
+            ->click('@second-request')
+            ->waitUntil("window.intercepts.includes('secondRequest-component succeeded')")
+            ->assertScript('window.intercepts.slice(0, 6)', [
                 'firstRequest-component started',
                 'firstRequest-component sent',
                 'firstRequest-component succeeded',
@@ -227,7 +225,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(
             new class extends Component {
                 public function firstRequest() {
-                    usleep(500 * 1000); // 500ms
+                    usleep(1000 * 1000); // Keep the first request in flight while Dusk queues the second...
                 }
 
                 public function secondRequest() {
@@ -265,17 +263,15 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             ->click('@first-request')
 
-            // Wait for the first request to have started before checking the intercepts...
-            ->pause(10)
-            ->assertScript('window.intercepts.length', 2)
-            ->assertScript('window.intercepts', [
+            ->waitUntil("window.intercepts.includes('firstRequest-foo sent')")
+            ->assertScript('window.intercepts.slice(0, 2)', [
                 'firstRequest-foo started',
                 'firstRequest-foo sent',
             ])
 
-            ->waitForLivewire()->click('@second-request')
-            ->assertScript('window.intercepts.length', 6)
-            ->assertScript('window.intercepts', [
+            ->click('@second-request')
+            ->waitUntil("window.intercepts.includes('secondRequest-foo succeeded')")
+            ->assertScript('window.intercepts.slice(0, 6)', [
                 'firstRequest-foo started',
                 'firstRequest-foo sent',
                 'firstRequest-foo succeeded',
