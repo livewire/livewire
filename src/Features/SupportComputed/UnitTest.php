@@ -211,14 +211,19 @@ class UnitTest extends TestCase
 
     function test_cached_computed_property_is_recomputed_when_the_cached_value_cannot_be_unserialized()
     {
+        config()->set('app.debug', true);
         config()->set('cache.serializable_classes', false);
         config()->set('cache.stores.array.serialize', true);
         Cache::purge('array');
         Cache::setDefaultDriver('array');
 
-        Livewire::test(new class extends TestComponent {
+        $component = Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
             #[Computed(cache: true)]
             function foo() {
+                $this->count++;
+
                 return (object) ['bar' => 'baz'];
             }
 
@@ -229,8 +234,19 @@ class UnitTest extends TestCase
             }
         })
             ->assertSee('foobaz')
-            ->call('$refresh')
-            ->assertSee('foobaz');
+            ->assertSetStrict('count', 1);
+
+        $logger = \Mockery::mock(\Psr\Log\LoggerInterface::class);
+        $logger->shouldReceive('warning')
+            ->once()
+            ->withArgs(fn ($message) => str_contains($message, '::foo]')
+                && str_contains($message, '[stdClass]')
+                && str_contains($message, 'was not served from cache'));
+        app()->instance('log', $logger);
+
+        $component->call('$refresh')
+            ->assertSee('foobaz')
+            ->assertSetStrict('count', 2);
     }
 
     function test_persisted_computed_property_is_recomputed_when_the_cached_value_cannot_be_unserialized()
@@ -241,8 +257,12 @@ class UnitTest extends TestCase
         Cache::setDefaultDriver('array');
 
         Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
             #[Computed(persist: true)]
             function foo() {
+                $this->count++;
+
                 return (object) ['bar' => 'baz'];
             }
 
@@ -253,8 +273,10 @@ class UnitTest extends TestCase
             }
         })
             ->assertSee('foobaz')
+            ->assertSetStrict('count', 1)
             ->call('$refresh')
-            ->assertSee('foobaz');
+            ->assertSee('foobaz')
+            ->assertSetStrict('count', 2);
     }
 
     function test_persisted_computed_property_is_recomputed_when_an_array_it_returns_holds_a_value_that_cannot_be_unserialized()
@@ -265,8 +287,12 @@ class UnitTest extends TestCase
         Cache::setDefaultDriver('array');
 
         Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
             #[Computed(persist: true)]
             function foo() {
+                $this->count++;
+
                 return ['bar' => (object) ['baz' => 'bob']];
             }
 
@@ -277,8 +303,40 @@ class UnitTest extends TestCase
             }
         })
             ->assertSee('foobob')
+            ->assertSetStrict('count', 1)
             ->call('$refresh')
-            ->assertSee('foobob');
+            ->assertSee('foobob')
+            ->assertSetStrict('count', 2);
+    }
+
+    function test_cached_computed_property_is_not_recomputed_when_its_class_is_allowed_to_be_unserialized()
+    {
+        config()->set('cache.serializable_classes', [\stdClass::class]);
+        config()->set('cache.stores.array.serialize', true);
+        Cache::purge('array');
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(cache: true)]
+            function foo() {
+                $this->count++;
+
+                return (object) ['bar' => 'baz'];
+            }
+
+            function render() {
+                return <<<'HTML'
+                    <div>foo{{ $this->foo->bar }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobaz')
+            ->assertSetStrict('count', 1)
+            ->call('$refresh')
+            ->assertSee('foobaz')
+            ->assertSetStrict('count', 1);
     }
 
     function test_can_tag_cached_computed_property()
