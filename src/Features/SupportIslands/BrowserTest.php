@@ -790,35 +790,32 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
-    public function test_buffered_island_fragments_are_morphed_sequentially()
+    public function test_awaiting_an_island_action_waits_for_the_island_to_finish_morphing()
     {
         Livewire::visit([new class extends \Livewire\Component {
             public $count = 0;
 
-            public function renderBoth()
+            public function increment()
             {
                 $this->count++;
-
-                $this->renderIsland('first');
-                $this->renderIsland('second');
             }
 
             public function render() {
                 return <<<'HTML'
                 <div>
-                    <button type="button" wire:click="renderBoth" dusk="render-both">Render both</button>
-
-                    @island(name: 'first')
-                        <div wire:transition>First: {{ $count }}</div>
+                    @island(name: 'counter')
+                        <div wire:transition dusk="island-count">Count: {{ $count }}</div>
                     @endisland
 
-                    @island(name: 'second')
-                        <div wire:transition>Second: {{ $count }}</div>
-                    @endisland
+                    <button
+                        type="button"
+                        x-on:click="await $wire.$island('counter').increment(); window.countAfterAction = document.querySelector('[dusk=island-count]').textContent"
+                        dusk="increment"
+                    >Increment</button>
 
                     @script
                     <script>
-                        window.islandMorphOrder = []
+                        window.countAfterAction = null
 
                         document.startViewTransition = (options) => {
                             let update = typeof options === 'function' ? options : options.update
@@ -836,18 +833,16 @@ class BrowserTest extends BrowserTestCase
                                 skipTransition() {},
                             }
                         }
-
-                        Livewire.hook('island.morph', () => window.islandMorphOrder.push('start'))
-                        Livewire.hook('island.morphed', () => window.islandMorphOrder.push('finish'))
                     </script>
                     @endscript
                 </div>
                 HTML;
             }
         }])
-            ->waitForLivewire()->click('@render-both')
-            ->waitUntil('window.islandMorphOrder.length === 4')
-            ->assertScript('JSON.stringify(window.islandMorphOrder)', '["start","finish","start","finish"]')
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->click('@increment')
+            ->waitUntil('window.countAfterAction !== null')
+            ->assertScript('window.countAfterAction', 'Count: 1')
             ;
     }
 
