@@ -790,6 +790,67 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_buffered_island_fragments_are_morphed_sequentially()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function renderBoth()
+            {
+                $this->count++;
+
+                $this->renderIsland('first');
+                $this->renderIsland('second');
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <button type="button" wire:click="renderBoth" dusk="render-both">Render both</button>
+
+                    @island(name: 'first')
+                        <div wire:transition>First: {{ $count }}</div>
+                    @endisland
+
+                    @island(name: 'second')
+                        <div wire:transition>Second: {{ $count }}</div>
+                    @endisland
+
+                    @script
+                    <script>
+                        window.islandMorphOrder = []
+
+                        document.startViewTransition = (options) => {
+                            let update = typeof options === 'function' ? options : options.update
+
+                            let updateCallbackDone = new Promise(resolve => {
+                                setTimeout(() => {
+                                    update()
+                                    resolve()
+                                }, 50)
+                            })
+
+                            return {
+                                updateCallbackDone,
+                                finished: updateCallbackDone,
+                                skipTransition() {},
+                            }
+                        }
+
+                        Livewire.hook('island.morph', () => window.islandMorphOrder.push('start'))
+                        Livewire.hook('island.morphed', () => window.islandMorphOrder.push('finish'))
+                    </script>
+                    @endscript
+                </div>
+                HTML;
+            }
+        }])
+            ->waitForLivewire()->click('@render-both')
+            ->waitUntil('window.islandMorphOrder.length === 4')
+            ->assertScript('JSON.stringify(window.islandMorphOrder)', '["start","finish","start","finish"]')
+            ;
+    }
+
     public function test_renderless_modifier_skips_island_render()
     {
         Livewire::visit([new class extends \Livewire\Component {
