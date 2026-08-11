@@ -73,6 +73,32 @@ class UploadActionBrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_rich_text_pastes_with_embedded_images_are_left_alone()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $body = '';
+            public $photos = [];
+
+            function render() { return <<<'HTML'
+            <div>
+                <textarea dusk="box" wire:model="body" wire:paste="$upload('photos')"></textarea>
+
+                <span dusk="count" x-text="$wire.photos.length"></span>
+            </div>
+            HTML; }
+        })
+        ->tap(fn ($b) => $this->putRichTextWithImageOnClipboard($b, 'copied from Word'))
+        ->click('@box')
+        ->keys('@box', [$this->pasteChord(), 'v'])
+        ->waitUntil('document.querySelector(\'[dusk="box"]\').value === "copied from Word"')
+        ->assertSeeIn('@count', '0')
+        ;
+    }
+
     public function test_drop_uploads_dropped_files_and_tracks_drag_state()
     {
         Storage::persistentFake('tmp-for-tests');
@@ -435,6 +461,35 @@ class UploadActionBrowserTest extends \Tests\BrowserTestCase
         $this->cdp($browser, 'Browser.grantPermissions', ['permissions' => ['clipboardReadWrite', 'clipboardSanitizedWrite']]);
 
         $browser->script("window.__clipboardReady = false; (async () => { await navigator.clipboard.writeText('{$text}'); window.__clipboardReady = true })()");
+
+        $browser->waitUntil('window.__clipboardReady === true');
+    }
+
+    protected function putRichTextWithImageOnClipboard($browser, $text)
+    {
+        $this->cdp($browser, 'Browser.grantPermissions', ['permissions' => ['clipboardReadWrite', 'clipboardSanitizedWrite']]);
+
+        $browser->script(<<<JS
+            window.__clipboardReady = false;
+
+            (async () => {
+                let canvas = document.createElement('canvas')
+                canvas.width = canvas.height = 8
+                let context = canvas.getContext('2d')
+                context.fillStyle = 'red'
+                context.fillRect(0, 0, 8, 8)
+
+                let image = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+
+                await navigator.clipboard.write([new ClipboardItem({
+                    'text/plain': new Blob(['{$text}'], { type: 'text/plain' }),
+                    'text/html': new Blob(['<p>{$text}<img src="data:image/png;base64,..."></p>'], { type: 'text/html' }),
+                    'image/png': image,
+                })])
+
+                window.__clipboardReady = true
+            })()
+        JS);
 
         $browser->waitUntil('window.__clipboardReady === true');
     }

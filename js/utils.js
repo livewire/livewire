@@ -62,6 +62,13 @@ export function filesFromEvent(event) {
 
     if (! source) return null
 
+    // Rich clipboard content can expose embedded images as files (Word does
+    // this, for example). Prefer the content paste whenever text is present;
+    // a standalone image/file paste only advertises file types...
+    if (event.clipboardData && Array.from(source.types || []).some(type => ['text/plain', 'text/html'].includes(type))) {
+        return []
+    }
+
     return Array.from(source.files || [])
 }
 
