@@ -75,6 +75,14 @@ export function createUrlObjectFromString(urlString) {
     return urlString !== null && new URL(urlString, document.baseURI)
 }
 
+export function isSameOrigin(destination) {
+    return !! destination && destination.origin === window.location.origin
+}
+
+export function visitNatively(destination) {
+    window.location.href = destination.href
+}
+
 export function getUriStringFromUrlObject(urlObject) {
     return urlObject.pathname + urlObject.search + urlObject.hash
 }

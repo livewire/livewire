@@ -1,6 +1,6 @@
 import { replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
-import { createUrlObjectFromString, extractDestinationFromLink, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
+import { createUrlObjectFromString, extractDestinationFromLink, isSameOrigin, visitNatively, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
 import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
 import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
 import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
@@ -44,7 +44,7 @@ export default function (Alpine) {
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
 
-            if (! destination) return
+            if (! isSameOrigin(destination)) return
 
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
@@ -56,7 +56,7 @@ export default function (Alpine) {
 
             if (! destination) return
 
-            prefetchHtml(destination, (html, finalDestination) => {
+            isSameOrigin(destination) && prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
             })
 
@@ -73,9 +73,18 @@ export default function (Alpine) {
     })
 
     function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
+        // Navigating swaps the new page into the current document, so it only
+        // applies to same-origin destinations. Anything else gets handed off
+        // to the browser as a normal, full page visit...
+        if (! isSameOrigin(destination)) return visitNatively(destination)
+
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
+            // The request may have been redirected off to another origin. We can't
+            // swap that page into this document, so let the browser visit it...
+            if (! isSameOrigin(finalDestination)) return visitNatively(finalDestination)
+
             // Fire the navigating event, allowing listeners to register onSwap callbacks
             let swapCallbacks = []
 
