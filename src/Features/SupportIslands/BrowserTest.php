@@ -790,7 +790,7 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
-    public function test_awaiting_an_island_action_waits_for_the_island_to_finish_morphing()
+    public function test_awaiting_an_island_action_sees_the_updated_island()
     {
         Livewire::visit([new class extends \Livewire\Component {
             public $count = 0;
@@ -804,45 +804,23 @@ class BrowserTest extends BrowserTestCase
                 return <<<'HTML'
                 <div>
                     @island(name: 'counter')
-                        <div wire:transition dusk="island-count">Count: {{ $count }}</div>
+                        <div wire:transition x-ref="island-count" dusk="island-count">Count: {{ $count }}</div>
                     @endisland
+
+                    <div x-ref="count-after-action" dusk="count-after-action"></div>
 
                     <button
                         type="button"
-                        x-on:click="await $wire.$island('counter').increment(); window.countAfterAction = document.querySelector('[dusk=island-count]').textContent"
+                        x-on:click="await $wire.$island('counter').increment(); $refs['count-after-action'].textContent = $refs['island-count'].textContent"
                         dusk="increment"
                     >Increment</button>
-
-                    @script
-                    <script>
-                        window.countAfterAction = null
-
-                        document.startViewTransition = (options) => {
-                            let update = typeof options === 'function' ? options : options.update
-
-                            let updateCallbackDone = new Promise(resolve => {
-                                setTimeout(() => {
-                                    update()
-                                    resolve()
-                                }, 50)
-                            })
-
-                            return {
-                                updateCallbackDone,
-                                finished: updateCallbackDone,
-                                skipTransition() {},
-                            }
-                        }
-                    </script>
-                    @endscript
                 </div>
                 HTML;
             }
         }])
             ->assertSeeIn('@island-count', 'Count: 0')
             ->click('@increment')
-            ->waitUntil('window.countAfterAction !== null')
-            ->assertScript('window.countAfterAction', 'Count: 1')
+            ->waitForTextIn('@count-after-action', 'Count: 1')
             ;
     }
 
