@@ -83,10 +83,18 @@ export function createUrlObjectFromString(urlString) {
     return urlString !== null && new URL(urlString, document.baseURI)
 }
 
+export function isSameOrigin(destination) {
+    return !! destination && destination.origin === window.location.origin
+}
+
+export function visitNatively(destination) {
+    window.location.href = destination.href
+}
+
 export function linkShouldBeHandledNatively(linkEl, destination = extractDestinationFromLink(linkEl)) {
     if (! destination) return true
     if (! ['http:', 'https:'].includes(destination.protocol)) return true
-    if (destination.origin !== window.location.origin) return true
+    if (! isSameOrigin(destination)) return true
     if (linkEl.hasAttribute('download')) return true
 
     let target = linkEl.getAttribute('target')?.trim().toLowerCase()
