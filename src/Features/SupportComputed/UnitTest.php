@@ -13,6 +13,15 @@ use Livewire\Features\SupportEvents\BaseOn;
 
 class UnitTest extends TestCase
 {
+    protected function skipUnlessCacheSupportsSerializableClassRestrictions()
+    {
+        $constructor = new \ReflectionMethod(\Illuminate\Cache\ArrayStore::class, '__construct');
+
+        if ($constructor->getNumberOfParameters() < 2) {
+            $this->markTestSkipped('This Laravel version does not support cache serializable class restrictions.');
+        }
+    }
+
     function test_can_make_method_a_computed()
     {
         Livewire::test(new class extends TestComponent {
@@ -211,6 +220,8 @@ class UnitTest extends TestCase
 
     function test_cached_computed_property_is_recomputed_when_the_cached_value_cannot_be_unserialized()
     {
+        $this->skipUnlessCacheSupportsSerializableClassRestrictions();
+
         config()->set('app.debug', true);
         config()->set('cache.serializable_classes', false);
         config()->set('cache.stores.array.serialize', true);
@@ -251,6 +262,8 @@ class UnitTest extends TestCase
 
     function test_persisted_computed_property_is_recomputed_when_the_cached_value_cannot_be_unserialized()
     {
+        $this->skipUnlessCacheSupportsSerializableClassRestrictions();
+
         config()->set('cache.serializable_classes', false);
         config()->set('cache.stores.array.serialize', true);
         Cache::purge('array');
@@ -281,6 +294,8 @@ class UnitTest extends TestCase
 
     function test_persisted_computed_property_is_recomputed_when_an_array_it_returns_holds_a_value_that_cannot_be_unserialized()
     {
+        $this->skipUnlessCacheSupportsSerializableClassRestrictions();
+
         config()->set('cache.serializable_classes', false);
         config()->set('cache.stores.array.serialize', true);
         Cache::purge('array');
@@ -311,6 +326,8 @@ class UnitTest extends TestCase
 
     function test_cached_computed_property_is_not_recomputed_when_its_class_is_allowed_to_be_unserialized()
     {
+        $this->skipUnlessCacheSupportsSerializableClassRestrictions();
+
         config()->set('cache.serializable_classes', [\stdClass::class]);
         config()->set('cache.stores.array.serialize', true);
         Cache::purge('array');
