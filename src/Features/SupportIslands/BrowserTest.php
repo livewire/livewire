@@ -790,37 +790,39 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
-    public function test_awaiting_an_island_action_sees_the_updated_island()
+    public function test_repeated_explicit_island_renders_are_applied_in_order()
     {
         Livewire::visit([new class extends \Livewire\Component {
             public $count = 0;
 
-            public function increment()
+            public function renderTwice()
             {
                 $this->count++;
+
+                $this->renderIsland('counter');
+
+                $this->count++;
+
+                $this->renderIsland('counter', mode: 'append');
+
+                $this->skipRender();
             }
 
             public function render() {
                 return <<<'HTML'
                 <div>
-                    @island(name: 'counter')
-                        <div wire:transition x-ref="island-count" dusk="island-count">Count: {{ $count }}</div>
-                    @endisland
+                    <div dusk="island">
+                        @island(name: 'counter')<div wire:transition data-count="{{ $count }}">Count: {{ $count }}</div>@endisland
+                    </div>
 
-                    <div x-ref="count-after-action" dusk="count-after-action"></div>
-
-                    <button
-                        type="button"
-                        x-on:click="await $wire.$island('counter').increment(); $refs['count-after-action'].textContent = $refs['island-count'].textContent"
-                        dusk="increment"
-                    >Increment</button>
+                    <button type="button" wire:click="renderTwice" dusk="render-twice">Render twice</button>
                 </div>
                 HTML;
             }
         }])
-            ->assertSeeIn('@island-count', 'Count: 0')
-            ->click('@increment')
-            ->waitForTextIn('@count-after-action', 'Count: 1')
+            ->assertSeeIn('@island', 'Count: 0')
+            ->waitForLivewire()->click('@render-twice')
+            ->assertPresent('[dusk="island"] [data-count="1"] + [data-count="2"]')
             ;
     }
 

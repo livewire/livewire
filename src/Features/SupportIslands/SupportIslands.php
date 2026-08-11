@@ -8,6 +8,8 @@ use Livewire\ComponentHook;
 
 class SupportIslands extends ComponentHook
 {
+    protected $renderedIslandNames = [];
+
     public static function provide()
     {
         static::registerInlineIslandPrecompiler();
@@ -65,6 +67,11 @@ class SupportIslands extends ComponentHook
 
             // If #[Renderless] attribute was used, don't render the island...
             if ($this->component->shouldSkipIslandsRender()) return;
+
+            // Automatic island renders only need to happen once per target...
+            if (in_array($name, $this->renderedIslandNames, true)) return;
+
+            $this->renderedIslandNames[] = $name;
 
             $this->component->skipRender();
 

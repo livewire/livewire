@@ -115,9 +115,6 @@ trait HandlesIslands
 
                 if (! $token) continue;
 
-                // Skip if this island was already rendered in this request...
-                if ($this->islandAlreadyRendered($name, $token)) continue;
-
                 // If the island is lazy, we need to mount it, but to ensure any nested islands render,
                 // we need to set the `$islandsHaveMounted` flag to false and reset it back after the
                 // lazy island is mounted...
@@ -138,17 +135,6 @@ trait HandlesIslands
                 $finish();
             }
         }
-    }
-
-    protected function islandAlreadyRendered($name, $token)
-    {
-        foreach ($this->renderedIslandFragments as $fragment) {
-            if (str_contains($fragment, "name={$name}|token={$token}")) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public function streamIsland($name, $content = null, $mode = 'morph', $with = [])
