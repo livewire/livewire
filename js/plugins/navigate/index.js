@@ -1,6 +1,6 @@
 import { replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
-import { createUrlObjectFromString, extractDestinationFromLink, linkShouldBeHandledNatively, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
+import { createUrlObjectFromString, extractDestinationFromLink, isSameOrigin, linkShouldBeHandledNatively, visitNatively, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
 import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
 import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
 import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
@@ -19,6 +19,11 @@ export default function (Alpine) {
         let { preserveScroll = false } = options
 
         let destination = createUrlObjectFromString(url)
+
+        // Navigating swaps the new page into the current document, so it only
+        // applies to same-origin destinations. Anything else gets handed off
+        // to the browser as a normal, full page visit...
+        if (! isSameOrigin(destination)) return visitNatively(destination)
 
         let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
             url: destination, history: false, cached: false,
@@ -77,6 +82,10 @@ export default function (Alpine) {
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
+            // The request may have been redirected off to another origin. We can't
+            // swap that page into this document, so let the browser visit it...
+            if (! isSameOrigin(finalDestination)) return visitNatively(finalDestination)
+
             // Fire the navigating event, allowing listeners to register onSwap callbacks
             let swapCallbacks = []
 
