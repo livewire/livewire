@@ -14,14 +14,13 @@ class PayloadGuardsUnitTest extends TestCase
 {
     public function test_rejects_payload_exceeding_max_size()
     {
-        config()->set('livewire.payload.max_size', 100); // 100 bytes
+        config()->set('livewire.payload.max_size', 1024); // 1KB
 
         $this->expectException(PayloadTooLargeException::class);
         $this->expectExceptionMessage('payload.max_size');
 
-        // Simulate a request with a large Content-Length header
         $this->withoutExceptionHandling()
-            ->withHeaders(['Content-Length' => 1000, 'X-Livewire' => 'true'])
+            ->withHeaders(['X-Livewire' => 'true'])
             ->postJson(EndpointResolver::updatePath(), [
                 'components' => [
                     [
@@ -30,7 +29,7 @@ class PayloadGuardsUnitTest extends TestCase
                             'memo' => ['id' => 'test', 'name' => 'test'],
                             'checksum' => 'test',
                         ]),
-                        'updates' => [],
+                        'updates' => ['name' => str_repeat('a', 2048)],
                         'calls' => [],
                     ],
                 ],
