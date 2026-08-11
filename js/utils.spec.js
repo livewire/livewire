@@ -1,5 +1,26 @@
 import { describe, it, expect } from 'vitest'
-import { isEmpty } from './utils'
+import { filesFromEvent, isEmpty } from './utils'
+
+describe('filesFromEvent', () => {
+    it('returns files from a standalone file paste', () => {
+        let file = new File(['image'], 'image.png', { type: 'image/png' })
+
+        expect(filesFromEvent({
+            clipboardData: { files: [file], types: ['Files'] },
+        })).toEqual([file])
+    })
+
+    it('ignores embedded files when the clipboard also contains rich text', () => {
+        let file = new File(['image'], 'image.png', { type: 'image/png' })
+
+        expect(filesFromEvent({
+            clipboardData: {
+                files: [file],
+                types: ['text/plain', 'text/html', 'Files'],
+            },
+        })).toEqual([])
+    })
+})
 
 describe('isEmpty', () => {
     it('mirrors PHP empty() for scalars', () => {
