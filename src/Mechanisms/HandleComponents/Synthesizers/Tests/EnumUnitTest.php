@@ -30,6 +30,14 @@ class EnumUnitTest extends \Tests\TestCase
         $testable->updateProperty('status', 'Be excellent excellent to each other');
     }
 
+    public function test_nullable_public_property_can_be_updated_to_null_while_already_null()
+    {
+        Livewire::test(ComponentWithNullablePublicEnumCaster::class)
+            ->assertSetStrict('status', null)
+            ->updateProperty('status', null)
+            ->assertSetStrict('status', null);
+    }
+
     public function test_an_enum_can_be_validated()
     {
         Livewire::test(ComponentWithValidatedEnum::class)
