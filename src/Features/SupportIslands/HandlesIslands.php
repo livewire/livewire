@@ -15,6 +15,7 @@ trait HandlesIslands
     protected $islandsHaveMounted = false;
     protected $islandIsTopLevelRender = false;
     protected $renderedIslandFragments = [];
+    protected $implicitlyRenderedIslandNames = [];
 
     public function islandIsMounting()
     {
@@ -102,6 +103,21 @@ trait HandlesIslands
             'token' => $token,
             'mode' => 'skip',
         ]);
+    }
+
+    public function triggerImplicitIslandRender($name, $mode = 'morph', $mount = false)
+    {
+        if (in_array($name, $this->implicitlyRenderedIslandNames, true)) return;
+
+        $this->implicitlyRenderedIslandNames[] = $name;
+
+        $this->skipRender();
+
+        $this->renderIsland(
+            name: $name,
+            mode: $mode,
+            mount: $mount,
+        );
     }
 
     public function renderIsland($name, $content = null, $mode = 'morph', $with = [], $mount = false)
