@@ -471,7 +471,7 @@ class UnitTest extends TestCase
             ->assertSee('Inner component rendered');
     }
 
-    public function test_multiple_calls_targeting_same_island_only_renders_fragment_once()
+    public function test_multiple_replace_calls_targeting_same_island_only_render_fragment_once()
     {
         $component = Livewire::test(new class extends \Livewire\Component {
             public $isDialogOpen = true;
@@ -509,7 +509,7 @@ class UnitTest extends TestCase
                     'metadata' => [
                         'island' => [
                             'name' => 'dialog',
-                            'mode' => 'morph',
+                            'mode' => 'replace',
                         ],
                     ],
                 ],
@@ -521,7 +521,7 @@ class UnitTest extends TestCase
                         'type' => 'model.live',
                         'island' => [
                             'name' => 'dialog',
-                            'mode' => 'morph',
+                            'mode' => 'replace',
                         ],
                     ],
                 ],

@@ -109,7 +109,7 @@ trait HandlesIslands
     {
         $this->skipRender();
 
-        if ($mode !== 'morph') {
+        if (! in_array($mode, ['morph', 'replace'], true)) {
             $this->renderIsland(name: $name, mode: $mode, mount: $mount);
 
             return;
