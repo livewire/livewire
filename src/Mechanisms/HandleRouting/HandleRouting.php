@@ -4,6 +4,7 @@ namespace Livewire\Mechanisms\HandleRouting;
 
 use Illuminate\Routing\Route as IlluminateRoute;
 use Illuminate\Support\Facades\Route;
+use Livewire\Features\SupportLazyLoading\SupportLazyLoading;
 use Livewire\Mechanisms\Mechanism;
 
 class HandleRouting extends Mechanism
@@ -21,5 +22,7 @@ class HandleRouting extends Mechanism
                 $route->action['livewire_component'] = $component;
             });
         });
+
+        SupportLazyLoading::registerRouteMacro();
     }
 }
