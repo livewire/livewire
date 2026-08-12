@@ -861,6 +861,61 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_implicit_append_and_prepend_render_after_each_call_in_order()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $appendCount = 0;
+            public $prependCount = 0;
+
+            public function appendOne()
+            {
+                $this->appendCount++;
+            }
+
+            public function appendTen()
+            {
+                $this->appendCount += 10;
+            }
+
+            public function prependOne()
+            {
+                $this->prependCount++;
+            }
+
+            public function prependTen()
+            {
+                $this->prependCount += 10;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div dusk="append-island">
+                        @island(name: 'append')<span data-append-count="{{ $appendCount }}">{{ $appendCount }}</span>@endisland
+                    </div>
+
+                    <div wire:click="appendTen" wire:island.append="append">
+                        <button type="button" wire:click="appendOne" wire:island.append="append" dusk="append-eleven">Append eleven</button>
+                    </div>
+
+                    <div dusk="prepend-island">
+                        @island(name: 'prepend')<span data-prepend-count="{{ $prependCount }}">{{ $prependCount }}</span>@endisland
+                    </div>
+
+                    <div wire:click="prependTen" wire:island.prepend="prepend">
+                        <button type="button" wire:click="prependOne" wire:island.prepend="prepend" dusk="prepend-eleven">Prepend eleven</button>
+                    </div>
+                </div>
+                HTML;
+            }
+        }])
+            ->waitForLivewire()->click('@append-eleven')
+            ->assertPresent('[dusk="append-island"] [data-append-count="0"] + [data-append-count="1"] + [data-append-count="11"]')
+            ->waitForLivewire()->click('@prepend-eleven')
+            ->assertPresent('[dusk="prepend-island"] [data-prepend-count="11"] + [data-prepend-count="1"] + [data-prepend-count="0"]')
+            ;
+    }
+
     public function test_renderless_modifier_skips_island_render()
     {
         Livewire::visit([new class extends \Livewire\Component {

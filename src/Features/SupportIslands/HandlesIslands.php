@@ -15,7 +15,7 @@ trait HandlesIslands
     protected $islandsHaveMounted = false;
     protected $islandIsTopLevelRender = false;
     protected $renderedIslandFragments = [];
-    protected $implicitIslandRenders = [];
+    protected $implicitIslandMorphs = [];
 
     public function islandIsMounting()
     {
@@ -109,22 +109,28 @@ trait HandlesIslands
     {
         $this->skipRender();
 
-        if (isset($this->implicitIslandRenders[$name])) {
-            $this->implicitIslandRenders[$name]['mount'] = $this->implicitIslandRenders[$name]['mount'] || $mount;
+        if ($mode !== 'morph') {
+            $this->renderIsland(name: $name, mode: $mode, mount: $mount);
 
             return;
         }
 
-        $this->implicitIslandRenders[$name] = compact('name', 'mode', 'mount');
+        if (isset($this->implicitIslandMorphs[$name])) {
+            $this->implicitIslandMorphs[$name]['mount'] = $this->implicitIslandMorphs[$name]['mount'] || $mount;
+
+            return;
+        }
+
+        $this->implicitIslandMorphs[$name] = compact('name', 'mode', 'mount');
     }
 
-    public function renderImplicitIslands()
+    public function renderImplicitIslandMorphs()
     {
-        foreach ($this->implicitIslandRenders as $island) {
+        foreach ($this->implicitIslandMorphs as $island) {
             $this->renderIsland(...$island);
         }
 
-        $this->implicitIslandRenders = [];
+        $this->implicitIslandMorphs = [];
     }
 
     public function renderIsland($name, $content = null, $mode = 'morph', $with = [], $mount = false)
