@@ -22,11 +22,6 @@ trait HandlesRenderless
         store($this)->set('skipRender', $html ?: true);
     }
 
-    public function skipIslandsRender()
-    {
-        store($this)->set('skipIslandsRender', true);
-    }
-
     public function shouldSkipRender()
     {
         return store($this)->get('skipRender', false);
@@ -40,8 +35,4 @@ trait HandlesRenderless
             ->contains(fn ($attribute) => $attribute->getName() === $method);
     }
 
-    public function shouldSkipIslandsRender()
-    {
-        return store($this)->get('skipIslandsRender', false);
-    }
 }

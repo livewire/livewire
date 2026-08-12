@@ -790,6 +790,47 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_renderless_attribute_only_skips_its_own_implicit_island_render()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            #[\Livewire\Attributes\Renderless]
+            public function addOne()
+            {
+                $this->count++;
+            }
+
+            public function addTen()
+            {
+                $this->count += 10;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'counter')
+                        <div dusk="island-count">Count: {{ $count }}</div>
+                    @endisland
+
+                    <div wire:click="addTen" wire:island="counter">
+                        <button type="button" wire:click="addOne" wire:island="counter" dusk="renderless-first">Renderless first</button>
+                    </div>
+
+                    <div wire:click="addOne" wire:island="counter">
+                        <button type="button" wire:click="addTen" wire:island="counter" dusk="renderless-last">Renderless last</button>
+                    </div>
+                </div>
+                HTML;
+            }
+        }])
+            ->waitForLivewire()->click('@renderless-first')
+            ->assertSeeIn('@island-count', 'Count: 11')
+            ->waitForLivewire()->click('@renderless-last')
+            ->assertSeeIn('@island-count', 'Count: 22')
+            ;
+    }
+
     public function test_repeated_explicit_island_renders_are_applied_in_order()
     {
         Livewire::visit([new class extends \Livewire\Component {
