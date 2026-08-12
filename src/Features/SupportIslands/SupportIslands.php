@@ -76,6 +76,8 @@ class SupportIslands extends ComponentHook
 
     public function dehydrate($context)
     {
+        $this->component->renderImplicitIslands();
+
         $context->addMemo('islands', $this->component->getIslands());
 
         if ($this->component->hasRenderedIslandFragments()) {
