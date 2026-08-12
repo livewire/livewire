@@ -48,14 +48,14 @@ class UnitTest extends TestCase
         $this->assertSame(500, $component->effects['debounce']['search']);
     }
 
-    function test_debounce_effect_falls_back_to_150_for_non_numeric_string()
+    function test_debounce_effect_falls_back_to_true_for_non_numeric_string()
     {
         $component = Livewire::test(new class extends TestComponent {
             #[BaseDebounce('fast')]
             public $search = '';
         });
 
-        $this->assertSame(150, $component->effects['debounce']['search']);
+        $this->assertTrue($component->effects['debounce']['search']);
     }
 
     function test_debounce_effect_only_includes_annotated_properties()
@@ -175,24 +175,24 @@ class UnitTest extends TestCase
         $this->assertSame(250, $component->effects['debounce']['search']);
     }
 
-    function test_debounce_effect_falls_back_to_150_for_empty_string()
+    function test_debounce_effect_falls_back_to_true_for_empty_string()
     {
         $component = Livewire::test(new class extends TestComponent {
             #[BaseDebounce('')]
             public $search = '';
         });
 
-        $this->assertSame(150, $component->effects['debounce']['search']);
+        $this->assertTrue($component->effects['debounce']['search']);
     }
 
-    function test_debounce_effect_falls_back_to_150_for_ms_without_number()
+    function test_debounce_effect_falls_back_to_true_for_ms_without_number()
     {
         $component = Livewire::test(new class extends TestComponent {
             #[BaseDebounce('ms')]
             public $search = '';
         });
 
-        $this->assertSame(150, $component->effects['debounce']['search']);
+        $this->assertTrue($component->effects['debounce']['search']);
     }
 
     function test_debounce_effect_is_case_insensitive_for_units()

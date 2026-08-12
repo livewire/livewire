@@ -519,16 +519,28 @@ class BrowserTest extends BrowserTestCase
             public function render()
             {
                 return <<<'HTML'
-                <div>
+                <div x-init="window.requests = 0">
                     <input type="text" wire:model.live="filters.q" dusk="input" />
-                    <span dusk="output">{{ $filters['q'] }}</span>
+                    <span dusk="output" wire:text="filters.q"></span>
                 </div>
+
+                @script
+                <script>
+                    this.intercept(({ onSend }) => {
+                        onSend(() => {
+                            window.requests++
+                        })
+                    })
+                </script>
+                @endscript
                 HTML;
             }
         })
             ->waitForLivewireToLoad()
             ->typeSlowly('@input', 'livewire', 50)
-            ->waitForTextIn('@output', 'livewire', 1) // Already passes 500ms
+            ->assertSeeIn('@output', 'livewire') // wire:text should update immediately
+            ->pause(300) // Wait for the request to be handled
+            ->assertScript('window.requests', 1); // Only one request was sent
         ;
     }
 

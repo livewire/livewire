@@ -16,15 +16,17 @@ class BaseDebounce extends LivewireAttribute
     {
         if (! $context->isMounting()) return;
 
-        $duration = $this->duration !== null
-            ? $this->normalizeDuration($this->duration)
-            : true;
+        $duration = $this->normalizeDuration($this->duration);
 
         $context->pushEffect('debounce', $duration, $this->getName());
     }
 
-    protected function normalizeDuration(int|string $duration): int
+    protected function normalizeDuration(int|string|null $duration): mixed
     {
+        if (is_null($duration)) {
+            return true;
+        }
+
         if (is_int($duration)) {
             return max(0, $duration);
         }
@@ -42,10 +44,10 @@ class BaseDebounce extends LivewireAttribute
         return $this->normalizeNumber($duration);
     }
 
-    protected function normalizeNumber(string $value, int $multiplier = 1): int
+    protected function normalizeNumber(string $value, int $multiplier = 1): mixed
     {
         if ($value === '' || ! is_numeric($value)) {
-            return 150;
+            return true;
         }
 
         return max(0, (int) ((float) $value * $multiplier));
