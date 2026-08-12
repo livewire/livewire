@@ -16,6 +16,7 @@ trait HandlesIslands
     protected $islandIsTopLevelRender = false;
     protected $renderedIslandFragments = [];
     protected $implicitIslandMorphs = [];
+    protected $orderedImplicitIslandNames = [];
 
     public function islandIsMounting()
     {
@@ -105,11 +106,26 @@ trait HandlesIslands
         ]);
     }
 
+    public function prepareImplicitIslandRenders($calls)
+    {
+        foreach ($calls as $call) {
+            $island = $call['metadata']['island'] ?? null;
+
+            if (! $island) continue;
+
+            if ($call['metadata']['renderless'] ?? false) continue;
+
+            if (in_array($island['mode'], ['append', 'prepend'], true)) {
+                $this->orderedImplicitIslandNames[$island['name']] = true;
+            }
+        }
+    }
+
     public function triggerImplicitIslandRender($name, $mode = 'morph', $mount = false)
     {
         $this->skipRender();
 
-        if (! in_array($mode, ['morph', 'replace'], true)) {
+        if (isset($this->orderedImplicitIslandNames[$name]) || ! in_array($mode, ['morph', 'replace'], true)) {
             $this->renderIsland(name: $name, mode: $mode, mount: $mount);
 
             return;

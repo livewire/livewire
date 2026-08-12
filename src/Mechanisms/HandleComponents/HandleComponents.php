@@ -533,6 +533,8 @@ class HandleComponents extends Mechanism
         $returns = [];
         $shouldSkipRender = $this->shouldSkipRenderAfterCalls($root, $calls);
 
+        $root->prepareImplicitIslandRenders($calls);
+
         foreach ($calls as $idx => $call) {
             $method = $call['method'];
             $params = $call['params'];
