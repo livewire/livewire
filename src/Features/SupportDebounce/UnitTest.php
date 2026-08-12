@@ -18,14 +18,14 @@ class UnitTest extends TestCase
         $this->assertSame(250, $component->effects['debounce']['search']);
     }
 
-    function test_debounce_effect_defaults_to_150_when_no_time_given()
+    function test_debounce_effect_defaults_to_true_when_no_time_given()
     {
         $component = Livewire::test(new class extends TestComponent {
             #[BaseDebounce]
             public $search = '';
         });
 
-        $this->assertSame(150, $component->effects['debounce']['search']);
+        $this->assertTrue($component->effects['debounce']['search']);
     }
 
     function test_debounce_effect_normalizes_ms_string()
@@ -239,7 +239,7 @@ class UnitTest extends TestCase
         $this->assertSame(250, $component->effects['debounce']['save']);
     }
 
-    function test_debounce_effect_on_method_defaults_to_150_when_no_time_given()
+    function test_debounce_effect_on_method_defaults_to_true_when_no_time_given()
     {
         $component = Livewire::test(new class extends TestComponent {
             #[BaseDebounce]
@@ -249,7 +249,7 @@ class UnitTest extends TestCase
             }
         });
 
-        $this->assertSame(150, $component->effects['debounce']['save']);
+        $this->assertTrue($component->effects['debounce']['save']);
     }
 
     function test_debounce_effect_on_method_normalizes_ms_string()

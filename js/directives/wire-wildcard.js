@@ -37,10 +37,16 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
         attribute = attribute.replace('.append', '')
     }
 
-    if (! directive.modifiers.includes('debounce') && hasDebounceEffects(component, directive.expression)) {
+    // Add .debounce modifier if debounce attribute applied on method
+    let isClickOrSubmit = directive.value === 'click' || directive.value === 'submit'
+    let shouldDebounced = hasDebounceEffects(component, directive.expression)
+    if (isClickOrSubmit && ! directive.modifiers.includes('debounce') && shouldDebounced) {
         let debounceDuration = componentEffectsDuration(component, directive.expression, 'debounce')
 
-        attribute = attribute + `.debounce.${debounceDuration}ms`
+        // If attribute duration omitted let it fall to default duration
+        attribute = debounceDuration === undefined
+            ? attribute + '.debounce'
+            : attribute + `.debounce.${debounceDuration}ms`
     }
 
     let cleanupBinding = Alpine.bind(el, {

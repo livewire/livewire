@@ -251,7 +251,7 @@ function parseModifierDuration(modifiers, key) {
     return ! isNaN(duration) ? duration : undefined
 }
 
-export function componentEffectsDuration(component, expression, key)
+export function getEffectsDuration(component, expression, key)
 {
     let target = component
     let name = expression
@@ -274,10 +274,20 @@ export function componentEffectsDuration(component, expression, key)
         || target.effects[key]
         || {}
 
-    return ! isNaN(options[name]) ? options[name] : undefined
+    return options[name]
+}
+
+export function componentEffectsDuration(component, expression, key)
+{
+    let duration = getEffectsDuration(component, expression, key)
+
+    // If attribute duration omitted let it fall to default duration
+    if (duration === true) return undefined
+
+    return ! isNaN(duration) ? duration : undefined
 }
 
 export function hasDebounceEffects(component, expression)
 {
-    return componentEffectsDuration(component, expression, 'debounce') !== undefined
+    return getEffectsDuration(component, expression, 'debounce') !== undefined
 }

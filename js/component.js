@@ -276,7 +276,7 @@ export class Component {
             effects.scripts = this.originalEffects.scripts;
         }
 
-        // We need to re-register property debounce defaults from #[Debounce]...
+        // We need to re-register any debounces that were originally registered...
         if (Object.prototype.hasOwnProperty.call(this.originalEffects, 'debounce') && this.originalEffects.debounce) {
             effects.debounce = this.originalEffects.debounce
         }

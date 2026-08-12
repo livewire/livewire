@@ -7,7 +7,7 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::TARGET_PROPERTY)]
 class BaseDebounce extends LivewireAttribute
 {
-    public function __construct(public int|string $duration = 150)
+    public function __construct(public int|string|null $duration = null)
     {
         //
     }
@@ -16,7 +16,9 @@ class BaseDebounce extends LivewireAttribute
     {
         if (! $context->isMounting()) return;
 
-        $duration = $this->normalizeDuration($this->duration);
+        $duration = $this->duration !== null
+            ? $this->normalizeDuration($this->duration)
+            : true;
 
         $context->pushEffect('debounce', $duration, $this->getName());
     }
