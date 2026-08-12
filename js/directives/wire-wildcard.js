@@ -4,6 +4,7 @@ import { on } from '@/hooks'
 import { setNextActionOrigin, setNextActionInterceptor } from '@/request'
 import Alpine from 'alpinejs'
 import { evaluateActionExpression } from '../evaluator'
+import { componentEffectsDuration, hasDebounceEffects } from '@/directives/wire-model'
 
 on('directive.init', ({ el, directive, cleanup, component }) => {
     if (['snapshot', 'effects', 'model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'target', 'dirty', 'sort'].includes(directive.value)) return
@@ -34,6 +35,12 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
     // Strip .append from Alpine expression because it only concerns Livewire and trips up Alpine...
     if (directive.modifiers.includes('append')) {
         attribute = attribute.replace('.append', '')
+    }
+
+    if (! directive.modifiers.includes('debounce') && hasDebounceEffects(component, directive.expression)) {
+        let debounceDuration = componentEffectsDuration(component, directive.expression, 'debounce')
+
+        attribute = attribute + `.debounce.${debounceDuration}ms`
     }
 
     let cleanupBinding = Alpine.bind(el, {
