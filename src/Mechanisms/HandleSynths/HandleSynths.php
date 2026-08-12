@@ -111,12 +111,18 @@ class HandleSynths extends Mechanism
             // for example — have no meta to reconstruct them from...
             if (! $childMeta = $this->getMetaForPath($raw, $childPath)) return $child;
 
+            // The child value is untrusted update data and may itself look like a
+            // synthetic tuple. Always pair it with the authenticated snapshot meta;
+            // never let an update choose its own synthesizer or class...
             return $this->hydratePropertyUpdate([$child, $childMeta], $context, $childPath, $raw);
         });
     }
 
     public function hydrateForUpdate($raw, $path, $value, $context)
     {
+        // This is a trust boundary: $value came from the update payload, while
+        // $raw came from the snapshot that Checksum::verify() authenticated. Synth
+        // identity and class must only ever be selected from the latter...
         $meta = $this->getMetaForPath($raw, $path);
 
         // If we have meta data already for this property, let's use that to get a synth...

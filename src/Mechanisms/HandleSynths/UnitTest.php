@@ -4,7 +4,9 @@ namespace Livewire\Mechanisms\HandleSynths;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\CollectionSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Tests\TestComponent;
@@ -233,6 +235,60 @@ class UnitTest extends \Tests\TestCase
         $this->expectExceptionMessage('is not allowed to be instantiated');
 
         $synths->hydrateForUpdate($raw, 'data.section', ['nested' => ['x' => 2]], $context);
+    }
+
+    public function test_hydrate_for_update_never_trusts_synthesizer_meta_from_the_update_payload()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['tags' => collect(['safe'])],
+        ], $context, 'data')];
+
+        // This value deliberately has the shape of a synthetic tuple and claims
+        // a denylisted class. It came from the update payload, so both the synth
+        // key and class must remain plain collection data. Only the previous,
+        // authenticated Collection meta is allowed to choose the hydrator...
+        $forgedTuple = [
+            ['attacker-controlled'],
+            ['s' => 'arr', 'class' => \Symfony\Component\Process\Process::class],
+        ];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'tags' => $forgedTuple,
+        ], $context);
+
+        $this->assertInstanceOf(Collection::class, $updated['tags']);
+        $this->assertSame($forgedTuple, $updated['tags']->all());
+    }
+
+    public function test_nested_synthesizer_meta_in_the_previous_snapshot_cannot_be_tampered_with()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public $data;
+
+            public function mount()
+            {
+                $this->data = ['section' => ['tags' => collect(['safe'])]];
+            }
+        });
+
+        $snapshot = $component->snapshot;
+
+        // Replace the nested Collection synth with attacker-selected metadata.
+        // The request must be rejected by checksum verification before recursive
+        // update hydration gets any opportunity to resolve it...
+        $snapshot['data']['data'][0]['section'][0]['tags'][1] = [
+            's' => 'arr',
+            'class' => \Symfony\Component\Process\Process::class,
+        ];
+
+        $component->snapshot = $snapshot;
+
+        $this->expectException(CorruptComponentPayloadException::class);
+
+        $component->set('data.section', ['tags' => ['attacker-controlled']]);
     }
 }
 
