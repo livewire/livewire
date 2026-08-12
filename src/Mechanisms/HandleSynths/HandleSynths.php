@@ -76,7 +76,7 @@ class HandleSynths extends Mechanism
         });
     }
 
-    public function hydratePropertyUpdate($valueOrTuple, $context, $path)
+    public function hydratePropertyUpdate($valueOrTuple, $context, $path, $raw = null)
     {
         if (! Utils::isSyntheticTuple($value = $tuple = $valueOrTuple)) return $value;
 
@@ -94,18 +94,40 @@ class HandleSynths extends Mechanism
 
         $synth = $this->resolve($meta['s'], $context, $path);
 
-        return $synth->hydrate($value, $meta, function ($name, $child) {
-            return $child;
+        return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path, $raw) {
+            // Updates carry values only — the browser strips synthesizer meta out
+            // of the payload — so nested values can only be reconstructed from the
+            // meta in the previous, checksum-verified snapshot...
+            if ($raw === null) return $child;
+
+            // Wire data is JSON: scalars, arrays, null. Anything already a PHP
+            // object was set server-side (the testing helpers do this) and is
+            // in its final form...
+            if (is_object($child)) return $child;
+
+            $childPath = "{$path}.{$name}";
+
+            // Children the snapshot has never seen — a freshly added repeater row,
+            // for example — have no meta to reconstruct them from...
+            if (! $childMeta = $this->getMetaForPath($raw, $childPath)) return $child;
+
+            // The child value is untrusted update data and may itself look like a
+            // synthetic tuple. Always pair it with the authenticated snapshot meta;
+            // never let an update choose its own synthesizer or class...
+            return $this->hydratePropertyUpdate([$child, $childMeta], $context, $childPath, $raw);
         });
     }
 
     public function hydrateForUpdate($raw, $path, $value, $context)
     {
+        // This is a trust boundary: $value came from the update payload, while
+        // $raw came from the snapshot that Checksum::verify() authenticated. Synth
+        // identity and class must only ever be selected from the latter...
         $meta = $this->getMetaForPath($raw, $path);
 
         // If we have meta data already for this property, let's use that to get a synth...
         if ($meta) {
-            return $this->hydratePropertyUpdate([$value, $meta], $context, $path);
+            return $this->hydratePropertyUpdate([$value, $meta], $context, $path, $raw);
         }
 
         // If we don't, let's check to see if it's a typed property and fetch the synth that way...

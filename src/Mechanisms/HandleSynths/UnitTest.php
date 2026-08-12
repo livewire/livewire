@@ -4,7 +4,9 @@ namespace Livewire\Mechanisms\HandleSynths;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\CollectionSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Tests\TestComponent;
@@ -130,6 +132,163 @@ class UnitTest extends \Tests\TestCase
         $this->expectExceptionMessage('is not allowed to be instantiated');
 
         $synths->hydratePropertyUpdate($tuple, $context, 'evil');
+    }
+
+    /*
+     * An update sends values without synthesizer meta — the browser strips
+     * it. When the updated path sits ABOVE a synthesized value (updating
+     * `data.section` when `data.section.row.tags` is a collection), the
+     * nested values can only be reconstructed from the meta in the previous,
+     * checksum-verified snapshot. See hydratePropertyUpdate().
+     */
+
+    public function test_hydrate_for_update_recursively_hydrates_nested_synthetic_values()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => [
+                'row' => ['tags' => collect(['a']), 'title' => 'Original'],
+            ],
+        ], $context, 'data')];
+
+        // The browser sends the whole section back with meta stripped...
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'row' => ['tags' => ['a', 'b'], 'title' => 'Updated'],
+        ], $context);
+
+        $this->assertInstanceOf(Collection::class, $updated['row']['tags']);
+        $this->assertSame(['a', 'b'], $updated['row']['tags']->all());
+        $this->assertSame('Updated', $updated['row']['title']);
+    }
+
+    public function test_hydrate_for_update_leaves_children_the_snapshot_has_no_meta_for_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['tags' => collect(['a'])],
+        ], $context, 'data')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'tags' => ['a'],
+            'brandNew' => ['some' => 'array'],
+        ], $context);
+
+        $this->assertInstanceOf(Collection::class, $updated['tags']);
+        $this->assertSame(['some' => 'array'], $updated['brandNew']);
+    }
+
+    public function test_hydrate_for_update_passes_nested_removals_through_untouched()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['tags' => collect(['a']), 'other' => collect(['b'])],
+        ], $context, 'data')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'tags' => '__rm__',
+            'other' => ['b'],
+        ], $context);
+
+        $this->assertSame('__rm__', $updated['tags']);
+        $this->assertInstanceOf(Collection::class, $updated['other']);
+    }
+
+    public function test_hydrate_for_update_leaves_already_hydrated_children_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['tags' => collect(['a'])],
+        ], $context, 'data')];
+
+        // Updates coming off the wire are JSON, but Livewire's testing
+        // helpers set real PHP values. Those are already in their final
+        // form and mustn't be run back through a synthesizer...
+        $tags = collect(['a', 'b']);
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', ['tags' => $tags], $context);
+
+        $this->assertSame($tags, $updated['tags']);
+    }
+
+    public function test_hydrate_for_update_runs_the_security_policy_over_nested_meta()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        // Meta declaring a denylisted gadget class, nested a level below the
+        // updated path. Recursion must not skip the denylist check...
+        $raw = ['data' => [[
+            'section' => [[
+                'nested' => [['x' => 1], ['s' => 'arr', 'class' => \Symfony\Component\Process\Process::class]],
+            ], ['s' => 'arr']],
+        ], ['s' => 'arr']]];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('is not allowed to be instantiated');
+
+        $synths->hydrateForUpdate($raw, 'data.section', ['nested' => ['x' => 2]], $context);
+    }
+
+    public function test_hydrate_for_update_never_trusts_synthesizer_meta_from_the_update_payload()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['tags' => collect(['safe'])],
+        ], $context, 'data')];
+
+        // This value deliberately has the shape of a synthetic tuple and claims
+        // a denylisted class. It came from the update payload, so both the synth
+        // key and class must remain plain collection data. Only the previous,
+        // authenticated Collection meta is allowed to choose the hydrator...
+        $forgedTuple = [
+            ['attacker-controlled'],
+            ['s' => 'arr', 'class' => \Symfony\Component\Process\Process::class],
+        ];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'tags' => $forgedTuple,
+        ], $context);
+
+        $this->assertInstanceOf(Collection::class, $updated['tags']);
+        $this->assertSame($forgedTuple, $updated['tags']->all());
+    }
+
+    public function test_nested_synthesizer_meta_in_the_previous_snapshot_cannot_be_tampered_with()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public $data;
+
+            public function mount()
+            {
+                $this->data = ['section' => ['tags' => collect(['safe'])]];
+            }
+        });
+
+        $snapshot = $component->snapshot;
+
+        // Replace the nested Collection synth with attacker-selected metadata.
+        // The request must be rejected by checksum verification before recursive
+        // update hydration gets any opportunity to resolve it...
+        $snapshot['data']['data'][0]['section'][0]['tags'][1] = [
+            's' => 'arr',
+            'class' => \Symfony\Component\Process\Process::class,
+        ];
+
+        $component->snapshot = $snapshot;
+
+        $this->expectException(CorruptComponentPayloadException::class);
+
+        $component->set('data.section', ['tags' => ['attacker-controlled']]);
     }
 }
 
