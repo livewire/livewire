@@ -1,10 +1,10 @@
 import { callAndClearComponentDebounces } from '@/debounce'
 import { customDirectiveHasBeenRegistered } from '@/directives'
+import { hasDebounceEffect, debounceEffectDuration } from '@/directives/shared'
 import { on } from '@/hooks'
 import { setNextActionOrigin, setNextActionInterceptor } from '@/request'
 import Alpine from 'alpinejs'
 import { evaluateActionExpression } from '../evaluator'
-import { debounceEffectDuration, hasDebounceEffect } from '@/directives/wire-model'
 
 on('directive.init', ({ el, directive, cleanup, component }) => {
     if (['snapshot', 'effects', 'model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'target', 'dirty', 'sort'].includes(directive.value)) return
