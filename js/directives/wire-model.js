@@ -66,7 +66,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let networkOnChange = networkModifiers.includes('change') || networkModifiers.includes('lazy')
     let networkOnEnter = networkModifiers.includes('enter')
     let hasNetworkTriggers = networkOnBlur || networkOnChange || networkOnEnter
-    let isDebounced = networkModifiers.includes('debounce') || hasDebounceEffects(component, expression)
+    let isDebounced = networkModifiers.includes('debounce') || hasDebounceEffect(component, expression)
     let isThrottled = networkModifiers.includes('throttle')
 
     // Trigger a network request
@@ -87,7 +87,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
     // Apply debounce/throttle from network modifiers
     if ((shouldSendNetwork && ! hasNetworkTriggers && isRealtimeInput(el) && ! isDebounced && ! isThrottled) || isDebounced) {
         let debounceDuration = parseModifierDuration(networkModifiers, 'debounce')
-            ?? componentEffectsDuration(component, expression, 'debounce')
+            ?? debounceEffectDuration(component, expression)
             ?? 150
 
         debouncedUpdate = debounce(debouncedUpdate, debounceDuration)
@@ -251,7 +251,7 @@ function parseModifierDuration(modifiers, key) {
     return ! isNaN(duration) ? duration : undefined
 }
 
-export function getEffectsDuration(component, expression, key)
+function parseEffectsDuration(component, expression, key)
 {
     let target = component
     let name = expression
@@ -277,17 +277,18 @@ export function getEffectsDuration(component, expression, key)
     return options[name]
 }
 
-export function componentEffectsDuration(component, expression, key)
+export function debounceEffectDuration(component, expression)
 {
-    let duration = getEffectsDuration(component, expression, key)
+    let duration = parseEffectsDuration(component, expression, 'debounce')
 
     // If attribute duration omitted let it fall to default duration
+    // properties: 150ms, methods: 250ms
     if (duration === true) return undefined
 
     return ! isNaN(duration) ? duration : undefined
 }
 
-export function hasDebounceEffects(component, expression)
+export function hasDebounceEffect(component, expression)
 {
-    return getEffectsDuration(component, expression, 'debounce') !== undefined
+    return parseEffectsDuration(component, expression, 'debounce') !== undefined
 }

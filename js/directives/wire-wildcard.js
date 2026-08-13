@@ -4,7 +4,7 @@ import { on } from '@/hooks'
 import { setNextActionOrigin, setNextActionInterceptor } from '@/request'
 import Alpine from 'alpinejs'
 import { evaluateActionExpression } from '../evaluator'
-import { componentEffectsDuration, hasDebounceEffects } from '@/directives/wire-model'
+import { debounceEffectDuration, hasDebounceEffect } from '@/directives/wire-model'
 
 on('directive.init', ({ el, directive, cleanup, component }) => {
     if (['snapshot', 'effects', 'model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'target', 'dirty', 'sort'].includes(directive.value)) return
@@ -39,11 +39,11 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
 
     // Add .debounce modifier if debounce attribute applied on method
     let isClickOrSubmit = directive.value === 'click' || directive.value === 'submit'
-    let shouldDebounced = hasDebounceEffects(component, directive.expression)
+    let shouldDebounced = hasDebounceEffect(component, directive.expression)
     if (isClickOrSubmit && ! directive.modifiers.includes('debounce') && shouldDebounced) {
-        let debounceDuration = componentEffectsDuration(component, directive.expression, 'debounce')
+        let debounceDuration = debounceEffectDuration(component, directive.expression)
 
-        // If attribute duration omitted let it fall to default duration
+        // If attribute duration omitted let it fall to default duration (250ms)
         attribute = debounceDuration === undefined
             ? attribute + '.debounce'
             : attribute + `.debounce.${debounceDuration}ms`
