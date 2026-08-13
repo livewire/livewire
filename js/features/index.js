@@ -4,6 +4,7 @@
 import './supportListeners';
 import './supportScriptsAndAssets';
 import './supportJsEvaluation';
+import './supportIslands';
 import './supportMorphDom';
 import './supportDispatches';
 
@@ -17,7 +18,6 @@ import './supportQueryString';
 import './supportLaravelEcho';
 import './supportStreaming';
 import './supportRedirects';
-import './supportIslands';
 import './supportNavigate';
 import './supportEntangle';
 import './supportSlots';

@@ -49,7 +49,7 @@ class SupportIslands extends ComponentHook
         }
 
         // if metadata contains an island, then we should render it...
-        return function (...$params) use ($island, $componentContext, $mount, $metadata) {
+        return function (...$params) use ($method, $island, $componentContext, $mount, $metadata) {
             ['name' => $name, 'mode' => $mode] = $island;
 
             $islands = $this->component->getIslands();
@@ -58,17 +58,12 @@ class SupportIslands extends ComponentHook
 
             if (empty($islands)) return;
 
-            // Support `Wire:click.renderless`...
-            if ($metadata['renderless'] ?? false) {
+            // Renderless attributes and modifiers only apply to their own call...
+            if (($metadata['renderless'] ?? false) || $this->component->isRenderlessMethod($method)) {
                 return;
             }
 
-            // If #[Renderless] attribute was used, don't render the island...
-            if ($this->component->shouldSkipIslandsRender()) return;
-
-            $this->component->skipRender();
-
-            $this->component->renderIsland(
+            $this->component->triggerImplicitIslandRender(
                 name: $name,
                 mode: $mode,
                 mount: $mount,
@@ -78,6 +73,8 @@ class SupportIslands extends ComponentHook
 
     public function dehydrate($context)
     {
+        $this->component->renderImplicitIslandMorphs();
+
         $context->addMemo('islands', $this->component->getIslands());
 
         if ($this->component->hasRenderedIslandFragments()) {

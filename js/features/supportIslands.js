@@ -61,9 +61,9 @@ interceptMessage(({ message, onSuccess, onStream }) => {
                 fragments = payload.effects.islandFragments
             }
 
-            fragments.forEach(async fragmentHtml => {
+            for (let fragmentHtml of fragments) {
                 await renderIsland(message.component, fragmentHtml)
-            })
+            }
         })
     })
 })
