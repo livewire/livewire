@@ -1,6 +1,6 @@
 import { directive } from '@/directives'
 import { checkDirty } from '@/directives/wire-dirty'
-import { debounceEffectDuration, hasDebounceEffect } from '@/directives/shared'
+import { hasDebounceEffect, debounceEffectDuration } from '@/features/supportDebounce'
 import { handleFileUpload } from '@/features/supportFileUploads'
 import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'

@@ -28,3 +28,4 @@ import './supportWireIntersect';
 import './supportWireSort';
 import './supportJsModules'
 import './supportCssModules';
+import './supportDebounce'

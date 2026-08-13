@@ -1,6 +1,6 @@
 import { callAndClearComponentDebounces } from '@/debounce'
 import { customDirectiveHasBeenRegistered } from '@/directives'
-import { debounceEffectDuration } from '@/directives/shared'
+import { debounceEffectDuration } from '@/features/supportDebounce'
 import { on } from '@/hooks'
 import { setNextActionOrigin, setNextActionInterceptor } from '@/request'
 import Alpine from 'alpinejs'
