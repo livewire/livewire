@@ -867,6 +867,38 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_root_render_is_applied_after_island_fragments()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function renderIslandThenRoot()
+            {
+                $this->count = 1;
+
+                $this->renderIsland('counter');
+
+                $this->count = 2;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'counter', always: true)
+                        <div wire:transition dusk="island-count">Count: {{ $count }}</div>
+                    @endisland
+
+                    <button type="button" wire:click="renderIslandThenRoot" dusk="render-island-then-root">Render island then root</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->waitForLivewire()->click('@render-island-then-root')
+            ->assertSeeIn('@island-count', 'Count: 2')
+            ;
+    }
+
     public function test_implicit_island_rendering_uses_final_state_after_all_calls()
     {
         Livewire::visit([new class extends \Livewire\Component {
