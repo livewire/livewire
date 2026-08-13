@@ -67,7 +67,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let networkOnChange = networkModifiers.includes('change') || networkModifiers.includes('lazy')
     let networkOnEnter = networkModifiers.includes('enter')
     let hasNetworkTriggers = networkOnBlur || networkOnChange || networkOnEnter
-    let isDebounced = networkModifiers.includes('debounce') || hasDebounceEffect(component, expression)
+    let isDebounced = networkModifiers.includes('debounce')
     let isThrottled = networkModifiers.includes('throttle')
 
     // Trigger a network request
@@ -86,7 +86,8 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let debouncedUpdate = update
 
     // Apply debounce/throttle from network modifiers
-    if ((shouldSendNetwork && ! hasNetworkTriggers && isRealtimeInput(el) && ! isDebounced && ! isThrottled) || isDebounced) {
+    let shouldDebounced = shouldSendNetwork && ! hasNetworkTriggers && isRealtimeInput(el) && ! isDebounced && ! isThrottled
+    if (shouldDebounced || isDebounced || hasDebounceEffect(component, expression)) {
         let debounceDuration = parseModifierDuration(networkModifiers, 'debounce')
             ?? debounceEffectDuration(component, expression)
             ?? 150

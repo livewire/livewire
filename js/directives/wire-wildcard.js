@@ -39,8 +39,7 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
 
     // Add .debounce modifier if debounce attribute applied on method
     let isClickOrSubmit = directive.value === 'click' || directive.value === 'submit'
-    let shouldDebounced = hasDebounceEffect(component, directive.expression)
-    if (isClickOrSubmit && ! directive.modifiers.includes('debounce') && shouldDebounced) {
+    if (isClickOrSubmit && ! directive.modifiers.includes('debounce') && hasDebounceEffect(component, directive.expression)) {
         let debounceDuration = debounceEffectDuration(component, directive.expression)
 
         // If attribute duration omitted let it fall to default duration (250ms)
