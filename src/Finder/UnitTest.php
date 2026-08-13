@@ -177,9 +177,6 @@ class UnitTest extends \Tests\TestCase
 
         $finder->addLocation(classNamespace: 'Livewire\Finder\Fixtures\Nested');
 
-        // `...\NestedSelfNamed` shares a character prefix with the registered `...\Nested`, but
-        // it is a different namespace, so the name should keep all of its leading segments
-        // and still resolve back to the class it came from...
         $name = $finder->normalizeName(SelfNamedViewComponent::class);
 
         $this->assertEquals('livewire.finder.fixtures.nested-self-named.self-named-view-component.self-named-view-component', $name);
