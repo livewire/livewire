@@ -1,6 +1,6 @@
 import { directive } from '@/directives'
 import { checkDirty } from '@/directives/wire-dirty'
-import { hasDebounceEffect, debounceEffectDuration } from '@/directives/shared'
+import { debounceEffectDuration, hasDebounceEffect } from '@/directives/shared'
 import { handleFileUpload } from '@/features/supportFileUploads'
 import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
@@ -67,7 +67,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let networkOnChange = networkModifiers.includes('change') || networkModifiers.includes('lazy')
     let networkOnEnter = networkModifiers.includes('enter')
     let hasNetworkTriggers = networkOnBlur || networkOnChange || networkOnEnter
-    let isDebounced = networkModifiers.includes('debounce')
+    let isDebounced = networkModifiers.includes('debounce') || hasDebounceEffect(component, expression)
     let isThrottled = networkModifiers.includes('throttle')
 
     // Trigger a network request
@@ -86,8 +86,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let debouncedUpdate = update
 
     // Apply debounce/throttle from network modifiers
-    let shouldDebounced = shouldSendNetwork && ! hasNetworkTriggers && isRealtimeInput(el) && ! isDebounced && ! isThrottled
-    if (shouldDebounced || isDebounced || hasDebounceEffect(component, expression)) {
+    if ((shouldSendNetwork && ! hasNetworkTriggers && isRealtimeInput(el) && ! isDebounced && ! isThrottled) || isDebounced) {
         let debounceDuration = parseModifierDuration(networkModifiers, 'debounce')
             ?? debounceEffectDuration(component, expression)
             ?? 150

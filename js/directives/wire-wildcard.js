@@ -1,6 +1,6 @@
 import { callAndClearComponentDebounces } from '@/debounce'
 import { customDirectiveHasBeenRegistered } from '@/directives'
-import { hasDebounceEffect, debounceEffectDuration } from '@/directives/shared'
+import { debounceEffectDuration } from '@/directives/shared'
 import { on } from '@/hooks'
 import { setNextActionOrigin, setNextActionInterceptor } from '@/request'
 import Alpine from 'alpinejs'
@@ -39,13 +39,12 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
 
     // Add .debounce modifier if debounce attribute applied on method
     let isClickOrSubmit = directive.value === 'click' || directive.value === 'submit'
-    if (isClickOrSubmit && ! directive.modifiers.includes('debounce') && hasDebounceEffect(component, directive.expression)) {
+    if (isClickOrSubmit && ! directive.modifiers.includes('debounce')) {
         let debounceDuration = debounceEffectDuration(component, directive.expression)
 
-        // If attribute duration omitted let it fall to default duration (250ms)
-        attribute = debounceDuration === undefined
-            ? attribute + '.debounce'
-            : attribute + `.debounce.${debounceDuration}ms`
+        if (debounceDuration !== undefined) {
+            attribute = attribute + `.debounce.${debounceDuration}ms`
+        }
     }
 
     let cleanupBinding = Alpine.bind(el, {

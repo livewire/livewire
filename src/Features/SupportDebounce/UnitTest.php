@@ -22,7 +22,7 @@ class UnitTest extends TestCase
         $this->assertSame(250, $component->effects['debounce']['save']);
     }
 
-    function test_debounce_effect_defaults_to_true_when_no_time_given()
+    function test_debounce_effect_fallback_to_defaults_when_no_time_given()
     {
         $component = Livewire::test(new class extends TestComponent {
             #[BaseDebounce]
@@ -32,8 +32,8 @@ class UnitTest extends TestCase
             public function save() {}
         });
 
-        $this->assertTrue($component->effects['debounce']['search']);
-        $this->assertTrue($component->effects['debounce']['save']);
+        $this->assertSame(150, $component->effects['debounce']['search']);
+        $this->assertSame(250, $component->effects['debounce']['save']);
     }
 
     function test_debounce_effect_normalizes_ms_string()
@@ -64,7 +64,7 @@ class UnitTest extends TestCase
         $this->assertSame(500, $component->effects['debounce']['save']);
     }
 
-    function test_debounce_effect_falls_back_to_true_for_non_numeric_string()
+    function test_debounce_effect_falls_back_to_defaults_for_non_numeric_string()
     {
         $component = Livewire::test(new class extends TestComponent {
             #[BaseDebounce('fast')]
@@ -74,8 +74,8 @@ class UnitTest extends TestCase
             public function save() {}
         });
 
-        $this->assertTrue($component->effects['debounce']['search']);
-        $this->assertTrue($component->effects['debounce']['save']);
+        $this->assertSame(150, $component->effects['debounce']['search']);
+        $this->assertSame(250, $component->effects['debounce']['save']);
     }
 
     function test_debounce_effect_only_includes_annotated_properties()
@@ -257,8 +257,8 @@ class UnitTest extends TestCase
             public function save() {}
         });
 
-        $this->assertTrue($component->effects['debounce']['search']);
-        $this->assertTrue($component->effects['debounce']['save']);
+        $this->assertSame(150, $component->effects['debounce']['search']);
+        $this->assertSame(250, $component->effects['debounce']['save']);
     }
 
     function test_debounce_effect_falls_back_to_true_for_ms_without_number()
@@ -271,8 +271,8 @@ class UnitTest extends TestCase
             public function save() {}
         });
 
-        $this->assertTrue($component->effects['debounce']['search']);
-        $this->assertTrue($component->effects['debounce']['save']);
+        $this->assertSame(150, $component->effects['debounce']['search']);
+        $this->assertSame(250, $component->effects['debounce']['save']);
     }
 
     function test_debounce_effect_is_case_insensitive_for_units()

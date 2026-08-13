@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportDebounce;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+use Livewire\Features\SupportAttributes\AttributeLevel;
 
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::TARGET_PROPERTY)]
 class BaseDebounce extends LivewireAttribute
@@ -17,6 +18,11 @@ class BaseDebounce extends LivewireAttribute
         if (! $context->isMounting()) return;
 
         $duration = $this->normalizeDuration($this->duration);
+
+        // Provide default fallback duration
+        if (is_bool($duration)) {
+            $duration = $this->getLevel() === AttributeLevel::PROPERTY ? 150 : 250;
+        }
 
         $context->pushEffect('debounce', $duration, $this->getName());
     }

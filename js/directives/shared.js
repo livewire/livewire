@@ -33,15 +33,18 @@ export function toggleBooleanStateDirective(el, directive, isTruthy, cachedDispl
     }
 }
 
-function parseEffectsDuration(component, expression, key)
+function parseComponentEffect(component, expression, key)
 {
     let target = component
     let name = expression
 
     // 1) wire:model.live="$parent.foo" commits on the parent — look up parent effects
-    if (expression.startsWith('$parent')) {
-        target = component.parent
-        name = expression.replace(/^\$parent\.?/, '')
+    if (name.startsWith('$parent')) {
+        target = target.parent
+
+        if (! target) return undefined
+
+        return parseComponentEffect(target, name.replace(/^\$parent\.?/, ''), key)
     }
 
     let parenthesesIndex = name.indexOf('(')
@@ -61,16 +64,12 @@ function parseEffectsDuration(component, expression, key)
 
 export function debounceEffectDuration(component, expression)
 {
-    let duration = parseEffectsDuration(component, expression, 'debounce')
-
-    // If attribute duration omitted let it fall to default duration
-    // properties: 150ms, methods: 250ms
-    if (duration === true) return undefined
+    let duration = parseComponentEffect(component, expression, 'debounce')
 
     return ! isNaN(duration) ? duration : undefined
 }
 
 export function hasDebounceEffect(component, expression)
 {
-    return parseEffectsDuration(component, expression, 'debounce') !== undefined
+    return debounceEffectDuration(component, expression) !== undefined
 }
