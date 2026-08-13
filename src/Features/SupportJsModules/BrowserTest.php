@@ -51,4 +51,37 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
             ->waitForTextIn('@target', 'js-import-loaded');
     }
+
+    public function test_script_module_survives_a_back_navigation()
+    {
+        // The `scriptModule` effect is only sent while mounting, so navigating
+        // away has to carry it over onto the element: inscribeSnapshotAndEffectsOnElement()
+        // rewrites wire:effects and navigate caches that markup for the back button.
+        // When the effect is dropped there, the restored component never imports its
+        // module and all of its $js actions are gone.
+        //
+        // Note the assertion is a $js action *call* after coming back, not text the
+        // module wrote before navigating away: navigate caches the mutated HTML, so
+        // that text is restored either way and would pass without the module loading.
+        Livewire::visit('testns::back-forward')
+            ->waitForLivewireToLoad()
+            ->pause(100)
+            ->assertSeeIn('@loaded', 'js-loaded')
+            ->waitForNavigate()->click('@link')
+            ->waitForText('On second page')
+            ->back()
+            ->waitForText('Mark')
+            ->pause(100)
+            ->click('@mark')
+            ->assertSeeIn('@target', 'js-action-called')
+            // And it has to survive doing all of that again, so the restored
+            // component carries the effect for the next navigation as well...
+            ->waitForNavigate()->click('@link')
+            ->waitForText('On second page')
+            ->back()
+            ->waitForText('Mark')
+            ->pause(100)
+            ->click('@mark-again')
+            ->assertSeeIn('@target', 'js-action-called-again');
+    }
 }
