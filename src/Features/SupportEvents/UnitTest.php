@@ -222,6 +222,18 @@ class UnitTest extends \Tests\TestCase
             ->dispatch('bar')
             ->tap(fn () => $this->assertEquals(3, ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::$counter));
     }
+
+    public function test_listener_must_resolve_to_a_method_on_the_component(): void
+    {
+        $this->expectException(\Livewire\Exceptions\EventHandlerDoesNotExist::class);
+
+        Livewire::test(ReceivesEventWithMissingHandler::class)->dispatch('bar');
+    }
+}
+
+class ReceivesEventWithMissingHandler extends TestComponent
+{
+    protected $listeners = ['bar' => 'handleBar'];
 }
 
 class ReceivesEvents extends TestComponent
