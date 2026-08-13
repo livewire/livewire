@@ -6,6 +6,7 @@ use function Livewire\wrap;
 use function Livewire\store;
 use function Livewire\invade;
 use Livewire\Features\SupportAttributes\AttributeLevel;
+use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
 use Livewire\Exceptions\EventHandlerDoesNotExist;
 use Livewire\Mechanisms\HandleComponents\BaseRenderless;
@@ -24,6 +25,13 @@ class SupportEvents extends ComponentHook
             }
 
             $method = static::getListenerMethodName($this->component, $name);
+
+            // Listeners resolve to a method defined on the component itself
+            // (or a magic action like "$refresh"), matching the way regular
+            // actions are resolved...
+            if (! str_starts_with($method, '$') && ! in_array($method, Utils::getPublicMethodsDefinedBySubClass($this->component))) {
+                throw new EventHandlerDoesNotExist($name);
+            }
 
             $returnEarly(
                 wrap($this->component)->$method(...$params)
