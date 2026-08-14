@@ -8,6 +8,25 @@ use Livewire\Component;
 
 class BrowserTest extends BrowserTestCase
 {
+    public function test_cancelled_poll_does_not_trigger_an_unhandled_promise_rejection()
+    {
+        Livewire::visit(new class extends Component {
+            public function render() {
+                usleep(3 * 1000 * 1000);
+
+                return <<<'HTML'
+                <div wire:poll>
+                    Polling
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->pause(4500)
+            ->assertConsoleLogHasNoErrors()
+            ;
+    }
+
     public function test_polling_requests_are_batched_by_default()
     {
         Livewire::visit([new class extends Component {
