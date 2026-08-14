@@ -93,6 +93,7 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
 
         let matches = true
         let cleared = false
+        let waitForNavigate = false
 
         onSend(({ payload }) => {
             if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
@@ -103,21 +104,30 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
         })
 
         // Clear loading before morph on success
-        onSuccess(({ onEffect }) => {
+        onSuccess(({ payload, onEffect }) => {
             onEffect(() => {
-                if (matches && ! cleared) {
-                    endLoading()
-                    cleared = true
+                if (! matches || cleared) return
+
+                let effects = payload?.effects || {}
+                let isRedirectUsingNavigate = effects.redirect && effects.redirectUsingNavigate
+
+                if (isRedirectUsingNavigate) {
+                    waitForNavigate = true
+
+                    return
                 }
+
+                endLoading()
+                cleared = true
             })
         })
 
         // Clear loading on cancel/error/failure (onFinish fires immediately on these paths)
         onFinish(() => {
-            if (matches && ! cleared) {
-                endLoading()
-                cleared = true
-            }
+            if (! matches || cleared || waitForNavigate) return
+
+            endLoading()
+            cleared = true
         })
     })
 }
