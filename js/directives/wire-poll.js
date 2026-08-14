@@ -135,5 +135,15 @@ export function extractDurationFrom(modifiers, defaultDuration) {
         durationInMilliSeconds = Number(durationInSecondsString.replace('s', '')) * 1000
     }
 
-    return durationInMilliSeconds || defaultDuration
+    if (! durationInMilliSeconds) {
+        let unsupportedDuration = modifiers.find(mod => mod.match(/^[0-9]+[a-z]+$/))
+
+        if (unsupportedDuration) {
+            console.warn(`Livewire: [wire:poll.${unsupportedDuration}] uses an unsupported duration. Supported units are "ms" and "s". The default 2-second interval will be used.`)
+        }
+
+        return defaultDuration
+    }
+
+    return durationInMilliSeconds
 }
