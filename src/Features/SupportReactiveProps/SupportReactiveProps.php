@@ -50,6 +50,35 @@ class SupportReactiveProps extends ComponentHook
         });
     }
 
+    static function hashValue(mixed $value): ?string
+    {
+        if ($value instanceof Model) {
+            $payload = json_encode([
+                'class' => $value::class,
+                'key' => $value->getKey(),
+                'attributes' => $value->getAttributes(),
+            ]);
+
+            return $payload === false ? null : (string) crc32($payload);
+        }
+
+        $json = json_encode($value);
+
+        return $json === false ? null : (string) crc32($json);
+    }
+
+    static function hashesMatch(mixed $left, mixed $right): bool
+    {
+        $leftHash = static::hashValue($left);
+        $rightHash = static::hashValue($right);
+
+        if ($leftHash === null || $rightHash === null) {
+            return false;
+        }
+
+        return $leftHash === $rightHash;
+    }
+
     static function shouldSkipUpdate($snapshot, $calls): bool
     {
         $id = $snapshot['memo']['id'] ?? null;

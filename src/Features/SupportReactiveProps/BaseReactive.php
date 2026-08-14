@@ -17,7 +17,7 @@ class BaseReactive extends LivewireAttribute
 
         $this->storePush('reactiveProps', $property);
 
-        $this->originalValueHash = crc32(json_encode($this->getValue()));
+        $this->originalValueHash = SupportReactiveProps::hashValue($this->getValue());
     }
 
     public function hydrate()
@@ -32,13 +32,10 @@ class BaseReactive extends LivewireAttribute
 
             // Only trigger lifecycle hooks if value actually changed
             // Use the same comparison method as dehydrate() for consistency (handles arrays/objects)
-            $currentHash = crc32(json_encode($currentValue));
-            $updatedHash = crc32(json_encode($updatedValue));
-
-            if ($currentHash !== $updatedHash) {
+            if (! SupportReactiveProps::hashesMatch($currentValue, $updatedValue)) {
                 // Set value immediately so lifecycle hooks (boot/hydrate/booted) see updated data
                 $this->setValue($updatedValue);
-                $this->originalValueHash = crc32(json_encode($updatedValue));
+                $this->originalValueHash = SupportReactiveProps::hashValue($updatedValue);
 
                 // Queue the update trigger for after hydrate so updating*/updated* hooks fire
                 // Pass both old and new values plus a setValue callback so that
@@ -55,12 +52,12 @@ class BaseReactive extends LivewireAttribute
             }
         }
 
-        $this->originalValueHash = crc32(json_encode($this->getValue()));
+        $this->originalValueHash = SupportReactiveProps::hashValue($this->getValue());
     }
 
     public function dehydrate($context)
     {
-        if ($this->originalValueHash !== crc32(json_encode($this->getValue()))) {
+        if ($this->originalValueHash !== SupportReactiveProps::hashValue($this->getValue())) {
             throw new CannotMutateReactivePropException($this->component->getName(), $this->getName());
         }
 
