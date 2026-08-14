@@ -133,8 +133,10 @@ export function diff(left, right, diffs = {}, path = '') {
 
     // Did the key order change?
     if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i])) {
-        diffs[path] = right
-        return diffs
+        if (path !== '') {
+            diffs[path] = right
+            return diffs
+        }
     }
 
     // Recursively diff the object's properties...
@@ -145,7 +147,7 @@ export function diff(left, right, diffs = {}, path = '') {
 
     // Mark any items for removal...
     leftKeys.forEach(key => {
-        diffs[`${path}.${key}`] = '__rm__'
+        diffs[path === '' ? key : `${path}.${key}`] = '__rm__'
     })
 
     return diffs
