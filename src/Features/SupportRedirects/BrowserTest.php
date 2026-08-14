@@ -87,6 +87,110 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_wire_loading_is_cleared_when_a_navigate_redirect_fetch_fails_while_online()
+    {
+        Route::get('/navigate-redirect-destination', function () {
+            return response(<<<'HTML'
+                <!DOCTYPE html>
+                <html>
+                    <body>
+                        <h1 dusk="destination">Navigate redirect destination</h1>
+                    </body>
+                </html>
+                HTML);
+        })->middleware('web');
+
+        Livewire::visit([new class extends Component {
+            public function save()
+            {
+                $this->redirect('/navigate-redirect-destination', navigate: true);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button type="button" dusk="save" wire:click="save" wire:loading.attr="disabled">Save</button>
+                    <span dusk="status">Ready</span>
+                </div>
+                HTML;
+            }
+        }])
+            ->tap(fn ($b) => $b->script(<<<'JS'
+                window._lw_dusk_navigate_fetch_failed = false;
+
+                const originalFetch = window.fetch.bind(window);
+
+                window.fetch = function (input, init = {}) {
+                    const headers = new Headers(init.headers || {});
+
+                    if (headers.has('X-Livewire-Navigate')) {
+                        // Delay so the Livewire request can finish while loading is still held,
+                        // then fail the navigate fetch (same path as #9380 cleanup).
+                        return new Promise((_, reject) => {
+                            setTimeout(() => {
+                                window._lw_dusk_navigate_fetch_failed = true;
+                                reject(new TypeError('Failed to fetch'));
+                            }, 400);
+                        });
+                    }
+
+                    return originalFetch(input, init);
+                };
+
+                Object.defineProperty(navigator, 'onLine', {
+                    get: () => true,
+                    configurable: true,
+                });
+            JS))
+            ->waitForLivewire()->click('@save')
+            ->assertAttribute('@save', 'disabled', 'true')
+            ->pause(600) // 400ms reject + cleanup
+            ->assertScript('window._lw_dusk_navigate_fetch_failed === true', true)
+            ->assertAttributeMissing('@save', 'disabled')
+            ->assertSee('Ready')
+            ->assertMissing('@destination')
+            ;
+    }
+
+    public function test_wire_loading_is_cleared_when_navigate_redirect_targets_a_cross_origin_redirect_response()
+    {
+        Route::get('/redirects-off-origin', function () {
+            return redirect('https://www.google.com');
+        })->middleware('web');
+
+        Livewire::visit([new class extends Component {
+            public function save()
+            {
+                $this->redirect('/redirects-off-origin', navigate: true);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button type="button" dusk="save" wire:click="save" wire:loading.attr="disabled">Save</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->tap(fn ($b) => $b->script(<<<'JS'
+                Object.defineProperty(navigator, 'onLine', {
+                    get: () => true,
+                    configurable: true,
+                });
+            JS))
+            ->waitForLivewire()->click('@save')
+            ->assertAttribute('@save', 'disabled', 'true')
+            // Fetch fails / cannot be swapped in; progress bar path settles; loading must clear.
+            ->pause(500)
+            ->waitUntilMissing('#nprogress')
+            ->assertAttributeMissing('@save', 'disabled')
+            // Origin page still usable.
+            ->waitForLivewire()->click('@save')
+        ;
+    }
+
     public function test_session_flash_persists_when_redirecting_from_request_with_multiple_components_in_the_same_request()
     {
         config()->set('session.driver', 'file');
