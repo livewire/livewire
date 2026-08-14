@@ -207,6 +207,46 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@count', '2')
         ;
     }
+
+    public function test_it_tracks_root_removals_when_the_key_order_changes()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public $first = 'foo';
+
+            public $second = 'bar';
+
+            public $third = 'baz';
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button type="button" wire:click="$refresh" dusk="refresh">Refresh</button>
+                </div>
+                HTML;
+            }
+        })
+        ->tap(function ($b) {
+            $b->script(<<<'JS'
+            let component = window.Livewire.all()[0]
+
+            window.updates = null
+
+            window.Livewire.hook('commit', ({ component: committing, commit }) => {
+                if (committing === component) window.updates = commit.updates
+            })
+
+            component.canonical = { first: 'foo', second: 'bar' }
+            component.ephemeral = { first: 'foo', third: 'baz' }
+            JS);
+        })
+        ->waitForLivewire()->click('@refresh')
+        ->assertScript('return window.updates', [
+            'third' => 'baz',
+            'second' => '__rm__',
+        ])
+        ;
+    }
 }
 
 enum Suit: string
@@ -219,4 +259,3 @@ enum Suit: string
 
     case Spades = 'S';
 }
-
