@@ -54,6 +54,39 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_loading_state_remains_active_while_a_navigate_redirect_fetches_its_destination()
+    {
+        Route::get('/slow-navigate-destination', function () {
+            sleep(1);
+
+            return response(<<<'HTML'
+                <!DOCTYPE html>
+                <html>
+                    <body>
+                        <h1 dusk="navigate-destination">Destination</h1>
+                    </body>
+                </html>
+                HTML);
+        })->middleware('web');
+
+        Livewire::visit([new class extends Component {
+            public function save()
+            {
+                $this->redirect('/slow-navigate-destination', navigate: true);
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button type="button" dusk="save" wire:click="save" wire:loading.attr="disabled">Save</button>
+            </div>
+            HTML; }
+        }])
+            ->waitForLivewire()->click('@save')
+            ->assertAttribute('@save', 'disabled', 'true')
+            ->waitFor('@navigate-destination', 5)
+        ;
+    }
+
     public function test_session_flash_persists_when_redirecting_from_request_with_multiple_components_in_the_same_request()
     {
         config()->set('session.driver', 'file');
