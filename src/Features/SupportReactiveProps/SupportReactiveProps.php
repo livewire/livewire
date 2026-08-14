@@ -6,6 +6,7 @@ use function Livewire\on;
 use function Livewire\after;
 use function Livewire\trigger;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\ComponentHook;
 
 class SupportReactiveProps extends ComponentHook
@@ -53,8 +54,16 @@ class SupportReactiveProps extends ComponentHook
     static function hashValue(mixed $value): ?string
     {
         if ($value instanceof Model) {
+            $class = $value::class;
+
+            $morphMap = Relation::morphMap();
+
+            $alias = in_array($class, $morphMap)
+                ? array_search($class, $morphMap, true)
+                : $class;
+
             $payload = json_encode([
-                'class' => $value::class,
+                'class' => $alias,
                 'key' => $value->getKey(),
                 'attributes' => $value->getAttributes(),
             ]);
