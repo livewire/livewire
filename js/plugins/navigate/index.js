@@ -141,6 +141,8 @@ export default function (Alpine) {
         }, (error) => {
             showProgressBar && finishAndHideProgressBar()
 
+            document.dispatchEvent(new CustomEvent('livewire:navigate-error', { bubbles: true }))
+
             // We cancelled this request ourselves, so the user is already on their
             // way somewhere else. Sending them to a destination they abandoned
             // would be worse than doing nothing...
