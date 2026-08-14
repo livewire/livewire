@@ -143,6 +143,70 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@selected', 'D')
         ;
     }
+
+    public function test_it_does_not_send_an_invalid_root_property_path_when_the_key_order_drifts()
+    {
+        // A deploy can add a public property to a component that a user already
+        // has open. The server snapshot then lists the properties in a different
+        // ORDER than the browser's ephemeral object, which appends unknown keys
+        // at the end. Previously diff() consolidated that at the root, sending
+        // the entire state keyed by an empty string, which the server resolved
+        // to an empty property name and rejected with a
+        // PublicPropertyNotFoundException — wedging the component until reload.
+        Livewire::visit(new class extends \Livewire\Component {
+            public $first = 'foo';
+
+            public $second = 'bar';
+
+            public $third = 'baz';
+
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <span dusk="count">{{ $count }}</span>
+
+                    <button type="button" wire:click="increment" dusk="increment">Increment</button>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@count', '0')
+
+        /**
+         * Move the first root key to the end of the ephemeral object, so its key
+         * order no longer matches the canonical (server) snapshot.
+         */
+        ->tap(function ($b) {
+            $b->script(<<<'JS'
+            let component = window.Livewire.all()[0]
+            let key = Object.keys(component.ephemeral)[0]
+            let value = component.ephemeral[key]
+
+            delete component.ephemeral[key]
+
+            component.ephemeral[key] = value
+            JS);
+        })
+
+        ->waitForLivewire()->click('@increment')
+        ->assertSeeIn('@count', '1')
+
+        /**
+         * The component keeps working on subsequent requests too — the bug
+         * wedged every following commit, not just the first.
+         */
+        ->waitForLivewire()->click('@increment')
+        ->assertSeeIn('@count', '2')
+        ;
+    }
 }
 
 enum Suit: string

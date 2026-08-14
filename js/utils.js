@@ -133,6 +133,21 @@ export function diff(left, right, diffs = {}, path = '') {
 
     // Did the key order change?
     if (isObject(left) && leftKeys.length === rightKeys.length && leftKeys.some((key, i) => key !== rightKeys[i])) {
+        // At the root there is no path to consolidate under — `diffs[''] = right`
+        // would send the entire component state keyed by an empty string, which
+        // the server resolves to an empty property name. Diff the root
+        // properties individually instead. Key order alone carries no meaning
+        // for the server, so an order-only change sends nothing...
+        if (path === '') {
+            Object.keys(right).forEach(key => {
+                if (JSON.stringify(left[key]) !== JSON.stringify(right[key])) {
+                    diffs[key] = right[key]
+                }
+            })
+
+            return diffs
+        }
+
         diffs[path] = right
         return diffs
     }
@@ -145,7 +160,7 @@ export function diff(left, right, diffs = {}, path = '') {
 
     // Mark any items for removal...
     leftKeys.forEach(key => {
-        diffs[`${path}.${key}`] = '__rm__'
+        diffs[path === '' ? key : `${path}.${key}`] = '__rm__'
     })
 
     return diffs
