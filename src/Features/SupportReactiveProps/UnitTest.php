@@ -102,22 +102,20 @@ class UnitTest extends \Tests\TestCase
             }
         }, ['article' => $article]);
 
-        $snapshot = $child->snapshot;
-
         SupportReactiveProps::$pendingChildParams[$child->id()] = ['article' => $article];
 
         $this->withHeaders(['X-Livewire' => 'true'])
             ->postJson(EndpointResolver::updatePath(), [
                 'components' => [
                     [
-                        'snapshot' => json_encode($snapshot),
+                        'snapshot' => json_encode($child->snapshot),
                         'updates' => [],
                         'calls' => [
                             ['method' => '$refresh', 'params' => [], 'metadata' => []],
                         ],
                     ],
                 ],
-            ]);
+            ])->assertOk();
 
         $child->assertSee('Ghabriel');
     }
@@ -140,20 +138,18 @@ class UnitTest extends \Tests\TestCase
 
         SupportReactiveProps::$pendingChildParams[$child->id()] = ['article' => $article];
 
-        $snapshot = $child->snapshot;
-
         $this->withHeaders(['X-Livewire' => 'true'])
             ->postJson(EndpointResolver::updatePath(), [
                 'components' => [
                     [
-                        'snapshot' => json_encode($snapshot),
+                        'snapshot' => json_encode($child->snapshot),
                         'updates' => [],
                         'calls' => [
                             ['method' => '$refresh', 'params' => [], 'metadata' => []],
                         ],
                     ],
                 ],
-            ]);
+            ])->assertOk();
 
         $child->assertSee('Ghabriel');
     }
@@ -181,21 +177,49 @@ class UnitTest extends \Tests\TestCase
 
         SupportReactiveProps::$pendingChildParams[$child->id()] = ['article' => $article];
 
+        $child->call('rename');
+    }
+
+    public function test_parent_passed_dirty_model_does_not_false_positive_when_child_does_nothing()
+    {
+        $article = Article::first();
+
+        $article->title = 'Dirty from parent';
+
+        $this->assertTrue($article->isDirty('title'));
+
+        $child = Livewire::test(new class extends Component {
+            #[BaseReactive]
+            public $article;
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>{{ $article->title }}</div>
+                HTML;
+            }
+        }, ['article' => $article]);
+
+        SupportReactiveProps::$pendingChildParams[$child->id()] = ['article' => $article];
+
         $snapshot = $child->snapshot;
 
-        $this->withoutExceptionHandling()
-            ->withHeaders(['X-Livewire' => 'true'])
+        // Simulate a subsequent request where the parent again passes the
+        // same (still dirty) model and the child only refreshes.
+        $this->withHeaders(['X-Livewire' => 'true'])
             ->postJson(EndpointResolver::updatePath(), [
                 'components' => [
                     [
                         'snapshot' => json_encode($snapshot),
                         'updates' => [],
                         'calls' => [
-                            ['method' => 'rename', 'params' => [], 'metadata' => []],
+                            ['method' => '$refresh', 'params' => [], 'metadata' => []],
                         ],
                     ],
                 ],
-            ]);
+            ])->assertOk();
+
+        $child->assertSee('Dirty from parent');
     }
 }
 
