@@ -114,6 +114,17 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
                 if (isRedirectUsingNavigate) {
                     waitForNavigate = true
 
+                    let onError = () => {
+                        if (cleared) return
+
+                        endLoading()
+                        cleared = true
+
+                        document.removeEventListener('livewire:navigate-error', onError)
+                    }
+
+                    document.addEventListener('livewire:navigate-error', onError)
+
                     return
                 }
 
