@@ -47,10 +47,12 @@ class CarbonSynth extends Synth {
     function hydrate($value, $meta) {
         if ($value === '' || $value === null) return null;
 
-        if (! isset($meta['type']) || ! isset(static::$types[$meta['type']])) {
-            throw new \Exception("Livewire: Type [{$meta['type']}] is not a valid DateTime type.");
+        $type = $meta['type'] ?? null;
+
+        if (! $type || ! isset(static::$types[$type])) {
+            throw new \Exception("Livewire: Type [{$type}] is not a valid DateTime type.");
         }
 
-        return new static::$types[$meta['type']]($value);
+        return new static::$types[$type]($value);
     }
 }
