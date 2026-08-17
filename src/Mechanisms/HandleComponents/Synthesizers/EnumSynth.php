@@ -14,7 +14,7 @@ class EnumSynth extends Synth {
     }
 
     static function hydrateFromType($type, $value) {
-        if ($value === '') return null;
+        if ($value === null || $value === '') return null;
 
         return $type::from($value);
     }

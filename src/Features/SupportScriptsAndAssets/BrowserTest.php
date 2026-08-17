@@ -16,6 +16,14 @@ class BrowserTest extends \Tests\BrowserTestCase
                 return Utils::pretendResponseIsFile(__DIR__.'/non-livewire-asset.js');
             });
 
+            Route::get('/asset-stylesheet.css', function () {
+                return Utils::pretendResponseIsFile(__DIR__.'/asset-stylesheet.css', 'text/css');
+            });
+
+            Route::get('/asset-after-stylesheet.js', function () {
+                return Utils::pretendResponseIsFile(__DIR__.'/asset-after-stylesheet.js');
+            });
+
             Route::get('/non-livewire-assets', function () {
                 return Blade::render(<<< BLADE
                 <html>
@@ -222,6 +230,45 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForTextIn('@output', 'foo')
         ->waitForLivewire()->click('@button')
         ->waitUntil('!! window.datePicker === true')
+        ;
+    }
+
+    public function test_assets_after_a_stylesheet_are_not_skipped()
+    {
+        // Assets are appended to the head one at a time. Non-script elements are
+        // moved out of the parsed document as they are appended, so iterating its
+        // live children collection skips whatever followed them, so the script
+        // after the stylesheet never ran.
+        Livewire::visit([new class extends \Livewire\Component {
+            public $load = false;
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button wire:click="$toggle('load')" dusk="button">Load assets</button>
+
+                <span dusk="output" x-text="'foo'"></span>
+
+                @if ($load)
+                    <livewire:child />
+                @endif
+            </div>
+            HTML; }
+        },
+        'child' => new class extends \Livewire\Component {
+            public function render() { return <<<'HTML'
+            <div>On child</div>
+
+            @assets
+                <link rel="stylesheet" type="text/css" href="/asset-stylesheet.css">
+                <script src="/asset-after-stylesheet.js"></script>
+            @endassets
+            HTML; }
+        },
+        ])
+        ->waitForTextIn('@output', 'foo')
+        ->waitForLivewire()->click('@button')
+        ->waitForText('On child')
+        ->waitUntil('!! window.assetAfterStylesheetLoaded === true')
         ;
     }
 

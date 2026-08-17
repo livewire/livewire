@@ -18,7 +18,7 @@ class BaseReactive extends LivewireAttribute
 
         store($this->component)->push('reactiveProps', $property);
 
-        $this->originalValueHash = crc32(json_encode($this->getValue()));
+        $this->originalValueHash = SupportReactiveProps::hashValue($this->getValue());
     }
 
     public function hydrate()
@@ -31,12 +31,12 @@ class BaseReactive extends LivewireAttribute
             $this->setValue($updatedValue);
         }
 
-        $this->originalValueHash = crc32(json_encode($this->getValue()));
+        $this->originalValueHash = SupportReactiveProps::hashValue($this->getValue());
     }
 
     public function dehydrate($context)
     {
-        if ($this->originalValueHash !== crc32(json_encode($this->getValue()))) {
+        if ($this->originalValueHash !== SupportReactiveProps::hashValue($this->getValue())) {
             throw new CannotMutateReactivePropException($this->component->getName(), $this->getName());
         }
 

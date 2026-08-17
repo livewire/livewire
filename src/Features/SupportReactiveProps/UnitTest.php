@@ -53,5 +53,66 @@ class UnitTest extends \Tests\TestCase
         $component->set('todos', ['todo 1', 'todo 2', 'todo 3']);
         $component->assertSee('Count: 3.');
     }
+
+    function test_accessing_lazy_loaded_relation_on_reactive_model_does_not_throw()
+    {
+        $article = ReactiveArticle::query()->first();
+
+        Livewire::test(new class extends Component {
+            #[BaseReactive]
+            public $article;
+
+            public function render()
+            {
+                return '<div>{{ $article->author->name }}</div>';
+            }
+        }, ['article' => $article])
+            ->assertSee('Ghabriel');
+    }
+
+    function test_mutating_reactive_model_attributes_still_throws()
+    {
+        $this->expectException(CannotMutateReactivePropException::class);
+
+        $article = ReactiveArticle::query()->first();
+
+        Livewire::test(new class extends Component {
+            #[BaseReactive]
+            public $article;
+
+            public function rename()
+            {
+                $this->article->title = 'Changed';
+            }
+
+            public function render()
+            {
+                return '<div></div>';
+            }
+        }, ['article' => $article])
+            ->call('rename');
+    }
 }
 
+class ReactiveAuthor extends \Illuminate\Database\Eloquent\Model
+{
+    use \Sushi\Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'name' => 'Ghabriel'],
+    ];
+}
+
+class ReactiveArticle extends \Illuminate\Database\Eloquent\Model
+{
+    use \Sushi\Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'title' => 'First', 'author_id' => 1],
+    ];
+
+    public function author()
+    {
+        return $this->belongsTo(ReactiveAuthor::class, 'author_id');
+    }
+}
