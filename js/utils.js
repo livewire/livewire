@@ -182,7 +182,7 @@ export function diff(left, right, diffs = {}, path = '') {
     let rightKeys = Object.keys(right)
 
     // Did the key order change? (includes insertions that shift existing keys)
-    if (isObject(left) && path !== '' && leftKeys.some((key, i) => key !== rightKeys[i])) {
+    if (isObject(left) && leftKeys.some((key, i) => key !== rightKeys[i])) {
         diffs[path] = right
         return diffs
     }
@@ -195,7 +195,7 @@ export function diff(left, right, diffs = {}, path = '') {
 
     // Mark any items for removal...
     leftKeys.forEach(key => {
-        diffs[path === '' ? key : `${path}.${key}`] = '__rm__'
+        diffs[`${path}.${key}`] = '__rm__'
     })
 
     return diffs
