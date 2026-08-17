@@ -201,20 +201,24 @@ class DuskBrowserMacros
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
-                "window.Livewire.hook('request', ({ respond, succeed, fail }) => {
-                    window.duskIsWaitingForLivewireRequest{$id} = true
+                "let pendingLivewireCommits{$id} = 0
 
-                    let handle = () => {
-                        // Wait an extra frame to ensure onRender callbacks have fired
+                window.Livewire.hook('commit', ({ respond }) => {
+                    if (window.duskIsWaitingForLivewireRequest{$id} === undefined) return
+
+                    pendingLivewireCommits{$id}++
+
+                    respond(() => {
+                        pendingLivewireCommits{$id}--
+
+                        // The commit has finished syncing and morphing. Wait one frame
+                        // so any immediately-following commit can join this wait too.
                         requestAnimationFrame(() => {
-                            queueMicrotask(() => {
+                            if (pendingLivewireCommits{$id} === 0) {
                                 delete window.duskIsWaitingForLivewireRequest{$id}
-                            })
+                            }
                         })
-                    }
-
-                    succeed(handle)
-                    fail(handle)
+                    })
                 })",
             ]);
 

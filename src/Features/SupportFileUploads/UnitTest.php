@@ -1216,6 +1216,53 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertInstanceOf(TemporaryUploadedFile::class, $test->viewData('photo'));
     }
+
+    public function test_nested_uploads_survive_an_update_to_one_of_their_ancestor_paths()
+    {
+        $component = Livewire::test(NestedFileUploadComponent::class)
+            ->set('data.sections.first.rows.one.image', UploadedFile::fake()->image('one.jpg'))
+            ->set('data.sections.first.rows.two.image', UploadedFile::fake()->image('two.jpg'));
+        $one = $component->viewData('data')['sections']['first']['rows']['one']['image'];
+        $two = $component->viewData('data')['sections']['first']['rows']['two']['image'];
+
+        $component->set('data.sections.first', ['rows' => [
+            'one' => ['image' => $one->serializeForLivewireResponse(), 'caption' => 'Updated'],
+            'two' => ['image' => $two->serializeForLivewireResponse(), 'caption' => ''],
+        ]]);
+
+        $rows = $component->viewData('data')['sections']['first']['rows'];
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $rows['one']['image']);
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $rows['two']['image']);
+        $this->assertEquals('Updated', $rows['one']['caption']);
+    }
+
+    public function test_a_row_added_alongside_a_nested_upload_doesnt_disturb_it()
+    {
+        $component = Livewire::test(NestedFileUploadComponent::class)
+            ->set('data.sections.first.rows.one.image', UploadedFile::fake()->image('one.jpg'));
+        $one = $component->viewData('data')['sections']['first']['rows']['one']['image'];
+
+        $component->set('data.sections.first', ['rows' => [
+            'one' => ['image' => $one->serializeForLivewireResponse(), 'caption' => ''],
+            'three' => ['image' => null, 'caption' => 'New row'],
+        ]]);
+
+        $rows = $component->viewData('data')['sections']['first']['rows'];
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $rows['one']['image']);
+        $this->assertEquals(['image' => null, 'caption' => 'New row'], $rows['three']);
+    }
+}
+
+class NestedFileUploadComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    public $data = [
+        'sections' => ['first' => ['rows' => [
+            'one' => ['image' => null, 'caption' => ''],
+            'two' => ['image' => null, 'caption' => ''],
+        ]]],
+    ];
 }
 
 class FileUploadWithValidateAttributeComponent extends TestComponent

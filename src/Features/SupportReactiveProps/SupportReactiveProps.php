@@ -6,6 +6,7 @@ use function Livewire\on;
 use function Livewire\after;
 use function Livewire\trigger;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\ComponentHook;
 
 class SupportReactiveProps extends ComponentHook
@@ -48,6 +49,43 @@ class SupportReactiveProps extends ComponentHook
                 $finish();
             }
         });
+    }
+
+    static function hashValue(mixed $value): ?string
+    {
+        if ($value instanceof Model) {
+            $class = $value::class;
+
+            $morphMap = Relation::morphMap();
+
+            $alias = in_array($class, $morphMap)
+                ? array_search($class, $morphMap, true)
+                : $class;
+
+            $payload = json_encode([
+                'class' => $alias,
+                'key' => $value->getKey(),
+                'attributes' => $value->getAttributes(),
+            ]);
+
+            return $payload === false ? null : (string) crc32($payload);
+        }
+
+        $json = json_encode($value);
+
+        return $json === false ? null : (string) crc32($json);
+    }
+
+    static function hashesMatch(mixed $left, mixed $right): bool
+    {
+        $leftHash = static::hashValue($left);
+        $rightHash = static::hashValue($right);
+
+        if ($leftHash === null || $rightHash === null) {
+            return false;
+        }
+
+        return $leftHash === $rightHash;
     }
 
     static function shouldSkipUpdate($snapshot, $calls): bool

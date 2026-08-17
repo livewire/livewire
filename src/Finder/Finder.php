@@ -351,7 +351,7 @@ class Finder
                 ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
                 ->implode('.');
 
-            if ($fullName->startsWith($namespace)) {
+            if ($fullName->startsWith($namespace . '.')) {
                 $name = $fullName->substr(strlen($namespace) + 1);
 
                 $prefix = is_string($key) ? $key . '::' : '';

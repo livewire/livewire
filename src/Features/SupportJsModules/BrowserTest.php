@@ -63,4 +63,26 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewireToLoad()
             ->waitForTextIn('@target', 'js-import-loaded');
     }
+
+    public function test_script_module_survives_a_back_navigation()
+    {
+        Livewire::visit('testns::back-forward')
+            ->waitForLivewireToLoad()
+            ->pause(100)
+            ->assertSeeIn('@loaded', 'js-loaded')
+            ->waitForNavigate()->click('@link')
+            ->waitForText('On second page')
+            ->back()
+            ->waitForText('Mark')
+            ->pause(100)
+            ->click('@mark')
+            ->assertSeeIn('@target', 'js-action-called')
+            ->waitForNavigate()->click('@link')
+            ->waitForText('On second page')
+            ->back()
+            ->waitForText('Mark')
+            ->pause(100)
+            ->click('@mark-again')
+            ->assertSeeIn('@target', 'js-action-called-again');
+    }
 }

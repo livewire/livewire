@@ -136,6 +136,70 @@ class UnitTest extends \Tests\TestCase
         $synths->hydratePropertyUpdate($tuple, $context, 'evil');
     }
 
+    public function test_hydrate_for_update_recursively_hydrates_nested_synthetic_values()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['row' => ['tags' => collect(['a']), 'title' => 'Original']],
+        ], $context, 'data')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'row' => ['tags' => ['a', 'b'], 'title' => 'Updated'],
+        ], $context);
+
+        $this->assertInstanceOf(Collection::class, $updated['row']['tags']);
+        $this->assertSame(['a', 'b'], $updated['row']['tags']->all());
+        $this->assertSame('Updated', $updated['row']['title']);
+    }
+
+    public function test_hydrate_for_update_leaves_children_without_snapshot_meta_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['tags' => collect(['a'])],
+        ], $context, 'data')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'tags' => ['a'],
+            'brandNew' => ['some' => 'array'],
+        ], $context);
+
+        $this->assertInstanceOf(Collection::class, $updated['tags']);
+        $this->assertSame(['some' => 'array'], $updated['brandNew']);
+    }
+
+    public function test_hydrate_for_update_leaves_already_hydrated_children_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['tags' => collect(['a'])],
+        ], $context, 'data')];
+        $tags = collect(['a', 'b']);
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', ['tags' => $tags], $context);
+
+        $this->assertSame($tags, $updated['tags']);
+    }
+
+    public function test_hydrate_for_update_runs_the_security_policy_over_nested_meta()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+        $raw = ['data' => [[
+            'section' => [[
+                'nested' => [['x' => 1], ['s' => 'arr', 'class' => \Symfony\Component\Process\Process::class]],
+            ], ['s' => 'arr']],
+        ], ['s' => 'arr']]];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('is not allowed to be instantiated');
+
+        $synths->hydrateForUpdate($raw, 'data.section', ['nested' => ['x' => 2]], $context);
+    }
+
     /*
      * Typed public properties whose synthesizer knows how to initialize
      * them (an initialize() method on the synth) spring to life

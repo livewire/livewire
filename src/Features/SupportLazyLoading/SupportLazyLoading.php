@@ -25,8 +25,6 @@ class SupportLazyLoading extends ComponentHook
 
     static function provide()
     {
-        static::registerRouteMacro();
-
         on('flush-state', function () {
             static::$disableWhileTesting = false;
         });

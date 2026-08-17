@@ -10,6 +10,7 @@ import { getErrorsObject } from '@/features/supportErrors'
 import { findRefEl } from '@/features/supportRefs'
 import { checkDirty } from './directives/wire-dirty'
 import { assetIsPendingFor, runAfterAssetIsLoadedFor } from './features/supportJsModules'
+import { isEvaluatingReactiveExpression } from '@/evaluator'
 
 let properties = {}
 let fallback
@@ -311,12 +312,22 @@ wireProperty('$effect', (component) => (callback) => {
     return effect
 })
 
-wireProperty('$refresh', (component) => async () => {
-    return fireAction(component, '$refresh')
+wireProperty('$refresh', (component) => () => {
+    // Keep the original action promise, but return synchronous errors as rejected promises...
+    try {
+        return fireAction(component, '$refresh')
+    } catch (error) {
+        return Promise.reject(error)
+    }
 })
 
-wireProperty('$commit', (component) => async () => {
-    return fireAction(component, '$commit')
+wireProperty('$commit', (component) => () => {
+    // Keep the original action promise, but return synchronous errors as rejected promises...
+    try {
+        return fireAction(component, '$commit')
+    } catch (error) {
+        return Promise.reject(error)
+    }
 })
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
@@ -388,6 +399,11 @@ wireFallback((component) => (property) => (...params) => {
         if (typeof overrides[property] === 'function') {
             return overrides[property](params)
         }
+    }
+
+    if (isEvaluatingReactiveExpression()) {
+        console.warn(`Livewire: Cannot call server method "${property}" from a reactive binding like wire:text, wire:show, or wire:bind.`, component.el)
+        return Promise.resolve()
     }
 
     return fireAction(component, property, params)

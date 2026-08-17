@@ -790,6 +790,205 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_renderless_attribute_only_skips_its_own_implicit_island_render()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            #[\Livewire\Attributes\Renderless]
+            public function addOne()
+            {
+                $this->count++;
+            }
+
+            public function addTen()
+            {
+                $this->count += 10;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'counter')
+                        <div dusk="island-count">Count: {{ $count }}</div>
+                    @endisland
+
+                    <div wire:click="addTen" wire:island="counter">
+                        <button type="button" wire:click="addOne" wire:island="counter" dusk="renderless-first">Renderless first</button>
+                    </div>
+
+                    <div wire:click="addOne" wire:island="counter">
+                        <button type="button" wire:click="addTen" wire:island="counter" dusk="renderless-last">Renderless last</button>
+                    </div>
+                </div>
+                HTML;
+            }
+        }])
+            ->waitForLivewire()->click('@renderless-first')
+            ->assertSeeIn('@island-count', 'Count: 11')
+            ->waitForLivewire()->click('@renderless-last')
+            ->assertSeeIn('@island-count', 'Count: 22')
+            ;
+    }
+
+    public function test_repeated_explicit_island_renders_are_applied_in_order()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function renderTwice()
+            {
+                $this->count++;
+
+                $this->renderIsland('counter');
+
+                $this->count++;
+
+                $this->renderIsland('counter', mode: 'append');
+
+                $this->skipRender();
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div dusk="island">
+                        @island(name: 'counter')<div wire:transition data-count="{{ $count }}">Count: {{ $count }}</div>@endisland
+                    </div>
+
+                    <button type="button" wire:click="renderTwice" dusk="render-twice">Render twice</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island', 'Count: 0')
+            ->waitForLivewire()->click('@render-twice')
+            ->assertPresent('[dusk="island"] [data-count="1"] + [data-count="2"]')
+            ;
+    }
+
+    public function test_root_render_is_applied_after_island_fragments()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function renderIslandThenRoot()
+            {
+                $this->count = 1;
+
+                $this->renderIsland('counter');
+
+                $this->count = 2;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'counter', always: true)
+                        <div wire:transition dusk="island-count">Count: {{ $count }}</div>
+                    @endisland
+
+                    <button type="button" wire:click="renderIslandThenRoot" dusk="render-island-then-root">Render island then root</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->waitForLivewire()->click('@render-island-then-root')
+            ->assertSeeIn('@island-count', 'Count: 2')
+            ;
+    }
+
+    public function test_implicit_island_rendering_uses_final_state_after_all_calls()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function addOne()
+            {
+                $this->count++;
+            }
+
+            public function addTen()
+            {
+                $this->count += 10;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'counter')
+                        <div dusk="island-count">Count: {{ $count }}</div>
+                    @endisland
+
+                    <div wire:click="addTen" wire:island="counter">
+                        <button type="button" wire:click="addOne" wire:island="counter" dusk="add-eleven">Add eleven</button>
+                    </div>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->waitForLivewire()->click('@add-eleven')
+            ->assertSeeIn('@island-count', 'Count: 11')
+            ;
+    }
+
+    public function test_implicit_append_and_prepend_render_after_each_call_in_order()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $appendCount = 0;
+            public $prependCount = 0;
+
+            public function appendOne()
+            {
+                $this->appendCount++;
+            }
+
+            public function appendTen()
+            {
+                $this->appendCount += 10;
+            }
+
+            public function prependOne()
+            {
+                $this->prependCount++;
+            }
+
+            public function prependTen()
+            {
+                $this->prependCount += 10;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div dusk="append-island">
+                        @island(name: 'append')<span data-append-count="{{ $appendCount }}">{{ $appendCount }}</span>@endisland
+                    </div>
+
+                    <div wire:click="appendTen" wire:island.append="append">
+                        <button type="button" wire:click="appendOne" wire:island.append="append" dusk="append-eleven">Append eleven</button>
+                    </div>
+
+                    <div dusk="prepend-island">
+                        @island(name: 'prepend')<span data-prepend-count="{{ $prependCount }}">{{ $prependCount }}</span>@endisland
+                    </div>
+
+                    <div wire:click="prependTen" wire:island.prepend="prepend">
+                        <button type="button" wire:click="prependOne" wire:island.prepend="prepend" dusk="prepend-eleven">Prepend eleven</button>
+                    </div>
+                </div>
+                HTML;
+            }
+        }])
+            ->waitForLivewire()->click('@append-eleven')
+            ->assertPresent('[dusk="append-island"] [data-append-count="0"] + [data-append-count="1"] + [data-append-count="11"]')
+            ->waitForLivewire()->click('@prepend-eleven')
+            ->assertPresent('[dusk="prepend-island"] [data-prepend-count="11"] + [data-prepend-count="1"] + [data-prepend-count="0"]')
+            ;
+    }
+
     public function test_renderless_modifier_skips_island_render()
     {
         Livewire::visit([new class extends \Livewire\Component {

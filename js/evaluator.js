@@ -46,6 +46,22 @@ export function evaluateExpression(el, expression, options = {}) {
     }
 }
 
+let reactiveExpressionEvaluationDepth = 0
+
+export function isEvaluatingReactiveExpression() {
+    return reactiveExpressionEvaluationDepth > 0
+}
+
+export function evaluateReactiveExpression(el, expression, options = {}) {
+    reactiveExpressionEvaluationDepth++
+
+    try {
+        return evaluateActionExpression(el, expression, options)
+    } finally {
+        reactiveExpressionEvaluationDepth--
+    }
+}
+
 export function evaluateActionExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 

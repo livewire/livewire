@@ -76,10 +76,12 @@ class BaseComputed extends Attribute
 
         $closure = fn () => $this->evaluateComputed();
 
-        return match(Cache::supportsTags() && !empty($this->tags)) {
+        $value = match(Cache::supportsTags() && !empty($this->tags)) {
             true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
             default => Cache::remember($key, $this->seconds, $closure)
         };
+
+        return $this->resolveCachedValue($value, $closure);
     }
 
     protected function handleCachedGet()
@@ -88,10 +90,42 @@ class BaseComputed extends Attribute
 
         $closure = fn () => $this->evaluateComputed();
 
-        return match(Cache::supportsTags() && !empty($this->tags)) {
+        $value = match(Cache::supportsTags() && !empty($this->tags)) {
             true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
             default => Cache::remember($key, $this->seconds, $closure)
         };
+
+        return $this->resolveCachedValue($value, $closure);
+    }
+
+    protected function resolveCachedValue($value, $closure)
+    {
+        $class = $this->findIncompleteClass($value);
+
+        if ($class === null) return $value;
+
+        if (config('app.debug')) {
+            logger()->warning(
+                "Livewire re-evaluated cached computed property [{$this->component->getName()}::{$this->getName()}] because Laravel could not unserialize [{$class}]. The value is correct, but it was not served from cache. Return a scalar or array, or add the class to [cache.serializable_classes]."
+            );
+        }
+
+        return $closure();
+    }
+
+    protected function findIncompleteClass($value)
+    {
+        if ($value instanceof \__PHP_Incomplete_Class) {
+            return ((array) $value)['__PHP_Incomplete_Class_Name'] ?? \__PHP_Incomplete_Class::class;
+        }
+
+        if (! is_array($value)) return null;
+
+        foreach ($value as $item) {
+            if ($class = $this->findIncompleteClass($item)) return $class;
+        }
+
+        return null;
     }
 
     protected function handlePersistedUnset()

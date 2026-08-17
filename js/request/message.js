@@ -224,9 +224,9 @@ export default class Message {
     }
 
     async invokeOnMorph() {
-        await Promise.all(
-            this.interceptors.map(interceptor => interceptor.onMorph())
-        )
+        for (let interceptor of this.interceptors) {
+            await interceptor.onMorph()
+        }
     }
 
     invokeOnRender() {
