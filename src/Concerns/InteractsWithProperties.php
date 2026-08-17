@@ -30,8 +30,14 @@ trait InteractsWithProperties
         $publicProperties = array_keys($this->all());
 
         if ($values instanceof Model) {
-            $values = collect($values->getAttributes())
-                ->mapWithKeys(fn ($value, $key) => [$key => $values->getAttribute($key)])
+            // toArray() produces two very different kinds of values:
+            // 1. Attribute / accessor / append
+            // 2. Loaded relation
+            $values = collect($values->toArray())
+                ->map(fn ($value, $key) => $values->relationLoaded($key)
+                    ? $value                        // keep relation as array
+                    : $values->getAttribute($key)   // get casted attribute / accessor / append
+                )
                 ->all();
         }
 
