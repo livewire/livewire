@@ -15,6 +15,7 @@ trait HandlesIslands
     protected $islandsHaveMounted = false;
     protected $islandIsTopLevelRender = false;
     protected $renderedIslandFragments = [];
+    protected $implicitIslandMorphs = [];
 
     public function islandIsMounting()
     {
@@ -104,6 +105,34 @@ trait HandlesIslands
         ]);
     }
 
+    public function triggerImplicitIslandRender($name, $mode = 'morph', $mount = false)
+    {
+        $this->skipRender();
+
+        if ($mode !== 'morph') {
+            $this->renderIsland(name: $name, mode: $mode, mount: $mount);
+
+            return;
+        }
+
+        if (isset($this->implicitIslandMorphs[$name])) {
+            $this->implicitIslandMorphs[$name]['mount'] = $this->implicitIslandMorphs[$name]['mount'] || $mount;
+
+            return;
+        }
+
+        $this->implicitIslandMorphs[$name] = compact('name', 'mode', 'mount');
+    }
+
+    public function renderImplicitIslandMorphs()
+    {
+        foreach ($this->implicitIslandMorphs as $island) {
+            $this->renderIsland(...$island);
+        }
+
+        $this->implicitIslandMorphs = [];
+    }
+
     public function renderIsland($name, $content = null, $mode = 'morph', $with = [], $mount = false)
     {
         $islands = $this->getIslands();
@@ -114,9 +143,6 @@ trait HandlesIslands
                 $token = $island['token'];
 
                 if (! $token) continue;
-
-                // Skip if this island was already rendered in this request...
-                if ($this->islandAlreadyRendered($name, $token)) continue;
 
                 // If the island is lazy, we need to mount it, but to ensure any nested islands render,
                 // we need to set the `$islandsHaveMounted` flag to false and reset it back after the
@@ -138,17 +164,6 @@ trait HandlesIslands
                 $finish();
             }
         }
-    }
-
-    protected function islandAlreadyRendered($name, $token)
-    {
-        foreach ($this->renderedIslandFragments as $fragment) {
-            if (str_contains($fragment, "name={$name}|token={$token}")) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public function streamIsland($name, $content = null, $mode = 'morph', $with = [])

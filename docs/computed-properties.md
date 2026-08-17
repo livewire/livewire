@@ -113,7 +113,7 @@ In the above component, the computed property is memoized before a new post is c
 
 Sometimes you would like to cache the value of a computed property for the lifespan of a Livewire component, rather than it being cleared after every request. In these cases, you can use [Laravel's caching utilities](https://laravel.com/docs/cache#retrieve-store).
 
-Below is an example of a computed property named `user()`, where instead of executing the Eloquent query directly, we wrap the query in `Cache::remember()` to ensure that any future requests retrieve it from Laravel's cache instead of re-executing the query:
+Below is an example of a computed property named `userName()`, where instead of executing the Eloquent query directly, we wrap the query in `Cache::remember()` to ensure that any future requests retrieve the name from Laravel's cache instead of re-executing the query:
 
 ```php
 <?php // resources/views/components/⚡show-user.blade.php
@@ -127,13 +127,13 @@ new class extends Component {
     public $userId;
 
     #[Computed]
-    public function user()
+    public function userName()
     {
-        $key = 'user'.$this->getId();
+        $key = 'user-name'.$this->getId();
         $seconds = 3600; // 1 hour...
 
         return Cache::remember($key, $seconds, function () {
-            return User::find($this->userId);
+            return User::find($this->userId)->name;
         });
     }
 
@@ -150,19 +150,30 @@ use Livewire\Attributes\Computed;
 use App\Models\User;
 
 #[Computed(persist: true)]
-public function user()
+public function userName()
 {
-    return User::find($this->userId);
+    return User::find($this->userId)->name;
 }
 ```
 
-In the example above, when `$this->user` is accessed from your component, it will continue to be cached for the duration of the Livewire component on the page. This means the actual Eloquent query will only be executed once.
+In the example above, when `$this->userName` is accessed from your component, it will continue to be cached for the duration of the Livewire component on the page. This means the actual Eloquent query will only be executed once.
 
 Livewire caches persisted values for 3600 seconds (one hour). You can override this default by passing an additional `seconds` parameter to the `#[Computed]` attribute:
 
 ```php
 #[Computed(persist: true, seconds: 7200)]
 ```
+
+> [!warning] Caching objects on Laravel 13
+> New Laravel 13 applications only unserialize explicitly allowed PHP classes from cache. When Laravel cannot restore an object returned by a persisted or cached computed property, Livewire re-evaluates the property so the value remains correct. In debug mode, Livewire also writes a warning to the application log because the value was not served from cache.
+>
+> Prefer caching scalars or arrays. To intentionally cache an object, add every class in its object graph to `cache.serializable_classes` in `config/cache.php`:
+>
+> ```php
+> 'serializable_classes' => [
+>     App\Models\User::class,
+> ],
+> ```
 
 > [!tip] Calling `unset()` will clear both memo and cache
 > As previously discussed, you can clear a computed property's memo using PHP's `unset()` method. This also applies to computed properties using the `persist: true` parameter. When calling `unset()` on a persisted computed property, Livewire will clear not only the in-request memo, but also the underlying cached value in Laravel's cache.
@@ -176,13 +187,13 @@ use Livewire\Attributes\Computed;
 use App\Models\Post;
 
 #[Computed(cache: true)]
-public function posts()
+public function postTitles()
 {
-    return Post::all();
+    return Post::query()->pluck('title', 'id')->all();
 }
 ```
 
-In the above example, until the cache expires or is busted, every instance of this component in your application will share the same cached value for `$this->posts`.
+In the above example, until the cache expires or is busted, every instance of this component in your application will share the same cached value for `$this->postTitles`.
 
 If you need to manually clear the cache for a computed property, you may set a custom cache key using the `key` parameter:
 
@@ -191,9 +202,9 @@ use Livewire\Attributes\Computed;
 use App\Models\Post;
 
 #[Computed(cache: true, key: 'homepage-posts')]
-public function posts()
+public function postTitles()
 {
-    return Post::all();
+    return Post::query()->pluck('title', 'id')->all();
 }
 ```
 

@@ -69,4 +69,57 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewire()->click('@change')
         ->assertSeeIn('@label', 'bar');
     }
+
+    public function test_wire_text_does_not_call_server_methods()
+    {
+        Livewire::visit(new class extends Component {
+            public $count = 0;
+
+            public function foo()
+            {
+                $this->count++;
+                return 'foo-result';
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div wire:text="foo" dusk="implicit"></div>
+                    <div wire:text="foo()" dusk="explicit"></div>
+                    <div dusk="count">{{ $count }}</div>
+                    <button wire:text="'Call foo'" wire:click="foo" dusk="call"></button>
+                </div>
+                HTML;
+            }
+        })
+        ->pause(250)
+        ->assertScript("document.querySelector('[dusk=implicit]').textContent", '')
+        ->assertScript("document.querySelector('[dusk=explicit]').textContent", '')
+        ->assertSeeIn('@call', 'Call foo')
+        ->assertSeeIn('@count', '0')
+        ->assertConsoleLogHasWarning('Cannot call server method')
+        ->waitForLivewire()->click('@call')
+        ->assertSeeIn('@count', '1');
+    }
+
+    public function test_wire_text_can_call_client_side_functions()
+    {
+        Livewire::visit(new class extends Component {
+            public $text = 'foo';
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div x-data="{ uppercase(value) { return value.toUpperCase() } }">
+                    <div wire:text="uppercase(text)" dusk="label"></div>
+                    <button wire:click="$set('text', 'bar')" dusk="change">Change</button>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@label', 'FOO')
+        ->waitForLivewire()->click('@change')
+        ->assertSeeIn('@label', 'BAR');
+    }
 }

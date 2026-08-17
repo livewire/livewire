@@ -104,4 +104,33 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewire()->click('@toggle')
         ->assertAttributeMissing('@target', 'disabled');
     }
+
+    public function test_wire_bind_does_not_call_server_methods()
+    {
+        Livewire::visit(new class extends Component {
+            public $count = 0;
+
+            public function title()
+            {
+                $this->count++;
+
+                return 'Server title';
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div wire:bind:title="title" dusk="target">Hello</div>
+                    <div dusk="count">{{ $count }}</div>
+                    <button wire:click="title" dusk="call">Call title</button>
+                </div>
+                HTML;
+            }
+        })
+        ->assertAttribute('@target', 'title', '')
+        ->assertSeeIn('@count', '0')
+        ->waitForLivewire()->click('@call')
+        ->assertSeeIn('@count', '1');
+    }
 }

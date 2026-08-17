@@ -78,7 +78,7 @@ class HandleSynths extends Mechanism
         });
     }
 
-    public function hydratePropertyUpdate($valueOrTuple, $context, $path)
+    public function hydratePropertyUpdate($valueOrTuple, $context, $path, $raw = null)
     {
         if (! Utils::isSyntheticTuple($value = $tuple = $valueOrTuple)) return $value;
 
@@ -96,8 +96,14 @@ class HandleSynths extends Mechanism
 
         $synth = $this->resolve($meta['s'], $context, $path);
 
-        return $synth->hydrate($value, $meta, function ($name, $child) {
-            return $child;
+        return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path, $raw) {
+            if ($raw === null || is_object($child)) return $child;
+
+            $childPath = "{$path}.{$name}";
+
+            if (! $childMeta = $this->getMetaForPath($raw, $childPath)) return $child;
+
+            return $this->hydratePropertyUpdate([$child, $childMeta], $context, $childPath, $raw);
         });
     }
 
@@ -154,7 +160,7 @@ class HandleSynths extends Mechanism
                 return $clone;
             }
 
-            return $this->hydratePropertyUpdate([$value, $meta], $context, $path);
+            return $this->hydratePropertyUpdate([$value, $meta], $context, $path, $raw);
         }
 
         // If we don't, let's check to see if it's a typed property and fetch the synth that way...

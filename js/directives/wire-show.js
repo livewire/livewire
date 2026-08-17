@@ -1,4 +1,4 @@
-import { evaluateActionExpression } from '../evaluator'
+import { evaluateReactiveExpression } from '../evaluator'
 import Alpine from 'alpinejs'
 
 Alpine.interceptInit(el => {
@@ -12,7 +12,7 @@ Alpine.interceptInit(el => {
 
             Alpine.bind(el, {
                 ['x-show' + modifierString]() {
-                    return evaluateActionExpression(el, expression)
+                    return evaluateReactiveExpression(el, expression)
                 }
             })
         }
