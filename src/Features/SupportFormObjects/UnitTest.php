@@ -1069,6 +1069,30 @@ class UnitTest extends \Tests\TestCase
         // This should throw because stdClass doesn't extend Form
         $synth->hydrate(['title' => 'test'], ['class' => \stdClass::class], fn($k, $v) => $v);
     }
+
+    public function test_can_fill_a_form_object_from_model_with_enum_cast()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostWithEnumCasting $post;
+            public FormWithTypedEnum $form;
+
+            public function mount()
+            {
+                $this->post = PostWithEnumCasting::first();
+            }
+
+            public function fillForm()
+            {
+                $this->form->fill($this->post);
+            }
+        })
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.status', FormEnumStub::Draft)
+            ->call('fillForm')
+            ->assertSetStrict('form.title', 'A Title')
+            ->assertSetStrict('form.status', FormEnumStub::Active)
+        ;
+    }
 }
 
 class PostFormStub extends Form
@@ -1488,4 +1512,26 @@ class BaseFormWithValidationInLifecycleHookStub extends \Livewire\Features\Suppo
     {
         return ['title' => 'required'];
     }
+}
+
+class PostWithEnumCasting extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'title' => 'A Title', 'content' => 'Some content', 'status' => 'active'],
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => FormEnumStub::class,
+        ];
+    }
+}
+
+class FormWithTypedEnum extends Form
+{
+    public string $title = '';
+    public FormEnumStub $status = FormEnumStub::Draft;
 }

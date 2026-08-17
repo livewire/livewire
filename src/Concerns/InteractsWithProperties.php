@@ -30,7 +30,9 @@ trait InteractsWithProperties
         $publicProperties = array_keys($this->all());
 
         if ($values instanceof Model) {
-            $values = $values->toArray();
+            $values = collect($values->getAttributes())
+                ->mapWithKeys(fn ($value, $key) => [$key => $values->getAttribute($key)])
+                ->all();
         }
 
         foreach ($values as $key => $value) {
