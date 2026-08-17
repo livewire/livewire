@@ -29,7 +29,11 @@ class EnumSynth extends Synth {
     function hydrate($value, $meta) {
         if ($value === null || $value === '') return null;
 
-        $class = $meta['class'];
+        $class = $meta['class'] ?? null;
+
+        if (! $class || ! is_a($class, \BackedEnum::class, true)) {
+            throw new \Exception("Livewire: Class [{$class}] is not a valid Enum type.");
+        }
 
         return $class::from($value);
     }
