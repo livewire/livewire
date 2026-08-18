@@ -28,53 +28,19 @@ trait InteractsWithProperties
     public function fill($values)
     {
         $publicProperties = array_keys($this->all());
+        $model = $values instanceof Model ? $values : null;
 
-        if ($values instanceof Model) {
-            $valueMatchesType = function ($value, \ReflectionType $type) {
-                if ($value === null) return $type->allowsNull();
-
-                $types = $type instanceof \ReflectionUnionType ? $type->getTypes() : [$type];
-
-                foreach ($types as $innerType) {
-                    if (! $innerType instanceof \ReflectionNamedType) continue;
-
-                    if ($innerType->isBuiltin()) continue;
-
-                    if ($value instanceof ($innerType->getName())) return true;
-                }
-
-                return false;
-            };
-
-            $model = $values;
-            $values = $model->toArray();
-
-            foreach ($values as $key => $value) {
-                if ($model->relationLoaded($key)) continue;
-
-                $propertyName = Utils::beforeFirstDot($key);
-
-                if (! in_array($propertyName, $publicProperties)) continue;
-
-                $property = Utils::getProperty($this, $propertyName);
-
-                // If property is not typed, leave as it is
-                if (! $property->hasType()) continue;
-
-                $castedValue = $model->getAttribute($key);
-
-                // Replace only when the casted value is compatible with the property type:
-                // - null is allowed only if the property is nullable
-                // - otherwise the value must be an instance of the declared class
-                if ($valueMatchesType($castedValue, $property->getType())) {
-                    $values[$key] = $castedValue;
-                }
-            }
-        }
+        if ($model) $values = $model->toArray();
 
         foreach ($values as $key => $value) {
-            if (in_array(Utils::beforeFirstDot($key), $publicProperties)) {
+            if (! in_array(Utils::beforeFirstDot($key), $publicProperties)) continue;
+
+            try {
                 data_set($this, $key, $value);
+            } catch (\TypeError $exception) {
+                if (! $model) throw $exception;
+
+                data_set($this, $key, $model->getAttribute($key));
             }
         }
     }

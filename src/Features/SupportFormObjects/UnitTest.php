@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Stringable;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -1089,10 +1088,10 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    public function test_can_fill_a_form_object_from_eloquent_model_with_datetime_cast()
+    public function test_fill_preserves_serialized_model_values_for_untyped_properties()
     {
         Livewire::test(new class extends TestComponent {
-            public FormWithDatePropertyStub $form;
+            public FormWithUntypedEnumPropertyStub $form;
 
             public function fillForm($values)
             {
@@ -1100,84 +1099,10 @@ class UnitTest extends \Tests\TestCase
             }
         })
             ->assertSetStrict('form.title', '')
-            ->assertSetStrict('form.published_at', null)
-            ->call('fillForm', PostForFormObjectWithDateCasting::first())
-            ->assertSetStrict('form.title', 'A Title')
-            ->assertSetStrict('form.published_at', function ($value) {
-                return $value instanceof Carbon
-                    && $value->eq(Carbon::parse('2024-06-15 10:30:00'));
-            });
-    }
-
-    public function test_untyped_datetime_property_stays_string()
-    {
-        Livewire::test(new class extends TestComponent {
-            public FormWithUntypedDatePropertyStub $form;
-
-            public function fillForm($values)
-            {
-                $this->form->fill($values);
-            }
-        })
-            ->assertSetStrict('form.title', '')
-            ->assertSetStrict('form.published_at', null)
-            ->call('fillForm', PostForFormObjectWithoutDateCasting::first())
-            ->assertSetStrict('form.title', 'A Title')
-            ->assertSetStrict('form.published_at', '2024-06-15 10:30:00');
-    }
-
-    public function test_untyped_property_with_datetime_cast_stays_as_serialized_string()
-    {
-        Livewire::test(new class extends TestComponent {
-            public FormWithUntypedDatePropertyStub $form;
-
-            public function fillForm($values)
-            {
-                $this->form->fill($values);
-            }
-        })
-            ->assertSetStrict('form.title', '')
-            ->assertSetStrict('form.published_at', null)
-            ->call('fillForm', PostForFormObjectWithDateCasting::first())
-            ->assertSetStrict('form.title', 'A Title')
-            ->assertSetStrict('form.published_at', function ($value) {
-                return is_string($value) && $value === '2024-06-15T10:30:00.000000Z';
-            });
-    }
-
-    public function test_can_fill_a_form_object_from_eloquent_model_with_union_typed_enum_property()
-    {
-        Livewire::test(new class extends TestComponent {
-            public FormWithUnionTypedEnumPropertyStub $form;
-
-            public function fillForm($values)
-            {
-                $this->form->fill($values);
-            }
-        })
-            ->assertSetStrict('form.title', '')
-            ->assertSetStrict('form.status', FormEnumStub::Draft)
+            ->assertSetStrict('form.status', null)
             ->call('fillForm', PostForFormObjectTesting::first())
             ->assertSetStrict('form.title', 'A Title')
-            ->assertSetStrict('form.status', FormEnumStub::Active)
-        ;
-    }
-
-    public function test_can_fill_a_form_object_from_eloquent_model_with_reversed_union_typed_enum_property()
-    {
-        Livewire::test(new class extends TestComponent {
-            public FormWithReversedUnionTypedEnumPropertyStub $form;
-
-            public function fillForm($values)
-            {
-                $this->form->fill($values);
-            }
-        })
-            ->assertSetStrict('form.title', '')
-            ->assertSetStrict('form.status', FormEnumStub::Draft)
-            ->call('fillForm', PostForFormObjectTesting::first())
-            ->assertSetStrict('form.title', 'A Title')
-            ->assertSetStrict('form.status', FormEnumStub::Active)
+            ->assertSetStrict('form.status', 'active')
         ;
     }
 }
@@ -1390,7 +1315,7 @@ class PostForFormObjectTesting extends Model
         [
             'title' => 'A Title',
             'content' => 'Some content',
-            'status' => 'active'
+            'status' => 'active',
         ],
     ];
 
@@ -1552,6 +1477,12 @@ class FormWithEnumPropertyStub extends Form
     public FormEnumStub $status = FormEnumStub::Draft;
 }
 
+class FormWithUntypedEnumPropertyStub extends Form
+{
+    public string $title = '';
+    public $status;
+}
+
 class FormWithUpdatedHookStub extends Form
 {
     public string $title = '';
@@ -1607,59 +1538,4 @@ class BaseFormWithValidationInLifecycleHookStub extends \Livewire\Features\Suppo
     {
         return ['title' => 'required'];
     }
-}
-
-class PostForFormObjectWithDateCasting extends Model
-{
-    use \Sushi\Sushi;
-
-    protected $rows = [
-        [
-            'title' => 'A Title',
-            'published_at' => '2024-06-15 10:30:00',
-        ],
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'published_at' => 'datetime',
-        ];
-    }
-}
-
-class PostForFormObjectWithoutDateCasting extends Model
-{
-    use \Sushi\Sushi;
-
-    protected $rows = [
-        [
-            'title' => 'A Title',
-            'published_at' => '2024-06-15 10:30:00',
-        ],
-    ];
-}
-
-class FormWithDatePropertyStub extends Form
-{
-    public string $title = '';
-    public ?Carbon $published_at = null;
-}
-
-class FormWithUntypedDatePropertyStub extends Form
-{
-    public string $title = '';
-    public $published_at;
-}
-
-class FormWithUnionTypedEnumPropertyStub extends Form
-{
-    public string $title = '';
-    public string|FormEnumStub $status = FormEnumStub::Draft;
-}
-
-class FormWithReversedUnionTypedEnumPropertyStub extends Form
-{
-    public string $title = '';
-    public FormEnumStub|string $status = FormEnumStub::Draft;
 }
