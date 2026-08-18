@@ -14,6 +14,7 @@ class TemporaryUploadedFile extends UploadedFile
     protected $storage;
     protected $path;
     protected $metaFileData;
+    protected $detectedMimeType;
 
     public function __construct($path, $disk)
     {
@@ -77,17 +78,30 @@ class TemporaryUploadedFile extends UploadedFile
             }
         }
 
-        $mimeType = $this->storage->mimeType($this->path);
+        return $this->detectedMimeType ??= $this->detectMimeTypeFromContents();
+    }
 
-        // Flysystem V2.0+ removed guess mimeType from extension support, so it has been re-added back
-        // in here to ensure the correct mimeType is returned when using faked files in tests
-        if (in_array($mimeType, ['application/octet-stream', 'inode/x-empty', 'application/x-empty'])) {
-            $detector = new FinfoMimeTypeDetector();
+    protected function detectMimeTypeFromContents(): string
+    {
+        $stream = $this->storage->readStream($this->path);
 
-            $mimeType = $detector->detectMimeTypeFromPath($this->path) ?: 'text/plain';
+        if (! is_resource($stream)) {
+            return 'application/octet-stream';
         }
 
-        return $mimeType;
+        try {
+            // Avoid downloading the entire object when the temporary disk is remote...
+            $contents = stream_get_contents($stream, 64 * 1024);
+        } finally {
+            fclose($stream);
+        }
+
+        if ($contents === false || $contents === '') {
+            return 'application/octet-stream';
+        }
+
+        return (new FinfoMimeTypeDetector())->detectMimeTypeFromBuffer($contents)
+            ?: 'application/octet-stream';
     }
 
     public function getFilename(): string
