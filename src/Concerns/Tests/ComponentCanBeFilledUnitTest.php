@@ -121,6 +121,24 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
         $component->assertSee('A Title');
         $component->assertSee('2024-06-15 10:30:00');
     }
+
+    public function test_untyped_property_with_datetime_cast_stays_as_serialized_string()
+    {
+        $component = Livewire::test(ComponentWithUntypedDateProperty::class);
+
+        $component->assertSetStrict('title', '');
+        $component->assertSetStrict('published_at', null);
+
+        $component->call('callFill', PostWithCasting::first());
+
+        $component->assertSetStrict('title', 'A Title');
+        $component->assertSetStrict('published_at', function ($value) {
+            return is_string($value) && $value === '2024-06-15T10:30:00.000000Z';
+        });
+
+        $component->assertSee('A Title');
+        $component->assertSee('2024-06-15T10:30:00.000000Z');
+    }
 }
 
 class User {

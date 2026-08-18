@@ -1125,6 +1125,25 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.title', 'A Title')
             ->assertSetStrict('form.published_at', '2024-06-15 10:30:00');
     }
+
+    public function test_untyped_property_with_datetime_cast_stays_as_serialized_string()
+    {
+        Livewire::test(new class extends TestComponent {
+            public FormWithUntypedDatePropertyStub $form;
+
+            public function fillForm($values)
+            {
+                $this->form->fill($values);
+            }
+        })
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.published_at', null)
+            ->call('fillForm', PostForFormObjectWithDateCasting::first())
+            ->assertSetStrict('form.title', 'A Title')
+            ->assertSetStrict('form.published_at', function ($value) {
+                return is_string($value) && $value === '2024-06-15T10:30:00.000000Z';
+            });
+    }
 }
 
 class PostFormStub extends Form
