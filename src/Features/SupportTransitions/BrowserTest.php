@@ -210,6 +210,71 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_transition_is_skipped_when_popover_opens_during_morph()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $items = ['Item A', 'Item B'];
+                public $showPopover = false;
+
+                public function openPopover()
+                {
+                    $this->showPopover = true;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <style>
+                        ::view-transition-old(*) { animation: 2s ease-out fade-out; }
+                        ::view-transition-new(*) { animation: 2s ease-in fade-in; }
+                        @keyframes fade-out { to { opacity: 0; } }
+                        @keyframes fade-in { from { opacity: 0; } }
+                    </style>
+
+                    @foreach ($items as $index => $item)
+                        <div
+                            wire:transition="card-{{ $index }}"
+                            wire:key="item-{{ $index }}"
+                            dusk="card-{{ $index }}"
+                        >
+                            {{ $item }}
+                        </div>
+                    @endforeach
+
+                    <button wire:click="openPopover" dusk="open">Open</button>
+
+                    <div
+                        popover="manual"
+                        x-ref="popover"
+                        x-effect="
+                            if ($wire.showPopover) { if (!$refs.popover.matches(':popover-open')) $refs.popover.showPopover() }
+                        "
+                    >
+                        Popover Content
+                    </div>
+                </div>
+                HTML; }
+            }
+        )
+        ->tap(fn ($browser) => $browser->script(<<<'JS'
+            window.__transitionUnhandledRejection = null
+
+            window.addEventListener('unhandledrejection', event => {
+                window.__transitionUnhandledRejection = event.reason?.name
+            })
+        JS))
+        ->waitForLivewire()->click('@open')
+        ->waitUntil("document.querySelector('[popover]').matches(':popover-open')")
+
+        // Without the fix, the 2s view transition animations would still be playing
+        // and the transitioning elements would appear above the popover.
+        // With the fix, the transition is skipped the instant the popover opens...
+        ->assertScript('document.getAnimations().some(a => a.playState === "running")', false)
+        ->pause(50)
+        ->assertScript('window.__transitionUnhandledRejection', null)
+        ;
+    }
+
     public function test_can_transition_dynamic_component_swap()
     {
         $animationsRunning = 'document.getAnimations().some(a => a.playState === "running")';
