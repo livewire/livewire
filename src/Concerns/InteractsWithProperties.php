@@ -30,6 +30,26 @@ trait InteractsWithProperties
         $publicProperties = array_keys($this->all());
 
         if ($values instanceof Model) {
+            $valueMatchesType = function ($value, \ReflectionType $type) use (&$valueMatchesType) {
+                if ($value === null) return $type->allowsNull();
+
+                if ($type instanceof \ReflectionNamedType) {
+                    if ($type->isBuiltin()) return false; 
+
+                    return $value instanceof ($type->getName());
+                }
+
+                if ($type instanceof \ReflectionUnionType) {
+                    foreach ($type->getTypes() as $innerType) {
+                        if ($valueMatchesType($value, $innerType)) {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            };
+
             $model = $values;
             $values = $model->toArray();
 
@@ -47,14 +67,12 @@ trait InteractsWithProperties
 
                 $type = $property->getType();
 
-                if (! $type instanceof \ReflectionNamedType || $type->isBuiltin()) continue;
-
                 $castedValue = $model->getAttribute($key);
 
-                // Only replace when the property has type, not built-in type
-                // (Enum, Carbon, custom cast object, etc.) and 
-                // the casted value is compatible (or null for nullable types)
-                if ($castedValue === null || $castedValue instanceof ($type->getName())) {
+                // Replace only when the casted value is compatible with the property type:
+                // - null is allowed only if the property is nullable
+                // - otherwise the value must be an instance of the declared class
+                if ($valueMatchesType($castedValue, $type)) {
                     $values[$key] = $castedValue;
                 }
             }
