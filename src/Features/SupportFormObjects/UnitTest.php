@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Stringable;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -1070,28 +1071,42 @@ class UnitTest extends \Tests\TestCase
         $synth->hydrate(['title' => 'test'], ['class' => \stdClass::class], fn($k, $v) => $v);
     }
 
-    public function test_can_fill_a_form_object_from_model_with_enum_cast()
+    public function test_can_fill_a_form_object_from_eloquent_model_with_enum_cast()
     {
         Livewire::test(new class extends TestComponent {
-            public PostWithEnumCasting $post;
-            public FormWithTypedEnum $form;
+            public FormWithEnumPropertyStub $form;
 
-            public function mount()
+            public function fillForm($values)
             {
-                $this->post = PostWithEnumCasting::first();
-            }
-
-            public function fillForm()
-            {
-                $this->form->fill($this->post);
+                $this->form->fill($values);
             }
         })
             ->assertSetStrict('form.title', '')
             ->assertSetStrict('form.status', FormEnumStub::Draft)
-            ->call('fillForm')
+            ->call('fillForm', PostForFormObjectTesting::first())
             ->assertSetStrict('form.title', 'A Title')
             ->assertSetStrict('form.status', FormEnumStub::Active)
         ;
+    }
+
+    public function test_can_fill_a_form_object_from_eloquent_model_with_datetime_cast()
+    {
+        Livewire::test(new class extends TestComponent {
+            public FormWithDatePropertyStub $form;
+
+            public function fillForm($values)
+            {
+                $this->form->fill($values);
+            }
+        })
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.published_at', null)
+            ->call('fillForm', PostForFormObjectDateTesting::first())
+            ->assertSetStrict('form.title', 'A Title')
+            ->assertSetStrict('form.published_at', function ($value) {
+                return $value instanceof Carbon
+                    && $value->eq(Carbon::parse('2024-06-15 10:30:00'));
+            });
     }
 }
 
@@ -1303,8 +1318,16 @@ class PostForFormObjectTesting extends Model
         [
             'title' => 'A Title',
             'content' => 'Some content',
+            'status' => 'active'
         ],
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => FormEnumStub::class,
+        ];
+    }
 }
 
 class FormWithLiveValidation extends Form
@@ -1514,24 +1537,27 @@ class BaseFormWithValidationInLifecycleHookStub extends \Livewire\Features\Suppo
     }
 }
 
-class PostWithEnumCasting extends Model
+class PostForFormObjectDateTesting extends Model
 {
-    use Sushi;
+    use \Sushi\Sushi;
 
     protected $rows = [
-        ['id' => 1, 'title' => 'A Title', 'content' => 'Some content', 'status' => 'active'],
+        [
+            'title' => 'A Title',
+            'published_at' => '2024-06-15 10:30:00',
+        ],
     ];
 
     protected function casts(): array
     {
         return [
-            'status' => FormEnumStub::class,
+            'published_at' => 'datetime',
         ];
     }
 }
 
-class FormWithTypedEnum extends Form
+class FormWithDatePropertyStub extends Form
 {
     public string $title = '';
-    public FormEnumStub $status = FormEnumStub::Draft;
+    public ?Carbon $published_at = null;
 }

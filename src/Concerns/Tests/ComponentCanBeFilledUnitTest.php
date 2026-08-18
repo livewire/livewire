@@ -5,6 +5,7 @@ namespace Livewire\Concerns\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Blade;
 
 class ComponentCanBeFilledUnitTest extends \Tests\TestCase
@@ -69,6 +70,41 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
             ->assertSetStrict('dotProperty.foo', 'bar')
             ->assertSetStrict('dotProperty.bob', 'lob');
     }
+
+    public function test_can_fill_from_eloquent_model_with_enum_cast()
+    {
+        $component = Livewire::test(ComponentWithTypedEnumProperty::class);
+
+        $component->assertSetStrict('title', '');
+        $component->assertSetStrict('status', PostEnumStub::Draft);
+
+        $component->call('callFill', PostWithCasting::first());
+
+        $component->assertSetStrict('title', 'A Title');
+        $component->assertSetStrict('status', PostEnumStub::Active);
+
+        $component->assertSee('A Title');
+        $component->assertSee('active');
+    }
+
+    public function test_can_fill_from_eloquent_model_with_datetime_cast()
+    {
+        $component = Livewire::test(ComponentWithTypedDateProperty::class);
+
+        $component->assertSetStrict('title', '');
+        $component->assertSetStrict('published_at', null);
+
+        $component->call('callFill', PostWithCasting::first());
+
+        $component->assertSetStrict('title', 'A Title');
+        $component->assertSetStrict('published_at', function ($value) {
+            return $value instanceof Carbon
+                && $value->eq(Carbon::parse('2024-06-15 10:30:00'));
+        });
+
+        $component->assertSee('A Title');
+        $component->assertSee('2024-06-15 10:30:00');
+    }
 }
 
 class User {
@@ -124,6 +160,83 @@ class ComponentWithFillableProperties extends Component
                 'publicProperty' => $this->publicProperty,
                 'protectedProperty' => $this->protectedProperty,
                 'privateProperty' => $this->privateProperty,
+            ]
+        );
+    }
+}
+
+enum PostEnumStub: string
+{
+    case Draft = 'draft';
+    case Active = 'active';
+}
+
+class PostWithCasting extends Model
+{
+    use \Sushi\Sushi;
+
+    protected $rows = [
+        ['title' => 'A Title', 'status' => 'active', 'published_at' => '2024-06-15 10:30:00'],
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => PostEnumStub::class,
+            'published_at' => 'datetime'
+        ];
+    }
+}
+
+class ComponentWithTypedEnumProperty extends Component
+{
+    public string $title = '';
+    public PostEnumStub $status = PostEnumStub::Draft;
+
+    public function callFill($values)
+    {
+        $this->fill($values);
+    }
+
+    public function render()
+    {
+        return Blade::render(
+            <<<'HTML'
+                <div>
+                    {{ $title }}
+                    {{ $status }}
+                </div>
+            HTML,
+            [
+                'title' => $this->title,
+                'status' => $this->status,
+            ]
+        );
+    }
+}
+
+class ComponentWithTypedDateProperty extends Component
+{
+    public string $title = '';
+    public ?Carbon $published_at = null;
+
+    public function callFill($values)
+    {
+        $this->fill($values);
+    }
+
+    public function render()
+    {
+        return Blade::render(
+            <<<'HTML'
+                <div>
+                    {{ $title }}
+                    {{ $published_at }}
+                </div>
+            HTML,
+            [
+                'title' => $this->title,
+                'published_at' => $this->published_at,
             ]
         );
     }
