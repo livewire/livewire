@@ -30,20 +30,16 @@ trait InteractsWithProperties
         $publicProperties = array_keys($this->all());
 
         if ($values instanceof Model) {
-            $valueMatchesType = function ($value, \ReflectionType $type) use (&$valueMatchesType) {
+            $valueMatchesType = function ($value, \ReflectionType $type) {
                 if ($value === null) return $type->allowsNull();
 
-                if ($type instanceof \ReflectionNamedType) {
-                    if ($type->isBuiltin()) return false; 
+                $types = $type instanceof \ReflectionUnionType ? $type->getTypes() : [$type];
 
-                    return $value instanceof ($type->getName());
-                }
+                foreach ($types as $innerType) {
+                    if ($innerType instanceof \ReflectionNamedType) {
+                        if ($innerType->isBuiltin()) return false; 
 
-                if ($type instanceof \ReflectionUnionType) {
-                    foreach ($type->getTypes() as $innerType) {
-                        if ($valueMatchesType($value, $innerType)) {
-                            return true;
-                        }
+                        return $value instanceof ($innerType->getName());
                     }
                 }
 
