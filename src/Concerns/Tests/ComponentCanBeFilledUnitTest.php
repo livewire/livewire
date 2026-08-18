@@ -139,6 +139,41 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
         $component->assertSee('A Title');
         $component->assertSee('2024-06-15T10:30:00.000000Z');
     }
+
+    public function test_can_fill_from_eloquent_model_with_union_typed_enum_property()
+    {
+        // string|Enum — builtin is listed first (the case the previous
+        // implementation short-circuited on).
+        $component = Livewire::test(ComponentWithUnionTypedEnumProperty::class);
+
+        $component->assertSetStrict('title', '');
+        $component->assertSetStrict('status', PostEnumStub::Draft);
+
+        $component->call('callFill', PostWithCasting::first());
+
+        $component->assertSetStrict('title', 'A Title');
+        $component->assertSetStrict('status', PostEnumStub::Active);
+
+        $component->assertSee('A Title');
+        $component->assertSee('active');
+    }
+
+    public function test_can_fill_from_eloquent_model_with_reversed_union_typed_enum_property()
+    {
+        // Enum|string — class type is listed first.
+        $component = Livewire::test(ComponentWithReversedUnionTypedEnumProperty::class);
+
+        $component->assertSetStrict('title', '');
+        $component->assertSetStrict('status', PostEnumStub::Draft);
+
+        $component->call('callFill', PostWithCasting::first());
+
+        $component->assertSetStrict('title', 'A Title');
+        $component->assertSetStrict('status', PostEnumStub::Active);
+
+        $component->assertSee('A Title');
+        $component->assertSee('active');
+    }
 }
 
 class User {
@@ -307,6 +342,60 @@ class ComponentWithUntypedDateProperty extends Component
             [
                 'title' => $this->title,
                 'published_at' => $this->published_at,
+            ]
+        );
+    }
+}
+
+class ComponentWithUnionTypedEnumProperty extends Component
+{
+    public string $title = '';
+    public string|PostEnumStub $status = PostEnumStub::Draft;
+
+    public function callFill($values)
+    {
+        $this->fill($values);
+    }
+
+    public function render()
+    {
+        return Blade::render(
+            <<<'HTML'
+                <div>
+                    {{ $title }}
+                    {{ $status }}
+                </div>
+            HTML,
+            [
+                'title' => $this->title,
+                'status' => $this->status,
+            ]
+        );
+    }
+}
+
+class ComponentWithReversedUnionTypedEnumProperty extends Component
+{
+    public string $title = '';
+    public PostEnumStub|string $status = PostEnumStub::Draft;
+
+    public function callFill($values)
+    {
+        $this->fill($values);
+    }
+
+    public function render()
+    {
+        return Blade::render(
+            <<<'HTML'
+                <div>
+                    {{ $title }}
+                    {{ $status }}
+                </div>
+            HTML,
+            [
+                'title' => $this->title,
+                'status' => $this->status,
             ]
         );
     }

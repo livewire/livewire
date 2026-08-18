@@ -1144,6 +1144,42 @@ class UnitTest extends \Tests\TestCase
                 return is_string($value) && $value === '2024-06-15T10:30:00.000000Z';
             });
     }
+
+    public function test_can_fill_a_form_object_from_eloquent_model_with_union_typed_enum_property()
+    {
+        Livewire::test(new class extends TestComponent {
+            public FormWithUnionTypedEnumPropertyStub $form;
+
+            public function fillForm($values)
+            {
+                $this->form->fill($values);
+            }
+        })
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.status', FormEnumStub::Draft)
+            ->call('fillForm', PostForFormObjectTesting::first())
+            ->assertSetStrict('form.title', 'A Title')
+            ->assertSetStrict('form.status', FormEnumStub::Active)
+        ;
+    }
+
+    public function test_can_fill_a_form_object_from_eloquent_model_with_reversed_union_typed_enum_property()
+    {
+        Livewire::test(new class extends TestComponent {
+            public FormWithReversedUnionTypedEnumPropertyStub $form;
+
+            public function fillForm($values)
+            {
+                $this->form->fill($values);
+            }
+        })
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.status', FormEnumStub::Draft)
+            ->call('fillForm', PostForFormObjectTesting::first())
+            ->assertSetStrict('form.title', 'A Title')
+            ->assertSetStrict('form.status', FormEnumStub::Active)
+        ;
+    }
 }
 
 class PostFormStub extends Form
@@ -1614,4 +1650,16 @@ class FormWithUntypedDatePropertyStub extends Form
 {
     public string $title = '';
     public $published_at;
+}
+
+class FormWithUnionTypedEnumPropertyStub extends Form
+{
+    public string $title = '';
+    public string|FormEnumStub $status = FormEnumStub::Draft;
+}
+
+class FormWithReversedUnionTypedEnumPropertyStub extends Form
+{
+    public string $title = '';
+    public FormEnumStub|string $status = FormEnumStub::Draft;
 }
