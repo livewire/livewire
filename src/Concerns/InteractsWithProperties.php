@@ -30,13 +30,24 @@ trait InteractsWithProperties
     public function fill($values)
     {
         $publicProperties = array_keys($this->all());
+        $model = $values instanceof Model ? $values : null;
 
-        if ($values instanceof Model) {
-            $values = $values->toArray();
-        }
+        if ($model) $values = $model->toArray();
 
         foreach ($values as $key => $value) {
-            if (in_array(Utils::beforeFirstDot($key), $publicProperties)) {
+            if (! in_array(Utils::beforeFirstDot($key), $publicProperties)) continue;
+
+            try {
+                if (! str_contains($key, '.') && $this->hasVirtualProperty($key)) {
+                    $this->setVirtualProperty($key, $value);
+                } else {
+                    data_set($this, $key, $value);
+                }
+            } catch (\TypeError $exception) {
+                if (! $model) throw $exception;
+
+                $value = $model->getAttribute($key);
+
                 if (! str_contains($key, '.') && $this->hasVirtualProperty($key)) {
                     $this->setVirtualProperty($key, $value);
                 } else {

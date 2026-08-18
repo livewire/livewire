@@ -1069,6 +1069,42 @@ class UnitTest extends \Tests\TestCase
         // This should throw because stdClass doesn't extend Form
         $synth->hydrate(['title' => 'test'], ['class' => \stdClass::class], fn($k, $v) => $v);
     }
+
+    public function test_can_fill_a_form_object_from_eloquent_model_with_enum_cast()
+    {
+        Livewire::test(new class extends TestComponent {
+            public FormWithEnumPropertyStub $form;
+
+            public function fillForm($values)
+            {
+                $this->form->fill($values);
+            }
+        })
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.status', FormEnumStub::Draft)
+            ->call('fillForm', PostForFormObjectTesting::first())
+            ->assertSetStrict('form.title', 'A Title')
+            ->assertSetStrict('form.status', FormEnumStub::Active)
+        ;
+    }
+
+    public function test_fill_preserves_serialized_model_values_for_untyped_properties()
+    {
+        Livewire::test(new class extends TestComponent {
+            public FormWithUntypedEnumPropertyStub $form;
+
+            public function fillForm($values)
+            {
+                $this->form->fill($values);
+            }
+        })
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.status', null)
+            ->call('fillForm', PostForFormObjectTesting::first())
+            ->assertSetStrict('form.title', 'A Title')
+            ->assertSetStrict('form.status', 'active')
+        ;
+    }
 }
 
 class PostFormStub extends Form
@@ -1279,8 +1315,16 @@ class PostForFormObjectTesting extends Model
         [
             'title' => 'A Title',
             'content' => 'Some content',
+            'status' => 'active',
         ],
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => FormEnumStub::class,
+        ];
+    }
 }
 
 class FormWithLiveValidation extends Form
@@ -1431,6 +1475,12 @@ class FormWithEnumPropertyStub extends Form
 {
     public string $title = '';
     public FormEnumStub $status = FormEnumStub::Draft;
+}
+
+class FormWithUntypedEnumPropertyStub extends Form
+{
+    public string $title = '';
+    public $status;
 }
 
 class FormWithUpdatedHookStub extends Form
