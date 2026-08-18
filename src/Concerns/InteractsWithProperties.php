@@ -36,11 +36,11 @@ trait InteractsWithProperties
                 $types = $type instanceof \ReflectionUnionType ? $type->getTypes() : [$type];
 
                 foreach ($types as $innerType) {
-                    if ($innerType instanceof \ReflectionNamedType) {
-                        if ($innerType->isBuiltin()) return false; 
+                    if (! $innerType instanceof \ReflectionNamedType) continue;
 
-                        return $value instanceof ($innerType->getName());
-                    }
+                    if ($innerType->isBuiltin()) continue;
+
+                    if ($value instanceof ($innerType->getName())) return true;
                 }
 
                 return false;
@@ -61,14 +61,12 @@ trait InteractsWithProperties
                 // If property is not typed, leave as it is
                 if (! $property->hasType()) continue;
 
-                $type = $property->getType();
-
                 $castedValue = $model->getAttribute($key);
 
                 // Replace only when the casted value is compatible with the property type:
                 // - null is allowed only if the property is nullable
                 // - otherwise the value must be an instance of the declared class
-                if ($valueMatchesType($castedValue, $type)) {
+                if ($valueMatchesType($castedValue, $property->getType())) {
                     $values[$key] = $castedValue;
                 }
             }
