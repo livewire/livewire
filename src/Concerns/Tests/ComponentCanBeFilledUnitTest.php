@@ -105,6 +105,22 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
         $component->assertSee('A Title');
         $component->assertSee('2024-06-15 10:30:00');
     }
+
+    public function test_untyped_datetime_property_stays_string()
+    {
+        $component = Livewire::test(ComponentWithUntypedDateProperty::class);
+
+        $component->assertSetStrict('title', '');
+        $component->assertSetStrict('published_at', null);
+
+        $component->call('callFill', PostWithoutCasting::first());
+
+        $component->assertSetStrict('title', 'A Title');
+        $component->assertSetStrict('published_at', '2024-06-15 10:30:00');
+
+        $component->assertSee('A Title');
+        $component->assertSee('2024-06-15 10:30:00');
+    }
 }
 
 class User {
@@ -188,6 +204,15 @@ class PostWithCasting extends Model
     }
 }
 
+class PostWithoutCasting extends Model
+{
+    use \Sushi\Sushi;
+
+    protected $rows = [
+        ['title' => 'A Title', 'published_at' => '2024-06-15 10:30:00'],
+    ];
+}
+
 class ComponentWithTypedEnumProperty extends Component
 {
     public string $title = '';
@@ -219,6 +244,33 @@ class ComponentWithTypedDateProperty extends Component
 {
     public string $title = '';
     public ?Carbon $published_at = null;
+
+    public function callFill($values)
+    {
+        $this->fill($values);
+    }
+
+    public function render()
+    {
+        return Blade::render(
+            <<<'HTML'
+                <div>
+                    {{ $title }}
+                    {{ $published_at }}
+                </div>
+            HTML,
+            [
+                'title' => $this->title,
+                'published_at' => $this->published_at,
+            ]
+        );
+    }
+}
+
+class ComponentWithUntypedDateProperty extends Component
+{
+    public string $title = '';
+    public $published_at;
 
     public function callFill($values)
     {

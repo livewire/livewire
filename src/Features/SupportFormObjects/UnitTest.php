@@ -1101,12 +1101,29 @@ class UnitTest extends \Tests\TestCase
         })
             ->assertSetStrict('form.title', '')
             ->assertSetStrict('form.published_at', null)
-            ->call('fillForm', PostForFormObjectDateTesting::first())
+            ->call('fillForm', PostForFormObjectWithDateCasting::first())
             ->assertSetStrict('form.title', 'A Title')
             ->assertSetStrict('form.published_at', function ($value) {
                 return $value instanceof Carbon
                     && $value->eq(Carbon::parse('2024-06-15 10:30:00'));
             });
+    }
+
+    public function test_untyped_datetime_property_stays_string()
+    {
+        Livewire::test(new class extends TestComponent {
+            public FormWithUntypedDatePropertyStub $form;
+
+            public function fillForm($values)
+            {
+                $this->form->fill($values);
+            }
+        })
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.published_at', null)
+            ->call('fillForm', PostForFormObjectWithoutDateCasting::first())
+            ->assertSetStrict('form.title', 'A Title')
+            ->assertSetStrict('form.published_at', '2024-06-15 10:30:00');
     }
 }
 
@@ -1537,7 +1554,7 @@ class BaseFormWithValidationInLifecycleHookStub extends \Livewire\Features\Suppo
     }
 }
 
-class PostForFormObjectDateTesting extends Model
+class PostForFormObjectWithDateCasting extends Model
 {
     use \Sushi\Sushi;
 
@@ -1556,8 +1573,26 @@ class PostForFormObjectDateTesting extends Model
     }
 }
 
+class PostForFormObjectWithoutDateCasting extends Model
+{
+    use \Sushi\Sushi;
+
+    protected $rows = [
+        [
+            'title' => 'A Title',
+            'published_at' => '2024-06-15 10:30:00',
+        ],
+    ];
+}
+
 class FormWithDatePropertyStub extends Form
 {
     public string $title = '';
     public ?Carbon $published_at = null;
+}
+
+class FormWithUntypedDatePropertyStub extends Form
+{
+    public string $title = '';
+    public $published_at;
 }

@@ -30,15 +30,34 @@ trait InteractsWithProperties
         $publicProperties = array_keys($this->all());
 
         if ($values instanceof Model) {
-            // toArray() produces two very different kinds of values:
-            // 1. Attribute / accessor / append
-            // 2. Loaded relation
-            $values = collect($values->toArray())
-                ->map(fn ($value, $key) => $values->relationLoaded($key)
-                    ? $value                        // keep relation as array
-                    : $values->getAttribute($key)   // get casted attribute / accessor / append
-                )
-                ->all();
+            $model = $values;
+            $values = $model->toArray();
+
+            foreach ($values as $key => $value) {
+                if ($model->relationLoaded($key)) continue;
+
+                $propertyName = Utils::beforeFirstDot($key);
+
+                if (! in_array($propertyName, $publicProperties)) continue;
+
+                $property = Utils::getProperty($this, $propertyName);
+
+                // If property is not typed, leave as it is
+                if (! $property->hasType()) continue;
+
+                $type = $property->getType();
+
+                if (! $type instanceof \ReflectionNamedType || $type->isBuiltin()) continue;
+
+                $castedValue = $model->getAttribute($key);
+
+                // Only replace when the property has type, not built-in type
+                // (Enum, Carbon, custom cast object, etc.) and 
+                // the casted value is compatible (or null for nullable types)
+                if ($castedValue === null || $castedValue instanceof ($type->getName())) {
+                    $values[$key] = $castedValue;
+                }
+            }
         }
 
         foreach ($values as $key => $value) {
