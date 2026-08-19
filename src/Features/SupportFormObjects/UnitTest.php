@@ -1105,6 +1105,49 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.status', 'active')
         ;
     }
+
+    public function test_resetting_component_does_not_unset_form_object()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithDefaults $form;
+
+            public $other = 'keep';
+
+            public function resetAll()
+            {
+                $this->reset();
+            }
+
+            public function resetFormProperty()
+            {
+                $this->reset('form');
+            }
+        })
+            ->assertSetStrict('form.title', 'foo')
+            ->assertSetStrict('form.content', 'bar')
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->set('other', 'changed')
+            ->assertSetStrict('form.title', 'Some Title')
+            ->assertSetStrict('form.content', 'Some content...')
+            ->assertSetStrict('other', 'changed')
+            // $this->reset() must reset form fields to their defaults, not unset the form
+            ->call('resetAll')
+            ->assertSetStrict('form.title', 'foo')
+            ->assertSetStrict('form.content', 'bar')
+            ->assertSetStrict('other', 'keep')
+            ->assertSetStrict('form', fn ($form) => $form instanceof PostFormStubWithDefaults)
+            // $this->reset('form') must do the same
+            ->set('form.title', 'Another Title')
+            ->set('form.content', 'More content...')
+            ->assertSetStrict('form.title', 'Another Title')
+            ->assertSetStrict('form.content', 'More content...')
+            ->call('resetFormProperty')
+            ->assertSetStrict('form.title', 'foo')
+            ->assertSetStrict('form.content', 'bar')
+            ->assertSetStrict('form', fn ($form) => $form instanceof PostFormStubWithDefaults)
+        ;
+    }
 }
 
 class PostFormStub extends Form
