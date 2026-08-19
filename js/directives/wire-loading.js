@@ -94,8 +94,7 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
 
         let matches = true
         let cleared = false
-        let requestCanFinishLoading = false
-        let navigating = false
+        let navigationWasStarted = false
         let stopWaitingForNavigation = () => {}
 
         let finishLoading = () => {
@@ -115,26 +114,21 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
             if (! matches) return
 
             startLoading()
-
-            stopWaitingForNavigation = onNavigationStart(navigation => {
-                navigating = true
-
-                navigation.onDestinationSettled(status => {
-                    navigating = false
-
-                    if (status === 'ready' || requestCanFinishLoading) finishLoading()
-                })
-            })
         })
 
         // Clear loading before morph on success
         onSuccess(({ onEffect }) => {
-            onEffect(() => {
-                requestCanFinishLoading = true
+            // Effects are processed before onEffect runs, so watch this window for a navigation...
+            stopWaitingForNavigation = onNavigationStart(navigation => {
+                navigationWasStarted = true
 
+                navigation.onDestinationSettled(finishLoading)
+            })
+
+            onEffect(() => {
                 stopWaitingForNavigation()
 
-                if (navigating) return
+                if (navigationWasStarted) return
 
                 finishLoading()
             })
@@ -142,11 +136,9 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
 
         // Clear loading on cancel/error/failure (onFinish fires immediately on these paths)
         onFinish(() => {
-            requestCanFinishLoading = true
-
             stopWaitingForNavigation()
 
-            if (navigating) return
+            if (navigationWasStarted) return
 
             finishLoading()
         })
