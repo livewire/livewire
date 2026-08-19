@@ -300,6 +300,11 @@ class Testable
             return $this;
         }
 
+        // The stored references come back signed; resolve them to raw paths for the local rewrite below.
+        $fileHashes = collect($fileHashes)->map(function ($signedPath) {
+            return \Livewire\Features\SupportFileUploads\TemporaryUploadedFile::extractPathFromSignedPath($signedPath);
+        })->toArray();
+
         // We are going to encode the original file size, mimeType and hashName in the filename
         // so when we create a new TemporaryUploadedFile instance we can fake the
         // same file size, mimeType and hashName set for the original file upload.
@@ -316,6 +321,10 @@ class Testable
 
         // Now we finish the upload with a final call to the Livewire component
         // with the temporarily uploaded file path.
+        $newFileHashes = collect($newFileHashes)->map(function ($path) {
+            return \Livewire\Features\SupportFileUploads\TemporaryUploadedFile::signPath($path);
+        })->toArray();
+
         $this->call('_finishUpload', $name, $newFileHashes, $isMultiple);
 
         return $this;
