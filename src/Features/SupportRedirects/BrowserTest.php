@@ -168,6 +168,60 @@ class BrowserTest extends BrowserTestCase
             ;
         });
     }
+
+    public function test_redirect_helper_with_flash_persists_on_destination_page()
+    {
+        config()->set('session.driver', 'file');
+
+        Route::get('/redirect', RedirectComponent::class)->middleware('web');
+
+        Livewire::visit([
+            new class extends Component {
+                public function doRedirect()
+                {
+                    return redirect('/redirect')->with('alert', 'Session flash data');
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="doRedirect" dusk="button">Do redirect</button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@session-message', 'Session flash data');
+    }
+
+    public function test_redirect_to_with_flash_persists_on_destination_page()
+    {
+        config()->set('session.driver', 'file');
+
+        Route::get('/redirect', RedirectComponent::class)->middleware('web');
+
+        Livewire::visit([
+            new class extends Component {
+                public function doRedirect()
+                {
+                    return redirect()->to('/redirect')->with('alert', 'Session flash data');
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="doRedirect" dusk="button">Do redirect</button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@session-message', 'Session flash data');
+    }
 }
 
 class RedirectComponent extends Component {
