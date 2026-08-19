@@ -1319,12 +1319,9 @@ class PostForFormObjectTesting extends Model
         ],
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'status' => FormEnumStub::class,
-        ];
-    }
+    protected $casts = [
+        'status' => FormEnumStub::class,
+    ];
 }
 
 class FormWithLiveValidation extends Form
