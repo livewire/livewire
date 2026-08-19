@@ -666,7 +666,7 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file);
 
         // Try to hijack the photo property to a path outside the temporary livewire directory root.
-        $component->set('photo', 'livewire-file:../dangerous.png')
+        $component->set('photo', 'livewire-file:'.TemporaryUploadedFile::signPath('../dangerous.png'))
             ->call('$refresh');
     }
 
