@@ -87,6 +87,64 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_loading_state_clears_when_a_navigate_redirect_is_prevented()
+    {
+        Livewire::visit([new class extends Component {
+            public function save()
+            {
+                $this->redirect('/prevented-navigate-destination', navigate: true);
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button type="button" dusk="save" wire:click="save" wire:loading.attr="disabled">Save</button>
+
+                @script
+                <script>
+                    document.addEventListener('livewire:navigate', event => event.preventDefault(), { once: true })
+                </script>
+                @endscript
+            </div>
+            HTML; }
+        }])
+            ->waitForLivewire()->click('@save')
+            ->assertAttributeMissing('@save', 'disabled')
+        ;
+    }
+
+    public function test_loading_state_clears_when_a_navigate_redirect_is_cancelled()
+    {
+        Livewire::visit([new class extends Component {
+            public function save()
+            {
+                $this->redirect('/cancelled-navigate-destination', navigate: true);
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button type="button" dusk="save" wire:click="save" wire:loading.attr="disabled">Save</button>
+
+                @script
+                <script>
+                    let removeHook = Livewire.hook('navigate.request', ({ options }) => {
+                        let controller = new AbortController()
+
+                        controller.abort()
+                        options.signal = controller.signal
+
+                        removeHook()
+                    })
+                </script>
+                @endscript
+            </div>
+            HTML; }
+        }])
+            ->waitForLivewire()->click('@save')
+            ->waitUntil("! document.querySelector('[dusk=\"save\"]').hasAttribute('disabled')")
+            ->assertAttributeMissing('@save', 'disabled')
+        ;
+    }
+
     public function test_session_flash_persists_when_redirecting_from_request_with_multiple_components_in_the_same_request()
     {
         config()->set('session.driver', 'file');

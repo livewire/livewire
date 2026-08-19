@@ -1,6 +1,7 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
 import { closestIsland } from '@/features/supportIslands'
+import { onNavigationStart } from '@/plugins/navigate/navigation'
 import { interceptMessage } from '@/request'
 import { listen } from '@/utils'
 
@@ -93,40 +94,77 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
 
         let matches = true
         let cleared = false
-        let navigating = false
+        let requestCanFinishLoading = false
+        let navigation
+        let removeNavigationStartListener = () => {}
+        let removeNavigationReadyListener = () => {}
+        let removeNavigationCancelledListener = () => {}
+
+        let stopListeningToNavigation = () => {
+            removeNavigationReadyListener()
+            removeNavigationCancelledListener()
+        }
+
+        let finishLoading = () => {
+            if (! matches || cleared) return
+
+            removeNavigationStartListener()
+            stopListeningToNavigation()
+
+            endLoading()
+            cleared = true
+        }
 
         onSend(({ payload }) => {
             if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
                 matches = false
             }
 
-            matches && startLoading()
+            if (! matches) return
+
+            startLoading()
+
+            removeNavigationStartListener = onNavigationStart(newNavigation => {
+                navigation = newNavigation
+
+                removeNavigationReadyListener = navigation.onReady(finishLoading)
+
+                if (cleared) return
+
+                removeNavigationCancelledListener = navigation.onCancelled(() => {
+                    if (navigation !== newNavigation) return
+
+                    stopListeningToNavigation()
+
+                    navigation = undefined
+
+                    if (requestCanFinishLoading) finishLoading()
+                })
+            })
         })
 
         // Clear loading before morph on success
-        onSuccess(({ payload, onEffect }) => {
+        onSuccess(({ onEffect }) => {
             onEffect(() => {
-                if (payload.effects.redirect && payload.effects.redirectUsingNavigate) {
-                    navigating = true
+                requestCanFinishLoading = true
 
-                    return
-                }
+                removeNavigationStartListener()
 
-                if (matches && ! cleared) {
-                    endLoading()
-                    cleared = true
-                }
+                if (navigation) return
+
+                finishLoading()
             })
         })
 
         // Clear loading on cancel/error/failure (onFinish fires immediately on these paths)
         onFinish(() => {
-            if (navigating) return
+            requestCanFinishLoading = true
 
-            if (matches && ! cleared) {
-                endLoading()
-                cleared = true
-            }
+            removeNavigationStartListener()
+
+            if (navigation) return
+
+            finishLoading()
         })
     })
 }
