@@ -227,6 +227,15 @@ class UnitTest extends \Tests\TestCase
         $this->assertNull(session()->get('foo'));
     }
 
+    public function test_redirect_helper_preserves_redirect_effects()
+    {
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerRedirectHelper');
+
+        $this->assertEquals(url('foo'), $component->effects['redirect']);
+    }
+
     public function test_redirect_helper_returns_redirect_response_instance()
     {
         $component = Livewire::test(TriggersRedirectStub::class);
@@ -234,7 +243,7 @@ class UnitTest extends \Tests\TestCase
         $return = $component->instance()->triggerRedirectHelper();
 
         $this->assertInstanceOf(RedirectResponse::class, $return);
-        $this->assertEquals(url('foo'), $component->effects['redirect'] ?? $return->getTargetUrl());
+        $this->assertEquals(url('foo'), $return->getTargetUrl());
     }
 
     public function test_redirect_helper_to_method_returns_redirect_response_instance()
