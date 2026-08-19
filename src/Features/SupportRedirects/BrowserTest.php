@@ -54,7 +54,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    public function test_loading_state_remains_active_while_a_navigate_redirect_fetches_its_destination()
+    public function test_loading_state_remains_active_during_navigation_but_is_not_stored_in_history()
     {
         Route::get('/slow-navigate-destination', function () {
             sleep(1);
@@ -84,6 +84,16 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@save')
             ->assertAttribute('@save', 'disabled', 'true')
             ->waitFor('@navigate-destination', 5)
+            ->waitForNavigate()->back()
+            ->assertAttributeMissing('@save', 'disabled')
+            ->waitForNavigate()->forward()
+            ->waitFor('@navigate-destination', 5)
+            ->waitForNavigate()->back()
+            ->assertAttributeMissing('@save', 'disabled')
+            ->waitForLivewire()->click('@save')
+            ->assertAttribute('@save', 'disabled', 'true')
+            ->waitFor('@navigate-destination', 5)
+            ->assertConsoleLogHasNoErrors()
         ;
     }
 
@@ -114,6 +124,19 @@ class BrowserTest extends BrowserTestCase
 
     public function test_loading_state_clears_when_a_navigate_redirect_is_cancelled()
     {
+        Route::get('/cancelled-navigate-destination', function () {
+            sleep(1);
+
+            return response(<<<'HTML'
+                <!DOCTYPE html>
+                <html>
+                    <body>
+                        <h1 dusk="navigate-destination">Destination</h1>
+                    </body>
+                </html>
+                HTML);
+        })->middleware('web');
+
         Livewire::visit([new class extends Component {
             public function save()
             {
@@ -142,6 +165,10 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@save')
             ->waitUntil("! document.querySelector('[dusk=\"save\"]').hasAttribute('disabled')")
             ->assertAttributeMissing('@save', 'disabled')
+            ->waitForLivewire()->click('@save')
+            ->assertAttribute('@save', 'disabled', 'true')
+            ->waitFor('@navigate-destination', 5)
+            ->assertConsoleLogHasNoErrors()
         ;
     }
 
