@@ -233,7 +233,7 @@ class UnitTest extends \Tests\TestCase
 
         $component->runAction('triggerRedirectHelper');
 
-        $this->assertEquals(url('foo'), $component->effects['redirect']);
+        $component->assertRedirect('/foo');
     }
 
     public function test_redirect_helper_returns_redirect_response_instance()
@@ -253,6 +253,7 @@ class UnitTest extends \Tests\TestCase
         $return = $component->instance()->triggerRedirectHelperUsingTo();
 
         $this->assertInstanceOf(RedirectResponse::class, $return);
+        $this->assertEquals(url('foo'), $return->getTargetUrl());
     }
 
     public function test_redirect_helper_route_method_returns_redirect_response_instance()
@@ -264,6 +265,7 @@ class UnitTest extends \Tests\TestCase
         $return = $component->instance()->triggerRedirectHelperUsingRoute();
 
         $this->assertInstanceOf(RedirectResponse::class, $return);
+        $this->assertEquals(route('foo'), $return->getTargetUrl());
     }
 
     public function test_typed_redirect_response_return_does_not_throw()
@@ -272,7 +274,7 @@ class UnitTest extends \Tests\TestCase
 
         $component->runAction('triggerTypedRedirectResponse');
 
-        $this->assertEquals(url('foo'), $component->effects['redirect']);
+        $component->assertRedirect('/foo');
     }
 
     public function test_redirect_helper_to_then_with_flashes_session()
@@ -281,7 +283,8 @@ class UnitTest extends \Tests\TestCase
 
         $component->runAction('triggerRedirectHelperUsingToThenWith');
 
-        $this->assertEquals(url('foo'), $component->effects['redirect']);
+        $component->assertRedirect('/foo');
+
         $this->assertEquals('livewire-is-awesome', Session::get('success'));
     }
 
