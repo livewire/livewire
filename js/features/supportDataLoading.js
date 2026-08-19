@@ -1,6 +1,7 @@
 import { interceptMessage } from '@/request'
+import { releaseAfterNavigation } from '@/plugins/navigate/navigation'
 
-interceptMessage(({ message, onSend, onFinish }) => {
+interceptMessage(({ message, onSend, onSuccess, onFinish }) => {
     let undos = []
 
     onSend(() => {
@@ -23,5 +24,5 @@ interceptMessage(({ message, onSend, onFinish }) => {
         })
     })
 
-    onFinish(() => undos.forEach(undo => undo()))
+    releaseAfterNavigation({ onSuccess, onFinish }, () => undos.forEach(undo => undo()))
 })

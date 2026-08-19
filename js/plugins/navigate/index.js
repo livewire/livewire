@@ -8,6 +8,7 @@ import { finishAndHideProgressBar, removeAnyLeftOverStaleProgressBars, showAndSt
 import { packUpPersistedPopovers, unPackPersistedPopovers } from "./popover"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
+import { startNavigation } from "./navigation"
 
 let enablePersist = true
 let showProgressBar = true
@@ -79,12 +80,21 @@ export default function (Alpine) {
     })
 
     function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
+        let navigation = startNavigation()
+
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
             // The request may have been redirected off to another origin. We can't
             // swap that page into this document, so let the browser visit it...
-            if (! isSameOrigin(finalDestination)) return visitNatively(finalDestination)
+            if (! isSameOrigin(finalDestination)) {
+                navigation.ready()
+                navigation.finish()
+
+                return visitNatively(finalDestination)
+            }
+
+            navigation.ready()
 
             // Fire the navigating event, allowing listeners to register onSwap callbacks
             let swapCallbacks = []
@@ -133,12 +143,15 @@ export default function (Alpine) {
                             autofocusElementsWithTheAutofocusAttribute()
 
                             fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                            navigation.finish()
                             showProgressBar && finishAndHideProgressBar()
                         })
                     })
                 })
             })
         }, (error) => {
+            navigation.cancel()
+
             showProgressBar && finishAndHideProgressBar()
 
             // We cancelled this request ourselves, so the user is already on their
@@ -180,12 +193,16 @@ export default function (Alpine) {
 
             if (prevented) return
 
+            let navigation = startNavigation()
+
             // @todo: see if there's a way to update the current HTML BEFORE
             // the back button is hit, and not AFTER:
             storeScrollInformationInHtmlBeforeNavigatingAway()
 
             // Fire the navigating event, allowing listeners to register onSwap callbacks
             let swapCallbacks = []
+
+            navigation.ready()
 
             fireEventForOtherLibrariesToHookInto('alpine:navigating', {
                 onSwap: (callback) => swapCallbacks.push(callback)
@@ -224,6 +241,7 @@ export default function (Alpine) {
                         autofocusElementsWithTheAutofocusAttribute()
 
                         fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                        navigation.finish()
                     })
                 })
             })

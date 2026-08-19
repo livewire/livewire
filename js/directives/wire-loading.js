@@ -1,6 +1,7 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
 import { closestIsland } from '@/features/supportIslands'
+import { onNavigationStart } from '@/plugins/navigate/navigation'
 import { interceptMessage } from '@/request'
 import { listen } from '@/utils'
 
@@ -93,31 +94,53 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
 
         let matches = true
         let cleared = false
+        let navigationWasStarted = false
+        let stopWaitingForNavigation = () => {}
+
+        let finishLoading = () => {
+            if (! matches || cleared) return
+
+            stopWaitingForNavigation()
+
+            endLoading()
+            cleared = true
+        }
 
         onSend(({ payload }) => {
             if (targets.length > 0 && containsTargets(payload, targets) === inverted) {
                 matches = false
             }
 
-            matches && startLoading()
+            if (! matches) return
+
+            startLoading()
         })
 
         // Clear loading before morph on success
         onSuccess(({ onEffect }) => {
+            // Effects are processed before onEffect runs, so watch this window for a navigation...
+            stopWaitingForNavigation = onNavigationStart(navigation => {
+                navigationWasStarted = true
+
+                navigation.onDestinationSettled(finishLoading)
+            })
+
             onEffect(() => {
-                if (matches && ! cleared) {
-                    endLoading()
-                    cleared = true
-                }
+                stopWaitingForNavigation()
+
+                if (navigationWasStarted) return
+
+                finishLoading()
             })
         })
 
         // Clear loading on cancel/error/failure (onFinish fires immediately on these paths)
         onFinish(() => {
-            if (matches && ! cleared) {
-                endLoading()
-                cleared = true
-            }
+            stopWaitingForNavigation()
+
+            if (navigationWasStarted) return
+
+            finishLoading()
         })
     })
 }
