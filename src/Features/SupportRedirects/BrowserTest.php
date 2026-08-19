@@ -83,17 +83,63 @@ class BrowserTest extends BrowserTestCase
         }])
             ->waitForLivewire()->click('@save')
             ->assertAttribute('@save', 'disabled', 'true')
+            ->assertAttribute('@save', 'data-loading', 'true')
             ->waitFor('@navigate-destination', 5)
             ->waitForNavigate()->back()
             ->assertAttributeMissing('@save', 'disabled')
+            ->assertAttributeMissing('@save', 'data-loading')
             ->waitForNavigate()->forward()
             ->waitFor('@navigate-destination', 5)
             ->waitForNavigate()->back()
             ->assertAttributeMissing('@save', 'disabled')
+            ->assertAttributeMissing('@save', 'data-loading')
             ->waitForLivewire()->click('@save')
             ->assertAttribute('@save', 'disabled', 'true')
+            ->assertAttribute('@save', 'data-loading', 'true')
             ->waitFor('@navigate-destination', 5)
             ->assertConsoleLogHasNoErrors()
+        ;
+    }
+
+    public function test_form_protection_remains_active_while_a_navigate_redirect_fetches_its_destination()
+    {
+        Route::get('/slow-form-navigate-destination', function () {
+            sleep(1);
+
+            return response(<<<'HTML'
+                <!DOCTYPE html>
+                <html>
+                    <body>
+                        <h1 dusk="navigate-destination">Destination</h1>
+                    </body>
+                </html>
+                HTML);
+        })->middleware('web');
+
+        Livewire::visit([new class extends Component {
+            public function save()
+            {
+                $this->redirect('/slow-form-navigate-destination', navigate: true);
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <form wire:submit="save">
+                    <input type="text" dusk="name">
+                    <button type="submit" dusk="save">Save</button>
+                </form>
+            </div>
+            HTML; }
+        }])
+            ->waitForLivewire()->click('@save')
+            ->assertAttribute('@name', 'readonly', 'true')
+            ->assertAttribute('@save', 'disabled', 'true')
+            ->assertAttribute('@save', 'data-loading', 'true')
+            ->waitFor('@navigate-destination', 5)
+            ->waitForNavigate()->back()
+            ->assertAttributeMissing('@name', 'readonly')
+            ->assertAttributeMissing('@save', 'disabled')
+            ->assertAttributeMissing('@save', 'data-loading')
         ;
     }
 
@@ -119,6 +165,7 @@ class BrowserTest extends BrowserTestCase
         }])
             ->waitForLivewire()->click('@save')
             ->assertAttributeMissing('@save', 'disabled')
+            ->assertAttributeMissing('@save', 'data-loading')
         ;
     }
 
@@ -165,8 +212,10 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@save')
             ->waitUntil("! document.querySelector('[dusk=\"save\"]').hasAttribute('disabled')")
             ->assertAttributeMissing('@save', 'disabled')
+            ->assertAttributeMissing('@save', 'data-loading')
             ->waitForLivewire()->click('@save')
             ->assertAttribute('@save', 'disabled', 'true')
+            ->assertAttribute('@save', 'data-loading', 'true')
             ->waitFor('@navigate-destination', 5)
             ->assertConsoleLogHasNoErrors()
         ;

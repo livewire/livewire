@@ -21,6 +21,29 @@ export function onNavigationStart(callback) {
     return () => navigationStartListeners.delete(callback)
 }
 
+export function releaseAfterNavigation({ onSuccess, onFinish }, release) {
+    let navigationWasStarted = false
+    let stopWaitingForNavigation = () => {}
+
+    onSuccess(({ onEffect }) => {
+        stopWaitingForNavigation = onNavigationStart(navigation => {
+            navigationWasStarted = true
+
+            navigation.onDestinationSettled(release)
+        })
+
+        onEffect(stopWaitingForNavigation)
+    })
+
+    onFinish(() => {
+        stopWaitingForNavigation()
+
+        if (navigationWasStarted) return
+
+        release()
+    })
+}
+
 export function getActiveNavigation() {
     return activeNavigation
 }
