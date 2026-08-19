@@ -95,26 +95,30 @@ describe('Navigation lifecycle', () => {
 
     it('settles the destination when it becomes ready', () => {
         let navigation = startNavigation()
-        let callback = vi.fn()
+        let state
+        let callback = vi.fn(() => state = navigation.state)
 
         navigation.onDestinationSettled(callback)
         navigation.ready()
         navigation.cancel()
 
         expect(callback).toHaveBeenCalledOnce()
-        expect(callback).toHaveBeenCalledWith('ready')
+        expect(callback).toHaveBeenCalledWith()
+        expect(state).toBe('ready')
     })
 
     it('settles the destination when navigation is cancelled', () => {
         let navigation = startNavigation()
-        let callback = vi.fn()
+        let state
+        let callback = vi.fn(() => state = navigation.state)
 
         navigation.onDestinationSettled(callback)
         navigation.cancel()
         navigation.ready()
 
         expect(callback).toHaveBeenCalledOnce()
-        expect(callback).toHaveBeenCalledWith('cancelled')
+        expect(callback).toHaveBeenCalledWith()
+        expect(state).toBe('cancelled')
     })
 
     it('allows listeners to be removed', () => {

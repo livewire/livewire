@@ -72,13 +72,13 @@ class Navigation {
 
     onDestinationSettled(callback) {
         if (this.state === 'ready' || this.state === 'finished') {
-            callback('ready')
+            callback()
 
             return () => {}
         }
 
         if (this.state === 'cancelled') {
-            callback('cancelled')
+            callback()
 
             return () => {}
         }
@@ -86,13 +86,13 @@ class Navigation {
         let removeReadyListener = this.listen('ready', () => {
             removeCancelledListener()
 
-            callback('ready')
+            callback()
         })
 
         let removeCancelledListener = this.listen('cancelled', () => {
             removeReadyListener()
 
-            callback('cancelled')
+            callback()
         })
 
         return () => {
