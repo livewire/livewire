@@ -1137,11 +1137,11 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.content', 'bar')
             ->assertSetStrict('other', 'keep')
             ->assertSetStrict('form', fn ($form) => $form instanceof PostFormStubWithDefaults)
-            // $this->reset('form') must do the same
             ->set('form.title', 'Another Title')
             ->set('form.content', 'More content...')
             ->assertSetStrict('form.title', 'Another Title')
             ->assertSetStrict('form.content', 'More content...')
+            // $this->reset('form') must do the same
             ->call('resetFormProperty')
             ->assertSetStrict('form.title', 'foo')
             ->assertSetStrict('form.content', 'bar')
