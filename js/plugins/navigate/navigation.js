@@ -70,6 +70,37 @@ class Navigation {
         return this.listen('finished', callback)
     }
 
+    onDestinationSettled(callback) {
+        if (this.state === 'ready' || this.state === 'finished') {
+            callback('ready')
+
+            return () => {}
+        }
+
+        if (this.state === 'cancelled') {
+            callback('cancelled')
+
+            return () => {}
+        }
+
+        let removeReadyListener = this.listen('ready', () => {
+            removeCancelledListener()
+
+            callback('ready')
+        })
+
+        let removeCancelledListener = this.listen('cancelled', () => {
+            removeReadyListener()
+
+            callback('cancelled')
+        })
+
+        return () => {
+            removeReadyListener()
+            removeCancelledListener()
+        }
+    }
+
     ready() {
         if (this.state !== 'fetching') return
 

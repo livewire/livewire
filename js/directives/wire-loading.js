@@ -95,21 +95,13 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
         let matches = true
         let cleared = false
         let requestCanFinishLoading = false
-        let navigation
-        let removeNavigationStartListener = () => {}
-        let removeNavigationReadyListener = () => {}
-        let removeNavigationCancelledListener = () => {}
-
-        let stopListeningToNavigation = () => {
-            removeNavigationReadyListener()
-            removeNavigationCancelledListener()
-        }
+        let navigating = false
+        let stopWaitingForNavigation = () => {}
 
         let finishLoading = () => {
             if (! matches || cleared) return
 
-            removeNavigationStartListener()
-            stopListeningToNavigation()
+            stopWaitingForNavigation()
 
             endLoading()
             cleared = true
@@ -124,21 +116,13 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
 
             startLoading()
 
-            removeNavigationStartListener = onNavigationStart(newNavigation => {
-                navigation = newNavigation
+            stopWaitingForNavigation = onNavigationStart(navigation => {
+                navigating = true
 
-                removeNavigationReadyListener = navigation.onReady(finishLoading)
+                navigation.onDestinationSettled(status => {
+                    navigating = false
 
-                if (cleared) return
-
-                removeNavigationCancelledListener = navigation.onCancelled(() => {
-                    if (navigation !== newNavigation) return
-
-                    stopListeningToNavigation()
-
-                    navigation = undefined
-
-                    if (requestCanFinishLoading) finishLoading()
+                    if (status === 'ready' || requestCanFinishLoading) finishLoading()
                 })
             })
         })
@@ -148,9 +132,9 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
             onEffect(() => {
                 requestCanFinishLoading = true
 
-                removeNavigationStartListener()
+                stopWaitingForNavigation()
 
-                if (navigation) return
+                if (navigating) return
 
                 finishLoading()
             })
@@ -160,9 +144,9 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
         onFinish(() => {
             requestCanFinishLoading = true
 
-            removeNavigationStartListener()
+            stopWaitingForNavigation()
 
-            if (navigation) return
+            if (navigating) return
 
             finishLoading()
         })
