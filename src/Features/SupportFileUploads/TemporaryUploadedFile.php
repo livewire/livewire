@@ -355,13 +355,20 @@ class TemporaryUploadedFile extends UploadedFile
     {
         if (is_string($subject)) {
             if (str($subject)->startsWith('livewire-file:')) {
-                return static::createFromLivewire(str($subject)->after('livewire-file:'));
+                $path = static::extractPathFromSignedPath(str($subject)->after('livewire-file:'));
+
+                return $path === false ? null : static::createFromLivewire($path);
             }
 
             if (str($subject)->startsWith('livewire-files:')) {
-                $paths = json_decode(str($subject)->after('livewire-files:'), true);
+                $signedPaths = json_decode(str($subject)->after('livewire-files:'), true) ?: [];
 
-                return collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
+                return collect($signedPaths)
+                    ->map(function ($signedPath) { return static::extractPathFromSignedPath($signedPath); })
+                    ->filter(function ($path) { return $path !== false; })
+                    ->map(function ($path) { return static::createFromLivewire($path); })
+                    ->values()
+                    ->all();
             }
         }
 
@@ -376,11 +383,13 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function serializeForLivewireResponse()
     {
-        return 'livewire-file:'.$this->getFilename();
+        return 'livewire-file:'.static::signPath($this->getFilename());
     }
 
     public static function serializeMultipleForLivewireResponse($files)
     {
-        return 'livewire-files:'.json_encode(collect($files)->map->getFilename());
+        return 'livewire-files:'.json_encode(collect($files)->map(function ($file) {
+            return static::signPath($file->getFilename());
+        }));
     }
 }
