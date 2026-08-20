@@ -99,20 +99,17 @@ class EloquentModelSynth extends Synth
         $values = $model->toArray();
         $attributes = $model->getAttributes();
 
-        foreach ($model->getCasts() as $key => $cast) {
-            if (! is_string($cast) || ! array_key_exists($key, $attributes)) continue;
+        foreach ($attributes as $key => $attribute) {
+            if (! array_key_exists($key, $values)) continue;
 
-            $cast = strtolower($cast);
+            $casted = $values[$key];
 
-            $isScalar = in_array($cast, [
-                'int', 'integer',
-                'real', 'float', 'double',
-                'bool', 'boolean',
-                'timestamp',
-            ], true) || str_starts_with($cast, 'decimal:');
-
-            if ($isScalar) {
-                $values[$key] = $attributes[$key];
+            if (
+                is_numeric($attribute)
+                && is_numeric($casted)
+                && $attribute != $casted
+            ) {
+                $values[$key] = $attribute;
             }
         }
 
