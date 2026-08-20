@@ -515,8 +515,17 @@ trait HandlesValidation
 
             $synth = app('livewire')->findSynth($value, $this);
 
-            if ($synth && method_exists($synth, 'unwrapForValidation')) return $synth->unwrapForValidation($value);
-            else if ($value instanceof Arrayable) return $value->toArray();
+            if ($synth && method_exists($synth, 'unwrapForValidation')) {
+                return $synth->unwrapForValidation($value);
+            }
+
+            if ($value instanceof Model) {
+                return $value->getAttributes();
+            }
+
+            if ($value instanceof Arrayable) {
+                return $value->toArray();
+            }
 
             return $value;
         })->all();
