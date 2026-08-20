@@ -104,8 +104,8 @@ class EloquentModelSynth extends Synth
             $casted = $values[$key];
 
             if (
-                is_numeric($attribute)
-                && is_numeric($casted)
+                is_scalar($attribute)
+                && is_scalar($casted)
                 && $attribute != $casted
             ) {
                 $values[$key] = $attribute;
