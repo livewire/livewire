@@ -1,4 +1,4 @@
-import { dataSet, deepClone, diff, diffAndConsolidate, diffAndPatchRecursive, extractData} from '@/utils'
+import { dataDelete, dataGet, dataSet, deepClone, deeplyEqual, diff, diffAndConsolidate, diffAndPatchRecursive, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
@@ -126,6 +126,26 @@ export class Component {
         let propertiesDiff = diffAndConsolidate(this.canonical, this.ephemeral)
 
         return this.mergeQueuedUpdates(propertiesDiff)
+    }
+
+    revertUpdates(updates) {
+        Object.entries(updates).forEach(([path, { exists, value }]) => {
+            let currentValue = dataGet(this.ephemeral, path)
+            let stillMatchesSentValue = exists
+                ? deeplyEqual(currentValue, value)
+                : currentValue === undefined
+
+            // Preserve a newer edit made while the failed request was in flight...
+            if (! stillMatchesSentValue) return
+
+            let canonicalValue = dataGet(this.canonical, path)
+
+            if (canonicalValue === undefined) {
+                dataDelete(this.reactive, path)
+            } else {
+                dataSet(this.reactive, path, deepClone(canonicalValue))
+            }
+        })
     }
 
     applyUpdates(object, updates) {

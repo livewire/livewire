@@ -49,6 +49,110 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_only_the_model_that_started_a_failed_request_is_reverted()
+    {
+        Livewire::visit(new class extends BaseComponent {
+            public $count = 0;
+            public $form = [
+                'name' => '',
+                'notes' => '',
+            ];
+
+            public function updatedForm($value, $key)
+            {
+                if ($key === 'name' || ($key === null && $value['name'] !== '')) {
+                    abort(500);
+                }
+            }
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <input dusk="name" wire:model.live="form.name" />
+                    <input dusk="notes" wire:model="form.notes" />
+
+                    <button dusk="increment" wire:click="increment">Increment</button>
+
+                    <span dusk="count">{{ $count }}</span>
+                </div>
+                HTML;
+            }
+        })
+            // This deferred draft will be bundled into the failed model request...
+            ->type('@notes', 'Keep this draft')
+            ->type('@name', 'x')
+            ->waitFor('#livewire-error')
+            ->keys('#livewire-error', '{escape}')
+            ->waitUntilMissing('#livewire-error')
+            // Revert only the model that initiated the request...
+            ->assertValue('@name', '')
+            ->assertValue('@notes', 'Keep this draft')
+            // The rejected model is no longer replayed and unrelated state can sync...
+            ->waitForLivewire()->click('@increment')
+            ->assertSeeIn('@count', '1')
+            ->assertValue('@notes', 'Keep this draft')
+            ->pause(100)
+            ->assertMissing('#livewire-error')
+        ;
+    }
+
+    public function test_deferred_form_values_survive_a_failed_action()
+    {
+        Livewire::visit(new class extends BaseComponent {
+            public $count = 0;
+            public $first = '';
+            public $last = '';
+
+            public function save()
+            {
+                abort(500);
+            }
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <input dusk="first" wire:model="first" />
+                    <input dusk="last" wire:model="last" />
+
+                    <button dusk="save" wire:click="save">Save</button>
+                    <button dusk="increment" wire:click="increment">Increment</button>
+
+                    <span dusk="count">{{ $count }}</span>
+                </div>
+                HTML;
+            }
+        })
+            ->type('@first', 'Ada')
+            ->type('@last', 'Lovelace')
+            ->click('@save')
+            ->waitFor('#livewire-error')
+            ->keys('#livewire-error', '{escape}')
+            ->waitUntilMissing('#livewire-error')
+            // An action error says nothing about whether these updates were accepted...
+            ->assertValue('@first', 'Ada')
+            ->assertValue('@last', 'Lovelace')
+            // A different action can accept the drafts and continue normally...
+            ->waitForLivewire()->click('@increment')
+            ->assertSeeIn('@count', '1')
+            ->assertValue('@first', 'Ada')
+            ->assertValue('@last', 'Lovelace')
+            ->pause(100)
+            ->assertMissing('#livewire-error')
+        ;
+    }
+
     public function test_it_does_not_show_html_modal_after_session_expired_dialog()
     {
         if (app()->version() >= '13') {

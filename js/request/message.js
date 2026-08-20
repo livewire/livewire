@@ -1,9 +1,11 @@
 import { MessageInterceptor } from "./interceptor"
+import { dataGet, deepClone } from "@/utils"
 
 export default class Message {
     actions = new Set()
     snapshot = null
     updates = null
+    modelUpdates = {}
     calls = null
     payload = null
     responsePayload = null
@@ -31,6 +33,35 @@ export default class Message {
 
     constructor(component) {
         this.component = component
+    }
+
+    captureModelUpdates() {
+        let capture = action => {
+            let directive = action.origin?.directive
+
+            if (directive?.value !== 'model' || ! directive.expression) return
+
+            let path = directive.expression.replace(/^\$parent\./, '')
+            let wasSent = Object.keys(this.updates).some(updatePath => {
+                return updatePath === path
+                    || updatePath.startsWith(`${path}.`)
+                    || path.startsWith(`${updatePath}.`)
+            })
+
+            if (! wasSent) return
+
+            let value = dataGet(this.component.ephemeral, path)
+
+            this.modelUpdates[path] = {
+                exists: value !== undefined,
+                value: value === undefined ? null : deepClone(value),
+            }
+        }
+
+        this.actions.forEach(action => {
+            capture(action)
+            action.squashedActions.forEach(capture)
+        })
     }
 
     addAction(action) {
@@ -174,6 +205,11 @@ export default class Message {
 
         // Invoke action-level onError callbacks
         Array.from(this.actions).forEach(action => action.invokeOnError({ response, body, preventDefault }))
+
+        // Only revert the model values that directly initiated this request.
+        // Other dirty state may have been bundled into the same message and
+        // must remain untouched when an action or render fails...
+        if (! this.isCancelled()) this.component.revertUpdates(this.modelUpdates)
 
         // Try to parse body as JSON for the rejection payload
         let json = null

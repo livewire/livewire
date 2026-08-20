@@ -267,6 +267,7 @@ function sendMessages() {
         request.messages.forEach(message => {
             message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn()
             message.updates = message.component.getUpdates()
+            message.captureModelUpdates()
             message.calls = Array.from(message.actions).map(i => ({
                 method: i.name,
                 params: i.params,
