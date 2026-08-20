@@ -65,7 +65,7 @@ export function evaluateReactiveExpression(el, expression, options = {}) {
 export function evaluateActionExpression(el, expression, options = {}) {
     if (! expression || expression.trim() === '') return
 
-    let contextualExpression = contextualizeExpression(expression, el)
+    let contextualExpression = contextualizeExpression(expression, el, ! isEvaluatingReactiveExpression())
 
     try {
         let result = Alpine.evaluateRaw(el, contextualExpression, options)
@@ -88,31 +88,53 @@ function reportExpressionError(error, expression, el) {
     console.error(error)
 }
 
-export function contextualizeExpression(expression, el) {
+export function contextualizeExpression(expression, el, preferWireAction = false) {
     let SKIP = ['JSON', 'true', 'false', 'null', 'undefined', 'this', '$wire', '$event']
+    let alpineScopeKeys = []
 
     // If an element is provided, collect Alpine scope keys between
     // this element and the Livewire component root so they don't
     // get incorrectly prefixed with $wire.
     if (el) {
-        SKIP.push(...getAlpineScopeKeys(el))
+        alpineScopeKeys = getAlpineScopeKeys(el)
+        SKIP.push(...alpineScopeKeys)
     }
-    let strings = []
+    let protectedExpressions = []
 
-    // 1. Yank out string literals so we don't touch them
-    let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (m) => {
-        strings.push(m)
-        return `___${strings.length - 1}___`
+    let actionTargetOffset = preferWireAction
+        ? getActionTargetOffset(expression)
+        : null
+
+    // 1. Yank out string literals and comments so we don't touch them
+    let result = expression.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (m) => {
+        protectedExpressions.push(m)
+        return `___${protectedExpressions.length - 1}___`
     })
 
     // 2. Prefix identifiers not after a dot (skip placeholders from step 1)
     //    Also skip object keys (identifiers immediately followed by colon)
     result = result.replace(/(^|[^.\w$])(\$?[a-zA-Z_]\w*)/g, (m, pre, ident, offset) => {
-        if (SKIP.includes(ident) || /^___\d+___$/.test(ident)) return pre + ident
+        let isWireActionTarget = alpineScopeKeys.includes(ident)
+            && offset + pre.length === actionTargetOffset
+
+        if ((SKIP.includes(ident) && ! isWireActionTarget) || /^___\d+___$/.test(ident)) return pre + ident
         if (result[offset + m.length] === ':') return pre + ident
         return pre + '$wire.' + ident
     })
 
-    // 3. Restore strings
-    return result.replace(/___(\d+)___/g, (m, i) => strings[i])
+    // 3. Restore strings and comments
+    return result.replace(/___(\d+)___/g, (m, i) => protectedExpressions[i])
+}
+
+function getActionTargetOffset(expression) {
+    let actionTarget = expression.match(/^(\s*)([a-zA-Z_]\w*)/)
+
+    if (! actionTarget) return null
+
+    let remainder = expression.slice(actionTarget[0].length)
+    let significantRemainder = remainder.replace(/^(?:(?:\s+)|(?:\/\*[\s\S]*?\*\/)|(?:\/\/[^\n]*(?:\n|$)))*/, '')
+
+    if (significantRemainder !== '' && ! significantRemainder.startsWith('(') && ! significantRemainder.startsWith(';')) return null
+
+    return actionTarget[1].length
 }
