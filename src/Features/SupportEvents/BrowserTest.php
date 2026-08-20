@@ -559,4 +559,103 @@ class BrowserTest extends BrowserTestCase
             ->click('@button')
             ->waitForTextIn('@output', 'baz');
     }
+
+    public function test_events_dispatched_alongside_newly_rendered_elements_are_received()
+    {
+        // Regression: livewire/livewire#10560 — when a single update both
+        // renders a brand-new element AND dispatches a browser event in the
+        // same round-trip, the event must not be fired before the morph has
+        // inserted that new element into the DOM (e.g. a Flux modal that is
+        // shown and opened in one click).
+        Livewire::visit(new class extends Component {
+            public $show = false;
+
+            function openPanel()
+            {
+                $this->show = true;
+
+                $this->dispatch('panel-opened');
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="openPanel" dusk="button">Open</button>
+
+                    @if ($show)
+                        <div x-data="{ message: 'closed' }" x-on:panel-opened.window="message = 'opened'">
+                            <span x-text="message" dusk="output"></span>
+                        </div>
+                    @endif
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@output', 'opened');
+    }
+
+    public function test_events_dispatched_to_a_newly_rendered_element_are_received()
+    {
+        // Regression: livewire/livewire#10560 — element-targeted dispatch
+        // (the exact mechanism Flux uses to show + open a modal in one
+        // round-trip) resolves its target via querySelectorAll at dispatch
+        // time, so it must also wait until after the morph has inserted the
+        // new element.
+        Livewire::visit(new class extends Component {
+            public $show = false;
+
+            function openPanel()
+            {
+                $this->show = true;
+
+                $this->dispatch('panel-opened')->el('#target');
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="openPanel" dusk="button">Open</button>
+
+                    @if ($show)
+                        <div id="target" x-data="{ message: 'closed' }" x-on:panel-opened="message = 'opened'">
+                            <span x-text="message" dusk="output"></span>
+                        </div>
+                    @endif
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@output', 'opened');
+    }
+
+    public function test_events_dispatched_during_mount_are_received_on_initial_page_load()
+    {
+        // Regression: livewire/livewire#10560 — dispatches that happen during
+        // mount() go out on initial page load, not through a message
+        // round-trip, so they never reach the interceptor in
+        // supportDispatches.js and instead take the `on('effect', ...)`
+        // fallback path guarded by `if (request) return`.
+        Livewire::visit(new class extends Component {
+            function mount()
+            {
+                $this->dispatch('mounted');
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div x-data="{ message: 'waiting' }" x-on:mounted.window="message = 'received'">
+                        <span x-text="message" dusk="output"></span>
+                    </div>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForTextIn('@output', 'received');
+    }
 }
