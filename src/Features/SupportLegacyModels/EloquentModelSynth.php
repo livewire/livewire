@@ -7,7 +7,6 @@ use Illuminate\Database\ClassMorphViolationException;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Livewire\Drawer\Utils;
 
 class EloquentModelSynth extends Synth
 {
