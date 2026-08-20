@@ -7,6 +7,7 @@ use Illuminate\Database\ClassMorphViolationException;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Livewire\Drawer\Utils;
 
 class EloquentModelSynth extends Synth
 {
@@ -91,6 +92,31 @@ class EloquentModelSynth extends Synth
         $this->setDataOnModel($model, $data);
 
         return $model;
+    }
+
+    public function unwrapForValidation($model)
+    {
+        $values = $model->toArray();
+        $attributes = $model->getAttributes();
+
+        foreach ($model->getCasts() as $key => $cast) {
+            if (! is_string($cast) || ! array_key_exists($key, $attributes)) continue;
+
+            $cast = strtolower($cast);
+
+            $isScalar = in_array($cast, [
+                'int', 'integer',
+                'real', 'float', 'double',
+                'bool', 'boolean',
+                'timestamp',
+            ], true) || str_starts_with($cast, 'decimal:');
+
+            if ($isScalar) {
+                $values[$key] = $attributes[$key];
+            }
+        }
+
+        return $values;
     }
 
     public function get(&$target, $key)
