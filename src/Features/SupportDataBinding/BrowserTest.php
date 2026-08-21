@@ -277,6 +277,29 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_x_mask_does_not_recreate_a_cleared_alpine_model()
+    {
+        Livewire::visit(new class extends Component {
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div x-data="{ form: { amount: '5000' } }">
+                        <input x-model="form.amount" x-mask:dynamic="$money($input)" dusk="amount" />
+
+                        <span dusk="model-state" x-text="'amount' in form ? 'EXISTS' : 'GONE'"></span>
+
+                        <button x-on:click="form = {}" dusk="clear">Clear</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertInputValue('@amount', '5,000')
+            ->assertSeeIn('@model-state', 'EXISTS')
+            ->click('@clear')
+            ->assertSeeIn('@model-state', 'GONE')
+        ;
+    }
+
     public function test_blur_modifier_does_not_recreate_deleted_array_entries_when_submitting_with_enter()
     {
         Livewire::visit(new class extends Component {
