@@ -140,7 +140,7 @@ class EloquentModelRestorationUnitTest extends \Tests\TestCase
 
         $this->assertTrue($post->relationLoaded('author'));
 
-        $mechanism->rememberResolvedModel($post);
+        $mechanism->rememberResolvedModel($post->withoutRelations());
 
         $resolved = $mechanism->getResolvedRouteModel(Post::class, $post->getKey());
 
