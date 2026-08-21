@@ -480,6 +480,8 @@ function sendMessages() {
                                 await message.invokeOnMorph()
 
                                 morphed = true
+
+                                message.invokeOnMorphed()
                             }).finally(() => {
                                 // Using `finally` so a broken effect or morph can't strand the
                                 // component with a stuck loading state and an action promise
