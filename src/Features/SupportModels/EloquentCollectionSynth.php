@@ -7,6 +7,7 @@ use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
 class EloquentCollectionSynth extends Synth {
     use SerializesAndRestoresModelIdentifiers, IsLazy;
@@ -82,6 +83,11 @@ class EloquentCollectionSynth extends Synth {
             $collection = (new $modelClass)->newQueryForRestoration($keys)->useWritePdo()->get();
 
             $collection = $collection->keyBy->getKey();
+
+            // Cache every model so individual ModelSynth hydrates can reuse them.
+            foreach ($collection as $model) {
+                app(PersistentMiddleware::class)->rememberResolvedModel($model);
+            }
 
             return new $meta['class'](
                 collect($meta['keys'])->map(function ($id) use ($collection) {

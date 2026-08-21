@@ -76,6 +76,13 @@ class PersistentMiddleware extends Mechanism
         return $this->resolvedRouteModels[$class.':'.$key] ?? null;
     }
 
+    function rememberResolvedModel(Model $model)
+    {
+        if (! $model->exists) return;
+
+        $this->resolvedRouteModels[get_class($model).':'.$model->getKey()] = $model;
+    }
+
     protected function extractPathAndMethodFromRequest()
     {
         if (app(HandleRequests::class)->isLivewireRoute()) {
@@ -128,8 +135,7 @@ class PersistentMiddleware extends Mechanism
         if ($route = $request->route()) {
             foreach ($route->parameters() as $parameter) {
                 if ($parameter instanceof Model) {
-                    $key = get_class($parameter).':'.$parameter->getKey();
-                    $this->resolvedRouteModels[$key] = $parameter;
+                    $this->rememberResolvedModel($parameter);
                 }
             }
         }
