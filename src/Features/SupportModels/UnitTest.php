@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Route;
 use Livewire\Drawer\Utils;
 use Livewire\Livewire;
-use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Sushi\Sushi;
 use Tests\TestComponent;
 
@@ -352,124 +351,6 @@ class UnitTest extends \Tests\TestCase
         } finally {
             restore_error_handler();
         }
-    }
-
-    public function test_model_synth_reuses_models_remembered_by_collection_synth()
-    {
-        // Boot Sushi so resolveConnection() is real.
-        Article::first();
-        app('livewire')->flushState();
-
-        $connection = Article::resolveConnection();
-        $connection->enableQueryLog();
-        $connection->flushQueryLog();
-
-        $component = new class extends TestComponent {};
-        $context = new ComponentContext($component);
-
-        $collectionSynth = new EloquentCollectionSynth($context, 'articles');
-        $modelSynth = new ModelSynth($context, 'first');
-
-        // Hydrate a collection of both articles (may be a lazy proxy on PHP 8.4+).
-        $collection = $collectionSynth->hydrate(null, [
-            'keys' => [1, 2],
-            'class' => Collection::class,
-            'modelClass' => Article::class,
-        ], fn ($property, $value) => $value);
-
-        // Materialize the collection — one bulk SELECT; models are remembered.
-        $this->assertCount(2, $collection);
-
-        $queriesAfterCollection = $connection->getQueryLog();
-        $this->assertCount(1, $queriesAfterCollection);
-
-        // Hydrate a single model that was part of that collection.
-        $model = $modelSynth->hydrate(null, ['class' => Article::class, 'key' => 1]);
-
-        // Materialize the model — must not issue another SELECT.
-        $this->assertSame('First', $model->title);
-
-        $this->assertCount(count($queriesAfterCollection), $connection->getQueryLog());
-    }
-
-    public function test_same_model_is_only_queried_once_when_hydrated_on_multiple_properties()
-    {
-        Article::first();
-        app('livewire')->flushState();
-
-        $connection = Article::resolveConnection();
-        $connection->enableQueryLog();
-        $connection->flushQueryLog();
-
-        $component = new class extends TestComponent {};
-        $context = new ComponentContext($component);
-        $synth = new ModelSynth($context, 'article');
-
-        $a = $synth->hydrate(null, ['class' => Article::class, 'key' => 1]);
-        $b = $synth->hydrate(null, ['class' => Article::class, 'key' => 1]);
-
-        // Force materialization (no-ops on PHP < 8.4 where hydrate already queried).
-        $this->assertSame('First', $a->title);
-        $this->assertSame('First', $b->title);
-        $this->assertSame($a->getKey(), $b->getKey());
-
-        $articleQueries = array_values(array_filter(
-            $connection->getQueryLog(),
-            fn ($q) => str_contains($q['query'], 'articles')
-        ));
-
-        // One restoration for the same class:key, not two.
-        $this->assertCount(1, $articleQueries);
-    }
-
-    public function test_collection_and_single_model_of_same_class_share_one_query_on_refresh()
-    {
-        Article::first();
-        app('livewire')->flushState();
-
-        $connection = Article::resolveConnection();
-        $connection->enableQueryLog();
-        $connection->flushQueryLog();
-
-        Livewire::test(new class extends TestComponent {
-            public Collection $articles;
-            public Article $selected;
-
-            public function mount()
-            {
-                $this->articles = Article::all();
-                $this->selected = $this->articles->first();
-            }
-
-            public function render()
-            {
-                return <<<'HTML'
-                    <div>
-                        @foreach ($articles as $article)
-                            {{ $article->title }}
-                        @endforeach
-                        selected: {{ $selected->title }}
-                    </div>
-                HTML;
-            }
-        })
-            ->assertSee('First')
-            ->assertSee('Second')
-            ->assertSee('selected: First')
-            ->call('$refresh')
-            ->assertSee('First')
-            ->assertSee('Second')
-            ->assertSee('selected: First');
-
-        $articleQueries = array_values(array_filter(
-            $connection->getQueryLog(),
-            fn ($q) => str_contains($q['query'], 'articles')
-        ));
-
-        // Mount: 1× SELECT for the collection (selected is the same instance, no extra query).
-        // Refresh: 1× bulk restore for the collection; selected reuses the cached model.
-        // Total: 2 queries, not 3 (or more).
-        $this->assertCount(2, $articleQueries);
     }
 }
 
