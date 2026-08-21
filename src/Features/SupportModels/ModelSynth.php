@@ -74,16 +74,29 @@ class ModelSynth extends Synth {
 
         $key = $meta['key'];
 
+        $mechanism = app(PersistentMiddleware::class);
+
         // If this model was already resolved by route binding (via
         // SubstituteBindings middleware), reuse it to avoid a duplicate query.
-        $resolvedModel = app(PersistentMiddleware::class)->getResolvedRouteModel($class, $key);
+        $resolvedModel = $mechanism->getResolvedRouteModel($class, $key);
 
         if ($resolvedModel) {
             return $resolvedModel;
         }
 
-        return $this->makeLazyProxy($class, $meta, function () use ($class, $key) {
-            return (new $class)->newQueryForRestoration($key)->useWritePdo()->firstOrFail();
+        return $this->makeLazyProxy($class, $meta, function () use ($mechanism, $class, $key) {
+            // Check again at materialization time — a sibling collection may have
+            // loaded and remembered this model since hydrate() ran.
+            if ($resolved = $mechanism->getResolvedRouteModel($class, $key)) {
+                return $resolved;
+            }
+
+            $model = (new $class)->newQueryForRestoration($key)->useWritePdo()->firstOrFail();
+
+            // Remember it so later hydrates of the same class:key are free.
+            $mechanism->rememberResolvedModel($model);
+
+            return $model;
         });
     }
 
