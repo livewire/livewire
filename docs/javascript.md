@@ -201,13 +201,14 @@ $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onSkippe
 
     onCancel(() => {})
 
-    onSuccess(({ payload, onSync, onEffect, onMorph, onRender }) => {
+    onSuccess(({ payload, onSync, onEffect, onMorph, onMorphed, onRender }) => {
         // payload: { snapshot, effects }
 
-        onSync(() => {})    // After state synced
-        onEffect(() => {})  // After effects processed
-        onMorph(async () => {})   // After DOM morphed (must be async)
-        onRender(() => {})  // After render complete
+        onSync(() => {})          // After state synced
+        onEffect(() => {})        // After effects processed
+        onMorph(async () => {})   // During the awaited DOM morph phase
+        onMorphed(() => {})       // After all DOM morph work completes
+        onRender(() => {})        // In the next animation frame
     })
 
     onSkipped(() => {
@@ -232,6 +233,8 @@ $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onSkippe
 })
 ```
 
+Use `onMorph` to contribute asynchronous DOM work that Livewire must wait for. Use `onMorphed` when code needs to run after the response's component, island, and slot morphs have all completed. `onMorphed` runs before action promises resolve and before `onFinish`.
+
 #### Timing
 
 Hook execution order for successful requests:
@@ -239,9 +242,10 @@ Hook execution order for successful requests:
 1. `onSuccess` - Immediately after server response
 2. `onSync` - After state merged
 3. `onEffect` - After effects processed
-4. `onMorph` - After DOM morphed
-5. `onFinish` - After morph completes
-6. `onRender` - In `requestAnimationFrame` (post-paint)
+4. `onMorph` - During the awaited DOM morph phase
+5. `onMorphed` - After all DOM morph work completes
+6. `onFinish` - After `onMorphed`
+7. `onRender` - In the next `requestAnimationFrame`
 
 For skipped messages (e.g. an unchanged reactive child) `onSkipped` fires instead of `onSuccess`, then `onFinish`. None of the morph/render hooks fire since there's nothing to apply.
 
