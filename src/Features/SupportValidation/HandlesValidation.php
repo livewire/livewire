@@ -512,7 +512,17 @@ trait HandlesValidation
     protected function unwrapDataForValidation($data, $property = null)
     {
         return collect($data)->map(function ($value, $key) use ($property) {
-            if (! is_null($property) && $key !== $property) return $value;
+            // Performance: skip siblings, Laravel can already traverse via Arr::get
+            // (scalars + ArrayAccess like Collection / Model). Still unwrap Wireables
+            // and other non-Arrayables so nested dependent rules work
+            // (e.g. required_if:settings.mode,strict).
+            if (
+                ! is_null($property)
+                && $key !== $property
+                && (! is_object($value) || $value instanceof \ArrayAccess)
+            ) {
+                return $value;
+            }
 
             $synth = app('livewire')->findSynth($value, $this);
 
