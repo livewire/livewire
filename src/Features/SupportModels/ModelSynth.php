@@ -94,7 +94,7 @@ class ModelSynth extends Synth {
             $model = (new $class)->newQueryForRestoration($key)->useWritePdo()->firstOrFail();
 
             // Remember it so later hydrates of the same class:key are free.
-            $mechanism->rememberResolvedModel($model->withoutRelations());
+            $mechanism->rememberResolvedModel($model);
 
             return $model;
         });

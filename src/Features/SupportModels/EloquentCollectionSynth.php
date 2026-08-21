@@ -97,7 +97,7 @@ class EloquentCollectionSynth extends Synth {
 
                 // Cache every model so individual ModelSynth hydrates can reuse them.
                 foreach ($collection as $model) {
-                    $mechanism->rememberResolvedModel($model->withoutRelations());
+                    $mechanism->rememberResolvedModel($model);
                 }
             }
 
