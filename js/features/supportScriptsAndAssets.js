@@ -2,6 +2,7 @@ import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 import { evaluateExpression } from '../evaluator'
 import { replaceNoncesInHtml, cloneScriptTag } from '../utils'
+import { interceptMessage } from '@/request'
 
 let executedScripts = new WeakMap
 
@@ -30,12 +31,18 @@ on('component.init', ({ component }) => {
     }
 })
 
-on('effect', ({ component, effects }) => {
-    let scripts
+on('component.initialized', ({ component }) => {
+    evaluateScripts(component, component.effects)
+})
 
-    if (Object.prototype.hasOwnProperty.call(effects, 'scripts')) {
-        scripts = effects.scripts
-    }
+interceptMessage(({ message, onSuccess }) => {
+    onSuccess(({ payload, onMorphed }) => {
+        onMorphed(() => evaluateScripts(message.component, payload.effects))
+    })
+})
+
+function evaluateScripts(component, effects) {
+    let scripts = effects.scripts
 
     if (scripts) {
         Object.entries(scripts).forEach(([key, content]) => {
@@ -61,7 +68,7 @@ on('effect', ({ component, effects }) => {
             })
         })
     }
-})
+}
 
 function onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, callback) {
     if (executedScripts.has(component)) {
@@ -149,4 +156,3 @@ async function runAssetSynchronously(child) {
 function isScript(el)   {
     return el.tagName.toLowerCase() === 'script'
 }
-

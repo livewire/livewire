@@ -187,8 +187,10 @@ export default class Message {
         this.invokeOnFinish()
     }
 
-    invokeOnStream({ json }) {
-        this.interceptors.forEach(interceptor => interceptor.onStream({ json }))
+    async invokeOnStream({ json }) {
+        for (let interceptor of this.interceptors) {
+            if (interceptor.onStream) await interceptor.onStream({ json })
+        }
     }
 
     invokeOnSuccess() {

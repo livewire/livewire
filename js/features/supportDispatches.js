@@ -10,7 +10,7 @@ interceptMessage(({ message, onSuccess }) => {
     })
 })
 
-on('component.init', ({ component }) => {
+on('component.initialized', ({ component }) => {
     let dispatches = getDispatches(component.effects)
 
     if (dispatches.length === 0) return

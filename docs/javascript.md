@@ -24,6 +24,8 @@ Because these scripts are handled by Livewire, they execute at the perfect time�
 
 This also means that lazily or conditionally loaded Livewire components are still able to execute JavaScript after the page has initialized.
 
+When a script is added by a component update, Livewire runs it after that update's DOM morph has completed. The script can safely access elements rendered by the same update.
+
 ```blade
 <div>
     ...
@@ -223,8 +225,9 @@ $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onSkippe
 
     onFailure(({ error }) => {})
 
-    onStream(({ json }) => {
+    onStream(async ({ json }) => {
         // json: Parsed stream chunk
+        // Async work is awaited before the next chunk is processed
     })
 
     onFinish(() => {
@@ -502,6 +505,14 @@ Livewire.hook('component.init', ({ component, cleanup }) => {
 })
 ```
 
+For advanced integrations that depend on Livewire's initial effects—such as event listeners, scripts, or server-dispatched JavaScript—use `component.initialized`. It runs after those effects have been processed, but before Livewire continues initializing the component's descendant elements:
+
+```js
+Livewire.hook('component.initialized', ({ component }) => {
+    //
+})
+```
+
 For more information, please consult the [documentation on the component object](#the-component-object).
 
 ### DOM element initialization
@@ -583,7 +594,7 @@ new class extends Component {
 };
 ```
 
-The JavaScript expression `alert('Post saved!')` will be executed on the client after the post has been saved to the database on the server.
+The JavaScript expression `alert('Post saved!')` will be executed on the client after the post has been saved to the database on the server and the response's DOM morph has completed.
 
 You can access the current component's `$wire` object inside the expression:
 

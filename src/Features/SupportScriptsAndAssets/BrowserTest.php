@@ -153,6 +153,33 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_conditionally_added_scripts_run_after_their_dom_is_morphed()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public $show = false;
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button dusk="button" wire:click="$set('show', true)">Show</button>
+
+                @if ($show)
+                    <div dusk="target">waiting</div>
+
+                    @script
+                    <script>
+                        document.querySelector('[dusk=target]').textContent = 'evaluated'
+                    </script>
+                    @endscript
+                @endif
+            </div>
+            HTML; }
+        })
+        ->assertMissing('@target')
+        ->waitForLivewire()->click('@button')
+        ->waitForTextIn('@target', 'evaluated')
+        ;
+    }
+
     public function test_assets_can_be_loaded()
     {
         Route::get('/test.js', function () {

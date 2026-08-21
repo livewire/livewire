@@ -347,14 +347,14 @@ function sendMessages() {
                 let finalResponse = ''
 
                 try {
-                    finalResponse = await interceptStreamAndReturnFinalResponse(response, json => {
+                    finalResponse = await interceptStreamAndReturnFinalResponse(response, async json => {
                         let componentId = json.id
 
-                        request.messages.forEach(message => {
+                        for (let message of request.messages) {
                             if (message.component.id === componentId) {
-                                message.invokeOnStream({ json })
+                                await message.invokeOnStream({ json })
                             }
-                        })
+                        }
 
                         trigger('stream', json)
                     })
@@ -636,9 +636,9 @@ async function interceptStreamAndReturnFinalResponse(response, callback) {
 
         let [ streams, remaining ] = extractStreamObjects(remainingResponse + output)
 
-        streams.forEach(stream => {
-            callback(stream)
-        })
+        for (let stream of streams) {
+            await callback(stream)
+        }
 
         remainingResponse = remaining
 

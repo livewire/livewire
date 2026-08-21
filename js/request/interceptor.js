@@ -5,7 +5,7 @@ export class MessageInterceptor {
     onCancel = () => {}
     onFailure = () => {}
     onError = () => {}
-    onStream = () => {}
+    onStream = null
     onSuccess = () => {}
     onSkipped = () => {}
     onFinish = () => {}
