@@ -86,7 +86,7 @@ class PersistentMiddleware extends Mechanism
         if (isset($this->resolvedRouteModels[$key])) return;
 
         // withoutRelations() returns a clone with no loaded relations.
-        $this->resolvedRouteModels[$key] = $model->withoutRelations();
+        $this->resolvedRouteModels[$key] = $model;
     }
 
     protected function extractPathAndMethodFromRequest()
