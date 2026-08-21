@@ -263,7 +263,7 @@ JS;
             ->assertDontSee('Protected Content')
             ->visit('/force-login/1')
             ->visit('/with-authorization/1/inline-auth')
-            ->assertSee('Protected Content')
+            ->waitForText('Protected Content')
             ->waitForLivewireToLoad()
             ->tap(function ($b) {
                 $script = <<<'JS'
