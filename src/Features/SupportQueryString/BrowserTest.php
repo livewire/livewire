@@ -547,7 +547,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertQueryStringHas('foo', '')
+            ->waitForQueryString('foo', '')
             ->assertSee('foo', null)
             ->waitForLivewire()->click('@button')
             ->assertQueryStringHas('foo', 'second')
@@ -590,7 +590,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertQueryStringHas('foo', '')
+            ->waitForQueryString('foo', '')
             ->assertSee('foo', null)
             ->waitForLivewire()->click('@button')
             ->assertQueryStringHas('foo', '2')
