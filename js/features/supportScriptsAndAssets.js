@@ -31,11 +31,11 @@ on('component.init', ({ component }) => {
 })
 
 on('effect', ({ component, effects }) => {
-    let scripts
+    evaluateScripts(component, effects)
+})
 
-    if (Object.prototype.hasOwnProperty.call(effects, 'scripts')) {
-        scripts = effects.scripts
-    }
+function evaluateScripts(component, effects) {
+    let scripts = effects.scripts
 
     if (scripts) {
         Object.entries(scripts).forEach(([key, content]) => {
@@ -61,7 +61,7 @@ on('effect', ({ component, effects }) => {
             })
         })
     }
-})
+}
 
 function onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, callback) {
     if (executedScripts.has(component)) {
@@ -149,4 +149,3 @@ async function runAssetSynchronously(child) {
 function isScript(el)   {
     return el.tagName.toLowerCase() === 'script'
 }
-
