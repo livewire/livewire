@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Routing\Router;
 use Livewire\Mechanisms\Mechanism;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -118,7 +119,11 @@ class PersistentMiddleware extends Mechanism
         // Only send through pipeline if there are middleware found
         if (is_null($middleware) || $middleware === []) return;
 
-        Utils::applyMiddleware($request, $middleware);
+        try {
+            Utils::applyMiddleware($request, $middleware);
+        } catch (ModelNotFoundException $e) {
+            return;
+        }
 
         $this->middlewareAppliedFor[$routeKey] = true;
 

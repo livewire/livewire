@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\Component as BaseComponent;
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
@@ -150,6 +151,39 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $response->assertJsonPath('components.0.snapshot', $snapshot);
     }
 
+    public function test_it_catches_model_not_found_from_persistent_middleware_pipeline()
+    {
+        $base = Livewire::getPersistentMiddleware();
+
+        try {
+            Livewire::addPersistentMiddleware(ThrowingMiddleware::class);
+
+            $component = Livewire::test(EmptyComponent::class);
+            $snapshot = json_encode($component->snapshot);
+
+            foreach (app('router')->getRoutes() as $route) {
+                if (str_contains($route->uri(), 'livewire-unit-test-endpoint')) {
+                    $route->middleware([ThrowingMiddleware::class]);
+                    break;
+                }
+            }
+
+            $response = $this->withHeaders(['X-Livewire' => 'true'])
+                ->postJson(EndpointResolver::updatePath(), [
+                    'components' => [[
+                        'calls'    => [],
+                        'updates'  => [],
+                        'snapshot' => $snapshot,
+                    ]],
+                ]);
+
+            $response->assertStatus(200);
+            $response->assertJsonPath('components.0.snapshot', $snapshot);
+        } finally {
+            Livewire::setPersistentMiddleware($base);
+        }
+    }
+
 }
 
 class EmptyComponent extends BaseComponent
@@ -161,5 +195,13 @@ class EmptyComponent extends BaseComponent
 
         </div>
         HTML;
+    }
+}
+
+class ThrowingMiddleware
+{
+    public function handle(Request $request, \Closure $next): \Symfony\Component\HttpFoundation\Response
+    {
+        throw (new ModelNotFoundException)->setModel('App\\MissingModel', ['not-exists']);
     }
 }
