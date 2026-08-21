@@ -77,21 +77,37 @@ class EloquentCollectionSynth extends Synth {
         }
 
         return $this->makeLazyProxy($class, $meta, function () use ($modelClass, $keys, $meta) {
-            // We are using Laravel's method here for restoring the collection, which ensures
-            // that all models in the collection are restored in one query, preventing n+1
-            // issues and also only restores models that exist.
-            $collection = (new $modelClass)->newQueryForRestoration($keys)->useWritePdo()->get();
+            $mechanism = app(PersistentMiddleware::class);
+
+            // Reuse models already loaded in this request (route binding or ModelSynth).
+            $missing = [];
+            foreach ($keys as $key) {
+                if (! $mechanism->getResolvedRouteModel($modelClass, $key)) {
+                    $missing[] = $key;
+                }
+            }
+
+            $collection = collect();
+
+            if (count($missing) > 0) {
+                // We are using Laravel's method here for restoring the collection, which ensures
+                // that all models in the collection are restored in one query, preventing n+1
+                // issues and also only restores models that exist.
+                $collection = (new $modelClass)->newQueryForRestoration($missing)->useWritePdo()->get();
+
+                // Cache every model so individual ModelSynth hydrates can reuse them.
+                foreach ($collection as $model) {
+                    $mechanism->rememberResolvedModel($model);
+                }
+            }
 
             $collection = $collection->keyBy->getKey();
 
-            // Cache every model so individual ModelSynth hydrates can reuse them.
-            foreach ($collection as $model) {
-                app(PersistentMiddleware::class)->rememberResolvedModel($model);
-            }
-
             return new $meta['class'](
-                collect($meta['keys'])->map(function ($id) use ($collection) {
-                    return $collection[$id] ?? null;
+                collect($keys)->map(function ($id) use ($mechanism, $modelClass, $collection) {
+                    return $mechanism->getResolvedRouteModel($modelClass, $id)
+                        ?? $collection[$id]
+                        ?? null;
                 })->filter()
             );
         });
