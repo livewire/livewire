@@ -206,7 +206,7 @@ $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onSkippe
 
         onSync(() => {})          // After state synced
         onEffect(() => {})        // After effects processed
-        onMorph(async () => {})   // During the awaited DOM morph phase
+        onMorph(async () => {})   // Advanced: add awaited DOM morph work
         onMorphed(() => {})       // After all DOM morph work completes
         onRender(() => {})        // In the next animation frame
     })
@@ -233,7 +233,7 @@ $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onSkippe
 })
 ```
 
-Use `onMorph` to contribute asynchronous DOM work that Livewire must wait for. Use `onMorphed` when code needs to run after the response's component, island, and slot morphs have all completed. `onMorphed` runs before action promises resolve and before `onFinish`.
+`onMorph` is an advanced hook for contributing asynchronous DOM work that Livewire must wait for. Most code that needs to access the updated DOM should use `onMorphed`, which runs after the response's component, island, and slot morphs have all completed, but before action promises resolve and `onFinish` runs.
 
 #### Timing
 
