@@ -10,26 +10,26 @@ interceptMessage(({ message, onSuccess }) => {
     })
 })
 
-on('effect', ({ component, effects, request }) => {
-    if (request) return
+on('component.init', ({ component }) => {
+    let dispatches = getDispatches(component.effects)
 
-    // Wrapping this in a triple queueMicrotask...
-    // The first one puts it after all other "effect" hooks...
-    // The second one puts it after all reactive Alpine effects
+    if (dispatches.length === 0) return
+
+    // Wrapping initial dispatches in a triple queueMicrotask...
+    // The first one puts them after all initialization and "effect" hooks...
+    // The second one puts them after all reactive Alpine effects
     // (that are processed via flushJobs in scheduler)...
-    // The third one puts it after morph changes have been applied...
+    // The third one puts them after DOM initialization changes have been applied...
     queueMicrotask(() => {
         queueMicrotask(() => {
             queueMicrotask(() => {
-                dispatchEvents(component, getDispatches(effects))
+                dispatchEvents(component, dispatches)
             })
         })
     })
 })
 
 function getDispatches(effects) {
-    if (! Object.prototype.hasOwnProperty.call(effects, 'dispatches')) return []
-
     return effects.dispatches || []
 }
 
