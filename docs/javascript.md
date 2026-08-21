@@ -24,8 +24,6 @@ Because these scripts are handled by Livewire, they execute at the perfect timeâ
 
 This also means that lazily or conditionally loaded Livewire components are still able to execute JavaScript after the page has initialized.
 
-When a script is added by a component update, Livewire runs it after that update's DOM morph has completed. The script can safely access elements rendered by the same update.
-
 ```blade
 <div>
     ...

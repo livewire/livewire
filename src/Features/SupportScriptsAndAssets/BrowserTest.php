@@ -153,7 +153,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_conditionally_added_scripts_run_after_their_dom_is_morphed()
+    public function test_conditionally_added_scripts_register_alpine_data_before_new_dom_is_initialized()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public $show = false;
@@ -163,11 +163,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                 <button dusk="button" wire:click="$set('show', true)">Show</button>
 
                 @if ($show)
-                    <div dusk="target">waiting</div>
+                    <button
+                        wire:transition
+                        dusk="target"
+                        x-data="timingTest"
+                        x-init="$el.textContent = 'ready'"
+                        x-on:click="initialize"
+                    >waiting</button>
 
                     @script
                     <script>
-                        document.querySelector('[dusk=target]').textContent = 'evaluated'
+                        Alpine.data('timingTest', () => ({
+                            initialize() {
+                                this.$el.textContent = 'initialized'
+                            },
+                        }))
                     </script>
                     @endscript
                 @endif
@@ -176,7 +186,9 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
         ->assertMissing('@target')
         ->waitForLivewire()->click('@button')
-        ->waitForTextIn('@target', 'evaluated')
+        ->waitForTextIn('@target', 'ready')
+        ->click('@target')
+        ->waitForTextIn('@target', 'initialized')
         ;
     }
 

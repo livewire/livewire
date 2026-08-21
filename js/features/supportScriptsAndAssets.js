@@ -2,7 +2,6 @@ import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 import { evaluateExpression } from '../evaluator'
 import { replaceNoncesInHtml, cloneScriptTag } from '../utils'
-import { interceptMessage } from '@/request'
 
 let executedScripts = new WeakMap
 
@@ -31,14 +30,8 @@ on('component.init', ({ component }) => {
     }
 })
 
-on('component.initialized', ({ component }) => {
-    evaluateScripts(component, component.effects)
-})
-
-interceptMessage(({ message, onSuccess }) => {
-    onSuccess(({ payload, onMorphed }) => {
-        onMorphed(() => evaluateScripts(message.component, payload.effects))
-    })
+on('effect', ({ component, effects }) => {
+    evaluateScripts(component, effects)
 })
 
 function evaluateScripts(component, effects) {
