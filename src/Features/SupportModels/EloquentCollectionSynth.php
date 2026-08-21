@@ -87,16 +87,18 @@ class EloquentCollectionSynth extends Synth {
                 }
             }
 
-            $missingKeys = count($missingKeys) > 0 ? $missingKeys : $keys;
+            $collection = collect();
 
-            // We are using Laravel's method here for restoring the collection, which ensures
-            // that all models in the collection are restored in one query, preventing n+1
-            // issues and also only restores models that exist.
-            $collection = (new $modelClass)->newQueryForRestoration($missingKeys)->useWritePdo()->get();
+            if (count($missingKeys) > 0) {
+                // We are using Laravel's method here for restoring the collection, which ensures
+                // that all models in the collection are restored in one query, preventing n+1
+                // issues and also only restores models that exist.
+                $collection = (new $modelClass)->newQueryForRestoration($missingKeys)->useWritePdo()->get();
 
-            // Cache every model so individual ModelSynth hydrates can reuse them.
-            foreach ($collection as $model) {
-                $mechanism->rememberResolvedModel($model);
+                // Cache every model so individual ModelSynth hydrates can reuse them.
+                foreach ($collection as $model) {
+                    $mechanism->rememberResolvedModel($model);
+                }
             }
 
             $collection = $collection->keyBy->getKey();
