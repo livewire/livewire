@@ -39,6 +39,16 @@ By adding the `.hover` modifier, Livewire will pre-fetch a page when a user hove
 <a href="/" wire:navigate.hover>Dashboard</a>
 ```
 
+## Animating page visits
+
+By adding the `.transition` modifier, Livewire will animate the page swap using the browser's [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API):
+
+```blade
+<a href="/" wire:navigate.transition>Dashboard</a>
+```
+
+Read more about [animating page visits in the Navigate documentation](/docs/4.x/navigate#animating-page-visits-with-view-transitions).
+
 ## Going deeper
 
 For more complete documentation on this feature, visit [Livewire's navigate documentation page](/docs/4.x/navigate).
@@ -60,3 +70,4 @@ wire:navigate
 | Modifier | Description |
 |----------|-------------|
 | `.hover` | Prefetches the page when user hovers over the link |
+| `.transition` | Animates the page swap using the View Transitions API |

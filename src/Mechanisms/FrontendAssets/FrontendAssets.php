@@ -220,6 +220,8 @@ class FrontendAssets extends Mechanism
 
         $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
 
+        $navigateTransitions = config('livewire.navigate.transitions', false) ? 'data-navigate-transitions' : '';
+
         $moduleUrl = url(app('livewire')->getUriPrefix());
 
         $updateUri = url(app('livewire')->getUpdateUri());
@@ -229,7 +231,7 @@ class FrontendAssets extends Mechanism
         );
 
         return <<<HTML
-        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-module-url="{$moduleUrl}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
+        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} {$navigateTransitions} data-csrf="{$token}" data-module-url="{$moduleUrl}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 
@@ -241,11 +243,14 @@ class FrontendAssets extends Mechanism
 
         $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
 
+        $navigateTransitions = config('livewire.navigate.transitions', false) ? 'data-navigate-transitions' : '';
+
         $attributes = json_encode([
             'csrf' => app()->has('session.store') ? csrf_token() : '',
             'uri' => url(app('livewire')->getUpdateUri()),
             'moduleUrl' => url(app('livewire')->getUriPrefix()),
             'progressBar' => $progressBar,
+            'navigateTransitions' => $navigateTransitions,
             'nonce' => $options['nonce'] ?? Vite::cspNonce() ?? '',
         ]);
 
