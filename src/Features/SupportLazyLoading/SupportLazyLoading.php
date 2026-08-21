@@ -76,7 +76,12 @@ class SupportLazyLoading extends ComponentHook
     public function hydrate($memo)
     {
         if (! isset($memo['lazyLoaded'])) return;
-        if ($memo['lazyLoaded'] === true) return;
+
+        if ($memo['lazyLoaded'] === true) {
+            $this->storeSet('hasAlreadyLazyLoaded', true);
+
+            return;
+        }
 
         $this->component->skipHydrate();
 
@@ -99,7 +104,16 @@ class SupportLazyLoading extends ComponentHook
         if ($method !== '__lazyLoad') return;
 
         // Only applies while a lazy load is being resumed.
-        if ($this->storeGet('isLazyLoadHydrating') !== true) return;
+        if ($this->storeGet('isLazyLoadHydrating') !== true) {
+            // The placeholder's `x-intersect` has no `.once` modifier, so it can fire again
+            // while the first resume is still in flight. That duplicate is queued client-side
+            // and sent afterwards carrying the post-load snapshot, so it lands here on an
+            // already-resumed component. Swallow it rather than letting it fall through to
+            // method resolution, which would throw MethodNotFoundException.
+            if ($this->storeGet('hasAlreadyLazyLoaded') === true) $returnEarly();
+
+            return;
+        }
 
         [ $encoded ] = $params;
 

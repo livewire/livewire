@@ -61,6 +61,26 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('level:5');
     }
 
+    public function test_a_repeat_lazy_load_call_is_ignored_rather_than_throwing()
+    {
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        Livewire::component('lazy-alpha', LazyAlpha::class);
+
+        $html = html_entity_decode(Livewire::mount('lazy-alpha', ['level' => 5]));
+        preg_match("/__lazyLoad\('([^']+)'\)/", $html, $matches);
+
+        $this->assertNotEmpty($matches[1] ?? null);
+
+        // The placeholder's `x-intersect` has no `.once` modifier, so the browser can queue a
+        // second `__lazyLoad` behind the first and send it with the post-load snapshot.
+        Livewire::test('lazy-alpha')
+            ->call('__lazyLoad', $matches[1])
+            ->call('__lazyLoad', $matches[1])
+            ->assertOk()
+            ->assertSee('level:5');
+    }
+
     public function test_a_mount_params_container_is_scoped_to_its_own_component()
     {
         SupportLazyLoading::$disableWhileTesting = false;
