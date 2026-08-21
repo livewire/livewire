@@ -8,6 +8,51 @@ use Livewire\Component;
 
 class BrowserTest extends BrowserTestCase
 {
+    public function test_action_promises_resolve_after_transitioned_slots_finish_morphing()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $count = 0;
+
+                public function increment()
+                {
+                    $this->count++;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div x-data="{ result: '' }">
+                        <button
+                            dusk="increment"
+                            x-on:click="await $wire.increment(); result = document.querySelector('[dusk=slot-count]').textContent.trim()"
+                        >Increment</button>
+
+                        <span dusk="result" x-text="result"></span>
+
+                        <livewire:modal>
+                            <div dusk="slot-count" wire:transition>Count: {{ $count }}</div>
+                        </livewire:modal>
+                    </div>
+                    HTML;
+                }
+            },
+            'modal' => new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>{{ $slot }}</div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertSeeIn('@slot-count', 'Count: 0')
+            ->click('@increment')
+            ->waitForTextIn('@result', 'Count: 1')
+            ->assertSeeIn('@slot-count', 'Count: 1')
+            ;
+    }
+
     public function test_default_slots()
     {
         Livewire::visit([
