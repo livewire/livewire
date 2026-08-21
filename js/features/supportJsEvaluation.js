@@ -1,6 +1,7 @@
 import { evaluateExpression } from '../evaluator'
 import { findComponentByEl } from '@/store'
 import { overrideMethod } from '@/$wire'
+import { interceptMessage } from '@/request'
 import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 
@@ -10,17 +11,19 @@ Alpine.magic('js', el => {
     return component.$wire.js
 })
 
-on('effect', ({ component, effects }) => {
-    let js
-    let xjs
+on('component.initialized', ({ component }) => {
+    evaluateJsEffects(component, component.effects)
+})
 
-    if (Object.prototype.hasOwnProperty.call(effects, 'js')) {
-        js = effects.js
-    }
+interceptMessage(({ message, onSuccess }) => {
+    onSuccess(({ payload, onMorphed }) => {
+        onMorphed(() => evaluateJsEffects(message.component, payload.effects))
+    })
+})
 
-    if (Object.prototype.hasOwnProperty.call(effects, 'xjs')) {
-        xjs = effects.xjs
-    }
+function evaluateJsEffects(component, effects) {
+    let js = effects.js
+    let xjs = effects.xjs
 
     if (js) {
         Object.entries(js).forEach(([method, body]) => {
@@ -37,4 +40,4 @@ on('effect', ({ component, effects }) => {
             evaluateExpression(component.el, expression, { scope: component.getJsActions(), params })
         })
     }
-})
+}

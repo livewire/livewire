@@ -201,13 +201,14 @@ $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onSkippe
 
     onCancel(() => {})
 
-    onSuccess(({ payload, onSync, onEffect, onMorph, onRender }) => {
+    onSuccess(({ payload, onSync, onEffect, onMorph, onMorphed, onRender }) => {
         // payload: { snapshot, effects }
 
-        onSync(() => {})    // After state synced
-        onEffect(() => {})  // After effects processed
-        onMorph(async () => {})   // After DOM morphed (must be async)
-        onRender(() => {})  // After render complete
+        onSync(() => {})          // After state synced
+        onEffect(() => {})        // After effects processed
+        onMorph(async () => {})   // Advanced: add awaited DOM morph work
+        onMorphed(() => {})       // After all DOM morph work completes
+        onRender(() => {})        // In the next animation frame
     })
 
     onSkipped(() => {
@@ -222,8 +223,9 @@ $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onSkippe
 
     onFailure(({ error }) => {})
 
-    onStream(({ json }) => {
+    onStream(async ({ json }) => {
         // json: Parsed stream chunk
+        // Async work is awaited before the next chunk is processed
     })
 
     onFinish(() => {
@@ -232,6 +234,8 @@ $wire.interceptMessage(({ message, cancel, onSend, onCancel, onSuccess, onSkippe
 })
 ```
 
+`onMorph` is an advanced hook for contributing asynchronous DOM work that Livewire must wait for. Most code that needs to access the updated DOM should use `onMorphed`, which runs after the response's component, island, and slot morphs have all completed, but before action promises resolve and `onFinish` runs.
+
 #### Timing
 
 Hook execution order for successful requests:
@@ -239,9 +243,10 @@ Hook execution order for successful requests:
 1. `onSuccess` - Immediately after server response
 2. `onSync` - After state merged
 3. `onEffect` - After effects processed
-4. `onMorph` - After DOM morphed
-5. `onFinish` - After morph completes
-6. `onRender` - In `requestAnimationFrame` (post-paint)
+4. `onMorph` - During the awaited DOM morph phase
+5. `onMorphed` - After all DOM morph work completes
+6. `onFinish` - After `onMorphed`
+7. `onRender` - In the next `requestAnimationFrame`
 
 For skipped messages (e.g. an unchanged reactive child) `onSkipped` fires instead of `onSuccess`, then `onFinish`. None of the morph/render hooks fire since there's nothing to apply.
 
@@ -498,6 +503,14 @@ Livewire.hook('component.init', ({ component, cleanup }) => {
 })
 ```
 
+For advanced integrations that depend on Livewire's initial effects—such as event listeners, scripts, or server-dispatched JavaScript—use `component.initialized`. It runs after those effects have been processed, but before Livewire continues initializing the component's descendant elements:
+
+```js
+Livewire.hook('component.initialized', ({ component }) => {
+    //
+})
+```
+
 For more information, please consult the [documentation on the component object](#the-component-object).
 
 ### DOM element initialization
@@ -579,7 +592,7 @@ new class extends Component {
 };
 ```
 
-The JavaScript expression `alert('Post saved!')` will be executed on the client after the post has been saved to the database on the server.
+The JavaScript expression `alert('Post saved!')` will be executed on the client after the post has been saved to the database on the server and the response's DOM morph has completed.
 
 You can access the current component's `$wire` object inside the expression:
 

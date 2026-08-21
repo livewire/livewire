@@ -45,12 +45,12 @@ interceptAction(({ action }) => {
 })
 
 interceptMessage(({ message, onSuccess, onStream }) => {
-    onStream(({ json }) => {
+    onStream(async ({ json }) => {
         let { type, islandFragment } = json
 
         if (type !== 'island') return
 
-        renderIsland(message.component, islandFragment)
+        await renderIsland(message.component, islandFragment)
     })
 
     onSuccess(({ payload, onMorph }) => {
