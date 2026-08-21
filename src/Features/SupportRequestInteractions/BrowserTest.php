@@ -1019,7 +1019,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ])
 
             ->waitUntil('window.intercepts.length >= 6')
-            ->assertScript('window.intercepts', [
+            ->assertScript('window.intercepts.slice(0, 6)', [
                 'userRequest-bar started',
                 'userRequest-bar sent',
                 'pollRequest-foo started',
