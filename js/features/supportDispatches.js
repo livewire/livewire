@@ -1,7 +1,18 @@
 import { dispatch, dispatchEl, dispatchRef, dispatchSelf, dispatchTo } from '@/events'
 import { on } from '@/hooks'
+import { interceptMessage } from '@/request'
 
-on('effect', ({ component, effects }) => {
+interceptMessage(({ message, onSuccess }) => {
+    onSuccess(({ payload, onMorphed }) => {
+        onMorphed(() => {
+            dispatchEvents(message.component, getDispatches(payload.effects))
+        })
+    })
+})
+
+on('effect', ({ component, effects, request }) => {
+    if (request) return
+
     // Wrapping this in a triple queueMicrotask...
     // The first one puts it after all other "effect" hooks...
     // The second one puts it after all reactive Alpine effects
@@ -10,17 +21,17 @@ on('effect', ({ component, effects }) => {
     queueMicrotask(() => {
         queueMicrotask(() => {
             queueMicrotask(() => {
-                let dispatches = []
-
-                if (Object.prototype.hasOwnProperty.call(effects, 'dispatches') && effects.dispatches) {
-                    dispatches = effects.dispatches
-                }
-
-                dispatchEvents(component, dispatches)
+                dispatchEvents(component, getDispatches(effects))
             })
         })
     })
 })
+
+function getDispatches(effects) {
+    if (! Object.prototype.hasOwnProperty.call(effects, 'dispatches')) return []
+
+    return effects.dispatches || []
+}
 
 function dispatchEvents(component, dispatches) {
     dispatches.forEach(({ name, params = {}, self = false, component: componentName, ref, el }) => {
