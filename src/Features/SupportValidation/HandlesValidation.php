@@ -514,7 +514,7 @@ trait HandlesValidation
         return collect($data)->map(function ($value, $key) use ($property) {
             // Performance: skip siblings, Laravel can already traverse via Arr::get
             // (scalars + ArrayAccess like Collection / Model). Still unwrap Wireables
-            // and other non-Arrayables so nested dependent rules work
+            // and other non-ArrayAccess Arrayables so nested dependent rules work
             // (e.g. required_if:settings.mode,strict).
             if (
                 ! is_null($property)
