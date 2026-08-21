@@ -381,7 +381,7 @@ trait HandlesValidation
 
         $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
 
-        $data = $this->unwrapDataForValidation($data);
+        $data = $this->unwrapDataForValidation($data, $property);
 
         // If a matching rule is found, then filter collections down to keys specified in the field,
         // while leaving all other data intact. If a key isn't specified and instead there is a
@@ -509,9 +509,20 @@ trait HandlesValidation
         return Utils::getPublicPropertiesDefinedOnSubclass($this);
     }
 
-    protected function unwrapDataForValidation($data)
+    protected function unwrapDataForValidation($data, $property = null)
     {
-        return collect($data)->map(function ($value) {
+        return collect($data)->map(function ($value, $key) use ($property) {
+            // Performance: skip siblings, Laravel can already traverse via Arr::get
+            // (scalars + ArrayAccess like Collection / Model). Still unwrap Wireables
+            // and other non-ArrayAccess Arrayables so nested dependent rules work
+            // (e.g. required_if:settings.mode,strict).
+            if (
+                ! is_null($property)
+                && $key !== $property
+                && (! is_object($value) || $value instanceof \ArrayAccess)
+            ) {
+                return $value;
+            }
 
             $synth = app('livewire')->findSynth($value, $this);
 

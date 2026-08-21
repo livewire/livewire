@@ -1036,6 +1036,51 @@ class UnitTest extends \Tests\TestCase
 
         $component->assertOnlyHasErrors(['foo' => 'min', 'bar' => 'min']);
     }
+
+    public function test_validate_only_skips_unwrapping_arrayable_siblings()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $title = 'ab';
+            public $sibling;
+
+            public function mount()
+            {
+                $this->sibling = collect([['id' => 1]]);
+            }
+
+            public function runValidateOnly()
+            {
+                $this->withValidator(function ($validator) {
+                    return $validator->getData()['sibling'] instanceof Collection;
+                })->validateOnly('title', [
+                    'title' => 'required|min:3',
+                ]);
+            }
+        })->call('runValidateOnly')->assertOnlyHasErrors(['title']);
+    }
+
+    public function test_validate_still_unwraps_arrayable_siblings()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $title = 'ok';
+            public $sibling;
+
+            public function mount()
+            {
+                $this->sibling = collect([['id' => 1]]);
+            }
+
+            public function runValidate()
+            {
+                $this->withValidator(function ($validator) {
+                    return is_array($validator->getData()['sibling']);
+                })->validate([
+                    'title' => 'required',
+                    'sibling' => 'required',
+                ]);
+            }
+        })->call('runValidate')->assertHasNoErrors(['title', 'sibling']);
+    }
 }
 
 class ComponentWithRulesProperty extends TestComponent
