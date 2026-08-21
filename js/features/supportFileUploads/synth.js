@@ -1,6 +1,7 @@
 import { registerSynth } from '@/synths'
 import { getUploadManager } from './manager'
 import { kindFromMime, kindFromName } from './kind'
+import { sizeForHumans } from './size'
 
 // Client-side blob URLs for uploaded files, keyed by their temporary server
 // filename. Lets previews keep using the local file after the upload
@@ -58,6 +59,14 @@ export class TemporaryUpload {
     get filename() { return this.serialized === null ? null : this.serialized.replace('livewire-file:', '') }
 
     get extension() { return this.name?.split('.').pop() }
+
+    // The file's size in bytes — from the native File object while it's
+    // around, from the server-provided meta after hydration...
+    get size() { return this.file?.size ?? this.meta.size ?? null }
+
+    // The size as a display string ("1.5 KB", "2 MB"), formatted the same
+    // way as PHP's $file->sizeForHumans()...
+    get sizeForHumans() { return this.size === null ? null : sizeForHumans(this.size) }
 
     // The coarse category of the file — 'image', 'audio', 'video', or 'file'.
     // While the native File object is around, its MIME type is the authority;

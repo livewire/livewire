@@ -216,6 +216,8 @@ Property | Description
 --- | ---
 `name` | The original filename from the user's machine
 `extension` | The file extension, derived from `name`
+`size` | The file's size in bytes
+`sizeForHumans` | The size as a display string ("1.5 KB", "2 MB") — also available in PHP as `$file->sizeForHumans()`
 `kind` | The coarse category of the file: `'image'`, `'audio'`, `'video'`, or `'file'` — from the browser's MIME type while uploading, the filename's extension after
 `isImage` / `isAudio` / `isVideo` | Shorthand predicates over `kind`, e.g. `wire:show="photo.isImage"`
 `filename` | The hashed temporary filename on the server (`null` while uploading)
