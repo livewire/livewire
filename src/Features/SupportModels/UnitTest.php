@@ -421,6 +421,56 @@ class UnitTest extends \Tests\TestCase
         // One restoration for the same class:key, not two.
         $this->assertCount(1, $articleQueries);
     }
+
+    public function test_collection_and_single_model_of_same_class_share_one_query_on_refresh()
+    {
+        Article::first();
+        app('livewire')->flushState();
+
+        $connection = Article::resolveConnection();
+        $connection->enableQueryLog();
+        $connection->flushQueryLog();
+
+        Livewire::test(new class extends TestComponent {
+            public Collection $articles;
+            public Article $selected;
+
+            public function mount()
+            {
+                $this->articles = Article::all();
+                $this->selected = $this->articles->first();
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        @foreach ($articles as $article)
+                            {{ $article->title }}
+                        @endforeach
+                        selected: {{ $selected->title }}
+                    </div>
+                HTML;
+            }
+        })
+            ->assertSee('First')
+            ->assertSee('Second')
+            ->assertSee('selected: First')
+            ->call('$refresh')
+            ->assertSee('First')
+            ->assertSee('Second')
+            ->assertSee('selected: First');
+
+        $articleQueries = array_values(array_filter(
+            $connection->getQueryLog(),
+            fn ($q) => str_contains($q['query'], 'articles')
+        ));
+
+        // Mount: 1× SELECT for the collection (selected is the same instance, no extra query).
+        // Refresh: 1× bulk restore for the collection; selected reuses the cached model.
+        // Total: 2 queries, not 3 (or more).
+        $this->assertCount(2, $articleQueries);
+    }
 }
 
 #[\Attribute]
