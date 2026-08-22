@@ -82,10 +82,12 @@ class PersistentMiddleware extends Mechanism
 
         $key = get_class($model).':'.$model->getKey();
 
-        // Keep the first clean instance for this identity.
-        if (isset($this->resolvedRouteModels[$key])) return;
+        $resolvedModel = $this->resolvedRouteModels[$key] ?? null;
 
-        // withoutRelations() returns a clone with no loaded relations.
+        // Check if model already stored and its the same model
+        if (! is_null($resolvedModel) && $model->is($resolvedModel)) return;
+
+        // Store the model so it can be reused later
         $this->resolvedRouteModels[$key] = $model;
     }
 
