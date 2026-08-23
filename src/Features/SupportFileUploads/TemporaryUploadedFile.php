@@ -5,9 +5,9 @@ namespace Livewire\Features\SupportFileUploads;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Number;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 use League\MimeTypeDetection\FinfoMimeTypeDetector;
+use Livewire\Facades\GenerateSignedUploadUrlFacade;
 
 class TemporaryUploadedFile extends UploadedFile
 {
@@ -158,7 +158,7 @@ class TemporaryUploadedFile extends UploadedFile
             return $this->storage->temporaryUrl($this->path, now()->addDay());
         }
 
-        return URL::temporarySignedRoute(
+        return GenerateSignedUploadUrlFacade::signedRoute(
             'livewire.preview-file', now()->addMinutes(30)->endOfHour(), ['filename' => $this->getFilename()]
         );
     }
