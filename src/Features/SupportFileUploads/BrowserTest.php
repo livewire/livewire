@@ -2,9 +2,12 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Livewire\WithFileUploads;
 use Livewire\Component;
+use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
 use Livewire\Features\SupportValidation\BaseValidate;
 use Livewire\Livewire;
 
@@ -273,5 +276,57 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitUntil("document.querySelector('[dusk=\"upload\"]')?.value === ''")
         ->assertInputValue('@upload', null)
         ;
+    }
+
+    public function test_local_upload_succeeds_when_the_proxys_forwarded_https_origin_is_not_trusted()
+    {
+        // Signs under https, then swaps https:// for http:// on the URL —
+        // simulating a proxy Laravel doesn't trust to report its real origin.
+        $this->beforeServingApplication(function () {
+            Storage::persistentFake('tmp-for-tests');
+
+            GenerateSignedUploadUrlFacade::swap(new class extends GenerateSignedUploadUrl {
+                public function forLocal()
+                {
+                    URL::forceScheme('https');
+                    $url = parent::forLocal();
+                    URL::forceScheme(null);
+
+                    return preg_replace('#^https://#', 'http://', $url);
+                }
+            });
+
+            Livewire::component('https-signed-upload', HttpsSignedUploadComponent::class);
+
+            Route::get('/https-signed-upload', HttpsSignedUploadComponent::class)->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser->visit('/https-signed-upload')
+                ->assertMissing('@preview')
+                ->attach('@upload', __DIR__ . '/browser_test_image.png')
+                ->waitFor('@preview')
+                ->assertVisible('@preview')
+            ;
+        });
+    }
+}
+
+class HttpsSignedUploadComponent extends Component
+{
+    use WithFileUploads;
+
+    public $photo;
+
+    function render() {
+        return <<<'HTML'
+            <div>
+                <input type="file" wire:model="photo" dusk="upload">
+
+                @if ($photo)
+                    <img src="{{ $photo->temporaryUrl() }}" dusk="preview">
+                @endif
+            </div>
+        HTML;
     }
 }

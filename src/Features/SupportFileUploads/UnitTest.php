@@ -11,6 +11,7 @@ use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButton
 use League\Flysystem\PathTraversalDetected;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Http\UploadedFile;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
 use Illuminate\Http\Testing\FileFactory;
@@ -951,6 +952,29 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertInstanceOf(TemporaryUploadedFile::class, $rows['one']['image']);
         $this->assertEquals(['image' => null, 'caption' => 'New row'], $rows['three']);
+    }
+
+    public function test_preview_succeeds_when_the_proxys_forwarded_https_origin_is_not_trusted()
+    {
+        // Signs under https, then swaps https:// for http:// on the URL,
+        // simulating a proxy Laravel doesn't trust to report its real origin.
+        Storage::fake('avatars');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->viewData('photo');
+
+        SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+
+        URL::forceScheme('https');
+        $url = $photo->temporaryUrl();
+        URL::forceScheme(null);
+
+        $this->assertStringStartsWith('https://', $url);
+
+        $url = preg_replace('#^https://#', 'http://', $url);
+
+        $this->get($url)->assertOk();
     }
 
     protected function useS3LikeTemporaryUploadDisk()
