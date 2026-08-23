@@ -21,7 +21,7 @@ class UnitTest extends \Tests\TestCase
             ->withoutExceptionHandling()
             ->get('/configurable-layout')
             ->assertSee('foo')
-            ->assertDontSee('baz');
+            ->assertDontSeeText('baz');
     }
 
     public function test_can_configure_a_default_layout()
@@ -47,7 +47,7 @@ class UnitTest extends \Tests\TestCase
             ->get('/configurable-layout')
             ->assertSee('foo')
             ->assertSee('bar')
-            ->assertDontSee('baz');
+            ->assertDontSeeText('baz');
     }
 
     public function test_can_show_params_with_a_configured_class_based_component_layout()
@@ -85,7 +85,7 @@ class UnitTest extends \Tests\TestCase
             ->get('/configurable-layout')
             ->assertSee('foo')
             ->assertSee('bar')
-            ->assertDontSee('baz');
+            ->assertDontSeeText('baz');
     }
 
     public function test_can_show_params_with_a_configured_anonymous_component_layout()
