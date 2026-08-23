@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Facade;
  *
  * @method static string forLocal()
  * @method static string forS3($file, $visibility = 'private')
+ * @method static string signedRoute($name, $expiration, $parameters = [])
  *
  * @see \Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl
  */
