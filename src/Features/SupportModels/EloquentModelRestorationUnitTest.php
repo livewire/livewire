@@ -35,20 +35,22 @@ class EloquentModelRestorationUnitTest extends \Tests\TestCase
 
         // Materialize the collection — one bulk SELECT; models are remembered.
         $this->assertCount(2, $collection);
+        $this->assertCount(1, $connection->getQueryLog());
 
-        $queriesAfterCollection = $connection->getQueryLog();
-        $this->assertCount(1, $queriesAfterCollection);
+        // Hydrate two models that was part of that collection.
+        $a = $modelSynth->hydrate(null, ['class' => Post::class, 'key' => 1]);
+        $b = $modelSynth->hydrate(null, ['class' => Post::class, 'key' => 2]);
+        $this->assertSame('First', $a->title);
+        $this->assertSame('Second', $b->title);
 
-        // Hydrate a single model that was part of that collection.
-        $model = $modelSynth->hydrate(null, ['class' => Post::class, 'key' => 1]);
+        // Same instances that were remembered — not newly queried models.
+        $this->assertTrue($a->is($collection->firstWhere('id', 1)));
+        $this->assertTrue($b->is($collection->firstWhere('id', 2)));
 
-        // Materialize the model — must not issue another SELECT.
-        $this->assertSame('First', $model->title);
-
-        $this->assertCount(count($queriesAfterCollection), $connection->getQueryLog());
+        $this->assertCount(1, $connection->getQueryLog());
     }
 
-    public function test_collection_reuses_already_materialized_single_model()
+    public function test_collection_reuses_already_materialized_single_models()
     {
         Post::first();
         app('livewire')->flushState();
@@ -63,14 +65,13 @@ class EloquentModelRestorationUnitTest extends \Tests\TestCase
         $modelSynth = new ModelSynth($context, 'first');
         $collectionSynth = new EloquentCollectionSynth($context, 'posts');
 
-        // Materialize a single model first.
-        $model = $modelSynth->hydrate(null, ['class' => Post::class, 'key' => 1]);
-        $this->assertSame('First', $model->title);
+        $a = $modelSynth->hydrate(null, ['class' => Post::class, 'key' => 1]);
+        $b = $modelSynth->hydrate(null, ['class' => Post::class, 'key' => 2]);
+        $this->assertSame('First', $a->title);
+        $this->assertSame('Second', $b->title);
 
-        $queriesAfterModel = $connection->getQueryLog();
-        $this->assertCount(1, $queriesAfterModel);
+        $this->assertCount(2, $connection->getQueryLog());
 
-        // Hydrate a collection that includes the already-cached key plus another.
         $collection = $collectionSynth->hydrate(null, [
             'keys' => [1, 2],
             'class' => Collection::class,
@@ -78,16 +79,13 @@ class EloquentModelRestorationUnitTest extends \Tests\TestCase
         ], fn ($property, $value) => $value);
 
         $this->assertCount(2, $collection);
-        $this->assertSame('First', $collection->firstWhere('id', 1)->title);
-        $this->assertSame('Second', $collection->firstWhere('id', 2)->title);
 
-        $postQueries = array_values(array_filter(
-            $connection->getQueryLog(),
-            fn ($q) => str_contains($q['query'], 'posts')
-        ));
+        // Same instances that were remembered — not newly queried models.
+        $this->assertTrue($a->is($collection->firstWhere('id', 1)));
+        $this->assertTrue($b->is($collection->firstWhere('id', 2)));
 
-        // 1 query for the single model + 1 query for the remaining key only.
-        $this->assertCount(2, $postQueries);
+        // Still 2 — collection did not query again.
+        $this->assertCount(2, $connection->getQueryLog());
     }
 
     public function test_same_model_is_only_queried_once_when_hydrated_on_multiple_properties()
@@ -105,19 +103,12 @@ class EloquentModelRestorationUnitTest extends \Tests\TestCase
 
         $a = $synth->hydrate(null, ['class' => Post::class, 'key' => 1]);
         $b = $synth->hydrate(null, ['class' => Post::class, 'key' => 1]);
-
-        // Force materialization (no-ops on PHP < 8.4 where hydrate already queried).
         $this->assertSame('First', $a->title);
         $this->assertSame('First', $b->title);
-        $this->assertSame($a->getKey(), $b->getKey());
-
-        $postQueries = array_values(array_filter(
-            $connection->getQueryLog(),
-            fn ($q) => str_contains($q['query'], 'posts')
-        ));
+        $this->assertTrue($a->is($b));
 
         // One restoration for the same class:key, not two.
-        $this->assertCount(1, $postQueries);
+        $this->assertCount(1, $connection->getQueryLog());
     }
 
     public function test_collection_and_single_model_of_same_class_share_one_query_on_refresh()
@@ -159,15 +150,10 @@ class EloquentModelRestorationUnitTest extends \Tests\TestCase
             ->assertSee('Second')
             ->assertSee('selected: First');
 
-        $postQueries = array_values(array_filter(
-            $connection->getQueryLog(),
-            fn ($q) => str_contains($q['query'], 'posts')
-        ));
-
         // Mount: 1× SELECT for the collection (selected is the same instance, no extra query).
         // Refresh: 1× bulk restore for the collection; selected reuses the cached model.
         // Total: 2 queries, not 3 (or more).
-        $this->assertCount(2, $postQueries);
+        $this->assertCount(2, $connection->getQueryLog());
     }
 
     public function test_cached_model_preserves_default_eager_loads_from_restoration()
@@ -212,8 +198,8 @@ class EloquentModelRestorationUnitTest extends \Tests\TestCase
 
         $mechanism = app(PersistentMiddleware::class);
 
-        $first = Post::first();
-        $mechanism->rememberResolvedModel($first);
+        $model = Post::first();
+        $mechanism->rememberResolvedModel($model);
 
         $second = Post::first();
         $second->setRelation('author', Author::first());
@@ -222,11 +208,11 @@ class EloquentModelRestorationUnitTest extends \Tests\TestCase
         // First write wins — a later remember must not replace the cached instance.
         $mechanism->rememberResolvedModel($second);
 
-        $resolved = $mechanism->getResolvedRouteModel(Post::class, $first->getKey());
+        $resolvedModel = $mechanism->getResolvedRouteModel(Post::class, $model->getKey());
 
-        $this->assertNotNull($resolved);
-        $this->assertFalse($resolved->relationLoaded('author'));
-        $this->assertSame($first->getKey(), $resolved->getKey());
+        $this->assertNotNull($resolvedModel);
+        $this->assertFalse($resolvedModel->relationLoaded('author'));
+        $this->assertTrue($resolvedModel->is($model));
     }
 }
 
