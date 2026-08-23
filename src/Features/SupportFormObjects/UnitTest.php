@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Stringable;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\Drawer\Utils;
 use Livewire\Form;
 use Livewire\Livewire;
 use PHPUnit\Framework\Assert;
@@ -1170,12 +1171,12 @@ class UnitTest extends \Tests\TestCase
 
         $form = $component->instance()->form;
 
-        $this->assertFalse(
-            (new \ReflectionProperty($form, 'title'))->isInitialized($form)
+        $this->assertTrue(
+            Utils::propertyIsTypedAndUninitialized($form, 'title')
         );
 
-        $this->assertFalse(
-            (new \ReflectionProperty($form, 'content'))->isInitialized($form)
+        $this->assertTrue(
+            Utils::propertyIsTypedAndUninitialized($form, 'content')
         );
     }
 
@@ -1201,8 +1202,8 @@ class UnitTest extends \Tests\TestCase
 
         $form = $component->instance()->form;
 
-        $this->assertFalse(
-            (new \ReflectionProperty($form, 'title'))->isInitialized($form)
+        $this->assertTrue(
+            Utils::propertyIsTypedAndUninitialized($form, 'title')
         );
     }
 }

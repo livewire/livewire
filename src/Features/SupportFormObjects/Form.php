@@ -108,14 +108,10 @@ class Form implements Arrayable
         $freshInstance = new static($this->getComponent(), $this->getPropertyName());
 
         foreach ($properties as $property) {
-            // Component reset may pass wildcards / nested segments (e.g. '*', 'foo')
-            // that are not real form properties. Keep data_get/data_set for those.
-            if (property_exists($freshInstance, $property)) {
-                // Handle resetting properties that are not initialized by default.
-                if (! (new \ReflectionProperty($freshInstance, $property))->isInitialized($freshInstance)) {
-                    data_forget($this, $property);
-                    continue;
-                }
+            // Handle resetting properties that are not initialized by default.
+            if (Utils::hasProperty($freshInstance, $property) && Utils::propertyIsTypedAndUninitialized($freshInstance, $property)) {
+                data_forget($this, $property);
+                continue;
             }
 
             data_set($this, $property, data_get($freshInstance, $property));
