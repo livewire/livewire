@@ -108,6 +108,32 @@ class Form implements Arrayable
         $freshInstance = new static($this->getComponent(), $this->getPropertyName());
 
         foreach ($properties as $property) {
+            $property = str($property);
+
+            // Check if the property contains a dot which means it is actually on a nested object
+            if (str($property)->contains('.')) {
+                $propertyName = $property->afterLast('.');
+                $objectName = $property->before('.');
+
+                $object = data_get($freshInstance, $objectName, null);
+
+                if (is_object($object)) {
+                    $isInitialized = (new \ReflectionProperty($object, (string) $propertyName))->isInitialized($object);
+                } elseif (is_array($object)) {
+                    $isInitialized = Arr::has($freshInstance->{$objectName}, Utils::afterFirstDot((string) $property));
+                } else {
+                    $isInitialized = false;
+                }
+            } else {
+                $isInitialized = (new \ReflectionProperty($freshInstance, (string) $property))->isInitialized($freshInstance);
+            }
+
+            // Handle resetting properties that are not initialized by default.
+            if (! $isInitialized) {
+                data_forget($this, (string) $property);
+                continue;
+            }
+
             data_set($this, $property, data_get($freshInstance, $property));
         }
     }

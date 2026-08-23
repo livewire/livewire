@@ -1148,6 +1148,69 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form', fn ($form) => $form instanceof PostFormStubWithDefaults)
         ;
     }
+
+    public function test_form_reset_handles_non_nullable_typed_properties_without_defaults()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public TypedRequiredForm $form;
+
+            public function mount()
+            {
+                $this->form->title = 'A Title';
+                $this->form->content = 'Some content...';
+            }
+
+            public function resetForm()
+            {
+                $this->form->reset();
+            }
+        })
+            ->call('resetForm')
+            ->assertOk();
+
+        $form = $component->instance()->form;
+
+        $this->assertFalse(
+            (new \ReflectionProperty($form, 'title'))->isInitialized($form)
+        );
+
+        $this->assertFalse(
+            (new \ReflectionProperty($form, 'content'))->isInitialized($form)
+        );
+    }
+
+    public function test_form_reset_single_non_nullable_typed_property_without_default()
+    {
+        $component = Livewire::test(new class extends \Tests\TestComponent {
+            public TypedRequiredForm $form;
+
+            public function mount()
+            {
+                $this->form->title = 'A Title';
+                $this->form->content = 'Some content...';
+            }
+
+            public function resetTitle()
+            {
+                $this->form->reset('title');
+            }
+        })
+            ->call('resetTitle')
+            ->assertOk()
+            ->assertSetStrict('form.content', 'Some content...');
+
+        $form = $component->instance()->form;
+
+        $this->assertFalse(
+            (new \ReflectionProperty($form, 'title'))->isInitialized($form)
+        );
+    }
+}
+
+class TypedRequiredForm extends Form
+{
+    public string $title;
+    public string $content;
 }
 
 class PostFormStub extends Form
