@@ -349,6 +349,39 @@ $this->reset('title');
 $this->reset(['title', 'content']);
 ```
 
+> [!important]
+> Form properties declared as non-nullable typed properties without defaults (e.g. `public string $title`) are left uninitialized after `reset()` (and when Livewire clears them via the form synthesizer). Accessing them in a view before assignment will throw. Use a default (`= ''`), a nullable type (`?string $title = null`), or null-safe access in the view.
+
+```php
+<?php
+
+namespace App\Livewire\Forms;
+
+use Livewire\Attributes\Validate;
+use App\Models\Post;
+use Livewire\Form;
+
+class PostForm extends Form
+{
+    public string $title;
+    public string $content;
+
+    public function mount()
+    {
+        $this->title = 'A Title';
+        $this->content = 'Some content...';
+    }
+
+    public function resetForm()
+    {
+        $this->reset();
+
+        $this->title = 'A Title';  // [tl! highlight]
+        $this->content = 'Some content...';  // [tl! highlight]
+    }
+}
+```
+
 ### Pulling form fields
 
 Alternatively, you can use the `pull()` method to both retrieve a form's properties and reset them in one operation.
