@@ -350,36 +350,57 @@ $this->reset(['title', 'content']);
 ```
 
 > [!important]
-> Form properties declared as non-nullable typed properties without defaults (e.g. `public string $title`) are left uninitialized after `reset()` (and when Livewire clears them via the form synthesizer). Accessing them in a view before assignment will throw. Use a default (`= ''`), a nullable type (`?string $title = null`), or null-safe access in the view.
+> Form properties declared as non-nullable typed properties without defaults (e.g. `public string $title`) are left uninitialized after `reset()` (and when Livewire clears them via the form synthesizer). Accessing them in a view before assignment will throw. Assign after reset, use a default value (`= ''`), a nullable type (`?string $title = null`), or null-safe access in the view (`$form?->title`).
 
 ```php
 <?php
 
 namespace App\Livewire\Forms;
 
-use Livewire\Attributes\Validate;
 use App\Models\Post;
 use Livewire\Form;
 
 class PostForm extends Form
 {
+    public ?Post $post;
+
     public string $title;
+
     public string $content;
 
-    public function mount()
+    public function setPost(Post $post)
     {
-        $this->title = 'A Title';
-        $this->content = 'Some content...';
+        $this->post = $post
+
+        $this->title = $post->title;
+
+        $this->content = $post->content;
+    }
+}
+```
+```php
+<?php
+
+use App\Livewire\Forms\PostForm;
+use Livewire\Component;
+use App\Models\Post;
+
+new class extends Component {
+    public Post $post;
+    public PostForm $form;
+
+    public function mount(Post $post)
+    {
+        $this->form->setPost($post);
     }
 
     public function resetForm()
     {
-        $this->reset();
+        $this->form->reset();
 
-        $this->title = 'A Title';  // [tl! highlight]
-        $this->content = 'Some content...';  // [tl! highlight]
+        $this->form->setPost($this->post); // [tl! highlight]
     }
-}
+};
 ```
 
 ### Pulling form fields
