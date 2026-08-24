@@ -56,7 +56,14 @@ export class TemporaryUpload {
     get name() { return this.file?.name ?? this.meta.name ?? this.filename }
 
     // The hashed temporary filename on the server (used by $wire.removeUpload())...
-    get filename() { return this.serialized === null ? null : this.serialized.replace('livewire-file:', '') }
+    get filename() {
+        if (this.serialized === null) return null
+
+        let signedFilename = this.serialized.replace('livewire-file:', '')
+        let tokenSeparator = signedFilename.indexOf(':')
+
+        return tokenSeparator === -1 ? signedFilename : signedFilename.slice(tokenSeparator + 1)
+    }
 
     get extension() { return this.name?.split('.').pop() }
 
