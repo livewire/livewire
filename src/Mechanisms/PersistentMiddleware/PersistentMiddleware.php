@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Routing\Router;
 use Livewire\Mechanisms\Mechanism;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -176,7 +177,16 @@ class PersistentMiddleware extends Mechanism
 
         if (! $route) return [];
 
-        $middleware = app('router')->gatherRouteMiddleware($route);
+        $router = app('router');
+
+        try {
+            $router->substituteBindings($route);
+            $router->substituteImplicitBindings($route);
+        } catch (ModelNotFoundException $e) {
+            return [];
+        }
+
+        $middleware = $router->gatherRouteMiddleware($route);
 
         return $this->filterMiddlewareByPersistentMiddleware($middleware);
     }

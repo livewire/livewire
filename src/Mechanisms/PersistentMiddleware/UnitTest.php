@@ -2,13 +2,16 @@
 
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component as BaseComponent;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleComponents\Checksum;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+use Sushi\Sushi;
 
 class UnitTest extends \LegacyTests\Unit\TestCase
 {
@@ -150,6 +153,49 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $response->assertJsonPath('components.0.snapshot', $snapshot);
     }
 
+    public function test_it_does_not_fail_update_when_original_route_model_binding_is_missing()
+    {
+        // Route exists; model key does not → SubstituteBindings throws ModelNotFoundException
+        Route::get('/posts/{post}', function (BindingPost $post) {
+            return 'ok';
+        })->middleware('web');
+
+        $component = Livewire::test(EmptyComponent::class);
+        $snapshot = $component->snapshot;
+
+        // Point the memo at a non-existent model on a matching route
+        $snapshot['memo']['path'] = 'posts/999999';
+        $snapshot['memo']['method'] = 'GET';
+
+        // Mutating memo will trigger CorruptComponentPayloadException -> 419
+        // Unset original checksum and generate a new one
+        unset($snapshot['checksum']);
+        $snapshot['checksum'] = Checksum::generate($snapshot);
+
+        $snapshotJson = json_encode($snapshot);
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), [
+                'components' => [[
+                    'calls'    => [],
+                    'updates'  => [],
+                    'snapshot' => $snapshotJson,
+                ]],
+            ]);
+
+        // Update endpoint must stay healthy; page-level 404 must not leak
+        $response->assertStatus(200);
+        $response->assertJsonPath('components.0.snapshot', $snapshotJson);
+    }
+}
+
+class BindingPost extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'title' => 'Exists'],
+    ];
 }
 
 class EmptyComponent extends BaseComponent
