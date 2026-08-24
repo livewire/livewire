@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Lazy;
 use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 
 class UnitTest extends \Tests\TestCase
@@ -61,6 +62,38 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('level:5');
     }
 
+    public function test_a_repeat_lazy_load_call_is_ignored_after_the_component_has_loaded()
+    {
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        Livewire::component('lazy-alpha', LazyAlpha::class);
+
+        $component = Livewire::test('lazy-alpha', ['level' => 5]);
+
+        preg_match("/__lazyLoad\('([^']+)'\)/", html_entity_decode($component->html()), $matches);
+
+        $component
+            ->call('__lazyLoad', $matches[1])
+            ->assertSee('level:5')
+            ->call('__lazyLoad', $matches[1])
+            ->assertSee('level:5')
+            ->assertSee('mounts:1')
+            ->call('__lazyLoad', $matches[1])
+            ->assertSee('level:5')
+            ->assertSee('mounts:1');
+    }
+
+    public function test_a_lazy_load_call_on_a_non_lazy_component_is_not_claimed()
+    {
+        $this->expectException(MethodNotFoundException::class);
+
+        Livewire::test(new class extends Component {
+            public function render() {
+                return '<div></div>';
+            }
+        })->call('__lazyLoad', 'invalid');
+    }
+
     public function test_a_mount_params_container_is_scoped_to_its_own_component()
     {
         SupportLazyLoading::$disableWhileTesting = false;
@@ -82,9 +115,11 @@ class UnitTest extends \Tests\TestCase
 #[Lazy]
 class LazyAlpha extends Component {
     public $level = 0;
+    public $mounts = 0;
 
     public function mount($level = 0) {
         $this->level = $level;
+        $this->mounts++;
     }
 
     public function placeholder() {
@@ -92,7 +127,7 @@ class LazyAlpha extends Component {
     }
 
     public function render() {
-        return '<div>level:'.$this->level.'</div>';
+        return '<div>level:'.$this->level.' mounts:'.$this->mounts.'</div>';
     }
 }
 
