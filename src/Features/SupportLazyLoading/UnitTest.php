@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportLazyLoading;
 use Illuminate\Support\Facades\Route;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Lazy;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\Exceptions\MethodNotFoundException;
@@ -60,6 +61,25 @@ class UnitTest extends \Tests\TestCase
         Livewire::test('lazy-alpha')
             ->call('__lazyLoad', $matches[1])
             ->assertSee('level:5');
+    }
+
+    public function test_a_lazy_component_registers_its_listeners_only_once_it_has_loaded()
+    {
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        Livewire::component('lazy-with-listener', LazyWithListener::class);
+
+        $component = Livewire::test('lazy-with-listener');
+
+        // The placeholder is dormant, so the browser has nothing to dispatch to yet...
+        $this->assertArrayNotHasKey('listeners', $component->effects);
+
+        preg_match("/__lazyLoad\('([^']+)'\)/", html_entity_decode($component->html()), $matches);
+
+        $component->call('__lazyLoad', $matches[1]);
+
+        // ...and the resume response is what registers them...
+        $this->assertEquals(['refresh-child'], $component->effects['listeners']);
     }
 
     public function test_a_repeat_lazy_load_call_is_ignored_after_the_component_has_loaded()
@@ -128,6 +148,24 @@ class LazyAlpha extends Component {
 
     public function render() {
         return '<div>level:'.$this->level.' mounts:'.$this->mounts.'</div>';
+    }
+}
+
+#[Lazy]
+class LazyWithListener extends Component {
+    public $count = 0;
+
+    #[On('refresh-child')]
+    public function refresh() {
+        $this->count++;
+    }
+
+    public function placeholder() {
+        return '<div>Loading...</div>';
+    }
+
+    public function render() {
+        return '<div>count:'.$this->count.'</div>';
     }
 }
 

@@ -52,7 +52,10 @@ class SupportEvents extends ComponentHook
 
     function dehydrate($context)
     {
-        if ($context->mounting) {
+        // Don't register listeners until a lazy component has fully mounted...
+        if ($this->storeGet('isLazyLoadMounting') === true) return;
+
+        if ($context->isMounting() || $this->storeGet('isLazyLoadHydrating') === true) {
             $listeners = static::getListenerEventNames($this->component);
 
             $listeners && $context->addEffect('listeners', $listeners);
