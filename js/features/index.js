@@ -21,6 +21,7 @@ import './supportRedirects';
 import './supportNavigate';
 import './supportEntangle';
 import './supportSlots';
+import './supportLazyLoading';
 import './supportDataLoading';
 import './supportDataCurrent';
 import './supportPreserveScroll';

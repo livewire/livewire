@@ -70,6 +70,51 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('Child!');
     }
 
+    public function test_a_placeholder_scrolling_back_into_view_does_not_send_a_second_request()
+    {
+        Livewire::visit([new class extends Component {
+            public function mount() {
+                cache()->forever('lazy-render-count', 0);
+            }
+
+            public function render() { return <<<HTML
+            <div>
+                <div style="height: 200vh"></div>
+                <livewire:child lazy />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public function mount() {
+                sleep(3);
+            }
+
+            public function render() {
+                $count = cache()->increment('lazy-render-count');
+
+                return <<<HTML
+                <div id="child">
+                    Child! renders:{$count}
+                </div>
+                HTML;
+            }
+        }])
+        ->assertDontSee('Child!')
+        // Scroll the placeholder in, back out, then in again while the load is still
+        // in flight. Without deduping, the second intersect sends its own request...
+        ->runScript('window.scrollTo(0, document.body.scrollHeight)')
+        ->pause(400)
+        ->runScript('window.scrollTo(0, 0)')
+        ->pause(400)
+        ->runScript('window.scrollTo(0, document.body.scrollHeight)')
+        ->pause(400)
+        ->runScript('window.scrollTo(0, 0)')
+        ->pause(400)
+        ->runScript('window.scrollTo(0, document.body.scrollHeight)')
+        ->waitFor('#child', 15)
+        ->pause(1500)
+        ->assertSeeIn('#child', 'renders:1');
+    }
+
     public function test_cant_lazy_load_a_component_on_intersect_outside_viewport()
     {
         Livewire::visit([new class extends Component {
