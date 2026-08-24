@@ -153,6 +153,45 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_conditionally_added_scripts_register_alpine_data_before_new_dom_is_initialized()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public $show = false;
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button dusk="button" wire:click="$set('show', true)">Show</button>
+
+                @if ($show)
+                    <button
+                        wire:transition
+                        dusk="target"
+                        x-data="timingTest"
+                        x-init="$el.textContent = 'ready'"
+                        x-on:click="initialize"
+                    >waiting</button>
+
+                    @script
+                    <script>
+                        Alpine.data('timingTest', () => ({
+                            initialize() {
+                                this.$el.textContent = 'initialized'
+                            },
+                        }))
+                    </script>
+                    @endscript
+                @endif
+            </div>
+            HTML; }
+        })
+        ->assertMissing('@target')
+        ->waitForLivewire()->click('@button')
+        ->waitForTextIn('@target', 'ready')
+        ->click('@target')
+        ->waitForTextIn('@target', 'initialized')
+        ;
+    }
+
     public function test_assets_can_be_loaded()
     {
         Route::get('/test.js', function () {

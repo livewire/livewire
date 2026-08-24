@@ -497,6 +497,58 @@ class BrowserTest extends BrowserTestCase
             ->waitForTextIn('@output', 'bar');
     }
 
+    public function test_can_dispatch_to_an_element_rendered_by_the_same_update()
+    {
+        Livewire::visit(new class extends Component {
+            public $show = false;
+
+            public function revealTarget()
+            {
+                $this->show = true;
+
+                $this->dispatch('opened')->el('#target');
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="revealTarget" dusk="button">Show target</button>
+
+                    @if ($show)
+                        <div id="target" x-data="{ received: false }" x-on:opened="received = true">
+                            <span dusk="output" x-text="received ? 'received' : 'waiting'"></span>
+                        </div>
+                    @endif
+                </div>
+                HTML;
+            }
+        })
+            ->assertMissing('@output')
+            ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@output', 'received');
+    }
+
+    public function test_can_dispatch_during_mount()
+    {
+        Livewire::visit(new class extends Component {
+            public function mount()
+            {
+                $this->dispatch('mounted');
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div x-data="{ received: false }" x-on:mounted.window="received = true">
+                    <span dusk="output" x-text="received ? 'received' : 'waiting'"></span>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForTextIn('@output', 'received');
+    }
+
     public function test_can_dispatch_to_element_using_wire_dispatch_ref()
     {
         Livewire::visit(new class extends Component {

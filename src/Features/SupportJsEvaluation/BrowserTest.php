@@ -75,6 +75,36 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_js_runs_after_new_dom_is_morphed()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $show = false;
+
+                public function reveal()
+                {
+                    $this->show = true;
+
+                    $this->js("document.querySelector('[dusk=target]').textContent = 'evaluated'");
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="reveal" dusk="reveal">Reveal</button>
+
+                    @if ($show)
+                        <div dusk="target">waiting</div>
+                    @endif
+                </div>
+                HTML; }
+            }
+        )
+        ->assertMissing('@target')
+        ->waitForLivewire()->click('@reveal')
+        ->waitForTextIn('@target', 'evaluated')
+        ;
+    }
+
     public function test_can_evaluate_js_on_mount_that_calls_a_livewire_action()
     {
         Livewire::visit(
@@ -506,6 +536,50 @@ class BrowserTest extends \Tests\BrowserTestCase
         )
         ->waitForLivewire()->click('@save')
         ->assertScript('window.test === "from wire"')
+        ;
+    }
+
+    public function test_wire_actions_take_precedence_over_nested_alpine_scope_variables()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $result = 'initial';
+
+                public function open($id) {
+                    $this->result = 'opened '.$id;
+                }
+
+                public function save() {
+                    $this->result = 'saved';
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                        <div>
+                            <div x-data="{ open: false }">
+                                <button wire:click="open(1)" dusk="open">Open</button>
+                            </div>
+
+                            <form wire:submit="save;" x-data="{ save: false }">
+                                <button type="submit" dusk="save">Save</button>
+                            </form>
+
+                            <div x-data="{ open: 'alpine' }">
+                                <span wire:text="open" dusk="reactive"></span>
+                            </div>
+
+                            <span dusk="output">{{ $result }}</span>
+                        </div>
+                    HTML;
+                }
+            }
+        )
+        ->assertSeeIn('@output', 'initial')
+        ->assertSeeIn('@reactive', 'alpine')
+        ->waitForLivewire()->click('@open')
+        ->assertSeeIn('@output', 'opened 1')
+        ->waitForLivewire()->click('@save')
+        ->assertSeeIn('@output', 'saved')
         ;
     }
 

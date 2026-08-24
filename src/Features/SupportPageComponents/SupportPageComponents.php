@@ -21,7 +21,7 @@ class SupportPageComponents extends ComponentHook
 
     static function registerLayoutViewMacros()
     {
-        View::macro('layoutData', function ($data = []) {
+        View::macro('layoutData', function ($data = []): static {
             if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->mergeParams($data);
@@ -29,7 +29,7 @@ class SupportPageComponents extends ComponentHook
             return $this;
         });
 
-        View::macro('section', function ($section) {
+        View::macro('section', function ($section): static {
             if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->slotOrSection = $section;
@@ -37,7 +37,7 @@ class SupportPageComponents extends ComponentHook
             return $this;
         });
 
-        View::macro('title', function ($title) {
+        View::macro('title', function ($title): static {
             if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->mergeParams(['title' => $title]);
@@ -45,7 +45,7 @@ class SupportPageComponents extends ComponentHook
             return $this;
         });
 
-        View::macro('slot', function ($slot) {
+        View::macro('slot', function ($slot): static {
             if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->slotOrSection = $slot;
@@ -53,7 +53,7 @@ class SupportPageComponents extends ComponentHook
             return $this;
         });
 
-        View::macro('extends', function ($view, $params = []) {
+        View::macro('extends', function ($view, $params = []): static {
             if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->type = 'extends';
@@ -64,7 +64,7 @@ class SupportPageComponents extends ComponentHook
             return $this;
         });
 
-        View::macro('layout', function ($view, $params = []) {
+        View::macro('layout', function ($view, $params = []): static {
             if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->type = 'component';
@@ -75,7 +75,7 @@ class SupportPageComponents extends ComponentHook
             return $this;
         });
 
-        View::macro('response', function (callable $callback) {
+        View::macro('response', function (callable $callback): static {
             if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->response = $callback;

@@ -1,5 +1,7 @@
 import { getDirectives } from '@/directives'
 import { on } from '@/hooks'
+import { releaseAfterNavigation } from '@/plugins/navigate/navigation'
+import { interceptMessage } from '@/request'
 import { Bag } from '@/utils'
 import Alpine from 'alpinejs'
 
@@ -27,11 +29,13 @@ on('directive.init', ({ el, directive, cleanup, component }) => setTimeout(() =>
     })
 }))
 
-on('commit', ({ component, respond }) => {
-    respond(() => {
-        cleanups.each(component.id, i => i())
-        cleanups.remove(component.id)
-    })
+interceptMessage(({ message, onSuccess, onFinish }) => {
+    let enableForm = () => {
+        cleanups.each(message.component.id, cleanup => cleanup())
+        cleanups.remove(message.component.id)
+    }
+
+    releaseAfterNavigation({ onSuccess, onFinish }, enableForm)
 })
 
 function disableForm(formEl) {

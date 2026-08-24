@@ -12,6 +12,7 @@ use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButton
 use League\Flysystem\PathTraversalDetected;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Testing\FileFactory;
 use Illuminate\Support\Arr;
@@ -711,7 +712,7 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file);
 
         // Try to hijack the photo property to a path outside the temporary livewire directory root.
-        $component->set('photo', 'livewire-file:../dangerous.png')
+        $component->set('photo', 'livewire-file:'.TemporaryUploadedFile::signPath('../dangerous.png'))
             ->call('$refresh');
     }
 
@@ -943,6 +944,47 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors([
                 'photo' => 'mimetypes',
             ]);
+    }
+
+    public function test_temporary_upload_validation_uses_file_contents_instead_of_storage_metadata()
+    {
+        $disk = $this->useS3LikeTemporaryUploadDisk();
+
+        $disk->put('livewire-tmp/png-disguised-as.webp', file_get_contents(__DIR__.'/browser_test_image.png'));
+
+        $this->assertSame('image/webp', $disk->mimeType('livewire-tmp/png-disguised-as.webp'));
+
+        $file = TemporaryUploadedFile::createFromLivewire('png-disguised-as.webp');
+
+        $this->assertSame('image/png', $file->getMimeType());
+        $this->assertTrue(validator(['file' => $file], ['file' => 'mimes:png|mimetypes:image/png'])->passes());
+        $this->assertFalse(validator(['file' => $file], ['file' => 'mimes:webp|mimetypes:image/webp'])->passes());
+        $this->assertSame(1, $disk->readStreamCalls);
+    }
+
+    public function test_temporary_upload_mime_type_does_not_fall_back_to_storage_metadata_for_empty_files()
+    {
+        $disk = $this->useS3LikeTemporaryUploadDisk();
+
+        $disk->put('livewire-tmp/empty.webp', '');
+
+        $this->assertSame('image/webp', $disk->mimeType('livewire-tmp/empty.webp'));
+
+        $file = TemporaryUploadedFile::createFromLivewire('empty.webp');
+
+        $this->assertSame('application/octet-stream', $file->getMimeType());
+    }
+
+    public function test_temporary_upload_mime_type_is_unknown_when_the_file_cannot_be_read()
+    {
+        $disk = $this->useS3LikeTemporaryUploadDisk();
+
+        $disk->put('livewire-tmp/unreadable.webp', file_get_contents(__DIR__.'/browser_test_image.png'));
+        $disk->canRead = false;
+
+        $file = TemporaryUploadedFile::createFromLivewire('unreadable.webp');
+
+        $this->assertSame('application/octet-stream', $file->getMimeType());
     }
 
     public function test_the_default_file_upload_controller_middleware_overwritten()
@@ -1250,6 +1292,59 @@ class UnitTest extends \Tests\TestCase
         $rows = $component->viewData('data')['sections']['first']['rows'];
         $this->assertInstanceOf(TemporaryUploadedFile::class, $rows['one']['image']);
         $this->assertEquals(['image' => null, 'caption' => 'New row'], $rows['three']);
+    }
+
+    public function test_preview_succeeds_when_the_proxys_forwarded_https_origin_is_not_trusted()
+    {
+        // Signs under https, then swaps https:// for http:// on the URL,
+        // simulating a proxy Laravel doesn't trust to report its real origin.
+        Storage::fake('avatars');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->viewData('photo');
+
+        \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+
+        URL::forceScheme('https');
+        $url = $photo->temporaryUrl();
+        URL::forceScheme(null);
+
+        $this->assertStringStartsWith('https://', $url);
+
+        $url = preg_replace('#^https://#', 'http://', $url);
+
+        $this->get($url)->assertOk();
+    }
+
+    protected function useS3LikeTemporaryUploadDisk()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 'tmp-for-tests');
+
+        // Simulate a remote disk returning stored upload metadata instead of inspecting the file...
+        $adapter = new \League\Flysystem\Local\LocalFilesystemAdapter(
+            $root = storage_path('framework/testing/disks/tmp-for-tests'),
+            null,
+            LOCK_EX,
+            \League\Flysystem\Local\LocalFilesystemAdapter::DISALLOW_LINKS,
+            new \League\MimeTypeDetection\ExtensionMimeTypeDetector(),
+        );
+
+        $disk = new class(new \League\Flysystem\Filesystem($adapter), $adapter, ['root' => $root]) extends FilesystemAdapter {
+            public $canRead = true;
+            public $readStreamCalls = 0;
+
+            public function readStream($path)
+            {
+                $this->readStreamCalls++;
+
+                return $this->canRead ? parent::readStream($path) : null;
+            }
+        };
+
+        Storage::set('tmp-for-tests', $disk);
+
+        return $disk;
     }
 }
 

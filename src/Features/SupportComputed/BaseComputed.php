@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportComputed;
 
-use function Livewire\invade;
+use function Livewire\{ invade, wrap };
 
 use Livewire\Features\SupportAttributes\Attribute;
 use Illuminate\Support\Facades\Cache;
@@ -158,7 +158,13 @@ class BaseComputed extends Attribute
 
     protected function evaluateComputed()
     {
-        return invade($this->component)->{parent::getName()}();
+        $value = null;
+
+        wrap($this->component)->tap(function ($component) use (&$value) {
+            $value = invade($component)->{parent::getName()}();
+        });
+
+        return $value;
     }
 
     public function getName()
@@ -170,6 +176,4 @@ class BaseComputed extends Attribute
     {
         return str($value)->camel()->toString();
     }
-
-
 }

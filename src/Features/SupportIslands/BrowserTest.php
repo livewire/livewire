@@ -507,6 +507,44 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_action_promises_wait_for_streamed_island_morphs()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+
+                $this->streamIsland('counter');
+                $this->skipRender();
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div x-data="{ result: '' }">
+                    <button
+                        type="button"
+                        dusk="increment"
+                        x-on:click="await $wire.increment(); result = document.querySelector('[dusk=island-count]').textContent.trim()"
+                    >Increment</button>
+
+                    <span dusk="result" x-text="result"></span>
+
+                    @island(name: 'counter')
+                        <div wire:transition dusk="island-count">Count: {{ $count }}</div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island-count', 'Count: 0')
+            ->click('@increment')
+            ->waitForTextIn('@result', 'Count: 1')
+            ->assertSeeIn('@island-count', 'Count: 1')
+            ;
+    }
+
     public function test_append_and_prepend_islands()
     {
         Livewire::visit([new class extends \Livewire\Component {

@@ -54,6 +54,173 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_loading_state_remains_active_during_navigation_but_is_not_stored_in_history()
+    {
+        Route::get('/slow-navigate-destination', function () {
+            sleep(1);
+
+            return response(<<<'HTML'
+                <!DOCTYPE html>
+                <html>
+                    <body>
+                        <h1 dusk="navigate-destination">Destination</h1>
+                    </body>
+                </html>
+                HTML);
+        })->middleware('web');
+
+        Livewire::visit([new class extends Component {
+            public function save()
+            {
+                $this->redirect('/slow-navigate-destination', navigate: true);
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button type="button" dusk="save" wire:click="save" wire:loading.attr="disabled">Save</button>
+            </div>
+            HTML; }
+        }])
+            ->waitForLivewire()->click('@save')
+            ->assertAttribute('@save', 'disabled', 'true')
+            ->assertAttribute('@save', 'data-loading', 'true')
+            ->waitFor('@navigate-destination', 5)
+            ->waitForNavigate()->back()
+            ->assertAttributeMissing('@save', 'disabled')
+            ->assertAttributeMissing('@save', 'data-loading')
+            ->waitForNavigate()->forward()
+            ->waitFor('@navigate-destination', 5)
+            ->waitForNavigate()->back()
+            ->assertAttributeMissing('@save', 'disabled')
+            ->assertAttributeMissing('@save', 'data-loading')
+            ->waitForLivewire()->click('@save')
+            ->assertAttribute('@save', 'disabled', 'true')
+            ->assertAttribute('@save', 'data-loading', 'true')
+            ->waitFor('@navigate-destination', 5)
+            ->assertConsoleLogHasNoErrors()
+        ;
+    }
+
+    public function test_form_protection_remains_active_while_a_navigate_redirect_fetches_its_destination()
+    {
+        Route::get('/slow-form-navigate-destination', function () {
+            sleep(1);
+
+            return response(<<<'HTML'
+                <!DOCTYPE html>
+                <html>
+                    <body>
+                        <h1 dusk="navigate-destination">Destination</h1>
+                    </body>
+                </html>
+                HTML);
+        })->middleware('web');
+
+        Livewire::visit([new class extends Component {
+            public function save()
+            {
+                $this->redirect('/slow-form-navigate-destination', navigate: true);
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <form wire:submit="save">
+                    <input type="text" dusk="name">
+                    <button type="submit" dusk="save">Save</button>
+                </form>
+            </div>
+            HTML; }
+        }])
+            ->waitForLivewire()->click('@save')
+            ->assertAttribute('@name', 'readonly', 'true')
+            ->assertAttribute('@save', 'disabled', 'true')
+            ->assertAttribute('@save', 'data-loading', 'true')
+            ->waitFor('@navigate-destination', 5)
+            ->waitForNavigate()->back()
+            ->assertAttributeMissing('@name', 'readonly')
+            ->assertAttributeMissing('@save', 'disabled')
+            ->assertAttributeMissing('@save', 'data-loading')
+        ;
+    }
+
+    public function test_loading_state_clears_when_a_navigate_redirect_is_prevented()
+    {
+        Livewire::visit([new class extends Component {
+            public function save()
+            {
+                $this->redirect('/prevented-navigate-destination', navigate: true);
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button type="button" dusk="save" wire:click="save" wire:loading.attr="disabled">Save</button>
+
+                @script
+                <script>
+                    document.addEventListener('livewire:navigate', event => event.preventDefault(), { once: true })
+                </script>
+                @endscript
+            </div>
+            HTML; }
+        }])
+            ->waitForLivewire()->click('@save')
+            ->assertAttributeMissing('@save', 'disabled')
+            ->assertAttributeMissing('@save', 'data-loading')
+        ;
+    }
+
+    public function test_loading_state_clears_when_a_navigate_redirect_is_cancelled()
+    {
+        Route::get('/cancelled-navigate-destination', function () {
+            sleep(1);
+
+            return response(<<<'HTML'
+                <!DOCTYPE html>
+                <html>
+                    <body>
+                        <h1 dusk="navigate-destination">Destination</h1>
+                    </body>
+                </html>
+                HTML);
+        })->middleware('web');
+
+        Livewire::visit([new class extends Component {
+            public function save()
+            {
+                $this->redirect('/cancelled-navigate-destination', navigate: true);
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button type="button" dusk="save" wire:click="save" wire:loading.attr="disabled">Save</button>
+
+                @script
+                <script>
+                    let removeHook = Livewire.hook('navigate.request', ({ options }) => {
+                        let controller = new AbortController()
+
+                        controller.abort()
+                        options.signal = controller.signal
+
+                        removeHook()
+                    })
+                </script>
+                @endscript
+            </div>
+            HTML; }
+        }])
+            ->waitForLivewire()->click('@save')
+            ->waitUntil("! document.querySelector('[dusk=\"save\"]').hasAttribute('disabled')")
+            ->assertAttributeMissing('@save', 'disabled')
+            ->assertAttributeMissing('@save', 'data-loading')
+            ->waitForLivewire()->click('@save')
+            ->assertAttribute('@save', 'disabled', 'true')
+            ->assertAttribute('@save', 'data-loading', 'true')
+            ->waitFor('@navigate-destination', 5)
+            ->assertConsoleLogHasNoErrors()
+        ;
+    }
+
     public function test_session_flash_persists_when_redirecting_from_request_with_multiple_components_in_the_same_request()
     {
         config()->set('session.driver', 'file');
@@ -167,6 +334,60 @@ class BrowserTest extends BrowserTestCase
                 ->assertConsoleLogHasNoErrors()
             ;
         });
+    }
+
+    public function test_redirect_helper_with_flash_persists_on_destination_page()
+    {
+        config()->set('session.driver', 'file');
+
+        Route::get('/redirect', RedirectComponent::class)->middleware('web');
+
+        Livewire::visit([
+            new class extends Component {
+                public function doRedirect()
+                {
+                    return redirect('/redirect')->with('alert', 'Session flash data');
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="doRedirect" dusk="button">Do redirect</button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@session-message', 'Session flash data');
+    }
+
+    public function test_redirect_to_with_flash_persists_on_destination_page()
+    {
+        config()->set('session.driver', 'file');
+
+        Route::get('/redirect', RedirectComponent::class)->middleware('web');
+
+        Livewire::visit([
+            new class extends Component {
+                public function doRedirect()
+                {
+                    return redirect()->to('/redirect')->with('alert', 'Session flash data');
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="doRedirect" dusk="button">Do redirect</button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@session-message', 'Session flash data');
     }
 }
 

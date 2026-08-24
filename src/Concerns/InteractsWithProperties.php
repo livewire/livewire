@@ -30,13 +30,24 @@ trait InteractsWithProperties
     public function fill($values)
     {
         $publicProperties = array_keys($this->all());
+        $model = $values instanceof Model ? $values : null;
 
-        if ($values instanceof Model) {
-            $values = $values->toArray();
-        }
+        if ($model) $values = $model->toArray();
 
         foreach ($values as $key => $value) {
-            if (in_array(Utils::beforeFirstDot($key), $publicProperties)) {
+            if (! in_array(Utils::beforeFirstDot($key), $publicProperties)) continue;
+
+            try {
+                if (! str_contains($key, '.') && $this->hasVirtualProperty($key)) {
+                    $this->setVirtualProperty($key, $value);
+                } else {
+                    data_set($this, $key, $value);
+                }
+            } catch (\TypeError $exception) {
+                if (! $model) throw $exception;
+
+                $value = $model->getAttribute($key);
+
                 if (! str_contains($key, '.') && $this->hasVirtualProperty($key)) {
                     $this->setVirtualProperty($key, $value);
                 } else {
@@ -89,6 +100,14 @@ trait InteractsWithProperties
                     $isInitialized = false;
                 }
             } else {
+                // Form objects are typed and have no default, so they appear
+                // uninitialized on a fresh instance. Reset their internal state
+                // instead of unsetting the property.
+                if (isset($this->{$property}) && is_subclass_of($this->{$property}, Form::class)) {
+                    $this->{$property}->reset();
+                    continue;
+                }
+
                 $isInitialized = (new \ReflectionProperty($freshInstance, (string) $property))->isInitialized($freshInstance);
             }
 

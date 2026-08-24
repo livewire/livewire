@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportRedirects;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -226,6 +227,67 @@ class UnitTest extends \Tests\TestCase
         $this->assertNull(session()->get('foo'));
     }
 
+    public function test_redirect_helper_preserves_redirect_effects()
+    {
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerRedirectHelper');
+
+        $component->assertRedirect('/foo');
+    }
+
+    public function test_redirect_helper_returns_redirect_response_instance()
+    {
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $return = $component->instance()->triggerRedirectHelper();
+
+        $this->assertInstanceOf(RedirectResponse::class, $return);
+        $this->assertEquals(url('foo'), $return->getTargetUrl());
+    }
+
+    public function test_redirect_helper_to_method_returns_redirect_response_instance()
+    {
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $return = $component->instance()->triggerRedirectHelperUsingTo();
+
+        $this->assertInstanceOf(RedirectResponse::class, $return);
+        $this->assertEquals(url('foo'), $return->getTargetUrl());
+    }
+
+    public function test_redirect_helper_route_method_returns_redirect_response_instance()
+    {
+        $this->registerNamedRoute();
+
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $return = $component->instance()->triggerRedirectHelperUsingRoute();
+
+        $this->assertInstanceOf(RedirectResponse::class, $return);
+        $this->assertEquals(route('foo'), $return->getTargetUrl());
+    }
+
+    public function test_typed_redirect_response_return_does_not_throw()
+    {
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerTypedRedirectResponse');
+
+        $component->assertRedirect('/foo');
+    }
+
+    public function test_redirect_helper_to_then_with_flashes_session()
+    {
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerRedirectHelperUsingToThenWith');
+
+        $component->assertRedirect('/foo');
+
+        $this->assertEquals('livewire-is-awesome', Session::get('success'));
+    }
+
     protected function registerNamedRoute()
     {
         Route::get('foo', function () {
@@ -276,6 +338,21 @@ class TriggersRedirectStub extends TestComponent
         return redirect('foo')->with([
             'success' => 'livewire-is-awesome'
         ]);
+    }
+
+    public function triggerRedirectHelperUsingTo()
+    {
+        return redirect()->to('foo');
+    }
+
+    public function triggerTypedRedirectResponse(): RedirectResponse
+    {
+        return redirect('foo');
+    }
+
+    public function triggerRedirectHelperUsingToThenWith()
+    {
+        return redirect()->to('foo')->with('success', 'livewire-is-awesome');
     }
 
     public function triggerRedirectFacadeUsingTo()

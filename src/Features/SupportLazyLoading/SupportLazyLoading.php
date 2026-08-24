@@ -108,7 +108,12 @@ class SupportLazyLoading extends ComponentHook
     public function hydrate($memo)
     {
         if (! isset($memo['lazyLoaded'])) return;
-        if ($memo['lazyLoaded'] === true) return;
+
+        if ($memo['lazyLoaded'] === true) {
+            $this->storeSet('isLazyLoadAlreadyLoaded', true);
+
+            return;
+        }
 
         $this->component->skipHydrate();
 
@@ -120,7 +125,10 @@ class SupportLazyLoading extends ComponentHook
         if ($this->storeGet('isLazyLoadMounting') === true) {
             $context->addMemo('lazyLoaded', false);
             $context->addMemo('lazyIsolated', $this->storeGet('isLazyIsolated'));
-        } elseif ($this->storeGet('isLazyLoadHydrating') === true) {
+        } elseif (
+            $this->storeGet('isLazyLoadHydrating') === true
+            || $this->storeGet('isLazyLoadAlreadyLoaded') === true
+        ) {
             $context->addMemo('lazyLoaded', true);
         }
     }
@@ -129,6 +137,13 @@ class SupportLazyLoading extends ComponentHook
     function call($method, $params, $returnEarly)
     {
         if ($method !== '__lazyLoad') return;
+
+        // Ignore repeat calls after the component has already been loaded.
+        if ($this->storeGet('isLazyLoadAlreadyLoaded') === true) {
+            $returnEarly();
+
+            return;
+        }
 
         // Only applies while a lazy load is being resumed.
         if ($this->storeGet('isLazyLoadHydrating') !== true) return;

@@ -86,6 +86,20 @@ describe('Contextualize expressions', () => {
         expect(contextualizeExpression('index', mockEl)).toBe('index')
     })
 
+    it('wire action targets take precedence over alpine scope variables', () => {
+        let mockEl = {
+            _x_dataStack: [{ open: false, save: false, user: {} }],
+            hasAttribute: () => false,
+            parentElement: null,
+        }
+
+        expect(contextualizeExpression('open(user)', mockEl, true)).toBe('$wire.open(user)')
+        expect(contextualizeExpression('save', mockEl, true)).toBe('$wire.save')
+        expect(contextualizeExpression('save;', mockEl, true)).toBe('$wire.save;')
+        expect(contextualizeExpression('open /* comment */ (user)', mockEl, true)).toBe('$wire.open /* comment */ (user)')
+        expect(contextualizeExpression('open = !open', mockEl, true)).toBe('open = !open')
+    })
+
     it('nested alpine scopes', () => {
         let parentEl = {
             _x_dataStack: [{ user: {} }],

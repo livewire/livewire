@@ -1069,6 +1069,85 @@ class UnitTest extends \Tests\TestCase
         // This should throw because stdClass doesn't extend Form
         $synth->hydrate(['title' => 'test'], ['class' => \stdClass::class], fn($k, $v) => $v);
     }
+
+    public function test_can_fill_a_form_object_from_eloquent_model_with_enum_cast()
+    {
+        Livewire::test(new class extends TestComponent {
+            public FormWithEnumPropertyStub $form;
+
+            public function fillForm($values)
+            {
+                $this->form->fill($values);
+            }
+        })
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.status', FormEnumStub::Draft)
+            ->call('fillForm', PostForFormObjectTesting::first())
+            ->assertSetStrict('form.title', 'A Title')
+            ->assertSetStrict('form.status', FormEnumStub::Active)
+        ;
+    }
+
+    public function test_fill_preserves_serialized_model_values_for_untyped_properties()
+    {
+        Livewire::test(new class extends TestComponent {
+            public FormWithUntypedEnumPropertyStub $form;
+
+            public function fillForm($values)
+            {
+                $this->form->fill($values);
+            }
+        })
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.status', null)
+            ->call('fillForm', PostForFormObjectTesting::first())
+            ->assertSetStrict('form.title', 'A Title')
+            ->assertSetStrict('form.status', 'active')
+        ;
+    }
+
+    public function test_resetting_component_does_not_unset_form_object()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithDefaults $form;
+
+            public $other = 'keep';
+
+            public function resetAll()
+            {
+                $this->reset();
+            }
+
+            public function resetFormProperty()
+            {
+                $this->reset('form');
+            }
+        })
+            ->assertSetStrict('form.title', 'foo')
+            ->assertSetStrict('form.content', 'bar')
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->set('other', 'changed')
+            ->assertSetStrict('form.title', 'Some Title')
+            ->assertSetStrict('form.content', 'Some content...')
+            ->assertSetStrict('other', 'changed')
+            // $this->reset() must reset form fields to their defaults, not unset the form
+            ->call('resetAll')
+            ->assertSetStrict('form.title', 'foo')
+            ->assertSetStrict('form.content', 'bar')
+            ->assertSetStrict('other', 'keep')
+            ->assertSetStrict('form', fn ($form) => $form instanceof PostFormStubWithDefaults)
+            ->set('form.title', 'Another Title')
+            ->set('form.content', 'More content...')
+            ->assertSetStrict('form.title', 'Another Title')
+            ->assertSetStrict('form.content', 'More content...')
+            // $this->reset('form') must do the same
+            ->call('resetFormProperty')
+            ->assertSetStrict('form.title', 'foo')
+            ->assertSetStrict('form.content', 'bar')
+            ->assertSetStrict('form', fn ($form) => $form instanceof PostFormStubWithDefaults)
+        ;
+    }
 }
 
 class PostFormStub extends Form
@@ -1279,7 +1358,12 @@ class PostForFormObjectTesting extends Model
         [
             'title' => 'A Title',
             'content' => 'Some content',
+            'status' => 'active',
         ],
+    ];
+
+    protected $casts = [
+        'status' => FormEnumStub::class,
     ];
 }
 
@@ -1431,6 +1515,12 @@ class FormWithEnumPropertyStub extends Form
 {
     public string $title = '';
     public FormEnumStub $status = FormEnumStub::Draft;
+}
+
+class FormWithUntypedEnumPropertyStub extends Form
+{
+    public string $title = '';
+    public $status;
 }
 
 class FormWithUpdatedHookStub extends Form

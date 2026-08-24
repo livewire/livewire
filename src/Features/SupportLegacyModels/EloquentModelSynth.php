@@ -93,6 +93,28 @@ class EloquentModelSynth extends Synth
         return $model;
     }
 
+    public function unwrapForValidation($model)
+    {
+        $values = $model->toArray();
+        $attributes = $model->getAttributes();
+
+        foreach ($attributes as $key => $attribute) {
+            if (! array_key_exists($key, $values)) continue;
+
+            $casted = $values[$key];
+
+            if (
+                is_scalar($attribute)
+                && is_scalar($casted)
+                && $attribute != $casted
+            ) {
+                $values[$key] = $attribute;
+            }
+        }
+
+        return $values;
+    }
+
     public function get(&$target, $key)
     {
         return $target->$key;

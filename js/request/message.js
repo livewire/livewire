@@ -187,8 +187,10 @@ export default class Message {
         this.invokeOnFinish()
     }
 
-    invokeOnStream({ json }) {
-        this.interceptors.forEach(interceptor => interceptor.onStream({ json }))
+    async invokeOnStream({ json }) {
+        for (let interceptor of this.interceptors) {
+            if (interceptor.onStream) await interceptor.onStream({ json })
+        }
     }
 
     invokeOnSuccess() {
@@ -198,6 +200,7 @@ export default class Message {
                 onSync: callback => interceptor.onSync = callback,
                 onEffect: callback => interceptor.onEffect = callback,
                 onMorph: callback => interceptor.onMorph = callback,
+                onMorphed: callback => interceptor.onMorphed = callback,
                 onRender: callback => interceptor.onRender = callback
             })
         })
@@ -227,6 +230,10 @@ export default class Message {
         for (let interceptor of this.interceptors) {
             await interceptor.onMorph()
         }
+    }
+
+    invokeOnMorphed() {
+        this.interceptors.forEach(interceptor => interceptor.onMorphed())
     }
 
     invokeOnRender() {
