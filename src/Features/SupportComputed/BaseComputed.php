@@ -158,11 +158,13 @@ class BaseComputed extends Attribute
 
     protected function evaluateComputed()
     {
-        $value = null;
+        $value = 'noneset';
 
         wrap($this->component)->tap(function ($component) use (&$value) {
             $value = invade($component)->{parent::getName()}();
         });
+
+        if ($value === 'noneset') return;
 
         return $value;
     }
