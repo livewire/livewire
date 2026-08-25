@@ -766,36 +766,41 @@ class UnitTest extends TestCase
         $this->assertTrue(session()->has('exception-hook-triggered'));
     }
 
-    public function test_computed_properties_does_not_return_anything_when_exception_thrown()
+    public function test_stops_execution_after_an_exception_from_a_computed_property_is_handled()
     {
         Livewire::test(new class extends TestComponent {
+            public bool $handled = false;
+
+            public function mount()
+            {
+                $value = $this->failingValue;
+
+                $this->acceptsString($value);
+            }
+
             #[Computed]
-            public function foo()
+            public function failingValue(): string
             {
-                $value = '1234';
-
-                throw_if($value === '1234', new ComputedPropertyException('Exception from computed property'));
-
-                return $value;
+                throw new \RuntimeException('The computed value could not be loaded.');
             }
 
-            public function exception($e, $stopPropagation)
+            public function exception($e, $stopPropagation): void
             {
-                if ($e instanceof ComputedPropertyException) {
-                    $stopPropagation();
+                if (! $e instanceof \RuntimeException) {
+                    return;
                 }
+
+                $this->handled = true;
+                $stopPropagation();
             }
 
-            public function render()
+            public function acceptsString(string $value): void
             {
-                return <<<'HTML'
-                    <div>foo{{ $this->foo }}</div>
-                HTML;
+                //
             }
         })
             ->assertOk()
-            ->assertDontSee('foo1234')
-            ->assertSetStrict('foo', null);
+            ->assertSetStrict('handled', true);
     }
 }
 
