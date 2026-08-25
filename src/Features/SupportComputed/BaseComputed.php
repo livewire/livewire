@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportComputed;
 
-use function Livewire\{ invade, wrap};
+use function Livewire\{ invade, wrap };
 
 use Livewire\Features\SupportAttributes\Attribute;
 use Illuminate\Support\Facades\Cache;
@@ -158,10 +158,14 @@ class BaseComputed extends Attribute
 
     protected function evaluateComputed()
     {
+        // If computed properties called from wrapped caller (e.g. lifecycle hooks)
+        // let it handles the exception
         if ($this->storeGet('exceptionHandlingDepth', 0) > 0) {
             return invade($this->component)->{parent::getName()}();
         }
 
+        // otherwise, if computed properties accessed directly from view (e.g. $this->foo)
+        // we need to wrap it so any exception thrown can be catch from exception() hook
         $value = null;
 
         wrap($this->component)->tap(function ($component) use (&$value) {
