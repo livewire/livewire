@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Routing\Router;
 use Livewire\Mechanisms\Mechanism;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -13,6 +14,8 @@ use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class PersistentMiddleware extends Mechanism
 {
+    protected const ROUTE_BINDING_ERROR_PAGE_ATTRIBUTE = 'livewire_route_binding_error_page';
+
     protected static $persistentMiddleware = [
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
@@ -31,7 +34,27 @@ class PersistentMiddleware extends Mechanism
 
     function boot()
     {
+        app('view')->composer('errors::*', function ($view) {
+            $exception = $view->getData()['exception'] ?? null;
+
+            if (
+                $exception instanceof NotFoundHttpException
+                && $exception->getPrevious() instanceof ModelNotFoundException
+            ) {
+                request()->attributes->set(static::ROUTE_BINDING_ERROR_PAGE_ATTRIBUTE, true);
+            }
+        });
+
         on('dehydrate', function ($component, $context) {
+            // Components rendered by a route model binding 404 never made it
+            // through the original route's middleware, so there is no
+            // successful middleware context to replay on their updates.
+            if (request()->attributes->get(static::ROUTE_BINDING_ERROR_PAGE_ATTRIBUTE)) {
+                $context->addMemo('routeBindingErrorPage', true);
+
+                return;
+            }
+
             [$path, $method] = $this->extractPathAndMethodFromRequest();
 
             $context->addMemo('path', $path);
@@ -41,6 +64,10 @@ class PersistentMiddleware extends Mechanism
         on('snapshot-verified', function ($snapshot) {
             // Only apply middleware to requests hitting the Livewire update endpoint, and not any fake requests such as a test.
             if (! app(HandleRequests::class)->isLivewireRoute()) return;
+
+            // This flag was added to the checksummed snapshot while Laravel
+            // rendered a route model binding 404 response.
+            if ($snapshot['memo']['routeBindingErrorPage'] ?? false) return;
 
             $this->extractPathAndMethodFromSnapshot($snapshot);
 
