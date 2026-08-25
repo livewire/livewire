@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportComputed;
 
-use function Livewire\{ invade, trigger };
+use function Livewire\{ invade, trigger, wrap};
 
 use Livewire\Features\SupportAttributes\Attribute;
 use Illuminate\Support\Facades\Cache;
@@ -158,19 +158,17 @@ class BaseComputed extends Attribute
 
     protected function evaluateComputed()
     {
-        try {
+        if ($this->storeGet('exceptionHandlingDepth', 0) > 0) {
             return invade($this->component)->{parent::getName()}();
-        } catch (\Throwable $e) {
-            $shouldPropagate = true;
-
-            $stopPropagation = function () use (&$shouldPropagate) {
-                $shouldPropagate = false;
-            };
-
-            trigger('exception', $this->component, $e, $stopPropagation);
-
-            $shouldPropagate && throw $e;
         }
+
+        $value = null;
+
+        wrap($this->component)->tap(function ($component) use (&$value) {
+            $value = invade($component)->{parent::getName()}();
+        });
+
+        return $value;
     }
 
     public function getName()
