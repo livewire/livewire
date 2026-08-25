@@ -770,10 +770,13 @@ class UnitTest extends TestCase
     {
         Livewire::test(new class extends TestComponent {
             public bool $handled = false;
+            public $otherValue = 'other';
 
             public function mount()
             {
                 $value = $this->failingValue;
+
+                $this->otherValue = $value;
 
                 $this->acceptsString($value);
             }
@@ -800,6 +803,7 @@ class UnitTest extends TestCase
             }
         })
             ->assertOk()
+            ->assertSetStrict('otherValue', 'other')
             ->assertSetStrict('handled', true);
     }
 }

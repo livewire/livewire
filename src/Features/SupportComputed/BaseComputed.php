@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportComputed;
 
-use function Livewire\{ invade, trigger, wrap};
+use function Livewire\{ invade, wrap};
 
 use Livewire\Features\SupportAttributes\Attribute;
 use Illuminate\Support\Facades\Cache;
