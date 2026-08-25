@@ -21,9 +21,14 @@ class Wrapped
 
         $store = store($this->target);
 
-        $depth = $store->get('exceptionHandlingDepth', 0);
+        // Already inside an outer exception boundary — call through without
+        // creating a nested one so $stopPropagation() on the outer handler
+        // correctly halts further execution (e.g. computed props in lifecycle hooks).
+        if ($store->get('exceptionHandlingDepth', 0) > 0) {
+            return ImplicitlyBoundMethod::call(app(), [$this->target, $method], $params);
+        }
 
-        $store->set('exceptionHandlingDepth', $depth + 1);
+        $store->set('exceptionHandlingDepth', 1);
 
         try {
             return ImplicitlyBoundMethod::call(app(), [$this->target, $method], $params);
@@ -38,14 +43,7 @@ class Wrapped
 
             $shouldPropagate && throw $e;
         } finally {
-            $store->set(
-                'exceptionHandlingDepth',
-                max(0, $store->get('exceptionHandlingDepth', 0) - 1)
-            );
+            $store->set('exceptionHandlingDepth', 0);
         }
     }
 }
-
-
-
-
