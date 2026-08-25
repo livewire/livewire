@@ -63,16 +63,25 @@ class FrontendAssets extends Mechanism
         $this->javaScriptRoute = $route;
     }
 
+    /**
+     * @return string
+     */
     public static function livewireScripts($expression)
     {
         return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts('.$expression.') !!}';
     }
 
+    /**
+     * @return string
+     */
     public static function livewireScriptConfig($expression)
     {
         return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scriptConfig('.$expression.') !!}';
     }
 
+    /**
+     * @return string
+     */
     public static function livewireStyles($expression)
     {
         return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::styles('.$expression.') !!}';
@@ -182,6 +191,9 @@ class FrontendAssets extends Mechanism
         return implode("\n", $html);
     }
 
+    /**
+     * @return string
+     */
     public static function js($options)
     {
         // Use the default endpoint...
@@ -233,6 +245,9 @@ class FrontendAssets extends Mechanism
         HTML;
     }
 
+    /**
+     * @return string
+     */
     public static function scriptConfig($options = [])
     {
         app(static::class)->hasRenderedScripts = true;
