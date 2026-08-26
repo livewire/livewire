@@ -109,6 +109,18 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame($largeNumber, $component->instance()->tableSearch);
     }
 
+    function test_json_array_strings_are_preserved_from_query_string()
+    {
+        $component = Livewire::withQueryParams([
+            'search' => '[123]',
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public $search = '';
+        });
+
+        $this->assertSame('[123]', $component->instance()->search);
+    }
+
     function test_large_numbers_in_arrays_are_preserved_from_query_string()
     {
         $largeNumber = '74350194073086909398128';
