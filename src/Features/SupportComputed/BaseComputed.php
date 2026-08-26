@@ -6,6 +6,7 @@ use function Livewire\{ invade, wrap };
 
 use Livewire\Features\SupportAttributes\Attribute;
 use Illuminate\Support\Facades\Cache;
+use Livewire\Mechanisms\HandleComponents\HandleComponents;
 
 #[\Attribute]
 class BaseComputed extends Attribute
@@ -158,18 +159,16 @@ class BaseComputed extends Attribute
 
     protected function evaluateComputed()
     {
-        // Check if computed properties accessed from lifecycle hooks that already has exception handler
-        // Return original value without wrapper
-        if ($this->storeGet('exceptionHandled')) {
-            return invade($this->component)->{parent::getName()}();
+        $evaluated = fn () => invade($this->component)->{parent::getName()}();
+
+        if (empty(HandleComponents::$renderStack)) {
+            return $evaluated();
         }
 
-        // Otherwise, if computed properties accessed from view that doesnt have exception handler,
-        // wrap it so any exception thrown from computed properties forwarded to component exception hook
         $value = null;
 
-        wrap($this->component)->tap(function ($component) use (&$value) {
-            $value = invade($component)->{parent::getName()}();
+        wrap($this->component)->tap(function () use (&$value, $evaluated) {
+            $value = $evaluated();
         });
 
         return $value;

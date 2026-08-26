@@ -19,8 +19,6 @@ class Wrapped
     {
         if (! method_exists($this->target, $method)) return value($this->fallback);
 
-        store($this->target)->set('exceptionHandled', true);
-
         try {
             return ImplicitlyBoundMethod::call(app(), [$this->target, $method], $params);
         } catch (\Throwable $e) {
@@ -33,8 +31,6 @@ class Wrapped
             trigger('exception', $this->target, $e, $stopPropagation);
 
             $shouldPropagate && throw $e;
-        } finally {
-            store($this->target)->unset('exceptionHandled');
         }
     }
 }
