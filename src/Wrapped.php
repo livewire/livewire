@@ -5,6 +5,7 @@ namespace Livewire;
 class Wrapped
 {
     protected $fallback;
+    protected static $wrapping = [];
 
     function __construct(public $target) {}
 
@@ -19,16 +20,13 @@ class Wrapped
     {
         if (! method_exists($this->target, $method)) return value($this->fallback);
 
-        $store = store($this->target);
-
-        // Already inside an outer exception boundary — call through without
-        // creating a nested one so $stopPropagation() on the outer handler
-        // correctly halts further execution (e.g. computed props in lifecycle hooks).
-        if ($store->get('exceptionHandlingDepth') === true) {
+        // Already inside a boundary for this component — run transparently
+        // so the outer wrap() remains the single exception handler.
+        if (in_array($this->target, static::$wrapping, true)) {
             return ImplicitlyBoundMethod::call(app(), [$this->target, $method], $params);
         }
 
-        $store->set('exceptionHandlingDepth', true);
+        static::$wrapping[] = $this->target;
 
         try {
             return ImplicitlyBoundMethod::call(app(), [$this->target, $method], $params);
@@ -43,7 +41,7 @@ class Wrapped
 
             $shouldPropagate && throw $e;
         } finally {
-            $store->set('exceptionHandlingDepth', false);
+            array_pop(static::$wrapping);
         }
     }
 }
