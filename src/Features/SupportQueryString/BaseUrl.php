@@ -61,13 +61,21 @@ class BaseUrl extends LivewireAttribute
 
         if ($initialValue === $nonExistentValue) return;
 
+        $original = $this->getValue();
+
         $decoded = is_array($initialValue)
             ? json_decode(json_encode($initialValue, flags: JSON_BIGINT_AS_STRING), true, flags: JSON_BIGINT_AS_STRING)
             : json_decode($initialValue ?? '', true, flags: JSON_BIGINT_AS_STRING);
 
+        // Query string arrays use bracket notation. If a scalar value decodes
+        // into structured JSON, preserve it when the property is a string...
+        if (is_string($initialValue) && is_array($decoded) && is_string($original)) {
+            $decoded = null;
+        }
+
         // If only part of an array is present in the query string,
         // we want to merge instead of override the value...
-        if (is_array($decoded) && is_array($original = $this->getValue())) {
+        if (is_array($decoded) && is_array($original)) {
             $decoded = $this->recursivelyMergeArraysWithoutAppendingDuplicateValues($original, $decoded);
         }
 
