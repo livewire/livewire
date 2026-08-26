@@ -14,6 +14,7 @@ use Livewire\Features\SupportEvents\SupportEvents;
 use Livewire\Features\SupportFormObjects\Form;
 use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class HandleComponents extends Mechanism
@@ -550,10 +551,10 @@ class HandleComponents extends Mechanism
             if ($earlyReturnCalled) {
                 $return = $finish($earlyReturn);
 
-                // File downloads are sent to the browser through the download effect, so we shouldn't add
-                // the response object as a return here. But we need to keep it's position in `returns`
-                // so we will just set it to `null` instead...
-                if ($return instanceof StreamedResponse || $return instanceof BinaryFileResponse) {
+                // File downloads and redirects are sent to the browser through their own effects, so we
+                // shouldn't add the response object as a return here. But we need to keep it's position
+                // in `returns` so we will just set it to `null` instead...
+                if ($return instanceof StreamedResponse || $return instanceof BinaryFileResponse || $return instanceof RedirectResponse) {
                     $return = null;
                 }
 
@@ -580,10 +581,10 @@ class HandleComponents extends Mechanism
 
             $return = $finish($return);
 
-            // File downloads are sent to the browser through the download effect, so we shouldn't add
-            // the response object as a return here. But we need to keep it's position in `returns`
-            // so we will just set it to `null` instead...
-            if ($return instanceof StreamedResponse || $return instanceof BinaryFileResponse) {
+            // File downloads and redirects are sent to the browser through their own effects, so we
+            // shouldn't add the response object as a return here. But we need to keep it's position
+            // in `returns` so we will just set it to `null` instead...
+            if ($return instanceof StreamedResponse || $return instanceof BinaryFileResponse || $return instanceof RedirectResponse) {
                 $return = null;
             }
 

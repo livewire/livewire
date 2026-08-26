@@ -288,6 +288,15 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('livewire-is-awesome', Session::get('success'));
     }
 
+    public function test_redirect_response_is_not_included_in_returns()
+    {
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerRedirectHelper');
+
+        $this->assertNull($component->effects['returns'][0]);
+    }
+
     protected function registerNamedRoute()
     {
         Route::get('foo', function () {
