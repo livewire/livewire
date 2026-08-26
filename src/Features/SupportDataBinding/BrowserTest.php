@@ -14,14 +14,21 @@ class BrowserTest extends BrowserTestCase
         Livewire::visit(new class extends Component {
             public $prop = false;
 
+            public $other = '';
+
             public function render()
             {
                 return <<<'BLADE'
                     <div>
                         <input dusk="checkbox" type="checkbox" wire:model="prop" value="true"  />
+                        <input dusk="other" type="text" wire:model="other" />
+
+                        <button dusk="commit" type="button" wire:click="$commit">Commit</button>
 
                         <div wire:dirty>Unsaved changes...</div>
                         <div wire:dirty.remove>The data is in-sync...</div>
+
+                        <div wire:dirty.class="dirty" wire:target="prop, other" dusk="targeted">Targeted...</div>
                     </div>
                 BLADE;
             }
@@ -31,9 +38,20 @@ class BrowserTest extends BrowserTestCase
             ->pause(50)
             ->assertDontSee('The data is in-sync')
             ->assertSee('Unsaved changes...')
+            ->assertAttributeContains('@targeted', 'class', 'dirty')
             ->uncheck('@checkbox')
+            ->pause(50)
             ->assertSee('The data is in-sync...')
             ->assertDontSee('Unsaved changes...')
+            ->assertAttributeDoesntContain('@targeted', 'class', 'dirty')
+            ->check('@checkbox')
+            ->pause(50)
+            ->assertAttributeContains('@targeted', 'class', 'dirty')
+            ->waitForLivewire()->click('@commit')
+            ->waitUntil("!document.querySelector('[dusk=\"targeted\"]').classList.contains('dirty')")
+            ->type('@other', 'Hello')
+            ->pause(50)
+            ->assertAttributeContains('@targeted', 'class', 'dirty')
         ;
     }
 

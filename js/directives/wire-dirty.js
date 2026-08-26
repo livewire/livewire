@@ -47,12 +47,10 @@ export function checkDirty(component, targets) {
     if (targets === undefined) {
         isDirty = JSON.stringify(component.canonical) !== JSON.stringify(component.reactive)
     } else if (Array.isArray(targets)) {
-        for (let i = 0; i < targets.length; i++) {
-            if (isDirty) break;
-
-            let target = targets[i]
-
-            isDirty = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target))
+        for (let target of targets) {
+            if (JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target))) {
+                isDirty = true
+            }
         }
     } else {
         isDirty = JSON.stringify(dataGet(component.canonical, targets)) !== JSON.stringify(dataGet(component.reactive, targets))
