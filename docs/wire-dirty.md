@@ -39,55 +39,6 @@ By adding the `.remove` modifier to `wire:dirty`, you can instead show an elemen
 <div wire:dirty.remove>The data is in-sync...</div>
 ```
 
-## Persisting dirty state across requests
-
-By default, "dirty" means "the client has changes the server hasn't seen yet". Any request resets it — including requests that save nothing, like `wire:poll`, a lazy load, or an unrelated action elsewhere in the component.
-
-That is the wrong measure for an "unsaved changes" warning, where you want to know whether anything has changed since the last *save*. The `.persist` modifier measures against the last saved state instead, and only an explicit rebaseline clears it:
-
-```blade
-<form wire:submit="save">
-    <input type="text" wire:model="title">
-
-    <button type="submit">Save</button>
-
-    <div wire:dirty.persist>Unsaved changes...</div> <!-- [tl! highlight] -->
-</form>
-```
-
-Tell Livewire when the state was saved by calling `rebaseline()` from the action that saved it:
-
-```php
-public function save()
-{
-    Post::create($this->only('title'));
-
-    $this->rebaseline(); // [tl! highlight]
-}
-```
-
-Until `save()` runs, the indicator stays visible — a poll ticking in the background no longer makes the form look saved.
-
-`.persist` composes with the other modifiers and with `wire:target`:
-
-```blade
-<div wire:dirty.persist wire:target="title">Unsaved title...</div>
-
-<div wire:dirty.persist.remove>All changes saved</div>
-
-<input wire:model="title" wire:dirty.persist.class="border-yellow-500">
-```
-
-### From Alpine
-
-`$dirty` takes the same option, and `$rebaseline()` clears it from the client:
-
-```blade
-<div x-show="$wire.$dirty('title', { persist: true })">Unsaved title...</div>
-
-<button x-on:click="$wire.$rebaseline()">Mark as saved</button>
-```
-
 ## Targeting property updates
 
 Imagine you are using `wire:model.live.blur` to update a property on the server immediately after a user leaves an input field. In this scenario, you can provide a "dirty" indication for only that property by adding `wire:target` to the element that contains the `wire:dirty` directive.
@@ -159,6 +110,59 @@ Or apply conditional classes with Alpine:
 >
 ```
 
+## Persisting dirty state across requests
+
+By default, "dirty" means "the client has changes the server hasn't seen yet". Any request resets it — including requests that save nothing, like `wire:poll`, a lazy load, or an unrelated action elsewhere in the component.
+
+An "unsaved changes" warning needs the other measure: whether anything has changed since the last *save*. The `.persist` modifier compares against the last saved state, and the action that saved it declares so with `rebaseline()`:
+
+```php
+<?php // resources/views/components/post/⚡create.blade.php
+
+use Livewire\Component;
+use App\Models\Post;
+
+new class extends Component {
+    public $title = '';
+
+    public function save()
+    {
+        Post::create($this->only(['title']));
+
+        $this->rebaseline(); // [tl! highlight]
+    }
+};
+?>
+
+<form wire:submit="save">
+    <input type="text" wire:model="title">
+
+    <button type="submit">Save</button>
+
+    <div wire:dirty.persist>Unsaved changes...</div> <!-- [tl! highlight] -->
+</form>
+```
+
+Until `save()` runs, the indicator stays visible — a poll ticking in the background no longer makes the form look saved.
+
+`.persist` composes with `wire:target` and the other modifiers:
+
+```blade
+<div wire:dirty.persist wire:target="title">Unsaved title...</div>
+
+<div wire:dirty.persist.remove>All changes saved</div>
+
+<input wire:model="title" wire:dirty.persist.class="border-yellow-500">
+```
+
+The `$dirty` expression takes the same option, and `$rebaseline()` clears it from the client:
+
+```blade
+<div x-show="$wire.$dirty('title', { persist: true })">Unsaved title...</div>
+
+<button x-on:click="$wire.$rebaseline()">Mark as saved</button>
+```
+
 ## Reference
 
 ```blade
@@ -182,6 +186,14 @@ wire:target="property"
 | `$dirty('property')` | Returns `true` if the specified property has unsaved changes |
 | `$dirty(['title', 'description'])` | Returns `true` if any of the specified properties have unsaved changes |
 | `$dirty('title', { persist: true })` | As above, but measured against the last saved state |
-| `$rebaseline()` | Treats the current server state as saved, clearing `.persist` dirty state |
 
 Can be used in Livewire directives like `wire:show="$dirty"` or in Alpine as `$wire.$dirty()`.
+
+### Rebaselining
+
+| Call | Description |
+|------|-------------|
+| `$this->rebaseline()` | Treats the state being returned by this request as saved |
+| `$wire.$rebaseline()` | The client-side equivalent, available in Alpine |
+
+Clears the dirty state reported by `.persist` and by `$dirty(..., { persist: true })`.

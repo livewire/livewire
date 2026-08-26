@@ -2,9 +2,9 @@
 
 namespace Livewire\Features\SupportDirty;
 
-use Livewire\Component;
-use Livewire\Livewire;
 use Tests\BrowserTestCase;
+use Livewire\Livewire;
+use Livewire\Component;
 
 class BrowserTest extends BrowserTestCase
 {
