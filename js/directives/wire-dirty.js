@@ -34,12 +34,10 @@ directive('dirty', ({ el, directive, component }) => {
         if (targets.length === 0) {
             isDirty = JSON.stringify(component.canonical) !== JSON.stringify(component.reactive)
         } else {
-            for (let i = 0; i < targets.length; i++) {
-                if (isDirty) break;
-
-                let target = targets[i]
-
-                isDirty = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target))
+            for (let target of targets) {
+                if (JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target))) {
+                    isDirty = true
+                }
             }
         }
 
