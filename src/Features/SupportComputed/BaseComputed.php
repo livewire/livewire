@@ -158,6 +158,14 @@ class BaseComputed extends Attribute
 
     protected function evaluateComputed()
     {
+        // Check if computed properties accessed from lifecycle hooks that already has exception handler
+        // Return original value without wrapper
+        if ($this->storeGet('exceptionHandled')) {
+            return invade($this->component)->{parent::getName()}();
+        }
+
+        // Otherwise, if computed properties accessed from view that doesnt have exception handler,
+        // wrap it so any exception thrown from computed properties forwarded to component exception hook
         $value = null;
 
         wrap($this->component)->tap(function ($component) use (&$value) {
