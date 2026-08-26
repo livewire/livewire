@@ -8,13 +8,18 @@ let refreshDirtyStatesByComponent = new WeakBag
 on('commit', ({ component, succeed }) => {
     succeed(() => {
         setTimeout(() => { // Doing a "setTimeout" to let morphdom do its thing first...
-            refreshDirtyStatesByComponent.each(component, i => i(false))
+            refreshDirtyStatesByComponent.each(component, recompute => recompute(true))
         })
     })
 })
 
 directive('dirty', ({ el, directive, component }) => {
     let targets = dirtyTargets(el)
+
+    // `wire:dirty.persist` measures against the last *saved* state rather than the last
+    // server response, so a round-trip that doesn't save (a poll, a lazy load, a live
+    // model update, any unrelated action) no longer reports the component as clean...
+    let persist = directive.modifiers.includes('persist')
 
     let oldIsDirty = false
 
@@ -26,36 +31,49 @@ directive('dirty', ({ el, directive, component }) => {
         oldIsDirty = isDirty
     }
 
-    refreshDirtyStatesByComponent.add(component, refreshDirtyState)
+    // Re-derive the state rather than assuming "clean" after a round-trip. For a plain
+    // `wire:dirty` this is the same answer the old hard-coded `false` gave (canonical and
+    // reactive match once the snapshot is merged), but a `.persist` directive measures
+    // against the baseline and must stay dirty until it is explicitly rebaselined.
+    // `force` re-applies even when the value is unchanged, because the morph has just
+    // replaced the element's inline style with the server's markup...
+    let recompute = (force = false) => {
+        let isDirty = checkDirty(component, targets.length === 0 ? undefined : targets, persist)
 
-    Alpine.effect(() => {
-        let isDirty = false
-
-        isDirty = checkDirty(component, targets.length === 0 ? undefined : targets)
-
-        if (oldIsDirty !== isDirty) {
+        if (force || oldIsDirty !== isDirty) {
             refreshDirtyState(isDirty)
         }
 
         oldIsDirty = isDirty
-    })
+    }
+
+    refreshDirtyStatesByComponent.add(component, recompute)
+
+    Alpine.effect(() => recompute())
 })
 
-export function checkDirty(component, targets) {
+export function checkDirty(component, targets, persist = false) {
     let isDirty = false
 
+    // "canonical" is the last server response and is replaced on every round-trip.
+    // "baseline" is the last state the component considers saved. Touching the version
+    // keeps the surrounding Alpine effect subscribed to rebaselines...
+    if (persist) component.baselineVersion.value
+
+    let reference = persist ? component.baseline : component.canonical
+
     if (targets === undefined) {
-        isDirty = JSON.stringify(component.canonical) !== JSON.stringify(component.reactive)
+        isDirty = JSON.stringify(reference) !== JSON.stringify(component.reactive)
     } else if (Array.isArray(targets)) {
         for (let i = 0; i < targets.length; i++) {
             if (isDirty) break;
 
             let target = targets[i]
 
-            isDirty = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target))
+            isDirty = JSON.stringify(dataGet(reference, target)) !== JSON.stringify(dataGet(component.reactive, target))
         }
     } else {
-        isDirty = JSON.stringify(dataGet(component.canonical, targets)) !== JSON.stringify(dataGet(component.reactive, targets))
+        isDirty = JSON.stringify(dataGet(reference, targets)) !== JSON.stringify(dataGet(component.reactive, targets))
     }
 
     return isDirty

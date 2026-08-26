@@ -33,6 +33,13 @@ export class Component {
 
         // "canonical" data represents the last known server state.
         this.canonical = extractData(deepClone(this.snapshot.data))
+        // "baseline" represents the last state the component considers "saved". Unlike
+        // "canonical", it survives round-trips: it is only replaced by an explicit
+        // rebaseline. This is what `wire:dirty.persist` compares against.
+        this.baseline = extractData(deepClone(this.snapshot.data))
+        // The baseline itself is a plain object, so anything deriving from it tracks this
+        // counter to stay reactive across a rebaseline...
+        this.baselineVersion = Alpine.reactive({ value: 0 })
         // "ephemeral" represents the most current state. (This can be freely manipulated by end users)
         this.ephemeral = extractData(deepClone(this.snapshot.data))
         // "reactive" is just ephemeral, except when you mutate it, front-ends like Vue react.
@@ -97,6 +104,17 @@ export class Component {
         diffAndPatchRecursive(updatedOldCanonical, newData, this.reactive)
 
         return dirty
+    }
+
+    /**
+     * Treat the last known server state as the new "saved" state, so that
+     * `wire:dirty.persist` reports clean again. Called by the `rebaseline`
+     * effect and by `$wire.$rebaseline()`.
+     */
+    rebaseline() {
+        this.baseline = deepClone(this.canonical)
+
+        this.baselineVersion.value++
     }
 
     queueUpdate(propertyName, value) {

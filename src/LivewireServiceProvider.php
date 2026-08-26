@@ -181,6 +181,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportJsEvaluation\SupportJsEvaluation::class,
             Features\SupportMagicActions\SupportMagicActions::class,
             Features\SupportQueryString\SupportQueryString::class,
+            Features\SupportDirty\SupportDirty::class,
             Features\SupportFileUploads\SupportFileUploads::class,
             Features\SupportTeleporting\SupportTeleporting::class,
             Features\SupportLazyLoading\SupportLazyLoading::class,

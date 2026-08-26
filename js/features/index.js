@@ -24,6 +24,7 @@ import './supportSlots';
 import './supportDataLoading';
 import './supportDataCurrent';
 import './supportPreserveScroll';
+import './supportDirty';
 import './supportWireIntersect';
 import './supportWireSort';
 import './supportJsModules'
