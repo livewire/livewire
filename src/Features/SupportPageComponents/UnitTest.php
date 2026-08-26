@@ -9,7 +9,10 @@ use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Component;
+use Livewire\EventBus;
 use Livewire\Livewire;
+
+use function Livewire\invade;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -477,6 +480,32 @@ class UnitTest extends \Tests\TestCase
             ->get('/teams/99/projects/42')
             ->assertSee('project:42')
             ->assertSee('team:none');
+    }
+
+    public function test_render_interceptor_removes_listeners_when_callback_throws()
+    {
+        $eventBus = invade(app(EventBus::class));
+
+        $renderListenersBefore = $eventBus->listeners['render'] ?? [];
+        $placeholderListenersBefore = $eventBus->listeners['render.placeholder'] ?? [];
+
+        try {
+            SupportPageComponents::interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration(function () {
+                throw new \RuntimeException;
+            });
+        } catch (\RuntimeException) {
+            //
+        }
+
+        $this->assertSame(
+            $renderListenersBefore,
+            $eventBus->listeners['render'] ?? [],
+        );
+
+        $this->assertSame(
+            $placeholderListenersBefore,
+            $eventBus->listeners['render.placeholder'] ?? [],
+        );
     }
 }
 
