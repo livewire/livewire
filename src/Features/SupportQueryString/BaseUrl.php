@@ -6,6 +6,7 @@ use Illuminate\Support\Arr;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportFormObjects\Form;
 use ReflectionClass;
+use ReflectionNamedType;
 
 #[\Attribute]
 class BaseUrl extends LivewireAttribute
@@ -49,6 +50,19 @@ class BaseUrl extends LivewireAttribute
         return false;
     }
 
+    protected function propertyIsTypedAsString()
+    {
+        $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
+
+        if ($this->getSubName() && $reflectionClass->hasProperty($this->getSubName())) {
+            $type = $reflectionClass->getProperty($this->getSubName())->getType();
+
+            return $type instanceof ReflectionNamedType && $type->getName() === 'string';
+        }
+
+        return false;
+    }
+
     public function setPropertyFromQueryString()
     {
         if ($this->as === null && $this->isOnFormObjectProperty()) {
@@ -69,7 +83,7 @@ class BaseUrl extends LivewireAttribute
 
         // Query string arrays use bracket notation. If a scalar value decodes
         // into structured JSON, preserve it when the property is a string...
-        if (is_string($initialValue) && is_array($decoded) && is_string($original)) {
+        if (is_string($initialValue) && is_array($decoded) && (is_string($original) || $this->propertyIsTypedAsString())) {
             $decoded = null;
         }
 
