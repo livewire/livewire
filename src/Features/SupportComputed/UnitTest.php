@@ -736,72 +736,27 @@ class UnitTest extends TestCase
             ->assertSetStrict('foo', 'baz');
     }
 
-    public function test_computed_attribute_can_trigger_component_exception_hook()
+    public function test_computed_properties_can_trigger_component_exception_hook()
     {
-        Livewire::test(new class extends TestComponent {
-            #[Computed]
-            public function foo(): string
-            {
-                throw new ComputedPropertyException('Exception from computed property');
-            }
-
-            public function exception($e, $stopPropagation)
-            {
-                if ($e instanceof ComputedPropertyException) {
-                    $stopPropagation();
-
-                    session()->put('exception-hook-triggered', true);
-                }
-            }
-
-            public function render()
-            {
-                return <<<'HTML'
-                    <div>{{ $this->foo }}</div>
-                HTML;
-            }
-        })
-            ->assertOk();
-
-        $this->assertTrue(session()->has('exception-hook-triggered'));
+        Livewire::test(ComputedViewExceptionStub::class)
+            ->assertOk()
+            ->assertSetStrict('handled', true);
     }
 
     public function test_stops_execution_after_an_exception_from_a_computed_property_is_handled()
     {
-        Livewire::test(new class extends TestComponent {
-            public bool $handled = false;
-            public $otherValue = 'other';
+        Livewire::test(ComputedLifecycleExceptionStub::class)
+            ->assertOk()
+            ->assertSetStrict('otherValue', 'other')
+            ->assertSetStrict('handled', true);
+    }
 
-            public function mount()
-            {
-                $value = $this->failingValue;
-
-                $this->otherValue = $value;
-
-                $this->acceptsString($value);
-            }
-
-            #[Computed]
-            public function failingValue(): string
-            {
-                throw new \RuntimeException('The computed value could not be loaded.');
-            }
-
-            public function exception($e, $stopPropagation): void
-            {
-                if (! $e instanceof \RuntimeException) {
-                    return;
-                }
-
-                $this->handled = true;
-                $stopPropagation();
-            }
-
-            public function acceptsString(string $value): void
-            {
-                //
-            }
+    public function test_stops_execution_after_computed_exception_is_handled_from_an_action()
+    {
+        Livewire::test(new class extends ComputedLifecycleExceptionStub {
+            public function mount() {}
         })
+            ->call('save')
             ->assertOk()
             ->assertSetStrict('otherValue', 'other')
             ->assertSetStrict('handled', true);
@@ -961,4 +916,70 @@ class ComputedPropertyException extends \Exception
     ) {
         parent::__construct($message, $code, $previous);
     }
+}
+
+class ComputedViewExceptionStub extends TestComponent
+{
+    public bool $handled = false;
+
+    #[Computed]
+    public function foo(): string
+    {
+        throw new ComputedPropertyException('Exception from computed property');
+    }
+
+    public function exception($e, $stopPropagation): void
+    {
+        if ($e instanceof ComputedPropertyException) {
+            $this->handled = true;
+            $stopPropagation();
+        }
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+            <div>{{ $this->foo }}</div>
+        HTML;
+    }
+}
+
+class ComputedLifecycleExceptionStub extends TestComponent
+{
+    public bool $handled = false;
+    public $otherValue = 'other';
+
+    public function mount()
+    {
+        $value = $this->failingValue;
+
+        $this->otherValue = $value;
+
+        $this->acceptsString($value);
+    }
+
+    public function save()
+    {
+        $value = $this->failingValue;
+
+        $this->otherValue = $value;
+
+        $this->acceptsString($value);
+    }
+
+    #[Computed]
+    public function failingValue(): string
+    {
+        throw new \RuntimeException('The computed value could not be loaded.');
+    }
+
+    public function exception($e, $stopPropagation): void
+    {
+        if ($e instanceof \RuntimeException) {
+            $this->handled = true;
+            $stopPropagation();
+        }
+    }
+
+    public function acceptsString(string $value) {}
 }
