@@ -761,6 +761,15 @@ class UnitTest extends TestCase
             ->assertSetStrict('otherValue', 'other')
             ->assertSetStrict('handled', true);
     }
+
+    public function test_nested_computed_exception_from_lifecycle_is_handled_once()
+    {
+        Livewire::test(ComputedNestedExceptionStub::class)
+            ->assertOk()
+            ->assertSetStrict('otherValue', 'other')
+            ->assertSetStrict('handled', true)
+            ->assertSetStrict('exceptionCalls', 1);
+    }
 }
 
 class ComputedPropertyStub extends Component
@@ -928,7 +937,7 @@ class ComputedViewExceptionStub extends TestComponent
         throw new ComputedPropertyException('Exception from computed property');
     }
 
-    public function exception($e, $stopPropagation): void
+    public function exception($e, $stopPropagation)
     {
         if ($e instanceof ComputedPropertyException) {
             $this->handled = true;
@@ -982,4 +991,39 @@ class ComputedLifecycleExceptionStub extends TestComponent
     }
 
     public function acceptsString(string $value) {}
+}
+
+class ComputedNestedExceptionStub extends TestComponent
+{
+    public bool $handled = false;
+    public $otherValue = 'other';
+    public int $exceptionCalls = 0;
+
+    public function mount()
+    {
+        $value = $this->outer;
+
+        $this->otherValue = $value;
+    }
+
+    #[Computed]
+    public function outer(): string
+    {
+        return $this->inner;
+    }
+
+    #[Computed]
+    public function inner(): string
+    {
+        throw new \RuntimeException('The computed value could not be loaded.');
+    }
+
+    public function exception($e, $stopPropagation): void
+    {
+        if ($e instanceof \RuntimeException) {
+            $this->exceptionCalls++;
+            $this->handled = true;
+            $stopPropagation();
+        }
+    }
 }

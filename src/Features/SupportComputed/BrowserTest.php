@@ -124,4 +124,91 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@foo', 'bar')
         ;
     }
+
+    public function test_exception_from_computed_properties_during_action_stops_further_execution()
+    {
+        Livewire::visit(new class extends Component {
+            public bool $handled = false;
+            public string $label = 'initial';
+
+            #[Computed]
+            public function failingValue(): string
+            {
+                throw new \RuntimeException('computed failed in action');
+            }
+
+            public function save()
+            {
+                $value = $this->failingValue;
+
+                // Must not run when stopPropagation() is called.
+                $this->label = $value;
+            }
+
+            public function exception($e, $stopPropagation): void
+            {
+                if ($e instanceof \RuntimeException) {
+                    $this->handled = true;
+                    $stopPropagation();
+                }
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="save" dusk="save">Save</button>
+                    <div dusk="label">{{ $label }}</div>
+                    <div dusk="handled">{{ $handled ? 'yes' : 'no' }}</div>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@label', 'initial')
+            ->assertSeeIn('@handled', 'no')
+            ->waitForLivewire()->click('@save')
+            ->assertSeeIn('@label', 'initial')
+            ->assertSeeIn('@handled', 'yes');
+    }
+
+    public function test_exception_from_computed_properties_during_mount_still_renders_after_stop()
+    {
+        Livewire::visit(new class extends Component {
+            public bool $handled = false;
+            public string $label = 'initial';
+
+            public function mount()
+            {
+                $value = $this->failingValue;
+
+                $this->label = is_string($value) ? $value : 'unchanged';
+            }
+
+            #[Computed]
+            public function failingValue(): string
+            {
+                throw new \RuntimeException('computed failed in mount');
+            }
+
+            public function exception($e, $stopPropagation): void
+            {
+                if ($e instanceof \RuntimeException) {
+                    $this->handled = true;
+                    $stopPropagation();
+                }
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div dusk="label">{{ $label }}</div>
+                    <div dusk="handled">{{ $handled ? 'yes' : 'no' }}</div>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@label', 'initial')
+            ->assertSeeIn('@handled', 'yes');
+    }
 }
