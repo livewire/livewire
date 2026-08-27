@@ -8,6 +8,8 @@ import { listen } from '@/utils'
 directive('loading', ({ el, directive, component, cleanup }) => {
     let { targets, inverted } = getTargets(el)
 
+    let [delay, abortDelay] = applyDelay(directive)
+
     let restoreLoadingState = () => toggleBooleanStateDirective(el, directive, false)
     let activeLoadingCount = 0
 
@@ -22,7 +24,7 @@ directive('loading', ({ el, directive, component, cleanup }) => {
                     : () => el.setAttribute(attribute, value)
             }
 
-            toggleBooleanStateDirective(el, directive, true)
+            delay(() => toggleBooleanStateDirective(el, directive, true))
         }
 
         activeLoadingCount++
@@ -33,14 +35,18 @@ directive('loading', ({ el, directive, component, cleanup }) => {
 
         activeLoadingCount--
 
-        if (activeLoadingCount === 0) restoreLoadingState()
+        if (activeLoadingCount === 0) abortDelay(restoreLoadingState)
     }
 
-    let startLoadingWithDelay = applyDelay(directive, startLoading, endLoading)
+    let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
+        startLoading,
+        endLoading,
+    ])
 
-    let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, startLoadingWithDelay)
-
-    let cleanupB = whenTargetsArePartOfFileUpload(component, targets, startLoadingWithDelay)
+    let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
+        startLoading,
+        endLoading,
+    ])
 
     cleanup(() => {
         cleanupA()
@@ -48,14 +54,8 @@ directive('loading', ({ el, directive, component, cleanup }) => {
     })
 })
 
-function applyDelay(directive, startLoading, endLoading) {
-    if (! directive.modifiers.includes('delay') || directive.modifiers.includes('none')) {
-        return () => {
-            startLoading()
-
-            return endLoading
-        }
-    }
+function applyDelay(directive) {
+    if (! directive.modifiers.includes('delay') || directive.modifiers.includes('none')) return [i => i(), i => i()]
 
     let duration = 200
 
@@ -77,26 +77,29 @@ function applyDelay(directive, startLoading, endLoading) {
         }
     })
 
-    return () => {
-        let started = false
+    let timeout
+    let started = false
 
-        let timeout = setTimeout(() => {
-            startLoading()
+    return [
+        (callback) => { // Initiate delay...
+            timeout = setTimeout(() => {
+                callback()
 
-            started = true
-        }, duration)
-
-        return () => {
+                started = true
+            }, duration)
+        },
+        async (callback) => { // Execute or abort...
             if (started) {
-                endLoading()
+                await callback()
+                started = false
             } else {
                 clearTimeout(timeout)
             }
-        }
-    }
+        },
+    ]
 }
 
-function whenTargetsArePartOfRequest(component, el, targets, inverted, startLoading) {
+function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLoading, endLoading ]) {
     return interceptMessage(({ message, onSend, onSuccess, onFinish }) => {
         if (component !== message.component) return
 
@@ -121,8 +124,6 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, startLoad
         let cleared = false
         let navigationWasStarted = false
         let stopWaitingForNavigation = () => {}
-        let endLoading = () => {}
-
         let finishLoading = () => {
             if (! matches || cleared) return
 
@@ -139,7 +140,7 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, startLoad
 
             if (! matches) return
 
-            endLoading = startLoading()
+            startLoading()
         })
 
         // Clear loading before morph on success
@@ -171,9 +172,7 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, startLoad
     })
 }
 
-function whenTargetsArePartOfFileUpload(component, targets, startLoading) {
-    let endLoadingByProperty = new Map
-
+function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endLoading ]) {
     let eventMismatch = e => {
         let { id, property } = e.detail
 
@@ -183,31 +182,23 @@ function whenTargetsArePartOfFileUpload(component, targets, startLoading) {
         return false
     }
 
-    let finishLoading = e => {
-        if (eventMismatch(e)) return
-
-        let { property } = e.detail
-        let pending = endLoadingByProperty.get(property)
-        let endLoading = pending?.shift()
-
-        endLoading?.()
-
-        if (pending?.length === 0) endLoadingByProperty.delete(property)
-    }
-
     let cleanupA = listen(window, 'livewire-upload-start', e => {
         if (eventMismatch(e)) return
 
-        let { property } = e.detail
-        let pending = endLoadingByProperty.get(property) ?? []
-
-        pending.push(startLoading())
-        endLoadingByProperty.set(property, pending)
+        startLoading()
     })
 
-    let cleanupB = listen(window, 'livewire-upload-finish', finishLoading)
+    let cleanupB = listen(window, 'livewire-upload-finish', e => {
+        if (eventMismatch(e)) return
 
-    let cleanupC = listen(window, 'livewire-upload-error', finishLoading)
+        endLoading()
+    })
+
+    let cleanupC = listen(window, 'livewire-upload-error', e => {
+        if (eventMismatch(e)) return
+
+        endLoading()
+    })
 
     return () => {
         cleanupA()
