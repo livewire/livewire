@@ -107,9 +107,16 @@ class HandleSynths extends Mechanism
 
             $childPath = "{$path}.{$name}";
 
+            [$childData, $childMeta] = $this->getTupleForPath($raw, $childPath);
+
             // Children the snapshot has never seen — a freshly added repeater row,
             // for example — have no meta to reconstruct them from...
-            if (! $childMeta = $this->getMetaForPath($raw, $childPath)) return $child;
+            if (! $childMeta) return $child;
+
+            // The update can also replace a child with a value of an entirely
+            // different type, in which case the previous meta no longer
+            // describes it and hydrating with it would fail...
+            if (get_debug_type($child) !== get_debug_type($childData)) return $child;
 
             // The child value is untrusted update data and may itself look like a
             // synthetic tuple. Always pair it with the authenticated snapshot meta;
@@ -218,6 +225,11 @@ class HandleSynths extends Mechanism
 
     protected function getMetaForPath($raw, $path)
     {
+        return $this->getTupleForPath($raw, $path)[1];
+    }
+
+    protected function getTupleForPath($raw, $path)
+    {
         $segments = explode('.', $path);
 
         $first = array_shift($segments);
@@ -227,9 +239,9 @@ class HandleSynths extends Mechanism
         if ($path !== '') {
             $value = $data[$first] ?? null;
 
-            return $this->getMetaForPath($value, implode('.', $segments));
+            return $this->getTupleForPath($value, implode('.', $segments));
         }
 
-        return $meta;
+        return [$data, $meta];
     }
 }

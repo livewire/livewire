@@ -181,6 +181,22 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(['some' => 'array'], $updated['brandNew']);
     }
 
+    public function test_hydrate_for_update_leaves_children_whose_type_changed_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['tags' => collect(['a'])],
+        ], $context, 'data')];
+
+        // The Collection has been replaced with a scalar, so the meta describing
+        // it no longer applies to the incoming value...
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', ['tags' => 1], $context);
+
+        $this->assertSame(1, $updated['tags']);
+    }
+
     public function test_hydrate_for_update_passes_nested_removals_through_untouched()
     {
         $synths = app(HandleSynths::class);
