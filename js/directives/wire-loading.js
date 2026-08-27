@@ -124,6 +124,7 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
         let cleared = false
         let navigationWasStarted = false
         let stopWaitingForNavigation = () => {}
+
         let finishLoading = () => {
             if (! matches || cleared) return
 
