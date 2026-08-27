@@ -10,14 +10,49 @@ directive('loading', ({ el, directive, component, cleanup }) => {
 
     let [delay, abortDelay] = applyDelay(directive)
 
+    let restoreLoadingState = () => toggleBooleanStateDirective(el, directive, false)
+    let activeLoadingCount = 0
+
+    let startLoading = () => {
+        if (activeLoadingCount === 0) {
+            if (directive.modifiers.includes('class')) {
+                let classes = directive.expression.split(' ').filter(String)
+                let classStates = classes.map(className => [className, el.classList.contains(className)])
+
+                restoreLoadingState = () => classStates.forEach(([className, wasPresent]) => {
+                    el.classList.toggle(className, wasPresent)
+                })
+            } else if (directive.modifiers.includes('attr')) {
+                let attribute = directive.expression
+                let value = el.getAttribute(attribute)
+
+                restoreLoadingState = value === null
+                    ? () => el.removeAttribute(attribute)
+                    : () => el.setAttribute(attribute, value)
+            }
+
+            delay(() => toggleBooleanStateDirective(el, directive, true))
+        }
+
+        activeLoadingCount++
+    }
+
+    let endLoading = () => {
+        if (activeLoadingCount === 0) return
+
+        activeLoadingCount--
+
+        if (activeLoadingCount === 0) abortDelay(restoreLoadingState)
+    }
+
     let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
-        () => delay(() => toggleBooleanStateDirective(el, directive, true)),
-        () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
+        startLoading,
+        endLoading,
     ])
 
     let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
-        () => delay(() => toggleBooleanStateDirective(el, directive, true)),
-        () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
+        startLoading,
+        endLoading,
     ])
 
     cleanup(() => {

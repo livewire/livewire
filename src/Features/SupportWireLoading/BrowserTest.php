@@ -104,6 +104,190 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    function test_wire_loading_attr_restores_existing_attribute_after_renderless_action()
+    {
+        Livewire::visit(new class extends Component {
+            public bool $disabled = true;
+
+            #[\Livewire\Attributes\Renderless]
+            public function renderlessAction() {
+                usleep(250000);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <button type="button" wire:click="renderlessAction" dusk="renderless">
+                            Renderless action
+                        </button>
+
+                        <button
+                            type="button"
+                            x-bind:disabled="$wire.$get('disabled')"
+                            wire:loading.attr="disabled"
+                            dusk="target">
+                            Target
+                        </button>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitUntil('document.querySelector(\'[dusk="target"]\').disabled === true')
+        ->waitForLivewire()->click('@renderless')
+        ->assertScript('document.querySelector(\'[dusk="target"]\').disabled', true)
+        ;
+    }
+
+    function test_wire_loading_class_restores_existing_class_state_after_renderless_action()
+    {
+        Livewire::visit(new class extends Component {
+            #[\Livewire\Attributes\Renderless]
+            public function renderlessAction() {
+                usleep(250000);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <button type="button" wire:click="renderlessAction" dusk="renderless">
+                            Renderless action
+                        </button>
+
+                        <div
+                            class="existing"
+                            wire:loading.class="existing added"
+                            dusk="add">
+                            Add classes
+                        </div>
+
+                        <div
+                            class="existing"
+                            wire:loading.class.remove="existing absent"
+                            dusk="remove">
+                            Remove classes
+                        </div>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertHasClass('@add', 'existing')
+        ->assertScript('document.querySelector(\'[dusk="add"]\').classList.contains(\'added\')', false)
+        ->assertHasClass('@remove', 'existing')
+        ->assertScript('document.querySelector(\'[dusk="remove"]\').classList.contains(\'absent\')', false)
+        ->waitForLivewire()->click('@renderless')
+        ->assertHasClass('@add', 'existing')
+        ->assertScript('document.querySelector(\'[dusk="add"]\').classList.contains(\'added\')', false)
+        ->assertHasClass('@remove', 'existing')
+        ->assertScript('document.querySelector(\'[dusk="remove"]\').classList.contains(\'absent\')', false)
+        ;
+    }
+
+    function test_wire_loading_attr_restores_after_all_overlapping_requests_finish()
+    {
+        Livewire::visit(new class extends Component {
+            #[\Livewire\Attributes\Renderless]
+            public function slowAction() {
+                usleep(500000);
+
+                $this->dispatch('slow-finished');
+            }
+
+            #[\Livewire\Attributes\Renderless]
+            public function fastAction() {
+                usleep(100000);
+
+                $this->dispatch('fast-finished');
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div
+                        x-data="{ fastFinished: false, slowFinished: false }"
+                        x-on:fast-finished.window="fastFinished = true"
+                        x-on:slow-finished.window="slowFinished = true"
+                    >
+                        <button type="button" wire:click.async="slowAction" dusk="slow">
+                            Slow action
+                        </button>
+
+                        <button type="button" wire:click.async="fastAction" dusk="fast">
+                            Fast action
+                        </button>
+
+                        <button type="button" wire:loading.attr="disabled" dusk="target">
+                            Target
+                        </button>
+
+                        <span x-show="fastFinished">Fast finished</span>
+                        <span x-show="slowFinished">Slow finished</span>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertAttributeMissing('@target', 'disabled')
+        ->click('@fast')
+        ->click('@slow')
+        ->waitForText('Fast finished')
+        ->assertAttribute('@target', 'disabled', 'true')
+        ->waitForText('Slow finished')
+        ->assertAttributeMissing('@target', 'disabled')
+        ;
+    }
+
+    function test_wire_loading_delay_restores_after_all_overlapping_requests_finish()
+    {
+        Livewire::visit(new class extends Component {
+            #[\Livewire\Attributes\Renderless]
+            public function slowAction() {
+                usleep(500000);
+
+                $this->dispatch('slow-finished');
+            }
+
+            #[\Livewire\Attributes\Renderless]
+            public function fastAction() {
+                usleep(100000);
+
+                $this->dispatch('fast-finished');
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div
+                        x-data="{ fastFinished: false, slowFinished: false }"
+                        x-on:fast-finished.window="fastFinished = true"
+                        x-on:slow-finished.window="slowFinished = true"
+                    >
+                        <button type="button" wire:click.async="slowAction" dusk="slow">
+                            Slow action
+                        </button>
+
+                        <button type="button" wire:click.async="fastAction" dusk="fast">
+                            Fast action
+                        </button>
+
+                        <button type="button" wire:loading.delay.shortest.attr="disabled" dusk="target">
+                            Target
+                        </button>
+
+                        <span x-show="fastFinished">Fast finished</span>
+                        <span x-show="slowFinished">Slow finished</span>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertAttributeMissing('@target', 'disabled')
+        ->click('@fast')
+        ->click('@slow')
+        ->waitForText('Fast finished')
+        ->assertAttribute('@target', 'disabled', 'true')
+        ->waitForText('Slow finished')
+        ->assertAttributeMissing('@target', 'disabled')
+        ;
+    }
+
     function test_wire_loading_attr_doesnt_conflict_with_exist_one()
     {
         Livewire::visit(new class extends Component {
