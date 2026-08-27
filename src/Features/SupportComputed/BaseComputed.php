@@ -161,7 +161,7 @@ class BaseComputed extends Attribute
     {
         $evaluated = fn () => invade($this->component)->{parent::getName()}();
 
-        if (empty(HandleComponents::$renderStack)) {
+        if (! in_array($this->component, HandleComponents::$renderStack, true)) {
             return $evaluated();
         }
 
