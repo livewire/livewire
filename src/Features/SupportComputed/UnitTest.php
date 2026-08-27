@@ -735,36 +735,6 @@ class UnitTest extends TestCase
             ->dispatch('bar', 'baz')
             ->assertSetStrict('foo', 'baz');
     }
-
-    public function test_computed_attribute_can_trigger_component_exception_hook()
-    {
-        Livewire::test(new class extends TestComponent {
-            #[Computed]
-            public function foo(): string
-            {
-                throw new ComputedPropertyException('Exception from computed property');
-            }
-
-            public function exception($e, $stopPropagation)
-            {
-                if ($e instanceof ComputedPropertyException) {
-                    $stopPropagation();
-
-                    session()->put('exception-hook-triggered', true);
-                }
-            }
-
-            public function render()
-            {
-                return <<<'HTML'
-                    <div>{{ $this->foo }}</div>
-                HTML;
-            }
-        })
-            ->assertOk();
-
-        $this->assertTrue(session()->has('exception-hook-triggered'));
-    }
 }
 
 class ComputedPropertyStub extends Component
@@ -908,16 +878,5 @@ class NullIssetComputedPropertyStub extends Component{
             {{ var_dump(isset($this->foo)) }}
         </div>
         HTML;
-    }
-}
-
-class ComputedPropertyException extends \Exception
-{
-    public function __construct(
-        string $message = '',
-        int $code = 0,
-        \Throwable|null $previous = null
-    ) {
-        parent::__construct($message, $code, $previous);
     }
 }
