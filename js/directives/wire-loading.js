@@ -11,28 +11,41 @@ directive('loading', ({ el, directive, component, cleanup }) => {
     let [delay, abortDelay] = applyDelay(directive)
 
     let restoreLoadingState = () => toggleBooleanStateDirective(el, directive, false)
+    let activeLoadingCount = 0
 
     let startLoading = () => {
-        if (directive.modifiers.includes('attr')) {
-            let attribute = directive.expression
-            let value = el.getAttribute(attribute)
+        if (activeLoadingCount === 0) {
+            if (directive.modifiers.includes('attr')) {
+                let attribute = directive.expression
+                let value = el.getAttribute(attribute)
 
-            restoreLoadingState = value === null
-                ? () => el.removeAttribute(attribute)
-                : () => el.setAttribute(attribute, value)
+                restoreLoadingState = value === null
+                    ? () => el.removeAttribute(attribute)
+                    : () => el.setAttribute(attribute, value)
+            }
+
+            toggleBooleanStateDirective(el, directive, true)
         }
 
-        toggleBooleanStateDirective(el, directive, true)
+        activeLoadingCount++
+    }
+
+    let endLoading = () => {
+        if (activeLoadingCount === 0) return
+
+        activeLoadingCount--
+
+        if (activeLoadingCount === 0) restoreLoadingState()
     }
 
     let cleanupA = whenTargetsArePartOfRequest(component, el, targets, inverted, [
         () => delay(startLoading),
-        () => abortDelay(restoreLoadingState),
+        () => abortDelay(endLoading),
     ])
 
     let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
         () => delay(startLoading),
-        () => abortDelay(restoreLoadingState),
+        () => abortDelay(endLoading),
     ])
 
     cleanup(() => {
