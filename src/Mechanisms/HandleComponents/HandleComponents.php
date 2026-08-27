@@ -319,9 +319,9 @@ class HandleComponents extends Mechanism
             ]);
         }
 
-        [ $view, $properties ] = $this->getView($component);
+        return $this->trackInRenderStack($component, function () use ($component) {
+            [ $view, $properties ] = $this->getView($component);
 
-        return $this->trackInRenderStack($component, function () use ($component, $view, $properties) {
             $finish = trigger('render', $component, $view, $properties);
 
             $revertA = Utils::shareWithViews('__livewire', $component);

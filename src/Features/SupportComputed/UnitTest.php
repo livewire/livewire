@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportComputed;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestComponent;
 use Tests\TestCase;
@@ -758,6 +759,27 @@ class UnitTest extends TestCase
         })
             ->call('save')
             ->assertOk()
+            ->assertSetStrict('otherValue', 'other')
+            ->assertSetStrict('handled', true);
+    }
+
+    public function test_stops_execution_after_computed_exception_is_handled_from_render()
+    {
+        Livewire::test(new class extends ComputedLifecycleExceptionStub {
+            public function mount() {}
+            public function render()
+            {
+                $value = $this->failingValue;
+
+                return Blade::render(<<<'HTML'
+                    <div>{{ $value }}</div>
+                    <div>{{ $otherValue }}</div>
+                HTML, ['value' => $value, 'otherValue' => $this->otherValue]);
+            }
+        })
+            ->call('save')
+            ->assertOk()
+            ->assertSee('other')
             ->assertSetStrict('otherValue', 'other')
             ->assertSetStrict('handled', true);
     }
