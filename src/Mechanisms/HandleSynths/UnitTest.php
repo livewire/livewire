@@ -181,20 +181,40 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(['some' => 'array'], $updated['brandNew']);
     }
 
-    public function test_hydrate_for_update_leaves_children_whose_type_changed_alone()
+    public function test_hydrate_for_update_leaves_children_whose_shape_changed_alone()
     {
         $synths = app(HandleSynths::class);
         $context = new ComponentContext(new TestComponent);
 
         $raw = ['data' => $synths->dehydrate([
-            'section' => ['tags' => collect(['a'])],
+            'section' => ['tags' => collect(['a']), 'other' => collect(['b'])],
         ], $context, 'data')];
 
         // The Collection has been replaced with a scalar, so the meta describing
         // it no longer applies to the incoming value...
-        $updated = $synths->hydrateForUpdate($raw, 'data.section', ['tags' => 1], $context);
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'tags' => 1,
+            'other' => ['b'],
+        ], $context);
 
         $this->assertSame(1, $updated['tags']);
+        $this->assertInstanceOf(Collection::class, $updated['other']);
+    }
+
+    public function test_hydrate_for_update_still_hydrates_children_sent_as_a_different_scalar_type()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['status' => IntBackedEnum::Active],
+        ], $context, 'data')];
+
+        // The browser sends numbers back as strings, so an int-backed enum
+        // arrives as a string and still has to hydrate...
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', ['status' => '2'], $context);
+
+        $this->assertSame(IntBackedEnum::Active, $updated['status']);
     }
 
     public function test_hydrate_for_update_passes_nested_removals_through_untouched()
@@ -306,6 +326,11 @@ class UnitTest extends \Tests\TestCase
 
         $component->set('data.section', ['tags' => ['attacker-controlled']]);
     }
+}
+
+enum IntBackedEnum: int
+{
+    case Active = 2;
 }
 
 class CustomThing

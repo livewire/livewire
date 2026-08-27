@@ -113,10 +113,10 @@ class HandleSynths extends Mechanism
             // for example — have no meta to reconstruct them from...
             if (! $childMeta) return $child;
 
-            // The update can also replace a child with a value of an entirely
-            // different type, in which case the previous meta no longer
-            // describes it and hydrating with it would fail...
-            if (get_debug_type($child) !== get_debug_type($childData)) return $child;
+            // The update can also swap a child between an array and a scalar —
+            // a Wireable replaced by an integer, say — and the previous meta no
+            // longer describes a value of that shape...
+            if (is_array($child) !== is_array($childData) || is_null($child) !== is_null($childData)) return $child;
 
             // The child value is untrusted update data and may itself look like a
             // synthetic tuple. Always pair it with the authenticated snapshot meta;
