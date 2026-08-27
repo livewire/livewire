@@ -15,7 +15,14 @@ directive('loading', ({ el, directive, component, cleanup }) => {
 
     let startLoading = () => {
         if (activeLoadingCount === 0) {
-            if (directive.modifiers.includes('attr')) {
+            if (directive.modifiers.includes('class')) {
+                let classes = directive.expression.split(' ').filter(String)
+                let classStates = classes.map(className => [className, el.classList.contains(className)])
+
+                restoreLoadingState = () => classStates.forEach(([className, wasPresent]) => {
+                    el.classList.toggle(className, wasPresent)
+                })
+            } else if (directive.modifiers.includes('attr')) {
                 let attribute = directive.expression
                 let value = el.getAttribute(attribute)
 

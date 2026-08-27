@@ -138,6 +138,50 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    function test_wire_loading_class_restores_existing_class_state_after_renderless_action()
+    {
+        Livewire::visit(new class extends Component {
+            #[\Livewire\Attributes\Renderless]
+            public function renderlessAction() {
+                usleep(250000);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <button type="button" wire:click="renderlessAction" dusk="renderless">
+                            Renderless action
+                        </button>
+
+                        <div
+                            class="existing"
+                            wire:loading.class="existing added"
+                            dusk="add">
+                            Add classes
+                        </div>
+
+                        <div
+                            class="existing"
+                            wire:loading.class.remove="existing absent"
+                            dusk="remove">
+                            Remove classes
+                        </div>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertHasClass('@add', 'existing')
+        ->assertScript('document.querySelector(\'[dusk="add"]\').classList.contains(\'added\')', false)
+        ->assertHasClass('@remove', 'existing')
+        ->assertScript('document.querySelector(\'[dusk="remove"]\').classList.contains(\'absent\')', false)
+        ->waitForLivewire()->click('@renderless')
+        ->assertHasClass('@add', 'existing')
+        ->assertScript('document.querySelector(\'[dusk="add"]\').classList.contains(\'added\')', false)
+        ->assertHasClass('@remove', 'existing')
+        ->assertScript('document.querySelector(\'[dusk="remove"]\').classList.contains(\'absent\')', false)
+        ;
+    }
+
     function test_wire_loading_attr_restores_after_all_overlapping_requests_finish()
     {
         Livewire::visit(new class extends Component {
