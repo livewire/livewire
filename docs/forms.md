@@ -349,6 +349,16 @@ $this->reset('title');
 $this->reset(['title', 'content']);
 ```
 
+`reset()` restores each property to the state declared on the form class. If a typed property has no default value, it will be uninitialized after it is reset. Give fields a default value when they need to be read or rendered immediately after resetting:
+
+```php
+public string $title = '';
+
+public ?string $subtitle = null;
+```
+
+Alternatively, assign the property after calling `reset()` before reading it.
+
 ### Pulling form fields
 
 Alternatively, you can use the `pull()` method to both retrieve a form's properties and reset them in one operation.
