@@ -552,6 +552,20 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue($photo->isPreviewable());
     }
 
+    public function test_temporary_preview_uses_the_original_filename_for_downloads()
+    {
+        Storage::fake('avatars');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->viewData('photo');
+
+        SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+
+        $this->get($photo->temporaryUrl())
+            ->assertDownload('avatar.jpg');
+    }
+
     public function test_file_is_not_sent_on_cache_hit()
     {
         Storage::fake('avatars');

@@ -65,7 +65,7 @@ class Utils extends BaseUtils
             fn ($headers) => response($content, 200, $headers));
     }
 
-    static function pretendPreviewResponseIsPreviewFile($filename)
+    static function pretendPreviewResponseIsPreviewFile($filename, $downloadName = null)
     {
         $file = FileUploadConfiguration::path($filename);
         $storage = FileUploadConfiguration::storage();
@@ -73,7 +73,7 @@ class Utils extends BaseUtils
         $lastModified = FileUploadConfiguration::lastModified($file);
 
         return self::cachedFileResponse($filename, $mimeType, $lastModified,
-            fn ($headers) => $storage->download($file, $filename, $headers));
+            fn ($headers) => $storage->download($file, $downloadName ?? $filename, $headers));
     }
 
     static private function cachedFileResponse($filename, $contentType, $lastModified, $downloadCallback)
