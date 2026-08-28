@@ -21,7 +21,12 @@ class StdClassSynth extends Synth {
         return [$data, []];
     }
 
-    function hydrate($value, $meta, $hydrateChild) {
+    function hydrate($value, $meta, $hydrateChild)
+    {
+        // Same guard as ArraySynth: updates can replace a Wireable with a
+        // scalar (or __rm__). Previous meta must not foreach a non-array
+        if (! is_array($value)) return $value;
+
         $obj = new stdClass;
 
         foreach ($value as $key => $child) {

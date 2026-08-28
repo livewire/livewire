@@ -290,6 +290,65 @@ class UnitTest extends \Tests\TestCase
 
         $component->set('data.section', ['tags' => ['attacker-controlled']]);
     }
+
+    public function test_hydrate_for_update_leaves_children_whose_shape_changed_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['tags' => collect(['a']), 'other' => collect(['b'])],
+        ], $context, 'data')];
+
+        // Collection meta must not be applied to a scalar...
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'tags' => 1,
+            'other' => ['b'],
+        ], $context);
+
+        $this->assertSame(1, $updated['tags']);
+        $this->assertInstanceOf(Collection::class, $updated['other']);
+    }
+
+    public function test_hydrate_for_update_leaves_wireable_children_replaced_with_scalars_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $wireable = new class implements \Livewire\Wireable {
+            public function toLivewire()
+            {
+                return [];
+            }
+
+            public static function fromLivewire($value)
+            {
+                return new static;
+            }
+        };
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['item' => $wireable],
+        ], $context, 'data')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'item' => 1,
+        ], $context);
+
+        $this->assertSame(1, $updated['item']);
+    }
+
+    public function test_hydrate_for_update_leaves_a_property_whose_shape_changed_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['item' => $synths->dehydrate(collect(['a']), $context, 'item')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'item', 1, $context);
+
+        $this->assertSame(1, $updated);
+    }
 }
 
 class CustomThing
