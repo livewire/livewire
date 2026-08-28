@@ -3,9 +3,9 @@ In a traditional HTML page containing a form, the form is only ever submitted wh
 
 However, Livewire is capable of much more than traditional form submissions. You can validate form inputs in real-time or even save the form as a user types.
 
-In these "real-time" update scenarios, it can be helpful to signal to your users when a form or subset of a form has been changed, but hasn't been saved to the database.
+In these "real-time" update scenarios, it can be helpful to signal when a form or subset of a form has changed but hasn't reached the server.
 
-When a form contains un-saved input, that form is considered "dirty". It only becomes "clean" when a network request has been triggered to synchronize the server state with the client-side state.
+When the browser contains input that differs from the server state, that input is considered "dirty". It becomes "clean" when a message synchronizes the browser and server state.
 
 ## Basic usage
 
@@ -110,6 +110,53 @@ Or apply conditional classes with Alpine:
 >
 ```
 
+## Persisting dirty state across messages
+
+By default, dirty state describes whether the server has received the browser's latest changes. Any message can therefore make the component clean, even when that message didn't save anything to a database.
+
+For an unsaved-changes indicator, add the `.persist` modifier and mark the state as clean after it has been saved:
+
+```php
+<?php // resources/views/components/post/⚡create.blade.php
+
+use Livewire\Component;
+use App\Models\Post;
+
+new class extends Component {
+    public $title = '';
+
+    public function save()
+    {
+        Post::create($this->only(['title']));
+
+        $this->markAsClean(); // [tl! highlight]
+    }
+};
+?>
+
+<form wire:submit="save">
+    <input type="text" wire:model="title">
+
+    <button type="submit">Save</button>
+
+    <div wire:dirty.persist>Unsaved changes...</div> <!-- [tl! highlight] -->
+</form>
+```
+
+Persistent dirty state survives polling, live model updates, and unrelated actions. Clean server-side changes are accepted into its baseline automatically, while local edits remain dirty until `markAsClean()` runs.
+
+The `$dirty` expression accepts the same option:
+
+```blade
+<div x-show="$wire.$dirty('title', { persist: true })">Unsaved title...</div>
+```
+
+From Alpine, `$wire.$markAsClean()` marks the current browser state as clean without sending a message:
+
+```blade
+<button type="button" x-on:click="$wire.$markAsClean()">Accept changes</button>
+```
+
 ## Reference
 
 ```blade
@@ -123,6 +170,7 @@ wire:target="property"
 |----------|-------------|
 | `.remove` | Show element by default, hide when dirty |
 | `.class="class-name"` | Add a CSS class when dirty |
+| `.persist` | Compare against the last state marked as clean instead of the latest server state |
 
 ### `$dirty` expression
 
@@ -131,5 +179,13 @@ wire:target="property"
 | `$dirty` | Returns `true` if any property has unsaved changes |
 | `$dirty('property')` | Returns `true` if the specified property has unsaved changes |
 | `$dirty(['title', 'description'])` | Returns `true` if any of the specified properties have unsaved changes |
+| `$dirty('title', { persist: true })` | Compares the property against the last state marked as clean |
 
 Can be used in Livewire directives like `wire:show="$dirty"` or in Alpine as `$wire.$dirty()`.
+
+### Marking state as clean
+
+| Call | Description |
+|------|-------------|
+| `$this->markAsClean()` | Marks the state returned by the current message as clean |
+| `$wire.$markAsClean()` | Marks the current browser state as clean |

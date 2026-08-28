@@ -110,6 +110,77 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    function test_persistent_dirty_state_can_be_marked_as_clean_by_the_server()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function save()
+            {
+                $this->markAsClean();
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model="title" />
+                        <button dusk="save" type="button" wire:click="save">Save</button>
+
+                        <div dusk="dirty" wire:dirty.persist>Unsaved changes...</div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->type('@input', 'Hello')
+            ->pause(50)
+            ->assertVisible('@dirty')
+            ->waitForLivewire()->click('@save')
+            ->pause(50)
+            ->assertNotVisible('@dirty')
+        ;
+    }
+
+    function test_marking_as_clean_preserves_a_newer_local_edit()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public $saves = 0;
+
+            public function save()
+            {
+                usleep(300_000);
+
+                $this->saves++;
+                $this->markAsClean();
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model="title" />
+                        <button dusk="save" type="button" wire:click="save">Save</button>
+                        <span dusk="saves">{{ $saves }}</span>
+
+                        <div dusk="dirty" wire:dirty.persist>Unsaved changes...</div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->type('@input', 'First edit')
+            ->pause(50)
+            ->assertVisible('@dirty')
+            ->click('@save')
+            ->pause(50)
+            ->type('@input', 'Newer edit')
+            ->waitUntil("document.querySelector('[dusk=\"saves\"]').textContent.trim() === '1'")
+            ->pause(50)
+            ->assertVisible('@dirty')
+        ;
+    }
+
     function test_can_use_dollar_dirty_to_check_if_component_is_dirty()
     {
         Livewire::visit(new class extends Component {

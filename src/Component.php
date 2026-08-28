@@ -13,6 +13,7 @@ use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
 use Livewire\Features\SupportIslands\HandlesIslands;
 use Livewire\Features\SupportFormObjects\HandlesFormObjects;
 use Livewire\Features\SupportEvents\HandlesEvents;
+use Livewire\Features\SupportDirty\HandlesDirty;
 use Livewire\Features\SupportHtmlAttributeForwarding\HandlesHtmlAttributeForwarding;
 use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
 use Livewire\Features\SupportAttributes\HandlesAttributes;
@@ -30,6 +31,7 @@ abstract class Component
     use AuthorizesRequests;
     use InteractsWithProperties;
     use HandlesEvents;
+    use HandlesDirty;
     use HandlesIslands;
     use HandlesRedirects;
     use HandlesTransitions;
