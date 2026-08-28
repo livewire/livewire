@@ -1,5 +1,6 @@
 import { on } from '@/hooks'
 import { getModuleUrl } from '@/utils'
+import Alpine from 'alpinejs'
 
 let pendingComponentAssets = new WeakMap()
 
@@ -14,18 +15,30 @@ on('effect', ({ component, effects }) => {
         let encodedName = component.name.replace(/\./g, '--').replace(/::/g, '---').replace(/:/g, '----')
         let path = `${getModuleUrl()}/js/${encodedName}.js?v=${scriptModuleHash}`
 
-        pendingComponentAssets.set(component, Alpine.reactive({
+        let pendingAsset = Alpine.reactive({
             loading: true,
             afterLoaded: [],
-        }))
+        })
 
-        import(/* @vite-ignore */ path).then(module => {
-            module.run.call(component.$wire, component.$wire, component.$wire.js);
+        pendingComponentAssets.set(component, pendingAsset)
 
-            pendingComponentAssets.get(component).loading = false
-            pendingComponentAssets.get(component).afterLoaded.forEach(callback => callback())
-            pendingComponentAssets.delete(component)
-        });
+        let promise = import(/* @vite-ignore */ path).then(module => {
+            module.run.call(component.$wire, component.$wire, component.$wire.js)
+        })
+
+        let finish = () => {
+            pendingAsset.loading = false
+
+            if (pendingComponentAssets.get(component) === pendingAsset) {
+                pendingComponentAssets.delete(component)
+            }
+
+            let callbacks = pendingAsset.afterLoaded.splice(0)
+
+            callbacks.forEach(callback => callback())
+        }
+
+        Alpine.deferInit(component.el, promise.finally(finish))
     }
 })
 
