@@ -9,6 +9,7 @@ use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\CollectionSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+use Livewire\Wireable;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -201,6 +202,20 @@ class UnitTest extends \Tests\TestCase
         $this->assertInstanceOf(Collection::class, $updated['other']);
     }
 
+    public function test_hydrate_for_update_leaves_the_updated_path_itself_alone_when_its_shape_changed()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate(['thing' => new SomeWireable('a')], $context, 'data')];
+
+        // The updated path is the synthesized value here, not one of its
+        // children, and its meta is just as stale...
+        $updated = $synths->hydrateForUpdate($raw, 'data.thing', 1, $context);
+
+        $this->assertSame(1, $updated);
+    }
+
     public function test_hydrate_for_update_still_hydrates_children_sent_as_a_different_scalar_type()
     {
         $synths = app(HandleSynths::class);
@@ -331,6 +346,15 @@ class UnitTest extends \Tests\TestCase
 enum IntBackedEnum: int
 {
     case Active = 2;
+}
+
+class SomeWireable implements Wireable
+{
+    public function __construct(public string $value) {}
+
+    public function toLivewire() { return ['value' => $this->value]; }
+
+    public static function fromLivewire($value) { return new static($value['value']); }
 }
 
 class CustomThing

@@ -116,7 +116,7 @@ class HandleSynths extends Mechanism
             // The update can also swap a child between an array and a scalar —
             // a Wireable replaced by an integer, say — and the previous meta no
             // longer describes a value of that shape...
-            if (is_array($child) !== is_array($childData) || is_null($child) !== is_null($childData)) return $child;
+            if (! $this->metaStillApplies($child, $childData)) return $child;
 
             // The child value is untrusted update data and may itself look like a
             // synthetic tuple. Always pair it with the authenticated snapshot meta;
@@ -130,10 +130,10 @@ class HandleSynths extends Mechanism
         // This is a trust boundary: $value came from the update payload, while
         // $raw came from the snapshot that Checksum::verify() authenticated. Synth
         // identity and class must only ever be selected from the latter...
-        $meta = $this->getMetaForPath($raw, $path);
+        [$data, $meta] = $this->getTupleForPath($raw, $path);
 
         // If we have meta data already for this property, let's use that to get a synth...
-        if ($meta) {
+        if ($meta && $this->metaStillApplies($value, $data)) {
             return $this->hydratePropertyUpdate([$value, $meta], $context, $path, $raw);
         }
 
@@ -221,6 +221,15 @@ class HandleSynths extends Mechanism
         }
 
         return null;
+    }
+
+    protected function metaStillApplies($value, $data)
+    {
+        // Wire data is JSON: scalars, arrays, null. Anything already a PHP object
+        // was set server-side and is in its final form...
+        if (is_object($value)) return true;
+
+        return is_array($value) === is_array($data) && is_null($value) === is_null($data);
     }
 
     protected function getMetaForPath($raw, $path)
