@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Facade;
@@ -150,6 +151,45 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $response->assertJsonPath('components.0.snapshot', $snapshot);
     }
 
+    public function test_model_not_found_during_middleware_replay_does_not_run_the_component_action()
+    {
+        $base = Livewire::getPersistentMiddleware();
+
+        try {
+            Livewire::addPersistentMiddleware(ThrowingMiddleware::class);
+
+            $component = Livewire::test(SensitiveActionComponent::class);
+            $snapshot = json_encode($component->snapshot);
+
+            foreach (app('router')->getRoutes() as $route) {
+                if (str_contains($route->uri(), 'livewire-unit-test-endpoint')) {
+                    $route->middleware([ThrowingMiddleware::class]);
+                    break;
+                }
+            }
+
+            SensitiveActionComponent::$actionRan = false;
+
+            $response = $this->withHeaders(['X-Livewire' => 'true'])
+                ->postJson(EndpointResolver::updatePath(), [
+                    'components' => [[
+                        'calls' => [[
+                            'method' => 'performSensitiveAction',
+                            'params' => [],
+                            'metadata' => [],
+                        ]],
+                        'updates' => [],
+                        'snapshot' => $snapshot,
+                    ]],
+                ]);
+
+            $response->assertNotFound();
+            $this->assertFalse(SensitiveActionComponent::$actionRan);
+        } finally {
+            Livewire::setPersistentMiddleware($base);
+        }
+    }
+
 }
 
 class EmptyComponent extends BaseComponent
@@ -161,5 +201,23 @@ class EmptyComponent extends BaseComponent
 
         </div>
         HTML;
+    }
+}
+
+class SensitiveActionComponent extends EmptyComponent
+{
+    public static $actionRan = false;
+
+    public function performSensitiveAction()
+    {
+        static::$actionRan = true;
+    }
+}
+
+class ThrowingMiddleware
+{
+    public function handle(Request $request, \Closure $next): \Symfony\Component\HttpFoundation\Response
+    {
+        throw (new ModelNotFoundException)->setModel('App\\MissingModel', ['missing']);
     }
 }

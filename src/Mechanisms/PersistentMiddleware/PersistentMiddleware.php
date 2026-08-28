@@ -8,12 +8,17 @@ use Illuminate\Routing\Router;
 use Livewire\Mechanisms\Mechanism;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use function Livewire\on;
+use function Livewire\store;
 use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class PersistentMiddleware extends Mechanism
 {
+    protected const ROUTE_BINDING_ERROR_PAGE = 'routeBindingErrorPage';
+
+    protected const ROUTE_BINDING_ERROR_PAGE_ATTRIBUTE = 'livewire_route_binding_error_page';
+
     protected static $persistentMiddleware = [
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
@@ -32,7 +37,42 @@ class PersistentMiddleware extends Mechanism
 
     function boot()
     {
+        app('view')->composer('errors::*', function ($view) {
+            $exception = $view->getData()['exception'] ?? null;
+
+            if (
+                $exception instanceof NotFoundHttpException
+                && $exception->getPrevious() instanceof ModelNotFoundException
+            ) {
+                request()->attributes->set(static::ROUTE_BINDING_ERROR_PAGE_ATTRIBUTE, true);
+            }
+        });
+
+        on('mount', function ($component, $params, $key, $parent) {
+            if (
+                request()->attributes->get(static::ROUTE_BINDING_ERROR_PAGE_ATTRIBUTE)
+                || ($parent && store($parent)->get(static::ROUTE_BINDING_ERROR_PAGE))
+            ) {
+                store($component)->set(static::ROUTE_BINDING_ERROR_PAGE, true);
+            }
+        });
+
+        on('hydrate', function ($component, $memo) {
+            if ($memo[static::ROUTE_BINDING_ERROR_PAGE] ?? false) {
+                store($component)->set(static::ROUTE_BINDING_ERROR_PAGE, true);
+            }
+        });
+
         on('dehydrate', function ($component, $context) {
+            // Components rendered by a route model binding 404 never made it
+            // through the original route's middleware, so there is no
+            // successful middleware context to replay on their updates.
+            if (store($component)->get(static::ROUTE_BINDING_ERROR_PAGE)) {
+                $context->addMemo(static::ROUTE_BINDING_ERROR_PAGE, true);
+
+                return;
+            }
+
             [$path, $method] = $this->extractPathAndMethodFromRequest();
 
             $context->addMemo('path', $path);
@@ -42,6 +82,10 @@ class PersistentMiddleware extends Mechanism
         on('snapshot-verified', function ($snapshot) {
             // Only apply middleware to requests hitting the Livewire update endpoint, and not any fake requests such as a test.
             if (! app(HandleRequests::class)->isLivewireRoute()) return;
+
+            // This flag was added to the checksummed snapshot while Laravel
+            // rendered a route model binding 404 response.
+            if ($snapshot['memo'][static::ROUTE_BINDING_ERROR_PAGE] ?? false) return;
 
             $this->extractPathAndMethodFromSnapshot($snapshot);
 
@@ -119,11 +163,7 @@ class PersistentMiddleware extends Mechanism
         // Only send through pipeline if there are middleware found
         if (is_null($middleware) || $middleware === []) return;
 
-        try {
-            Utils::applyMiddleware($request, $middleware);
-        } catch (ModelNotFoundException $e) {
-            return;
-        }
+        Utils::applyMiddleware($request, $middleware);
 
         $this->middlewareAppliedFor[$routeKey] = true;
 

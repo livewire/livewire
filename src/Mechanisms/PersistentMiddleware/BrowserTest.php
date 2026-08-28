@@ -35,6 +35,11 @@ class BrowserTest extends BrowserTestCase
 
     public static function tweakApplicationHook() {
         return function() {
+            config()->set('view.paths', [
+                __DIR__.'/fixtures/views',
+                ...config('view.paths'),
+            ]);
+
             Livewire::addPersistentMiddleware([AllowListedMiddleware::class, IsBanned::class]);
 
             // Overwrite the default route for these tests, so the middleware is included
@@ -85,6 +90,8 @@ class BrowserTest extends BrowserTestCase
             Livewire::component('child-with-modelable', ChildComponentWithModelable::class);
             Livewire::component('page-with-explicit-binding', PageComponentWithExplicitBinding::class);
             Livewire::component('child-for-explicit-binding', ChildForExplicitBinding::class);
+            Livewire::component('error-page-counter', ErrorPageCounter::class);
+            Livewire::component('error-page-child', ErrorPageChild::class);
 
             Route::get('/page-with-reactive-child/{post}', PageComponentWithReactiveChild::class)
                 ->middleware('web');
@@ -96,8 +103,29 @@ class BrowserTest extends BrowserTestCase
 
             Route::get('/explicit-binding/{bound_model}', PageComponentWithExplicitBinding::class)
                 ->middleware('web');
+
+            Route::get('/model-binding-error/{post}', fn (Post $post) => 'Found')
+                ->middleware('web');
         };
     }
+
+    public function test_component_on_route_model_binding_404_can_make_repeated_livewire_requests()
+    {
+        Livewire::visit(Component::class)
+            ->visit('/model-binding-error/40472')
+            ->assertSee('Count: 0')
+            ->waitForLivewire()->click('@error-page-increment')
+            ->assertSee('Count: 1')
+            ->waitForLivewire()->click('@error-page-increment')
+            ->assertSee('Count: 2')
+            ->waitForLivewire()->click('@show-error-page-child')
+            ->assertSee('Child count: 0')
+            ->waitForLivewire()->click('@error-page-child-increment')
+            ->assertSee('Child count: 1')
+            ->assertMissing('#livewire-error')
+        ;
+    }
+
     public function test_that_persistent_middleware_is_applied_to_subsequent_livewire_requests()
     {
         // @todo: Copy implementation from V2 for persistent middleware and ensure localisation and subdirectory hosting are supported. https://github.com/livewire/livewire/pull/5490
@@ -724,6 +752,49 @@ class ChildForExplicitBinding extends BaseComponent
         <div>
             <span dusk="child-output">child loaded</span>
         </div>
+        HTML;
+    }
+}
+
+class ErrorPageCounter extends BaseComponent
+{
+    public $count = 0;
+
+    public $showChild = false;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <button wire:click="increment" dusk="error-page-increment">Count: {{ $count }}</button>
+            <button wire:click="$set('showChild', true)" dusk="show-error-page-child">Show child</button>
+
+            @if ($showChild)
+                <livewire:error-page-child />
+            @endif
+        </div>
+        HTML;
+    }
+}
+
+class ErrorPageChild extends BaseComponent
+{
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <button wire:click="increment" dusk="error-page-child-increment">Child count: {{ $count }}</button>
         HTML;
     }
 }
