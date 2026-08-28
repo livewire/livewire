@@ -23,6 +23,14 @@ class HandleSynths extends Mechanism
         Synthesizers\FloatSynth::class,
     ];
 
+    protected array $arrayShapedSynthKeys = [
+        'arr',      // ArraySynth
+        'clctn',    // CollectionSynth
+        'std',      // StdClassSynth
+        'wrbl',     // WireableSynth
+        'form',     // FormObjectSynth
+    ];
+
     // Performance optimization: Cache which synthesizer matches which type
     protected array $typeCache = [];
 
@@ -90,6 +98,12 @@ class HandleSynths extends Mechanism
         // Validate class against denylist before any synthesizer can instantiate it...
         if (isset($meta['class'])) {
             SecurityPolicy::validateClass($meta['class']);
+        }
+
+        // Central guard: array-shaped synths must not receive non-arrays
+        // (scalars, __rm__, null, etc.) when meta is reused from the snapshot.
+        if ($this->isArrayShapedSynth($meta['s'] ?? '') && ! is_array($value)) {
+            return $value;
         }
 
         $synth = $this->resolve($meta['s'], $context, $path);
@@ -231,5 +245,10 @@ class HandleSynths extends Mechanism
         }
 
         return $meta;
+    }
+
+    protected function isArrayShapedSynth(string $key): bool
+    {
+        return in_array($key, $this->arrayShapedSynthKeys, true);
     }
 }
