@@ -22,6 +22,8 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             Livewire::component('query-page', QueryPage::class);
             Livewire::component('first-page', FirstPage::class);
+            Livewire::component('first-transition-page', FirstTransitionPage::class);
+            Livewire::component('second-transition-page', SecondTransitionPage::class);
             Livewire::component('first-page-child', FirstPageChild::class);
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
@@ -61,6 +63,18 @@ class BrowserTest extends \Tests\BrowserTestCase
                 config(['livewire.navigate.show_progress_bar' => false]);
 
                 return (new FirstPage)();
+            })->middleware('web');
+            Route::get('/first-transition', fn () => (new FirstTransitionPage)())->middleware('web');
+            Route::get('/second-transition', fn () => (new SecondTransitionPage)())->middleware('web');
+            Route::get('/first-transition-global', function () {
+                config(['livewire.navigate.transitions' => true]);
+
+                return (new FirstTransitionPage)();
+            })->middleware('web');
+            Route::get('/second-transition-global', function () {
+                config(['livewire.navigate.transitions' => true]);
+
+                return (new SecondTransitionPage)();
             })->middleware('web');
             Route::get('/first-outside', FirstPageWithLinkOutside::class)->middleware('web');
             Route::get('/redirect-to-second', fn () => redirect()->to('/second'));
@@ -298,6 +312,53 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitFor('@link.to.second')
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first');
+        });
+    }
+
+    public function test_wire_navigate_does_not_use_view_transitions_by_default()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-transition')
+                ->assertSee('On first transition page')
+                // Intercept document.startViewTransition to track if it gets called...
+                ->tap(fn ($b) => $b->script("
+                    window.__viewTransitionCount = 0;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__viewTransitionCount++;
+                        return orig.apply(document, arguments);
+                    };
+                "))
+                ->waitForNavigate()->click('@link.plain')
+                ->assertSee('On second transition page')
+                ->assertScript('window.__viewTransitionCount', 0);
+        });
+    }
+
+    public function test_view_transitions_can_be_enabled_globally_for_all_navigations()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-transition-global')
+                ->assertSee('On first transition page')
+                // Intercept document.startViewTransition to track if it gets called...
+                ->tap(fn ($b) => $b->script("
+                    window.__viewTransitionCount = 0;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__viewTransitionCount++;
+                        return orig.apply(document, arguments);
+                    };
+                "))
+                // A plain wire:navigate link transitions when enabled globally...
+                ->waitForNavigate()->click('@link.plain.global')
+                ->assertSee('On second transition page')
+                ->assertScript('window.__viewTransitionCount', 1)
+                // So does the back button...
+                ->waitForNavigate()->back()
+                ->assertSee('On first transition page')
+                ->assertScript('window.__viewTransitionCount', 2);
         });
     }
 
@@ -1527,6 +1588,33 @@ class BrowserTest extends \Tests\BrowserTestCase
                 return app('livewire')->new($name)();
             })->middleware('web');
         }
+    }
+}
+
+class FirstTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first transition page</div>
+
+            <a href="/second-transition" wire:navigate dusk="link.plain">Plain link</a>
+            <a href="/second-transition-global" wire:navigate dusk="link.plain.global">Plain link (global route)</a>
+        </div>
+        HTML;
+    }
+}
+
+class SecondTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On second transition page</div>
+        </div>
+        HTML;
     }
 }
 

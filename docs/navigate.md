@@ -273,9 +273,22 @@ In addition to `wire:navigate`, you can manually call the `Livewire.navigate()` 
 <script>
     // ...
 
-    Livewire.navigate('/new/url')
+Livewire.navigate('/new/url')
 </script>
 ```
+
+## Animating page visits with view transitions
+
+By default, `wire:navigate` swaps in the new page instantly. To animate every navigation—including browser back and forward visits—enable the browser's [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API) in `config/livewire.php`:
+
+```php
+'navigate' => [
+    // ...
+    'transitions' => true,
+],
+```
+
+Livewire will use the browser's default crossfade. You can customize the animation with standard `::view-transition-*` CSS. Browsers without View Transitions support, users who prefer reduced motion, and pages with an open dialog or popover fall back to an instant swap.
 
 ## Using with analytics software
 
