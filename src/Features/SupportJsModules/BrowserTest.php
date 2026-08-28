@@ -52,6 +52,14 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForTextIn('@target', 'js-import-loaded');
     }
 
+    public function test_alpine_data_is_available_during_initial_component_initialization()
+    {
+        Livewire::visit('testns::alpine-data.index')
+            ->waitForLivewireToLoad()
+            ->waitForTextIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
     public function test_script_module_survives_a_back_navigation()
     {
         // The `scriptModule` effect is only sent while mounting, so navigating
