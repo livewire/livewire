@@ -315,20 +315,8 @@ class UnitTest extends \Tests\TestCase
         $synths = app(HandleSynths::class);
         $context = new ComponentContext(new TestComponent);
 
-        $wireable = new class implements \Livewire\Wireable {
-            public function toLivewire()
-            {
-                return [];
-            }
-
-            public static function fromLivewire($value)
-            {
-                return new static;
-            }
-        };
-
         $raw = ['data' => $synths->dehydrate([
-            'section' => ['item' => $wireable],
+            'section' => ['item' => new EmptyWireable],
         ], $context, 'data')];
 
         $updated = $synths->hydrateForUpdate($raw, 'data.section', [
@@ -344,6 +332,64 @@ class UnitTest extends \Tests\TestCase
         $context = new ComponentContext(new TestComponent);
 
         $raw = ['item' => $synths->dehydrate(collect(['a']), $context, 'item')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'item', 1, $context);
+
+        $this->assertSame(1, $updated);
+    }
+    
+    public function test_replacing_a_wireable_array_item_with_a_scalar_does_not_throw()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public $array = [];
+        });
+
+        $component->set('array', [0 => new EmptyWireable]);
+        $component->set('array', [0 => 1]);
+
+        $this->assertSame([0 => 1], $component->get('array'));
+    }
+
+    public function test_hydrate_for_update_leaves_stdclass_children_replaced_with_scalars_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => [
+                'item' => (object) ['name' => 'a'],
+                'other' => (object) ['name' => 'b'],
+            ],
+        ], $context, 'data')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'item' => 1,
+            'other' => ['name' => 'b'],
+        ], $context);
+
+        $this->assertSame(1, $updated['item']);
+        $this->assertInstanceOf(\stdClass::class, $updated['other']);
+        $this->assertSame('b', $updated['other']->name);
+    }
+
+    public function test_hydrate_for_update_leaves_a_top_level_stdclass_whose_shape_changed_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['item' => $synths->dehydrate((object) ['name' => 'a'], $context, 'item')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'item', 1, $context);
+
+        $this->assertSame(1, $updated);
+    }
+
+    public function test_hydrate_for_update_leaves_a_top_level_wireable_whose_shape_changed_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['item' => $synths->dehydrate(new EmptyWireable, $context, 'item')];
 
         $updated = $synths->hydrateForUpdate($raw, 'item', 1, $context);
 
@@ -373,5 +419,20 @@ class CustomThingSynth extends Synth
     public function hydrate($value)
     {
         return new CustomThing($value['value']);
+    }
+}
+
+class EmptyWireable implements \Livewire\Wireable
+{
+    public function __construct(public mixed $v = null) {}
+
+    public function toLivewire()
+    {
+        return ['v' => $this->v];
+    }
+
+    public static function fromLivewire($value)
+    {
+        return new static($value['v'] ?? null);
     }
 }
