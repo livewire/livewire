@@ -114,7 +114,7 @@ export default function (Alpine) {
             shouldPushToHistoryState && updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
-                transitionPageSwap(() => {
+                transitionPageSwap(html, () => {
                     enablePersist && storePersistantElementsForLater(persistedEl => {
                         packUpPersistedTeleports(persistedEl)
                         packUpPersistedPopovers(persistedEl)
@@ -219,7 +219,7 @@ export default function (Alpine) {
             updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageKey, currentPageUrl)
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
-                transitionPageSwap(() => {
+                transitionPageSwap(html, () => {
                     enablePersist && storePersistantElementsForLater(persistedEl => {
                         packUpPersistedTeleports(persistedEl)
                         packUpPersistedPopovers(persistedEl)

@@ -1,11 +1,12 @@
 let useViewTransitions = false
+let navigateTransitionSelector = '[wire\\:transition\\.navigate]'
 
 export function enableViewTransitions() {
     useViewTransitions = true
 }
 
-export function transitionPageSwap(update) {
-    if (! useViewTransitions) return update()
+export function transitionPageSwap(html, update) {
+    if (! shouldTransition(html)) return update()
 
     // Check if the View Transitions API is supported...
     if (typeof document.startViewTransition !== 'function') return update()
@@ -18,4 +19,14 @@ export function transitionPageSwap(update) {
     if (document.querySelector('dialog:modal, :popover-open')) return update()
 
     document.startViewTransition(update)
+}
+
+function shouldTransition(html) {
+    if (useViewTransitions) return true
+
+    if (document.body.querySelector(navigateTransitionSelector)) return true
+
+    let newDocument = new DOMParser().parseFromString(html, 'text/html')
+
+    return !! newDocument.body.querySelector(navigateTransitionSelector)
 }

@@ -24,6 +24,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('first-page', FirstPage::class);
             Livewire::component('first-transition-page', FirstTransitionPage::class);
             Livewire::component('second-transition-page', SecondTransitionPage::class);
+            Livewire::component('second-transition-opt-in-page', SecondTransitionOptInPage::class);
             Livewire::component('first-page-child', FirstPageChild::class);
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
@@ -66,6 +67,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             })->middleware('web');
             Route::get('/first-transition', fn () => (new FirstTransitionPage)())->middleware('web');
             Route::get('/second-transition', fn () => (new SecondTransitionPage)())->middleware('web');
+            Route::get('/second-transition-opt-in', fn () => (new SecondTransitionOptInPage)())->middleware('web');
             Route::get('/first-transition-global', function () {
                 config(['livewire.navigate.transitions' => true]);
 
@@ -356,6 +358,30 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSee('On second transition page')
                 ->assertScript('window.__viewTransitionCount', 1)
                 // So does the back button...
+                ->waitForNavigate()->back()
+                ->assertSee('On first transition page')
+                ->assertScript('window.__viewTransitionCount', 2);
+        });
+    }
+
+    public function test_a_page_can_opt_into_view_transitions_in_both_directions()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-transition')
+                ->tap(fn ($b) => $b->script("
+                    window.__viewTransitionCount = 0;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__viewTransitionCount++;
+                        return orig.apply(document, arguments);
+                    };
+                "))
+                // The incoming page opts this navigation in...
+                ->waitForNavigate()->click('@link.opt-in')
+                ->assertSee('On opted-in transition page')
+                ->assertScript('window.__viewTransitionCount', 1)
+                // The outgoing page opts the cached back navigation in as well...
                 ->waitForNavigate()->back()
                 ->assertSee('On first transition page')
                 ->assertScript('window.__viewTransitionCount', 2);
@@ -1600,6 +1626,7 @@ class FirstTransitionPage extends Component
             <div>On first transition page</div>
 
             <a href="/second-transition" wire:navigate dusk="link.plain">Plain link</a>
+            <a href="/second-transition-opt-in" wire:navigate dusk="link.opt-in">Opt-in page</a>
             <a href="/second-transition-global" wire:navigate dusk="link.plain.global">Plain link (global route)</a>
         </div>
         HTML;
@@ -1613,6 +1640,18 @@ class SecondTransitionPage extends Component
         return <<<'HTML'
         <div>
             <div>On second transition page</div>
+        </div>
+        HTML;
+    }
+}
+
+class SecondTransitionOptInPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div wire:transition.navigate>
+            <div>On opted-in transition page</div>
         </div>
         HTML;
     }
