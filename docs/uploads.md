@@ -179,6 +179,12 @@ However, Livewire solves this issue by providing a temporary, signed URL that pr
 
 This URL is protected against showing files in directories above the temporary directory. And, because it's signed, users can't abuse this URL to preview other files on your system.
 
+If users can download the preview, you may use the original upload name as the suggested filename by passing `useOriginalFilename: true`:
+
+```blade
+<a href="{{ $photo->temporaryUrl(useOriginalFilename: true) }}">Download preview</a>
+```
+
 > [!tip] S3 temporary signed URLs
 > If you've configured Livewire to use S3 for temporary file storage, calling `->temporaryUrl()` will generate a temporary, signed URL to S3 directly so that image previews aren't loaded from your Laravel application server.
 

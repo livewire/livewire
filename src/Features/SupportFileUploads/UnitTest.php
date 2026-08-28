@@ -685,6 +685,16 @@ class UnitTest extends \Tests\TestCase
         $this->get(str($photo->temporaryUrl())->before('&signature='))->assertStatus(401);
     }
 
+    public function test_original_filename_preview_option_must_be_part_of_the_signed_url()
+    {
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->viewData('photo');
+
+        $this->get($photo->temporaryUrl().'&useOriginalFilename=1')
+            ->assertStatus(401);
+    }
+
     public function test_file_paths_cant_include_slashes_which_would_allow_them_to_access_other_private_directories()
     {
         $this->expectException(PathTraversalDetected::class);
