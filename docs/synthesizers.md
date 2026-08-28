@@ -244,3 +244,30 @@ class AddressSynth extends Synth
     }
 }
 ```
+
+## Array-shaped synthesizers
+
+If your synthesizer's `hydrate()` method assumes the wire value is an array
+(e.g. it runs `foreach`, builds a collection, or calls `fromLivewire()` on
+array data), implement the `ArrayShapedSynth` marker interface:
+
+```php
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+
+class MoneySynth extends Synth implements ArrayShapedSynth
+{
+    public static $key = 'money';
+
+    public function hydrate($value, $meta, $hydrateChild)
+    {
+        // $value is guaranteed to be an array on the update path when
+        // this interface is implemented; non-arrays are returned as-is
+        // by HandleSynths before hydrate() is called.
+        // ...
+    }
+}
+```
+> [!important]
+> Do not implement this interface on synths that legitimately hydrate scalars
+(dates, enums, ints, floats, strings).

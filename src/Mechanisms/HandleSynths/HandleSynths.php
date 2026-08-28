@@ -8,6 +8,7 @@ use Livewire\Mechanisms\HandleComponents\SecurityPolicy;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers;
 use Livewire\Drawer\Utils;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
 use ReflectionUnionType;
 
 class HandleSynths extends Mechanism
@@ -21,14 +22,6 @@ class HandleSynths extends Mechanism
         Synthesizers\ArraySynth::class,
         Synthesizers\IntSynth::class,
         Synthesizers\FloatSynth::class,
-    ];
-
-    protected array $arrayShapedSynthKeys = [
-        'arr',      // ArraySynth
-        'clctn',    // CollectionSynth
-        'std',      // StdClassSynth
-        'wrbl',     // WireableSynth
-        'form',     // FormObjectSynth
     ];
 
     // Performance optimization: Cache which synthesizer matches which type
@@ -100,13 +93,15 @@ class HandleSynths extends Mechanism
             SecurityPolicy::validateClass($meta['class']);
         }
 
-        // Central guard: array-shaped synths must not receive non-arrays
-        // (scalars, __rm__, null, etc.) when meta is reused from the snapshot.
-        if ($this->isArrayShapedSynth($meta['s'] ?? '') && ! is_array($value)) {
+        $synth = $this->resolve($meta['s'], $context, $path);
+
+        // Array-shaped synths must not receive non-arrays when meta is reused
+        // from the snapshot (shape change or __rm__). Same rule ArraySynth
+        // already applies locally; enforced here for all implementors of
+        // ArrayShapedSynth (built-in and third-party).
+        if ($synth instanceof ArrayShapedSynth && ! is_array($value)) {
             return $value;
         }
-
-        $synth = $this->resolve($meta['s'], $context, $path);
 
         return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path, $raw) {
             // Updates carry values only — the browser strips synthesizer meta out
@@ -245,10 +240,5 @@ class HandleSynths extends Mechanism
         }
 
         return $meta;
-    }
-
-    protected function isArrayShapedSynth(string $key): bool
-    {
-        return in_array($key, $this->arrayShapedSynthKeys, true);
     }
 }

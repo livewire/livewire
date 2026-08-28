@@ -2,7 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
-class ArraySynth extends Synth {
+class ArraySynth extends Synth implements ArrayShapedSynth {
     public static $key = 'arr';
 
     static function match($target) {
