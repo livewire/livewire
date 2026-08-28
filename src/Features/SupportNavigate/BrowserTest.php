@@ -25,6 +25,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('first-transition-page', FirstTransitionPage::class);
             Livewire::component('second-transition-page', SecondTransitionPage::class);
             Livewire::component('second-transition-opt-in-page', SecondTransitionOptInPage::class);
+            Livewire::component('first-animated-transition-page', FirstAnimatedTransitionPage::class);
+            Livewire::component('second-animated-transition-page', SecondAnimatedTransitionPage::class);
             Livewire::component('first-page-child', FirstPageChild::class);
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
@@ -68,6 +70,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/first-transition', fn () => (new FirstTransitionPage)())->middleware('web');
             Route::get('/second-transition', fn () => (new SecondTransitionPage)())->middleware('web');
             Route::get('/second-transition-opt-in', fn () => (new SecondTransitionOptInPage)())->middleware('web');
+            Route::get('/first-animated-transition', fn () => (new FirstAnimatedTransitionPage)())->middleware('web');
+            Route::get('/second-animated-transition', fn () => (new SecondAnimatedTransitionPage)())->middleware('web');
             Route::get('/first-transition-global', function () {
                 config(['livewire.navigate.transitions' => true]);
 
@@ -385,6 +389,24 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForNavigate()->back()
                 ->assertSee('On first transition page')
                 ->assertScript('window.__viewTransitionCount', 2);
+        });
+    }
+
+    public function test_named_elements_visibly_transition_between_pages()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-animated-transition')
+                ->click('@link.animated')
+                // Prove a transition is genuinely running, rather than merely counting API calls...
+                ->waitUntil("document.documentElement.matches(':active-view-transition')")
+                ->assertScript("document.querySelector('[dusk=hero-detail]').style.viewTransitionName", 'hero')
+                // Unnamed markers remain in the root page snapshot...
+                ->assertScript("document.querySelector('[dusk=unnamed-detail]').style.viewTransitionName", '')
+                ->waitUntil("! document.documentElement.matches(':active-view-transition')")
+                // Names don't leave permanent stacking contexts behind...
+                ->waitUntil("document.querySelector('[dusk=hero-detail]').style.viewTransitionName === ''")
+                ->assertSee('On second animated page');
         });
     }
 
@@ -1652,6 +1674,50 @@ class SecondTransitionOptInPage extends Component
         return <<<'HTML'
         <div wire:transition.navigate>
             <div>On opted-in transition page</div>
+        </div>
+        HTML;
+    }
+}
+
+class FirstAnimatedTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first animated page</div>
+
+            <style>
+                ::view-transition-group(*), ::view-transition-old(root), ::view-transition-new(root) {
+                    animation-duration: 1.5s;
+                }
+            </style>
+
+            <h2 wire:transition.navigate="hero" dusk="hero">Hero title</h2>
+
+            <a href="/second-animated-transition" wire:navigate dusk="link.animated">Go to second animated page</a>
+        </div>
+        HTML;
+    }
+}
+
+class SecondAnimatedTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On second animated page</div>
+
+            <style>
+                ::view-transition-group(*), ::view-transition-old(root), ::view-transition-new(root) {
+                    animation-duration: 1.5s;
+                }
+            </style>
+
+            <h1 wire:transition.navigate="hero" dusk="hero-detail">Hero title</h1>
+
+            <div wire:transition.navigate dusk="unnamed-detail">Unnamed marker element</div>
         </div>
         HTML;
     }

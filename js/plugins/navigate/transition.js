@@ -1,3 +1,7 @@
+import { clearTransitionNames, setTransitionNames } from '@/directives/wire-transition'
+
+let type = 'navigate'
+let attribute = 'wire:transition.navigate'
 let useViewTransitions = false
 let navigateTransitionSelector = '[wire\\:transition\\.navigate]'
 
@@ -18,7 +22,28 @@ export function transitionPageSwap(html, update) {
     // transition snapshots would paint above it...
     if (document.querySelector('dialog:modal, :popover-open')) return update()
 
-    document.startViewTransition(update)
+    // Assign names just for the transition so they don't permanently create
+    // stacking contexts on either page...
+    setTransitionNames(document.body, { type, attribute })
+
+    let updateAndNameNewPage = () => {
+        update()
+
+        setTransitionNames(document.body, { type, attribute })
+    }
+
+    let viewTransition
+
+    try {
+        viewTransition = document.startViewTransition({ update: updateAndNameNewPage, types: [type] })
+    } catch (e) {
+        // Firefox supports the callback form but not typed transitions...
+        viewTransition = document.startViewTransition(updateAndNameNewPage)
+    }
+
+    viewTransition.finished
+        .finally(() => clearTransitionNames(document.body, { attribute }))
+        .catch(() => {})
 }
 
 function shouldTransition(html) {

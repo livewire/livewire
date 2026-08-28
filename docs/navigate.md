@@ -298,7 +298,32 @@ To animate every navigation in your application, enable transitions globally in 
 ],
 ```
 
-Livewire will use the browser's default crossfade. You can customize the animation with standard `::view-transition-*` CSS. Browsers without View Transitions support, users who prefer reduced motion, and pages with an open dialog or popover fall back to an instant swap.
+Livewire will use the browser's default crossfade. You can customize the animation with standard `::view-transition-*` CSS. Navigation transitions are typed as `navigate`, so styles can target page visits without affecting component transitions:
+
+```css
+html:active-view-transition-type(navigate)::view-transition-new(root) {
+    animation: slide-up .2s ease-out;
+}
+```
+
+### Morphing elements between pages
+
+Give matching elements on both pages the same transition name to morph one into the other:
+
+```blade
+<!-- /posts -->
+<h2 wire:transition.navigate="post-{{ $post->id }}">{{ $post->title }}</h2>
+
+<!-- /posts/1 -->
+<h1 wire:transition.navigate="post-{{ $post->id }}">{{ $post->title }}</h1>
+```
+
+Livewire assigns the underlying `view-transition-name` immediately before the transition and clears it when the animation finishes. An unnamed `wire:transition.navigate` remains a page-level opt-in marker and participates only in the root crossfade.
+
+> [!warning] Transition names must be unique per page
+> Like an `id` attribute, a transition name can only appear once per page. Include a unique identifier when rendering names in a loop.
+
+Browsers without View Transitions support, users who prefer reduced motion, and pages with an open dialog or popover fall back to an instant swap.
 
 ## Using with analytics software
 
