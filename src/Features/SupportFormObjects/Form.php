@@ -108,6 +108,17 @@ class Form implements Arrayable
         $freshInstance = new static($this->getComponent(), $this->getPropertyName());
 
         foreach ($properties as $property) {
+            $property = str($property);
+
+            if (! $property->contains('.') && property_exists($freshInstance, (string) $property)) {
+                $isInitialized = (new \ReflectionProperty($freshInstance, (string) $property))->isInitialized($freshInstance);
+
+                if (! $isInitialized) {
+                    data_forget($this, (string) $property);
+                    continue;
+                }
+            }
+
             data_set($this, $property, data_get($freshInstance, $property));
         }
     }
