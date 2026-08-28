@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportTesting;
 
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Validation\ValidationRule;
 use PHPUnit\Framework\ExpectationFailedException;
 use Illuminate\Support\Facades\Artisan;
@@ -571,6 +572,41 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->call('save');
     }
 
+    function test_type_errors_thrown_while_binding_component_action_parameters_are_rethrown()
+    {
+        config()->set('app.debug', false);
+
+        $this->expectException(\TypeError::class);
+        $this->expectExceptionMessage('must be of type array, string given');
+
+        Livewire::test(ComponentWithActionThatThrowsTypeError::class)
+            ->call('saveItems', 'not-an-array');
+    }
+
+    function test_exception_handling_and_middleware_are_restored_after_component_exceptions()
+    {
+        config()->set('app.debug', false);
+
+        $cachedHandler = app(ExceptionHandler::class);
+        $cachedShouldSkipMiddleware = app()->shouldSkipMiddleware();
+
+        try {
+            Livewire::test(ComponentWithActionThatThrowsTypeError::class)
+                ->call('save');
+
+            $this->fail('The component TypeError was not rethrown.');
+        } catch (\TypeError $e) {
+            $this->assertStringContainsString('array_merge()', $e->getMessage());
+        }
+
+        $this->assertSame($cachedHandler, app(ExceptionHandler::class));
+        $this->assertSame($cachedShouldSkipMiddleware, app()->shouldSkipMiddleware());
+
+        Livewire::test(ComponentWithMethodThatReturnsData::class)
+            ->call('foo')
+            ->assertReturned('bar');
+    }
+
     public function test_can_set_cookies_for_use_with_testing()
     {
         // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
@@ -823,6 +859,10 @@ class ComponentWithActionThatThrowsTypeError extends TestComponent
     function save()
     {
         array_merge(collect(), []);
+    }
+
+    function saveItems(array $items)
+    {
     }
 }
 
