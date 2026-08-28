@@ -24,12 +24,7 @@ class CollectionSynth extends ArraySynth {
         ];
     }
 
-    function hydrate($value, $meta, $hydrateChild)
-    {
-        // Same guard as ArraySynth: updates can replace a Wireable with a
-        // scalar (or __rm__). Previous meta must not loop a non-array
-        if (! is_array($value)) return $value;
-
+    function hydrate($value, $meta, $hydrateChild) {
         if (! isset($meta['class']) || ! is_a($meta['class'], Collection::class, true)) {
             throw new \Exception("Livewire: Class [{$meta['class']}] is not a valid Collection type.");
         }

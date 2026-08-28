@@ -33,12 +33,7 @@ class WireableSynth extends Synth
         ];
     }
 
-    function hydrate($value, $meta, $hydrateChild)
-    {
-        // Same guard as ArraySynth: updates can replace a Wireable with a
-        // scalar (or __rm__). Previous meta must not loop a non-array
-        if (! is_array($value)) return $value;
-
+    function hydrate($value, $meta, $hydrateChild) {
         // Verify class implements Wireable even though checksum protects this...
         if (! isset($meta['class']) || ! is_a($meta['class'], Wireable::class, true)) {
             throw new \Exception('Livewire: Invalid wireable class.');
