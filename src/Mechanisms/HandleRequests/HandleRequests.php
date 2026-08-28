@@ -18,6 +18,8 @@ class HandleRequests extends Mechanism
 {
     protected $updateRoute;
 
+    protected $shouldPropagateExceptions = false;
+
     function boot()
     {
         // Register the default route immediately (before routes files load)
@@ -135,6 +137,19 @@ class HandleRequests extends Mechanism
         return $route->named('*livewire.update');
     }
 
+    function temporarilyPropagateExceptions($callback)
+    {
+        $cachedShouldPropagateExceptions = $this->shouldPropagateExceptions;
+
+        $this->shouldPropagateExceptions = true;
+
+        try {
+            return $callback();
+        } finally {
+            $this->shouldPropagateExceptions = $cachedShouldPropagateExceptions;
+        }
+    }
+
     function handleUpdate()
     {
         // When a custom update route is registered, reject requests that arrive
@@ -206,7 +221,7 @@ class HandleRequests extends Mechanism
             } catch (\TypeError $e) {
                 report($e);
 
-                if (config('app.debug')) throw $e;
+                if (config('app.debug') || $this->shouldPropagateExceptions) throw $e;
 
                 abort(419);
             }
