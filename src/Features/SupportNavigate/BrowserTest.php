@@ -400,6 +400,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->click('@link.animated')
                 // Prove a transition is genuinely running, rather than merely counting API calls...
                 ->waitUntil("document.documentElement.matches(':active-view-transition')")
+                ->assertScript("document.documentElement.matches(':active-view-transition-type(navigate)')", true)
                 ->assertScript("document.querySelector('[dusk=hero-detail]').style.viewTransitionName", 'hero')
                 // Unnamed markers remain in the root page snapshot...
                 ->assertScript("document.querySelector('[dusk=unnamed-detail]').style.viewTransitionName", '')
@@ -407,6 +408,27 @@ class BrowserTest extends \Tests\BrowserTestCase
                 // Names don't leave permanent stacking contexts behind...
                 ->waitUntil("document.querySelector('[dusk=hero-detail]').style.viewTransitionName === ''")
                 ->assertSee('On second animated page');
+        });
+    }
+
+    public function test_view_transitions_are_skipped_behind_an_open_dialog()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-transition-global')
+                ->tap(fn ($b) => $b->script("
+                    window.__viewTransitionCount = 0;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__viewTransitionCount++;
+                        return orig.apply(document, arguments);
+                    };
+
+                    document.querySelector('[dusk=transition-modal]').showModal();
+                    Livewire.navigate('/second-transition-global');
+                "))
+                ->waitForText('On second transition page')
+                ->assertScript('window.__viewTransitionCount', 0);
         });
     }
 
@@ -1650,6 +1672,8 @@ class FirstTransitionPage extends Component
             <a href="/second-transition" wire:navigate dusk="link.plain">Plain link</a>
             <a href="/second-transition-opt-in" wire:navigate dusk="link.opt-in">Opt-in page</a>
             <a href="/second-transition-global" wire:navigate dusk="link.plain.global">Plain link (global route)</a>
+
+            <dialog dusk="transition-modal">Modal</dialog>
         </div>
         HTML;
     }
@@ -1662,6 +1686,8 @@ class SecondTransitionPage extends Component
         return <<<'HTML'
         <div>
             <div>On second transition page</div>
+
+            <script type="application/json">{"note":"wire:transition.navigate is documentation, not an attribute"}</script>
         </div>
         HTML;
     }

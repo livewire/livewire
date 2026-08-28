@@ -1,6 +1,7 @@
 import { globalDirective } from "@/directives"
 
 let defaultName = 'match-element'
+let assignedTransitionNames = new WeakSet()
 
 // No-op — viewTransitionName is now set dynamically by transitionDomMutation()
 // to avoid creating permanent stacking contexts...
@@ -22,6 +23,7 @@ export function setTransitionNames(root, options = {}) {
         if (! name && options.type) return
 
         el.style.viewTransitionName = name || defaultName
+        assignedTransitionNames.add(el)
     })
 }
 
@@ -29,12 +31,62 @@ export function clearTransitionNames(root, options = {}) {
     let attribute = options.attribute ?? 'wire:transition'
 
     root.querySelectorAll(selectorForAttribute(attribute)).forEach(el => {
+        if (! assignedTransitionNames.has(el)) return
+
         el.style.viewTransitionName = ''
+        assignedTransitionNames.delete(el)
     })
 }
 
 function selectorForAttribute(attribute) {
     return `[${attribute.replace(/[:.]/g, '\\$&')}]`
+}
+
+export function startViewTransition(update, options = {}) {
+    let transitionConfig = { update }
+
+    if (options.type) transitionConfig.types = [options.type]
+
+    try {
+        return document.startViewTransition(transitionConfig)
+    } catch (e) {
+        // Firefox supports the callback form but not typed transitions...
+        return document.startViewTransition(update)
+    }
+}
+
+export function skipTransitionWhenTopLayerOpens(transition) {
+    // Chromium rejects `ready` when skipTransition() is called. Consume that
+    // expected rejection so a deliberate policy skip is not reported as an error...
+    transition.ready.catch(() => {})
+
+    let onBeforeToggle = (event) => {
+        if (event.newState === 'open' && event.target.matches?.('dialog, [popover]')) {
+            transition.skipTransition()
+        }
+    }
+
+    document.addEventListener('beforetoggle', onBeforeToggle, true)
+
+    // Keep the attribute observer as a fallback for browsers that do not emit
+    // beforetoggle when a modal dialog is opened...
+    let observer = new MutationObserver(() => {
+        if (document.querySelector('dialog:modal')) {
+            transition.skipTransition()
+            observer.disconnect()
+        }
+    })
+
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['open'],
+        subtree: true,
+    })
+
+    transition.finished.finally(() => {
+        observer.disconnect()
+        document.removeEventListener('beforetoggle', onBeforeToggle, true)
+    }).catch(() => {})
 }
 
 export async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
@@ -91,71 +143,16 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
         setTransitionNames(fromEl, options)
     }
 
-    let transitionConfig = { update }
-
-    // Add transition types if provided...
-    if (options.type) {
-        transitionConfig.types = [options.type]
-    }
-
     let cleanup = () => {
         style.remove()
         clearTransitionNames(fromEl)
     }
 
-    // Watch for dialogs or popovers opening during the transition (e.g., via Alpine
-    // x-effect or a toast). ::view-transition pseudo-elements paint above the top
-    // layer, so the transition must be skipped before the browser paints a frame...
-    let skipOnTopLayer = (transition) => {
-        // Chromium rejects `ready` when skipTransition() is called. Consume that
-        // expected rejection so a deliberate policy skip is not reported as an error...
-        transition.ready.catch(() => {})
+    let transition = startViewTransition(update, { type: options.type })
 
-        let onBeforeToggle = (event) => {
-            if (event.newState === 'open' && event.target.matches?.('dialog, [popover]')) {
-                transition.skipTransition()
-            }
-        }
+    skipTransitionWhenTopLayerOpens(transition)
 
-        document.addEventListener('beforetoggle', onBeforeToggle, true)
+    transition.finished.finally(cleanup).catch(() => {})
 
-        // Keep the attribute observer as a fallback for browsers that do not emit
-        // beforetoggle when a modal dialog is opened...
-        let observer = new MutationObserver(() => {
-            if (document.querySelector('dialog:modal')) {
-                transition.skipTransition()
-                observer.disconnect()
-            }
-        })
-
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['open'],
-            subtree: true,
-        })
-
-        transition.finished.finally(() => {
-            observer.disconnect()
-            document.removeEventListener('beforetoggle', onBeforeToggle, true)
-        }).catch(() => {})
-    }
-
-    try {
-        let transition = document.startViewTransition(transitionConfig)
-
-        skipOnTopLayer(transition)
-
-        transition.finished.finally(cleanup).catch(() => {})
-
-        await transition.updateCallbackDone
-    } catch (e) {
-        // Firefox 144+ supports View Transitions but only with a callback, not a config object (no transition types support)
-        let transition = document.startViewTransition(update)
-
-        skipOnTopLayer(transition)
-
-        transition.finished.finally(cleanup).catch(() => {})
-
-        await transition.updateCallbackDone
-    }
+    await transition.updateCallbackDone
 }

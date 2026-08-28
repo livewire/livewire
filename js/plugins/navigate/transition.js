@@ -1,4 +1,4 @@
-import { clearTransitionNames, setTransitionNames } from '@/directives/wire-transition'
+import { clearTransitionNames, setTransitionNames, skipTransitionWhenTopLayerOpens, startViewTransition } from '@/directives/wire-transition'
 
 let type = 'navigate'
 let attribute = 'wire:transition.navigate'
@@ -32,14 +32,9 @@ export function transitionPageSwap(html, update) {
         setTransitionNames(document.body, { type, attribute })
     }
 
-    let viewTransition
+    let viewTransition = startViewTransition(updateAndNameNewPage, { type })
 
-    try {
-        viewTransition = document.startViewTransition({ update: updateAndNameNewPage, types: [type] })
-    } catch (e) {
-        // Firefox supports the callback form but not typed transitions...
-        viewTransition = document.startViewTransition(updateAndNameNewPage)
-    }
+    skipTransitionWhenTopLayerOpens(viewTransition)
 
     viewTransition.finished
         .finally(() => clearTransitionNames(document.body, { attribute }))
