@@ -536,6 +536,34 @@ class UnitTest extends TestCase
         $this->assertCount(1, $fragments, 'Expected only one island fragment but got ' . count($fragments));
     }
 
+    public function test_island_render_shares_the_component_with_views()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public function repaint()
+            {
+                $this->renderIsland('probe');
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'probe')
+                        <div>shared: {{ app('view')->shared('__livewire') ? 'yes' : 'no' }}</div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        $component->assertSee('shared: yes');
+
+        $component->call('repaint');
+
+        $fragments = implode('', $component->effects['islandFragments'] ?? []);
+
+        $this->assertStringContainsString('shared: yes', $fragments);
+    }
+
     public function test_island_directive_supports_nested_parentheses_in_expression()
     {
         Livewire::test(new class extends \Livewire\Component {
