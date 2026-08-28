@@ -507,6 +507,22 @@ class UnitTest extends \Tests\TestCase
             $eventBus->listeners['render.placeholder'] ?? [],
         );
     }
+
+    public function test_page_component_falls_back_to_default_layout_when_no_layout_is_captured()
+    {
+        config()->set('livewire.component_layout', 'layouts::panel');
+
+        $layoutConfig = SupportPageComponents::interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration(function () {
+            // Intentionally do nothing – no render / render.placeholder is fired
+        });
+
+        $this->assertNull($layoutConfig);
+
+        // Exact fallback used by HandlesPageComponents::__invoke
+        $fallback = $layoutConfig ?: new PageComponentConfig;
+
+        $this->assertSame('layouts::panel', $fallback->view);
+    }
 }
 
 class ComponentForRouteWithoutMountParametersTest extends Component
