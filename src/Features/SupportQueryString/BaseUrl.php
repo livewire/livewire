@@ -7,6 +7,7 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportFormObjects\Form;
 use ReflectionClass;
 use ReflectionNamedType;
+use ReflectionUnionType;
 
 #[\Attribute]
 class BaseUrl extends LivewireAttribute
@@ -50,14 +51,25 @@ class BaseUrl extends LivewireAttribute
         return false;
     }
 
-    protected function propertyIsTypedAsString()
+    protected function propertySupportsStringValues($value)
     {
+        if (is_string($value)) return true;
+
         $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
+        $propertyName = $this->getSubName() ?? $this->getName();
 
-        if ($this->getSubName() && $reflectionClass->hasProperty($this->getSubName())) {
-            $type = $reflectionClass->getProperty($this->getSubName())->getType();
+        if (! $propertyName || ! $reflectionClass->hasProperty($propertyName)) return false;
 
-            return $type instanceof ReflectionNamedType && $type->getName() === 'string';
+        $type = $reflectionClass->getProperty($propertyName)->getType();
+
+        if ($type instanceof ReflectionNamedType) {
+            return $type->getName() === 'string';
+        }
+
+        if ($type instanceof ReflectionUnionType) {
+            foreach ($type->getTypes() as $type) {
+                if ($type->getName() === 'string') return true;
+            }
         }
 
         return false;
@@ -81,7 +93,7 @@ class BaseUrl extends LivewireAttribute
 
         $original = $this->getValue();
 
-        if (is_string($initialValue) && is_array($decoded) && (is_string($original) || $this->propertyIsTypedAsString())) {
+        if (is_string($initialValue) && is_array($decoded) && $this->propertySupportsStringValues($original)) {
             $decoded = null;
         }
 

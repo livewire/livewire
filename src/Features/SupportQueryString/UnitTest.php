@@ -121,6 +121,18 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame('[123]', $component->instance()->search);
     }
 
+    function test_structured_strings_are_preserved_by_the_public_url_attribute()
+    {
+        $component = Livewire::withQueryParams([
+            'search' => '[123]',
+        ])->test(new class extends TestComponent {
+            #[\Livewire\Attributes\Url]
+            public $search = '';
+        });
+
+        $this->assertSame('[123]', $component->instance()->search);
+    }
+
     function test_structured_strings_are_preserved_for_uninitialized_nullable_string_properties()
     {
         $component = Livewire::withQueryParams([
@@ -131,6 +143,46 @@ class UnitTest extends \Tests\TestCase
         });
 
         $this->assertSame('[123]', $component->instance()->search);
+    }
+
+    function test_structured_strings_are_preserved_for_legacy_query_string_properties()
+    {
+        $component = Livewire::withQueryParams([
+            'search' => '[123]',
+        ])->test(new class extends TestComponent {
+            public ?string $search;
+
+            protected function queryString()
+            {
+                return ['search'];
+            }
+        });
+
+        $this->assertSame('[123]', $component->instance()->search);
+    }
+
+    function test_structured_strings_are_preserved_when_a_union_type_accepts_strings()
+    {
+        $component = Livewire::withQueryParams([
+            'search' => '{"id":123}',
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string|array|null $search;
+        });
+
+        $this->assertSame('{"id":123}', $component->instance()->search);
+    }
+
+    function test_bracketed_query_string_arrays_remain_arrays_when_a_union_type_accepts_them()
+    {
+        $component = Livewire::withQueryParams([
+            'search' => [123],
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public string|array|null $search;
+        });
+
+        $this->assertSame([123], $component->instance()->search);
     }
 
     function test_large_numbers_in_arrays_are_preserved_from_query_string()
