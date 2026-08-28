@@ -217,9 +217,16 @@ trait HandlesIslands
 
         $view->with($data);
 
+        // Blade components and third-party packages detect the Livewire context
+        // through the shared "__livewire" variable, so an island render has to
+        // share it the same way a full component render does...
+        $revertShare = Utils::shareWithViews('__livewire', $this);
+
         $finish = trigger('renderIsland', $this, $name, $view, $properties);
 
         $html = $view->render();
+
+        $revertShare();
 
         $replaceHtml = function ($newHtml) use (&$html) {
             $html = $newHtml;
