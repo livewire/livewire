@@ -19,7 +19,9 @@ class FilePreviewController implements HasMiddleware
     {
         abort_unless(request()->hasValidRelativeSignature(), 401);
 
-        $downloadName = (new TemporaryUploadedFile($filename, FileUploadConfiguration::disk()))->getClientOriginalName();
+        $downloadName = request()->boolean('useOriginalFilename')
+            ? (new TemporaryUploadedFile($filename, FileUploadConfiguration::disk()))->getClientOriginalName()
+            : null;
 
         return Utils::pretendPreviewResponseIsPreviewFile($filename, $downloadName);
     }

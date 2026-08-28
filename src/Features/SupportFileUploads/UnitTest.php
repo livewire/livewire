@@ -552,7 +552,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue($photo->isPreviewable());
     }
 
-    public function test_temporary_preview_uses_the_original_filename_for_downloads()
+    public function test_temporary_preview_uses_the_temporary_filename_for_downloads_by_default()
     {
         Storage::fake('avatars');
 
@@ -563,6 +563,20 @@ class UnitTest extends \Tests\TestCase
         SupportDisablingBackButtonCache::$disableBackButtonCache = false;
 
         $this->get($photo->temporaryUrl())
+            ->assertDownload($photo->getFilename());
+    }
+
+    public function test_temporary_preview_can_use_the_original_filename_for_downloads()
+    {
+        Storage::fake('avatars');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->viewData('photo');
+
+        SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+
+        $this->get($photo->temporaryUrl(useOriginalFilename: true))
             ->assertDownload('avatar.jpg');
     }
 
