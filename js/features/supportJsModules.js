@@ -1,15 +1,18 @@
 import { on } from '@/hooks'
+import { findComponentByEl } from '@/store'
 import { getModuleUrl } from '@/utils'
 import Alpine from 'alpinejs'
 
 let pendingComponentAssets = new WeakMap()
 let pendingComponentCount = 0
 
+// Morph initializes detached clones before swapping them into the document, so
+// carry the pending component's ignore state onto each clone in that subtree.
 Alpine.interceptClone((from, to) => {
     if (pendingComponentCount === 0) return
     if (! from || from.nodeType !== 1) return
 
-    let component = from.closest('[wire\\:id]')?.__livewire
+    let component = findComponentByEl(from, false)
 
     if (component && assetIsPendingFor(component)) {
         to._x_ignore = true
@@ -41,7 +44,7 @@ on('effect', ({ component, effects }) => {
 
         import(/* @vite-ignore */ path).then(module => {
             module.run.call(component.$wire, component.$wire, component.$wire.js)
-
+        }).finally(() => {
             let pendingAsset = pendingComponentAssets.get(component)
 
             pendingAsset.loading = false
