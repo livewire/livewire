@@ -77,6 +77,39 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    function test_persistent_dirty_state_ignores_clean_server_changes()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public $count = 0;
+
+            public function increment() { $this->count++; }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model="title" />
+                        <button dusk="unrelated" type="button" wire:click="increment">{{ $count }}</button>
+
+                        <div dusk="dirty" wire:dirty.persist>Unsaved changes...</div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertNotVisible('@dirty')
+            ->waitForLivewire()->click('@unrelated')
+            ->assertNotVisible('@dirty')
+            ->type('@input', 'Hello')
+            ->pause(50)
+            ->assertVisible('@dirty')
+            ->waitForLivewire()->click('@unrelated')
+            ->pause(50)
+            ->assertVisible('@dirty')
+        ;
+    }
+
     function test_can_use_dollar_dirty_to_check_if_component_is_dirty()
     {
         Livewire::visit(new class extends Component {

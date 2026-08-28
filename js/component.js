@@ -3,6 +3,7 @@ import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
 import { setNextActionOrigin } from '@/request'
+import { mergeCleanState } from '@/utils/mergeCleanState'
 
 export class Component {
     constructor(el) {
@@ -86,6 +87,9 @@ export class Component {
         let newCanonical = extractData(deepClone(snapshot.data))
 
         let dirty = diff(updatedOldCanonical, newCanonical)
+
+        this.baseline = mergeCleanState(this.baseline, this.reactive, newCanonical)
+        this.baselineVersion.value++
 
         this.snapshotEncoded = snapshotEncoded
 
