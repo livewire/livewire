@@ -37,6 +37,46 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    function test_wire_dirty_can_persist_across_messages_until_marked_as_clean()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public $count = 0;
+
+            public function increment() { $this->count++; }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model="title" />
+                        <button dusk="unrelated" type="button" wire:click="increment">{{ $count }}</button>
+                        <button dusk="clean" type="button" x-on:click="$wire.$markAsClean()">Mark clean</button>
+
+                        <div dusk="dirty" wire:dirty.persist wire:target="title">Unsaved changes...</div>
+                        <div dusk="expression" x-show="$wire.$dirty('title', { persist: true })">Expression is dirty...</div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertNotVisible('@dirty')
+            ->assertNotVisible('@expression')
+            ->type('@input', 'Hello')
+            ->pause(50)
+            ->assertVisible('@dirty')
+            ->assertVisible('@expression')
+            ->waitForLivewire()->click('@unrelated')
+            ->pause(50)
+            ->assertVisible('@dirty')
+            ->assertVisible('@expression')
+            ->click('@clean')
+            ->pause(50)
+            ->assertNotVisible('@dirty')
+            ->assertNotVisible('@expression')
+        ;
+    }
+
     function test_can_use_dollar_dirty_to_check_if_component_is_dirty()
     {
         Livewire::visit(new class extends Component {

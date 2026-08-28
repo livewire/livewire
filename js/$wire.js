@@ -37,6 +37,7 @@ let aliases = {
     'hook': '$hook',
     'watch': '$watch',
     'dirty': '$dirty',
+    'markAsClean': '$markAsClean',
     'effect': '$effect',
     'commit': '$commit',
     'errors': '$errors',
@@ -222,22 +223,27 @@ wireProperty('$refs', (component) => {
     })
 })
 
-wireProperty('$dirty', (component) => (property) => {
+wireProperty('$dirty', (component) => (property, options = {}) => {
+    let persist = options.persist ?? false
     let reactive = Alpine.reactive({ dirty: false })
+
+    let refresh = () => {
+        reactive.dirty = checkDirty(component, property, persist)
+    }
 
     interceptComponentMessage(component, ({ onFinish }) => {
         onFinish(() => {
-            queueMicrotask(() => {
-                reactive.dirty = checkDirty(component, property)
-            })
+            queueMicrotask(refresh)
         })
     })
 
-    Alpine.effect(() => {
-        reactive.dirty = checkDirty(component, property)
-    })
+    Alpine.effect(refresh)
 
     return reactive.dirty
+})
+
+wireProperty('$markAsClean', (component) => () => {
+    component.markAsClean()
 })
 
 wireProperty('$intercept', (component) => (actionNameOrCallback, maybeCallback) => {

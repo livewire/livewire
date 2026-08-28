@@ -8,13 +8,14 @@ let refreshDirtyStatesByComponent = new WeakBag
 on('commit', ({ component, succeed }) => {
     succeed(() => {
         setTimeout(() => { // Doing a "setTimeout" to let morphdom do its thing first...
-            refreshDirtyStatesByComponent.each(component, i => i(false))
+            refreshDirtyStatesByComponent.each(component, recompute => recompute(true))
         })
     })
 })
 
 directive('dirty', ({ el, directive, component }) => {
     let targets = dirtyTargets(el)
+    let persist = directive.modifiers.includes('persist')
 
     let oldIsDirty = false
 
@@ -26,36 +27,43 @@ directive('dirty', ({ el, directive, component }) => {
         oldIsDirty = isDirty
     }
 
-    refreshDirtyStatesByComponent.add(component, refreshDirtyState)
+    let recompute = (force = false) => {
+        let isDirty = checkDirty(component, targets.length === 0 ? undefined : targets, persist)
 
-    Alpine.effect(() => {
-        let isDirty = false
-
-        isDirty = checkDirty(component, targets.length === 0 ? undefined : targets)
-
-        if (oldIsDirty !== isDirty) {
+        if (force || oldIsDirty !== isDirty) {
             refreshDirtyState(isDirty)
         }
 
         oldIsDirty = isDirty
-    })
+    }
+
+    refreshDirtyStatesByComponent.add(component, recompute)
+
+    Alpine.effect(() => recompute())
 })
 
-export function checkDirty(component, targets) {
+export function checkDirty(component, targets, persist = false) {
     let isDirty = false
+    let reference = component.canonical
+
+    if (persist) {
+        component.baselineVersion.value
+
+        reference = component.baseline
+    }
 
     if (targets === undefined) {
-        isDirty = JSON.stringify(component.canonical) !== JSON.stringify(component.reactive)
+        isDirty = JSON.stringify(reference) !== JSON.stringify(component.reactive)
     } else if (Array.isArray(targets)) {
         for (let i = 0; i < targets.length; i++) {
             if (isDirty) break;
 
             let target = targets[i]
 
-            isDirty = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target))
+            isDirty = JSON.stringify(dataGet(reference, target)) !== JSON.stringify(dataGet(component.reactive, target))
         }
     } else {
-        isDirty = JSON.stringify(dataGet(component.canonical, targets)) !== JSON.stringify(dataGet(component.reactive, targets))
+        isDirty = JSON.stringify(dataGet(reference, targets)) !== JSON.stringify(dataGet(component.reactive, targets))
     }
 
     return isDirty

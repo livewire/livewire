@@ -136,7 +136,7 @@ class FrontendAssets extends Mechanism
                 display: none;
             }
 
-            [wire\:dirty]:not(textarea):not(input):not(select) {
+            [wire\:dirty]:not(textarea):not(input):not(select), [wire\:dirty\.persist]:not(textarea):not(input):not(select) {
                 display: none;
             }
 

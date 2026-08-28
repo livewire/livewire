@@ -33,6 +33,9 @@ export class Component {
 
         // "canonical" data represents the last known server state.
         this.canonical = extractData(deepClone(this.snapshot.data))
+        // "baseline" data represents the last state marked as clean.
+        this.baseline = extractData(deepClone(this.snapshot.data))
+        this.baselineVersion = Alpine.reactive({ value: 0 })
         // "ephemeral" represents the most current state. (This can be freely manipulated by end users)
         this.ephemeral = extractData(deepClone(this.snapshot.data))
         // "reactive" is just ephemeral, except when you mutate it, front-ends like Vue react.
@@ -66,6 +69,12 @@ export class Component {
 
     intercept(action, callback = null) {
         return this.$wire.$intercept(action, callback)
+    }
+
+    markAsClean(state = this.reactive) {
+        this.baseline = deepClone(state)
+
+        this.baselineVersion.value++
     }
 
     mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
