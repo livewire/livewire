@@ -60,6 +60,13 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertConsoleLogHasNoErrors();
     }
 
+    public function test_alpine_data_is_available_when_a_lazy_component_hydrates()
+    {
+        Livewire::visit('testns::lazy-with-alpine-data')
+            ->waitForTextIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
     public function test_script_module_survives_a_back_navigation()
     {
         // The `scriptModule` effect is only sent while mounting, so navigating
