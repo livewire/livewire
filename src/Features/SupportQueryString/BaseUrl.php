@@ -6,6 +6,7 @@ use Illuminate\Support\Arr;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportFormObjects\Form;
 use ReflectionClass;
+use ReflectionNamedType;
 
 #[\Attribute]
 class BaseUrl extends LivewireAttribute
@@ -49,6 +50,19 @@ class BaseUrl extends LivewireAttribute
         return false;
     }
 
+    protected function propertyIsTypedAsString()
+    {
+        $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
+
+        if ($this->getSubName() && $reflectionClass->hasProperty($this->getSubName())) {
+            $type = $reflectionClass->getProperty($this->getSubName())->getType();
+
+            return $type instanceof ReflectionNamedType && $type->getName() === 'string';
+        }
+
+        return false;
+    }
+
     public function setPropertyFromQueryString()
     {
         if ($this->as === null && $this->isOnFormObjectProperty()) {
@@ -65,13 +79,15 @@ class BaseUrl extends LivewireAttribute
             ? json_decode(json_encode($initialValue, flags: JSON_BIGINT_AS_STRING), true, flags: JSON_BIGINT_AS_STRING)
             : json_decode($initialValue ?? '', true, flags: JSON_BIGINT_AS_STRING);
 
-        if (is_string($initialValue) && is_array($decoded) && is_string($this->getValue())) {
+        $original = $this->getValue();
+
+        if (is_string($initialValue) && is_array($decoded) && (is_string($original) || $this->propertyIsTypedAsString())) {
             $decoded = null;
         }
 
         // If only part of an array is present in the query string,
         // we want to merge instead of override the value...
-        if (is_array($decoded) && is_array($original = $this->getValue())) {
+        if (is_array($decoded) && is_array($original)) {
             $decoded = $this->recursivelyMergeArraysWithoutAppendingDuplicateValues($original, $decoded);
         }
 

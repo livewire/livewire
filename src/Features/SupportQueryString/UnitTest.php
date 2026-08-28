@@ -121,6 +121,18 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame('[123]', $component->instance()->search);
     }
 
+    function test_structured_strings_are_preserved_for_uninitialized_nullable_string_properties()
+    {
+        $component = Livewire::withQueryParams([
+            'search' => '[123]',
+        ])->test(new class extends TestComponent {
+            #[BaseUrl]
+            public ?string $search;
+        });
+
+        $this->assertSame('[123]', $component->instance()->search);
+    }
+
     function test_large_numbers_in_arrays_are_preserved_from_query_string()
     {
         $largeNumber = '74350194073086909398128';
