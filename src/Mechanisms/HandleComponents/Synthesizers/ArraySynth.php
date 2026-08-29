@@ -2,7 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
-class ArraySynth extends Synth {
+class ArraySynth extends Synth implements ArrayShapedSynth {
     public static $key = 'arr';
 
     static function match($target) {
@@ -18,10 +18,7 @@ class ArraySynth extends Synth {
     }
 
     function hydrate($value, $meta, $hydrateChild) {
-        // If we are "hydrating" a value about to be used in an update,
-        // Let's make sure it's actually an array before try to set it.
-        // This is most common in the case of "__rm__" values, but also
-        // applies to any non-array value...
+        // Keep direct callers from attempting to iterate a non-array value.
         if (! is_array($value)) {
             return $value;
         }

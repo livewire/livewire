@@ -8,6 +8,7 @@ use Livewire\Attributes\Validate;
 use Livewire\Form;
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\CollectionSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Selection;
@@ -136,6 +137,28 @@ class UnitTest extends \Tests\TestCase
         $synths->hydratePropertyUpdate($tuple, $context, 'evil');
     }
 
+    public function test_hydrate_property_update_validates_classes_before_skipping_array_shaped_synths()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('is not allowed to be instantiated');
+
+        $synths->hydratePropertyUpdate([
+            1,
+            ['s' => 'arr', 'class' => \Symfony\Component\Process\Process::class],
+        ], $context, 'evil');
+    }
+
+    /*
+     * An update sends values without synthesizer meta — the browser strips
+     * it. When the updated path sits ABOVE a synthesized value (updating
+     * `data.section` when `data.section.row.tags` is a collection), the
+     * nested values can only be reconstructed from the meta in the previous,
+     * checksum-verified snapshot. See hydratePropertyUpdate().
+     */
+
     public function test_hydrate_for_update_recursively_hydrates_nested_synthetic_values()
     {
         $synths = app(HandleSynths::class);
@@ -168,6 +191,113 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertInstanceOf(Collection::class, $updated['tags']);
         $this->assertSame(['some' => 'array'], $updated['brandNew']);
+    }
+
+    public function test_hydrate_for_update_leaves_collection_children_replaced_with_scalars_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['tags' => collect(['a']), 'other' => collect(['b'])],
+        ], $context, 'data')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'tags' => 1,
+            'other' => ['b'],
+        ], $context);
+
+        $this->assertSame(1, $updated['tags']);
+        $this->assertInstanceOf(Collection::class, $updated['other']);
+    }
+
+    public function test_hydrate_for_update_leaves_stdclass_children_replaced_with_scalars_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => [
+                'item' => (object) ['name' => 'a'],
+                'other' => (object) ['name' => 'b'],
+            ],
+        ], $context, 'data')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'item' => 1,
+            'other' => ['name' => 'b'],
+        ], $context);
+
+        $this->assertSame(1, $updated['item']);
+        $this->assertInstanceOf(\stdClass::class, $updated['other']);
+        $this->assertSame('b', $updated['other']->name);
+    }
+
+    public function test_hydrate_for_update_leaves_top_level_array_shaped_values_replaced_with_scalars_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $collection = ['item' => $synths->dehydrate(collect(['a']), $context, 'item')];
+        $stdClass = ['item' => $synths->dehydrate((object) ['name' => 'a'], $context, 'item')];
+
+        $this->assertSame(1, $synths->hydrateForUpdate($collection, 'item', 1, $context));
+        $this->assertSame(1, $synths->hydrateForUpdate($stdClass, 'item', 1, $context));
+        $this->assertNull($synths->hydrateForUpdate($collection, 'item', null, $context));
+    }
+
+    public function test_hydrate_for_update_still_applies_scalar_shaped_synths()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['date' => $synths->dehydrate(Carbon::parse('2026-01-01'), $context, 'date')];
+        $updated = $synths->hydrateForUpdate($raw, 'date', '2026-08-29T12:00:00+00:00', $context);
+
+        $this->assertInstanceOf(Carbon::class, $updated);
+        $this->assertSame('2026-08-29T12:00:00+00:00', $updated->format(\DateTimeInterface::ATOM));
+    }
+
+    public function test_userland_array_shaped_synths_can_allow_scalar_replacements()
+    {
+        $synths = app(HandleSynths::class);
+        $synths->registerSynth(CustomThingSynth::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['thing' => $synths->dehydrate(new CustomThing('original'), $context, 'thing')];
+
+        $this->assertSame(1, $synths->hydrateForUpdate($raw, 'thing', 1, $context));
+    }
+
+    public function test_unmarked_userland_synths_keep_hydrating_non_array_updates()
+    {
+        $synths = app(HandleSynths::class);
+        $synths->registerSynth(ScalarFriendlyThingSynth::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['thing' => $synths->dehydrate(new ScalarFriendlyThing('original'), $context, 'thing')];
+        $updated = $synths->hydrateForUpdate($raw, 'thing', 1, $context);
+
+        $this->assertInstanceOf(ScalarFriendlyThing::class, $updated);
+        $this->assertSame(1, $updated->value);
+    }
+
+    public function test_hydrate_for_update_passes_nested_removals_through_untouched()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['tags' => collect(['a']), 'other' => collect(['b'])],
+        ], $context, 'data')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'tags' => '__rm__',
+            'other' => ['b'],
+        ], $context);
+
+        $this->assertSame('__rm__', $updated['tags']);
+        $this->assertInstanceOf(Collection::class, $updated['other']);
     }
 
     public function test_hydrate_for_update_leaves_already_hydrated_children_alone()
@@ -282,7 +412,7 @@ class CustomThing
     public function __construct(public string $value = 'default') {}
 }
 
-class CustomThingSynth extends Synth
+class CustomThingSynth extends Synth implements ArrayShapedSynth
 {
     public static $key = 'custom-thing';
 
@@ -299,5 +429,30 @@ class CustomThingSynth extends Synth
     public function hydrate($value)
     {
         return new CustomThing($value['value']);
+    }
+}
+
+class ScalarFriendlyThing
+{
+    public function __construct(public mixed $value) {}
+}
+
+class ScalarFriendlyThingSynth extends Synth
+{
+    public static $key = 'scalar-friendly-thing';
+
+    public static function match($target)
+    {
+        return $target instanceof ScalarFriendlyThing;
+    }
+
+    public function dehydrate($target)
+    {
+        return [['value' => $target->value], []];
+    }
+
+    public function hydrate($value)
+    {
+        return new ScalarFriendlyThing($value);
     }
 }

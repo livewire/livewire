@@ -4,11 +4,12 @@ namespace Livewire\Features\SupportLegacyModels;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\ClassMorphViolationException;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-class EloquentModelSynth extends Synth
+class EloquentModelSynth extends Synth implements ArrayShapedSynth
 {
     public static $key = 'elmdl';
 
