@@ -2,15 +2,19 @@
 
 namespace Livewire\Features\SupportSession;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Session as FacadesSession;
 use Livewire\Attributes\Session;
 use Livewire\Component;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+use Livewire\Mechanisms\HandleSynths\HandleSynths;
 use Livewire\Mechanisms\HandleSynths\PersistedValueCodec;
 use Tests\TestCase;
 use Livewire\Livewire;
 use Tests\TestComponent;
+use Sushi\Sushi;
 
 class UnitTest extends TestCase
 {
@@ -87,6 +91,38 @@ class UnitTest extends TestCase
                 && $nested['when']->equalTo($date));
     }
 
+    public function test_custom_synthesized_properties_survive_json_session_serialization()
+    {
+        config(['session.serialization' => 'json']);
+
+        app('session')->forgetDrivers();
+        app(HandleSynths::class)->registerSynth(CustomSessionValueSynth::class);
+
+        Livewire::test(ComponentWithCustomSynthesizedSessionProperty::class);
+
+        session()->save();
+        session()->start();
+
+        Livewire::test(ComponentWithCustomSynthesizedSessionProperty::class)
+            ->assertSet('value', fn ($value) => $value instanceof CustomSessionValue && $value->value === 'persisted');
+    }
+
+    public function test_model_properties_survive_json_session_serialization()
+    {
+        config(['session.serialization' => 'json']);
+
+        app('session')->forgetDrivers();
+
+        Livewire::test(ComponentWithSessionModel::class)
+            ->assertSet('article', fn ($article) => $article instanceof SessionArticle && $article->title === 'First');
+
+        session()->save();
+        session()->start();
+
+        Livewire::test(ComponentWithSessionModel::class)
+            ->assertSet('article', fn ($article) => $article instanceof SessionArticle && $article->title === 'First');
+    }
+
     public function test_php_sessions_continue_to_store_values_raw()
     {
         config(['session.serialization' => 'php']);
@@ -112,6 +148,7 @@ class UnitTest extends TestCase
             ->set('count', 1);
 
         $this->assertSame(1, session('primitive'));
+        $this->assertSame(['search' => '', 'tags' => [1, 2]], session('json-native'));
     }
 
     public function test_legacy_tuple_shaped_arrays_are_not_treated_as_synthetic_values()
@@ -295,10 +332,79 @@ class ComponentWithSynthesizedSessionProperties extends Component
     }
 }
 
+class ComponentWithCustomSynthesizedSessionProperty extends Component
+{
+    #[Session]
+    public ?CustomSessionValue $value = null;
+
+    public function mount()
+    {
+        $this->value ??= new CustomSessionValue('persisted');
+    }
+
+    public function render()
+    {
+        return '<div></div>';
+    }
+}
+
+class ComponentWithSessionModel extends Component
+{
+    #[Session(key: 'article')]
+    public ?SessionArticle $article = null;
+
+    public function mount()
+    {
+        $this->article ??= SessionArticle::first();
+    }
+
+    public function render()
+    {
+        return '<div></div>';
+    }
+}
+
+class SessionArticle extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['title' => 'First'],
+    ];
+}
+
+class CustomSessionValue
+{
+    public function __construct(public string $value) {}
+}
+
+class CustomSessionValueSynth extends Synth
+{
+    public static $key = 'session-value';
+
+    public static function match($target)
+    {
+        return $target instanceof CustomSessionValue;
+    }
+
+    public function dehydrate($target)
+    {
+        return [$target->value, []];
+    }
+
+    public function hydrate($value)
+    {
+        return new CustomSessionValue($value);
+    }
+}
+
 class ComponentWithPrimitiveSessionProperty extends Component
 {
     #[Session(key: 'primitive')]
     public int $count = 0;
+
+    #[Session(key: 'json-native')]
+    public array $filters = ['search' => '', 'tags' => [1, 2]];
 
     public function render()
     {
