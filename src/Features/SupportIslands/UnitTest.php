@@ -605,4 +605,51 @@ class UnitTest extends TestCase
 
         File::deleteDirectory($compiledPath);
     }
+
+    public function test_island_keeps_its_token_when_a_directive_above_it_has_an_unbalanced_expression()
+    {
+        $compiledPath = sys_get_temp_dir() . '/laravel-island-offset-' . uniqid();
+
+        config()->set('view.compiled', $compiledPath);
+        app()->forgetInstance('livewire.compiler');
+        app()->forgetInstance('livewire.factory');
+
+        // Blade's directive regex is non-greedy, so the second condition below first matches
+        // as `@if (auth()` - unbalanced. Resolving that used to rebuild the match out of the
+        // first identical prefix in the template (the condition above it), which pushed the
+        // compiler's search offset past the @island and dropped its replacement silently...
+        $compiled = IslandCompiler::compile(__FILE__, <<<'HTML'
+        <div>
+            @if (auth()->check())
+                first
+            @endif
+
+            @if (auth()->check() && request()->isMethod('get'))
+                second
+            @endif
+
+            @island(name: 'counter')
+                <div>count: {{ $count }}</div>
+            @endisland
+
+            @if (auth()->check())
+                third
+            @endif
+        </div>
+        HTML);
+
+        $token = app('livewire.compiler')->cacheManager->getHash(__FILE__) . '-1';
+
+        $this->assertStringContainsString("token: '{$token}'", $compiled);
+        $this->assertFileExists(IslandCompiler::getCachedPathFromToken($token));
+
+        // A dropped @island leaves its closing marker behind, because the failed lookup
+        // resets the offset and the @endisland is then found again...
+        $this->assertStringNotContainsString('[ENDISLAND', $compiled);
+
+        // Foreign directives come back exactly as they went in...
+        $this->assertStringContainsString("@if (auth()->check() && request()->isMethod('get'))", $compiled);
+
+        File::deleteDirectory($compiledPath);
+    }
 }

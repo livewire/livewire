@@ -57,6 +57,8 @@ class IslandCompiler
 
         $result = $compiler->compileStatementsMadePublic($contents);
 
+        $result = $this->restoreSetAsideDirectives($result, $compiler->setAsideDirectives);
+
         $result = $this->restoreBladeComments($result, $comments);
 
         for ($i=$maxNestingLevel; $i >= $currentNestingLevel; $i--) {
@@ -203,6 +205,20 @@ PHP;
         return [$contents, $comments];
     }
 
+    /**
+     * @param  array<int, string>  $directives
+     */
+    protected function restoreSetAsideDirectives(string $contents, array $directives): string
+    {
+        if ($directives === []) {
+            return $contents;
+        }
+
+        return preg_replace_callback('/\[BLADE_DIRECTIVE:(\d+)\]/', function ($match) use ($directives) {
+            return $directives[(int) $match[1]];
+        }, $contents);
+    }
+
     protected function restoreBladeComments(string $contents, array $comments): string
     {
         return preg_replace_callback('/\[BLADE_COMMENT:(\d+)\]/', function ($match) use ($comments) {
@@ -217,11 +233,39 @@ PHP;
             rtrim(config('view.compiled'), '/\\') . '/livewire',
         ) extends \Illuminate\View\Compilers\BladeCompiler {
             /**
+             * Foreign directives, keyed by the placeholder standing in for them.
+             *
+             * @var array<int, string>
+             */
+            public $setAsideDirectives = [];
+
+            /**
              * Make this method public...
              */
             public function compileStatementsMadePublic($template)
             {
                 return $this->compileStatements($template);
+            }
+
+            /**
+             * Swap a foreign directive for a placeholder instead of returning it unchanged.
+             *
+             * compileStatements() locates every directive by text, with a search offset that
+             * only moves forward - which assumes a replacement consumes the source it matched.
+             * Handing a directive back untouched breaks that assumption: its text stays in the
+             * template, and the paren-balancing loop (which resolves an unbalanced match with
+             * Str::after(), searching from position 0) can rebuild a later directive out of an
+             * earlier, identical prefix. The offset then jumps past directives that follow, or
+             * lands on text that no longer exists ahead of it, and replaceFirstStatement()
+             * silently drops their compiled output. An @island caught by that keeps a bare
+             * `@island(...)` with no token, so every render throws from
+             * getCachedPathFromToken(). A unique placeholder keeps the invariant intact...
+             */
+            protected function setAside($directive)
+            {
+                $this->setAsideDirectives[] = $directive;
+
+                return '[BLADE_DIRECTIVE:' . (count($this->setAsideDirectives) - 1) . ']';
             }
 
             /**
@@ -238,10 +282,9 @@ PHP;
                     // Don't process through built-in directive methods...
                     // $match[0] = $this->$method(Arr::get($match, 3));
 
-                    // Just return the original match...
-                    return $match[0];
+                    return $this->setAside($match[0]);
                 } else {
-                    return $match[0];
+                    return $this->setAside($match[0]);
                 }
 
                 return isset($match[3]) ? $match[0] : $match[0].$match[2];
