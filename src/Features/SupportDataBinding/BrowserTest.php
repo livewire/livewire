@@ -36,6 +36,39 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    function test_wire_dirty_keeps_tracking_every_target_after_a_commit()
+    {
+        Livewire::visit(new class extends Component {
+            public $first = false;
+
+            public $second = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="first" type="checkbox" wire:model="first" />
+                        <input dusk="second" type="text" wire:model="second" />
+
+                        <button dusk="commit" type="button" wire:click="$commit">Commit</button>
+
+                        <div dusk="dirty" wire:dirty.class="dirty" wire:target="first, second"></div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertAttributeDoesntContain('@dirty', 'class', 'dirty')
+            ->check('@first')
+            ->pause(50)
+            ->assertAttributeContains('@dirty', 'class', 'dirty')
+            ->waitForLivewire()->click('@commit')
+            ->waitUntil("!document.querySelector('[dusk=\"dirty\"]').classList.contains('dirty')")
+            ->type('@second', 'Later target')
+            ->pause(50)
+            ->assertAttributeContains('@dirty', 'class', 'dirty')
+        ;
+    }
+
     function test_can_update_bound_value_from_lifecyle_hook()
     {
         Livewire::visit(new class extends Component {
