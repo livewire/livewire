@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportSession;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Session as FacadesSession;
 use Livewire\Attributes\Session;
@@ -61,6 +62,29 @@ class UnitTest extends TestCase
         Livewire::test(ComponentWithSessionCollection::class)
             ->assertSet('list', fn ($list) => $list instanceof Collection && $list->all() === [1]);
     }
+
+    public function test_synthesized_properties_survive_json_session_serialization()
+    {
+        config(['session.serialization' => 'json']);
+
+        app('session')->forgetDrivers();
+
+        $date = Carbon::parse('2026-01-15 10:00:00');
+
+        Livewire::test(ComponentWithSynthesizedSessionProperties::class)
+            ->set('when', $date)
+            ->set('nested', ['list' => collect([1, 2]), 'when' => $date]);
+
+        session()->save();
+        session()->start();
+
+        Livewire::test(ComponentWithSynthesizedSessionProperties::class)
+            ->assertSet('when', fn ($when) => $when instanceof Carbon && $when->equalTo($date))
+            ->assertSet('nested', fn ($nested) => $nested['list'] instanceof Collection
+                && $nested['list']->all() === [1, 2]
+                && $nested['when'] instanceof Carbon
+                && $nested['when']->equalTo($date));
+    }
 }
 
 class ComponentWithSessionCollection extends Component
@@ -81,5 +105,19 @@ class ComponentWithSessionCollection extends Component
     public function render()
     {
         return '<div>{{ $list->implode(", ") }}</div>';
+    }
+}
+
+class ComponentWithSynthesizedSessionProperties extends Component
+{
+    #[Session]
+    public ?Carbon $when = null;
+
+    #[Session]
+    public array $nested = [];
+
+    public function render()
+    {
+        return '<div></div>';
     }
 }
