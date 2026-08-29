@@ -3,10 +3,11 @@
 namespace Livewire\Features\SupportLegacyModels;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use LogicException;
 
-class EloquentCollectionSynth extends Synth
+class EloquentCollectionSynth extends Synth implements ArrayShapedSynth
 {
     public static $key = 'elcl';
 

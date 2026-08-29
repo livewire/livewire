@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -56,6 +57,26 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(PostComponent::class);
         $this->assertEquals('Livewire\Features\SupportLegacyModels\Tests\Post', $component->snapshot['data']['post'][1]['class']);
+    }
+
+    public function test_legacy_models_and_collections_can_be_replaced_with_scalars_during_an_update()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public $model;
+            public $models;
+
+            public function mount()
+            {
+                $this->model = new Post;
+                $this->models = new EloquentCollection([new Post]);
+            }
+        });
+
+        $component->set('model', 1);
+        $component->set('models', 2);
+
+        $this->assertSame(1, $component->get('model'));
+        $this->assertSame(2, $component->get('models'));
     }
 
     public function test_it_uses_class_name_if_laravels_morph_map_not_available_when_hydrating()
