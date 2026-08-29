@@ -48,11 +48,11 @@ export function checkDirty(component, targets) {
         isDirty = ! deeplyEqual(component.canonical, component.reactive)
     } else if (Array.isArray(targets)) {
         for (let i = 0; i < targets.length; i++) {
-            if (isDirty) break;
-
             let target = targets[i]
 
-            isDirty = ! deeplyEqual(dataGet(component.canonical, target), dataGet(component.reactive, target))
+            if (! deeplyEqual(dataGet(component.canonical, target), dataGet(component.reactive, target))) {
+                isDirty = true
+            }
         }
     } else {
         isDirty = ! deeplyEqual(dataGet(component.canonical, targets), dataGet(component.reactive, targets))
