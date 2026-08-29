@@ -59,6 +59,31 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForText('43')
         ->assertSee('43');
     }
+
+    public function test_a_wireable_can_be_replaced_with_a_scalar()
+    {
+        Livewire::visit(new class () extends \Livewire\Component {
+            public array $items = [];
+
+            public function mount(): void
+            {
+                $this->items = [new Person('Jæja', 42)];
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <button type="button" x-on:click="$wire.set('items', [1])" dusk="replace">Replace</button>
+                    <span>{{ json_encode($items) }}</span>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSee('42')
+        ->waitForLivewire()->click('@replace')
+        ->assertSee('[1]');
+    }
 }
 
 class Person implements Wireable

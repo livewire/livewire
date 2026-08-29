@@ -259,6 +259,6 @@ class AddressSynth extends Synth implements ArrayShapedSynth
 }
 ```
 
-This tells Livewire not to run your synthesizer when an update replaces the previous value with a scalar, `null`, or a removal marker. Instead, Livewire treats the incoming value as the replacement.
+This tells Livewire not to run your synthesizer when a top-level or nested update replaces the previous value with any non-array value. Instead, Livewire treats the incoming value as the replacement. Array updates continue through your synthesizer as usual.
 
-Only implement this interface when your synthesizer's `hydrate()` method requires an array. Synthesizers that hydrate scalar values, such as dates, enums, integers, floats, or strings, should not implement it.
+Only implement this interface when your synthesizer's `hydrate()` method requires an array. Synthesizers that hydrate scalar values, such as dates, enums, integers, floats, or strings, should not implement it. Without the interface, Livewire continues applying the previous synthesizer metadata to non-array updates for backwards compatibility.

@@ -1070,21 +1070,18 @@ class UnitTest extends \Tests\TestCase
         $synth->hydrate(['title' => 'test'], ['class' => \stdClass::class], fn($k, $v) => $v);
     }
 
-    function test_form_object_synth_allows_a_scalar_replacement_during_an_update()
+    function test_an_untyped_form_object_property_can_be_replaced_with_a_scalar_during_an_update()
     {
-        $component = Livewire::test(new class extends TestComponent {
-            public PostFormStub $form;
-        });
+        Livewire::test(new class extends TestComponent {
+            public $form;
 
-        $synths = app(\Livewire\Mechanisms\HandleSynths\HandleSynths::class);
-        $context = new \Livewire\Mechanisms\HandleComponents\ComponentContext($component->instance());
-
-        $this->assertSame(1, $synths->hydrateForUpdate(
-            $component->snapshot['data'],
-            'form',
-            1,
-            $context,
-        ));
+            public function mount()
+            {
+                $this->form = new PostFormStub($this, 'form');
+            }
+        })
+            ->set('form', 1)
+            ->assertSetStrict('form', 1);
     }
 
     public function test_can_fill_a_form_object_from_eloquent_model_with_enum_cast()

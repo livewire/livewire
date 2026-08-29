@@ -247,7 +247,6 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(1, $synths->hydrateForUpdate($collection, 'item', 1, $context));
         $this->assertSame(1, $synths->hydrateForUpdate($stdClass, 'item', 1, $context));
         $this->assertNull($synths->hydrateForUpdate($collection, 'item', null, $context));
-        $this->assertSame('__rm__', $synths->hydrateForUpdate($collection, 'item', '__rm__', $context));
     }
 
     public function test_hydrate_for_update_still_applies_scalar_shaped_synths()
@@ -271,6 +270,19 @@ class UnitTest extends \Tests\TestCase
         $raw = ['thing' => $synths->dehydrate(new CustomThing('original'), $context, 'thing')];
 
         $this->assertSame(1, $synths->hydrateForUpdate($raw, 'thing', 1, $context));
+    }
+
+    public function test_unmarked_userland_synths_keep_hydrating_non_array_updates()
+    {
+        $synths = app(HandleSynths::class);
+        $synths->registerSynth(ScalarFriendlyThingSynth::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['thing' => $synths->dehydrate(new ScalarFriendlyThing('original'), $context, 'thing')];
+        $updated = $synths->hydrateForUpdate($raw, 'thing', 1, $context);
+
+        $this->assertInstanceOf(ScalarFriendlyThing::class, $updated);
+        $this->assertSame(1, $updated->value);
     }
 
     public function test_hydrate_for_update_passes_nested_removals_through_untouched()
@@ -406,5 +418,30 @@ class CustomThingSynth extends Synth implements ArrayShapedSynth
     public function hydrate($value)
     {
         return new CustomThing($value['value']);
+    }
+}
+
+class ScalarFriendlyThing
+{
+    public function __construct(public mixed $value) {}
+}
+
+class ScalarFriendlyThingSynth extends Synth
+{
+    public static $key = 'scalar-friendly-thing';
+
+    public static function match($target)
+    {
+        return $target instanceof ScalarFriendlyThing;
+    }
+
+    public function dehydrate($target)
+    {
+        return [['value' => $target->value], []];
+    }
+
+    public function hydrate($value)
+    {
+        return new ScalarFriendlyThing($value);
     }
 }
