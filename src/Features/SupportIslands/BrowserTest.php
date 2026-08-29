@@ -71,11 +71,14 @@ class BrowserTest extends BrowserTestCase
                     @if (auth()->check())
                         third
                     @endif
+
+                    <div dusk="literal">[LIVEWIRE_DIRECTIVE_AT]</div>
                 </div>
                 HTML;
             }
         }])
             ->assertSeeIn('@island', 'Count: 0')
+            ->assertSeeIn('@literal', '[LIVEWIRE_DIRECTIVE_AT]')
             ;
     }
 

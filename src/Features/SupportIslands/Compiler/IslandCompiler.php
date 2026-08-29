@@ -57,7 +57,7 @@ class IslandCompiler
 
         $result = $compiler->compileStatementsMadePublic($contents);
 
-        $result = str_replace('[LIVEWIRE_DIRECTIVE_AT]', '@', $result);
+        $result = $this->restoreSetAsideDirectives($result, $compiler->setAsideDirectives);
 
         $result = $this->restoreBladeComments($result, $comments);
 
@@ -212,18 +212,34 @@ PHP;
         }, $contents);
     }
 
+    protected function restoreSetAsideDirectives(string $contents, array $directives): string
+    {
+        return preg_replace_callback('/\[LIVEWIRE_DIRECTIVE:(\d+)\]/', function ($match) use ($directives) {
+            return $directives[(int) $match[1]];
+        }, $contents);
+    }
+
     public function getHackedBladeCompiler()
     {
         $instance = new class (
             app('files'),
             rtrim(config('view.compiled'), '/\\') . '/livewire',
         ) extends \Illuminate\View\Compilers\BladeCompiler {
+            public $setAsideDirectives = [];
+
             /**
              * Make this method public...
              */
             public function compileStatementsMadePublic($template)
             {
                 return $this->compileStatements($template);
+            }
+
+            protected function setAside($directive)
+            {
+                $this->setAsideDirectives[] = $directive;
+
+                return '[LIVEWIRE_DIRECTIVE:' . (count($this->setAsideDirectives) - 1) . ']';
             }
 
             /**
@@ -240,9 +256,9 @@ PHP;
                     // Don't process through built-in directive methods...
                     // $match[0] = $this->$method(Arr::get($match, 3));
 
-                    return str_replace('@', '[LIVEWIRE_DIRECTIVE_AT]', $match[0]);
+                    return $this->setAside($match[0]);
                 } else {
-                    return str_replace('@', '[LIVEWIRE_DIRECTIVE_AT]', $match[0]);
+                    return $this->setAside($match[0]);
                 }
 
                 return isset($match[3]) ? $match[0] : $match[0].$match[2];
