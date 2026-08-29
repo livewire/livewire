@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\CollectionSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Tests\TestComponent;
@@ -134,6 +135,20 @@ class UnitTest extends \Tests\TestCase
         $synths->hydratePropertyUpdate($tuple, $context, 'evil');
     }
 
+    public function test_hydrate_property_update_validates_classes_before_skipping_array_shaped_synths()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('is not allowed to be instantiated');
+
+        $synths->hydratePropertyUpdate([
+            1,
+            ['s' => 'arr', 'class' => \Symfony\Component\Process\Process::class],
+        ], $context, 'evil');
+    }
+
     /*
      * An update sends values without synthesizer meta — the browser strips
      * it. When the updated path sits ABOVE a synthesized value (updating
@@ -231,6 +246,31 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame(1, $synths->hydrateForUpdate($collection, 'item', 1, $context));
         $this->assertSame(1, $synths->hydrateForUpdate($stdClass, 'item', 1, $context));
+        $this->assertNull($synths->hydrateForUpdate($collection, 'item', null, $context));
+        $this->assertSame('__rm__', $synths->hydrateForUpdate($collection, 'item', '__rm__', $context));
+    }
+
+    public function test_hydrate_for_update_still_applies_scalar_shaped_synths()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['date' => $synths->dehydrate(Carbon::parse('2026-01-01'), $context, 'date')];
+        $updated = $synths->hydrateForUpdate($raw, 'date', '2026-08-29T12:00:00+00:00', $context);
+
+        $this->assertInstanceOf(Carbon::class, $updated);
+        $this->assertSame('2026-08-29T12:00:00+00:00', $updated->format(\DateTimeInterface::ATOM));
+    }
+
+    public function test_userland_array_shaped_synths_can_allow_scalar_replacements()
+    {
+        $synths = app(HandleSynths::class);
+        $synths->registerSynth(CustomThingSynth::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['thing' => $synths->dehydrate(new CustomThing('original'), $context, 'thing')];
+
+        $this->assertSame(1, $synths->hydrateForUpdate($raw, 'thing', 1, $context));
     }
 
     public function test_hydrate_for_update_passes_nested_removals_through_untouched()
@@ -349,7 +389,7 @@ class CustomThing
     public function __construct(public string $value = 'default') {}
 }
 
-class CustomThingSynth extends Synth
+class CustomThingSynth extends Synth implements ArrayShapedSynth
 {
     public static $key = 'custom-thing';
 
