@@ -22,6 +22,10 @@ class StdClassSynth extends Synth {
     }
 
     function hydrate($value, $meta, $hydrateChild) {
+        if (! is_array($value)) {
+            return $value;
+        }
+
         $obj = new stdClass;
 
         foreach ($value as $key => $child) {

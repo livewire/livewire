@@ -181,6 +181,58 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(['some' => 'array'], $updated['brandNew']);
     }
 
+    public function test_hydrate_for_update_leaves_collection_children_replaced_with_scalars_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => ['tags' => collect(['a']), 'other' => collect(['b'])],
+        ], $context, 'data')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'tags' => 1,
+            'other' => ['b'],
+        ], $context);
+
+        $this->assertSame(1, $updated['tags']);
+        $this->assertInstanceOf(Collection::class, $updated['other']);
+    }
+
+    public function test_hydrate_for_update_leaves_stdclass_children_replaced_with_scalars_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $raw = ['data' => $synths->dehydrate([
+            'section' => [
+                'item' => (object) ['name' => 'a'],
+                'other' => (object) ['name' => 'b'],
+            ],
+        ], $context, 'data')];
+
+        $updated = $synths->hydrateForUpdate($raw, 'data.section', [
+            'item' => 1,
+            'other' => ['name' => 'b'],
+        ], $context);
+
+        $this->assertSame(1, $updated['item']);
+        $this->assertInstanceOf(\stdClass::class, $updated['other']);
+        $this->assertSame('b', $updated['other']->name);
+    }
+
+    public function test_hydrate_for_update_leaves_top_level_array_shaped_values_replaced_with_scalars_alone()
+    {
+        $synths = app(HandleSynths::class);
+        $context = new ComponentContext(new TestComponent);
+
+        $collection = ['item' => $synths->dehydrate(collect(['a']), $context, 'item')];
+        $stdClass = ['item' => $synths->dehydrate((object) ['name' => 'a'], $context, 'item')];
+
+        $this->assertSame(1, $synths->hydrateForUpdate($collection, 'item', 1, $context));
+        $this->assertSame(1, $synths->hydrateForUpdate($stdClass, 'item', 1, $context));
+    }
+
     public function test_hydrate_for_update_passes_nested_removals_through_untouched()
     {
         $synths = app(HandleSynths::class);

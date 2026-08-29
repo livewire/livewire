@@ -34,6 +34,10 @@ class FormObjectSynth extends Synth {
             throw new \Exception('Livewire: Invalid form object class.');
         }
 
+        if (! is_array($data)) {
+            return $data;
+        }
+
         // If the form object already exists on the component (e.g. during a
         // consolidated property update where the entire form is sent as one
         // update), reuse it. Creating a new instance would discard the booted
