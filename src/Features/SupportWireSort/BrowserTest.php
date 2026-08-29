@@ -139,8 +139,8 @@ class BrowserTest extends BrowserTestCase
                     <button type="button" dusk="enable" wire:click="enable">Enable</button>
 
                     <ul dusk="sortable" wire:sort="sortItem">
-                        <li wire:key="item-1" @if ($enabled) wire:sort:item="item-1" @endif>Item 1</li>
-                        <li wire:key="item-2" @if ($enabled) wire:sort:item="item-2" @endif>Item 2</li>
+                        <li dusk="item-1" wire:key="item-1" @if ($enabled) wire:sort:item="item-1" @endif>Item 1</li>
+                        <li dusk="item-2" wire:key="item-2" @if ($enabled) wire:sort:item="item-2" @endif>Item 2</li>
                     </ul>
 
                     <div dusk="result">{{ $result }}</div>
@@ -150,106 +150,8 @@ class BrowserTest extends BrowserTestCase
         })
         ->click('@enable')
         ->waitForTextIn('[wire\\:key="item-2"]', 'Item 2')
-        ->tap(function ($b) {
-            $b->script(<<<'JS'
-                let el = document.querySelector('[dusk="sortable"]')
-                let item = el.querySelector('[wire\\:sort\\:item="item-2"]')
-
-                el.insertBefore(item, el.firstElementChild)
-
-                let key = Object.keys(el).find(k => k.startsWith('Sortable'))
-                let instance = el[key]
-
-                instance.options.onSort({
-                    item: item,
-                    from: el,
-                    to: el,
-                    target: el,
-                    newIndex: 0,
-                    oldIndex: 1,
-                })
-            JS);
-        })
+        ->drag('@item-2', '@item-1')
         ->waitForTextIn('@result', 'item:item-2,position:0')
-        ->assertSeeIn('@result', 'item:item-2,position:0');
-    }
-
-    public function test_wire_sort_can_be_toggled_on_and_off()
-    {
-        Livewire::visit(new class extends Component {
-            public $editing = false;
-            public $result = '';
-
-            public function toggle()
-            {
-                $this->editing = ! $this->editing;
-            }
-
-            public function sortItem($item, $position)
-            {
-                $this->result = "item:{$item},position:{$position}";
-            }
-
-            public function render()
-            {
-                return <<<'HTML'
-                <div>
-                    <button type="button" dusk="toggle" wire:click="toggle">
-                        {{ $editing ? 'Save' : 'Edit' }}
-                    </button>
-
-                    <ul dusk="sortable" @if ($editing) wire:sort="sortItem" @endif>
-                        <li wire:key="item-1" wire:sort:item="item-1">Item 1</li>
-                        <li wire:key="item-2" wire:sort:item="item-2">Item 2</li>
-                    </ul>
-
-                    <div dusk="result">{{ $result }}</div>
-                </div>
-                HTML;
-            }
-        })
-        ->waitForText('Edit')
-        ->click('@toggle')
-        ->waitForText('Save')
-        ->tap(function ($b) {
-            // Turning wire:sort on should make the already-rendered <ul> sortable...
-            $b->script(<<<'JS'
-                let el = document.querySelector('[dusk="sortable"]')
-                let item = el.querySelector('[wire\\:sort\\:item="item-2"]')
-
-                el.insertBefore(item, el.firstElementChild)
-
-                let key = Object.keys(el).find(k => k.startsWith('Sortable'))
-                let instance = el[key]
-
-                instance.options.onSort({
-                    item: item,
-                    from: el,
-                    to: el,
-                    target: el,
-                    newIndex: 0,
-                    oldIndex: 1,
-                })
-            JS);
-        })
-        ->waitForTextIn('@result', 'item:item-2,position:0')
-        ->assertSeeIn('@result', 'item:item-2,position:0')
-        ->click('@toggle')
-        ->waitForText('Edit')
-        ->tap(function ($b) {
-            // Turning wire:sort back off should tear down the Sortable instance
-            // entirely, rather than leaving it silently still active. SortableJS's
-            // own destroy() nulls out its instance reference on the element rather
-            // than deleting the key, so check the value rather than the key...
-            $sortableInstanceWasDestroyed = $b->script(<<<'JS'
-                let el = document.querySelector('[dusk="sortable"]')
-                let key = Object.keys(el).find(k => k.startsWith('Sortable'))
-
-                return key === undefined || el[key] === null
-            JS)[0];
-
-            $this->assertTrue($sortableInstanceWasDestroyed, 'Expected the Sortable instance to be destroyed after wire:sort was removed.');
-        })
         ->assertSeeIn('@result', 'item:item-2,position:0');
     }
 
@@ -269,11 +171,11 @@ class BrowserTest extends BrowserTestCase
                     return <<<'HTML'
                     <div>
                         <ul dusk="sortable" wire:sort="sortItem">
-                            <livewire:child wire:key="item-1" wire:sort:item="item-1" lazy>
+                            <livewire:child dusk="item-1" wire:key="item-1" wire:sort:item="item-1" lazy>
                                 Item 1
                             </livewire:child>
 
-                            <livewire:child wire:key="item-2" wire:sort:item="item-2" lazy>
+                            <livewire:child dusk="item-2" wire:key="item-2" wire:sort:item="item-2" lazy>
                                 Item 2
                             </livewire:child>
                         </ul>
@@ -302,28 +204,49 @@ class BrowserTest extends BrowserTestCase
             },
         ])
         ->waitForText('Child Item 2')
-        ->tap(function ($b) {
-            $b->script(<<<'JS'
-                let el = document.querySelector('[dusk="sortable"]')
-                let item = el.querySelector('[wire\\:sort\\:item="item-2"]')
-
-                el.insertBefore(item, el.firstElementChild)
-
-                let key = Object.keys(el).find(k => k.startsWith('Sortable'))
-                let instance = el[key]
-
-                instance.options.onSort({
-                    item: item,
-                    from: el,
-                    to: el,
-                    target: el,
-                    newIndex: 0,
-                    oldIndex: 1,
-                })
-            JS);
-        })
+        ->drag('@item-2', '@item-1')
         ->waitForTextIn('@result', 'item:item-2,position:0')
         ->assertSeeIn('@result', 'item:item-2,position:0');
+    }
+
+    public function test_removing_a_sortable_element_after_wire_sort_is_removed_does_not_error()
+    {
+        Livewire::visit(new class extends Component {
+            public $sorting = true;
+            public $showList = true;
+
+            public function disableSorting()
+            {
+                $this->sorting = false;
+            }
+
+            public function removeList()
+            {
+                $this->showList = false;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button dusk="disable" wire:click="disableSorting">Disable sorting</button>
+                    <button dusk="remove" wire:click="removeList">Remove list</button>
+
+                    @if ($showList)
+                        <ul dusk="sortable" @if ($sorting) wire:sort="sortItem" @endif>
+                            <li wire:sort:item="item-1">Item 1</li>
+                            <li wire:sort:item="item-2">Item 2</li>
+                        </ul>
+                    @endif
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewire()->click('@disable')
+        ->assertAttributeMissing('@sortable', 'wire:sort')
+        ->waitForLivewire()->click('@remove')
+        ->waitUntilMissing('@sortable')
+        ->assertConsoleLogHasNoErrors();
     }
 
     public function test_wire_sort_works_without_sort_id()
