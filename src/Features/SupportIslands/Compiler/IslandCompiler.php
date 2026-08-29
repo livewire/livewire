@@ -57,6 +57,8 @@ class IslandCompiler
 
         $result = $compiler->compileStatementsMadePublic($contents);
 
+        $result = str_replace('[LIVEWIRE_DIRECTIVE_AT]', '@', $result);
+
         $result = $this->restoreBladeComments($result, $comments);
 
         for ($i=$maxNestingLevel; $i >= $currentNestingLevel; $i--) {
@@ -238,10 +240,9 @@ PHP;
                     // Don't process through built-in directive methods...
                     // $match[0] = $this->$method(Arr::get($match, 3));
 
-                    // Just return the original match...
-                    return $match[0];
+                    return str_replace('@', '[LIVEWIRE_DIRECTIVE_AT]', $match[0]);
                 } else {
-                    return $match[0];
+                    return str_replace('@', '[LIVEWIRE_DIRECTIVE_AT]', $match[0]);
                 }
 
                 return isset($match[3]) ? $match[0] : $match[0].$match[2];

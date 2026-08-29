@@ -47,6 +47,38 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_island_after_repeated_nested_blade_directives()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @if (auth()->check())
+                        first
+                    @endif
+
+                    @if (auth()->check() && request()->isMethod('get'))
+                        second
+                    @endif
+
+                    @island
+                        <div dusk="island">Count: {{ $count }}</div>
+                    @endisland
+
+                    @if (auth()->check())
+                        third
+                    @endif
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@island', 'Count: 0')
+            ;
+    }
+
     public function test_sibling_islands()
     {
         Livewire::visit([new class extends \Livewire\Component {
