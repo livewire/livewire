@@ -3,11 +3,10 @@
 namespace Livewire\Features\SupportQueryString;
 
 use Illuminate\Support\Arr;
+use Livewire\Drawer\Utils;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportFormObjects\Form;
 use ReflectionClass;
-use ReflectionNamedType;
-use ReflectionUnionType;
 
 #[\Attribute]
 class BaseUrl extends LivewireAttribute
@@ -51,30 +50,6 @@ class BaseUrl extends LivewireAttribute
         return false;
     }
 
-    protected function propertySupportsStringValues($value)
-    {
-        if (is_string($value)) return true;
-
-        $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
-        $propertyName = $this->getSubName() ?? $this->getName();
-
-        if (! $propertyName || ! $reflectionClass->hasProperty($propertyName)) return false;
-
-        $type = $reflectionClass->getProperty($propertyName)->getType();
-
-        if ($type instanceof ReflectionNamedType) {
-            return $type->getName() === 'string';
-        }
-
-        if ($type instanceof ReflectionUnionType) {
-            foreach ($type->getTypes() as $type) {
-                if ($type->getName() === 'string') return true;
-            }
-        }
-
-        return false;
-    }
-
     public function setPropertyFromQueryString()
     {
         if ($this->as === null && $this->isOnFormObjectProperty()) {
@@ -93,8 +68,27 @@ class BaseUrl extends LivewireAttribute
 
         $original = $this->getValue();
 
-        if (is_string($initialValue) && is_array($decoded) && $this->propertySupportsStringValues($original)) {
-            $decoded = null;
+        if (is_string($initialValue) && is_array($decoded)) {
+            $target = $this->getSubTarget() ?? $this->getComponent();
+            $property = $this->getSubName() ?? $this->getName();
+
+            $decodedMatchesPropertyType = Utils::propertyTypeMatchesValue(
+                $target,
+                $property,
+                $decoded,
+            );
+            $initialValueMatchesPropertyType = Utils::propertyTypeMatchesValue(
+                $target,
+                $property,
+                $initialValue,
+            );
+
+            $propertyTypePrefersInitialValue = $decodedMatchesPropertyType === false && $initialValueMatchesPropertyType === true;
+            $untypedPropertyCurrentlyContainsString = $decodedMatchesPropertyType === null && is_string($original);
+
+            if ($propertyTypePrefersInitialValue || $untypedPropertyCurrentlyContainsString) {
+                $decoded = null;
+            }
         }
 
         // If only part of an array is present in the query string,

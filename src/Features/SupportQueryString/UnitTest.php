@@ -161,7 +161,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame('[123]', $component->instance()->search);
     }
 
-    function test_structured_strings_are_preserved_when_a_union_type_accepts_strings()
+    function test_structured_values_are_decoded_when_a_union_type_accepts_arrays()
     {
         $component = Livewire::withQueryParams([
             'search' => '{"id":123}',
@@ -170,7 +170,7 @@ class UnitTest extends \Tests\TestCase
             public string|array|null $search;
         });
 
-        $this->assertSame('{"id":123}', $component->instance()->search);
+        $this->assertSame(['id' => 123], $component->instance()->search);
     }
 
     function test_bracketed_query_string_arrays_remain_arrays_when_a_union_type_accepts_them()
