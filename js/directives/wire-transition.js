@@ -29,6 +29,23 @@ function clearTransitionNames(root) {
     })
 }
 
+function hasBlockingTopLayer() {
+    if (document.querySelector('dialog:modal')) return true
+
+    for (let el of document.querySelectorAll(':popover-open')) {
+        // Flux toast hosts: only block while a real toast panel is present
+        if (el.localName === 'ui-toast' || el.localName === 'ui-toast-group') {
+            if (el.querySelector('[data-flux-toast-dialog]')) return true
+            continue // open host, no panel → do not block transitions
+        }
+
+        // Other popovers (menus, dropdowns, etc.): still block
+        return true
+    }
+
+    return false
+}
+
 export async function transitionDomMutation(fromEl, toEl, callback, options = {}) {
     // Skip transitions entirely if requested...
     if (options.skip) return callback()
@@ -44,7 +61,7 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
     // Skip entirely if a top-layer element is already open (transitions behind
     // it are invisible to the user and the ::view-transition pseudo-elements
     // would paint above it during animation)...
-    if (document.querySelector('dialog:modal, :popover-open')) return callback()
+    if (hasBlockingTopLayer()) return callback()
 
     // Set transition names right before the transition starts (not permanently)...
     setTransitionNames(fromEl, options)
