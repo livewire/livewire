@@ -1036,6 +1036,40 @@ class UnitTest extends \Tests\TestCase
 
         $component->assertOnlyHasErrors(['foo' => 'min', 'bar' => 'min']);
     }
+
+    public function test_validation_ready_data_is_not_resolved_by_synthesizers()
+    {
+        $livewire = new class {
+            public int $findSynthCalls = 0;
+
+            public function findSynth($value, $component)
+            {
+                $this->findSynthCalls++;
+            }
+        };
+
+        app()->instance('livewire', $livewire);
+
+        $component = new class extends TestComponent {
+            public function unwrap($data)
+            {
+                return $this->unwrapDataForValidation($data);
+            }
+        };
+
+        $data = [
+            'string' => 'Livewire',
+            'integer' => 4,
+            'float' => 4.0,
+            'boolean' => true,
+            'null' => null,
+            'array' => ['already', 'valid'],
+        ];
+
+        $this->assertSame($data, $component->unwrap($data));
+        $this->assertSame(0, $livewire->findSynthCalls);
+    }
+
 }
 
 class ComponentWithRulesProperty extends TestComponent
