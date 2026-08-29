@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportValidation;
 
+use ArrayAccess;
 use function Livewire\invade;
 use function Livewire\store;
 use Illuminate\Contracts\Support\Arrayable;
@@ -381,7 +382,7 @@ trait HandlesValidation
 
         $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
 
-        $data = $this->unwrapDataForValidation($data);
+        $data = $this->unwrapDataForValidation($data, $property);
 
         // If a matching rule is found, then filter collections down to keys specified in the field,
         // while leaving all other data intact. If a key isn't specified and instead there is a
@@ -509,11 +510,20 @@ trait HandlesValidation
         return Utils::getPublicPropertiesDefinedOnSubclass($this);
     }
 
-    protected function unwrapDataForValidation($data)
+    protected function unwrapDataForValidation($data, $property = null)
     {
-        return collect($data)->map(function ($value) {
+        return collect($data)->map(function ($value, $key) use ($property) {
             // Scalars and arrays are already valid Laravel validation data...
             if (! is_object($value)) return $value;
+
+            if (
+                ! is_null($property)
+                && $key !== $property
+                && $value instanceof ArrayAccess
+            ) {
+                // Laravel can traverse ArrayAccess values without materializing them...
+                return $value;
+            }
 
             $synth = app('livewire')->findSynth($value, $this);
 

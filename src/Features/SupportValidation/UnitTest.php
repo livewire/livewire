@@ -1070,6 +1070,71 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(0, $livewire->findSynthCalls);
     }
 
+    public function test_validate_only_does_not_unwrap_unrelated_arrayable_properties()
+    {
+        ValidationUnwrappingSpyCollection::$toArrayCalls = 0;
+
+        Livewire::test(new class extends TestComponent {
+            public $title = 'Livewire';
+
+            public $rows;
+
+            public function mount()
+            {
+                $this->rows = new ValidationUnwrappingSpyCollection([
+                    ['id' => 1],
+                ]);
+            }
+
+            public function validateTitle()
+            {
+                $this->validateOnly('title', [
+                    'title' => 'required',
+                ]);
+            }
+        })->call('validateTitle')->assertHasNoErrors();
+
+        $this->assertSame(0, ValidationUnwrappingSpyCollection::$toArrayCalls);
+    }
+
+    public function test_validate_only_can_use_an_array_access_sibling_in_a_dependent_rule_without_unwrapping_it()
+    {
+        ValidationUnwrappingSpyCollection::$toArrayCalls = 0;
+
+        Livewire::test(new class extends TestComponent {
+            public $title = 'Livewire';
+
+            public $settings;
+
+            public function mount()
+            {
+                $this->settings = new ValidationUnwrappingSpyCollection([
+                    'required_title' => 'Livewire',
+                ]);
+            }
+
+            public function validateTitle()
+            {
+                $this->validateOnly('title', [
+                    'title' => 'same:settings.required_title',
+                ]);
+            }
+        })->call('validateTitle')->assertHasNoErrors();
+
+        $this->assertSame(0, ValidationUnwrappingSpyCollection::$toArrayCalls);
+    }
+}
+
+class ValidationUnwrappingSpyCollection extends Collection
+{
+    public static int $toArrayCalls = 0;
+
+    public function toArray()
+    {
+        static::$toArrayCalls++;
+
+        return parent::toArray();
+    }
 }
 
 class ComponentWithRulesProperty extends TestComponent
