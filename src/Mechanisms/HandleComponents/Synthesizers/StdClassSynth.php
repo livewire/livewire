@@ -4,7 +4,7 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
 use stdClass;
 
-class StdClassSynth extends Synth {
+class StdClassSynth extends Synth implements ArrayShapedSynth {
     public static $key = 'std';
 
     static function match($target) {
@@ -22,10 +22,6 @@ class StdClassSynth extends Synth {
     }
 
     function hydrate($value, $meta, $hydrateChild) {
-        if (! is_array($value)) {
-            return $value;
-        }
-
         $obj = new stdClass;
 
         foreach ($value as $key => $child) {

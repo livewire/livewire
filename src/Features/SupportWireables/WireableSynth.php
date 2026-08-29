@@ -3,9 +3,10 @@
 namespace Livewire\Features\SupportWireables;
 
 use Livewire\Wireable;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 
-class WireableSynth extends Synth
+class WireableSynth extends Synth implements ArrayShapedSynth
 {
     public static $key = 'wrbl';
 
@@ -37,10 +38,6 @@ class WireableSynth extends Synth
         // Verify class implements Wireable even though checksum protects this...
         if (! isset($meta['class']) || ! is_a($meta['class'], Wireable::class, true)) {
             throw new \Exception('Livewire: Invalid wireable class.');
-        }
-
-        if (! is_array($value)) {
-            return $value;
         }
 
         foreach ($value as $key => $child) {

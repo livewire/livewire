@@ -3,12 +3,13 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Livewire\Drawer\Utils;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Features\SupportAttributes\AttributeCollection;
 
 use function Livewire\wrap;
 
-class FormObjectSynth extends Synth {
+class FormObjectSynth extends Synth implements ArrayShapedSynth {
     public static $key = 'form';
 
     static function match($target)
@@ -32,10 +33,6 @@ class FormObjectSynth extends Synth {
         // Verify class extends Form even though checksum protects this...
         if (! isset($meta['class']) || ! is_a($meta['class'], Form::class, true)) {
             throw new \Exception('Livewire: Invalid form object class.');
-        }
-
-        if (! is_array($data)) {
-            return $data;
         }
 
         // If the form object already exists on the component (e.g. during a

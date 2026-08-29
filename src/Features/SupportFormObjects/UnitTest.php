@@ -1076,12 +1076,15 @@ class UnitTest extends \Tests\TestCase
             public PostFormStub $form;
         });
 
-        $synth = new FormObjectSynth(
-            new \Livewire\Mechanisms\HandleComponents\ComponentContext($component->instance()),
-            'form'
-        );
+        $synths = app(\Livewire\Mechanisms\HandleSynths\HandleSynths::class);
+        $context = new \Livewire\Mechanisms\HandleComponents\ComponentContext($component->instance());
 
-        $this->assertSame(1, $synth->hydrate(1, ['class' => PostFormStub::class], fn($k, $v) => $v));
+        $this->assertSame(1, $synths->hydrateForUpdate(
+            $component->snapshot['data'],
+            'form',
+            1,
+            $context,
+        ));
     }
 
     public function test_can_fill_a_form_object_from_eloquent_model_with_enum_cast()
