@@ -15,6 +15,16 @@ let morphGates = new WeakMap()
 // page carries on. Scripts therefore always run with the component's markup
 // in the DOM, but before Alpine has initialized it...
 on('effect', ({ component, effects, request }) => {
+    // A response that's about to mount new children with script modules names
+    // them ahead of the morph — start fetching so their modules are warm (or
+    // already loaded) by the time the children hit the page. Purely a latency
+    // optimization: each child still imports its own module when it mounts...
+    if (effects.childScriptModules) {
+        effects.childScriptModules.forEach(({ name, hash }) => {
+            import(/* @vite-ignore */ modulePath(name, hash)).catch(() => {})
+        })
+    }
+
     let scriptModuleHash
 
     if (Object.prototype.hasOwnProperty.call(effects, 'scriptModule')) {
@@ -23,8 +33,7 @@ on('effect', ({ component, effects, request }) => {
 
     if (! scriptModuleHash) return
 
-    let encodedName = component.name.replace(/\./g, '--').replace(/::/g, '---').replace(/:/g, '----')
-    let path = `${getModuleUrl()}/js/${encodedName}.js?v=${scriptModuleHash}`
+    let path = modulePath(component.name, scriptModuleHash)
 
     let pending = Alpine.reactive({
         loading: true,
@@ -70,6 +79,12 @@ on('effect', ({ component, effects, request }) => {
 // breaking outright...
 function deferInit(el, promise) {
     if (Alpine.deferInit) Alpine.deferInit(el, promise)
+}
+
+function modulePath(name, hash) {
+    let encodedName = name.replace(/\./g, '--').replace(/::/g, '---').replace(/:/g, '----')
+
+    return `${getModuleUrl()}/js/${encodedName}.js?v=${hash}`
 }
 
 // The morph gate answers "is this component's markup in the DOM yet?". With
