@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportIslands;
 
+use Illuminate\Support\Facades\Blade;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 
@@ -79,6 +80,36 @@ class BrowserTest extends BrowserTestCase
         }])
             ->assertSeeIn('@island', 'Count: 0')
             ->assertSeeIn('@literal', '[LIVEWIRE_DIRECTIVE_AT]')
+            ;
+    }
+
+    public function test_island_compilation_preserves_foreign_directives_and_marker_like_content()
+    {
+        Blade::directive('islandGreeting', fn ($expression) => '<div dusk="custom-directive">Hello from Blade</div>');
+
+        Livewire::visit([new class extends \Livewire\Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @islandGreeting
+
+                    <div dusk="marker-like-content">[LIVEWIRE_DIRECTIVE:0]</div>
+                    <div dusk="escaped-directive">@@if (true)</div>
+
+                    @island
+                        <div dusk="island-with-foreign-directives">Island rendered</div>
+                        <div dusk="escaped-directive-inside-island">@@if (true)</div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@custom-directive', 'Hello from Blade')
+            ->assertSeeIn('@marker-like-content', '[LIVEWIRE_DIRECTIVE:0]')
+            ->assertSeeIn('@escaped-directive', '@if(true)')
+            ->assertSeeIn('@island-with-foreign-directives', 'Island rendered')
+            ->assertSeeIn('@escaped-directive-inside-island', '@if(true)')
             ;
     }
 
