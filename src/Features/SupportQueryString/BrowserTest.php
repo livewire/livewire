@@ -11,6 +11,30 @@ use Illuminate\Support\Facades\Route;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
+    public function test_structured_string_query_parameters_remain_strings()
+    {
+        Livewire::withQueryParams([
+            'search' => '[123]',
+        ])->visit([
+            new class extends Component
+            {
+                #[Url]
+                public $search = '';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <span dusk="search">{{ $search }}</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertSeeIn('@search', '[123]')
+            ->assertQueryStringHas('search', '[123]');
+    }
+
     public function test_it_does_not_add_null_values_to_the_query_string_array()
     {
         Livewire::visit([

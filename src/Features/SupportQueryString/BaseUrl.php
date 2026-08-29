@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportQueryString;
 
 use Illuminate\Support\Arr;
+use Livewire\Drawer\Utils;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportFormObjects\Form;
 use ReflectionClass;
@@ -65,9 +66,34 @@ class BaseUrl extends LivewireAttribute
             ? json_decode(json_encode($initialValue, flags: JSON_BIGINT_AS_STRING), true, flags: JSON_BIGINT_AS_STRING)
             : json_decode($initialValue ?? '', true, flags: JSON_BIGINT_AS_STRING);
 
+        $original = $this->getValue();
+
+        if (is_string($initialValue) && is_array($decoded)) {
+            $target = $this->getSubTarget() ?? $this->getComponent();
+            $property = $this->getSubName() ?? $this->getName();
+
+            $decodedMatchesPropertyType = Utils::propertyTypeMatchesValue(
+                $target,
+                $property,
+                $decoded,
+            );
+            $initialValueMatchesPropertyType = Utils::propertyTypeMatchesValue(
+                $target,
+                $property,
+                $initialValue,
+            );
+
+            $propertyTypePrefersInitialValue = $decodedMatchesPropertyType === false && $initialValueMatchesPropertyType === true;
+            $untypedPropertyCurrentlyContainsString = $decodedMatchesPropertyType === null && is_string($original);
+
+            if ($propertyTypePrefersInitialValue || $untypedPropertyCurrentlyContainsString) {
+                $decoded = null;
+            }
+        }
+
         // If only part of an array is present in the query string,
         // we want to merge instead of override the value...
-        if (is_array($decoded) && is_array($original = $this->getValue())) {
+        if (is_array($decoded) && is_array($original)) {
             $decoded = $this->recursivelyMergeArraysWithoutAppendingDuplicateValues($original, $decoded);
         }
 
