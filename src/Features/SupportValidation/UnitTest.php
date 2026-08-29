@@ -1123,6 +1123,80 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame(0, ValidationUnwrappingSpyCollection::$toArrayCalls);
     }
+
+    public function test_validate_only_still_unwraps_a_wireable_sibling_for_dependent_rules()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $title;
+
+            public $settings;
+
+            public function mount()
+            {
+                $this->settings = new CustomWireableValidationDTO(50);
+            }
+
+            public function validateTitle()
+            {
+                $this->validateOnly('title', [
+                    'title' => 'required_if:settings.amount,50',
+                ]);
+            }
+        })->call('validateTitle')->assertHasErrors(['title' => 'required_if']);
+    }
+
+    public function test_validate_only_still_unwraps_the_property_being_validated()
+    {
+        ValidationUnwrappingSpyCollection::$toArrayCalls = 0;
+
+        Livewire::test(new class extends TestComponent {
+            public $rows;
+
+            public function mount()
+            {
+                $this->rows = new ValidationUnwrappingSpyCollection([
+                    ['id' => 1],
+                ]);
+            }
+
+            public function validateRow()
+            {
+                $this->validateOnly('rows.0.id', [
+                    'rows.*.id' => 'required|integer',
+                ]);
+            }
+        })->call('validateRow')->assertHasNoErrors();
+
+        $this->assertSame(1, ValidationUnwrappingSpyCollection::$toArrayCalls);
+    }
+
+    public function test_validate_still_unwraps_all_arrayable_properties()
+    {
+        ValidationUnwrappingSpyCollection::$toArrayCalls = 0;
+
+        Livewire::test(new class extends TestComponent {
+            public $title = 'Livewire';
+
+            public $rows;
+
+            public function mount()
+            {
+                $this->rows = new ValidationUnwrappingSpyCollection([
+                    ['id' => 1],
+                ]);
+            }
+
+            public function validateAll()
+            {
+                $this->validate([
+                    'title' => 'required',
+                    'rows.*.id' => 'required|integer',
+                ]);
+            }
+        })->call('validateAll')->assertHasNoErrors();
+
+        $this->assertSame(1, ValidationUnwrappingSpyCollection::$toArrayCalls);
+    }
 }
 
 class ValidationUnwrappingSpyCollection extends Collection
