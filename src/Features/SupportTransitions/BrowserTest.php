@@ -501,7 +501,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_transition_runs_when_popover_stays_open_without_panel()
+    public function test_transition_runs_when_popover_stays_open_without_visible_content()
     {
         Livewire::visit(
             new class extends \Livewire\Component {
@@ -522,11 +522,11 @@ class BrowserTest extends \Tests\BrowserTestCase
                             <div wire:transition dusk="target">Hello</div>
                         @endif
 
-                        <div
-                            popover="manual"
-                            dusk="toast-host"
-                            x-init="$el.showPopover()"
-                        ></div>
+                        <div popover="manual" dusk="toast-host" x-init="$el.showPopover()">
+                            <template>
+                                <div>Hidden popover content</div>
+                            </template>
+                        </div>
                     </div>
                     HTML;
                 }
@@ -543,7 +543,49 @@ class BrowserTest extends \Tests\BrowserTestCase
         "))
         ->waitForLivewire()->click('@toggle')
         ->waitFor('@target')
-        ->assertScript('window.__startViewTransitionCalled', true)
-        ;
+        ->assertScript('window.__startViewTransitionCalled', true);
+    }
+
+    public function test_transition_does_not_run_when_popover_has_visible_content()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $show = false;
+
+                public function toggle()
+                {
+                    $this->show = ! $this->show;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="toggle" dusk="toggle">Toggle</button>
+
+                        @if ($show)
+                            <div wire:transition dusk="target">Hello</div>
+                        @endif
+
+                        <div popover="manual" dusk="toast-host" x-init="$el.showPopover()">
+                            <div>Visible popover content</div>
+                        </div>
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitUntil("document.querySelector('[dusk=toast-host]').matches(':popover-open')")
+        ->tap(fn ($browser) => $browser->script("
+            window.__startViewTransitionCalled = false
+            let original = document.startViewTransition.bind(document)
+            document.startViewTransition = function (...args) {
+                window.__startViewTransitionCalled = true
+                return original(...args)
+            }
+        "))
+        ->waitForLivewire()->click('@toggle')
+        ->waitFor('@target')
+        ->assertScript('window.__startViewTransitionCalled', false);
     }
 }
