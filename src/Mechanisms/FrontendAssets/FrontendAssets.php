@@ -63,17 +63,17 @@ class FrontendAssets extends Mechanism
         $this->javaScriptRoute = $route;
     }
 
-    public static function livewireScripts($expression)
+    public static function livewireScripts($expression): string
     {
         return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts('.$expression.') !!}';
     }
 
-    public static function livewireScriptConfig($expression)
+    public static function livewireScriptConfig($expression): string
     {
         return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scriptConfig('.$expression.') !!}';
     }
 
-    public static function livewireStyles($expression)
+    public static function livewireStyles($expression): string
     {
         return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::styles('.$expression.') !!}';
     }
@@ -105,10 +105,7 @@ class FrontendAssets extends Mechanism
         return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.csp.min.js.map');
     }
 
-    /**
-     * @return string
-     */
-    public static function styles($options = [])
+    public static function styles($options = []): string
     {
         if (app(static::class)->hasRenderedStyles) return '';
 
@@ -161,10 +158,7 @@ class FrontendAssets extends Mechanism
         return static::minify($html);
     }
 
-    /**
-     * @return string
-     */
-    public static function scripts($options = [])
+    public static function scripts($options = []): string
     {
         if (app(static::class)->hasRenderedScripts) return '';
 
@@ -182,7 +176,7 @@ class FrontendAssets extends Mechanism
         return implode("\n", $html);
     }
 
-    public static function js($options)
+    public static function js($options): string
     {
         // Use the default endpoint...
         $url = url(app(static::class)->javaScriptRoute->uri);
@@ -233,7 +227,7 @@ class FrontendAssets extends Mechanism
         HTML;
     }
 
-    public static function scriptConfig($options = [])
+    public static function scriptConfig($options = []): string
     {
         app(static::class)->hasRenderedScripts = true;
 
