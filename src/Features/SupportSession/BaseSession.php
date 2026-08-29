@@ -3,12 +3,16 @@
 namespace Livewire\Features\SupportSession;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+use Livewire\Mechanisms\HandleSynths\CorruptPersistedValueException;
+use Livewire\Mechanisms\HandleSynths\PersistedValueCodec;
 use Illuminate\Support\Facades\Session;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class BaseSession extends LivewireAttribute
 {
+    protected $codec;
+
     function __construct(
         protected $key = null,
     ) {}
@@ -17,9 +21,19 @@ class BaseSession extends LivewireAttribute
     {
         if (! $this->exists()) return;
 
-        $fromSession = $this->read();
+        try {
+            $fromSession = $this->read();
+        } catch (CorruptPersistedValueException) {
+            Session::forget($this->key());
 
-        $this->setValue($fromSession);
+            return;
+        }
+
+        try {
+            $this->setValue($fromSession);
+        } catch (\TypeError) {
+            Session::forget($this->key());
+        }
     }
 
     public function dehydrate($context)
@@ -34,12 +48,43 @@ class BaseSession extends LivewireAttribute
 
     protected function read()
     {
-        return Session::get($this->key());
+        // Always decode so changing session serializers doesn't strand values
+        // that Livewire encoded before the configuration changed.
+        $key = $this->key();
+
+        return $this->codec()->decodeFromStorage(
+            Session::get($key),
+            $this->component,
+            $this->getName(),
+            $key,
+        );
     }
 
     protected function write()
     {
-        Session::put($this->key(), $this->getValue());
+        $value = $this->getValue();
+        $key = $this->key();
+
+        if ($this->sessionIsJsonSerialized()) {
+            $value = $this->codec()->encodeForStorage(
+                $value,
+                $this->component,
+                $this->getName(),
+                $key,
+            );
+        }
+
+        Session::put($key, $value);
+    }
+
+    protected function sessionIsJsonSerialized()
+    {
+        return config('session.serialization', 'php') === 'json';
+    }
+
+    protected function codec()
+    {
+        return $this->codec ??= app(PersistedValueCodec::class);
     }
 
     protected function key()
