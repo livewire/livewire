@@ -116,6 +116,139 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@result', 'item:item-1,position:2');
     }
 
+    public function test_wire_sort_item_id_works_when_added_to_an_already_rendered_element()
+    {
+        Livewire::visit(new class extends Component {
+            public $enabled = false;
+            public $result = '';
+
+            public function enable()
+            {
+                $this->enabled = true;
+            }
+
+            public function sortItem($item, $position)
+            {
+                $this->result = "item:{$item},position:{$position}";
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button type="button" dusk="enable" wire:click="enable">Enable</button>
+
+                    <ul dusk="sortable" wire:sort="sortItem">
+                        <li dusk="item-1" wire:key="item-1" @if ($enabled) wire:sort:item="item-1" @endif>Item 1</li>
+                        <li dusk="item-2" wire:key="item-2" @if ($enabled) wire:sort:item="item-2" @endif>Item 2</li>
+                    </ul>
+
+                    <div dusk="result">{{ $result }}</div>
+                </div>
+                HTML;
+            }
+        })
+        ->click('@enable')
+        ->waitForTextIn('[wire\\:key="item-2"]', 'Item 2')
+        ->drag('@item-2', '@item-1')
+        ->waitForTextIn('@result', 'item:item-2,position:0')
+        ->assertSeeIn('@result', 'item:item-2,position:0');
+    }
+
+    public function test_wire_sort_item_id_is_passed_for_lazy_child_components()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $result = '';
+
+                public function sortItem($item, $position)
+                {
+                    $this->result = "item:{$item},position:{$position}";
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <ul dusk="sortable" wire:sort="sortItem">
+                            <livewire:child dusk="item-1" wire:key="item-1" wire:sort:item="item-1" lazy>
+                                Item 1
+                            </livewire:child>
+
+                            <livewire:child dusk="item-2" wire:key="item-2" wire:sort:item="item-2" lazy>
+                                Item 2
+                            </livewire:child>
+                        </ul>
+
+                        <div dusk="result">{{ $result }}</div>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public function placeholder()
+                {
+                    return <<<'HTML'
+                    <li>Loading...</li>
+                    HTML;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <li {{ $attributes }}>
+                        Child {{ $slot }}
+                    </li>
+                    HTML;
+                }
+            },
+        ])
+        ->waitForText('Child Item 2')
+        ->drag('@item-2', '@item-1')
+        ->waitForTextIn('@result', 'item:item-2,position:0')
+        ->assertSeeIn('@result', 'item:item-2,position:0');
+    }
+
+    public function test_removing_a_sortable_element_after_wire_sort_is_removed_does_not_error()
+    {
+        Livewire::visit(new class extends Component {
+            public $sorting = true;
+            public $showList = true;
+
+            public function disableSorting()
+            {
+                $this->sorting = false;
+            }
+
+            public function removeList()
+            {
+                $this->showList = false;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button dusk="disable" wire:click="disableSorting">Disable sorting</button>
+                    <button dusk="remove" wire:click="removeList">Remove list</button>
+
+                    @if ($showList)
+                        <ul dusk="sortable" @if ($sorting) wire:sort="sortItem" @endif>
+                            <li wire:sort:item="item-1">Item 1</li>
+                            <li wire:sort:item="item-2">Item 2</li>
+                        </ul>
+                    @endif
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewire()->click('@disable')
+        ->assertAttributeMissing('@sortable', 'wire:sort')
+        ->waitForLivewire()->click('@remove')
+        ->waitUntilMissing('@sortable')
+        ->assertConsoleLogHasNoErrors();
+    }
+
     public function test_wire_sort_works_without_sort_id()
     {
         Livewire::visit(new class extends Component {
