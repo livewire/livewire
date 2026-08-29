@@ -39,6 +39,10 @@ class WireableSynth extends Synth
             throw new \Exception('Livewire: Invalid wireable class.');
         }
 
+        if (! is_array($value)) {
+            return $value;
+        }
+
         foreach ($value as $key => $child) {
             $value[$key] = $hydrateChild($key, $child);
         }
