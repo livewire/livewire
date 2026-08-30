@@ -15,7 +15,10 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Livewire\Form;
 use PHPUnit\Framework\AssertionFailedError;
+use Sushi\Sushi;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -1097,7 +1100,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(0, ValidationUnwrappingSpyCollection::$toArrayCalls);
     }
 
-    public function test_validate_only_can_use_an_array_access_sibling_in_a_dependent_rule_without_unwrapping_it()
+    public function test_validate_only_unwraps_an_array_access_sibling_referenced_by_a_dependent_rule()
     {
         ValidationUnwrappingSpyCollection::$toArrayCalls = 0;
 
@@ -1121,7 +1124,161 @@ class UnitTest extends \Tests\TestCase
             }
         })->call('validateTitle')->assertHasNoErrors();
 
+        $this->assertSame(1, ValidationUnwrappingSpyCollection::$toArrayCalls);
+    }
+
+    public function test_validate_only_dependent_rule_against_a_sibling_still_fails_when_it_should()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $title = 'Different';
+
+            public $settings;
+
+            public function mount()
+            {
+                $this->settings = new ValidationUnwrappingSpyCollection([
+                    'required_title' => 'Livewire',
+                ]);
+            }
+
+            public function validateTitle()
+            {
+                $this->validateOnly('title', [
+                    'title' => 'same:settings.required_title',
+                ]);
+            }
+        })->call('validateTitle')->assertHasErrors(['title' => 'same']);
+    }
+
+    public function test_validate_only_supports_wildcard_dependent_rule_parameters_against_a_collection_sibling()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $chosen = 2;
+
+            public $options;
+
+            public function mount()
+            {
+                $this->options = collect([['id' => 1], ['id' => 2]]);
+            }
+
+            public function validateChosen()
+            {
+                $this->validateOnly('chosen', [
+                    'chosen' => 'in_array:options.*.id',
+                ]);
+            }
+        })->call('validateChosen')->assertHasNoErrors()
+            ->set('chosen', 99)
+            ->call('validateChosen')->assertHasErrors(['chosen' => 'in_array']);
+    }
+
+    public function test_validate_only_can_compare_against_a_whole_collection_sibling()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $copy = ['a'];
+
+            public $original;
+
+            public function mount()
+            {
+                $this->original = collect(['a']);
+            }
+
+            public function validateCopy()
+            {
+                $this->validateOnly('copy', [
+                    'copy' => 'same:original',
+                ]);
+            }
+        })->call('validateCopy')->assertHasNoErrors();
+    }
+
+    public function test_validate_only_dependent_rules_read_a_model_sibling_the_same_as_full_validation()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $reason = '';
+
+            public $article;
+
+            public function mount()
+            {
+                $this->article = ArticleForValidationUnwrappingTesting::first();
+            }
+
+            public function validateReason()
+            {
+                $this->validateOnly('reason', [
+                    'reason' => 'required_if:article.status,published',
+                ]);
+            }
+        })->call('validateReason')->assertHasErrors(['reason' => 'required_if']);
+    }
+
+    public function test_validate_only_with_validator_callbacks_see_unwrapped_siblings()
+    {
+        ValidationUnwrappingSpyCollection::$toArrayCalls = 0;
+
+        Livewire::test(new class extends TestComponent {
+            public $title = '';
+
+            public $settings;
+
+            public function mount()
+            {
+                $this->settings = new ValidationUnwrappingSpyCollection([
+                    'strict' => true,
+                ]);
+            }
+
+            public function validateTitle()
+            {
+                $this->withValidator(function ($validator) {
+                    $validator->sometimes('title', 'required', fn ($input) => $input->settings['strict'] === true);
+                })->validateOnly('title', [
+                    'title' => 'string',
+                ]);
+            }
+        })->call('validateTitle')->assertHasErrors(['title' => 'required']);
+
+        $this->assertSame(1, ValidationUnwrappingSpyCollection::$toArrayCalls);
+    }
+
+    public function test_validate_only_keeps_unreferenced_form_object_siblings_wrapped()
+    {
+        ValidationUnwrappingSpyCollection::$toArrayCalls = 0;
+
+        Livewire::test(new class extends TestComponent {
+            public ValidationUnwrappingTestForm $form;
+
+            public function mount()
+            {
+                $this->form->rows = new ValidationUnwrappingSpyCollection([
+                    ['id' => 1],
+                ]);
+            }
+
+            public function validateTitle()
+            {
+                $this->validateOnly('form.title');
+            }
+        })->call('validateTitle')->assertHasNoErrors();
+
         $this->assertSame(0, ValidationUnwrappingSpyCollection::$toArrayCalls);
+    }
+
+    public function test_can_validate_a_string_property_whose_value_matches_a_synth_key()
+    {
+        // The raw string used to be passed to findSynth, match the Wireable
+        // synth's key, and fatal calling toLivewire() on a string...
+        Livewire::test(new class extends TestComponent {
+            public $title = 'wrbl';
+
+            public function save()
+            {
+                $this->validate(['title' => 'required|string|min:3']);
+            }
+        })->call('save')->assertHasNoErrors();
     }
 
     public function test_validate_only_still_unwraps_a_wireable_sibling_for_dependent_rules()
@@ -1209,6 +1366,31 @@ class ValidationUnwrappingSpyCollection extends Collection
 
         return parent::toArray();
     }
+}
+
+class ValidationUnwrappingTestForm extends Form
+{
+    #[Validate('required')]
+    public $title = 'Livewire';
+
+    public $rows;
+}
+
+class ArticleForValidationUnwrappingTesting extends Model
+{
+    use Sushi;
+
+    protected $casts = ['status' => ArticleStatusForValidationUnwrappingTesting::class];
+
+    protected $rows = [
+        ['status' => 'published'],
+    ];
+}
+
+enum ArticleStatusForValidationUnwrappingTesting: string
+{
+    case Published = 'published';
+    case Draft = 'draft';
 }
 
 class ComponentWithRulesProperty extends TestComponent
