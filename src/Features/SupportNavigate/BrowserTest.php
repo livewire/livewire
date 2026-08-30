@@ -72,16 +72,6 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/second-transition-opt-in', fn () => (new SecondTransitionOptInPage)())->middleware('web');
             Route::get('/first-animated-transition', fn () => (new FirstAnimatedTransitionPage)())->middleware('web');
             Route::get('/second-animated-transition', fn () => (new SecondAnimatedTransitionPage)())->middleware('web');
-            Route::get('/first-transition-global', function () {
-                config(['livewire.navigate.transitions' => true]);
-
-                return (new FirstTransitionPage)();
-            })->middleware('web');
-            Route::get('/second-transition-global', function () {
-                config(['livewire.navigate.transitions' => true]);
-
-                return (new SecondTransitionPage)();
-            })->middleware('web');
             Route::get('/first-outside', FirstPageWithLinkOutside::class)->middleware('web');
             Route::get('/redirect-to-second', fn () => redirect()->to('/second'));
             Route::get('/second', SecondPage::class)->middleware('web');
@@ -342,29 +332,56 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    public function test_view_transitions_can_be_enabled_globally_for_all_navigations()
+    public function test_the_html_element_can_opt_into_a_full_page_transition()
     {
         $this->browse(function (Browser $browser) {
             $browser
-                ->visit('/first-transition-global')
+                ->visit('/first-transition')
                 ->assertSee('On first transition page')
-                // Intercept document.startViewTransition to track if it gets called...
                 ->tap(fn ($b) => $b->script("
                     window.__viewTransitionCount = 0;
+                    window.__rootTransitionWasDisabled = null;
                     let orig = document.startViewTransition.bind(document);
                     document.startViewTransition = function() {
                         window.__viewTransitionCount++;
+                        window.__rootTransitionWasDisabled = !! document.querySelector('[data-livewire-navigate-transition]');
                         return orig.apply(document, arguments);
                     };
+
+                    document.documentElement.setAttribute('wire:transition.navigate', '');
                 "))
-                // A plain wire:navigate link transitions when enabled globally...
-                ->waitForNavigate()->click('@link.plain.global')
+                ->waitForNavigate()->click('@link.plain')
                 ->assertSee('On second transition page')
                 ->assertScript('window.__viewTransitionCount', 1)
-                // So does the back button...
+                // The document root keeps the browser's native full-page transition...
+                ->assertScript('window.__rootTransitionWasDisabled', false)
                 ->waitForNavigate()->back()
                 ->assertSee('On first transition page')
                 ->assertScript('window.__viewTransitionCount', 2);
+        });
+    }
+
+    public function test_the_body_element_can_be_the_transition_region()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-transition')
+                ->tap(fn ($b) => $b->script("
+                    window.__outgoingBodyTransitionName = null;
+                    window.__rootTransitionWasDisabled = null;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__outgoingBodyTransitionName = document.body.style.viewTransitionName;
+                        window.__rootTransitionWasDisabled = !! document.querySelector('[data-livewire-navigate-transition]');
+                        return orig.apply(document, arguments);
+                    };
+
+                    document.body.setAttribute('wire:transition.navigate', '');
+                "))
+                ->waitForNavigate()->click('@link.plain')
+                ->assertSee('On second transition page')
+                ->assertScript('window.__outgoingBodyTransitionName', 'livewire-navigate')
+                ->assertScript('window.__rootTransitionWasDisabled', true);
         });
     }
 
@@ -401,12 +418,18 @@ class BrowserTest extends \Tests\BrowserTestCase
                 // Prove a transition is genuinely running, rather than merely counting API calls...
                 ->waitUntil("document.documentElement.matches(':active-view-transition')")
                 ->assertScript("document.documentElement.matches(':active-view-transition-type(navigate)')", true)
+                // The unnamed region gets the one implicit page-region name...
+                ->assertScript("document.querySelector('[dusk=navigate-region]').style.viewTransitionName", 'livewire-navigate')
                 ->assertScript("document.querySelector('[dusk=hero-detail]').style.viewTransitionName", 'hero')
-                // Unnamed markers remain in the root page snapshot...
-                ->assertScript("document.querySelector('[dusk=unnamed-detail]').style.viewTransitionName", '')
+                // Ordinary component transitions and unmarked siblings stay separate...
+                ->assertScript("document.querySelector('[dusk=component-transition]').style.viewTransitionName", '')
+                ->assertScript("document.querySelector('[dusk=sidebar]').style.viewTransitionName", '')
+                ->assertScript("!! document.querySelector('style[data-livewire-navigate-transition]')", true)
                 ->waitUntil("! document.documentElement.matches(':active-view-transition')")
                 // Names don't leave permanent stacking contexts behind...
+                ->waitUntil("document.querySelector('[dusk=navigate-region]').style.viewTransitionName === ''")
                 ->waitUntil("document.querySelector('[dusk=hero-detail]').style.viewTransitionName === ''")
+                ->assertScript("!! document.querySelector('style[data-livewire-navigate-transition]')", false)
                 ->assertSee('On second animated page');
         });
     }
@@ -415,7 +438,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         $this->browse(function (Browser $browser) {
             $browser
-                ->visit('/first-transition-global')
+                ->visit('/first-animated-transition')
                 ->tap(fn ($b) => $b->script("
                     window.__viewTransitionCount = 0;
                     let orig = document.startViewTransition.bind(document);
@@ -425,9 +448,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                     };
 
                     document.querySelector('[dusk=transition-modal]').showModal();
-                    Livewire.navigate('/second-transition-global');
+                    Livewire.navigate('/second-animated-transition');
                 "))
-                ->waitForText('On second transition page')
+                ->waitForText('On second animated page')
                 ->assertScript('window.__viewTransitionCount', 0);
         });
     }
@@ -1671,9 +1694,6 @@ class FirstTransitionPage extends Component
 
             <a href="/second-transition" wire:navigate dusk="link.plain">Plain link</a>
             <a href="/second-transition-opt-in" wire:navigate dusk="link.opt-in">Opt-in page</a>
-            <a href="/second-transition-global" wire:navigate dusk="link.plain.global">Plain link (global route)</a>
-
-            <dialog dusk="transition-modal">Modal</dialog>
         </div>
         HTML;
     }
@@ -1711,17 +1731,24 @@ class FirstAnimatedTransitionPage extends Component
     {
         return <<<'HTML'
         <div>
-            <div>On first animated page</div>
+            <aside dusk="sidebar">Stable sidebar</aside>
 
-            <style>
-                ::view-transition-group(*), ::view-transition-old(root), ::view-transition-new(root) {
-                    animation-duration: 1.5s;
-                }
-            </style>
+            <main wire:transition.navigate dusk="navigate-region">
+                <div>On first animated page</div>
 
-            <h2 wire:transition.navigate="hero" dusk="hero">Hero title</h2>
+                <style>
+                    ::view-transition-group(*) {
+                        animation-duration: 1.5s;
+                    }
+                </style>
 
-            <a href="/second-animated-transition" wire:navigate dusk="link.animated">Go to second animated page</a>
+                <h2 wire:transition.navigate="hero" dusk="hero">Hero title</h2>
+                <div wire:transition="component-only" dusk="component-transition">Component-only transition</div>
+
+                <a href="/second-animated-transition" wire:navigate dusk="link.animated">Go to second animated page</a>
+
+                <dialog dusk="transition-modal">Modal</dialog>
+            </main>
         </div>
         HTML;
     }
@@ -1733,17 +1760,20 @@ class SecondAnimatedTransitionPage extends Component
     {
         return <<<'HTML'
         <div>
-            <div>On second animated page</div>
+            <aside dusk="sidebar">Stable sidebar</aside>
 
-            <style>
-                ::view-transition-group(*), ::view-transition-old(root), ::view-transition-new(root) {
-                    animation-duration: 1.5s;
-                }
-            </style>
+            <main wire:transition.navigate dusk="navigate-region">
+                <div>On second animated page</div>
 
-            <h1 wire:transition.navigate="hero" dusk="hero-detail">Hero title</h1>
+                <style>
+                    ::view-transition-group(*) {
+                        animation-duration: 1.5s;
+                    }
+                </style>
 
-            <div wire:transition.navigate dusk="unnamed-detail">Unnamed marker element</div>
+                <h1 wire:transition.navigate="hero" dusk="hero-detail">Hero title</h1>
+                <div wire:transition="component-only" dusk="component-transition">Component-only transition</div>
+            </main>
         </div>
         HTML;
     }

@@ -11,11 +11,23 @@ globalDirective('transition', ({ el, directive, cleanup }) => {
 
 export function setTransitionNames(root, options = {}) {
     let attribute = options.attribute ?? 'wire:transition'
+    let hasUsedDefaultName = false
 
-    root.querySelectorAll(selectorForAttribute(attribute)).forEach(el => {
+    elementsForAttribute(root, attribute, options.includeRoot).forEach(el => {
         if (el.style.viewTransitionName) return
 
         let name = el.getAttribute(attribute)
+
+        if (! name && options.defaultName) {
+            if (hasUsedDefaultName) {
+                console.warn(`Livewire: Only one unnamed [${attribute}] element can be transitioned per page. Give additional elements unique names.`)
+
+                return
+            }
+
+            name = options.defaultName
+            hasUsedDefaultName = true
+        }
 
         // When the developer orchestrates a typed swap (e.g. #[Transition('forward')]),
         // unnamed wire:transition elements stay unnamed so they ride with the parent's
@@ -30,7 +42,7 @@ export function setTransitionNames(root, options = {}) {
 export function clearTransitionNames(root, options = {}) {
     let attribute = options.attribute ?? 'wire:transition'
 
-    root.querySelectorAll(selectorForAttribute(attribute)).forEach(el => {
+    elementsForAttribute(root, attribute, options.includeRoot).forEach(el => {
         if (! assignedTransitionNames.has(el)) return
 
         el.style.viewTransitionName = ''
@@ -40,6 +52,15 @@ export function clearTransitionNames(root, options = {}) {
 
 function selectorForAttribute(attribute) {
     return `[${attribute.replace(/[:.]/g, '\\$&')}]`
+}
+
+function elementsForAttribute(root, attribute, includeRoot = false) {
+    let selector = selectorForAttribute(attribute)
+    let elements = Array.from(root.querySelectorAll(selector))
+
+    if (includeRoot && root.matches?.(selector)) elements.unshift(root)
+
+    return elements
 }
 
 export function startViewTransition(update, options = {}) {

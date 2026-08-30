@@ -2,15 +2,15 @@ import { clearTransitionNames, setTransitionNames, skipTransitionWhenTopLayerOpe
 
 let type = 'navigate'
 let attribute = 'wire:transition.navigate'
-let useViewTransitions = false
 let navigateTransitionSelector = '[wire\\:transition\\.navigate]'
-
-export function enableViewTransitions() {
-    useViewTransitions = true
-}
+let defaultName = 'livewire-navigate'
 
 export function transitionPageSwap(html, update) {
-    if (! shouldTransition(html)) return update()
+    let newDocument = new DOMParser().parseFromString(html, 'text/html')
+    let currentDocumentTransitions = findNavigateTransitions(document)
+    let newDocumentTransitions = findNavigateTransitions(newDocument)
+
+    if (! currentDocumentTransitions.length && ! newDocumentTransitions.length) return update()
 
     // Check if the View Transitions API is supported...
     if (typeof document.startViewTransition !== 'function') return update()
@@ -22,14 +22,19 @@ export function transitionPageSwap(html, update) {
     // transition snapshots would paint above it...
     if (document.querySelector('dialog:modal, :popover-open')) return update()
 
-    // Assign names just for the transition so they don't permanently create
-    // stacking contexts on either page...
-    setTransitionNames(document.body, { type, attribute })
+    let useRootTransition = document.documentElement.matches(navigateTransitionSelector)
+        || newDocument.documentElement.matches(navigateTransitionSelector)
+
+    // Element-scoped transitions leave the document root stationary. Marking
+    // <html> opts into the browser's full-page root transition instead...
+    let style = useRootTransition ? null : disableRootTransition()
+
+    setNavigateTransitionNames(document.body)
 
     let updateAndNameNewPage = () => {
         update()
 
-        setTransitionNames(document.body, { type, attribute })
+        setNavigateTransitionNames(document.body)
     }
 
     let viewTransition = startViewTransition(updateAndNameNewPage, { type })
@@ -37,16 +42,49 @@ export function transitionPageSwap(html, update) {
     skipTransitionWhenTopLayerOpens(viewTransition)
 
     viewTransition.finished
-        .finally(() => clearTransitionNames(document.body, { attribute }))
+        .finally(() => {
+            style?.remove()
+            clearTransitionNames(document.body, { attribute, includeRoot: true })
+        })
         .catch(() => {})
 }
 
-function shouldTransition(html) {
-    if (useViewTransitions) return true
+function findNavigateTransitions(subject) {
+    let root = subject.documentElement
+    let elements = Array.from(root.querySelectorAll(navigateTransitionSelector))
 
-    if (document.body.querySelector(navigateTransitionSelector)) return true
+    if (root.matches(navigateTransitionSelector)) elements.unshift(root)
 
-    let newDocument = new DOMParser().parseFromString(html, 'text/html')
+    return elements
+}
 
-    return !! newDocument.body.querySelector(navigateTransitionSelector)
+function setNavigateTransitionNames(root) {
+    setTransitionNames(root, {
+        type,
+        attribute,
+        defaultName,
+        includeRoot: true,
+    })
+}
+
+function disableRootTransition() {
+    let style = document.createElement('style')
+
+    style.setAttribute('data-livewire-navigate-transition', '')
+
+    style.textContent = `
+        ::view-transition-old(root) {
+            animation: none !important;
+            opacity: 0 !important;
+        }
+
+        ::view-transition-new(root) {
+            animation: none !important;
+            opacity: 1 !important;
+        }
+    `
+
+    document.head.appendChild(style)
+
+    return style
 }
