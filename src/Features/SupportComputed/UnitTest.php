@@ -9,7 +9,10 @@ use Livewire\EventBus;
 use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
+use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Features\SupportEvents\BaseOn;
+
+use function Livewire\on;
 
 class UnitTest extends TestCase
 {
@@ -769,6 +772,28 @@ class UnitTest extends TestCase
         })
             ->assertSetStrict('foo', 'noneset')
             ->assertSee('noneset');
+    }
+
+    public function test_get_finisher_does_not_receive_stdclass()
+    {
+        $seen = null;
+
+        on('__get', function () use (&$seen) {
+            return function ($value) use (&$seen) {
+                $seen = $value;
+
+                return $value;
+            };
+        });
+
+        try {
+            $component = Livewire::test(TestComponent::class);
+            $component->instance()->missingProperty;
+        } catch (PropertyNotFoundException $e) {
+            // expected
+        }
+
+        $this->assertNotInstanceOf(\stdClass::class, $seen);
     }
 }
 

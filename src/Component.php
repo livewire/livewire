@@ -122,7 +122,9 @@ abstract class Component
 
         $finish = trigger('__get', $this, $property, $returnValue);
 
-        $value = $finish($value);
+        if ($value !== $noneset) {
+            $value = $finish($value);
+        }
 
         if ($value === $noneset) {
             throw new PropertyNotFoundException($property, $this->getName());
