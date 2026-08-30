@@ -218,21 +218,32 @@ View Transitions are supported in Chrome 111+, Edge 111+, and Safari 18+. In bro
 
 [View browser support on caniuse.com →](https://caniuse.com/view-transitions)
 
+## Transitioning between page visits
+
+`wire:transition` animates elements during component updates. To animate elements between `wire:navigate` page visits instead, use the `.navigate` modifier:
+
+```blade
+<h2 wire:transition.navigate="post-{{ $post->id }}">{{ $post->title }}</h2>
+```
+
+The directive is element-scoped: only marked regions animate during the page visit, while unmarked layout elements remain stationary. An unnamed directive identifies one primary region; use explicit names for additional regions or shared elements. Read more in the [Navigate documentation](/docs/4.x/navigate#animating-page-visits-with-view-transitions).
+
 ## See also
 
 - **[wire:show](/docs/4.x/wire-show)** — Toggle visibility with CSS display
+- **[Navigate](/docs/4.x/navigate#animating-page-visits-with-view-transitions)** — Animate between page visits with `.navigate`
 - **[Loading States](/docs/4.x/loading-states)** — Show loading indicators during requests
 - **[Alpine Transitions](https://alpinejs.dev/directives/transition)** — For more complex animation needs
 
 ## Reference
 
-```blade
-wire:transition="name"
-```
+| Directive | Description |
+|-----------|-------------|
+| `wire:transition` | Animates an element during component updates using `match-element` |
+| `wire:transition="name"` | Animates a named element during component updates |
+| `wire:transition.navigate` | Animates the page's primary element region between visits |
+| `wire:transition.navigate="name"` | Animates a named region or shared element between visits |
 
-| Expression | Description |
-|------------|-------------|
-| (none) | Uses `match-element` as the view-transition-name |
-| `"name"` | Uses the provided string as the view-transition-name |
-
-This directive has no modifiers.
+| Modifier | Description |
+|----------|-------------|
+| `.navigate` | Transitions the element between page visits instead of component updates. Unnamed, it becomes the primary page region; named, it becomes an additional region or shared element. |
