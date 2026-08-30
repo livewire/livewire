@@ -46,9 +46,14 @@ export async function transitionDomMutation(fromEl, toEl, callback, options = {}
     // would paint above it during animation)...
     if (document.querySelector('dialog:modal')) return callback()
 
-    for (let el of document.querySelectorAll(':popover-open')) {
-        if ([...el.querySelectorAll('*')].some(el => el.checkVisibility())) {
-            return callback()
+    // An open popover only blocks the transition if it has visible descendants.
+    // Some components (e.g. toast hosts) keep an empty popover open as a
+    // persistent container — the host element itself always passes
+    // checkVisibility() while open, so visible *descendants* are the proxy
+    // for "this popover is actually showing UI"...
+    for (let popover of document.querySelectorAll(':popover-open')) {
+        for (let el of popover.querySelectorAll('*')) {
+            if (el.checkVisibility()) return callback()
         }
     }
 
