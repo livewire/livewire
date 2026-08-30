@@ -226,7 +226,7 @@ View Transitions are supported in Chrome 111+, Edge 111+, and Safari 18+. In bro
 <h2 wire:transition.navigate="post-{{ $post->id }}">{{ $post->title }}</h2>
 ```
 
-The presence of `wire:transition.navigate` on either page opts the visit into a view transition. Read more in the [Navigate documentation](/docs/4.x/navigate#animating-page-visits-with-view-transitions).
+The directive is element-scoped: only marked regions animate during the page visit, while unmarked layout elements remain stationary. An unnamed directive identifies one primary region; use explicit names for additional regions or shared elements. Read more in the [Navigate documentation](/docs/4.x/navigate#animating-page-visits-with-view-transitions).
 
 ## See also
 
@@ -237,16 +237,13 @@ The presence of `wire:transition.navigate` on either page opts the visit into a 
 
 ## Reference
 
-```blade
-wire:transition="name"
-wire:transition.navigate="name"
-```
-
-| Expression | Description |
-|------------|-------------|
-| (none) | Uses `match-element` as the view-transition-name |
-| `"name"` | Uses the provided string as the view-transition-name |
+| Directive | Description |
+|-----------|-------------|
+| `wire:transition` | Animates an element during component updates using `match-element` |
+| `wire:transition="name"` | Animates a named element during component updates |
+| `wire:transition.navigate` | Animates the page's primary element region between visits |
+| `wire:transition.navigate="name"` | Animates a named region or shared element between visits |
 
 | Modifier | Description |
 |----------|-------------|
-| `.navigate` | Transitions the element between page visits instead of component updates. Unnamed, it opts the page into a crossfade; named, it morphs into the matching element on the next page. |
+| `.navigate` | Transitions the element between page visits instead of component updates. Unnamed, it becomes the primary page region; named, it becomes an additional region or shared element. |

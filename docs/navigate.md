@@ -279,7 +279,7 @@ Livewire.navigate('/new/url')
 
 ## Animating page visits with view transitions
 
-By default, `wire:navigate` swaps in the new page instantly. To opt a page into the browser's [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API), add `wire:transition.navigate` to an element on the page:
+By default, `wire:navigate` swaps in the new page instantly. Add `wire:transition.navigate` to an element to animate that region with the browser's [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API):
 
 ```blade
 <main wire:transition.navigate>
@@ -287,24 +287,71 @@ By default, `wire:navigate` swaps in the new page instantly. To opt a page into 
 </main>
 ```
 
-A navigation animates when either the page being left or the page being entered opts in, so clicks, programmatic navigation, and browser back and forward visits behave consistently.
+The directive is element-scoped: only the marked `<main>` transitions. Siblings such as a sidebar or header update without animating. A transition runs when either the page being left or the page being entered contains a marked element, so clicks, programmatic navigation, and browser back and forward visits behave consistently.
 
-To animate every navigation in your application, enable transitions globally in `config/livewire.php`:
+An unnamed directive is the page's primary transition region. Each page may contain one unnamed region. Give any additional regions unique names:
 
-```php
-'navigate' => [
-    // ...
-    'transitions' => true,
-],
+```blade
+<main wire:transition.navigate>...</main>
+
+<aside wire:transition.navigate="secondary">...</aside>
 ```
 
-Livewire will use the browser's default crossfade. You can customize the animation with standard `::view-transition-*` CSS. Navigation transitions are typed as `navigate`, so styles can target page visits without affecting component transitions:
+### Keeping a sidebar still
+
+Because transitions are element-scoped, a persistent application shell needs no special transition CSS. Mark the changing content on both pages and leave the shell unmarked:
+
+```blade
+<body>
+    <aside>
+        <!-- This sidebar remains visually stationary... -->
+    </aside>
+
+    <main wire:transition.navigate="content">
+        {{ $slot }}
+    </main>
+</body>
+```
+
+Livewire temporarily disables the browser's root animation while element regions transition, preventing the unmarked sidebar from fading with the page.
+
+### Transitioning the full page
+
+To use the browser's native full-page transition, place the directive on the document element in your application layout:
+
+```blade
+<html wire:transition.navigate>
+    <!-- ... -->
+</html>
+```
+
+You may also place it on `<body>` to transition the complete body as a single element region.
+
+### Customizing the animation
+
+Put custom transition CSS in your application's shared `resources/css/app.css` file—the same stylesheet loaded by your layout using `@vite`. Keeping these styles in the shared stylesheet ensures they are present on both sides of every navigation.
+
+The unnamed region uses the transition name `livewire-navigate`. For example, this replaces its default animation with a short fade and rise:
 
 ```css
-html:active-view-transition-type(navigate)::view-transition-new(root) {
-    animation: slide-up .2s ease-out;
+@keyframes navigate-out {
+    to { opacity: 0; transform: translateY(-0.5rem); }
+}
+
+@keyframes navigate-in {
+    from { opacity: 0; transform: translateY(0.5rem); }
+}
+
+html:active-view-transition-type(navigate)::view-transition-old(livewire-navigate) {
+    animation: navigate-out 150ms ease-in both;
+}
+
+html:active-view-transition-type(navigate)::view-transition-new(livewire-navigate) {
+    animation: navigate-in 200ms ease-out both;
 }
 ```
+
+Navigation transitions carry the `navigate` transition type, keeping these rules separate from ordinary component `wire:transition` animations. Firefox supports the underlying transition but currently ignores transition types, so it uses the browser's default animation unless you also provide untyped fallback selectors.
 
 ### Morphing elements between pages
 
@@ -318,7 +365,9 @@ Give matching elements on both pages the same transition name to morph one into 
 <h1 wire:transition.navigate="post-{{ $post->id }}">{{ $post->title }}</h1>
 ```
 
-Livewire assigns the underlying `view-transition-name` immediately before the transition and clears it when the animation finishes. An unnamed `wire:transition.navigate` remains a page-level opt-in marker and participates only in the root crossfade.
+Livewire assigns the underlying `view-transition-name` immediately before the transition and clears it when the animation finishes. Named elements can be nested inside the primary region; the browser removes them from their parent's snapshot and transitions them independently.
+
+Ordinary `wire:transition` elements remain scoped to Livewire component updates. They are not named or animated by `wire:navigate` page transitions.
 
 > [!warning] Transition names must be unique per page
 > Like an `id` attribute, a transition name can only appear once per page. Include a unique identifier when rendering names in a loop.
