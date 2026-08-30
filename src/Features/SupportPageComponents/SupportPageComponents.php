@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportPageComponents;
 
-use function Livewire\{on, off, once};
+use function Livewire\{on, once};
 use Livewire\Drawer\ImplicitRouteBinding;
 use Livewire\ComponentHook;
 use Livewire\Mechanisms\HandleRouting\LivewirePageController;
@@ -112,13 +112,15 @@ class SupportPageComponents extends ComponentHook
             };
         });
 
-        on('render', $handler);
-        on('render.placeholder', $handler);
+        $render = on('render', $handler);
+        $renderPlaceholder = on('render.placeholder', $handler);
 
-        $callback();
-
-        off('render', $handler);
-        off('render.placeholder', $handler);
+        try {
+            $callback();
+        } finally {
+            $render();
+            $renderPlaceholder();
+        }
 
         return $layoutConfig;
     }
