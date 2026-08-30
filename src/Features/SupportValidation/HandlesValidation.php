@@ -512,6 +512,8 @@ trait HandlesValidation
     protected function unwrapDataForValidation($data)
     {
         return collect($data)->map(function ($value) {
+            // Scalars and arrays are already valid Laravel validation data...
+            if (! is_object($value)) return $value;
 
             $synth = app('livewire')->findSynth($value, $this);
 
