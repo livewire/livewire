@@ -52,6 +52,8 @@ The best way to reduce requests in this scenario is simply to make the polling i
 You can manually control how often the component will poll by appending the desired duration to `wire:poll` like so:
 
 ```blade
+<div wire:poll.1m> <!-- In minutes... -->
+
 <div wire:poll.15s> <!-- In seconds... -->
 
 <div wire:poll.15000ms> <!-- In milliseconds... -->
@@ -88,6 +90,7 @@ wire:poll="action"
 
 | Modifier | Description |
 |----------|-------------|
+| `.[number]m` | Poll interval in minutes (e.g., `.1m`) |
 | `.[number]s` | Poll interval in seconds (e.g., `.15s`) |
 | `.[number]ms` | Poll interval in milliseconds (e.g., `.15000ms`) |
 | `.keep-alive` | Continue polling even when the tab is in the background |
