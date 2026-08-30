@@ -113,7 +113,8 @@ abstract class Component
 
     function __get($property)
     {
-        $value = 'noneset';
+        $noneset = new \stdClass();
+        $value = $noneset;
 
         $returnValue = function ($newValue) use (&$value) {
             $value = $newValue;
@@ -123,7 +124,7 @@ abstract class Component
 
         $value = $finish($value);
 
-        if ($value === 'noneset') {
+        if ($value === $noneset) {
             throw new PropertyNotFoundException($property, $this->getName());
         }
 

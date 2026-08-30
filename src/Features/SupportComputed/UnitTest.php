@@ -735,6 +735,41 @@ class UnitTest extends TestCase
             ->dispatch('bar', 'baz')
             ->assertSetStrict('foo', 'baz');
     }
+
+    public function test_computed_property_can_return_the_string_noneset()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Computed]
+            public function foo()
+            {
+                return 'noneset';
+            }
+
+            public function render()
+            {
+                return '<div>{{ $this->foo }}</div>';
+            }
+        })
+            ->assertSetStrict('foo', 'noneset')
+            ->assertSee('noneset');
+    }
+
+    public function test_legacy_computed_property_can_return_the_string_noneset()
+    {
+        Livewire::test(new class extends TestComponent {
+            public function getFooProperty()
+            {
+                return 'noneset';
+            }
+
+            public function render()
+            {
+                return '<div>{{ $this->foo }}</div>';
+            }
+        })
+            ->assertSetStrict('foo', 'noneset')
+            ->assertSee('noneset');
+    }
 }
 
 class ComputedPropertyStub extends Component
