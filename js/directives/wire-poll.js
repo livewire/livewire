@@ -128,11 +128,14 @@ export function extractDurationFrom(modifiers, defaultDuration) {
     let durationInMilliSeconds
     let durationInMilliSecondsString = modifiers.find(mod => mod.match(/([0-9]+)ms/))
     let durationInSecondsString = modifiers.find(mod => mod.match(/([0-9]+)s/))
+    let durationInMinutesString = modifiers.find(mod => mod.match(/([0-9]+)m/))
 
     if (durationInMilliSecondsString) {
         durationInMilliSeconds = Number(durationInMilliSecondsString.replace('ms', ''))
     } else if (durationInSecondsString) {
         durationInMilliSeconds = Number(durationInSecondsString.replace('s', '')) * 1000
+    } else if (durationInMinutesString) {
+        durationInMilliSeconds = Number(durationInMinutesString.replace('m', '')) * 60 * 1000
     }
 
     return durationInMilliSeconds || defaultDuration
