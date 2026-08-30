@@ -255,6 +255,21 @@ class UnitTest extends TestCase
             ->assertSet('list', null);
     }
 
+    public function test_stale_enum_backing_values_are_discarded_from_typed_properties()
+    {
+        config(['session.serialization' => 'json']);
+
+        app('session')->forgetDrivers();
+
+        // A scalar backing an enum case that no longer exists (a removed or
+        // renamed case, or a value written before the enum changed). Coercing
+        // it throws a ValueError that must be recovered from, not surfaced.
+        FacadesSession::put('stale-enum', 'archived');
+
+        Livewire::test(ComponentWithSessionEnum::class)
+            ->assertSet('status', null);
+    }
+
     protected function assertClientAuthoredSynthEnvelopeIsDiscarded($serialization)
     {
         config(['session.serialization' => $serialization]);
@@ -438,6 +453,23 @@ class ComponentWithStaleSessionCollection extends Component
 {
     #[Session(key: 'stale-collection')]
     public ?Collection $list = null;
+
+    public function render()
+    {
+        return '<div></div>';
+    }
+}
+
+enum SessionStatus: string
+{
+    case Draft = 'draft';
+    case Published = 'published';
+}
+
+class ComponentWithSessionEnum extends Component
+{
+    #[Session(key: 'stale-enum')]
+    public ?SessionStatus $status = null;
 
     public function render()
     {

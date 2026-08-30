@@ -29,9 +29,13 @@ class BaseSession extends LivewireAttribute
             return;
         }
 
+        // A stored value can become unassignable after it was persisted: its
+        // type no longer matches the property (\TypeError), or it's a scalar
+        // backing a since-removed enum case (\ValueError from Enum::from()).
+        // Either way the stale value is forgotten and the default preserved.
         try {
             $this->setValue($fromSession);
-        } catch (\TypeError) {
+        } catch (\TypeError|\ValueError) {
             Session::forget($this->key());
         }
     }
