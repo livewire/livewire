@@ -243,6 +243,35 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertConsoleLogHasNoErrors();
     }
 
+    public function test_a_module_preload_link_is_injected_into_the_head()
+    {
+        // The initial page render emits a modulepreload link so the browser
+        // starts fetching the module while parsing — before Livewire boots...
+        Livewire::visit('testns::alpine-data')
+            ->assertScript('!! document.head.querySelector(\'link[rel="modulepreload"][href*="testns---alpine-data.js"]\')', true)
+            ->waitForTextIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_a_module_preload_link_is_injected_for_lazy_components()
+    {
+        // Even though a lazy placeholder mounts without its scriptModule
+        // effect, the page render still warms the module it will need...
+        Livewire::visit([new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <livewire:testns::alpine-data lazy />
+                </div>
+                HTML;
+            }
+        }])
+            ->assertScript('!! document.head.querySelector(\'link[rel="modulepreload"][href*="testns---alpine-data.js"]\')', true)
+            ->waitForTextIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
     public function test_x_cloak_is_honored_while_the_module_is_loading()
     {
         // The /slow-module.js import keeps the component's module pending
