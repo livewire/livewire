@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportValidation;
 
-use ArrayAccess;
 use function Livewire\invade;
 use function Livewire\store;
 use Illuminate\Contracts\Support\Arrayable;
@@ -382,7 +381,7 @@ trait HandlesValidation
 
         $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
 
-        $data = $this->unwrapDataForValidation($data, $property, $rulesForField);
+        $data = $this->unwrapDataForValidation($data);
 
         // If a matching rule is found, then filter collections down to keys specified in the field,
         // while leaving all other data intact. If a key isn't specified and instead there is a
@@ -510,17 +509,11 @@ trait HandlesValidation
         return Utils::getPublicPropertiesDefinedOnSubclass($this);
     }
 
-    protected function unwrapDataForValidation($data, $property = null, $rules = [])
+    protected function unwrapDataForValidation($data)
     {
-        $untouched = $this->siblingsUntouchedByRules($data, $property, $rules);
-
-        return collect($data)->map(function ($value, $key) use ($untouched) {
+        return collect($data)->map(function ($value) {
             // Scalars and arrays are already valid Laravel validation data...
             if (! is_object($value)) return $value;
-
-            // Laravel can traverse ArrayAccess values without materializing them,
-            // so siblings that no rule references are safe to leave wrapped...
-            if (in_array($key, $untouched, true)) return $value;
 
             $synth = app('livewire')->findSynth($value, $this);
 
@@ -529,41 +522,6 @@ trait HandlesValidation
 
             return $value;
         })->all();
-    }
-
-    protected function siblingsUntouchedByRules($data, $property, $rules)
-    {
-        if (is_null($property)) return [];
-
-        // Rule objects, closures, and withValidator() callbacks can read any
-        // value on the validator, so every sibling has to be unwrapped...
-        if ($this->withValidatorCallback) return [];
-
-        $referenced = [$property];
-
-        foreach ($rules as $key => $ruleSet) {
-            foreach (is_string($ruleSet) ? explode('|', $ruleSet) : Arr::wrap($ruleSet) as $rule) {
-                if ($rule instanceof \Stringable) $rule = (string) $rule;
-
-                if (! is_string($rule)) return [];
-
-                // A bare "confirmed" rule implicitly reads a "{field}_confirmation" sibling...
-                if ($rule === 'confirmed') $referenced[] = Utils::beforeFirstDot($key.'_confirmation');
-
-                if (! str_contains($rule, ':')) continue;
-
-                // Dependent rules like "same:settings.title" read sibling properties
-                // through their parameters...
-                foreach (explode(',', (string) str($rule)->after(':')) as $parameter) {
-                    $referenced[] = Utils::beforeFirstDot(trim($parameter));
-                }
-            }
-        }
-
-        return collect($data)
-            ->filter(fn ($value, $key) => $value instanceof ArrayAccess && ! in_array($key, $referenced, true))
-            ->keys()
-            ->all();
     }
 
     protected function prepareForValidation($attributes)
