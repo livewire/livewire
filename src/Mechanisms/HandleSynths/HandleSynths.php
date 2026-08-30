@@ -5,6 +5,7 @@ namespace Livewire\Mechanisms\HandleSynths;
 use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\HandleComponents\SecurityPolicy;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers;
 use Livewire\Drawer\Utils;
@@ -93,6 +94,12 @@ class HandleSynths extends Mechanism
         }
 
         $synth = $this->resolve($meta['s'], $context, $path);
+
+        // Snapshot meta describes the previous value. If an update replaces an
+        // array-shaped value with a scalar, the previous synth no longer applies.
+        if ($synth instanceof ArrayShapedSynth && ! is_array($value)) {
+            return $value;
+        }
 
         return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path, $raw) {
             // Updates carry values only — the browser strips synthesizer meta out

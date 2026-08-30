@@ -1,4 +1,5 @@
 import { findComponentByEl, destroyComponent, initComponent, hasComponent } from './store'
+import { treeIsSuspendedFor } from './features/supportJsModules'
 import { matchesForLivewireDirective, extractDirective } from './directives'
 import { trigger } from './hooks'
 import collapse from '@alpinejs/collapse'
@@ -40,6 +41,12 @@ export function start() {
         // This prevents Livewire from causing general slowness for other Alpine elements on the page...
         if (! Array.from(attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return
 
+        // An element Alpine hasn't initialized sits inside an ignored or
+        // suspended tree. Its directives will be picked up by the tree walk
+        // when (and if) it initializes — triggering them now would double
+        // them up...
+        if (! el._x_marker) return
+
         let component = findComponentByEl(el, false)
 
         if (! component) return
@@ -67,6 +74,12 @@ export function start() {
                 Alpine.onAttributeRemoved(el, 'wire:id', () => {
                     destroyComponent(component.id)
                 })
+
+                // If the component's tree was just suspended while its script module
+                // loads (initComponent's effect processing registered it with
+                // Alpine.deferInit), bail out here so directive triggers fire once
+                // on the resume pass instead of on both passes...
+                if (treeIsSuspendedFor(component)) return
             }
 
             let directives = Array.from(el.getAttributeNames())

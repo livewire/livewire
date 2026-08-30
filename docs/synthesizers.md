@@ -244,3 +244,21 @@ class AddressSynth extends Synth
     }
 }
 ```
+
+## Array-shaped synthesizers
+
+During property updates, Livewire may reuse synthesizer metadata from the previous snapshot to hydrate nested values. If your synthesizer always serializes its value as an array, implement the `ArrayShapedSynth` interface:
+
+```php
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+
+class AddressSynth extends Synth implements ArrayShapedSynth
+{
+    // ...
+}
+```
+
+This tells Livewire not to run your synthesizer when a top-level or nested update replaces the previous value with any non-array value. Instead, Livewire treats the incoming value as the replacement. Array updates continue through your synthesizer as usual.
+
+Only implement this interface when your synthesizer's `hydrate()` method requires an array. Synthesizers that hydrate scalar values, such as dates, enums, integers, floats, or strings, should not implement it. Without the interface, Livewire continues applying the previous synthesizer metadata to non-array updates for backwards compatibility.

@@ -733,18 +733,25 @@ Run actions when elements enter or leave the viewport, similar to Alpine's [`x-i
 <div wire:intersect:leave="pauseVideo">...</div>
 <div wire:intersect.half="loadMore">...</div>
 <div wire:intersect.full="startAnimation">...</div>
+<div wire:intersect.half.dwell.500ms="trackImpression">...</div>
 
 <!-- With options -->
 <div wire:intersect.margin.200px="loadMore">...</div>
 <div wire:intersect.threshold.50="trackScroll">...</div>
+<div wire:intersect.parent="loadWithinScroller">...</div>
 ```
 
 Available modifiers:
 - `.once` - Fire only once
+- `.dwell.Xms` - Require continuous intersection for a duration (250ms by default)
 - `.half` - Wait until half is visible
 - `.full` - Wait until fully visible
 - `.threshold.X` - Custom visibility percentage (0-100)
 - `.margin.Xpx` or `.margin.X%` - Intersection margin
+- `.parent` - Observe relative to the element's parent
+- `.renderless` - Skip rendering after the action
+- `.async` - Run the action in parallel
+- `.preserve-scroll` - Preserve the page scroll position
 
 [Learn more about wire:intersect →](/docs/4.x/wire-intersect)
 

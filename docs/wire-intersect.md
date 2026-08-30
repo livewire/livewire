@@ -72,6 +72,35 @@ Use the `.once` modifier to ensure the action only fires on the first intersecti
 
 This is particularly useful for analytics or tracking when you only want to record the first time a user sees something.
 
+## Require continuous visibility
+
+Use `.dwell` when an element must remain visible before the action runs. The default dwell time is 250 milliseconds:
+
+```blade
+<div wire:intersect.dwell="trackView">...</div>
+```
+
+Add a duration modifier to choose a different interval:
+
+```blade
+<!-- Run after 500 milliseconds of continuous visibility -->
+<div wire:intersect.dwell.500ms="trackView">...</div>
+```
+
+The dwell timer resets if the element stops meeting its visibility threshold or the page moves to the background. It starts again when the element becomes eligible in a visible page.
+
+For `wire:intersect:leave`, the dwell interval instead begins after visibility falls below the configured threshold:
+
+```blade
+<div wire:intersect:leave.half.dwell.500ms="pauseVideo">...</div>
+```
+
+Combine `.dwell` with a visibility threshold and `.once` to record a qualified impression:
+
+```blade
+<div wire:intersect.once.half.dwell.1000ms="trackImpression">...</div>
+```
+
 ## Combining modifiers
 
 You can combine multiple modifiers to create precise behaviors:
@@ -178,7 +207,12 @@ wire:intersect:leave="action"
 | Modifier | Description |
 |----------|-------------|
 | `.once` | Only fire the action on the first intersection |
+| `.dwell.[duration]` | Require continuous visibility before firing (defaults to `250ms`) |
 | `.half` | Trigger when half of the element is visible |
 | `.full` | Trigger when the entire element is visible |
 | `.threshold.[0-100]` | Trigger at a custom visibility threshold percentage |
 | `.margin.[value]` | Add margin around the viewport (e.g., `.margin.200px`, `.margin.10%`) |
+| `.parent` | Observe visibility within the element's parent instead of the browser viewport |
+| `.renderless` | Run the action without rendering the component |
+| `.async` | Run the action in a parallel request |
+| `.preserve-scroll` | Preserve the page's scroll position through the action |
