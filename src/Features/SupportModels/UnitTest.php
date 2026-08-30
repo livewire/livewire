@@ -325,6 +325,406 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(1, array_values($articleQueries));
     }
 
+    public function test_a_model_property_reuses_a_model_already_hydrated_by_a_collection_property()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public Collection $articles;
+
+            public Article $selected;
+
+            public function mount() {
+                $this->articles = Article::all();
+                $this->selected = $this->articles->first();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    @foreach($articles as $article)
+                    {{ $article->title.'-'.$loop->index }}
+                    @endforeach
+                    {{ 'Selected: '.$selected->title }}
+                </div>
+            HTML; }
+        });
+
+        Article::resolveConnection()->enableQueryLog();
+        Article::resolveConnection()->flushQueryLog();
+
+        $component->call('$refresh')
+            ->assertSee('First-0')
+            ->assertSee('Second-1')
+            ->assertSee('Selected: First');
+
+        $this->assertCount(1, Article::resolveConnection()->getQueryLog());
+    }
+
+    public function test_a_collection_property_only_queries_models_not_already_hydrated_by_a_model_property()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public Article $selected;
+
+            public Collection $articles;
+
+            public function mount() {
+                $this->selected = Article::first();
+                $this->articles = Article::all();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    {{ 'Selected: '.$selected->title }}
+                    @foreach($articles as $article)
+                    {{ $article->title.'-'.$loop->index }}
+                    @endforeach
+                </div>
+            HTML; }
+        });
+
+        Article::resolveConnection()->enableQueryLog();
+        Article::resolveConnection()->flushQueryLog();
+
+        $component->call('$refresh')
+            ->assertSee('Selected: First')
+            ->assertSee('First-0')
+            ->assertSee('Second-1');
+
+        $queryLog = Article::resolveConnection()->getQueryLog();
+
+        $this->assertCount(2, $queryLog);
+
+        // The collection query should only restore the model that wasn't already
+        // resolved by the model property. Integer keys may be inlined into the
+        // SQL or passed as bindings depending on the Laravel version...
+        [$modelQuery, $collectionQuery] = $queryLog;
+
+        $this->assertTrue(
+            str_contains($collectionQuery['query'], 'in (2)') || $collectionQuery['bindings'] === [2],
+            'The collection should only have queried for the unresolved model',
+        );
+    }
+
+    public function test_two_model_properties_with_the_same_key_are_hydrated_with_one_query()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public Article $first;
+
+            public Article $second;
+
+            public function mount() {
+                $this->first = Article::first();
+                $this->second = Article::first();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ 'a:'.$first->title }} {{ 'b:'.$second->title }}</div>
+            HTML; }
+        });
+
+        Article::resolveConnection()->enableQueryLog();
+        Article::resolveConnection()->flushQueryLog();
+
+        $component->call('$refresh')
+            ->assertSee('a:First')
+            ->assertSee('b:First');
+
+        $this->assertCount(1, Article::resolveConnection()->getQueryLog());
+    }
+
+    public function test_reused_model_instances_are_shared_within_a_request()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public Collection $articles;
+
+            public Article $selected;
+
+            public function mount() {
+                $this->articles = Article::all();
+                $this->selected = $this->articles->first();
+            }
+
+            public function rename() {
+                $this->articles->count();
+
+                $this->selected->title = 'Renamed';
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    @foreach($articles as $article)
+                    {{ $article->title.'-'.$loop->index }}
+                    @endforeach
+                </div>
+            HTML; }
+        })
+        ->call('rename')
+        ->assertSee('Renamed-0')
+        ->assertSee('Second-1');
+    }
+
+    public function test_a_collection_is_not_queried_when_all_its_models_are_already_resolved()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public Article $one;
+
+            public Article $two;
+
+            public Collection $articles;
+
+            public function mount() {
+                $this->one = Article::find(1);
+                $this->two = Article::find(2);
+                $this->articles = new Collection([Article::find(1), Article::find(1), Article::find(2)]);
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    {{ 'a:'.$one->title }} {{ 'b:'.$two->title }}
+                    @foreach($articles as $article)
+                    {{ $article->title.'-'.$loop->index }}
+                    @endforeach
+                </div>
+            HTML; }
+        });
+
+        Article::resolveConnection()->enableQueryLog();
+        Article::resolveConnection()->flushQueryLog();
+
+        $component->call('$refresh')
+            ->assertSee('a:First')
+            ->assertSee('b:Second')
+            ->assertSee('First-0')
+            ->assertSee('First-1')
+            ->assertSee('Second-2');
+
+        $this->assertCount(2, Article::resolveConnection()->getQueryLog());
+    }
+
+    public function test_resolved_models_are_not_reused_across_requests()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public Article $article;
+
+            public function mount() {
+                $this->article = Article::first();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ $article->title }}</div>
+            HTML; }
+        });
+
+        Article::resolveConnection()->enableQueryLog();
+        Article::resolveConnection()->flushQueryLog();
+
+        $component->call('$refresh')->assertSee('First');
+        $component->call('$refresh')->assertSee('First');
+
+        $this->assertCount(2, Article::resolveConnection()->getQueryLog());
+    }
+
+    public function test_a_mutated_model_is_not_reused_by_other_properties()
+    {
+        // On earlier versions there are no lazy proxies, so properties hydrate
+        // eagerly before any mutations and share the still-clean instance...
+        if (PHP_VERSION_ID < 80400) $this->markTestSkipped('Requires lazy model proxies');
+
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public Article $first;
+
+            public Article $second;
+
+            public function mount() {
+                $this->first = Article::first();
+                $this->second = Article::first();
+            }
+
+            public function rename() {
+                $this->first->title = 'Draft';
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ 'a:'.$first->title }} {{ 'b:'.$second->title }}</div>
+            HTML; }
+        });
+
+        Article::resolveConnection()->enableQueryLog();
+        Article::resolveConnection()->flushQueryLog();
+
+        // The unsaved mutation on $first shouldn't leak into $second — it
+        // should fall through to a fresh query instead...
+        $component->call('rename')
+            ->assertSee('a:Draft')
+            ->assertSee('b:First');
+
+        $this->assertCount(2, Article::resolveConnection()->getQueryLog());
+    }
+
+    public function test_a_deleted_model_is_not_reused_when_hydrating_a_collection()
+    {
+        // On earlier versions there are no lazy proxies, so the collection is
+        // hydrated eagerly before the deletion, like it is on main...
+        if (PHP_VERSION_ID < 80400) $this->markTestSkipped('Requires lazy model proxies');
+
+        $this->resetMutableArticles();
+
+        Livewire::test(new class extends \Livewire\Component {
+            public Collection $articles;
+
+            public MutableArticle $selected;
+
+            public function mount() {
+                $this->articles = MutableArticle::all();
+                $this->selected = $this->articles->first();
+            }
+
+            public function deleteSelected() {
+                $this->selected->delete();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    @foreach($articles as $article)
+                    {{ $article->title.'-'.$loop->index }}
+                    @endforeach
+                </div>
+            HTML; }
+        })
+        ->call('deleteSelected')
+        ->assertDontSee('First-')
+        ->assertSee('Second-0');
+    }
+
+    public function test_a_saved_model_is_not_reused_by_other_properties()
+    {
+        if (PHP_VERSION_ID < 80400) $this->markTestSkipped('Requires lazy model proxies');
+
+        $this->resetMutableArticles();
+
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public MutableArticle $first;
+
+            public MutableArticle $second;
+
+            public function mount() {
+                $this->first = MutableArticle::find(1);
+                $this->second = MutableArticle::find(1);
+            }
+
+            public function rename() {
+                $this->first->update(['title' => 'Renamed']);
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ 'a:'.$first->title }} {{ 'b:'.$second->title }}</div>
+            HTML; }
+        });
+
+        MutableArticle::resolveConnection()->enableQueryLog();
+        MutableArticle::resolveConnection()->flushQueryLog();
+
+        // The saved model shouldn't be reused for $second — it should fall
+        // through to a fresh query, which reads the same saved title...
+        $component->call('rename')
+            ->assertSee('a:Renamed')
+            ->assertSee('b:Renamed');
+
+        $selects = array_filter(
+            MutableArticle::resolveConnection()->getQueryLog(),
+            fn ($q) => str_starts_with($q['query'], 'select'),
+        );
+
+        $this->assertCount(2, $selects);
+    }
+
+    public function test_a_model_saved_after_its_reuse_was_rejected_is_not_served_stale()
+    {
+        if (PHP_VERSION_ID < 80400) $this->markTestSkipped('Requires lazy model proxies');
+
+        $this->resetMutableArticles();
+
+        Livewire::test(new class extends \Livewire\Component {
+            public MutableArticle $first;
+
+            public MutableArticle $second;
+
+            public Collection $articles;
+
+            public function mount() {
+                $this->first = MutableArticle::find(1);
+                $this->second = MutableArticle::find(1);
+                $this->articles = MutableArticle::all();
+            }
+
+            public function rename() {
+                // Once a mutated instance is encountered, the model shouldn't be
+                // shared for the rest of the request — even after the collection
+                // resolves a clean instance while the mutation is unsaved...
+                $this->first->title = 'Renamed';
+
+                $this->articles->count();
+
+                $this->first->save();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ 'b:'.$second->title }}</div>
+            HTML; }
+        })
+        ->call('rename')
+        ->assertSee('b:Renamed');
+    }
+
+    public function test_a_model_deleted_after_its_reuse_was_rejected_is_not_resurrected()
+    {
+        if (PHP_VERSION_ID < 80400) $this->markTestSkipped('Requires lazy model proxies');
+
+        $this->resetMutableArticles();
+
+        Livewire::test(new class extends \Livewire\Component {
+            public MutableArticle $selected;
+
+            public Collection $articles;
+
+            public Collection $others;
+
+            public function mount() {
+                $this->selected = MutableArticle::find(1);
+                $this->articles = MutableArticle::all();
+                $this->others = MutableArticle::all();
+            }
+
+            public function deleteSelected() {
+                $this->selected->title = 'Doomed';
+
+                $this->articles->count();
+
+                $this->selected->delete();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    @foreach($others as $article)
+                    {{ $article->title.'-'.$loop->index }}
+                    @endforeach
+                </div>
+            HTML; }
+        })
+        ->call('deleteSelected')
+        ->assertDontSee('First-')
+        ->assertDontSee('Doomed-')
+        ->assertSee('Second-0');
+    }
+
+    protected function resetMutableArticles()
+    {
+        // Reset the table as these tests modify or delete its rows...
+        MutableArticle::query()->delete();
+        MutableArticle::insert([
+            ['id' => 1, 'title' => 'First'],
+            ['id' => 2, 'title' => 'Second'],
+        ]);
+    }
+
     public function test_hydrating_an_empty_eloquent_collection_does_not_trigger_deprecations()
     {
         $component = Livewire::test(new class extends \Livewire\Component {
@@ -377,6 +777,19 @@ class ArticleComponent extends \Livewire\Component
 class Article extends Model
 {
     use Sushi;
+
+    protected $rows = [
+        ['title' => 'First'],
+        ['title' => 'Second'],
+    ];
+}
+
+// Uses its own table so modifying or deleting rows doesn't affect other tests...
+class MutableArticle extends Model
+{
+    use Sushi;
+
+    protected $guarded = [];
 
     protected $rows = [
         ['title' => 'First'],
