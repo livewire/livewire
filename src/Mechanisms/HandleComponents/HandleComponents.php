@@ -320,7 +320,7 @@ class HandleComponents extends Mechanism
 
                 // Trigger skip.render event without calling the finisher
                 // to respect component layout macro/attribute
-                trigger('skip.render', $component, $view);
+                trigger('skip.render', $component, $view, []);
             }
 
             return Utils::insertAttributesIntoHtmlRoot($html, [
