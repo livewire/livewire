@@ -114,7 +114,9 @@ class SupportPageComponents extends ComponentHook
 
         $render = on('render', $handler);
         $renderPlaceholder = on('render.placeholder', $handler);
-        $skipRender = on('skip.render', $handler);
+        $skipRender = on('skip.render', function ($target, $resolveView) use ($handler) {
+            return $handler($target, ...$resolveView());
+        });
 
         try {
             $callback();

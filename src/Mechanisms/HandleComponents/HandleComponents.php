@@ -316,11 +316,9 @@ class HandleComponents extends Mechanism
 
             // We only need to set layout configuration if its not redirecting
             if (! store($component)->get('redirect', false)) {
-                [$view] = $this->getView($component);
-
                 // Trigger skip.render event without calling the finisher
                 // to respect component layout macro/attribute
-                trigger('skip.render', $component, $view, []);
+                trigger('skip.render', $component, fn () => $this->getView($component));
             }
 
             return Utils::insertAttributesIntoHtmlRoot($html, [
