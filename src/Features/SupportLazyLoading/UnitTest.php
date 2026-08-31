@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Attributes\Defer;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Lazy;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Livewire;
@@ -112,6 +113,26 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('mounts:1');
     }
 
+    public function test_a_lazy_component_reached_before_it_loads_still_mounts()
+    {
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        Livewire::component('lazy-gamma', LazyGamma::class);
+
+        $component = Livewire::test('lazy-gamma', ['level' => 5]);
+
+        preg_match("/__lazyLoad\('([^']+)'\)/", html_entity_decode($component->html()), $matches);
+
+        $this->assertFalse($component->snapshot['memo']['lazyLoaded']);
+
+        $component->dispatch('refresh-panels');
+
+        $component
+            ->call('__lazyLoad', $matches[1])
+            ->assertSee('level:5')
+            ->assertSee('mounts:1');
+    }
+
     public function test_a_lazy_load_call_on_a_non_lazy_component_is_not_claimed()
     {
         $this->expectException(MethodNotFoundException::class);
@@ -150,6 +171,28 @@ class LazyAlpha extends Component {
         $this->level = $level;
         $this->mounts++;
     }
+
+    public function placeholder() {
+        return '<div>Loading...</div>';
+    }
+
+    public function render() {
+        return '<div>level:'.$this->level.' mounts:'.$this->mounts.'</div>';
+    }
+}
+
+#[Lazy]
+class LazyGamma extends Component {
+    public $level = 0;
+    public $mounts = 0;
+
+    public function mount($level = 0) {
+        $this->level = $level;
+        $this->mounts++;
+    }
+
+    #[On('refresh-panels')]
+    public function refreshPanels() {}
 
     public function placeholder() {
         return '<div>Loading...</div>';
