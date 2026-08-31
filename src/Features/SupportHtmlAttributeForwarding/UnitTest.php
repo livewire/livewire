@@ -70,6 +70,6 @@ class LazyAlert extends Component {
     }
 
     public function render() {
-        return '<div {{ $attributes }}>Alert</div>';
+        return '<div>Alert</div>';
     }
 }
