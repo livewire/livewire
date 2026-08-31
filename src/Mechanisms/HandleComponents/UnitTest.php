@@ -285,6 +285,25 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEmpty(HandleComponents::$renderStack);
     }
+
+    public function test_view_sharing_is_reverted_when_render_throws()
+    {
+        try {
+            Livewire::test(new class extends Component {
+                public function render()
+                {
+                    return '<div>{{ $foo }}</div>';
+                }
+            });
+
+            $this->fail('Expected a ViewException to be thrown.');
+        } catch (\Illuminate\View\ViewException $e) {
+            // Expected...
+        }
+
+        $this->assertNull(view()->shared('__livewire'));
+        $this->assertNull(view()->shared('_instance'));
+    }
 }
 
 class BasicComponent extends TestComponent
