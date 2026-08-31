@@ -182,6 +182,17 @@ class LazyAlpha extends Component {
 }
 
 #[Lazy]
+class LazyBeta extends Component {
+    public function placeholder() {
+        return '<div>Loading...</div>';
+    }
+
+    public function render() {
+        return '<div>beta</div>';
+    }
+}
+
+#[Lazy]
 class LazyGamma extends Component {
     public $level = 0;
     public $mounts = 0;
@@ -200,17 +211,6 @@ class LazyGamma extends Component {
 
     public function render() {
         return '<div>level:'.$this->level.' mounts:'.$this->mounts.'</div>';
-    }
-}
-
-#[Lazy]
-class LazyBeta extends Component {
-    public function placeholder() {
-        return '<div>Loading...</div>';
-    }
-
-    public function render() {
-        return '<div>beta</div>';
     }
 }
 
