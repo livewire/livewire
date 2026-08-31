@@ -536,6 +536,34 @@ class UnitTest extends TestCase
         $this->assertCount(1, $fragments, 'Expected only one island fragment but got ' . count($fragments));
     }
 
+    public function test_island_render_shares_the_component_with_views()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public function repaint()
+            {
+                $this->renderIsland('probe');
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'probe')
+                        <div>shared: {{ app('view')->shared('__livewire') ? 'yes' : 'no' }}</div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        $component->assertSee('shared: yes');
+
+        $component->call('repaint');
+
+        $fragments = implode('', $component->effects['islandFragments'] ?? []);
+
+        $this->assertStringContainsString('shared: yes', $fragments);
+    }
+
     public function test_island_directive_supports_nested_parentheses_in_expression()
     {
         Livewire::test(new class extends \Livewire\Component {
@@ -550,6 +578,50 @@ class UnitTest extends TestCase
             }
         })
             ->assertSee('value: HELLO');
+    }
+
+    public function test_island_keeps_its_token_when_a_directive_above_it_has_an_unbalanced_expression()
+    {
+        $compiledPath = sys_get_temp_dir() . '/laravel-island-offset-' . uniqid();
+
+        config()->set('view.compiled', $compiledPath);
+        app()->forgetInstance('livewire.compiler');
+        app()->forgetInstance('livewire.factory');
+
+        $compiled = IslandCompiler::compile(__FILE__, <<<'HTML'
+        <div>
+            @if (auth()->check())
+                first
+            @endif
+
+            @if (auth()->check() && request()->isMethod('get'))
+                second
+            @endif
+
+            @island(name: 'counter')
+                @if (request()->isMethod('get'))
+                    <div>count: {{ $count }}</div>
+                @endif
+            @endisland
+
+            @if (auth()->check())
+                third
+            @endif
+        </div>
+        HTML);
+
+        $token = app('livewire.compiler')->cacheManager->getHash(__FILE__) . '-1';
+        $cachedPath = IslandCompiler::getCachedPathFromToken($token);
+
+        $this->assertStringContainsString("token: '{$token}'", $compiled);
+        $this->assertStringNotContainsString('[ENDISLAND', $compiled);
+        $this->assertStringNotContainsString('[LIVEWIRE_DIRECTIVE:', $compiled);
+        $this->assertStringContainsString("@if (auth()->check() && request()->isMethod('get'))", $compiled);
+        $this->assertFileExists($cachedPath);
+        $this->assertStringContainsString("@if (request()->isMethod('get'))", File::get($cachedPath));
+        $this->assertStringNotContainsString('[LIVEWIRE_DIRECTIVE:', File::get($cachedPath));
+
+        File::deleteDirectory($compiledPath);
     }
 
     public function test_island_tokens_are_stable_across_different_base_paths()

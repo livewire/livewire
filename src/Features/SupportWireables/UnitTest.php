@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\Wireable;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -36,6 +37,18 @@ class UnitTest extends \Tests\TestCase
             ->call("\$set", 'wireable', ['message' => 'bar', 'embeddedWireable' => ['message' => '42']])
             ->call("\$set", 'wireable.message', 'bar')
             ->assertSee('bar');
+    }
+
+    public function test_a_wireable_can_be_replaced_with_a_scalar_during_an_update()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public $items = [];
+        });
+
+        $component->set('items', [new WireableClass('foo', '42')]);
+        $component->set('items', [1]);
+
+        $this->assertSame([1], $component->get('items'));
     }
 
     public function test_a_wireable_can_be_set_as_a_public_property_and_validates_only()

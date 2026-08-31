@@ -50,6 +50,31 @@ Here's a more full example where you can do something like register a JavaScript
 
 To learn more about JavaScript actions, [visit the actions documentation](/docs/4.x/actions#javascript-actions).
 
+### When scripts run
+
+A component's script runs when its markup is in the DOM, but before Alpine has initialized it. Livewire suspends initialization of the component's tree until the script has finished, so anything the script registers—`Alpine.data()` providers, `$js` actions, custom directives—is guaranteed to exist before any expression in the component's markup evaluates:
+
+```blade
+<div x-data="audioUploader">
+    <span x-text="message"></span>
+</div>
+
+<script>
+    Alpine.data('audioUploader', () => ({
+        message: 'Loaded',
+    }))
+</script>
+```
+
+This holds on the initial page load and every other way a component enters the page: lazy loading, dynamic mounting from a parent update, islands, and `wire:navigate`.
+
+A few consequences of this timing worth knowing:
+
+* `$wire.$el` and plain DOM queries work—the markup is present when the script runs.
+* Anything produced by initializing the markup—`$refs`, Alpine component state—doesn't exist yet. Reach for it from an `init()` hook on your Alpine component, or after `await $wire.$nextTick()`.
+* While a script is loading, the component's markup is visible but not yet interactive. This window is normally imperceptible, but for a heavy module you can put [`x-cloak`](https://alpinejs.dev/directives/cloak) on elements that shouldn't appear until the script is ready—it's honored until the component initializes.
+* If a script fails to load or throws, Livewire logs the error and initializes the component anyway so the page keeps working.
+
 ### Using `$wire` from scripts
 
 When you add `<script>` tags inside your component, you automatically have access to your Livewire component's `$wire` object.

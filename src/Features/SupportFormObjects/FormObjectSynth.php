@@ -3,12 +3,13 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Livewire\Drawer\Utils;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Features\SupportAttributes\AttributeCollection;
 
 use function Livewire\wrap;
 
-class FormObjectSynth extends Synth {
+class FormObjectSynth extends Synth implements ArrayShapedSynth {
     public static $key = 'form';
 
     static function match($target)

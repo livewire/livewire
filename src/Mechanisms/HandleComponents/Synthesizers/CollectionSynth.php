@@ -4,7 +4,7 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
 use Illuminate\Support\Collection;
 
-class CollectionSynth extends ArraySynth {
+class CollectionSynth extends ArraySynth implements ArrayShapedSynth {
     public static $key = 'clctn';
 
     static function match($target) {

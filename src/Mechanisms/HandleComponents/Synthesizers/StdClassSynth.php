@@ -4,7 +4,7 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
 use stdClass;
 
-class StdClassSynth extends Synth {
+class StdClassSynth extends Synth implements ArrayShapedSynth {
     public static $key = 'std';
 
     static function match($target) {

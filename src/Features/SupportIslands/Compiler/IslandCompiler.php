@@ -57,6 +57,8 @@ class IslandCompiler
 
         $result = $compiler->compileStatementsMadePublic($contents);
 
+        $result = $this->restoreSetAsideDirectives($result, $compiler->setAsideDirectives);
+
         $result = $this->restoreBladeComments($result, $comments);
 
         for ($i=$maxNestingLevel; $i >= $currentNestingLevel; $i--) {
@@ -210,18 +212,41 @@ PHP;
         }, $contents);
     }
 
+    protected function restoreSetAsideDirectives(string $contents, array $directives): string
+    {
+        return strtr($contents, $directives);
+    }
+
     public function getHackedBladeCompiler()
     {
         $instance = new class (
             app('files'),
             rtrim(config('view.compiled'), '/\\') . '/livewire',
         ) extends \Illuminate\View\Compilers\BladeCompiler {
+            public array $setAsideDirectives = [];
+
+            protected string $setAsideDirectivePrefix = '[LIVEWIRE_DIRECTIVE:';
+
             /**
-             * Make this method public...
+             * Make statement compilation public and reserve a placeholder prefix
+             * that does not collide with authored view content...
              */
             public function compileStatementsMadePublic($template)
             {
+                while (str_contains($template, $this->setAsideDirectivePrefix)) {
+                    $this->setAsideDirectivePrefix .= '_';
+                }
+
                 return $this->compileStatements($template);
+            }
+
+            protected function setAside($directive)
+            {
+                $placeholder = $this->setAsideDirectivePrefix . count($this->setAsideDirectives) . ']';
+
+                $this->setAsideDirectives[$placeholder] = $directive;
+
+                return $placeholder;
             }
 
             /**
@@ -230,21 +255,15 @@ PHP;
              */
             protected function compileStatement($match)
             {
-                if (str_contains($match[1], '@')) {
-                    $match[0] = isset($match[3]) ? $match[1].$match[3] : $match[1];
-                } elseif (isset($this->customDirectives[$match[1]])) {
-                    $match[0] = $this->callCustomDirective($match[1], Arr::get($match, 3));
-                } elseif (method_exists($this, $method = 'compile'.ucfirst($match[1]))) {
-                    // Don't process through built-in directive methods...
-                    // $match[0] = $this->$method(Arr::get($match, 3));
+                if (isset($this->customDirectives[$match[1]])) {
+                    $compiled = $this->callCustomDirective($match[1], Arr::get($match, 3));
 
-                    // Just return the original match...
-                    return $match[0];
-                } else {
-                    return $match[0];
+                    return isset($match[3]) ? $compiled : $compiled.$match[2];
                 }
 
-                return isset($match[3]) ? $match[0] : $match[0].$match[2];
+                // Blade moves forward as it replaces statements, so foreign directives
+                // must be consumed during this island-only pass and restored afterward...
+                return $this->setAside($match[0]);
             }
         };
 

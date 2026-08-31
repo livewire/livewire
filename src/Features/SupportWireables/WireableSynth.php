@@ -3,9 +3,10 @@
 namespace Livewire\Features\SupportWireables;
 
 use Livewire\Wireable;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 
-class WireableSynth extends Synth
+class WireableSynth extends Synth implements ArrayShapedSynth
 {
     public static $key = 'wrbl';
 

@@ -400,3 +400,21 @@ JavaScript proxies can't intercept a `Date`'s internal methods, so Alpine (like 
 * **Binding inputs directly to a rich property** (`wire:model="publishedAt"`) sets the input's raw string value onto the property. The string is sent to the server as-is and re-hydrated there, but the input will display the browser's string representation of the rich object — for form inputs, prefer binding to nested fields or handling conversion yourself.
 
 For reference, these are the keys of Livewire's built-in synthesizers: `arr` (arrays), `cbn` (Carbon/DateTime), `clctn` (Collections), `str` (Stringables), `enm` (Enums), `std` (stdClass), `mdl` (Eloquent models), `elcln` (Eloquent collections), `wrbl` (Wireables), `form` (Form objects), and `fil` (file uploads).
+
+## Array-shaped synthesizers
+
+During property updates, Livewire may reuse synthesizer metadata from the previous snapshot to hydrate nested values. If your synthesizer always serializes its value as an array, implement the `ArrayShapedSynth` interface:
+
+```php
+use Livewire\Mechanisms\HandleComponents\Synthesizers\ArrayShapedSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+
+class AddressSynth extends Synth implements ArrayShapedSynth
+{
+    // ...
+}
+```
+
+This tells Livewire not to run your synthesizer when a top-level or nested update replaces the previous value with any non-array value. Instead, Livewire treats the incoming value as the replacement. Array updates continue through your synthesizer as usual.
+
+Only implement this interface when your synthesizer's `hydrate()` method requires an array. Synthesizers that hydrate scalar values, such as dates, enums, integers, floats, or strings, should not implement it. Without the interface, Livewire continues applying the previous synthesizer metadata to non-array updates for backwards compatibility.

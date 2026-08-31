@@ -1070,6 +1070,20 @@ class UnitTest extends \Tests\TestCase
         $synth->hydrate(['title' => 'test'], ['class' => \stdClass::class], fn($k, $v) => $v);
     }
 
+    function test_an_untyped_form_object_property_can_be_replaced_with_a_scalar_during_an_update()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $form;
+
+            public function mount()
+            {
+                $this->form = new PostFormStub($this, 'form');
+            }
+        })
+            ->set('form', 1)
+            ->assertSetStrict('form', 1);
+    }
+
     public function test_can_fill_a_form_object_from_eloquent_model_with_enum_cast()
     {
         Livewire::test(new class extends TestComponent {
@@ -1148,6 +1162,72 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form', fn ($form) => $form instanceof PostFormStubWithDefaults)
         ;
     }
+
+    public function test_reset_restores_required_typed_properties_to_their_uninitialized_state()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public PostFormStubWithRequiredTypedProperties $form;
+
+            public function mount()
+            {
+                $this->form->title = 'Some Title';
+                $this->form->content = 'Some content...';
+            }
+
+            public function resetForm()
+            {
+                $this->form->reset();
+            }
+        })
+            ->call('resetForm')
+            ->assertOk();
+
+        $form = $component->instance()->form;
+
+        $this->assertFalse((new \ReflectionProperty($form, 'title'))->isInitialized($form));
+        $this->assertFalse((new \ReflectionProperty($form, 'content'))->isInitialized($form));
+    }
+
+    public function test_resetting_one_required_typed_property_preserves_sibling_values()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public PostFormStubWithRequiredTypedProperties $form;
+
+            public function mount()
+            {
+                $this->form->title = 'Some Title';
+                $this->form->content = 'Some content...';
+            }
+
+            public function resetTitle()
+            {
+                $this->form->reset('title');
+            }
+        })
+            ->call('resetTitle')
+            ->assertSetStrict('form.content', 'Some content...')
+            ->assertOk();
+
+        $form = $component->instance()->form;
+
+        $this->assertFalse((new \ReflectionProperty($form, 'title'))->isInitialized($form));
+    }
+
+    public function test_resetting_a_nested_path_continues_to_use_its_declared_default()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithNestedDefaults $form;
+
+            public function resetName()
+            {
+                $this->form->reset('profile.name');
+            }
+        })
+            ->set('form.profile.name', 'Taylor')
+            ->call('resetName')
+            ->assertSetStrict('form.profile.name', '')
+            ->assertOk();
+    }
 }
 
 class PostFormStub extends Form
@@ -1172,6 +1252,20 @@ class PostFormStubWithArrayDefaults extends Form
         1 => true,
         2 => false,
         'foo' => ['bar' => 'baz'],
+    ];
+}
+
+class PostFormStubWithRequiredTypedProperties extends Form
+{
+    public string $title;
+
+    public string $content;
+}
+
+class PostFormStubWithNestedDefaults extends Form
+{
+    public array $profile = [
+        'name' => '',
     ];
 }
 

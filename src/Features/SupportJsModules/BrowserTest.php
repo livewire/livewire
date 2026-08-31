@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportJsModules;
 
 use Illuminate\Support\Facades\Route;
+use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -17,6 +18,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                     'Content-Type' => 'application/javascript',
                 ]);
             });
+
+            // A module that stays pending until the test releases it. Gating
+            // client-side keeps the (single-threaded) test server free to
+            // handle Livewire updates while the module is "loading"...
+            Route::get('/slow-module.js', function () {
+                return response(
+                    'await new Promise(resolve => { window.releaseSlowModule = resolve })' . "\n\n" . 'export default true',
+                    200,
+                    ['Content-Type' => 'application/javascript'],
+                );
+            });
+
+            Route::get('/navigate-page', function () {
+                return app('livewire')->new('testns::navigate-page')();
+            })->middleware('web');
         };
     }
 
@@ -84,5 +100,263 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->pause(100)
             ->click('@mark-again')
             ->assertSeeIn('@target', 'js-action-called-again');
+    }
+
+    public function test_alpine_data_works_in_single_file_component_script()
+    {
+        // Alpine walks the DOM synchronously while script modules load
+        // asynchronously. The component's tree must be suspended until its
+        // module has registered Alpine.data() providers, or `x-data` on the
+        // component's own root evaluates against nothing.
+        // Regression test for: https://github.com/livewire/livewire/discussions/9591
+        Livewire::visit('testns::alpine-data')
+            ->waitForTextIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_keeps_working_after_a_morph()
+    {
+        Livewire::visit('testns::alpine-data')
+            ->waitForTextIn('@target', 'alpine-data-loaded')
+            ->waitForLivewire()->click('@refresh')
+            ->assertSeeIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_works_with_two_instances_on_one_page()
+    {
+        // The first instance is the one that historically failed: later
+        // instances only worked because the first one's module had already
+        // registered the shared Alpine.data() name globally.
+        Livewire::visit([new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <livewire:testns::alpine-data key="first" />
+                    <livewire:testns::alpine-data key="second" />
+                </div>
+                HTML;
+            }
+        }])
+            ->waitUntil("[...document.querySelectorAll('[dusk=\"target\"]')].filter(el => el.textContent === 'alpine-data-loaded').length === 2")
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_works_in_dynamically_added_component()
+    {
+        Livewire::visit([new class extends Component {
+            public $show = false;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="$toggle('show')" dusk="toggle">Toggle</button>
+
+                    @if ($show)
+                        <livewire:testns::alpine-data />
+                    @endif
+                </div>
+                HTML;
+            }
+        }])
+            ->assertConsoleLogHasNoErrors()
+            ->assertDontSee('alpine-data-loaded')
+            ->waitForLivewire()->click('@toggle')
+            ->waitForTextIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_works_in_lazy_loaded_component()
+    {
+        Livewire::visit([new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <livewire:testns::alpine-data lazy />
+                </div>
+                HTML;
+            }
+        }])
+            ->waitForTextIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_works_in_component_inside_island()
+    {
+        Livewire::visit('testns::island-with-alpine-data')
+            ->assertConsoleLogHasNoErrors()
+            ->assertSeeIn('@placeholder', 'No child yet')
+            ->assertDontSee('alpine-data-loaded')
+            ->waitForLivewire()->click('@toggle')
+            ->waitForTextIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_alpine_data_works_after_wire_navigate()
+    {
+        Livewire::visit([new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div dusk="source-page">Source page</div>
+
+                    <a href="/navigate-page" wire:navigate dusk="link">Go to the alpine data page</a>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@source-page', 'Source page')
+            ->assertConsoleLogHasNoErrors()
+            ->waitForNavigate()->click('@link')
+            ->waitForTextIn('@target', 'navigate-data-loaded')
+            ->assertConsoleLogHasNoErrors()
+            // Navigating on to another page containing the same component
+            // reuses the cached module and still initializes correctly...
+            ->waitForNavigate()->click('@next-link')
+            ->waitForTextIn('@page-marker', 'page-two')
+            ->waitForTextIn('@target', 'navigate-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_a_lazy_components_script_runs_against_its_real_markup_not_the_placeholder()
+    {
+        // The non-lazy instance warms the module cache, so the lazy instance's
+        // import resolves instantly — before the hydration morph, without the
+        // morph gate. The script records whether it saw the real markup...
+        Livewire::visit([new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <livewire:testns::lazy-probe key="eager" />
+                    <livewire:testns::lazy-probe key="lazy" lazy />
+                </div>
+                HTML;
+            }
+        }])
+            ->waitUntil("window.lazyProbeResults && window.lazyProbeResults.length === 2")
+            ->assertScript('window.lazyProbeResults.every(sawRealMarkup => sawRealMarkup)', true)
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_a_module_preload_link_is_injected_into_the_head()
+    {
+        // The initial page render emits a modulepreload link so the browser
+        // starts fetching the module while parsing — before Livewire boots...
+        Livewire::visit('testns::alpine-data')
+            ->assertScript('!! document.head.querySelector(\'link[rel="modulepreload"][href*="testns---alpine-data.js"]\')', true)
+            ->waitForTextIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_a_module_preload_link_is_injected_for_lazy_components()
+    {
+        // Even though a lazy placeholder mounts without its scriptModule
+        // effect, the page render still warms the module it will need...
+        Livewire::visit([new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <livewire:testns::alpine-data lazy />
+                </div>
+                HTML;
+            }
+        }])
+            ->assertScript('!! document.head.querySelector(\'link[rel="modulepreload"][href*="testns---alpine-data.js"]\')', true)
+            ->waitForTextIn('@target', 'alpine-data-loaded')
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_x_cloak_is_honored_while_the_module_is_loading()
+    {
+        // The /slow-module.js import keeps the component's module pending
+        // until the test releases it, holding the suspended window open...
+        Livewire::visit('testns::slow-alpine-data')
+            ->waitUntil('typeof window.releaseSlowModule === "function"')
+            ->assertScript('document.querySelector(\'[dusk="wrapper"]\').hasAttribute(\'x-cloak\')', true)
+            ->tap(fn ($b) => $b->script('window.releaseSlowModule()'))
+            ->waitForTextIn('@target', 'slow-data-loaded')
+            ->assertScript('document.querySelector(\'[dusk="wrapper"]\').hasAttribute(\'x-cloak\')', false)
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_a_component_removed_while_its_module_loads_never_runs_its_script()
+    {
+        Livewire::visit([new class extends Component {
+            public $show = false;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button wire:click="$toggle('show')" dusk="toggle">Toggle</button>
+
+                    @if ($show)
+                        <livewire:testns::slow-alpine-data />
+                    @endif
+                </div>
+                HTML;
+            }
+        }])
+            ->waitForLivewire()->click('@toggle')
+            ->waitUntil('typeof window.releaseSlowModule === "function"')
+            // Remove the component before its module resolves...
+            ->waitForLivewire()->click('@toggle')
+            ->tap(fn ($b) => $b->script('window.releaseSlowModule()'))
+            ->pause(300)
+            ->assertScript('window.slowModuleRan === undefined', true)
+            ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_a_failed_module_import_still_initializes_the_component_and_the_rest_of_the_page()
+    {
+        // The /missing-module.js import 404s, so the module never loads. The
+        // component's tree must initialize anyway (fail open), and other
+        // components on the page must be unaffected...
+        Livewire::visit([new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <livewire:testns::broken-import />
+
+                    <div x-data="{ message: 'sibling-works' }">
+                        <span dusk="sibling" x-text="message"></span>
+                    </div>
+                </div>
+                HTML;
+            }
+        }])
+            ->waitForTextIn('@sibling', 'sibling-works')
+            ->assertSeeIn('@broken-target', 'server-rendered')
+            // The failed component's own tree still initializes (fail open):
+            // an Alpine binding inside it that doesn't need the module renders...
+            ->waitForTextIn('@broken-fail-open', 'initialized-anyway');
+    }
+
+    public function test_a_script_that_throws_still_initializes_the_component_and_the_rest_of_the_page()
+    {
+        Livewire::visit([new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <livewire:testns::run-throws />
+
+                    <div x-data="{ message: 'sibling-works' }">
+                        <span dusk="sibling" x-text="message"></span>
+                    </div>
+                </div>
+                HTML;
+            }
+        }])
+            ->waitForTextIn('@sibling', 'sibling-works')
+            ->assertSeeIn('@throws-target', 'server-rendered')
+            ->waitForTextIn('@throws-fail-open', 'initialized-anyway');
     }
 }
