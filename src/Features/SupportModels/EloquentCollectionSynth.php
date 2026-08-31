@@ -76,16 +76,36 @@ class EloquentCollectionSynth extends Synth {
         }
 
         return $this->makeLazyProxy($class, $meta, function () use ($modelClass, $keys, $meta) {
-            // We are using Laravel's method here for restoring the collection, which ensures
-            // that all models in the collection are restored in one query, preventing n+1
-            // issues and also only restores models that exist.
-            $collection = (new $modelClass)->newQueryForRestoration($keys)->useWritePdo()->get();
+            $models = [];
+            $missingKeys = [];
 
-            $collection = $collection->keyBy->getKey();
+            // Reuse any models already resolved this request — by route binding (via
+            // SubstituteBindings middleware) or by another hydrated property — so
+            // that only the remaining models need to be queried.
+            foreach (array_unique($keys) as $key) {
+                if ($model = SupportModels::getResolvedModel($modelClass, $key)) {
+                    $models[$key] = $model;
+                } else {
+                    $missingKeys[] = $key;
+                }
+            }
+
+            if (count($missingKeys) > 0) {
+                // We are using Laravel's method here for restoring the collection, which ensures
+                // that all models in the collection are restored in one query, preventing n+1
+                // issues and also only restores models that exist.
+                $collection = (new $modelClass)->newQueryForRestoration($missingKeys)->useWritePdo()->get();
+
+                foreach ($collection as $model) {
+                    $models[$model->getKey()] = $model;
+
+                    SupportModels::rememberResolvedModel($model);
+                }
+            }
 
             return new $meta['class'](
-                collect($meta['keys'])->map(function ($id) use ($collection) {
-                    return $collection[$id] ?? null;
+                collect($meta['keys'])->map(function ($id) use ($models) {
+                    return $models[$id] ?? null;
                 })->filter()
             );
         });
