@@ -4,7 +4,9 @@ namespace Livewire\Features\SupportHtmlAttributeForwarding;
 
 use Tests\TestCase;
 use Livewire\Livewire;
+use Livewire\Features\SupportLazyLoading\SupportLazyLoading;
 use Livewire\Component;
+use Livewire\Attributes\Lazy;
 
 class UnitTest extends TestCase
 {
@@ -46,5 +48,28 @@ class UnitTest extends TestCase
         ->assertSeeHtml('id="error-alert"')
         ->assertSeeHtml('data-testid="my-alert"')
         ;
+    }
+
+    public function test_array_html_attributes_are_not_forwarded_to_a_placeholder()
+    {
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        Livewire::component('alert', LazyAlert::class);
+
+        $html = Livewire::mount('alert', ['lazy' => true, 'pageFilters' => ['status' => 'active'], 'id' => 'error-alert']);
+
+        $this->assertStringContainsString('id="error-alert"', $html);
+        $this->assertStringNotContainsString('pageFilters=', $html);
+    }
+}
+
+#[Lazy]
+class LazyAlert extends Component {
+    public function placeholder() {
+        return '<div {{ $attributes }}>Loading...</div>';
+    }
+
+    public function render() {
+        return '<div {{ $attributes }}>Alert</div>';
     }
 }
