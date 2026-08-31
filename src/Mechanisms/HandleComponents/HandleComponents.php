@@ -2,7 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use function Livewire\{on, trigger, wrap };
+use function Livewire\{on, store, trigger, wrap };
 use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleSynths\HandleSynths;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
@@ -309,22 +309,27 @@ class HandleComponents extends Mechanism
 
     protected function render($component, $default = null)
     {
-        [ $view, $properties ] = $this->getView($component);
-
         if ($html = $component->shouldSkipRender()) {
             $html = value(is_string($html) ? $html : $default);
 
             if (! $html) return;
 
-            // Trigger skip.render event without calling the finisher
-            // to respect component layout macro/attribute
-            trigger('skip.render', $component, $view);
+            // We only need to set layout configuration if its not redirecting
+            if (! store($component)->get('redirect', false)) {
+                [$view] = $this->getView($component);
+
+                // Trigger skip.render event without calling the finisher
+                // to respect component layout macro/attribute
+                trigger('skip.render', $component, $view);
+            }
 
             return Utils::insertAttributesIntoHtmlRoot($html, [
                 'wire:id' => $component->getId(),
                 'wire:name' => $component->getName(),
             ]);
         }
+
+        [ $view, $properties ] = $this->getView($component);
 
         return $this->trackInRenderStack($component, function () use ($component, $view, $properties) {
             $finish = trigger('render', $component, $view, $properties);
