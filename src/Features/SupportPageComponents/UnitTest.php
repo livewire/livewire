@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\Blade;
 use Livewire\Component;
 use Livewire\EventBus;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleComponents\HandleComponents;
 
 use function Livewire\invade;
+use function Livewire\trigger;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -523,6 +525,42 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame('layouts::panel', $fallback->view);
     }
+
+    public function test_layout_from_view_macro_is_captured_when_render_is_skipped(): void
+    {
+        Livewire::component(ComponentWithLayoutMacroAndSkipRender::class);
+
+        Route::get('/foo', ComponentWithLayoutMacroAndSkipRender::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/foo')
+            ->assertSee('baz');
+    }
+
+    public function test_layout_from_attribute_is_captured_when_render_is_skipped()
+    {
+        Livewire::component(ComponentWithLayoutAttributeAndSkipRender::class);
+
+        Route::get('/foo', ComponentWithLayoutAttributeAndSkipRender::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/foo')
+            ->assertSee('baz');
+    }
+
+    public function test_title_from_attribute_is_captured_when_render_is_skipped()
+    {
+        Livewire::component(ComponentWithTitleAttributeAndSkipRender::class);
+
+        Route::get('/foo', ComponentWithTitleAttributeAndSkipRender::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/foo')
+            ->assertSee('some-title');
+    }
 }
 
 class ComponentForRouteWithoutMountParametersTest extends Component
@@ -929,5 +967,49 @@ class ComponentWithOptionalMountParamAndTrait extends Component
         return <<<'HTML'
         <div>{{ $postId }} {{ $tab }}</div>
         HTML;
+    }
+}
+
+class ComponentWithLayoutMacroAndSkipRender extends Component
+{
+    public function mount()
+    {
+        $this->skipRender('<div>skip-placeholder</div>');
+    }
+
+    public function render()
+    {
+        return view('null-view')->layout('layouts.app-with-bar', [
+            'bar' => 'baz',
+        ]);
+    }
+}
+
+#[BaseLayout('layouts.app-with-bar', ['bar' => 'baz'])]
+class ComponentWithLayoutAttributeAndSkipRender extends Component
+{
+    public function mount()
+    {
+        $this->skipRender('<div>skip-placeholder</div>');
+    }
+
+    public function render()
+    {
+        return view('null-view');
+    }
+}
+
+#[BaseLayout('layouts.app-with-title')]
+#[BaseTitle('some-title')]
+class ComponentWithTitleAttributeAndSkipRender extends Component
+{
+    public function mount()
+    {
+        $this->skipRender('<div>skip-placeholder</div>');
+    }
+
+    public function render()
+    {
+        return view('null-view');
     }
 }

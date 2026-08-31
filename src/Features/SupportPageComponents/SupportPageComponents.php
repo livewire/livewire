@@ -91,7 +91,7 @@ class SupportPageComponents extends ComponentHook
 
         // Only run this handler once for the parent-most component. Otherwise child components
         // will run this handler too and override the configured layout...
-        $handler = once(function ($target, $view, $data) use (&$layoutConfig, &$slots) {
+        $handler = once(function ($target, $view, $data = []) use (&$layoutConfig, &$slots) {
             $layoutAttr = $target->getAttributes()->whereInstanceOf(BaseLayout::class)->first();
             $titleAttr = $target->getAttributes()->whereInstanceOf(BaseTitle::class)->first();
 
@@ -114,12 +114,14 @@ class SupportPageComponents extends ComponentHook
 
         $render = on('render', $handler);
         $renderPlaceholder = on('render.placeholder', $handler);
+        $skipRender = on('skip.render', $handler);
 
         try {
             $callback();
         } finally {
             $render();
             $renderPlaceholder();
+            $skipRender();
         }
 
         return $layoutConfig;
