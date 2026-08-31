@@ -267,6 +267,37 @@ class UnitTest extends \Tests\TestCase
         ->call('refresh')
         ->assertSetStrict('refreshed', true);
     }
+
+    public function test_render_stack_is_cleaned_up_when_render_callback_throws()
+    {
+        $component = new class extends Component {};
+
+        $handleComponents = app(HandleComponents::class);
+
+        $trackInRenderStack = (new \ReflectionMethod(
+            HandleComponents::class,
+            'trackInRenderStack'
+        ));
+
+        try {
+            $trackInRenderStack->invoke(
+                $handleComponents,
+                $component,
+                function () {
+                    throw new \RuntimeException('Render failed.');
+                },
+            );
+
+            $this->fail('Expected render callback to throw.');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('Render failed.', $e->getMessage());
+        }
+
+        $this->assertTrue(
+            empty(HandleComponents::$renderStack),
+            'Render stack should be empty on exception'
+        );
+    }
 }
 
 class BasicComponent extends TestComponent

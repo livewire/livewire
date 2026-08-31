@@ -381,9 +381,11 @@ class HandleComponents extends Mechanism
     {
         array_push(static::$renderStack, $component);
 
-        return tap($callback(), function () {
+        try {
+            return $callback();
+        } finally {
             array_pop(static::$renderStack);
-        });
+        }
     }
 
     protected function updateProperties($component, $updates, $data, $context)
