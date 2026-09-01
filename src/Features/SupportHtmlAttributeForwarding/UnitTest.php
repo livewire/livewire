@@ -5,6 +5,8 @@ namespace Livewire\Features\SupportHtmlAttributeForwarding;
 use Tests\TestCase;
 use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Features\SupportLazyLoading\BaseLazy;
+use Livewire\Features\SupportLazyLoading\SupportLazyLoading;
 
 class UnitTest extends TestCase
 {
@@ -46,5 +48,83 @@ class UnitTest extends TestCase
         ->assertSeeHtml('id="error-alert"')
         ->assertSeeHtml('data-testid="my-alert"')
         ;
+    }
+
+    public function test_array_html_attributes_are_not_forwarded_to_a_placeholder()
+    {
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        Livewire::component('alert', LazyAlert::class);
+
+        $html = Livewire::mount('alert', [
+            'lazy' => true,
+            'pageFilters' => ['status' => 'active'],
+            'id' => 'error-alert',
+        ]);
+
+        $this->assertStringContainsString('id="error-alert"', $html);
+        $this->assertStringNotContainsString('pageFilters=', $html);
+    }
+
+    public function test_array_html_attributes_are_not_forwarded_to_a_component_render()
+    {
+        Livewire::component('alert', AlertWithAttributes::class);
+
+        $html = Livewire::mount('alert', [
+            'pageFilters' => ['status' => 'active'],
+            'id' => 'error-alert',
+        ]);
+
+        $this->assertStringContainsString('id="error-alert"', $html);
+        $this->assertStringNotContainsString('pageFilters=', $html);
+    }
+
+    public function test_array_html_attributes_are_not_forwarded_to_an_island()
+    {
+        Livewire::component('alert', AlertWithIslandAttributes::class);
+
+        $html = Livewire::mount('alert', [
+            'pageFilters' => ['status' => 'active'],
+            'id' => 'error-alert',
+        ]);
+
+        $this->assertStringContainsString('id="error-alert"', $html);
+        $this->assertStringNotContainsString('pageFilters=', $html);
+    }
+}
+
+#[BaseLazy]
+class LazyAlert extends Component
+{
+    public function placeholder()
+    {
+        return '<div {{ $attributes }}>Loading...</div>';
+    }
+
+    public function render()
+    {
+        return '<div>Alert</div>';
+    }
+}
+
+class AlertWithAttributes extends Component
+{
+    public function render()
+    {
+        return '<div {{ $attributes }}>Alert</div>';
+    }
+}
+
+class AlertWithIslandAttributes extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            @island(name: 'content')
+                <div {{ $attributes }}>Island</div>
+            @endisland
+        </div>
+        HTML;
     }
 }
