@@ -44,7 +44,7 @@ class SupportHtmlAttributeForwarding extends ComponentHook
     {
         $attributes = array_filter(
             $this->component->getHtmlAttributes(),
-            fn ($attribute) => ! is_array($attribute)
+            fn ($attribute) => ! is_array($attribute) && ! is_object($attribute)
         );
 
         $view->with(['attributes' => new ComponentAttributeBag($attributes)]);

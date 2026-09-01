@@ -2,11 +2,13 @@
 
 namespace Livewire\Features\SupportHtmlAttributeForwarding;
 
+use Illuminate\Database\Eloquent\Model;
 use Tests\TestCase;
 use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\Features\SupportLazyLoading\BaseLazy;
 use Livewire\Features\SupportLazyLoading\SupportLazyLoading;
+use Sushi\Sushi;
 
 class UnitTest extends TestCase
 {
@@ -91,6 +93,57 @@ class UnitTest extends TestCase
         $this->assertStringContainsString('id="error-alert"', $html);
         $this->assertStringNotContainsString('pageFilters=', $html);
     }
+
+    public function test_eloquent_model_html_attributes_are_not_forwarded_to_a_placeholder()
+    {
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        Livewire::component('alert', LazyAlert::class);
+
+        $html = Livewire::mount('alert', [
+            'lazy' => true,
+            'record' => RecordModel::first(),
+            'id' => 'error-alert',
+        ]);
+
+        $this->assertStringContainsString('id="error-alert"', $html);
+        $this->assertStringNotContainsString('record=', $html);
+    }
+
+    public function test_object_html_attributes_are_not_forwarded_to_a_component_render()
+    {
+        Livewire::component('alert', AlertWithAttributes::class);
+
+        $html = Livewire::mount('alert', [
+            'record' => RecordModel::first(),
+            'id' => 'error-alert',
+        ]);
+
+        $this->assertStringContainsString('id="error-alert"', $html);
+        $this->assertStringNotContainsString('record=', $html);
+    }
+
+    public function test_object_html_attributes_are_not_forwarded_to_an_island()
+    {
+        Livewire::component('alert', AlertWithIslandAttributes::class);
+
+        $html = Livewire::mount('alert', [
+            'record' => RecordModel::first(),
+            'id' => 'error-alert',
+        ]);
+
+        $this->assertStringContainsString('id="error-alert"', $html);
+        $this->assertStringNotContainsString('record=', $html);
+    }
+}
+
+class RecordModel extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'name' => 'First User', 'email' => 'first@example.com', 'password' => ''],
+    ];
 }
 
 #[BaseLazy]
