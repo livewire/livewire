@@ -53,7 +53,7 @@ class UnitTest extends TestCase
         ;
     }
 
-    public function test_array_html_attributes_are_not_forwarded_to_a_placeholder()
+    public function test_array_is_not_forwarded_as_html_attribute_to_component_placeholder()
     {
         SupportLazyLoading::$disableWhileTesting = false;
 
@@ -69,7 +69,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('pageFilters=', $html);
     }
 
-    public function test_array_html_attributes_are_not_forwarded_to_a_component_render()
+    public function test_array_is_not_forwarded_as_html_attribute_to_component_render()
     {
         Livewire::component('alert', AlertWithAttributes::class);
 
@@ -82,7 +82,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('pageFilters=', $html);
     }
 
-    public function test_array_html_attributes_are_not_forwarded_to_an_island()
+    public function test_array_is_not_forwarded_as_html_attribute_to_an_island()
     {
         Livewire::component('alert', AlertWithIslandAttributes::class);
 
@@ -95,7 +95,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('pageFilters=', $html);
     }
 
-    public function test_eloquent_model_html_attributes_are_not_forwarded_to_a_placeholder()
+    public function test_eloquent_models_is_not_forwarded_as_html_attribute_to_component_placeholder()
     {
         SupportLazyLoading::$disableWhileTesting = false;
 
@@ -111,7 +111,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('record=', $html);
     }
 
-    public function test_eloquent_model_html_attributes_are_not_forwarded_to_a_component_render()
+    public function test_eloquent_models_is_not_forwarded_as_an_html_attribute_to_component_render()
     {
         Livewire::component('alert', AlertWithAttributes::class);
 
@@ -124,7 +124,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('record=', $html);
     }
 
-    public function test_eloquent_model_html_attributes_are_not_forwarded_to_an_island()
+    public function test_eloquent_models_is_not_forwarded_as_html_attribute_to_an_island()
     {
         Livewire::component('alert', AlertWithIslandAttributes::class);
 
@@ -137,7 +137,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('record=', $html);
     }
 
-    public function test_htmlable_object_html_attributes_are_forwarded_to_a_placeholder()
+    public function test_htmlable_objects_are_forwarded_as_html_attributes_to_component_placeholder()
     {
         SupportLazyLoading::$disableWhileTesting = false;
 
@@ -153,7 +153,7 @@ class UnitTest extends TestCase
         $this->assertStringContainsString('title="Hello World"', $html);
     }
 
-    public function test_htmlable_object_html_attributes_are_forwarded_to_a_component_render()
+    public function test_htmlable_objects_are_forwarded_as_html_attributes_to_a_component_render()
     {
         Livewire::component('alert', AlertWithAttributes::class);
 
@@ -166,7 +166,7 @@ class UnitTest extends TestCase
         $this->assertStringContainsString('title="Hello World"', $html);
     }
 
-    public function test_htmlable_object_html_attributes_are_forwarded_to_an_island()
+    public function test_htmlable_objects_are_forwarded_as_html_attributes_to_an_island()
     {
         Livewire::component('alert', AlertWithIslandAttributes::class);
 
