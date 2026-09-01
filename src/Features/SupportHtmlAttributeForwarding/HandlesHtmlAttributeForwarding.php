@@ -17,9 +17,11 @@ trait HandlesHtmlAttributeForwarding
 
     public function getHtmlAttributes(): array
     {
+        // Structured values like arrays and objects can't be rendered as HTML
+        // attribute values, so only scalars and Htmlable objects are forwarded...
         return array_filter(
             $this->htmlAttributes,
-            fn ($value) => ! is_array($value) && (! is_object($value) || $value instanceof Htmlable)
+            fn ($value) => is_scalar($value) || is_null($value) || $value instanceof Htmlable
         );
     }
 }

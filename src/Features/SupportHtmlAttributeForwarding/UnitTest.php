@@ -7,7 +7,7 @@ use Illuminate\Support\HtmlString;
 use Tests\TestCase;
 use Livewire\Livewire;
 use Livewire\Component;
-use Livewire\Features\SupportLazyLoading\BaseLazy;
+use Livewire\Attributes\Lazy;
 use Livewire\Features\SupportLazyLoading\SupportLazyLoading;
 use Sushi\Sushi;
 
@@ -95,7 +95,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('pageFilters=', $html);
     }
 
-    public function test_eloquent_models_is_not_forwarded_as_html_attribute_to_component_placeholder()
+    public function test_eloquent_model_is_not_forwarded_as_html_attribute_to_component_placeholder()
     {
         SupportLazyLoading::$disableWhileTesting = false;
 
@@ -111,7 +111,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('record=', $html);
     }
 
-    public function test_eloquent_models_is_not_forwarded_as_an_html_attribute_to_component_render()
+    public function test_eloquent_model_is_not_forwarded_as_html_attribute_to_component_render()
     {
         Livewire::component('alert', AlertWithAttributes::class);
 
@@ -124,7 +124,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('record=', $html);
     }
 
-    public function test_eloquent_models_is_not_forwarded_as_html_attribute_to_an_island()
+    public function test_eloquent_model_is_not_forwarded_as_html_attribute_to_an_island()
     {
         Livewire::component('alert', AlertWithIslandAttributes::class);
 
@@ -153,7 +153,7 @@ class UnitTest extends TestCase
         $this->assertStringContainsString('title="Hello World"', $html);
     }
 
-    public function test_htmlable_objects_are_forwarded_as_html_attributes_to_a_component_render()
+    public function test_htmlable_objects_are_forwarded_as_html_attributes_to_component_render()
     {
         Livewire::component('alert', AlertWithAttributes::class);
 
@@ -178,6 +178,21 @@ class UnitTest extends TestCase
         $this->assertStringContainsString('id="error-alert"', $html);
         $this->assertStringContainsString('title="Hello World"', $html);
     }
+
+    public function test_arrays_and_objects_are_not_dehydrated_into_the_component_snapshot()
+    {
+        Livewire::component('alert', AlertWithAttributes::class);
+
+        $html = Livewire::mount('alert', [
+            'record' => RecordModel::first(),
+            'pageFilters' => ['status' => 'active'],
+            'id' => 'error-alert',
+        ]);
+
+        // Without filtering, these would be serialized into the wire:snapshot attribute...
+        $this->assertStringNotContainsString('first@example.com', $html);
+        $this->assertStringNotContainsString('pageFilters', $html);
+    }
 }
 
 class RecordModel extends Model
@@ -185,11 +200,11 @@ class RecordModel extends Model
     use Sushi;
 
     protected $rows = [
-        ['id' => 1, 'name' => 'First User', 'email' => 'first@example.com', 'password' => ''],
+        ['id' => 1, 'name' => 'First User', 'email' => 'first@example.com'],
     ];
 }
 
-#[BaseLazy]
+#[Lazy]
 class LazyAlert extends Component
 {
     public function placeholder()
