@@ -254,7 +254,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_teleports_targeting_an_element_inside_a_persist_are_put_back()
+    public function test_navigate_works_with_teleports_targeting_inside_a_persist()
     {
         $this->registerComponentTestRoutes([
             '/second' => new class extends Component {
@@ -265,7 +265,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                         </div>
 
                         @persist('header')
-                            <div>Loading...</div>
+                            <div>Placeholder</div>
                         @endpersist
                     </div>
                 HTML; }
@@ -291,6 +291,67 @@ class BrowserTest extends \Tests\BrowserTestCase
                                     </div>
                                 </template>
                             </div>
+                        @endpersist
+
+                        <a href="/second" wire:navigate dusk="link">Go to second page</a>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@target', '0')
+        ->click('@button')
+        ->assertSeeIn('@target', '1')
+        ->click('@link')
+        ->waitForText('On second page')
+        ->assertSeeIn('@target', '1')
+        ->click('@button')
+        ->assertSeeIn('@target', '2')
+        ;
+    }
+
+    public function test_navigate_works_with_teleports_targeting_inside_another_persist()
+    {
+        $this->registerComponentTestRoutes([
+            '/second' => new class extends Component {
+                public function render(){ return <<<'HTML'
+                    <div>
+                        <div>
+                            On second page
+                        </div>
+
+                        @persist('header')
+                            <div>Placeholder</div>
+                        @endpersist
+
+                        @persist('sidebar')
+                            <div>Placeholder</div>
+                        @endpersist
+                    </div>
+                HTML; }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public function render(){
+                return <<<'HTML'
+                    <div>
+                        <div>
+                            On first page
+                        </div>
+
+                        @persist('header')
+                            <div x-data="{ outerScopeCount: 0 }">
+                                <template x-teleport="#labels">
+                                    <div>
+                                        <span x-text="outerScopeCount" dusk="target"></span>
+                                        <button x-on:click="outerScopeCount++" dusk="button">inc</button>
+                                    </div>
+                                </template>
+                            </div>
+                        @endpersist
+
+                        @persist('sidebar')
+                            <div id="labels"></div>
                         @endpersist
 
                         <a href="/second" wire:navigate dusk="link">Go to second page</a>

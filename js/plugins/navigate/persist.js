@@ -18,6 +18,7 @@ export function storePersistantElementsForLater(callback) {
 
 export function putPersistantElementsBack(callback) {
     let usedPersists = []
+    let putBacks = []
 
     document.querySelectorAll('[x-persist]').forEach(i => {
         let old = els[i.getAttribute('x-persist')]
@@ -33,8 +34,12 @@ export function putPersistantElementsBack(callback) {
             i.replaceWith(old)
         })
 
-        callback(old, i)
+        putBacks.push([old, i])
     })
+
+    // Wait until every persisted element is back on the page before running the
+    // callbacks, otherwise a teleport can't resolve a target inside one of them...
+    putBacks.forEach(([old, i]) => callback(old, i))
 
     Object.entries(els).forEach(([key, el]) => {
         if (usedPersists.includes(key)) return
