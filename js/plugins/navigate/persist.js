@@ -29,11 +29,11 @@ export function putPersistantElementsBack(callback) {
 
         old._x_wasPersisted = true
 
-        callback(old, i)
-
         Alpine.mutateDom(() => {
             i.replaceWith(old)
         })
+
+        callback(old, i)
     })
 
     Object.entries(els).forEach(([key, el]) => {
