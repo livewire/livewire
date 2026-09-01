@@ -1354,7 +1354,7 @@ class BrowserTest extends BrowserTestCase
             public function render() {
                 return <<<'HTML'
                 <div dusk="edit-mode">{{ $editing ? 'Yes' : 'No' }}</div>
-                HTML; 
+                HTML;
             }
         }])
             ->waitFor('@one-mounted')
@@ -1395,7 +1395,7 @@ class BrowserTest extends BrowserTestCase
                 <div>
                     <input dusk="input" wire:model="content" />
                 </div>
-                HTML; 
+                HTML;
             }
         }])
             ->waitFor('@one-mounted')
