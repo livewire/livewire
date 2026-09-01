@@ -1325,6 +1325,7 @@ class BrowserTest extends BrowserTestCase
     public function test_visible_lazy_islands_with_a_reactive_nested_component_hydrate()
     {
         Livewire::visit([new class extends \Livewire\Component {
+            public bool $editing = false;
             public function render() {
                 return <<<'HTML'
                 <div>
@@ -1336,13 +1337,13 @@ class BrowserTest extends BrowserTestCase
                         @placeholder <div dusk="two-placeholder">Loading two</div> @endplaceholder
                         <div dusk="two-mounted">Two mounted</div>
                     @endisland
-                    <livewire:nested />
+                    <livewire:nested :$editing />
                 </div>
                 HTML;
             }
         }, 'nested' => new class extends \Livewire\Component {
             #[\Livewire\Attributes\Reactive]
-            public bool $editing = false;
+            public $editing;
             public function render() { return '<div></div>'; }
         }])
             ->waitFor('@one-mounted')

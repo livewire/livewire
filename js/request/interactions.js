@@ -21,15 +21,12 @@ export function coordinateNetworkInteractions(messageBus) {
 
     // Handle modelable/reactive components...
     interceptPartition(({ message, compileRequest }) => {
-        let component = message.component
-
         // Island-only loads (e.g. __lazyLoadIsland) should not force a reactive
         // child $commit. Bundling is what couples concurrent island hydrations
         // and causes the second visible lazy island to stall.
-        let isIslandOnly = Array.from(message.actions).length > 0
-            && Array.from(message.actions).every(action => action.metadata.island)
+        if (! message.hasActionForComponent()) return
 
-        if (isIslandOnly) return
+        let component = message.component
 
         let bundledMessages = []
 
