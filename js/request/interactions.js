@@ -21,6 +21,12 @@ export function coordinateNetworkInteractions(messageBus) {
 
     // Handle modelable/reactive components...
     interceptPartition(({ message, compileRequest }) => {
+        // Island-only messages never trigger a full parent render on the server,
+        // so bound children can't receive fresh props from them. Bundling would
+        // only couple concurrent island requests together (stalling, for example,
+        // the second of two visible lazy island loads)...
+        if (! message.hasActionForComponent()) return
+
         let component = message.component
 
         let bundledMessages = []
