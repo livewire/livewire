@@ -1326,9 +1326,16 @@ class BrowserTest extends BrowserTestCase
     {
         Livewire::visit([new class extends \Livewire\Component {
             public bool $editing = false;
+
+            public function toggle()
+            {
+                $this->editing = ! $this->editing;
+            }
+
             public function render() {
                 return <<<'HTML'
                 <div>
+                    <button dusk="toggle" wire:click="toggle">Toggle Edit Mode</button>
                     @island(name: 'one', lazy: true, always: true)
                         @placeholder <div dusk="one-placeholder">Loading one</div> @endplaceholder
                         <div dusk="one-mounted">One mounted</div>
@@ -1344,11 +1351,18 @@ class BrowserTest extends BrowserTestCase
         }, 'nested' => new class extends \Livewire\Component {
             #[\Livewire\Attributes\Reactive]
             public $editing;
-            public function render() { return '<div></div>'; }
+            public function render() {
+                return <<<'HTML'
+                <div dusk="edit-mode">{{ $editing ? 'Yes' : 'No' }}</div>
+                HTML; 
+            }
         }])
             ->waitFor('@one-mounted')
             ->waitFor('@two-mounted')
             ->assertNotPresent('@one-placeholder')
-            ->assertNotPresent('@two-placeholder');
+            ->assertNotPresent('@two-placeholder')
+            ->assertSeeIn('@edit-mode', 'No')
+            ->waitForLivewire()->click('@toggle')
+            ->assertSeeIn('@edit-mode', 'Yes');
     }
 }
