@@ -2,6 +2,8 @@
 
 namespace Livewire\Features\SupportHtmlAttributeForwarding;
 
+use Illuminate\Contracts\Support\Htmlable;
+
 trait HandlesHtmlAttributeForwarding
 {
     protected array $htmlAttributes = [];
@@ -15,6 +17,9 @@ trait HandlesHtmlAttributeForwarding
 
     public function getHtmlAttributes(): array
     {
-        return $this->htmlAttributes;
+        return array_filter(
+            $this->htmlAttributes,
+            fn ($value) => ! is_array($value) && (! is_object($value) || $value instanceof Htmlable)
+        );
     }
 }
