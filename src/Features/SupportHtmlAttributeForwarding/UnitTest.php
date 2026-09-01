@@ -150,7 +150,7 @@ class UnitTest extends TestCase
         ]);
 
         $this->assertStringContainsString('id="error-alert"', $html);
-        $this->assertStringNotContainsString('record=Hello World', $html);
+        $this->assertStringContainsString('title="Hello World"', $html);
     }
 
     public function test_htmlable_object_html_attributes_are_forwarded_to_a_component_render()
@@ -158,8 +158,8 @@ class UnitTest extends TestCase
         Livewire::component('alert', AlertWithAttributes::class);
 
         $html = Livewire::mount('alert', [
-            'title' => new HtmlString('Hello World'),
             'id' => 'error-alert',
+            'title' => new HtmlString('Hello World'),
         ]);
 
         $this->assertStringContainsString('id="error-alert"', $html);
@@ -176,7 +176,7 @@ class UnitTest extends TestCase
         ]);
 
         $this->assertStringContainsString('id="error-alert"', $html);
-        $this->assertStringNotContainsString('record=Hello World', $html);
+        $this->assertStringContainsString('title="Hello World"', $html);
     }
 }
 
