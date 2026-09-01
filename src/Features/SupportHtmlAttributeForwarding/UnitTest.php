@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportHtmlAttributeForwarding;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
 use Tests\TestCase;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -110,7 +111,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('record=', $html);
     }
 
-    public function test_object_html_attributes_are_not_forwarded_to_a_component_render()
+    public function test_eloquent_model_html_attributes_are_not_forwarded_to_a_component_render()
     {
         Livewire::component('alert', AlertWithAttributes::class);
 
@@ -123,7 +124,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('record=', $html);
     }
 
-    public function test_object_html_attributes_are_not_forwarded_to_an_island()
+    public function test_eloquent_model_html_attributes_are_not_forwarded_to_an_island()
     {
         Livewire::component('alert', AlertWithIslandAttributes::class);
 
@@ -134,6 +135,48 @@ class UnitTest extends TestCase
 
         $this->assertStringContainsString('id="error-alert"', $html);
         $this->assertStringNotContainsString('record=', $html);
+    }
+
+    public function test_htmlable_object_html_attributes_are_forwarded_to_a_placeholder()
+    {
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        Livewire::component('alert', LazyAlert::class);
+
+        $html = Livewire::mount('alert', [
+            'lazy' => true,
+            'id' => 'error-alert',
+            'title' => new HtmlString('Hello World'),
+        ]);
+
+        $this->assertStringContainsString('id="error-alert"', $html);
+        $this->assertStringNotContainsString('record=Hello World', $html);
+    }
+
+    public function test_htmlable_object_html_attributes_are_forwarded_to_a_component_render()
+    {
+        Livewire::component('alert', AlertWithAttributes::class);
+
+        $html = Livewire::mount('alert', [
+            'title' => new HtmlString('Hello World'),
+            'id' => 'error-alert',
+        ]);
+
+        $this->assertStringContainsString('id="error-alert"', $html);
+        $this->assertStringContainsString('title="Hello World"', $html);
+    }
+
+    public function test_htmlable_object_html_attributes_are_forwarded_to_an_island()
+    {
+        Livewire::component('alert', AlertWithIslandAttributes::class);
+
+        $html = Livewire::mount('alert', [
+            'id' => 'error-alert',
+            'title' => new HtmlString('Hello World'),
+        ]);
+
+        $this->assertStringContainsString('id="error-alert"', $html);
+        $this->assertStringNotContainsString('record=Hello World', $html);
     }
 }
 

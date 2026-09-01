@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportHtmlAttributeForwarding;
 
+use Illuminate\Contracts\Support\Htmlable;
 use Livewire\ComponentHook;
 use Illuminate\View\ComponentAttributeBag;
 
@@ -44,7 +45,7 @@ class SupportHtmlAttributeForwarding extends ComponentHook
     {
         $attributes = array_filter(
             $this->component->getHtmlAttributes(),
-            fn ($attribute) => ! is_array($attribute) && ! is_object($attribute)
+            fn ($value) => ! is_array($value) && (! is_object($value) || $value instanceof Htmlable)
         );
 
         $view->with(['attributes' => new ComponentAttributeBag($attributes)]);
