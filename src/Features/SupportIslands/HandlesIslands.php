@@ -224,17 +224,19 @@ trait HandlesIslands
 
         $finish = trigger('renderIsland', $this, $name, $view, $properties);
 
-        $html = $view->render();
+        try {
+            $html = $view->render();
+        } finally {
+            $revertShare();
 
-        $revertShare();
-
-        $replaceHtml = function ($newHtml) use (&$html) {
-            $html = $newHtml;
-        };
-
-        $finish($html, $replaceHtml);
-
-        app(ExtendBlade::class)->endLivewireRendering();
+            $replaceHtml = function ($newHtml) use (&$html) {
+                $html = $newHtml;
+            };
+    
+            $finish($html, $replaceHtml);
+    
+            app(ExtendBlade::class)->endLivewireRendering();
+        }
 
         return $html;
     }

@@ -6,8 +6,10 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Stringable;
 use Livewire\Component;
+use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Livewire\Form;
 use Livewire\Livewire;
+use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -303,6 +305,47 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertNull(view()->shared('__livewire'));
         $this->assertNull(view()->shared('_instance'));
+    }
+
+    public function test_island_view_sharing_is_reverted_when_render_island_throws()
+    {
+        try {
+            Livewire::test(new class extends Component {
+                public bool $fail = false;
+
+                public function breakIsland()
+                {
+                    $this->fail = true;
+                    $this->skipRender();
+                    $this->renderIsland('probe');
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        @island(name: 'probe')
+                            <div>
+                                @if ($fail)
+                                    {{ $foo }}
+                                @else
+                                    ok
+                                @endif
+                            </div>
+                        @endisland
+                    </div>
+                    HTML;
+                }
+            })
+                ->call('breakIsland');
+
+            $this->fail('Expected a ViewException to be thrown.');
+        } catch (\Illuminate\View\ViewException $e) {
+            // Expected...
+        }
+
+        $this->assertNull(view()->shared('__livewire'));
+        $this->assertFalse(ExtendBlade::isRenderingLivewireComponent());
     }
 }
 
