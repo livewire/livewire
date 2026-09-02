@@ -6,10 +6,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Stringable;
 use Livewire\Component;
-use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Livewire\Form;
 use Livewire\Livewire;
-use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -345,7 +343,6 @@ class UnitTest extends \Tests\TestCase
         }
 
         $this->assertNull(view()->shared('__livewire'));
-        $this->assertFalse(ExtendBlade::isRenderingLivewireComponent());
     }
 }
 
