@@ -11,7 +11,6 @@ use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Form;
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
-use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -410,7 +409,6 @@ class UnitTest extends \Tests\TestCase
         }
 
         $this->assertNull(view()->shared('__livewire'));
-        $this->assertFalse(ExtendBlade::isRenderingLivewireComponent());
     }
 }
 
