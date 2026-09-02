@@ -270,18 +270,20 @@ class UnitTest extends \Tests\TestCase
 
     public function test_render_stack_is_cleaned_up_when_render_callback_throws()
     {
-        $this->expectException(\Illuminate\View\ViewException::class);
-
-        Livewire::test(ComponentWithUndefinedProperty::class);
+        try {
+            Livewire::test(ComponentWithUndefinedProperty::class);
+            $this->fail('Expected ViewException to be thrown.');
+        } catch (\Illuminate\View\ViewException) {}
 
         $this->assertEmpty(HandleComponents::$renderStack);
     }
 
     public function test_view_sharing_is_reverted_when_render_throws()
     {
-        $this->expectException(\Illuminate\View\ViewException::class);
-
-        Livewire::test(ComponentWithUndefinedProperty::class);
+        try {
+            Livewire::test(ComponentWithUndefinedProperty::class);
+            $this->fail('Expected ViewException to be thrown.');
+        } catch (\Illuminate\View\ViewException) {}
 
         $this->assertNull(view()->shared('__livewire'));
         $this->assertNull(view()->shared('_instance'));
@@ -289,9 +291,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_island_view_sharing_is_reverted_when_render_island_throws()
     {
-        $this->expectException(\Illuminate\View\ViewException::class);
-
-        Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends Component {
             public bool $fail = false;
 
             public function breakIsland()
@@ -320,9 +320,12 @@ class UnitTest extends \Tests\TestCase
         })
             ->assertOk()
             ->assertSetStrict('fail', false)
-            ->assertSee('Island rendered')
-            ->call('breakIsland')
-            ->assertSetStrict('fail', true);
+            ->assertSee('Island rendered');
+
+        try {
+            $component->call('breakIsland')->assertSetStrict('fail', true);
+            $this->fail('Expected ViewException to be thrown');
+        } catch (\Illuminate\View\ViewException) {}
 
         $this->assertNull(view()->shared('__livewire'));
     }
