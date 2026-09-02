@@ -228,15 +228,15 @@ trait HandlesIslands
             $html = $view->render();
         } finally {
             $revertShare();
-
-            $replaceHtml = function ($newHtml) use (&$html) {
-                $html = $newHtml;
-            };
-    
-            $finish($html, $replaceHtml);
-    
-            app(ExtendBlade::class)->endLivewireRendering();
         }
+        
+        $replaceHtml = function ($newHtml) use (&$html) {
+            $html = $newHtml;
+        };
+    
+        $finish($html, $replaceHtml);
+    
+        app(ExtendBlade::class)->endLivewireRendering();
 
         return $html;
     }
