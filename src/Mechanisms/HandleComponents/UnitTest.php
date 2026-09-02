@@ -270,36 +270,18 @@ class UnitTest extends \Tests\TestCase
 
     public function test_render_stack_is_cleaned_up_when_render_callback_throws()
     {
-        try {
-            Livewire::test(new class extends Component {
-                public function render()
-                {
-                    return '<div>{{ $foo }}</div>';
-                }
-            });
+        $this->expectException(\Illuminate\View\ViewException::class);
 
-            $this->fail('Expected a ViewException to be thrown.');
-        } catch (\Illuminate\View\ViewException $e) {
-            // Expected...
-        }
+        Livewire::test(ComponentWithUndefinedProperty::class);
 
         $this->assertEmpty(HandleComponents::$renderStack);
     }
 
     public function test_view_sharing_is_reverted_when_render_throws()
     {
-        try {
-            Livewire::test(new class extends Component {
-                public function render()
-                {
-                    return '<div>{{ $foo }}</div>';
-                }
-            });
+        $this->expectException(\Illuminate\View\ViewException::class);
 
-            $this->fail('Expected a ViewException to be thrown.');
-        } catch (\Illuminate\View\ViewException $e) {
-            // Expected...
-        }
+        Livewire::test(ComponentWithUndefinedProperty::class);
 
         $this->assertNull(view()->shared('__livewire'));
         $this->assertNull(view()->shared('_instance'));
@@ -307,42 +289,50 @@ class UnitTest extends \Tests\TestCase
 
     public function test_island_view_sharing_is_reverted_when_render_island_throws()
     {
-        try {
-            Livewire::test(new class extends Component {
-                public bool $fail = false;
+        $this->expectException(\Illuminate\View\ViewException::class);
 
-                public function breakIsland()
-                {
-                    $this->fail = true;
-                    $this->skipRender();
-                    $this->renderIsland('probe');
-                }
+        Livewire::test(new class extends Component {
+            public bool $fail = false;
 
-                public function render()
-                {
-                    return <<<'HTML'
-                    <div>
-                        @island(name: 'probe')
-                            <div>
-                                @if ($fail)
-                                    {{ $foo }}
-                                @else
-                                    ok
-                                @endif
-                            </div>
-                        @endisland
-                    </div>
-                    HTML;
-                }
-            })
-                ->call('breakIsland');
+            public function breakIsland()
+            {
+                $this->fail = true;
+                $this->skipRender();
+                $this->renderIsland('probe');
+            }
 
-            $this->fail('Expected a ViewException to be thrown.');
-        } catch (\Illuminate\View\ViewException $e) {
-            // Expected...
-        }
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'probe')
+                        <div>
+                            @if ($fail)
+                                {{ $undefinedProperty }}
+                            @else
+                                Island rendered
+                            @endif
+                        </div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        })
+            ->assertOk()
+            ->assertSetStrict('fail', false)
+            ->assertSee('Island rendered')
+            ->call('breakIsland')
+            ->assertSetStrict('fail', true);
 
         $this->assertNull(view()->shared('__livewire'));
+    }
+}
+
+class ComponentWithUndefinedProperty extends Component
+{
+    public function render()
+    {
+        return '<div>{{ $undefinedProperty }}</div>';
     }
 }
 

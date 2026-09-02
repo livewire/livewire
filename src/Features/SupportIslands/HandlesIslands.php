@@ -229,13 +229,13 @@ trait HandlesIslands
         } finally {
             $revertShare();
         }
-        
+
         $replaceHtml = function ($newHtml) use (&$html) {
             $html = $newHtml;
         };
-    
+
         $finish($html, $replaceHtml);
-    
+
         app(ExtendBlade::class)->endLivewireRendering();
 
         return $html;
