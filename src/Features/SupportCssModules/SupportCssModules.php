@@ -5,14 +5,14 @@ namespace Livewire\Features\SupportCssModules;
 use Illuminate\Support\Facades\Route;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
-use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+use Livewire\Facades\LivewireEndpoint;
 
 class SupportCssModules extends ComponentHook
 {
     static function provide()
     {
         // Route for scoped styles
-        Route::get(EndpointResolver::componentCssPath(), function ($component) {
+        Route::get(LivewireEndpoint::componentCssPath(), function ($component) {
             $component = str_replace('----', ':', $component);
             $component = str_replace('---', '::', $component);
             $component = str_replace('--', '.', $component);
@@ -45,7 +45,7 @@ class SupportCssModules extends ComponentHook
         });
 
         // Route for global styles
-        Route::get(EndpointResolver::componentGlobalCssPath(), function ($component) {
+        Route::get(LivewireEndpoint::componentGlobalCssPath(), function ($component) {
             $component = str_replace('----', ':', $component);
             $component = str_replace('---', '::', $component);
             $component = str_replace('--', '.', $component);

@@ -7,8 +7,8 @@ use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component as BaseComponent;
+use Livewire\Facades\LivewireEndpoint;
 use Livewire\Livewire;
-use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 class UnitTest extends \LegacyTests\Unit\TestCase
 {
@@ -107,7 +107,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         }
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), [
+            ->postJson(LivewireEndpoint::updatePath(), [
                 'components' => [[
                     'calls'    => [],
                     'updates'  => [],
@@ -137,7 +137,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
         // Hit update endpoint, including PersistentMiddleware
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), [
+            ->postJson(LivewireEndpoint::updatePath(), [
                 'components' => [
                     [
                         'calls' => [],

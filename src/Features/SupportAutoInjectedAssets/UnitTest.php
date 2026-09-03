@@ -8,8 +8,7 @@ use Tests\TestCase;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
-use LegacyTests\Browser\Actions\Test;
-use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+use Livewire\Facades\LivewireEndpoint;
 
 class UnitTest extends TestCase
 {
@@ -163,7 +162,7 @@ class UnitTest extends TestCase
         });
 
         // Check for the appropriate script path based on debug mode
-        $scriptPath = EndpointResolver::scriptPath(! config('app.debug'));
+        $scriptPath = LivewireEndpoint::scriptPath(! config('app.debug'));
 
         \Livewire\Livewire::forceAssetInjection();
         $this->get('/with-livewire')->assertSee($scriptPath);
@@ -182,7 +181,7 @@ class UnitTest extends TestCase
         });
 
         // Check for the appropriate script path based on debug mode
-        $scriptPath = EndpointResolver::scriptPath(! config('app.debug'));
+        $scriptPath = LivewireEndpoint::scriptPath(! config('app.debug'));
 
         $this->get('/without-livewire')->assertDontSee($scriptPath);
         $this->get('/with-livewire')->assertSee($scriptPath);
@@ -199,7 +198,7 @@ class UnitTest extends TestCase
         });
 
         // Check for the appropriate script path based on debug mode
-        $scriptPath = EndpointResolver::scriptPath(! config('app.debug'));
+        $scriptPath = LivewireEndpoint::scriptPath(! config('app.debug'));
 
         $this->get('/without-persist')->assertDontSee($scriptPath);
         $this->get('/with-persist')->assertSee($scriptPath);

@@ -5,8 +5,8 @@ namespace Livewire\Features\SupportFileUploads;
 use function Livewire\on;
 use Livewire\ComponentHook;
 use Illuminate\Support\Facades\Route;
-use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
+use Livewire\Facades\LivewireEndpoint;
 
 class SupportFileUploads extends ComponentHook
 {
@@ -31,10 +31,10 @@ class SupportFileUploads extends ComponentHook
             }
         });
 
-        Route::post(EndpointResolver::uploadPath(), [FileUploadController::class, 'handle'])
+        Route::post(LivewireEndpoint::uploadPath(), [FileUploadController::class, 'handle'])
             ->name('livewire.upload-file');
 
-        Route::get(EndpointResolver::previewPath(), [FilePreviewController::class, 'handle'])
+        Route::get(LivewireEndpoint::previewPath(), [FilePreviewController::class, 'handle'])
             ->name('livewire.preview-file');
     }
 }

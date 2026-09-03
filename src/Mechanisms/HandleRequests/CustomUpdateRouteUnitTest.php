@@ -2,8 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Facades\LivewireEndpoint;
 use Livewire\Livewire;
-use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\TestCase;
 use Tests\TestComponent;
 
@@ -31,7 +31,7 @@ class CustomUpdateRouteUnitTest extends TestCase
     public function test_default_route_returns_404_when_custom_route_registered(): void
     {
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => []]);
+            ->postJson(LivewireEndpoint::updatePath(), ['components' => []]);
 
         $response->assertNotFound();
     }

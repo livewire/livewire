@@ -2,14 +2,12 @@
 
 namespace Livewire\Mechanisms\HandleRequests;
 
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 use Livewire\Features\SupportReactiveProps\SupportReactiveProps;
-use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Exceptions\PayloadTooLargeException;
 use Livewire\Exceptions\TooManyComponentsException;
-
+use Livewire\Facades\LivewireEndpoint;
 use Livewire\Mechanisms\Mechanism;
 
 use function Livewire\trigger;
@@ -42,7 +40,7 @@ class HandleRequests extends Mechanism
 
     function getUriPrefix()
     {
-        return EndpointResolver::prefix();
+        return LivewireEndpoint::prefix();
     }
 
     function getUpdateUri()
@@ -92,7 +90,7 @@ class HandleRequests extends Mechanism
 
     function setUpdateRoute($callback)
     {
-        $route = $callback([self::class, 'handleUpdate'], EndpointResolver::updatePath());
+        $route = $callback([self::class, 'handleUpdate'], LivewireEndpoint::updatePath());
 
         // Ensure the route includes the `web` middleware group.
         // Without it, CSRF protection is lost entirely on the update endpoint.

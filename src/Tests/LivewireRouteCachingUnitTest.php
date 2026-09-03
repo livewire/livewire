@@ -5,6 +5,7 @@ namespace Livewire\Tests;
 use Error;
 use Exception;
 use Illuminate\Routing\Route;
+use Livewire\Facades\LivewireEndpoint;
 use Tests\TestCase;
 
 class LivewireRouteCachingUnitTest extends TestCase
@@ -12,7 +13,7 @@ class LivewireRouteCachingUnitTest extends TestCase
     public function test_livewire_script_route_is_cacheable(): void
     {
         // The route changes based on debug mode
-        $uri = ltrim(\Livewire\Mechanisms\HandleRequests\EndpointResolver::scriptPath(! config('app.debug')), '/');
+        $uri = ltrim(LivewireEndpoint::scriptPath(! config('app.debug')), '/');
         $route = $this->getRoute($uri);
 
         $this->cacheRoute($route, 'Livewire\Mechanisms\FrontendAssets\FrontendAssets@returnJavaScriptAsFile', "Failed to cache route '$uri'");
@@ -20,7 +21,7 @@ class LivewireRouteCachingUnitTest extends TestCase
 
     public function test_livewire_update_route_is_cacheable(): void
     {
-        $uri = ltrim(\Livewire\Mechanisms\HandleRequests\EndpointResolver::updatePath(), '/');
+        $uri = ltrim(LivewireEndpoint::updatePath(), '/');
         $route = $this->getRoute($uri);
 
         $this->cacheRoute($route, 'Livewire\Mechanisms\HandleRequests\HandleRequests@handleUpdate', "Failed to cache route 'livewire/update'");

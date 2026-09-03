@@ -2,9 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Livewire\Facades\LivewireEndpoint;
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
-use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleRequests\RequireLivewireHeaders;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -20,7 +20,7 @@ class UnitTest extends TestCase
         config()->set('app.debug', false);
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), $payload);
+            ->postJson(LivewireEndpoint::updatePath(), $payload);
 
         $response->assertNotFound();
     }
@@ -47,7 +47,7 @@ class UnitTest extends TestCase
         config()->set('app.debug', false);
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
+            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
                 ['snapshot' => $snapshot, 'updates' => [], 'calls' => []],
             ]]);
 
@@ -75,7 +75,7 @@ class UnitTest extends TestCase
         $snapshot = json_encode(['data' => [], 'memo' => ['id' => 'abc', 'name' => 'foo'], 'checksum' => 'hash']);
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
+            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
                 ['snapshot' => $snapshot, 'updates' => [], 'calls' => $calls],
             ]]);
 
@@ -110,7 +110,7 @@ class UnitTest extends TestCase
         ]);
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
+            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
                 ['snapshot' => $snapshot, 'updates' => [], 'calls' => []],
             ]]);
 
@@ -164,7 +164,7 @@ class UnitTest extends TestCase
 
         // Send a string where an array property is expected...
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
+            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
                 ['snapshot' => $snapshotJson, 'updates' => ['items' => 'not_an_array'], 'calls' => []],
             ]]);
 
@@ -187,7 +187,7 @@ class UnitTest extends TestCase
         });
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
+            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
                 ['snapshot' => json_encode($testable->snapshot), 'updates' => ['items' => 'not_an_array'], 'calls' => []],
             ]]);
 
@@ -214,7 +214,7 @@ class UnitTest extends TestCase
         });
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
+            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
                 [
                     'snapshot' => json_encode($testable->snapshot),
                     'updates' => [],
@@ -236,7 +236,7 @@ class UnitTest extends TestCase
         $snapshotJson = json_encode($testable->snapshot);
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
+            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
                 ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => []],
             ]]);
 
@@ -251,7 +251,7 @@ class UnitTest extends TestCase
         });
 
         $this->assertCount(1, $livewireUpdateRoutes);
-        $this->assertEquals(ltrim(EndpointResolver::updatePath(), '/'), $livewireUpdateRoutes->first()->uri());
+        $this->assertEquals(ltrim(LivewireEndpoint::updatePath(), '/'), $livewireUpdateRoutes->first()->uri());
     }
 
     public function test_duplicate_route_is_not_registered_when_livewire_update_route_already_exists(): void
@@ -287,7 +287,7 @@ class UnitTest extends TestCase
 
         // Livewire's update route should still be matched, not the catch-all
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
+            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
                 ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => []],
             ]]);
 
@@ -297,7 +297,7 @@ class UnitTest extends TestCase
 
     public function test_update_endpoint_returns_404_without_x_livewire_header(): void
     {
-        $response = $this->postJson(EndpointResolver::updatePath(), ['components' => []]);
+        $response = $this->postJson(LivewireEndpoint::updatePath(), ['components' => []]);
 
         $response->assertNotFound();
     }
@@ -305,14 +305,14 @@ class UnitTest extends TestCase
     public function test_update_endpoint_returns_404_without_json_content_type(): void
     {
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->post(EndpointResolver::updatePath(), ['components' => []]);
+            ->post(LivewireEndpoint::updatePath(), ['components' => []]);
 
         $response->assertNotFound();
     }
 
     public function test_update_endpoint_returns_404_without_either_required_header(): void
     {
-        $response = $this->post(EndpointResolver::updatePath(), ['components' => []]);
+        $response = $this->post(LivewireEndpoint::updatePath(), ['components' => []]);
 
         $response->assertNotFound();
     }
@@ -323,7 +323,7 @@ class UnitTest extends TestCase
         $snapshotJson = json_encode($testable->snapshot);
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
+            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
                 ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => []],
             ]]);
 
@@ -351,7 +351,7 @@ class UnitTest extends TestCase
         $snapshotJson = json_encode($testable->snapshot);
 
         $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
+            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
                 ['snapshot' => $snapshotJson, 'updates' => [], 'calls' => [
                     ['method' => 'loadItems', 'params' => []],
                 ]],
@@ -375,7 +375,7 @@ class UnitTest extends TestCase
 
         // Livewire's update route should still be matched, not the catch-all
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(EndpointResolver::updatePath(), ['components' => [
+            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
                 ['snapshot' => $encodedSnapshot, 'updates' => [], 'calls' => []],
             ]]);
 
@@ -404,7 +404,7 @@ class UnitTest extends TestCase
         // This should work even though $updateRoute is null by finding the route from the router
         $uri = $handleRequests->getUpdateUri();
 
-        $this->assertEquals(EndpointResolver::updatePath(), $uri);
+        $this->assertEquals(LivewireEndpoint::updatePath(), $uri);
     }
 
     public function test_get_update_uri_works_when_route_name_is_not_indexed(): void
@@ -432,6 +432,6 @@ class UnitTest extends TestCase
         $handleRequests = app(HandleRequests::class);
         $uri = $handleRequests->getUpdateUri();
 
-        $this->assertEquals(EndpointResolver::updatePath(), $uri);
+        $this->assertEquals(LivewireEndpoint::updatePath(), $uri);
     }
 }
