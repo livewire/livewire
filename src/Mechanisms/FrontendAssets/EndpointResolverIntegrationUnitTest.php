@@ -26,10 +26,11 @@ class EndpointResolverIntegrationUnitTest extends TestCase
 
         foreach ([
             'custom-livewire/update',
-            'custom-livewire/livewire.js',
-            'custom-livewire/livewire.map',
-            'custom-livewire/upload',
-            'custom-livewire/preview/{filename}',
+            config('app.debug') ? 'custom-livewire/livewire.js' : 'custom-livewire/livewire.min.js',
+            'custom-livewire/livewire.min.js.map',
+            'custom-livewire/livewire.csp.min.js.map',
+            'custom-livewire/upload-file',
+            'custom-livewire/preview-file/{filename}',
             'custom-livewire/js/{component}.js',
             'custom-livewire/css/{component}.css',
             'custom-livewire/css/{component}.global.css',
@@ -79,8 +80,12 @@ class EndpointResolverIntegrationUnitTest extends TestCase
         $prefix = EndpointResolver::prefix();
 
         $this->assertStringStartsWith($prefix, EndpointResolver::updatePath());
-        $this->assertStringStartsWith($prefix, EndpointResolver::scriptPath());
+        $this->assertStringStartsWith($prefix, EndpointResolver::scriptPath(false));
+        $this->assertStringStartsWith($prefix, EndpointResolver::scriptPath(true));
+        $this->assertStringStartsWith($prefix, EndpointResolver::mapPath(false));
+        $this->assertStringStartsWith($prefix, EndpointResolver::mapPath(true));
         $this->assertStringStartsWith($prefix, EndpointResolver::uploadPath());
+        $this->assertStringStartsWith($prefix, EndpointResolver::previewPath());
     }
 }
 
@@ -109,22 +114,26 @@ class CustomEndpointResolver implements EndpointResolverInterface
 
     public function scriptPath(bool $minified = false): string
     {
-        return $this->prefix() . '/livewire.js';
+        $file = $minified ? 'livewire.min.js' : 'livewire.js';
+
+        return $this->prefix() . '/' . $file;
     }
 
     public function mapPath(bool $csp = false): string
     {
-        return $this->prefix() . '/livewire.map';
+        $file = $csp ? 'livewire.csp.min.js.map' : 'livewire.min.js.map';
+
+        return $this->prefix() . '/' . $file;
     }
 
     public function uploadPath(): string
     {
-        return $this->prefix() . '/upload';
+        return $this->prefix() . '/upload-file';
     }
 
     public function previewPath(): string
     {
-        return $this->prefix() . '/preview/{filename}';
+        return $this->prefix() . '/preview-file/{filename}';
     }
 
     public function componentJsPath(): string

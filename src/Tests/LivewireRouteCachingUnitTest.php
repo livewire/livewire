@@ -22,7 +22,7 @@ class LivewireRouteCachingUnitTest extends TestCase
 
     public function test_custom_livewire_script_route_is_cacheable(): void
     {
-        $uri = 'custom-livewire/livewire.js';
+        $uri = config('app.debug') ? 'custom-livewire/livewire.js' : 'custom-livewire/livewire.min.js';
         $route = $this->getRoute($uri);
 
         $this->cacheRoute($route, 'Livewire\Mechanisms\FrontendAssets\FrontendAssets@returnJavaScriptAsFile', "Failed to cache route '$uri'");
@@ -104,22 +104,26 @@ class CustomEndpointResolver implements EndpointResolverInterface
 
     public function scriptPath(bool $minified = false): string
     {
-        return $this->prefix() . '/livewire.js';
+        $file = $minified ? 'livewire.min.js' : 'livewire.js';
+
+        return $this->prefix() . '/' . $file;
     }
 
     public function mapPath(bool $csp = false): string
     {
-        return $this->prefix() . '/livewire.map';
+        $file = $csp ? 'livewire.csp.min.js.map' : 'livewire.min.js.map';
+
+        return $this->prefix() . '/' . $file;
     }
 
     public function uploadPath(): string
     {
-        return $this->prefix() . '/upload';
+        return $this->prefix() . '/upload-file';
     }
 
     public function previewPath(): string
     {
-        return $this->prefix() . '/preview/{filename}';
+        return $this->prefix() . '/preview-file/{filename}';
     }
 
     public function componentJsPath(): string

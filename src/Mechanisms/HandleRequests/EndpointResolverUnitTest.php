@@ -14,16 +14,16 @@ class EndpointResolverUnitTest extends TestCase
         EndpointResolver::clearResolvedInstance(EndpointResolverInterface::class);
 
         $this->assertSame('/custom-livewire', EndpointResolver::prefix());
-        $this->assertSame('/custom-livewire/custom-update', EndpointResolver::updatePath());
-        $this->assertSame('/custom-livewire/custom.js', EndpointResolver::scriptPath());
-        $this->assertSame('/custom-livewire/custom.min.js', EndpointResolver::scriptPath(minified: true));
-        $this->assertSame('/custom-livewire/custom.map', EndpointResolver::mapPath());
-        $this->assertSame('/custom-livewire/custom.csp.map', EndpointResolver::mapPath(csp: true));
-        $this->assertSame('/custom-livewire/custom-upload', EndpointResolver::uploadPath());
-        $this->assertSame('/custom-livewire/custom-preview/{filename}', EndpointResolver::previewPath());
-        $this->assertSame('/custom-livewire/custom-js/{component}.js', EndpointResolver::componentJsPath());
-        $this->assertSame('/custom-livewire/custom-css/{component}.css', EndpointResolver::componentCssPath());
-        $this->assertSame('/custom-livewire/custom-css/{component}.global.css', EndpointResolver::componentGlobalCssPath());
+        $this->assertSame('/custom-livewire/update', EndpointResolver::updatePath());
+        $this->assertSame('/custom-livewire/livewire.js', EndpointResolver::scriptPath(config('app.debug')));
+        $this->assertSame('/custom-livewire/livewire.min.js', EndpointResolver::scriptPath(! config('app.debug')));
+        $this->assertSame('/custom-livewire/livewire.min.js.map', EndpointResolver::mapPath());
+        $this->assertSame('/custom-livewire/livewire.csp.min.js.map', EndpointResolver::mapPath(csp: true));
+        $this->assertSame('/custom-livewire/upload-file', EndpointResolver::uploadPath());
+        $this->assertSame('/custom-livewire/preview-file/{filename}', EndpointResolver::previewPath());
+        $this->assertSame('/custom-livewire/js/{component}.js', EndpointResolver::componentJsPath());
+        $this->assertSame('/custom-livewire/css/{component}.css', EndpointResolver::componentCssPath());
+        $this->assertSame('/custom-livewire/css/{component}.global.css', EndpointResolver::componentGlobalCssPath());
     }
 
     public function test_generates_unique_prefix_from_app_key()
@@ -130,41 +130,45 @@ class CustomEndpointResolver implements EndpointResolverInterface
 
     public function updatePath(): string
     {
-        return $this->prefix() . '/custom-update';
+        return $this->prefix() . '/update';
     }
 
     public function scriptPath(bool $minified = false): string
     {
-        return $this->prefix() . ($minified ? '/custom.min.js' : '/custom.js');
+        $file = $minified ? 'livewire.min.js' : 'livewire.js';
+
+        return $this->prefix() . '/' . $file;
     }
 
     public function mapPath(bool $csp = false): string
     {
-        return $this->prefix() . ($csp ? '/custom.csp.map' : '/custom.map');
+        $file = $csp ? 'livewire.csp.min.js.map' : 'livewire.min.js.map';
+
+        return $this->prefix() . '/' . $file;
     }
 
     public function uploadPath(): string
     {
-        return $this->prefix() . '/custom-upload';
+        return $this->prefix() . '/upload-file';
     }
 
     public function previewPath(): string
     {
-        return $this->prefix() . '/custom-preview/{filename}';
+        return $this->prefix() . '/preview-file/{filename}';
     }
 
     public function componentJsPath(): string
     {
-        return $this->prefix() . '/custom-js/{component}.js';
+        return $this->prefix() . '/js/{component}.js';
     }
 
     public function componentCssPath(): string
     {
-        return $this->prefix() . '/custom-css/{component}.css';
+        return $this->prefix() . '/css/{component}.css';
     }
 
     public function componentGlobalCssPath(): string
     {
-        return $this->prefix() . '/custom-css/{component}.global.css';
+        return $this->prefix() . '/css/{component}.global.css';
     }
 }

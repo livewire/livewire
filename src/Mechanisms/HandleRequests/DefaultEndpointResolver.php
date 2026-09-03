@@ -4,9 +4,6 @@ namespace Livewire\Mechanisms\HandleRequests;
 
 /**
  * Default implementation of the endpoint resolver.
- *
- * Delegates to the legacy EndpointResolver static API for backwards
- * compatibility while allowing the resolver to be overridden via the container.
  */
 class DefaultEndpointResolver implements EndpointResolverInterface
 {
