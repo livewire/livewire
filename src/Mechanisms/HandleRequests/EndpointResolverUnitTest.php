@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleRequests;
 
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\TestCase;
 
 class EndpointResolverUnitTest extends TestCase

@@ -5,8 +5,8 @@ namespace Livewire\Features\SupportFileUploads;
 use function Livewire\on;
 use Livewire\ComponentHook;
 use Illuminate\Support\Facades\Route;
-use Livewire\Facades\GenerateSignedUploadUrlFacade;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+use Livewire\Facades\GenerateSignedUploadUrlFacade;
 
 class SupportFileUploads extends ComponentHook
 {

@@ -8,6 +8,7 @@ use Tests\TestCase;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
+use LegacyTests\Browser\Actions\Test;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 class UnitTest extends TestCase

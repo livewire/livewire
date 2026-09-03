@@ -6,9 +6,8 @@ use Illuminate\Support\Facades\Vite;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
-use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Mechanisms\Mechanism;
-
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use function Livewire\on;
 
 class FrontendAssets extends Mechanism

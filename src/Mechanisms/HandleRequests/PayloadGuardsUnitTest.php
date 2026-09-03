@@ -8,6 +8,7 @@ use Livewire\Exceptions\PayloadTooLargeException;
 use Livewire\Exceptions\TooManyComponentsException;
 use Livewire\Exceptions\TooManyCallsException;
 use Tests\TestCase;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 class PayloadGuardsUnitTest extends TestCase
 {
