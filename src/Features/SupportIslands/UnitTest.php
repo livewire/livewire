@@ -689,8 +689,7 @@ class UnitTest extends TestCase
         });
 
         $component = Livewire::test(new class extends \Livewire\Component {
-            public $from = 0;
-
+            public $from = 1;
             public $to = 1;
 
             public function loadMore()
@@ -703,7 +702,7 @@ class UnitTest extends TestCase
                 return <<<'HTML'
                 <div>
                     @island(name: 'rows', always: true)
-                        @foreach (range($from ?: 1, $to) as $number)
+                        @foreach (range($from, $to) as $number)
                             <livewire:island-child :$number :wire:key="'row-'.$number" />
                         @endforeach
                     @endisland
@@ -714,6 +713,7 @@ class UnitTest extends TestCase
 
         $this->assertSame(['row-1'], array_keys($component->snapshot['memo']['children']));
 
+        // Simulate an append-mode island render, like a "load more" button would...
         $component->update(calls: [
             [
                 'method' => 'loadMore',
@@ -734,7 +734,9 @@ class UnitTest extends TestCase
 
         $component->call('$refresh');
 
+        // The appended child should come back as a stub, not mount again from scratch...
         $this->assertStringContainsString('wire:id="'.$appendedChildId.'" wire:name="island-child" wire:key="row-2"', $component->html());
+        $this->assertStringNotContainsString('child 1', $component->html());
         $this->assertStringNotContainsString('child 2', $component->html());
     }
 }

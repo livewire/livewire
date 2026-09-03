@@ -112,10 +112,7 @@ class SupportNestingComponents extends ComponentHook
 
     function keepRenderedChildren()
     {
-        $this->storeSet('children', array_replace(
-            $this->storeGet('previousChildren', []),
-            $this->storeGet('children', []),
-        ));
+        $this->storeSet('children', array_replace($this->storeGet('previousChildren', []), $this->getChildren()));
     }
 
     static function setParametersToMatchingProperties($component, $params)
