@@ -5,8 +5,8 @@ namespace Livewire\Features\SupportFileDownloads;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
-use Livewire\Facades\LivewireEndpoint;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use PHPUnit\Framework\ExpectationFailedException;
 
 class UnitTest extends \Tests\TestCase
@@ -31,7 +31,7 @@ class UnitTest extends \Tests\TestCase
         $testable = Livewire::test(FileDownloadComponent::class);
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
                 [
                     'snapshot' => json_encode($testable->snapshot),
                     'updates' => [],

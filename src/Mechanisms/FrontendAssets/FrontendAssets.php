@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Vite;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
-use Livewire\Facades\LivewireEndpoint;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Mechanisms\Mechanism;
 
 use function Livewire\on;
@@ -24,12 +24,12 @@ class FrontendAssets extends Mechanism
     {
         app($this::class)->setScriptRoute(function ($handle) {
             return config('app.debug')
-                ? Route::get(LivewireEndpoint::scriptPath(minified: false), $handle)
-                : Route::get(LivewireEndpoint::scriptPath(minified: true), $handle);
+                ? Route::get(EndpointResolver::scriptPath(minified: false), $handle)
+                : Route::get(EndpointResolver::scriptPath(minified: true), $handle);
         });
 
-        Route::get(LivewireEndpoint::mapPath(csp: false), [static::class, 'maps']);
-        Route::get(LivewireEndpoint::mapPath(csp: true), [static::class, 'cspMaps']);
+        Route::get(EndpointResolver::mapPath(csp: false), [static::class, 'maps']);
+        Route::get(EndpointResolver::mapPath(csp: true), [static::class, 'cspMaps']);
 
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
         Blade::directive('livewireScriptConfig', [static::class, 'livewireScriptConfig']);
@@ -59,7 +59,7 @@ class FrontendAssets extends Mechanism
 
     function setScriptRoute($callback)
     {
-        $route = $callback([self::class, 'returnJavaScriptAsFile'], LivewireEndpoint::scriptPath());
+        $route = $callback([self::class, 'returnJavaScriptAsFile'], EndpointResolver::scriptPath());
 
         $this->javaScriptRoute = $route;
     }

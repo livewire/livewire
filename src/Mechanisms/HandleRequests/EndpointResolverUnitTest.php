@@ -2,7 +2,6 @@
 
 namespace Livewire\Mechanisms\HandleRequests;
 
-use Livewire\Facades\LivewireEndpoint;
 use Tests\TestCase;
 
 class EndpointResolverUnitTest extends TestCase
@@ -11,24 +10,24 @@ class EndpointResolverUnitTest extends TestCase
     {
         $this->app->singleton(EndpointResolverInterface::class, CustomEndpointResolver::class);
 
-        LivewireEndpoint::clearResolvedInstance(EndpointResolverInterface::class);
+        EndpointResolver::clearResolvedInstance(EndpointResolverInterface::class);
 
-        $this->assertSame('/custom-livewire', LivewireEndpoint::prefix());
-        $this->assertSame('/custom-livewire/custom-update', LivewireEndpoint::updatePath());
-        $this->assertSame('/custom-livewire/custom.js', LivewireEndpoint::scriptPath());
-        $this->assertSame('/custom-livewire/custom.min.js', LivewireEndpoint::scriptPath(minified: true));
-        $this->assertSame('/custom-livewire/custom.map', LivewireEndpoint::mapPath());
-        $this->assertSame('/custom-livewire/custom.csp.map', LivewireEndpoint::mapPath(csp: true));
-        $this->assertSame('/custom-livewire/custom-upload', LivewireEndpoint::uploadPath());
-        $this->assertSame('/custom-livewire/custom-preview/{filename}', LivewireEndpoint::previewPath());
-        $this->assertSame('/custom-livewire/custom-js/{component}.js', LivewireEndpoint::componentJsPath());
-        $this->assertSame('/custom-livewire/custom-css/{component}.css', LivewireEndpoint::componentCssPath());
-        $this->assertSame('/custom-livewire/custom-css/{component}.global.css', LivewireEndpoint::componentGlobalCssPath());
+        $this->assertSame('/custom-livewire', EndpointResolver::prefix());
+        $this->assertSame('/custom-livewire/custom-update', EndpointResolver::updatePath());
+        $this->assertSame('/custom-livewire/custom.js', EndpointResolver::scriptPath());
+        $this->assertSame('/custom-livewire/custom.min.js', EndpointResolver::scriptPath(minified: true));
+        $this->assertSame('/custom-livewire/custom.map', EndpointResolver::mapPath());
+        $this->assertSame('/custom-livewire/custom.csp.map', EndpointResolver::mapPath(csp: true));
+        $this->assertSame('/custom-livewire/custom-upload', EndpointResolver::uploadPath());
+        $this->assertSame('/custom-livewire/custom-preview/{filename}', EndpointResolver::previewPath());
+        $this->assertSame('/custom-livewire/custom-js/{component}.js', EndpointResolver::componentJsPath());
+        $this->assertSame('/custom-livewire/custom-css/{component}.css', EndpointResolver::componentCssPath());
+        $this->assertSame('/custom-livewire/custom-css/{component}.global.css', EndpointResolver::componentGlobalCssPath());
     }
 
     public function test_generates_unique_prefix_from_app_key()
     {
-        $prefix = LivewireEndpoint::prefix();
+        $prefix = EndpointResolver::prefix();
 
         // Should start with /livewire-
         $this->assertStringStartsWith('/livewire-', $prefix);
@@ -39,8 +38,8 @@ class EndpointResolverUnitTest extends TestCase
 
     public function test_same_app_key_generates_same_prefix()
     {
-        $prefix1 = LivewireEndpoint::prefix();
-        $prefix2 = LivewireEndpoint::prefix();
+        $prefix1 = EndpointResolver::prefix();
+        $prefix2 = EndpointResolver::prefix();
 
         $this->assertEquals($prefix1, $prefix2);
     }
@@ -49,11 +48,11 @@ class EndpointResolverUnitTest extends TestCase
     {
         $originalKey = config('app.key');
 
-        $prefix1 = LivewireEndpoint::prefix();
+        $prefix1 = EndpointResolver::prefix();
 
         config()->set('app.key', 'base64:' . base64_encode('different-key-for-testing'));
 
-        $prefix2 = LivewireEndpoint::prefix();
+        $prefix2 = EndpointResolver::prefix();
 
         // Restore original key
         config()->set('app.key', $originalKey);
@@ -63,61 +62,61 @@ class EndpointResolverUnitTest extends TestCase
 
     public function test_update_path_uses_prefix()
     {
-        $prefix = LivewireEndpoint::prefix();
-        $path = LivewireEndpoint::updatePath();
+        $prefix = EndpointResolver::prefix();
+        $path = EndpointResolver::updatePath();
 
         $this->assertEquals($prefix . '/update', $path);
     }
 
     public function test_script_path_uses_prefix()
     {
-        $prefix = LivewireEndpoint::prefix();
+        $prefix = EndpointResolver::prefix();
 
-        $this->assertEquals($prefix . '/livewire.js', LivewireEndpoint::scriptPath(minified: false));
-        $this->assertEquals($prefix . '/livewire.min.js', LivewireEndpoint::scriptPath(minified: true));
+        $this->assertEquals($prefix . '/livewire.js', EndpointResolver::scriptPath(minified: false));
+        $this->assertEquals($prefix . '/livewire.min.js', EndpointResolver::scriptPath(minified: true));
     }
 
     public function test_map_path_uses_prefix()
     {
-        $prefix = LivewireEndpoint::prefix();
+        $prefix = EndpointResolver::prefix();
 
-        $this->assertEquals($prefix . '/livewire.min.js.map', LivewireEndpoint::mapPath(csp: false));
-        $this->assertEquals($prefix . '/livewire.csp.min.js.map', LivewireEndpoint::mapPath(csp: true));
+        $this->assertEquals($prefix . '/livewire.min.js.map', EndpointResolver::mapPath(csp: false));
+        $this->assertEquals($prefix . '/livewire.csp.min.js.map', EndpointResolver::mapPath(csp: true));
     }
 
     public function test_upload_path_uses_prefix()
     {
-        $prefix = LivewireEndpoint::prefix();
-        $path = LivewireEndpoint::uploadPath();
+        $prefix = EndpointResolver::prefix();
+        $path = EndpointResolver::uploadPath();
 
         $this->assertEquals($prefix . '/upload-file', $path);
     }
 
     public function test_preview_path_uses_prefix()
     {
-        $prefix = LivewireEndpoint::prefix();
-        $path = LivewireEndpoint::previewPath();
+        $prefix = EndpointResolver::prefix();
+        $path = EndpointResolver::previewPath();
 
         $this->assertEquals($prefix . '/preview-file/{filename}', $path);
     }
 
     public function test_component_js_path_uses_prefix()
     {
-        $prefix = LivewireEndpoint::prefix();
-        $path = LivewireEndpoint::componentJsPath();
+        $prefix = EndpointResolver::prefix();
+        $path = EndpointResolver::componentJsPath();
 
         $this->assertEquals($prefix . '/js/{component}.js', $path);
     }
 
     public function test_all_paths_share_same_prefix()
     {
-        $prefix = LivewireEndpoint::prefix();
+        $prefix = EndpointResolver::prefix();
 
-        $this->assertStringStartsWith($prefix, LivewireEndpoint::updatePath());
-        $this->assertStringStartsWith($prefix, LivewireEndpoint::scriptPath());
-        $this->assertStringStartsWith($prefix, LivewireEndpoint::uploadPath());
-        $this->assertStringStartsWith($prefix, LivewireEndpoint::previewPath());
-        $this->assertStringStartsWith($prefix, LivewireEndpoint::componentJsPath());
+        $this->assertStringStartsWith($prefix, EndpointResolver::updatePath());
+        $this->assertStringStartsWith($prefix, EndpointResolver::scriptPath());
+        $this->assertStringStartsWith($prefix, EndpointResolver::uploadPath());
+        $this->assertStringStartsWith($prefix, EndpointResolver::previewPath());
+        $this->assertStringStartsWith($prefix, EndpointResolver::componentJsPath());
     }
 }
 

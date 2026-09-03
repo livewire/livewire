@@ -5,8 +5,8 @@ namespace Livewire\Features\SupportJsModules;
 use Illuminate\Support\Facades\Route;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
-use Livewire\Facades\LivewireEndpoint;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 use function Livewire\on;
 
@@ -20,7 +20,7 @@ class SupportJsModules extends ComponentHook
             static::$modulesMountedThisRequest = [];
         });
 
-        Route::get(LivewireEndpoint::componentJsPath(), function ($component) {
+        Route::get(EndpointResolver::componentJsPath(), function ($component) {
             $component = str_replace('----', ':', $component);
             $component = str_replace('---', '::', $component);
             $component = str_replace('--', '.', $component);

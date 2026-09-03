@@ -4,8 +4,8 @@ namespace Livewire\Features\SupportLockedProperties;
 
 use Livewire\Livewire;
 use Livewire\Component as BaseComponent;
-use Livewire\Facades\LivewireEndpoint;
 use Livewire\Form;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -75,7 +75,7 @@ class UnitTest extends \Tests\TestCase
         $snapshotJson = json_encode($testable->snapshot);
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(LivewireEndpoint::updatePath(), ['components' => [
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
                 ['snapshot' => $snapshotJson, 'updates' => ['count' => 2], 'calls' => []],
             ]]);
 

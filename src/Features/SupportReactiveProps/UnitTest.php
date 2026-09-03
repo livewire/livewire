@@ -3,8 +3,8 @@
 namespace Livewire\Features\SupportReactiveProps;
 
 use Livewire\Component;
-use Livewire\Facades\LivewireEndpoint;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -105,7 +105,7 @@ class UnitTest extends \Tests\TestCase
         SupportReactiveProps::$pendingChildParams[$child->id()] = ['article' => $article];
 
         $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(LivewireEndpoint::updatePath(), [
+            ->postJson(EndpointResolver::updatePath(), [
                 'components' => [
                     [
                         'snapshot' => json_encode($child->snapshot),
@@ -139,7 +139,7 @@ class UnitTest extends \Tests\TestCase
         SupportReactiveProps::$pendingChildParams[$child->id()] = ['article' => $article];
 
         $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(LivewireEndpoint::updatePath(), [
+            ->postJson(EndpointResolver::updatePath(), [
                 'components' => [
                     [
                         'snapshot' => json_encode($child->snapshot),
@@ -207,7 +207,7 @@ class UnitTest extends \Tests\TestCase
         // Simulate a subsequent request where the parent again passes the
         // same (still dirty) model and the child only refreshes.
         $this->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(LivewireEndpoint::updatePath(), [
+            ->postJson(EndpointResolver::updatePath(), [
                 'components' => [
                     [
                         'snapshot' => json_encode($snapshot),

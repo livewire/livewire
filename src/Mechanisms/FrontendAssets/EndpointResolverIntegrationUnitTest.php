@@ -2,15 +2,15 @@
 
 namespace Livewire\Mechanisms\FrontendAssets;
 
-use Livewire\Facades\LivewireEndpoint;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\TestCase;
 
 class EndpointResolverIntegrationUnitTest extends TestCase
 {
     public function test_script_route_uses_endpoint_resolver_path()
     {
-        $expectedPath = LivewireEndpoint::scriptPath(minified: !config('app.debug'));
+        $expectedPath = EndpointResolver::scriptPath(minified: !config('app.debug'));
 
         $frontendAssets = app(FrontendAssets::class);
         $actualPath = '/' . ltrim($frontendAssets->javaScriptRoute->uri, '/');
@@ -35,7 +35,7 @@ class EndpointResolverIntegrationUnitTest extends TestCase
 
     public function test_update_uri_uses_endpoint_resolver_path()
     {
-        $expectedPath = LivewireEndpoint::updatePath();
+        $expectedPath = EndpointResolver::updatePath();
         $actualPath = app('livewire')->getUpdateUri();
 
         $this->assertEquals($expectedPath, $actualPath);
@@ -43,10 +43,10 @@ class EndpointResolverIntegrationUnitTest extends TestCase
 
     public function test_all_endpoints_use_same_prefix()
     {
-        $prefix = LivewireEndpoint::prefix();
+        $prefix = EndpointResolver::prefix();
 
-        $this->assertStringStartsWith($prefix, LivewireEndpoint::updatePath());
-        $this->assertStringStartsWith($prefix, LivewireEndpoint::scriptPath());
-        $this->assertStringStartsWith($prefix, LivewireEndpoint::uploadPath());
+        $this->assertStringStartsWith($prefix, EndpointResolver::updatePath());
+        $this->assertStringStartsWith($prefix, EndpointResolver::scriptPath());
+        $this->assertStringStartsWith($prefix, EndpointResolver::uploadPath());
     }
 }

@@ -7,7 +7,6 @@ use Livewire\Livewire;
 use Livewire\Exceptions\PayloadTooLargeException;
 use Livewire\Exceptions\TooManyComponentsException;
 use Livewire\Exceptions\TooManyCallsException;
-use Livewire\Facades\LivewireEndpoint;
 use Tests\TestCase;
 
 class PayloadGuardsUnitTest extends TestCase
@@ -21,7 +20,7 @@ class PayloadGuardsUnitTest extends TestCase
 
         $this->withoutExceptionHandling()
             ->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(LivewireEndpoint::updatePath(), [
+            ->postJson(EndpointResolver::updatePath(), [
                 'components' => [
                     [
                         'snapshot' => json_encode([
@@ -70,7 +69,7 @@ class PayloadGuardsUnitTest extends TestCase
         // Create a request with 3 components (exceeds limit of 2)
         $this->withoutExceptionHandling()
             ->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(LivewireEndpoint::updatePath(), [
+            ->postJson(EndpointResolver::updatePath(), [
                 'components' => [
                     ['snapshot' => '{}', 'updates' => [], 'calls' => []],
                     ['snapshot' => '{}', 'updates' => [], 'calls' => []],
@@ -117,7 +116,7 @@ class PayloadGuardsUnitTest extends TestCase
         // Send a request with 4 calls (exceeds limit of 3)
         $this->withoutExceptionHandling()
             ->withHeaders(['X-Livewire' => 'true'])
-            ->postJson(LivewireEndpoint::updatePath(), [
+            ->postJson(EndpointResolver::updatePath(), [
                 'components' => [
                     [
                         'snapshot' => json_encode($snapshot),
