@@ -677,4 +677,64 @@ class UnitTest extends TestCase
 
         File::deleteDirectory($compiledPath);
     }
+
+    public function test_children_mounted_during_an_island_render_are_kept_in_the_children_memo()
+    {
+        Livewire::component('island-child', new class extends \Livewire\Component {
+            public $number = 0;
+
+            public function render() {
+                return '<div>child {{ $number }}</div>';
+            }
+        });
+
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public $from = 0;
+
+            public $to = 1;
+
+            public function loadMore()
+            {
+                $this->from = $this->to + 1;
+                $this->to++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'rows', always: true)
+                        @foreach (range($from ?: 1, $to) as $number)
+                            <livewire:island-child :$number :wire:key="'row-'.$number" />
+                        @endforeach
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        $this->assertSame(['row-1'], array_keys($component->snapshot['memo']['children']));
+
+        $component->update(calls: [
+            [
+                'method' => 'loadMore',
+                'params' => [],
+                'path' => '',
+                'metadata' => [
+                    'island' => [
+                        'name' => 'rows',
+                        'mode' => 'append',
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertSame(['row-1', 'row-2'], array_keys($component->snapshot['memo']['children']));
+
+        $appendedChildId = $component->snapshot['memo']['children']['row-2'][1];
+
+        $component->call('$refresh');
+
+        $this->assertStringContainsString('wire:id="'.$appendedChildId.'" wire:name="island-child" wire:key="row-2"', $component->html());
+        $this->assertStringNotContainsString('child 2', $component->html());
+    }
 }
