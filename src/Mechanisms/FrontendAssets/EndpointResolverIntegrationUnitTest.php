@@ -2,12 +2,45 @@
 
 namespace Livewire\Mechanisms\FrontendAssets;
 
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
+use Livewire\LivewireServiceProvider;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+use Livewire\Mechanisms\HandleRequests\EndpointResolverInterface;
 use Tests\TestCase;
 
 class EndpointResolverIntegrationUnitTest extends TestCase
 {
+    protected function getPackageProviders($app)
+    {
+        return [
+            LivewireServiceProvider::class,
+            CustomEndpointResolverServiceProvider::class,
+        ];
+    }
+
+    public function test_livewire_routes_use_custom_endpoint_resolver()
+    {
+        $routes = collect(Route::getRoutes()->getRoutes());
+
+        foreach ([
+            'custom-livewire/update',
+            'custom-livewire/livewire.js',
+            'custom-livewire/livewire.map',
+            'custom-livewire/upload',
+            'custom-livewire/preview/{filename}',
+            'custom-livewire/js/{component}.js',
+            'custom-livewire/css/{component}.css',
+            'custom-livewire/css/{component}.global.css',
+        ] as $uri) {
+            $this->assertTrue(
+                $routes->contains(fn ($route) => $route->uri() === $uri),
+                "Expected Livewire route [{$uri}] to be registered."
+            );
+        }
+    }
+
     public function test_script_route_uses_endpoint_resolver_path()
     {
         $expectedPath = EndpointResolver::scriptPath(minified: !config('app.debug'));
@@ -48,5 +81,64 @@ class EndpointResolverIntegrationUnitTest extends TestCase
         $this->assertStringStartsWith($prefix, EndpointResolver::updatePath());
         $this->assertStringStartsWith($prefix, EndpointResolver::scriptPath());
         $this->assertStringStartsWith($prefix, EndpointResolver::uploadPath());
+    }
+}
+
+class CustomEndpointResolverServiceProvider extends ServiceProvider
+{
+    public function register()
+    {
+        $this->app->singleton(
+            EndpointResolverInterface::class,
+            CustomEndpointResolver::class,
+        );
+    }
+}
+
+class CustomEndpointResolver implements EndpointResolverInterface
+{
+    public function prefix(): string
+    {
+        return '/custom-livewire';
+    }
+
+    public function updatePath(): string
+    {
+        return $this->prefix() . '/update';
+    }
+
+    public function scriptPath(bool $minified = false): string
+    {
+        return $this->prefix() . '/livewire.js';
+    }
+
+    public function mapPath(bool $csp = false): string
+    {
+        return $this->prefix() . '/livewire.map';
+    }
+
+    public function uploadPath(): string
+    {
+        return $this->prefix() . '/upload';
+    }
+
+    public function previewPath(): string
+    {
+        return $this->prefix() . '/preview/{filename}';
+    }
+
+    public function componentJsPath(): string
+    {
+        return $this->prefix() . '/js/{component}.js';
+    }
+
+    public function componentCssPath(): string
+    {
+        return $this->prefix() . '/css/{component}.css';
+    }
+
+    public function componentGlobalCssPath(): string
+    {
+        return $this->prefix() . '/css/{component}.global.css';
     }
 }
