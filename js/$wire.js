@@ -1,6 +1,7 @@
 import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
 import { dispatch, dispatchEl, dispatchRef, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
+import { generateWatchFunction } from '@/features/supportWatch'
 import { findComponentByEl } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
@@ -119,6 +120,8 @@ Alpine.magic('wire', (el, { cleanup }) => {
 
             if (['$entangle', 'entangle'].includes(property)) {
                 return generateEntangleFunction(component, cleanup)
+            } else if (['$watch', 'watch'].includes(property)) {
+                return generateWatchFunction(component, cleanup)
             }
 
             return component.$wire[property]
@@ -277,18 +280,7 @@ wireProperty('$toggle', (component) => (name, live = true) => {
 })
 
 wireProperty('$watch', (component) => (path, callback) => {
-    let getter = () => {
-        return dataGet(component.reactive, path)
-    }
-
-    let unwatch = Alpine.watch(getter, callback)
-
-    let removeCleanup = component.addCleanup(unwatch)
-
-    return () => {
-        removeCleanup()
-        unwatch()
-    }
+    return generateWatchFunction(component)(path, callback)
 })
 
 wireProperty('$effect', (component) => (callback) => {
