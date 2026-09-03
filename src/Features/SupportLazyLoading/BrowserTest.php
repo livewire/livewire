@@ -827,6 +827,46 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_conflicting_placeholder_node_does_not_break_watch_cleanup_or_leak_memory_on_lazy_component()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public bool $childShown = false;
+
+                public function render() { return <<<HTML
+                <div>
+                    <button type="button" wire:click="\$toggle('childShown')">Toggle</button>
+
+                    @if (\$this->childShown)
+                        <livewire:child lazy />
+                    @endif
+                </div>
+                HTML; }
+            }, 'child' => new class extends Component {
+                public function placeholder() { return <<<HTML
+                    <div id="child">
+                        <div>Loading...</div>
+                        <div>Dummy placeholder</div>
+                    </div>
+                    HTML; }
+
+                public function render() { return <<<HTML
+                    <div id="child">
+                        <div x-data="{ init() { \$wire.\$watch('search', () => {}) } }">
+                            Children component
+                        </div>
+                    </div>
+                    HTML; }
+            }
+        ])
+        ->waitForText('Toggle')
+        ->click('button')
+        ->waitForText('Children component')
+        ->click('button')
+        ->waitUntilMissing('#child')
+        ->assertConsoleLogHasNoErrors()
+        ->assertScript("window.Livewire.all().some(c => c.name === 'child')", false);
+    }
 }
 
 class Page extends Component {
