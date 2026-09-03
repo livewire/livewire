@@ -17,7 +17,7 @@ export function removeAnyLeftOverStaleTeleportTargets(body) {
 }
 
 export function unPackPersistedTeleports(persistedEl) {
-    // Before we put back any persisted elements, we're going to
+    // Now that the persisted elements are back on the page, we're going to
     // find any "x-teleports" and put their targets back on the page...
     Alpine.walk(persistedEl, (el, skip) => {
         if (! el._x_teleport) return;
