@@ -2,7 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleRequests;
 
-class EndpointResolver implements EndpointResolverInterface
+class EndpointResolver
 {
     /**
      * Get the base path prefix for all Livewire endpoints.
@@ -10,7 +10,7 @@ class EndpointResolver implements EndpointResolverInterface
      * Uses APP_KEY to generate a unique prefix per installation,
      * making it harder to target Livewire apps with universal scanners.
      */
-    public function prefix(): string
+    public static function prefix(): string
     {
         $hash = substr(hash('sha256', config('app.key') . 'livewire-endpoint'), 0, 8);
 
@@ -20,68 +20,68 @@ class EndpointResolver implements EndpointResolverInterface
     /**
      * Get the path for the update endpoint.
      */
-    public function updatePath(): string
+    public static function updatePath(): string
     {
-        return $this->prefix() . '/update';
+        return static::prefix() . '/update';
     }
 
     /**
      * Get the path for the JavaScript asset endpoint.
      */
-    public function scriptPath(bool $minified = false): string
+    public static function scriptPath(bool $minified = false): string
     {
         $file = $minified ? 'livewire.min.js' : 'livewire.js';
 
-        return $this->prefix() . '/' . $file;
+        return static::prefix() . '/' . $file;
     }
 
     /**
      * Get the path for the source map endpoint.
      */
-    public function mapPath(bool $csp = false): string
+    public static function mapPath(bool $csp = false): string
     {
         $file = $csp ? 'livewire.csp.min.js.map' : 'livewire.min.js.map';
 
-        return $this->prefix() . '/' . $file;
+        return static::prefix() . '/' . $file;
     }
 
     /**
      * Get the path for the file upload endpoint.
      */
-    public function uploadPath(): string
+    public static function uploadPath(): string
     {
-        return $this->prefix() . '/upload-file';
+        return static::prefix() . '/upload-file';
     }
 
     /**
      * Get the path for the file preview endpoint.
      */
-    public function previewPath(): string
+    public static function previewPath(): string
     {
-        return $this->prefix() . '/preview-file/{filename}';
+        return static::prefix() . '/preview-file/{filename}';
     }
 
     /**
      * Get the path for component JavaScript modules.
      */
-    public function componentJsPath(): string
+    public static function componentJsPath(): string
     {
-        return $this->prefix() . '/js/{component}.js';
+        return static::prefix() . '/js/{component}.js';
     }
 
     /**
      * Get the path for component CSS modules (scoped styles).
      */
-    public function componentCssPath(): string
+    public static function componentCssPath(): string
     {
-        return $this->prefix() . '/css/{component}.css';
+        return static::prefix() . '/css/{component}.css';
     }
 
     /**
      * Get the path for component global CSS modules.
      */
-    public function componentGlobalCssPath(): string
+    public static function componentGlobalCssPath(): string
     {
-        return $this->prefix() . '/css/{component}.global.css';
+        return static::prefix() . '/css/{component}.global.css';
     }
 }
