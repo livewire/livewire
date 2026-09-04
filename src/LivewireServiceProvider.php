@@ -7,6 +7,8 @@ use Livewire\Compiler\Compiler;
 use Illuminate\Foundation\Console\AboutCommand;
 use Composer\InstalledVersions;
 use Livewire\Compiler\CacheManager;
+use Livewire\Mechanisms\HandleRequests\DefaultEndpointResolver;
+use Livewire\Mechanisms\HandleRequests\EndpointResolverInterface;
 
 class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 {
@@ -31,6 +33,8 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->app->singleton(LivewireManager::class);
 
         app('livewire')->setProvider($this);
+
+        $this->app->singletonIf(EndpointResolverInterface::class, DefaultEndpointResolver::class);
 
         $this->app->singleton('livewire.finder', function () {
             $finder = new Finder;

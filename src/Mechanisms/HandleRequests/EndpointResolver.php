@@ -5,6 +5,14 @@ namespace Livewire\Mechanisms\HandleRequests;
 class EndpointResolver
 {
     /**
+     * Get the concrete implementation from container
+     */
+    protected static function resolver(): EndpointResolverInterface
+    {
+        return app(EndpointResolverInterface::class);
+    }
+
+    /**
      * Get the base path prefix for all Livewire endpoints.
      *
      * Uses APP_KEY to generate a unique prefix per installation,
@@ -12,9 +20,7 @@ class EndpointResolver
      */
     public static function prefix(): string
     {
-        $hash = substr(hash('sha256', config('app.key') . 'livewire-endpoint'), 0, 8);
-
-        return '/livewire-' . $hash;
+        return static::resolver()->prefix();
     }
 
     /**
@@ -22,7 +28,7 @@ class EndpointResolver
      */
     public static function updatePath(): string
     {
-        return static::prefix() . '/update';
+        return static::resolver()->updatePath();
     }
 
     /**
@@ -30,9 +36,7 @@ class EndpointResolver
      */
     public static function scriptPath(bool $minified = false): string
     {
-        $file = $minified ? 'livewire.min.js' : 'livewire.js';
-
-        return static::prefix() . '/' . $file;
+        return static::resolver()->scriptPath($minified);
     }
 
     /**
@@ -40,9 +44,7 @@ class EndpointResolver
      */
     public static function mapPath(bool $csp = false): string
     {
-        $file = $csp ? 'livewire.csp.min.js.map' : 'livewire.min.js.map';
-
-        return static::prefix() . '/' . $file;
+        return static::resolver()->mapPath($csp);
     }
 
     /**
@@ -50,7 +52,7 @@ class EndpointResolver
      */
     public static function uploadPath(): string
     {
-        return static::prefix() . '/upload-file';
+        return static::resolver()->uploadPath();
     }
 
     /**
@@ -58,7 +60,7 @@ class EndpointResolver
      */
     public static function previewPath(): string
     {
-        return static::prefix() . '/preview-file/{filename}';
+        return static::resolver()->previewPath();
     }
 
     /**
@@ -66,7 +68,7 @@ class EndpointResolver
      */
     public static function componentJsPath(): string
     {
-        return static::prefix() . '/js/{component}.js';
+        return static::resolver()->componentJsPath();
     }
 
     /**
@@ -74,7 +76,7 @@ class EndpointResolver
      */
     public static function componentCssPath(): string
     {
-        return static::prefix() . '/css/{component}.css';
+        return static::resolver()->componentCssPath();
     }
 
     /**
@@ -82,6 +84,6 @@ class EndpointResolver
      */
     public static function componentGlobalCssPath(): string
     {
-        return static::prefix() . '/css/{component}.global.css';
+        return static::resolver()->componentGlobalCssPath();
     }
 }

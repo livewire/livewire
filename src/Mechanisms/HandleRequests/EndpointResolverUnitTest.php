@@ -7,6 +7,23 @@ use Tests\TestCase;
 
 class EndpointResolverUnitTest extends TestCase
 {
+    public function test_endpoint_resolver_can_be_overridden()
+    {
+        $this->app->singleton(EndpointResolverInterface::class, CustomEndpointResolver::class);
+
+        $this->assertSame('/custom-livewire', EndpointResolver::prefix());
+        $this->assertSame('/custom-livewire/update', EndpointResolver::updatePath());
+        $this->assertSame('/custom-livewire/livewire.js', EndpointResolver::scriptPath(config('app.debug')));
+        $this->assertSame('/custom-livewire/livewire.min.js', EndpointResolver::scriptPath(! config('app.debug')));
+        $this->assertSame('/custom-livewire/livewire.min.js.map', EndpointResolver::mapPath());
+        $this->assertSame('/custom-livewire/livewire.csp.min.js.map', EndpointResolver::mapPath(csp: true));
+        $this->assertSame('/custom-livewire/upload-file', EndpointResolver::uploadPath());
+        $this->assertSame('/custom-livewire/preview-file/{filename}', EndpointResolver::previewPath());
+        $this->assertSame('/custom-livewire/js/{component}.js', EndpointResolver::componentJsPath());
+        $this->assertSame('/custom-livewire/css/{component}.css', EndpointResolver::componentCssPath());
+        $this->assertSame('/custom-livewire/css/{component}.global.css', EndpointResolver::componentGlobalCssPath());
+    }
+
     public function test_generates_unique_prefix_from_app_key()
     {
         $prefix = EndpointResolver::prefix();
@@ -99,5 +116,57 @@ class EndpointResolverUnitTest extends TestCase
         $this->assertStringStartsWith($prefix, EndpointResolver::uploadPath());
         $this->assertStringStartsWith($prefix, EndpointResolver::previewPath());
         $this->assertStringStartsWith($prefix, EndpointResolver::componentJsPath());
+    }
+}
+
+class CustomEndpointResolver implements EndpointResolverInterface
+{
+    public function prefix(): string
+    {
+        return '/custom-livewire';
+    }
+
+    public function updatePath(): string
+    {
+        return $this->prefix() . '/update';
+    }
+
+    public function scriptPath(bool $minified = false): string
+    {
+        $file = $minified ? 'livewire.min.js' : 'livewire.js';
+
+        return $this->prefix() . '/' . $file;
+    }
+
+    public function mapPath(bool $csp = false): string
+    {
+        $file = $csp ? 'livewire.csp.min.js.map' : 'livewire.min.js.map';
+
+        return $this->prefix() . '/' . $file;
+    }
+
+    public function uploadPath(): string
+    {
+        return $this->prefix() . '/upload-file';
+    }
+
+    public function previewPath(): string
+    {
+        return $this->prefix() . '/preview-file/{filename}';
+    }
+
+    public function componentJsPath(): string
+    {
+        return $this->prefix() . '/js/{component}.js';
+    }
+
+    public function componentCssPath(): string
+    {
+        return $this->prefix() . '/css/{component}.css';
+    }
+
+    public function componentGlobalCssPath(): string
+    {
+        return $this->prefix() . '/css/{component}.global.css';
     }
 }
