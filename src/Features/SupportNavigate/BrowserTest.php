@@ -1636,7 +1636,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    public function test_wire_navigate_still_works_when_link_also_has_wire_sort_item()
+    public function test_wire_navigate_still_works_when_link_also_has_sortable_item()
     {
         $this->browse(function (Browser $browser) {
             $browser

@@ -9,6 +9,13 @@ use Livewire\Livewire;
 
 class BrowserTest extends BrowserTestCase
 {
+    public static function tweakApplicationHook()
+    {
+        return function () {
+            Livewire::component('sort-nav-first', SortNavFirstPage::class);
+            Route::get('/sort-nav-first', SortNavFirstPage::class)->middleware('web');
+        };
+    }
     public function test_wire_sort_id_is_passed_as_third_parameter_to_sort_handler()
     {
         Livewire::visit(new class extends Component {
@@ -300,36 +307,42 @@ class BrowserTest extends BrowserTestCase
 
     public function test_wire_sort_works_when_sort_item_also_has_wire_navigate()
     {
-        Livewire::visit(new class extends Component {
-            public $result = '';
+        $this->browse(function ($browser) {
+            $browser->visit('/sort-nav-first')
+                ->drag('@item-2', '@item-1')
+                ->waitForTextIn('@result', 'item:item-2,position:0')
+                ->assertPresent('@sortable')
+                ->assertSeeIn('@item-1', 'Item 1')
+                ->assertSeeIn('@item-2', 'Item 2')
+                ->assertPathIs('/sort-nav-first');
+        });
+    }
+}
 
-            public function sortItem($item, $position)
-            {
-                $this->result = "item:{$item},position:{$position}";
-            }
+class SortNavFirstPage extends Component
+{
+    public $result = '';
 
-            public function render()
-            {
-                return <<<'HTML'
-                <div>
-                    <ul dusk="sortable" wire:sort="sortItem">
-                        <li>
-                            <a href="/nowhere-one" dusk="item-1" wire:navigate wire:sort:item="item-1">Item 1</a>
-                        </li>
-                        <li>
-                            <a href="/nowhere-two" dusk="item-2" wire:navigate wire:sort:item="item-2">Item 2</a>
-                        </li>
-                    </ul>
+    public function sortItem($item, $position)
+    {
+        $this->result = "item:{$item},position:{$position}";
+    }
 
-                    <div dusk="result">{{ $result }}</div>
-                </div>
-                HTML;
-            }
-        })
-        ->drag('@item-2', '@item-1')
-        ->waitForTextIn('@result', 'item:item-2,position:0')
-        ->assertPresent('@sortable')
-        ->assertSeeIn('@item-1', 'Item 1')
-        ->assertSeeIn('@item-2', 'Item 2');
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <ul dusk="sortable" wire:sort="sortItem">
+                <li>
+                    <a href="/sort-nav-first" dusk="item-1" wire:navigate wire:sort:item="item-1">Item 1</a>
+                </li>
+                <li>
+                    <a href="/sort-nav-second" dusk="item-2" wire:navigate wire:sort:item="item-2">Item 2</a>
+                </li>
+            </ul>
+
+            <div dusk="result">{{ $result }}</div>
+        </div>
+        HTML;
     }
 }
