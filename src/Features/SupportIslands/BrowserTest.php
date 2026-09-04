@@ -807,6 +807,35 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_visible_lazy_islands_with_a_reactive_nested_component_hydrate()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'one', lazy: true, always: true)
+                        @placeholder <div dusk="one-placeholder">Loading one</div> @endplaceholder
+                        <div dusk="one-mounted">One mounted</div>
+                    @endisland
+                    @island(name: 'two', lazy: true, always: true)
+                        @placeholder <div dusk="two-placeholder">Loading two</div> @endplaceholder
+                        <div dusk="two-mounted">Two mounted</div>
+                    @endisland
+                    <livewire:nested />
+                </div>
+                HTML;
+            }
+        }, 'nested' => new class extends \Livewire\Component {
+            #[\Livewire\Attributes\Reactive]
+            public bool $editing = false;
+            public function render() { return '<div></div>'; }
+        }])
+            ->waitFor('@one-mounted')
+            ->waitFor('@two-mounted')
+            ->assertNotPresent('@one-placeholder')
+            ->assertNotPresent('@two-placeholder');
+    }
+
     public function test_island_with_lazy_and_always_updates_with_the_component_when_the_component_makes_a_request()
     {
         Livewire::visit([new class extends \Livewire\Component {
