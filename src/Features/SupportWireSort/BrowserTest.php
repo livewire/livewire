@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportWireSort;
 
+use Illuminate\Support\Facades\Route;
 use Tests\BrowserTestCase;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -295,5 +296,40 @@ class BrowserTest extends BrowserTestCase
         })
         ->waitForTextIn('@result', 'item:item-2,position:0')
         ->assertSeeIn('@result', 'item:item-2,position:0');
+    }
+
+    public function test_wire_sort_works_when_sort_item_also_has_wire_navigate()
+    {
+        Livewire::visit(new class extends Component {
+            public $result = '';
+
+            public function sortItem($item, $position)
+            {
+                $this->result = "item:{$item},position:{$position}";
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <ul dusk="sortable" wire:sort="sortItem">
+                        <li>
+                            <a href="/nowhere-one" dusk="item-1" wire:navigate wire:sort:item="item-1">Item 1</a>
+                        </li>
+                        <li>
+                            <a href="/nowhere-two" dusk="item-2" wire:navigate wire:sort:item="item-2">Item 2</a>
+                        </li>
+                    </ul>
+
+                    <div dusk="result">{{ $result }}</div>
+                </div>
+                HTML;
+            }
+        })
+        ->drag('@item-2', '@item-1')
+        ->waitForTextIn('@result', 'item:item-2,position:0')
+        ->assertPresent('@sortable')
+        ->assertSeeIn('@item-1', 'Item 1')
+        ->assertSeeIn('@item-2', 'Item 2');
     }
 }

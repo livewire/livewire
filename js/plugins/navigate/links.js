@@ -4,6 +4,11 @@ export function whenThisLinkIsPressed(el, callback) {
     let isNotPlainLeftClick = e => (e.which > 1) || (e.altKey) || (e.ctrlKey) || (e.metaKey) || (e.shiftKey)
     let isNotPlainEnterKey = (e) => (e.which !== 13) || (e.altKey) || (e.ctrlKey) || (e.metaKey) || (e.shiftKey)
 
+    // wire:sort / x-sort use SortableJS, which needs a native mousedown to start a drag.
+    let isSortableElement = el.hasAttribute('wire:sort:item')
+        || el.hasAttribute('x-sort:item')
+        || el.closest('[wire\\:sort\\:item],[x-sort\\:item]') !== null
+
     el.addEventListener('click', e => {
         // This allows programmatic clicking of links via: `$0.click()`...
         if (isProgrammaticClick(e)) {
@@ -31,7 +36,10 @@ export function whenThisLinkIsPressed(el, callback) {
 
         if (linkShouldBeHandledNatively(el)) return;
 
-        e.preventDefault()
+        // SortableJS needs the native mousedown to start a drag.
+        if (! isSortableElement) {
+            e.preventDefault()
+        }
 
         callback((whenReleased) => {
             let handler = e => {

@@ -53,6 +53,12 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('first-noscript-page', FirstNoscriptPage::class);
             Livewire::component('second-noscript-page', SecondNoscriptPage::class);
 
+            Livewire::component('sort-nav-first', SortNavFirstPage::class);
+            Livewire::component('sort-nav-second', SortNavSecondPage::class);
+
+            Route::get('/sort-nav-first', SortNavFirstPage::class)->middleware('web');
+            Route::get('/sort-nav-second', SortNavSecondPage::class)->middleware('web');
+
             Route::get('/navbar/{page}', NavBarComponent::class)->middleware('web');
 
             Route::get('/query-page', QueryPage::class)->middleware('web');
@@ -1630,6 +1636,18 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_wire_navigate_still_works_when_link_also_has_wire_sort_item()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/sort-nav-first')
+                ->assertSee('On first')
+                ->waitForNavigate()->click('@nav-sort-item')
+                ->waitForText('On second')
+                ->assertSee('On second');
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -2292,6 +2310,44 @@ class PageWithLinkToAnErrorPage extends Component
             })
         </script>
         @endscript
+        HTML;
+    }
+}
+
+class SortNavFirstPage extends Component
+{
+    public function sortItem($item, $position)
+    {
+        //
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first</div>
+
+            <ul wire:sort="sortItem">
+                <li>
+                    <a href="/sort-nav-second" dusk="nav-sort-item" wire:navigate wire:sort:item="item-1">Go</a>
+                </li>
+                <li>
+                    <a href="/" wire:navigate wire:sort:item="item-2">Other</a>
+                </li>
+            </ul>
+        </div>
+        HTML;
+    }
+}
+
+class SortNavSecondPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On second</div>
+        </div>
         HTML;
     }
 }
