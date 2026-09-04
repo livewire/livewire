@@ -5,7 +5,7 @@ namespace Livewire\Mechanisms\HandleRequests;
 /**
  * Default implementation of the endpoint resolver.
  */
-class DefaultEndpointResolver implements EndpointResolverInterface
+final class DefaultEndpointResolver implements EndpointResolverInterface
 {
     /**
      * Get the base path prefix for all Livewire endpoints.
