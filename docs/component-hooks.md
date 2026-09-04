@@ -99,49 +99,72 @@ class AppServiceProvider extends ServiceProvider
 }
 ```
 
-Now that you've seen the broad overview of Component Hooks, here's a more practical example of using them to provide useful functionality for your application.
+## Enforcing a rule before an action runs
 
-Let's say you wanted to support the ability to return a CSV from any Livewire action, and it would automatically trigger a file download. For example, you could return a Csv from a method called `save` inside a `CreatePost` component:
+The `call()` hook runs before every action on every component. Calling the `$returnEarly` argument prevents the action from running. This makes it possible to enforce rules across the whole application from a single place.
 
-```php
-use Livewire\Component;
-
-class CreateUser extends Component
-{
-    public $username = '';
-
-    public $email = '';
-
-    public function something()
-    {
-        return new Csv();
-    }
-
-    // ...
-}
-```
-
+For example, the following hook prevents a user without an active subscription from calling the `create` method on any component:
 
 ```php
 <?php
 
 namespace App;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\ComponentHook;
 
-class SupportCsvDownloads extends ComponentHook
+class RequireSubscription extends ComponentHook
 {
     public function call($method, $params, $returnEarly)
     {
-        // Called before a method on the component is called...
+        if ($method !== 'create') {
+            return;
+        }
 
-        return function ($returnValue) {
-            if ($returnValue instanceof Csv) {
-                // do something
-            }
-        };
+        if (Auth::user()?->subscribed()) {
+            return;
+        }
+
+        $returnEarly(
+            $this->component->redirect(route('subscription'))
+        );
     }
 }
 ```
 
-You can 
+When an unsubscribed user triggers `create` on any component, the hook redirects them to the subscription page and the action never runs.
+
+## Handling exceptions
+
+The `exception()` hook lets a Component Hook intercept exceptions thrown inside any component. Livewire passes the exception and a `$stopPropagation` callable; calling `$stopPropagation()` marks the exception as handled so it is not re-thrown to Laravel's exception handler.
+
+```php
+<?php
+
+namespace App;
+
+use App\Exceptions\SubscriptionExpiredException;
+use Livewire\ComponentHook;
+
+class HandleSubscriptionErrors extends ComponentHook
+{
+    public function exception($e, $stopPropagation)
+    {
+        if (! $e instanceof SubscriptionExpiredException) {
+            return;
+        }
+
+        $this->component->dispatch('notify', 'Your subscription has expired.');
+
+        $stopPropagation();
+    }
+}
+```
+
+Register the hook in the same way:
+
+```php
+// App\Providers\AppServiceProvider.php
+
+Livewire::componentHook(HandleSubscriptionErrors::class);
+```
