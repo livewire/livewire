@@ -309,7 +309,7 @@ class BrowserTest extends BrowserTestCase
     {
         $this->browse(function ($browser) {
             $browser->visit('/sort-nav-first')
-                ->drag('@item-2', '@item-1')
+                ->waitForNoNavigateRequest()->drag('@item-2', '@item-1')
                 ->waitForTextIn('@result', 'item:item-2,position:0')
                 ->assertPresent('@sortable')
                 ->assertSeeIn('@item-1', 'Item 1')

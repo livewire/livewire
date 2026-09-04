@@ -26,6 +26,16 @@ export function whenThisLinkIsPressed(el, callback) {
 
         if (linkShouldBeHandledNatively(el)) return;
 
+        // Sortable item: activate only on a real click.
+        // After a drag, SortableJS prevents this click → no prefetch, no navigate.
+        if (isSortableElement) {
+            e.preventDefault()
+
+            callback(whenReleased => whenReleased())
+
+            return
+        }
+
         // If it's a plain left click, we want to prevent "click" and let "mouseup" do its thing...
         e.preventDefault()
     })
@@ -36,10 +46,11 @@ export function whenThisLinkIsPressed(el, callback) {
 
         if (linkShouldBeHandledNatively(el)) return;
 
-        // SortableJS needs the native mousedown to start a drag.
-        if (! isSortableElement) {
-            e.preventDefault()
-        }
+        // Do not call callback() here for sortable items.
+        // callback() starts prefetch immediately in navigate/index.js.
+        if (isSortableElement) return
+
+        e.preventDefault()
 
         callback((whenReleased) => {
             let handler = e => {
