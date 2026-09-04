@@ -24,6 +24,16 @@ class EndpointResolverUnitTest extends TestCase
         $this->assertSame('/custom-livewire/css/{component}.global.css', EndpointResolver::componentGlobalCssPath());
     }
 
+    public function test_endpoint_resolver_retains_static_api(): void
+    {
+        $this->assertTrue(method_exists(EndpointResolver::class, 'prefix'));
+        $this->assertTrue(method_exists(EndpointResolver::class, 'updatePath'));
+        $this->assertTrue(method_exists(EndpointResolver::class, 'scriptPath'));
+        $this->assertTrue(method_exists(EndpointResolver::class, 'mapPath'));
+        $this->assertTrue(method_exists(EndpointResolver::class, 'uploadPath'));
+        $this->assertTrue(method_exists(EndpointResolver::class, 'previewPath'));
+    }
+
     public function test_generates_unique_prefix_from_app_key()
     {
         $prefix = EndpointResolver::prefix();
