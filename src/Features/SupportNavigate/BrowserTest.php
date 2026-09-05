@@ -56,6 +56,12 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('sort-nav-first', SortNavFirstPage::class);
             Livewire::component('sort-nav-second', SortNavSecondPage::class);
 
+            Livewire::component('sort-nav-handle', SortNavHandleNavPage::class);
+            Livewire::component('sort-nav-ignore', SortNavIgnorePage::class);
+
+            Route::get('/sort-nav-handle', SortNavHandleNavPage::class)->middleware('web');
+            Route::get('/sort-nav-ignore', SortNavIgnorePage::class)->middleware('web');
+
             Route::get('/sort-nav-first', SortNavFirstPage::class)->middleware('web');
             Route::get('/sort-nav-second', SortNavSecondPage::class)->middleware('web');
 
@@ -1648,6 +1654,30 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_wire_navigate_still_works_when_link_is_outside_sort_handle()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/sort-nav-handle')
+                ->assertSee('On first')
+                ->waitForNavigate()->click('@nav-link')
+                ->waitForText('On second')
+                ->assertSee('On second');
+        });
+    }
+
+    public function test_wire_navigate_still_works_when_link_has_sort_ignore()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/sort-nav-ignore')
+                ->assertSee('On first')
+                ->waitForNavigate()->click('@ignored-link')
+                ->waitForText('On second')
+                ->assertSee('On second');
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -2347,6 +2377,60 @@ class SortNavSecondPage extends Component
         return <<<'HTML'
         <div>
             <div>On second</div>
+        </div>
+        HTML;
+    }
+}
+
+class SortNavHandleNavPage extends Component
+{
+    public function sortItem($item, $position)
+    {
+        //
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first</div>
+
+            <ul wire:sort="sortItem">
+                <li wire:sort:item="item-1">
+                    <a href="/sort-nav-second" dusk="nav-link" wire:navigate>Go</a>
+                    <span wire:sort:handle>Drag</span>
+                </li>
+                <li wire:sort:item="item-2">
+                    <a href="/" wire:navigate>Other</a>
+                    <span wire:sort:handle>Drag</span>
+                </li>
+            </ul>
+        </div>
+        HTML;
+    }
+}
+
+class SortNavIgnorePage extends Component
+{
+    public function sortItem($item, $position)
+    {
+        //
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first</div>
+
+            <ul wire:sort="sortItem">
+                <li wire:sort:item="item-1">
+                    <a href="/sort-nav-second" dusk="ignored-link" wire:navigate wire:sort:ignore>Go</a>
+                </li>
+                <li wire:sort:item="item-2">
+                    <a href="/" wire:navigate>Other</a>
+                </li>
+            </ul>
         </div>
         HTML;
     }
