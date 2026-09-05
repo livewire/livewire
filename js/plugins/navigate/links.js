@@ -1,13 +1,9 @@
+import { isSortableElement } from '@features/supportWireSort'
 
 export function whenThisLinkIsPressed(el, callback) {
     let isProgrammaticClick = e => ! e.isTrusted
     let isNotPlainLeftClick = e => (e.which > 1) || (e.altKey) || (e.ctrlKey) || (e.metaKey) || (e.shiftKey)
     let isNotPlainEnterKey = (e) => (e.which !== 13) || (e.altKey) || (e.ctrlKey) || (e.metaKey) || (e.shiftKey)
-
-    // wire:sort / x-sort use SortableJS, which needs a native mousedown to start a drag.
-    let isSortableElement = el.hasAttribute('wire:sort:item')
-        || el.hasAttribute('x-sort:item')
-        || el.closest('[wire\\:sort\\:item],[x-sort\\:item]') !== null
 
     el.addEventListener('click', e => {
         // This allows programmatic clicking of links via: `$0.click()`...
@@ -28,7 +24,7 @@ export function whenThisLinkIsPressed(el, callback) {
 
         // Sortable item: activate only on a real click.
         // After a drag, SortableJS prevents this click → no prefetch, no navigate.
-        if (isSortableElement) {
+        if (isSortableElement(el)) {
             e.preventDefault()
 
             callback(whenReleased => whenReleased())
@@ -48,7 +44,7 @@ export function whenThisLinkIsPressed(el, callback) {
 
         // Do not call callback() here for sortable items.
         // callback() starts prefetch immediately in navigate/index.js.
-        if (isSortableElement) return
+        if (isSortableElement(el)) return
 
         e.preventDefault()
 
