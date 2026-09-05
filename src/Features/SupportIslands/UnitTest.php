@@ -742,7 +742,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('child 2', $component->html());
     }
 
-    public function test_assets_inside_implicitly_rendered_deferred_island_are_shipped(): void
+    public function test_assets_and_scripts_inside_implicitly_rendered_island_are_available(): void
     {
         $component = Livewire::test(new class extends \Livewire\Component {
             public function render()
@@ -790,18 +790,18 @@ class UnitTest extends TestCase
 
         $this->assertTrue(
             collect($assets)->contains(fn ($script) => str_contains($script, 'data-island-asset')),
-            'Assets from an implicitly rendered deferred island must appear in the response assets payload'
+            'Assets from an implicitly rendered island must appear in the response assets payload'
         );
 
         // 3) Scripts are component effects (still valid after flush)
         $scripts = $component->effects['scripts'] ?? [];
         $this->assertTrue(
             collect($scripts)->contains(fn ($script) => str_contains($script, 'data-island-script')),
-            'Scripts from an implicitly rendered deferred island must appear in effects'
+            'Scripts from an implicitly rendered island must appear in effects'
         );
     }
 
-    public function test_assets_inside_an_explicitly_rendered_island_are_still_shipped()
+    public function test_assets_and_scripts_inside_an_explicitly_rendered_island_are_available()
     {
         $component = Livewire::test(new class extends \Livewire\Component {
             public function refreshPanel()
@@ -828,23 +828,9 @@ class UnitTest extends TestCase
             }
         });
 
-        $component->assertDontSee('data-loaded');
+        $component->assertDontSee('data-loaded')->call('refreshPanel');
 
-        $component->update(calls: [
-            [
-                'method' => 'refreshPanel',
-                'params' => [],
-                'path' => '',
-                'metadata' => [
-                    'island' => [
-                        'name' => 'panel',
-                        'mode' => 'morph',
-                    ],
-                ],
-            ],
-        ]);
-
-        // 1) Island really mounted (implicit morph path)
+        // 1) Island really mounted (explicit morph path)
         $fragments = implode('', $component->effects['islandFragments'] ?? []);
         $this->assertStringContainsString('data-loaded', $fragments);
 
@@ -854,14 +840,14 @@ class UnitTest extends TestCase
 
         $this->assertTrue(
             collect($assets)->contains(fn ($script) => str_contains($script, 'data-island-asset')),
-            'Assets from an implicitly rendered deferred island must appear in the response assets payload'
+            'Assets from an explicitly rendered island must appear in the response assets payload'
         );
 
         // 3) Scripts are component effects (still valid after flush)
         $scripts = $component->effects['scripts'] ?? [];
         $this->assertTrue(
             collect($scripts)->contains(fn ($script) => str_contains($script, 'data-island-script')),
-            'Scripts from an implicitly rendered deferred island must appear in effects'
+            'Scripts from an explicitly rendered island must appear in effects'
         );
     }
 }
