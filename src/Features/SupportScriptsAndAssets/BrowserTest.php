@@ -504,4 +504,38 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitUntil('!! window.datePicker === true')
         ;
     }
+
+    public function test_assets_and_scripts_can_be_loaded_from_an_implicitly_rendered_deferred_island()
+    {
+        Route::get('/test.js', function () {
+            return Utils::pretendResponseIsFile(__DIR__.'/test.js');
+        });
+
+        Livewire::visit(new class extends \Livewire\Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <span dusk="foo"></span>
+                    <span dusk="bar"></span>
+                    @island(defer: true)
+                        <div dusk="island">Island loaded</div>
+                        @assets
+                            <script src="/test.js" defer></script>
+                        @endassets
+                        @script
+                            <script>
+                                document.querySelector('[dusk="bar"]').textContent = 'script loaded'
+                            </script>
+                        @endscript
+                    @endisland
+                </div>
+                HTML;
+            }
+        })
+            ->assertNotPresent('@island')
+            ->waitForTextIn('@island', 'Island loaded')
+            ->assertSeeIn('@foo', 'evaluated')
+            ->assertSeeIn('@bar', 'script loaded');
+    }
 }

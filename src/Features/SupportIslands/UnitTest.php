@@ -7,6 +7,8 @@ use Livewire\Livewire;
 use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Illuminate\Support\Facades\File;
 
+use function Livewire\invade;
+
 class UnitTest extends TestCase
 {
     public function test_class_component_island_recovers_when_cached_file_is_deleted_between_requests()
@@ -738,5 +740,114 @@ class UnitTest extends TestCase
         $this->assertStringContainsString('wire:id="'.$appendedChildId.'" wire:name="island-child" wire:key="row-2"', $component->html());
         $this->assertStringNotContainsString('child 1', $component->html());
         $this->assertStringNotContainsString('child 2', $component->html());
+    }
+
+    public function test_assets_and_scripts_inside_implicitly_rendered_island_are_available(): void
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'panel', defer: true)
+                        @placeholder <div>loading</div> @endplaceholder
+                        <div data-loaded>ready</div>
+                        @assets
+                            <script src="/island-asset.js" data-island-asset></script>
+                        @endassets
+                        @script
+                            <script data-island-script>window.__islandScript = true</script>
+                        @endscript
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        $component->assertDontSee('data-loaded');
+
+        $component->update(calls: [
+            [
+                'method' => '__lazyLoadIsland',
+                'params' => [],
+                'path' => '',
+                'metadata' => [
+                    'island' => [
+                        'name' => 'panel',
+                        'mode' => 'morph',
+                    ],
+                ],
+            ],
+        ]);
+
+        // 1) Island really mounted (implicit morph path)
+        $fragments = implode('', $component->effects['islandFragments'] ?? []);
+        $this->assertStringContainsString('data-loaded', $fragments);
+
+        // 2) Assets from the payload (NOT static getAssets() after flushState)
+        $payload = invade($component)->lastState->getResponse()->json();
+        $assets = $payload['assets'] ?? [];
+
+        $this->assertTrue(
+            collect($assets)->contains(fn ($script) => str_contains($script, 'data-island-asset')),
+            'Assets from an implicitly rendered island must appear in the response assets payload'
+        );
+
+        // 3) Scripts are component effects (still valid after flush)
+        $scripts = $component->effects['scripts'] ?? [];
+        $this->assertTrue(
+            collect($scripts)->contains(fn ($script) => str_contains($script, 'data-island-script')),
+            'Scripts from an implicitly rendered island must appear in effects'
+        );
+    }
+
+    public function test_assets_and_scripts_inside_an_explicitly_rendered_island_are_available()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public function refreshPanel()
+            {
+                $this->renderIsland('panel');
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'panel', defer: true)
+                        @placeholder <div>loading</div> @endplaceholder
+                        <div data-loaded>ready</div>
+                        @assets
+                            <script src="/island-asset.js" data-island-asset></script>
+                        @endassets
+                        @script
+                            <script data-island-script>window.__islandScript = true</script>
+                        @endscript
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        $component->assertDontSee('data-loaded')->call('refreshPanel');
+
+        // 1) Island really mounted (explicit morph path)
+        $fragments = implode('', $component->effects['islandFragments'] ?? []);
+        $this->assertStringContainsString('data-loaded', $fragments);
+
+        // 2) Assets from the payload (NOT static getAssets() after flushState)
+        $payload = invade($component)->lastState->getResponse()->json();
+        $assets = $payload['assets'] ?? [];
+
+        $this->assertTrue(
+            collect($assets)->contains(fn ($script) => str_contains($script, 'data-island-asset')),
+            'Assets from an explicitly rendered island must appear in the response assets payload'
+        );
+
+        // 3) Scripts are component effects (still valid after flush)
+        $scripts = $component->effects['scripts'] ?? [];
+        $this->assertTrue(
+            collect($scripts)->contains(fn ($script) => str_contains($script, 'data-island-script')),
+            'Scripts from an explicitly rendered island must appear in effects'
+        );
     }
 }
