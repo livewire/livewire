@@ -13,7 +13,10 @@ class BrowserTest extends BrowserTestCase
     {
         return function () {
             Livewire::component('sort-nav-first', SortNavFirstPage::class);
+            Livewire::component('sort-nav-handle', SortNavHandlePage::class);
+
             Route::get('/sort-nav-first', SortNavFirstPage::class)->middleware('web');
+            Route::get('/sort-nav-handle', SortNavHandlePage::class)->middleware('web');
         };
     }
     public function test_wire_sort_id_is_passed_as_third_parameter_to_sort_handler()
@@ -317,6 +320,17 @@ class BrowserTest extends BrowserTestCase
                 ->assertPathIs('/sort-nav-first');
         });
     }
+
+    public function test_wire_sort_works_via_handle_when_item_contains_wire_navigate_link()
+    {
+        $this->browse(function ($browser) {
+            $browser->visit('/sort-nav-handle')
+                ->waitForNoNavigateRequest()->drag('@handle-2', '@handle-1')
+                ->waitForTextIn('@result', 'item:item-2,position:0')
+                ->assertPresent('@sortable')
+                ->assertPathIs('/sort-nav-handle');
+        });
+    }
 }
 
 class SortNavFirstPage extends Component
@@ -338,6 +352,36 @@ class SortNavFirstPage extends Component
                 </li>
                 <li>
                     <a href="/sort-nav-second" dusk="item-2" wire:navigate wire:sort:item="item-2">Item 2</a>
+                </li>
+            </ul>
+
+            <div dusk="result">{{ $result }}</div>
+        </div>
+        HTML;
+    }
+}
+
+class SortNavHandlePage extends Component
+{
+    public $result = '';
+
+    public function sortItem($item, $position)
+    {
+        $this->result = "item:{$item},position:{$position}";
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <ul dusk="sortable" wire:sort="sortItem">
+                <li wire:sort:item="item-1">
+                    <a href="/sort-nav-second" wire:navigate>Item 1</a>
+                    <span dusk="handle-1" wire:sort:handle>Drag</span>
+                </li>
+                <li wire:sort:item="item-2">
+                    <a href="/sort-nav-second" wire:navigate>Item 2</a>
+                    <span dusk="handle-2" wire:sort:handle>Drag</span>
                 </li>
             </ul>
 
