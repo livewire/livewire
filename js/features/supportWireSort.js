@@ -94,3 +94,9 @@ function bindSortItem(el, directive) {
         }
     })
 }
+
+export function isSortableElement(el) {
+    return el.hasAttribute('wire:sort:item')
+        || el.hasAttribute('x-sort:item')
+        || el.closest('[wire\\:sort\\:item],[x-sort\\:item]') !== null
+}
