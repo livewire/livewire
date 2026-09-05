@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportIslands;
 use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Illuminate\Support\Facades\Blade;
 use Livewire\ComponentHook;
+use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 
 class SupportIslands extends ComponentHook
 {
@@ -74,6 +75,10 @@ class SupportIslands extends ComponentHook
     public function dehydrate($context)
     {
         $this->component->renderImplicitIslandMorphs();
+
+        // Collect assets/scripts immediately after island rendering,
+        // as SupportScriptsAndAssets::dehydrate runs before this hook.
+        SupportScriptsAndAssets::collectComponentPendingAssetsAndScripts($this->component, $context);
 
         $context->addMemo('islands', $this->component->getIslands());
 

@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportScriptsAndAssets;
 use Livewire\ComponentHook;
 
 use function Livewire\on;
+use function Livewire\store;
 
 class SupportScriptsAndAssets extends ComponentHook
 {
@@ -138,10 +139,15 @@ class SupportScriptsAndAssets extends ComponentHook
 
     function dehydrate($context)
     {
-        $alreadyRunScriptKeys = $this->storeGet('forwardScriptsToDehydrateMemo', []);
+        static::collectComponentPendingAssetsAndScripts($this->component, $context);
+    }
+
+    public static function collectComponentPendingAssetsAndScripts($component, $context)
+    {
+        $alreadyRunScriptKeys = store($component)->get('forwardScriptsToDehydrateMemo', []);
 
         // Add any scripts to the payload that haven't been run yet for this component....
-        foreach ($this->storeGet('scripts', []) as $key => $script) {
+        foreach (store($component)->get('scripts', []) as $key => $script) {
             if (! in_array($key, $alreadyRunScriptKeys)) {
                 $context->pushEffect('scripts', $script, $key);
                 $alreadyRunScriptKeys[] = $key;
@@ -150,11 +156,10 @@ class SupportScriptsAndAssets extends ComponentHook
 
         $context->addMemo('scripts', $alreadyRunScriptKeys);
 
+        $alreadyRunAssetKeys = store($component)->get('forwardAssetsToDehydrateMemo', []);
+        
         // Add any assets to the payload that haven't been run yet for the entire page...
-
-        $alreadyRunAssetKeys = $this->storeGet('forwardAssetsToDehydrateMemo', []);
-
-        foreach ($this->storeGet('assets', []) as $key => $assets) {
+        foreach (store($component)->get('assets', []) as $key => $assets) {
             if (! in_array($key, $alreadyRunAssetKeys)) {
 
                 // These will either get injected into the HTML if it's an initial page load
