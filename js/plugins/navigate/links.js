@@ -1,4 +1,4 @@
-import { isSortableElement } from '@features/supportWireSort'
+import { isSortableElement } from '@/features/supportWireSort'
 
 export function whenThisLinkIsPressed(el, callback) {
     let isProgrammaticClick = e => ! e.isTrusted
