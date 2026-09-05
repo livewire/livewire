@@ -1647,10 +1647,13 @@ class BrowserTest extends \Tests\BrowserTestCase
         $this->browse(function (Browser $browser) {
             $browser
                 ->visit('/sort-nav-first')
-                ->assertSee('On first')
-                ->waitForNavigate()->click('@nav-sort-item')
-                ->waitForText('On second')
-                ->assertSee('On second');
+                ->assertSeeIn('@item-1', 'Page 1')
+                ->assertSeeIn('@item-2', 'Page 2')
+                ->waitForNavigate()->click('@item-2')
+                ->assertPathIs('/sort-nav-second')
+                ->assertSeeIn('@item-1', 'Page 1')
+                ->assertSeeIn('@item-2', 'Page 2')
+                ;
         });
     }
 
@@ -1661,8 +1664,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->visit('/sort-nav-handle')
                 ->assertSee('On first')
                 ->waitForNavigate()->click('@nav-link')
-                ->waitForText('On second')
-                ->assertSee('On second');
+                ->assertPathIs('/sort-nav-second');
         });
     }
 
@@ -1673,8 +1675,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->visit('/sort-nav-ignore')
                 ->assertSee('On first')
                 ->waitForNavigate()->click('@ignored-link')
-                ->waitForText('On second')
-                ->assertSee('On second');
+                ->assertPathIs('/sort-nav-second');
         });
     }
 
@@ -2355,14 +2356,12 @@ class SortNavFirstPage extends Component
     {
         return <<<'HTML'
         <div>
-            <div>On first</div>
-
             <ul wire:sort="sortItem">
                 <li>
-                    <a href="/sort-nav-second" dusk="nav-sort-item" wire:navigate wire:sort:item="item-1">Go</a>
+                    <a href="/sort-nav-first" dusk="item-1" wire:navigate wire:sort:item="item-1">Page 1</a>
                 </li>
                 <li>
-                    <a href="/" wire:navigate wire:sort:item="item-2">Other</a>
+                    <a href="/sort-nav-second" dusk="item-2" wire:navigate wire:sort:item="item-2">Page 2</a>
                 </li>
             </ul>
         </div>
@@ -2370,17 +2369,7 @@ class SortNavFirstPage extends Component
     }
 }
 
-class SortNavSecondPage extends Component
-{
-    public function render()
-    {
-        return <<<'HTML'
-        <div>
-            <div>On second</div>
-        </div>
-        HTML;
-    }
-}
+class SortNavSecondPage extends SortNavFirstPage {}
 
 class SortNavHandleNavPage extends Component
 {

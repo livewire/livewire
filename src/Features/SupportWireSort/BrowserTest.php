@@ -13,10 +13,16 @@ class BrowserTest extends BrowserTestCase
     {
         return function () {
             Livewire::component('sort-nav-first', SortNavFirstPage::class);
-            Livewire::component('sort-nav-handle', SortNavHandlePage::class);
+            Livewire::component('sort-nav-second', SortNavSecondPage::class);
+
+            Livewire::component('sort-nav-handle-first', SortNavHandleFirstPage::class);
+            Livewire::component('sort-nav-handle-second', SortNavHandleSecondPage::class);
 
             Route::get('/sort-nav-first', SortNavFirstPage::class)->middleware('web');
-            Route::get('/sort-nav-handle', SortNavHandlePage::class)->middleware('web');
+            Route::get('/sort-nav-second', SortNavSecondPage::class)->middleware('web');
+
+            Route::get('/sort-nav-handle-first', SortNavHandleFirstPage::class)->middleware('web');
+            Route::get('/sort-nav-handle-second', SortNavHandleSecondPage::class)->middleware('web');
         };
     }
     public function test_wire_sort_id_is_passed_as_third_parameter_to_sort_handler()
@@ -312,23 +318,47 @@ class BrowserTest extends BrowserTestCase
     {
         $this->browse(function ($browser) {
             $browser->visit('/sort-nav-first')
+                // Dragging sortable item shouldn't sending network request
                 ->waitForNoNavigateRequest()->drag('@item-2', '@item-1')
                 ->waitForTextIn('@result', 'item:item-2,position:0')
                 ->assertPresent('@sortable')
                 ->assertSeeIn('@item-1', 'Item 1')
                 ->assertSeeIn('@item-2', 'Item 2')
-                ->assertPathIs('/sort-nav-first');
+                ->assertPathIs('/sort-nav-first')
+                // Navigate should still work after sorting
+                ->waitForNavigate()->click('@item-2')
+                ->assertPathIs('/sort-nav-second')
+                ->waitForNoNavigateRequest()->drag('@item-1', '@item-2')
+                ->waitForTextIn('@result', 'item:item-1,position:1')
+                ->assertPresent('@sortable')
+                ->assertSeeIn('@item-1', 'Item 1')
+                ->assertSeeIn('@item-2', 'Item 2')
+                ;
         });
     }
 
     public function test_wire_sort_works_via_handle_when_item_contains_wire_navigate_link()
     {
         $this->browse(function ($browser) {
-            $browser->visit('/sort-nav-handle')
+            $browser->visit('/sort-nav-handle-first')
+                // Dragging sortable item shouldn't sending network request
                 ->waitForNoNavigateRequest()->drag('@handle-2', '@handle-1')
                 ->waitForTextIn('@result', 'item:item-2,position:0')
                 ->assertPresent('@sortable')
-                ->assertPathIs('/sort-nav-handle');
+                ->assertSeeIn('@handle-1', 'Handle 1')
+                ->assertSeeIn('@handle-2', 'Handle 2')
+                ->assertPathIs('/sort-nav-handle-first')
+                // Clicking sort handler should not trigger navigate
+                ->waitForNoNavigateRequest()->click('@handle-2')
+                // Navigate should still work after sorting
+                ->waitForNavigate()->click('@link-2')
+                ->assertPathIs('/sort-nav-handle-second')
+                ->waitForNoNavigateRequest()->drag('@handle-1', '@handle-2')
+                ->waitForTextIn('@result', 'item:item-1,position:1')
+                ->assertPresent('@sortable')
+                ->assertSeeIn('@handle-1', 'Handle 1')
+                ->assertSeeIn('@handle-2', 'Handle 2')
+                ;
         });
     }
 }
@@ -361,7 +391,7 @@ class SortNavFirstPage extends Component
     }
 }
 
-class SortNavHandlePage extends Component
+class SortNavHandleFirstPage extends Component
 {
     public $result = '';
 
@@ -376,12 +406,12 @@ class SortNavHandlePage extends Component
         <div>
             <ul dusk="sortable" wire:sort="sortItem">
                 <li wire:sort:item="item-1">
-                    <a href="/sort-nav-second" wire:navigate>Item 1</a>
-                    <span dusk="handle-1" wire:sort:handle>Drag</span>
+                    <a href="/sort-nav-handle-first" dusk="link-1" wire:navigate>Item 1</a>
+                    <span dusk="handle-1" wire:sort:handle>Handle 1</span>
                 </li>
                 <li wire:sort:item="item-2">
-                    <a href="/sort-nav-second" wire:navigate>Item 2</a>
-                    <span dusk="handle-2" wire:sort:handle>Drag</span>
+                    <a href="/sort-nav-handle-second" dusk="link-2" wire:navigate>Item 2</a>
+                    <span dusk="handle-2" wire:sort:handle>Handle 2</span>
                 </li>
             </ul>
 
@@ -390,3 +420,6 @@ class SortNavHandlePage extends Component
         HTML;
     }
 }
+
+class SortNavSecondPage extends SortNavFirstPage {}
+class SortNavHandleSecondPage extends SortNavHandleFirstPage {}
