@@ -6,6 +6,7 @@ use Laravel\Dusk\Browser;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -1628,6 +1629,128 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             $browser->driver->switchTo()->window($initialHandles[0]);
         });
+    }
+
+    public function test_livewire_action_clears_navigate_prefetch_cache()
+    {
+        Livewire::visit(new class extends Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <div dusk="title">Prefetch clear page</div>
+
+                        <span dusk="count">{{ $count }}</span>
+
+                        <button type="button" wire:click="increment" dusk="increment">+</button>
+
+                        <a href="/second" wire:navigate.hover dusk="link.to.second">
+                            Go to second page
+                        </a>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertSee('Prefetch clear page')
+
+        // Hover → prefetch stored
+        ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+        ->mouseover('@title')
+
+        // Still cached
+        ->waitForNoNavigatePrefetchRequest()->mouseover('@link.to.second')
+        ->mouseover('@title')
+
+        // Real MessageRequest → interceptor clears cache
+        ->waitForLivewire()->click('@increment')
+        ->assertSeeIn('@count', '1')
+
+        // Cache cleared → new prefetch must fire
+        ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+        ->assertSee('Prefetch clear page')
+        ;
+    }
+
+    public function test_livewire_action_clears_prefetch_so_protected_route_is_refetched()
+    {
+        $this->registerComponentTestRoutes([
+            '/protected' => new class extends Component {
+                public function render()
+                {
+                    if (! session('authorized')) {
+                        return redirect('/create-password');
+                    }
+
+                    return <<<'HTML'
+                        <div dusk="protected-page">On protected page</div>
+                    HTML;
+                }
+            },
+            '/create-password' => new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                        <div dusk="create-password-page">Create a password</div>
+                    HTML;
+                }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public $authorized = false;
+
+            public function save()
+            {
+                session(['authorized' => true]);
+
+                $this->authorized = true;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <div dusk="gate-page">{{ $authorized ? 'Authorized' : 'Forbidden' }}</div>
+
+                        <a href="/protected" wire:navigate.hover dusk="link.to.protected">
+                            Go to protected
+                        </a>
+
+                        <button type="button" wire:click="save" dusk="authorize">
+                            Authorize
+                        </button>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertSee('Forbidden')
+
+        // Simulate prefetch destination on hover when its still protected
+        ->waitForNavigatePrefetchRequest()->mouseover('@link.to.protected')
+        ->mouseover('@gate-page')
+
+        // Second hover should not prefetch destination
+        ->waitForNoNavigatePrefetchRequest()->mouseover('@link.to.protected')
+        ->mouseover('@gate-page')
+
+        ->waitForLivewire()->click('@authorize')
+        ->assertSee('Authorized')
+
+        // Livewire action should clear all prefetch destination so hovering should prefetch again
+        ->waitForNavigatePrefetchRequest()->mouseover('@link.to.protected')
+        // Clicking the link should not trigger navigate request again
+        ->waitForNoNavigateRequest()->click('@link.to.protected')
+        ->assertSee('On protected page')
+        ->assertDontSee('Create a password')
+        ->assertPathIs('/protected')
+        ;
     }
 
     protected function registerComponentTestRoutes($routes)

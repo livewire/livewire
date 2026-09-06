@@ -1,12 +1,17 @@
 import { performFetch } from "@/plugins/navigate/fetch";
 import { getUriStringFromUrlObject } from "./links";
 import { storeCurrentPageStatus } from "./history";
+import { interceptRequest } from "@/request";
 
 // Warning: this could cause some memory leaks
 let prefetches = {}
 
 // Default prefetch cache duration is 30 seconds...
 let cacheDuration = 30000
+
+interceptRequest(({ onSend }) => {
+    onSend(() => clearPrefetches())
+})
 
 export function prefetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination)
@@ -68,3 +73,8 @@ export function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
     }
 }
 
+function clearPrefetches() {
+    for (let uri in prefetches) {
+        delete prefetches[uri]
+    }
+}
