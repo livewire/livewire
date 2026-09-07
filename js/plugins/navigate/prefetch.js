@@ -35,11 +35,7 @@ export function prefetchHtml(destination, callback, errorCallback) {
 
         // The prefetch may already have been invalidated while the request
         // was in flight. In that case there is nothing left to update.
-        if (! state) {
-            errorCallback()
-
-            return
-        }
+        if (! state) return
 
         if (state.expiry) clearTimeout(state.expiry)
 
