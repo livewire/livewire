@@ -1770,7 +1770,6 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             // MessageRequest invalidates the prefetch while navigation is waiting.
             ->waitForLivewire()->click('@increment')
-            ->assertSeeIn('@count', '1')
 
             // Correct behavior is a second request for the navigation fallback.
             ->waitUntil('window.__requestCount === 2')

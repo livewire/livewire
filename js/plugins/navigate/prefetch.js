@@ -18,24 +18,24 @@ export function prefetchHtml(destination, callback, errorCallback) {
 
     if (prefetches[uri]) return
 
-    prefetches[uri] = { finished: false, html: null, whenFinished: () => {}, whenFailed: () => {}, expiry: null }
+    let state = { finished: false, html: null, whenFinished: () => {}, whenFailed: () => {}, expiry: null }
+
+    prefetches[uri] = state
 
     // Bound the lifetime of an in-flight prefetch. If it takes too long,
     // invalidate it and allow any waiting navigation to fall back.
-    prefetches[uri].expiry = setTimeout(() => {
-        invalidatePrefetch(uri)
+    state.expiry = setTimeout(() => {
+        invalidatePrefetch(uri, state)
     }, cacheDuration)
 
     performFetch(uri, (html, routedUri, status) => {
+        if (prefetches[uri] !== state) return
+
         storeCurrentPageStatus(status)
 
         callback(html, routedUri)
     }, () => {
-        let state = prefetches[uri]
-
-        // The prefetch may already have been invalidated while the request
-        // was in flight. In that case there is nothing left to update.
-        if (! state) return
+        if (prefetches[uri] !== state) return
 
         if (state.expiry) clearTimeout(state.expiry)
 
@@ -64,7 +64,7 @@ export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, f
     if (state.expiry) clearTimeout(state.expiry)
 
     state.expiry = setTimeout(() => {
-        invalidatePrefetch(uri)
+        invalidatePrefetch(uri, state)
     }, cacheDuration)
 
     state.whenFinished()
@@ -116,10 +116,11 @@ function clearPrefetches() {
     }
 }
 
-function invalidatePrefetch(uri) {
-    let state = prefetches[uri]
-
+function invalidatePrefetch(uri, state = prefetches[uri]) {
     if (! state) return
+
+    // Don't let an old prefetch invalidate a newer one for the same URI.
+    if (prefetches[uri] !== state) return
 
     if (state.expiry) clearTimeout(state.expiry)
 
