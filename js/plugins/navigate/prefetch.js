@@ -13,12 +13,14 @@ let cacheDuration = 30000
 // so discard all prefetched HTML before the request is sent.
 // If a navigation is already waiting on an in-flight prefetch, fail it so it
 // falls back to a fresh navigation request.
-interceptRequest(() => {
-    Object.values(prefetches).forEach(state => {
-        if (! state.finished) state.whenFailed()
-    })
+interceptRequest(({ onSend }) => {
+    onSend(() => {
+        Object.values(prefetches).forEach(state => {
+            if (! state.finished) state.whenFailed()
+        })
 
-    prefetches = {}
+        prefetches = {}
+    })
 })
 
 export function prefetchHtml(destination, callback, errorCallback) {
@@ -69,6 +71,10 @@ export function prefetchHtml(destination, callback, errorCallback) {
 
 export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
     let state = prefetches[getUriStringFromUrlObject(destination)]
+
+    // The prefetch may have been invalidated while its request was in flight.
+    if (! state) return
+
     state.html = html
     state.finished = true
     state.finalDestination = finalDestination

@@ -1936,6 +1936,50 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('return window.__requestCount', 2);
     }
 
+    public function test_redirected_navigate_prefetch_is_not_cached()
+    {
+        Livewire::visit(new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <div dusk="title">Redirect prefetch page</div>
+                        <a href="/redirect-to-second" wire:navigate.hover dusk="link.to.redirected">
+                            Go to redirected
+                        </a>
+                    </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@title', 'Redirect prefetch page')
+            ->tap(fn (Browser $browser) => $browser->script(<<<'JS'
+                window.__redirectedPrefetchRequests = 0
+                window.__redirectedPrefetchCompleted = 0
+                window.__originalFetch = window.fetch
+
+                window.fetch = function (url, options) {
+                    let pathname = new URL(url, window.location.origin).pathname
+
+                    // Count the *original* URL only (before follow)
+                    if (pathname === '/redirect-to-second') {
+                        window.__redirectedPrefetchRequests++
+                        return window.__originalFetch(url, options).then(response => {
+                            window.__redirectedPrefetchCompleted++
+                            return response
+                        })
+                    }
+
+                    return window.__originalFetch(url, options)
+                }
+            JS))
+            ->waitForNavigatePrefetchRequest()->mouseover('@link.to.redirected')
+            ->waitUntil('window.__redirectedPrefetchCompleted === 1')
+            ->mouseover('@title')
+            // Must prefetch again: redirectd response must not sit under /redirect-to-second
+            ->waitForNavigatePrefetchRequest()->mouseover('@link.to.redirected')
+            ->waitUntil('window.__redirectedPrefetchRequests === 2');
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
