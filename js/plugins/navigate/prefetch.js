@@ -18,29 +18,59 @@ export function prefetchHtml(destination, callback, errorCallback) {
 
     if (prefetches[uri]) return
 
-    prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration), whenFailed: () => {} }
+    prefetches[uri] = { finished: false, html: null, whenFinished: () => {}, whenFailed: () => {}, expiry: null }
+
+    // Bound the lifetime of an in-flight prefetch. If it takes too long,
+    // invalidate it and allow any waiting navigation to fall back.
+    prefetches[uri].expiry = setTimeout(() => {
+        invalidatePrefetch(uri)
+    }, cacheDuration)
 
     performFetch(uri, (html, routedUri, status) => {
         storeCurrentPageStatus(status)
 
         callback(html, routedUri)
     }, () => {
-        let whenFailed = prefetches[uri].whenFailed
+        let state = prefetches[uri]
 
-        // If the fetch failed, remove the prefetch so it gets attempted again...
+        // The prefetch may already have been invalidated while the request
+        // was in flight. In that case there is nothing left to update.
+        if (! state) {
+            errorCallback()
+
+            return
+        }
+
+        if (state.expiry) clearTimeout(state.expiry)
+
         delete prefetches[uri]
 
         errorCallback()
 
-        whenFailed()
+        // If navigation was waiting for this in-flight prefetch,
+        // fall back to the normal navigation request.
+        state.whenFailed()
     })
 }
 
 export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
-    let state = prefetches[getUriStringFromUrlObject(destination)]
+    let uri = getUriStringFromUrlObject(destination)
+    let state = prefetches[uri]
+
+    // If it takes too long, invalidate it and allow any waiting navigation to fall back.
+    if (! state) return
+
     state.html = html
     state.finished = true
     state.finalDestination = finalDestination
+
+    // The cache lifetime begins once the HTML is available.
+    if (state.expiry) clearTimeout(state.expiry)
+
+    state.expiry = setTimeout(() => {
+        invalidatePrefetch(uri)
+    }, cacheDuration)
+
     state.whenFinished()
 }
 
@@ -50,31 +80,54 @@ export function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
     if (! prefetches[uri]) return ifNoPrefetchExists()
 
     if (prefetches[uri].finished) {
-        let html = prefetches[uri].html
-        let finalDestination = prefetches[uri].finalDestination
+        let state = prefetches[uri]
+        let html = state.html
+        let finalDestination = state.finalDestination
+
+        if (state.expiry) clearTimeout(state.expiry)
 
         delete prefetches[uri]
 
         return receive(html, finalDestination)
-    } else {
-        prefetches[uri].whenFinished = () => {
-            let html = prefetches[uri].html
-            let finalDestination = prefetches[uri].finalDestination
-
-            delete prefetches[uri]
-
-            receive(html, finalDestination)
-        }
-
-        // Someone is waiting on this in-flight prefetch. If it fails, they're
-        // left hanging with no navigation at all, so send them down the normal
-        // request path instead where a failure can be handled properly...
-        prefetches[uri].whenFailed = ifNoPrefetchExists
     }
+
+    // Navigation is waiting for the in-flight prefetch.
+    prefetches[uri].whenFinished = () => {
+        // The prefetch may have been invalidated before completion.
+        let state = prefetches[uri]
+
+        if (! state) return ifNoPrefetchExists()
+
+        let html = state.html
+        let finalDestination = state.finalDestination
+
+        if (state.expiry) clearTimeout(state.expiry)
+
+        delete prefetches[uri]
+
+        receive(html, finalDestination)
+    }
+
+    // Someone is waiting on this in-flight prefetch. If it fails, they're
+    // left hanging with no navigation at all, so send them down the normal
+    // request path instead where a failure can be handled properly...
+    prefetches[uri].whenFailed = ifNoPrefetchExists
 }
 
 function clearPrefetches() {
     for (let uri in prefetches) {
-        delete prefetches[uri]
+        invalidatePrefetch(uri)
     }
+}
+
+function invalidatePrefetch(uri) {
+    let state = prefetches[uri]
+
+    if (! state) return
+
+    if (state.expiry) clearTimeout(state.expiry)
+
+    delete prefetches[uri]
+
+    state.whenFailed()
 }

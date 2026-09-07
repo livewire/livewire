@@ -1753,6 +1753,94 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_navigate_fallback_when_in_flight_prefetch_cleared_by_livewire_request()
+    {
+        Livewire::visit(new class extends Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <div dusk="title">On first</div>
+                        <span dusk="count">{{ $count }}</span>
+                        <button type="button" wire:click="increment" dusk="increment">
+                            Increment
+                        </button>
+                        <a href="/second" wire:navigate.hover dusk="link.to.second">
+                            Go to second page
+                        </a>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertSee('On first')
+
+        ->tap(fn (Browser $browser) => $browser->script(<<<'JS'
+            window.__originalFetch = window.fetch
+            window.__releaseProtectedPrefetch = null
+            window.__secondRequestCount = 0
+
+            window.fetch = function (url, options) {
+                let pathname = new URL(
+                    url,
+                    window.location.origin
+                ).pathname
+
+                if (pathname === '/second') {
+                    window.__secondRequestCount++
+
+                    // Hold only the speculative prefetch.
+                    if (window.__secondRequestCount === 1) {
+                        return new Promise((resolve, reject) => {
+                            window.__releaseProtectedPrefetch = () => {
+                                window.__originalFetch(url, options)
+                                    .then(resolve)
+                                    .catch(reject)
+                            }
+                        })
+                    }
+                }
+
+                return window.__originalFetch(url, options)
+            }
+        JS))
+
+        // Hover starts the first request, which we deliberately keep open.
+        ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+
+        ->waitUntil('window.__releaseProtectedPrefetch !== null')
+
+        // Click while navigation is waiting for the in-flight prefetch.
+        ->click('@link.to.second')
+
+        // Let the navigate click handler attach its callbacks to the prefetch.
+        ->pause(50)
+
+        // A MessageRequest invalidates the prefetch while navigation is waiting.
+        ->waitForLivewire()->click('@increment')
+        ->assertSeeIn('@count', '1')
+
+        // Correct behavior is a second request for the navigation fallback.
+        ->waitUntil('window.__secondRequestCount === 2')
+        ->waitForText('On second')
+
+        // The original prefetch can finish afterwards without resurrecting
+        // stale prefetched HTML.
+        ->tap(fn (Browser $browser) => $browser->script(
+            'window.__releaseProtectedPrefetch()'
+        ))
+
+        ->assertPathIs('/second')
+        ->assertScript('return window.__secondRequestCount', 2)
+        ;
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
