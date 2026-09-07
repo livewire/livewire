@@ -429,6 +429,8 @@ You can apply these attributes in the child component using the `$attributes` va
 
 Attributes that match public property names are automatically passed as props and excluded from `$attributes`. Any remaining attributes like `class`, `id`, or `data-*` are available through `$attributes`.
 
+Only values that can be rendered as an HTML attribute are forwarded. Arrays and objects (other than `Htmlable` instances like `HtmlString`) are silently discarded rather than passed through `$attributes`.
+
 ## Islands vs nested components
 
 When building Livewire applications, you'll often face a choice: Should you create a nested child component or use an island? Both approaches allow you to isolate updates to specific regions, but they serve different purposes.

@@ -6,12 +6,19 @@ use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Illuminate\Support\Facades\Blade;
 use Livewire\ComponentHook;
 
+use function Livewire\before;
+
 class SupportIslands extends ComponentHook
 {
     public static function provide()
     {
         static::registerInlineIslandPrecompiler();
         static::registerIslandDirective();
+
+        // Flush implicit island renders before any dehydrate hook, so other hooks (e.g. assets) see their output...
+        before('dehydrate', function ($component) {
+            $component->renderImplicitIslandMorphs();
+        });
     }
 
     public static function registerIslandDirective()

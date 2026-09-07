@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportIslands;
 use Tests\TestCase;
 use Livewire\Livewire;
 use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
+use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 use Illuminate\Support\Facades\File;
 
 class UnitTest extends TestCase
@@ -676,5 +677,131 @@ class UnitTest extends TestCase
         $this->assertFileExists($cachedPath);
 
         File::deleteDirectory($compiledPath);
+    }
+
+    public function test_children_mounted_during_an_island_render_are_kept_in_the_children_memo()
+    {
+        Livewire::component('island-child', new class extends \Livewire\Component {
+            public $number = 0;
+
+            public function render() {
+                return '<div>child {{ $number }}</div>';
+            }
+        });
+
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public $from = 1;
+            public $to = 1;
+
+            public function loadMore()
+            {
+                $this->from = $this->to + 1;
+                $this->to++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'rows', always: true)
+                        @foreach (range($from, $to) as $number)
+                            <livewire:island-child :$number :wire:key="'row-'.$number" />
+                        @endforeach
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        $this->assertSame(['row-1'], array_keys($component->snapshot['memo']['children']));
+
+        // Simulate an append-mode island render, like a "load more" button would...
+        $component->update(calls: [
+            [
+                'method' => 'loadMore',
+                'params' => [],
+                'path' => '',
+                'metadata' => [
+                    'island' => [
+                        'name' => 'rows',
+                        'mode' => 'append',
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertSame(['row-1', 'row-2'], array_keys($component->snapshot['memo']['children']));
+
+        $appendedChildId = $component->snapshot['memo']['children']['row-2'][1];
+
+        $component->call('$refresh');
+
+        // The appended child should come back as a stub, not mount again from scratch...
+        $this->assertStringContainsString('wire:id="'.$appendedChildId.'" wire:name="island-child" wire:key="row-2"', $component->html());
+        $this->assertStringNotContainsString('child 1', $component->html());
+        $this->assertStringNotContainsString('child 2', $component->html());
+    }
+
+    public function test_assets_inside_an_implicitly_rendered_island_are_shipped()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(defer: true)
+                        @placeholder <div>loading</div> @endplaceholder
+                        <div data-loaded>ready</div>
+                        @assets <script src="/x.js" data-x></script> @endassets
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        $name = $component->instance()->getIslands()[0]['name'];
+
+        app('livewire')->update($component->snapshot, [], [
+            [
+                'method' => '__lazyLoadIsland',
+                'params' => [],
+                'path' => '',
+                'metadata' => [
+                    'island' => ['name' => $name, 'mode' => 'morph'],
+                ],
+            ],
+        ]);
+
+        $this->assertStringContainsString('/x.js', json_encode(SupportScriptsAndAssets::getAssets()));
+    }
+
+    public function test_assets_inside_an_explicitly_rendered_island_are_still_shipped()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public function refresh()
+            {
+                $this->renderIsland('counter');
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(defer: true, name: 'counter')
+                        @placeholder <div>loading</div> @endplaceholder
+                        <div data-loaded>ready</div>
+                        @assets <script src="/y.js" data-y></script> @endassets
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        app('livewire')->update($component->snapshot, [], [
+            [
+                'method' => 'refresh',
+                'params' => [],
+                'path' => '',
+            ],
+        ]);
+
+        $this->assertStringContainsString('/y.js', json_encode(SupportScriptsAndAssets::getAssets()));
     }
 }

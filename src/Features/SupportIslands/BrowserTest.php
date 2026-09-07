@@ -1321,4 +1321,90 @@ class BrowserTest extends BrowserTestCase
             ->assertDontSee('ENDISLAND')
             ;
     }
+
+    public function test_visible_lazy_islands_with_a_reactive_nested_component_hydrate()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public bool $editing = false;
+
+            public function toggle()
+            {
+                $this->editing = ! $this->editing;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <button dusk="toggle" wire:click="toggle">Toggle Edit Mode</button>
+                    @island(name: 'one', lazy: true, always: true)
+                        @placeholder <div dusk="one-placeholder">Loading one</div> @endplaceholder
+                        <div dusk="one-mounted">One mounted</div>
+                    @endisland
+                    @island(name: 'two', lazy: true, always: true)
+                        @placeholder <div dusk="two-placeholder">Loading two</div> @endplaceholder
+                        <div dusk="two-mounted">Two mounted</div>
+                    @endisland
+                    <livewire:nested :$editing />
+                </div>
+                HTML;
+            }
+        }, 'nested' => new class extends \Livewire\Component {
+            #[\Livewire\Attributes\Reactive]
+            public $editing;
+            public function render() {
+                return <<<'HTML'
+                <div dusk="edit-mode">{{ $editing ? 'Yes' : 'No' }}</div>
+                HTML;
+            }
+        }])
+            ->waitFor('@one-mounted')
+            ->waitFor('@two-mounted')
+            ->assertNotPresent('@one-placeholder')
+            ->assertNotPresent('@two-placeholder')
+            ->assertSeeIn('@edit-mode', 'No')
+            ->waitForLivewire()->click('@toggle')
+            ->assertSeeIn('@edit-mode', 'Yes');
+    }
+
+    public function test_visible_lazy_islands_with_a_modelable_nested_component_hydrate()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public string $body = '';
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <div dusk="content">{{ $body }}</div>
+                    @island(name: 'one', lazy: true, always: true)
+                        @placeholder <div dusk="one-placeholder">Loading one</div> @endplaceholder
+                        <div dusk="one-mounted">One mounted</div>
+                    @endisland
+                    @island(name: 'two', lazy: true, always: true)
+                        @placeholder <div dusk="two-placeholder">Loading two</div> @endplaceholder
+                        <div dusk="two-mounted">Two mounted</div>
+                    @endisland
+                    <livewire:nested wire:model.live="body" />
+                </div>
+                HTML;
+            }
+        }, 'nested' => new class extends \Livewire\Component {
+            #[\Livewire\Attributes\Modelable]
+            public $content;
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <input dusk="input" wire:model="content" />
+                </div>
+                HTML;
+            }
+        }])
+            ->waitFor('@one-mounted')
+            ->waitFor('@two-mounted')
+            ->assertNotPresent('@one-placeholder')
+            ->assertNotPresent('@two-placeholder')
+            ->assertSeeNothingIn('@content')
+            ->assertSeeNothingIn('@input')
+            ->type('@input', 'livewire')
+            ->waitForTextIn('@content', 'livewire');
+    }
 }
