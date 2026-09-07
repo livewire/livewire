@@ -6,6 +6,43 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
+    public function test_data_loading_follows_an_event_origin_into_a_different_listener_component()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button x-on:click="$el.dispatchEvent(new CustomEvent('toast-action', { bubbles: true }))" dusk="toast-action">Retry</button>
+                        <livewire:receiver />
+                    </div>
+                    HTML;
+                }
+            },
+            'receiver' => new class extends \Livewire\Component {
+                #[\Livewire\Attributes\On('toast-action')]
+                public function handleToastAction()
+                {
+                    usleep(250 * 1000);
+                }
+
+                public function render()
+                {
+                    return '<div dusk="receiver">Receiver</div>';
+                }
+            },
+        ])
+        ->waitForLivewireToLoad()
+        ->assertAttributeMissing('@toast-action', 'data-loading')
+        ->click('@toast-action')
+        ->pause(10)
+        ->assertAttribute('@toast-action', 'data-loading', 'true')
+        ->pause(350)
+        ->assertAttributeMissing('@toast-action', 'data-loading')
+        ;
+    }
+
     public function test_data_loading_attribute_is_added_to_an_element_when_it_triggers_a_request()
     {
         Livewire::visit([
