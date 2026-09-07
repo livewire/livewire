@@ -127,11 +127,11 @@ class FrontendAssets extends Mechanism
                 --livewire-progress-bar-color: {$progressBarColor};
             }
 
-            [x-cloak] {
+            [x-cloak=""] {
                 display: none !important;
             }
 
-            [wire\:cloak] {
+            [wire\:cloak=""] {
                 display: none !important;
             }
 
