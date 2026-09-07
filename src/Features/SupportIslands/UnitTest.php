@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportIslands;
 use Tests\TestCase;
 use Livewire\Livewire;
 use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
+use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 use Illuminate\Support\Facades\File;
 
 class UnitTest extends TestCase
@@ -738,5 +739,69 @@ class UnitTest extends TestCase
         $this->assertStringContainsString('wire:id="'.$appendedChildId.'" wire:name="island-child" wire:key="row-2"', $component->html());
         $this->assertStringNotContainsString('child 1', $component->html());
         $this->assertStringNotContainsString('child 2', $component->html());
+    }
+
+    public function test_assets_inside_an_implicitly_rendered_island_are_shipped()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(defer: true)
+                        @placeholder <div>loading</div> @endplaceholder
+                        <div data-loaded>ready</div>
+                        @assets <script src="/x.js" data-x></script> @endassets
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        $name = $component->instance()->getIslands()[0]['name'];
+
+        app('livewire')->update($component->snapshot, [], [
+            [
+                'method' => '__lazyLoadIsland',
+                'params' => [],
+                'path' => '',
+                'metadata' => [
+                    'island' => ['name' => $name, 'mode' => 'morph'],
+                ],
+            ],
+        ]);
+
+        $this->assertStringContainsString('/x.js', json_encode(SupportScriptsAndAssets::getAssets()));
+    }
+
+    public function test_assets_inside_an_explicitly_rendered_island_are_still_shipped()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public function refresh()
+            {
+                $this->renderIsland('counter');
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(defer: true, name: 'counter')
+                        @placeholder <div>loading</div> @endplaceholder
+                        <div data-loaded>ready</div>
+                        @assets <script src="/y.js" data-y></script> @endassets
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        app('livewire')->update($component->snapshot, [], [
+            [
+                'method' => 'refresh',
+                'params' => [],
+                'path' => '',
+            ],
+        ]);
+
+        $this->assertStringContainsString('/y.js', json_encode(SupportScriptsAndAssets::getAssets()));
     }
 }
