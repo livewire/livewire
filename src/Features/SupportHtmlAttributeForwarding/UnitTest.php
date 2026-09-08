@@ -250,6 +250,22 @@ class UnitTest extends TestCase
         $this->assertStringContainsString('id="rows-component"', $html);
         $this->assertStringNotContainsString('rows="', $html);
     }
+
+    public function test_non_html_attributes_are_available_as_blade_props_in_placeholder()
+    {
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        Livewire::component('alert', LazyAlertWithProps::class);
+
+        $html = Livewire::mount('alert', [
+            'lazy' => true,
+            'rows' => [
+                ['id' => 1, 'name' => 'Alice'],
+            ],
+        ]);
+
+        $this->assertStringContainsString('Alice', $html);
+    }
 }
 
 class RecordModel extends Model
@@ -322,5 +338,23 @@ class AlertWithPropsWithoutDefault extends Component
             {{ $rows[0]['name'] }}
         </div>
         HTML;
+    }
+}
+
+#[Lazy]
+class LazyAlertWithProps extends Component
+{
+    public function placeholder()
+    {
+        return <<<'HTML'
+        @props(['rows'])
+
+        <div>{{ $rows[0]['name'] }}</div>
+        HTML;
+    }
+
+    public function render()
+    {
+        return '<div>Alert</div>';
     }
 }
