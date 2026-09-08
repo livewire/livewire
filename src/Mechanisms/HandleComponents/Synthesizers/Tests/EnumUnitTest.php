@@ -62,6 +62,28 @@ class EnumUnitTest extends \Tests\TestCase
         ;
     }
 
+    public function test_malformed_enum_property_update_throws_type_error()
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(\TypeError::class);
+
+        Livewire::test(ComponentWithNullablePublicEnumCaster::class)
+            ->set('status', [])
+            ->assertOk();
+    }
+
+    public function test_malformed_synthesized_enum_update_throws_type_error()
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(\TypeError::class);
+
+        Livewire::test(ComponentWithInitializedPublicEnumCaster::class)
+            ->set('status', [])
+            ->assertOk();
+    }
+
     public function test_malformed_enum_property_update_returns_419()
     {
         config()->set('app.debug', false);

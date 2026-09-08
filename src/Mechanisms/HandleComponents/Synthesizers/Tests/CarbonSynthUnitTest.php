@@ -79,6 +79,28 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable->updateProperty('date', 'Bad Date');
     }
 
+    public function test_malformed_carbon_update_throws_type_error()
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(\TypeError::class);
+
+        Livewire::test(ComponentWithNullablePublicCarbonCaster::class)
+            ->set('date', [])
+            ->assertOk();
+    }
+
+    public function test_malformed_synthesized_carbon_update_throws_type_error()
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(\TypeError::class);
+
+        Livewire::test(ComponentWithInitializedCarbonCaster::class)
+            ->set('date', [])
+            ->assertOk();
+    }
+
     public function test_malformed_carbon_update_returns_419()
     {
         config()->set('app.debug', false);
