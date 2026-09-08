@@ -193,6 +193,63 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('first@example.com', $html);
         $this->assertStringNotContainsString('pageFilters', $html);
     }
+
+    public function test_non_html_attributes_are_available_as_blade_props()
+    {
+        Livewire::component('alert', AlertWithProps::class);
+
+        $html = Livewire::mount('alert', [
+            'rows' => [
+                ['id' => 1, 'name' => 'Alice'],
+                ['id' => 2, 'name' => 'Bob'],
+            ],
+        ]);
+
+        $this->assertStringContainsString('Alice', $html);
+        $this->assertStringContainsString('Bob', $html);
+    }
+
+    public function test_non_html_attributes_are_available_as_blade_props_without_default()
+    {
+        Livewire::component('alert', AlertWithPropsWithoutDefault::class);
+
+        $html = Livewire::mount('alert', [
+            'rows' => [
+                ['id' => 1, 'name' => 'Alice'],
+            ],
+        ]);
+
+        $this->assertStringContainsString('Alice', $html);
+    }
+
+    public function test_non_html_attributes_are_not_forwarded_as_html_attributes()
+    {
+        Livewire::component('alert', AlertWithProps::class);
+
+        $html = Livewire::mount('alert', [
+            'rows' => [
+                ['id' => 1, 'name' => 'Alice'],
+            ],
+        ]);
+
+        $this->assertStringNotContainsString('rows="', $html);
+    }
+
+    public function test_html_attributes_are_forwarded_while_non_html_attributes_are_available_as_blade_props()
+    {
+        Livewire::component('alert', AlertWithProps::class);
+
+        $html = Livewire::mount('alert', [
+            'rows' => [
+                ['id' => 1, 'name' => 'Alice'],
+            ],
+            'id' => 'rows-component',
+        ]);
+
+        $this->assertStringContainsString('Alice', $html);
+        $this->assertStringContainsString('id="rows-component"', $html);
+        $this->assertStringNotContainsString('rows="', $html);
+    }
 }
 
 class RecordModel extends Model
@@ -235,6 +292,34 @@ class AlertWithIslandAttributes extends Component
             @island(name: 'content')
                 <div {{ $attributes }}>Island</div>
             @endisland
+        </div>
+        HTML;
+    }
+}
+
+class AlertWithProps extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        @props(['rows' => []])
+        <ul {{ $attributes }}>
+            @foreach ($rows as $row)
+                <li wire:key="{{ $row['id'] }}">{{ $row['name'] }}</li>
+            @endforeach
+        </ul>
+        HTML;
+    }
+}
+
+class AlertWithPropsWithoutDefault extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        @props(['rows'])
+        <div>
+            {{ $rows[0]['name'] }}
         </div>
         HTML;
     }
