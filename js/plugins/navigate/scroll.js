@@ -32,3 +32,42 @@ export function restoreScrollPositionOrScrollToTop() {
         })
     })
 }
+
+export function restoreScrollPositionOrScrollToHash(destination, preserveScroll) {
+    if (destination.hash) {
+        queueMicrotask(() => {
+            queueMicrotask(() => {
+                let fragment = destination.hash.slice(1)
+                let element = document.getElementById(fragment)
+
+                if (! element) {
+                    try {
+                        let decodedFragment = decodeURIComponent(fragment)
+
+                        element = document.getElementById(decodedFragment)
+
+                        // Match the browser's fragment navigation behavior, including legacy named anchors.
+                        if (! element) {
+                            element = [...document.getElementsByTagName('a')]
+                                .find(el => el.getAttribute('name') === decodedFragment)
+                        }
+
+                        if (! element && decodedFragment.toLowerCase() === 'top') {
+                            window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+
+                            return
+                        }
+                    } catch {
+                        // Ignore malformed percent-encoding.
+                    }
+                }
+
+                element?.scrollIntoView()
+            })
+        })
+
+        return
+    }
+
+    ! preserveScroll && restoreScrollPositionOrScrollToTop()
+}

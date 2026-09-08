@@ -1630,6 +1630,112 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_navigate_scrolls_to_hash()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNavigate()->click('@link.to.second.with.hash')
+                ->waitForText('On second')
+                ->assertFragmentIs('second-target')
+                ->assertInViewPort('#second-target');
+        });
+    }
+
+    public function test_navigate_to_missing_hash_scrolls_to_top()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNavigate()->click('@link.to.second.with.missing.hash')
+                ->waitForText('On second')
+                ->assertFragmentIs('does-not-exist')
+                ->assertSee('On second')
+                ->assertNotInViewPort('#second-target');
+        });
+    }
+
+    public function test_navigate_scrolls_to_hash_even_with_preserve_scroll()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->scrollTo('@first-target')
+                ->waitForNavigate()->click('@link.to.second.with.hash.preserve.scroll')
+                ->waitForText('On second')
+                ->assertFragmentIs('second-target')
+                ->assertInViewPort('#second-target');
+        });
+    }
+
+    public function test_navigate_to_hash_preserves_back_forward_scroll_behavior()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->waitForNavigate()->click('@link.to.second.with.hash')
+                ->waitForText('On second')
+                ->assertInViewPort('#second-target')
+                ->back()
+                ->waitForText('On first')
+                ->assertInViewPort('#first-target')
+                ->forward()
+                ->waitForText('On second')
+                ->assertInViewPort('#second-target');
+        });
+    }
+
+    public function test_navigate_scrolls_to_percent_encoded_hash()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNavigate()->click('@link.to.encoded.hash')
+                ->waitForText('On second')
+                ->assertFragmentIs('second%20target')
+                ->tap(function (Browser $browser) {
+                    $browser->script(["
+                        window.__inViewPort = false
+                        const rect = document.getElementById('second target').getBoundingClientRect();
+
+                        window.__inViewPort = (
+                            rect.top >= 0 &&
+                            rect.left >= 0 &&
+                            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                        );
+                    "]);
+                })
+                ->assertScript("window.__inViewPort", true);
+        });
+    }
+
+    public function test_navigate_scrolls_to_top_with_top_hash()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->scrollTo('@first-target')
+                ->waitForNavigate()->click('@link.to.second.with.top.hash')
+                ->waitForText('On second')
+                ->assertFragmentIs('top')
+                ->assertScript('window.scrollY === 0')
+                ->assertNotInViewPort('#second-target');
+        });
+    }
+
+    public function test_navigate_scrolls_to_legacy_named_anchor()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNavigate()->click('@link.to.second.with.named.hash')
+                ->waitForText('On second')
+                ->assertFragmentIs('named-target')
+                ->assertInViewPort('@named-target');
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -1683,6 +1789,12 @@ class FirstPage extends Component
 
             <a href="/first" wire:navigate wire:current.ignore dusk="link.to.first.wire.current.ignore">First (wire:current.ignore)</a>
             <a href="/second" wire:navigate wire:current.ignore dusk="link.to.second.wire.current.ignore">Second (wire:current.ignore)</a>
+
+            <a href="/second-scroll#second-target" wire:navigate dusk="link.to.second.with.hash">Go to second page with hash</a>
+            <a href="/second-scroll#does-not-exist" wire:navigate dusk="link.to.second.with.missing.hash">Go to second page with missing hash</a>
+            <a href="/second-scroll#second-target" wire:navigate.preserve-scroll dusk="link.to.second.with.hash.preserve.scroll">Go to second page with hash and preserve scroll</a>
+            <a href="/second-scroll#second%20target" wire:navigate dusk="link.to.encoded.hash">Go to second page with encoded hash</a>
+            <a href="/second-scroll#named-target" wire:navigate dusk="link.to.second.with.named.hash">Go to second page with named hash</a>
 
             @script
             <script>
@@ -1974,15 +2086,17 @@ class FirstScrollPage extends Component
 
             <div style="height: 100vh;">spacer</div>
 
-            <div dusk="first-target">below the fold</div>
+            <div id="first-target" dusk="first-target">below the fold</div>
 
             <a href="/second-scroll" wire:navigate.hover dusk="link.to.second">Go to second page</a>
-
-            <a href="/second-scroll" x-on:click="$event.preventDefault(); Livewire.navigate($el.href)"  dusk="link.to.second.using.javascript">Go to second page using javascript</a>
+            <a href="/second-scroll" x-on:click="$event.preventDefault(); Livewire.navigate($el.href)" dusk="link.to.second.using.javascript">Go to second page using javascript</a>
 
             <a href="/second-scroll" wire:navigate.hover.preserve-scroll dusk="link.to.second.with.preserve.scroll">Go to second page with preserve scroll</a>
+            <a href="/second-scroll" x-on:click="$event.preventDefault(); Livewire.navigate($el.href, { preserveScroll: true })" dusk="link.to.second.with.preserve.scroll.using.javascript">Go to second page with preserve scroll using javascript</a>
 
-            <a href="/second-scroll" x-on:click="$event.preventDefault(); Livewire.navigate($el.href, { preserveScroll: true })"  dusk="link.to.second.with.preserve.scroll.using.javascript">Go to second page with preserve scroll using javascript</a>
+            <a href="/second-scroll#second-target" wire:navigate dusk="link.to.second.with.hash">Go to second page with hash</a>
+            <a href="/second-scroll#second-target" wire:navigate.preserve-scroll dusk="link.to.second.with.hash.preserve.scroll">Go to second page with hash and preserve scroll</a>
+            <a href="/second-scroll#top" wire:navigate dusk="link.to.second.with.top.hash"> Go to second page with top hash</a>
 
             <div style="height: 100vh;">spacer</div>
         </div>
@@ -2083,7 +2197,9 @@ class SecondScrollPage extends Component
 
             <div style="height: 100vh;">spacer</div>
 
-            <div dusk="second-target">below the fold</div>
+            <div id="second-target" dusk="second-target">below the fold</div>
+            <div id="second target">encoded target</div>
+            <a name="named-target" dusk="named-target"></a>
 
             <div style="height: 100vh;">spacer</div>
         </div>

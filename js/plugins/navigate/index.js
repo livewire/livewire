@@ -2,7 +2,7 @@ import { replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
 import { createUrlObjectFromString, extractDestinationFromLink, isSameOrigin, linkShouldBeHandledNatively, visitNatively, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
 import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
-import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
+import { restoreScrollPositionOrScrollToHash, restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
 import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
 import { finishAndHideProgressBar, removeAnyLeftOverStaleProgressBars, showAndStartProgressBar } from "./bar"
 import { packUpPersistedPopovers, unPackPersistedPopovers } from "./popover"
@@ -132,7 +132,7 @@ export default function (Alpine) {
                         unPackPersistedPopovers(persistedEl)
                     })
 
-                    !preserveScroll && restoreScrollPositionOrScrollToTop()
+                    restoreScrollPositionOrScrollToHash(finalDestination, preserveScroll)
 
                     // Invoke any callbacks registered via onSwap during the navigating event
                     swapCallbacks.forEach(callback => callback())
