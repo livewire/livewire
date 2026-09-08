@@ -194,7 +194,7 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('pageFilters', $html);
     }
 
-    public function test_non_html_attributes_are_available_as_blade_props()
+    public function test_non_html_attributes_are_available_to_blade_props()
     {
         Livewire::component('alert', AlertWithProps::class);
 
@@ -265,6 +265,18 @@ class UnitTest extends TestCase
         ]);
 
         $this->assertStringContainsString('Alice', $html);
+    }
+
+    public function test_eloquent_model_are_available_as_blade_props_without_being_dehydrated()
+    {
+        Livewire::component('alert', AlertWithRecordProps::class);
+
+        $html = Livewire::mount('alert', [
+            'record' => RecordModel::first(),
+        ]);
+
+        $this->assertStringContainsString('First User', $html);
+        $this->assertStringNotContainsString('first@example.com', $html);
     }
 }
 
@@ -356,5 +368,16 @@ class LazyAlertWithProps extends Component
     public function render()
     {
         return '<div>Alert</div>';
+    }
+}
+
+class AlertWithRecordProps extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        @props(['record'])
+        <div>{{ $record->name }}</div>
+        HTML;
     }
 }
