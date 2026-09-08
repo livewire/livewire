@@ -5,7 +5,9 @@ namespace Livewire\Mechanisms\HandleComponents;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Stringable;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Form;
 use Livewire\Livewire;
 use Tests\TestComponent;
@@ -266,6 +268,22 @@ class UnitTest extends \Tests\TestCase
         })
         ->call('refresh')
         ->assertSetStrict('refreshed', true);
+    }
+
+    public function test_locked_uninitialized_typed_property_does_not_throw_uninitialized_property_error()
+    {
+        $this->expectException(CannotUpdateLockedPropertyException::class);
+
+        Livewire::test(new class extends Component {
+            #[Locked]
+            public \stdClass $group;
+
+            public function render()
+            {
+                return '<div></div>';
+            }
+        })
+            ->set('group', ['foo' => 'bar']);
     }
 }
 
