@@ -6,7 +6,7 @@ use Livewire\Livewire;
 
 class StringableSynthUnitTest extends \Tests\TestCase
 {
-    public function test_malformed_stringable_update_throws_type_error()
+    public function test_malformed_stringable_update_throws_type_error_on_debug_mode()
     {
         config()->set('app.debug', true);
 
@@ -24,7 +24,7 @@ class StringableSynthUnitTest extends \Tests\TestCase
             ->assertOk();
     }
 
-    public function test_malformed_stringable_update_returns_419()
+    public function test_malformed_stringable_update_returns_419_on_production()
     {
         config()->set('app.debug', false);
 

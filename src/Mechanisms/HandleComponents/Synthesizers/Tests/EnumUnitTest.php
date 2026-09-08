@@ -62,7 +62,7 @@ class EnumUnitTest extends \Tests\TestCase
         ;
     }
 
-    public function test_malformed_enum_property_update_throws_type_error()
+    public function test_malformed_enum_property_update_throws_type_error_on_debug_mode()
     {
         config()->set('app.debug', true);
 
@@ -73,7 +73,7 @@ class EnumUnitTest extends \Tests\TestCase
             ->assertOk();
     }
 
-    public function test_malformed_synthesized_enum_update_throws_type_error()
+    public function test_malformed_synthesized_enum_update_throws_type_error_on_debug_mode()
     {
         config()->set('app.debug', true);
 
@@ -84,7 +84,7 @@ class EnumUnitTest extends \Tests\TestCase
             ->assertOk();
     }
 
-    public function test_malformed_enum_property_update_returns_419()
+    public function test_malformed_enum_property_update_returns_419_on_production()
     {
         config()->set('app.debug', false);
 
@@ -93,7 +93,7 @@ class EnumUnitTest extends \Tests\TestCase
             ->assertStatus(419);
     }
 
-    public function test_malformed_synthesized_enum_update_returns_419()
+    public function test_malformed_synthesized_enum_update_returns_419_on_production()
     {
         config()->set('app.debug', false);
 
