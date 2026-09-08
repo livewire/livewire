@@ -203,10 +203,13 @@ class UnitTest extends TestCase
                 ['id' => 1, 'name' => 'Alice'],
                 ['id' => 2, 'name' => 'Bob'],
             ],
+            'id' => 'rows-component',
         ]);
 
         $this->assertStringContainsString('Alice', $html);
         $this->assertStringContainsString('Bob', $html);
+        $this->assertStringContainsString('id="rows-component"', $html);
+        $this->assertStringNotContainsString('rows=', $html);
     }
 
     public function test_non_html_attributes_are_available_as_blade_props_without_default()
@@ -217,22 +220,12 @@ class UnitTest extends TestCase
             'rows' => [
                 ['id' => 1, 'name' => 'Alice'],
             ],
+            'id' => 'rows-component',
         ]);
 
         $this->assertStringContainsString('Alice', $html);
-    }
-
-    public function test_non_html_attributes_are_not_forwarded_as_html_attributes()
-    {
-        Livewire::component('alert', AlertWithProps::class);
-
-        $html = Livewire::mount('alert', [
-            'rows' => [
-                ['id' => 1, 'name' => 'Alice'],
-            ],
-        ]);
-
-        $this->assertStringNotContainsString('rows="', $html);
+        $this->assertStringContainsString('id="rows-component"', $html);
+        $this->assertStringNotContainsString('rows=', $html);
     }
 
     public function test_html_attributes_are_forwarded_while_non_html_attributes_are_available_as_blade_props()
@@ -262,9 +255,12 @@ class UnitTest extends TestCase
             'rows' => [
                 ['id' => 1, 'name' => 'Alice'],
             ],
+            'id' => 'rows-component',
         ]);
 
         $this->assertStringContainsString('Alice', $html);
+        $this->assertStringContainsString('id="rows-component"', $html);
+        $this->assertStringNotContainsString('rows=', $html);
     }
 
     public function test_eloquent_model_are_available_as_blade_props_without_being_dehydrated()
@@ -273,9 +269,11 @@ class UnitTest extends TestCase
 
         $html = Livewire::mount('alert', [
             'record' => RecordModel::first(),
+            'id' => 'rows-component',
         ]);
 
         $this->assertStringContainsString('First User', $html);
+        $this->assertStringContainsString('id="rows-component"', $html);
         $this->assertStringNotContainsString('first@example.com', $html);
     }
 }
@@ -346,7 +344,7 @@ class AlertWithPropsWithoutDefault extends Component
     {
         return <<<'HTML'
         @props(['rows'])
-        <div>
+        <div {{ $attributes }}>
             {{ $rows[0]['name'] }}
         </div>
         HTML;
@@ -360,8 +358,7 @@ class LazyAlertWithProps extends Component
     {
         return <<<'HTML'
         @props(['rows'])
-
-        <div>{{ $rows[0]['name'] }}</div>
+        <div {{ $attributes }}>{{ $rows[0]['name'] }}</div>
         HTML;
     }
 
@@ -377,7 +374,7 @@ class AlertWithRecordProps extends Component
     {
         return <<<'HTML'
         @props(['record'])
-        <div>{{ $record->name }}</div>
+        <div {{ $attributes }}>{{ $record->name }}</div>
         HTML;
     }
 }
