@@ -1980,6 +1980,35 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitUntil('window.__redirectedPrefetchRequests === 2');
     }
 
+    public function test_prefetch_invalidation_callback_does_not_expire_a_new_prefetch_early()
+    {
+        Livewire::visit(PageWithPrefetchOnHover::class)
+            ->assertSee('Prefetch clear page')
+
+            // A: create the first cached prefetch.
+            ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+            ->mouseover('@title')
+
+            // Give A's expiry timer a definite head start over B's.
+            ->pause(5000)
+
+            // Invalidate A through the Livewire-request hook.
+            ->waitForLivewire()->click('@increment')
+            ->assertSeeIn('@count', '1')
+
+            // B: create a new prefetch for the same URI.
+            ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+            ->mouseover('@title')
+
+            // A is now at least 31s old, while B is only 26s old.
+            // A's timer should have expired, but B's timer should still be active.
+            ->pause(26000)
+
+            // B must still be served from the cache.
+            ->waitForNoNavigatePrefetchRequest()->mouseover('@link.to.second')
+            ->mouseover('@title');
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
