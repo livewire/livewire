@@ -188,10 +188,18 @@ class HandleComponents extends Mechanism
             if (! is_array($call)
                 || ! is_string($call['method'] ?? null)
                 || ! is_array($call['params'] ?? null)
+                || ! is_array($call['metadata'] ?? [])
             ) {
-                if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire call structure: each call must contain [method] (string) and [params] (array).');
+                if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire call structure: each call must contain [method] (string), [params] (array), and optional [metadata] (array).');
 
                 abort(404);
+            }
+
+            // Method names follow PHP's identifier syntax, with an optional "$" for magic actions.
+            if (! preg_match('/\A\$?[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*\z/', $call['method'])) {
+                if (config('app.debug')) throw new MethodNotFoundException($call['method']);
+
+                abort(419);
             }
         }
 

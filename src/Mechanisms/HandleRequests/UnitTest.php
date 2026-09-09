@@ -72,14 +72,22 @@ class UnitTest extends TestCase
         // Disable debug mode to test production HTTP responses (404/419)...
         config()->set('app.debug', false);
 
-        $snapshot = json_encode(['data' => [], 'memo' => ['id' => 'abc', 'name' => 'foo'], 'checksum' => 'hash']);
+        $component = Livewire::test(new class extends TestComponent {});
+        $reported = [];
+
+        app(ExceptionHandler::class)->reportable(function (\Throwable $e) use (&$reported) {
+            $reported[] = $e;
+
+            return false;
+        });
 
         $response = $this->withHeaders(['X-Livewire' => 'true'])
             ->postJson(EndpointResolver::updatePath(), ['components' => [
-                ['snapshot' => $snapshot, 'updates' => [], 'calls' => $calls],
+                ['snapshot' => json_encode($component->snapshot), 'updates' => [], 'calls' => $calls],
             ]]);
 
         $response->assertNotFound();
+        $this->assertEmpty($reported);
     }
 
     public static function malformedCalls()
@@ -89,7 +97,109 @@ class UnitTest extends TestCase
             'missing params' => [[['method' => 'doSomething']]],
             'non-string method' => [[['method' => 123, 'params' => []]]],
             'non-array params' => [[['method' => 'doSomething', 'params' => 'bad']]],
+            'non-array metadata' => [[['method' => '$refresh', 'params' => [], 'metadata' => 'bad']]],
         ];
+    }
+
+    #[DataProvider('invalidMethodNames')]
+    public function test_invalid_method_names_are_rejected_before_hydration($method): void
+    {
+        config()->set('app.debug', false);
+
+        $component = Livewire::test(new class extends TestComponent {});
+        $reported = [];
+        $hydrated = false;
+
+        app(ExceptionHandler::class)->reportable(function (\Throwable $e) use (&$reported) {
+            $reported[] = $e;
+
+            return false;
+        });
+
+        \Livewire\on('hydrate', function () use (&$hydrated) { $hydrated = true; });
+
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [[
+                'snapshot' => json_encode($component->snapshot),
+                'updates' => [],
+                'calls' => [
+                    ['method' => '$refresh', 'params' => []],
+                    ['method' => $method, 'params' => []],
+                ],
+            ]]])
+            ->assertStatus(419);
+
+        $this->assertEmpty($reported);
+        $this->assertFalse($hydrated);
+    }
+
+    public static function invalidMethodNames()
+    {
+        return [
+            'punctuation' => ['|'],
+            'empty' => [''],
+            'leading digit' => ['1save'],
+            'trailing newline' => ["save\n"],
+            'null byte' => ["save\0"],
+        ];
+    }
+
+    public function test_invalid_method_name_remains_diagnostic_in_debug_mode(): void
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(\Livewire\Exceptions\MethodNotFoundException::class);
+
+        Livewire::test(new class extends TestComponent {})->call('|');
+    }
+
+    public function test_plausible_missing_method_is_still_reported(): void
+    {
+        config()->set('app.debug', false);
+
+        $component = Livewire::test(new class extends TestComponent {});
+        $reported = [];
+
+        app(ExceptionHandler::class)->reportable(function (\Throwable $e) use (&$reported) {
+            $reported[] = $e;
+
+            return false;
+        });
+
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [[
+                'snapshot' => json_encode($component->snapshot),
+                'updates' => [],
+                'calls' => [['method' => 'missingAction', 'params' => []]],
+            ]]])
+            ->assertStatus(500);
+
+        $this->assertCount(1, $reported);
+        $this->assertInstanceOf(\Livewire\Exceptions\MethodNotFoundException::class, $reported[0]);
+    }
+
+    public function test_valid_calls_preserve_named_params_magic_actions_and_optional_metadata(): void
+    {
+        config()->set('app.debug', false);
+
+        $component = Livewire::test(new class extends TestComponent {
+            public $name;
+
+            public function enregistrer($name) { $this->name = $name; }
+        });
+
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [[
+                'snapshot' => json_encode($component->snapshot),
+                'updates' => [],
+                'calls' => [
+                    ['method' => 'enregistrer', 'params' => ['name' => 'Taylor']],
+                    ['method' => '$refresh', 'params' => [], 'metadata' => null],
+                    ['method' => '$commit', 'params' => [], 'metadata' => []],
+                ],
+            ]]])
+            ->assertOk()
+            ->assertJsonPath('components.0.snapshot', fn ($snapshot) => json_decode($snapshot, true)['data']['name'] === 'Taylor');
     }
 
     public function test_bad_checksum_returns_419(): void

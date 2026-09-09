@@ -7,6 +7,28 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
+    public static function tweakApplicationHook()
+    {
+        return function () { config()->set('app.debug', false); };
+    }
+
+    public function test_invalid_method_name_shows_the_rejection_dialog()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public function render() { return <<<'HTML'
+                <div>
+                    <button x-on:click="$wire.$call('|')" dusk="invalid">Invalid call</button>
+                </div>
+                HTML;
+            }
+        })
+            ->click('@invalid')
+            ->waitForDialog()
+            ->assertDialogOpened("This page has expired.\nWould you like to refresh the page?")
+            ->dismissDialog()
+            ->assertMissing('#livewire-error');
+    }
+
     public function test_can_register_a_custom_update_endpoint()
     {
         Livewire::setUpdateRoute(function ($handle) {
