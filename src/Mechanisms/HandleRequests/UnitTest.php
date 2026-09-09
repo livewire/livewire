@@ -332,9 +332,64 @@ class UnitTest extends TestCase
                 ],
             ]]);
 
-        $response->assertStatus(419);
-        $this->assertNotEmpty($reported, 'Legitimate TypeError from component method body should be reported.');
+        $response->assertStatus(500);
+        $this->assertCount(1, $reported, 'Legitimate TypeError from component method body should be reported once.');
         $this->assertInstanceOf(\TypeError::class, $reported[0]);
+    }
+
+    #[DataProvider('applicationTypeErrors')]
+    public function test_application_typeerrors_keep_normal_error_handling($phase): void
+    {
+        config()->set('app.debug', false);
+
+        $component = Livewire::test(new class extends TestComponent {
+            public $phase;
+            public $name = '';
+
+            public function mount($phase) { $this->phase = $phase; }
+            public function hydrate() { if ($this->phase === 'hydrate') $this->broken(); }
+            public function updatingName() { if ($this->phase === 'updating') $this->broken(); }
+            public function updatedName() { if ($this->phase === 'updated') $this->broken(); }
+            public function needsArray(array $items) {}
+            public function broken(): int { return 'not-an-int'; }
+
+            public function render()
+            {
+                if ($this->phase === 'render' && $this->name === 'changed') $this->broken();
+
+                return '<div></div>';
+            }
+        }, ['phase' => $phase]);
+
+        $reported = [];
+
+        app(ExceptionHandler::class)->reportable(function (\Throwable $e) use (&$reported) {
+            $reported[] = $e;
+
+            return false;
+        });
+
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [[
+                'snapshot' => json_encode($component->snapshot),
+                'updates' => ['name' => 'changed'],
+                'calls' => $phase === 'argument' ? [['method' => 'needsArray', 'params' => ['not-an-array']]] : [],
+            ]]])
+            ->assertStatus(500);
+
+        $this->assertCount(1, $reported);
+        $this->assertInstanceOf(\TypeError::class, $reported[0]);
+    }
+
+    public static function applicationTypeErrors()
+    {
+        return [
+            ['hydrate'],
+            ['updating'],
+            ['updated'],
+            ['render'],
+            ['argument'],
+        ];
     }
 
     public function test_valid_request_returns_200(): void

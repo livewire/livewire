@@ -12,6 +12,23 @@ class BrowserTest extends \Tests\BrowserTestCase
         return function () { config()->set('app.debug', false); };
     }
 
+    public function test_application_typeerror_shows_the_error_modal()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public function bug(): int { return 'not-an-int'; }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="bug" dusk="bug">Broken action</button>
+                </div>
+                HTML;
+            }
+        })
+            ->click('@bug')
+            ->waitFor('#livewire-error')
+            ->assertVisible('#livewire-error');
+    }
+
     public function test_invalid_method_name_shows_the_rejection_dialog()
     {
         Livewire::visit(new class extends \Livewire\Component {

@@ -16,6 +16,39 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function test_typeerror_in_lazy_mount_is_still_reported()
+    {
+        config()->set('app.debug', false);
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        $component = Livewire::test(new #[Lazy] class extends Component {
+            public function mount() { strlen([]); }
+            public function placeholder() { return '<div>Loading...</div>'; }
+            public function render() { return '<div>Loaded</div>'; }
+        });
+
+        preg_match("/__lazyLoad\('([^']+)'\)/", html_entity_decode($component->html()), $matches);
+
+        $reported = [];
+
+        app(ExceptionHandler::class)->reportable(function (\Throwable $e) use (&$reported) {
+            $reported[] = $e;
+
+            return false;
+        });
+
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [[
+                'snapshot' => json_encode($component->snapshot),
+                'updates' => [],
+                'calls' => [['method' => '__lazyLoad', 'params' => [$matches[1]]]],
+            ]]])
+            ->assertStatus(500);
+
+        $this->assertCount(1, $reported);
+        $this->assertInstanceOf(\TypeError::class, $reported[0]);
+    }
+
     #[DataProvider('invalidLazyLoadParams')]
     public function test_invalid_lazy_load_encoding_is_not_reported($params)
     {

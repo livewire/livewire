@@ -7,7 +7,6 @@ use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Debug\ExceptionHandler;
-use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class RequestBroker
 {
@@ -29,9 +28,7 @@ class RequestBroker
         $this->withoutExceptionHandling([HttpException::class, AuthorizationException::class])->withoutMiddleware();
 
         try {
-            return app(HandleRequests::class)->temporarilyPropagateExceptions(
-                fn () => $callback($this),
-            );
+            return $callback($this);
         } finally {
             $this->app->instance(ExceptionHandler::class, $cachedHandler);
 
