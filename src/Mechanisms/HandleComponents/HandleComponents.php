@@ -614,9 +614,10 @@ class HandleComponents extends Mechanism
 
     protected function isValidComponentMethodName(mixed $method): bool
     {
-        // PHP method name: letter/underscore/high-byte, then those plus digits.
+        // PHP method name, or Livewire magic actions like "$refresh" / "$set" / "$commit".
+        // Rejects probe junk like "|".
         return is_string($method)
-            && preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/', $method) === 1;
+            && preg_match('/^\$?[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/', $method) === 1;
     }
 
     protected function shouldSkipRenderAfterCalls($root, $calls)

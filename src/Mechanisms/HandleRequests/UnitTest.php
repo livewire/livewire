@@ -239,6 +239,33 @@ class UnitTest extends TestCase
         })->call('missingAction');
     }
 
+    public function test_magic_dollar_call_methods_are_still_allowed(): void
+    {
+        config()->set('app.debug', false);
+
+        $testable = Livewire::test(new class extends TestComponent {
+            public $name = 'foo';
+
+            public function render()
+            {
+                return '<div>{{ $name }}</div>';
+            }
+        });
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                [
+                    'snapshot' => json_encode($testable->snapshot),
+                    'updates' => [],
+                    'calls' => [
+                        ['method' => '$refresh', 'params' => [], 'metadata' => []],
+                    ],
+                ],
+            ]]);
+
+        $response->assertOk();
+    }
+
     public function test_tampered_property_type_is_not_reported(): void
     {
         config()->set('app.debug', false);
