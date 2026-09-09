@@ -1,6 +1,6 @@
-import { replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
+import { pushUrl, replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
-import { createUrlObjectFromString, extractDestinationFromLink, isSameOrigin, linkShouldBeHandledNatively, visitNatively, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
+import { createUrlObjectFromString, extractDestinationFromLink, isSameOrigin, isSamePageFragment, linkShouldBeHandledNatively, visitNatively, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
 import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
 import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
 import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
@@ -50,7 +50,7 @@ export default function (Alpine) {
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
 
-            if (linkShouldBeHandledNatively(el, destination)) return
+            if (linkShouldBeHandledNatively(el, destination) || isSamePageFragment(destination)) return
 
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
@@ -62,7 +62,7 @@ export default function (Alpine) {
         whenThisLinkIsPressed(el, (whenItIsReleased) => {
             let destination = extractDestinationFromLink(el)
 
-            prefetchHtml(destination, (html, finalDestination) => {
+            if (! isSamePageFragment(destination)) prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
             }, () => {
                 showProgressBar && finishAndHideProgressBar()
@@ -82,6 +82,24 @@ export default function (Alpine) {
 
     function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
         let navigation = startNavigation()
+
+        if (shouldPushToHistoryState && isSamePageFragment(destination)) {
+            navigation.ready()
+
+            storeScrollInformationInHtmlBeforeNavigatingAway()
+            updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
+
+            if (destination.href !== window.location.href) {
+                pushUrl(destination, document.documentElement.outerHTML, { sameDocument: true })
+            }
+
+            restoreScrollPositionOrScrollToTop({ scrollToFragment: ! preserveScroll })
+
+            fireEventForOtherLibrariesToHookInto('alpine:navigated')
+            navigation.finish()
+
+            return
+        }
 
         showProgressBar && showAndStartProgressBar()
 
@@ -250,6 +268,19 @@ export default function (Alpine) {
                     })
                 })
             })
+        },
+        (destination, snapshotHtml, currentPageUrl, currentPageKey) => {
+            let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
+                url: destination, history: true, cached: true,
+            })
+
+            if (prevented) return
+
+            storeScrollInformationInHtmlBeforeNavigatingAway()
+            updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageKey, currentPageUrl)
+            restoreScrollPositionOrScrollToTop({ snapshotHtml })
+
+            fireEventForOtherLibrariesToHookInto('alpine:navigated')
         },
     )
 
