@@ -843,6 +843,60 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_navigate_scrolls_to_fragment_targets()
+    {
+        $this->browse(function ($browser) {
+            foreach (['comments', 'comments%3Areplies', '100%', 'legacy-comments'] as $index => $fragment) {
+                $browser
+                    ->visit('/first-scroll')
+                    ->waitForNavigate()->click('@link.to.fragment.'.$index)
+                    ->assertFragmentIs($fragment)
+                    ->assertInViewPort('@second-target');
+            }
+        });
+    }
+
+    public function test_navigate_with_an_unknown_fragment_scrolls_to_top()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->waitForNavigate()->click('@link.to.fragment.4')
+                ->assertFragmentIs('missing')
+                ->assertScript('window.scrollY', 0);
+        });
+    }
+
+    public function test_navigate_fragment_does_not_override_history_scroll_restoration()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->waitForNavigate()->click('@link.to.fragment.0')
+                ->assertInViewPort('@second-target');
+
+            $browser->script('window.scrollTo(0, 0)');
+
+            $browser
+                ->assertScript('window.scrollY', 0)
+                ->waitForNavigate()->back()
+                ->waitForNavigate()->forward()
+                ->assertFragmentIs('comments')
+                ->assertScript('window.scrollY', 0);
+        });
+    }
+
+    public function test_navigate_fragment_respects_preserve_scroll()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->waitForNavigate()->click('@link.to.fragment.with.preserve.scroll')
+                ->assertFragmentIs('comments')
+                ->assertScript('window.scrollY', 0);
+        });
+    }
+
     public function test_navigate_scrolls_to_top_and_back_preserves_scroll()
     {
         $this->browse(function ($browser) {
@@ -2221,6 +2275,14 @@ class FirstScrollPage extends Component
         <div>
             <div>On first</div>
 
+            <div style="position: fixed; top: 0; right: 0;">
+                <a href="/second-scroll#comments" wire:navigate.preserve-scroll dusk="link.to.fragment.with.preserve.scroll">Preserve scroll</a>
+
+                @foreach (['comments', 'comments%3Areplies', '100%', 'legacy-comments', 'missing'] as $fragment)
+                    <a href="/second-scroll#{{ $fragment }}" wire:navigate dusk="link.to.fragment.{{ $loop->index }}">Go to fragment</a>
+                @endforeach
+            </div>
+
             <div style="height: 100vh;">spacer</div>
 
             <div dusk="first-target">below the fold</div>
@@ -2332,7 +2394,12 @@ class SecondScrollPage extends Component
 
             <div style="height: 100vh;">spacer</div>
 
-            <div dusk="second-target">below the fold</div>
+            <div id="comments" dusk="second-target">
+                <span id="comments:replies">Replies</span>
+                <span id="100%">Percentage</span>
+                <a name="legacy-comments">Legacy comments</a>
+                below the fold
+            </div>
 
             <div style="height: 100vh;">spacer</div>
         </div>
