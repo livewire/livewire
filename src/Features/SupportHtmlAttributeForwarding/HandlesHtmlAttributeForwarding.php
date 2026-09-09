@@ -24,4 +24,9 @@ trait HandlesHtmlAttributeForwarding
             fn ($value) => is_scalar($value) || is_null($value) || $value instanceof Htmlable
         );
     }
+
+    public function getNonHtmlAttributes(): array
+    {
+        return array_diff_key($this->htmlAttributes, $this->getHtmlAttributes());
+    }
 }
