@@ -6,8 +6,10 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Stringable;
 use Livewire\Component;
+use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Form;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -266,6 +268,35 @@ class UnitTest extends \Tests\TestCase
         })
         ->call('refresh')
         ->assertSetStrict('refreshed', true);
+    }
+
+    public function test_invalid_call_method_name_returns_419_on_production()
+    {
+        config()->set('app.debug', false);
+
+        $component = Livewire::test(TestComponent::class);
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                [
+                    'snapshot' => json_encode($component->snapshot),
+                    'updates' => [],
+                    'calls' => [
+                        ['method' => '|', 'params' => [], 'metadata' => []],
+                    ],
+                ],
+            ]]);
+
+        $response->assertStatus(419);
+    }
+
+    public function test_invalid_call_method_name_throws_method_not_found_on_debug_mode()
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(MethodNotFoundException::class);
+
+        Livewire::test(TestComponent::class)->call('missingAction');
     }
 }
 
