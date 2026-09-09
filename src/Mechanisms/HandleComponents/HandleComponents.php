@@ -532,11 +532,25 @@ class HandleComponents extends Mechanism
         }
 
         $returns = [];
+
+        // Validate method names before any call bookkeeping — probes send "|", null, arrays, etc.
+        foreach ($calls as $call) {
+            $method = $call['method'] ?? null;
+
+            if (! $this->isValidComponentMethodName($method)) {
+                if (config('app.debug')) {
+                    throw new MethodNotFoundException(is_string($method) ? $method : get_debug_type($method));
+                }
+
+                abort(419);
+            }
+        }
+
         $shouldSkipRender = $this->shouldSkipRenderAfterCalls($root, $calls);
 
         foreach ($calls as $idx => $call) {
             $method = $call['method'];
-            $params = $call['params'];
+            $params = $call['params'] ?? [];
             $metadata = $call['metadata'] ?? [];
 
             $earlyReturnCalled = false;
@@ -596,6 +610,13 @@ class HandleComponents extends Mechanism
         }
 
         $componentContext->addEffect('returns', $returns);
+    }
+
+    protected function isValidComponentMethodName(mixed $method): bool
+    {
+        // PHP method name: letter/underscore/high-byte, then those plus digits.
+        return is_string($method)
+            && preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/', $method) === 1;
     }
 
     protected function shouldSkipRenderAfterCalls($root, $calls)

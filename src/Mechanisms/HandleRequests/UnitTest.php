@@ -171,6 +171,74 @@ class UnitTest extends TestCase
         $response->assertStatus(419);
     }
 
+    public function test_invalid_call_method_name_returns_419(): void
+    {
+        config()->set('app.debug', false);
+
+        $testable = Livewire::test(new class extends TestComponent {
+            public function render()
+            {
+                return '<div></div>';
+            }
+        });
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                [
+                    'snapshot' => json_encode($testable->snapshot),
+                    'updates' => [],
+                    'calls' => [
+                        ['method' => '|', 'params' => [], 'metadata' => []],
+                    ],
+                ],
+            ]]);
+
+        $response->assertStatus(419);
+    }
+
+    public function test_invalid_lazy_load_param_returns_419(): void
+    {
+        config()->set('app.debug', false);
+        \Livewire\Features\SupportLazyLoading\SupportLazyLoading::$disableWhileTesting = false;
+
+        $testable = Livewire::test(new #[\Livewire\Attributes\Lazy] class extends TestComponent {
+            public function placeholder()
+            {
+                return '<div>Loading...</div>';
+            }
+
+            public function render()
+            {
+                return '<div></div>';
+            }
+        });
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                [
+                    'snapshot' => json_encode($testable->snapshot),
+                    'updates' => [],
+                    'calls' => [
+                        ['method' => '__lazyLoad', 'params' => ['|'], 'metadata' => []],
+                    ],
+                ],
+            ]]);
+
+        $response->assertStatus(419);
+    }
+
+    public function test_valid_missing_call_method_still_throws_method_not_found(): void
+    {
+        $this->expectException(\Livewire\Exceptions\MethodNotFoundException::class);
+
+        Livewire::test(new class extends TestComponent {
+            public function render()
+            {
+                return '<div></div>';
+            }
+        })->call('missingAction');
+    }
+
     public function test_tampered_property_type_is_not_reported(): void
     {
         config()->set('app.debug', false);
