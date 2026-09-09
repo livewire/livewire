@@ -16,6 +16,56 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 class UnitTest extends \Tests\TestCase
 {
+    #[DataProvider('invalidLazyLoadParams')]
+    public function test_invalid_lazy_load_encoding_is_not_reported($params)
+    {
+        config()->set('app.debug', false);
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        $component = Livewire::test(BasicLazyComponent::class);
+        $reported = [];
+
+        app(ExceptionHandler::class)->reportable(function (\Throwable $e) use (&$reported) {
+            $reported[] = $e;
+
+            return false;
+        });
+
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [[
+                'snapshot' => json_encode($component->snapshot),
+                'updates' => [],
+                'calls' => [['method' => '__lazyLoad', 'params' => $params]],
+            ]]])
+            ->assertStatus(419);
+
+        $this->assertEmpty($reported);
+    }
+
+    public static function invalidLazyLoadParams()
+    {
+        return [
+            'missing' => [[]],
+            'null' => [[null]],
+            'integer' => [[42]],
+            'array' => [[[]]],
+            'invalid base64' => [['|']],
+        ];
+    }
+
+    public function test_invalid_base64_characters_are_not_discarded_from_a_lazy_snapshot()
+    {
+        config()->set('app.debug', true);
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        $component = Livewire::test(BasicLazyComponent::class);
+        preg_match("/__lazyLoad\('([^']+)'\)/", html_entity_decode($component->html()), $matches);
+
+        $this->expectException(CorruptComponentPayloadException::class);
+
+        $component->call('__lazyLoad', $matches[1].'|');
+    }
+
     #[DataProvider('malformedSnapshots')]
     public function test_malformed_lazy_snapshot_is_not_reported($snapshot)
     {
