@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Stringable;
@@ -270,7 +271,7 @@ class UnitTest extends \Tests\TestCase
         ->assertSetStrict('refreshed', true);
     }
 
-    public function test_invalid_call_method_name_returns_419_on_production()
+    public function test_invalid_call_method_name_returns_419_when_debug_is_disabled()
     {
         config()->set('app.debug', false);
 
@@ -290,13 +291,47 @@ class UnitTest extends \Tests\TestCase
         $response->assertStatus(419);
     }
 
-    public function test_invalid_call_method_name_throws_method_not_found_on_debug_mode()
+    public function test_method_not_found_exception_is_not_reported_when_debug_is_disabled()
+    {
+        config()->set('app.debug', false);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (MethodNotFoundException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new MethodNotFoundException('invalidAction'));
+
+        $this->assertEmpty($reported);
+    }
+
+    public function test_invalid_call_method_name_throws_method_not_found_when_debug_is_enabled()
     {
         config()->set('app.debug', true);
 
         $this->expectException(MethodNotFoundException::class);
 
         Livewire::test(TestComponent::class)->call('missingAction');
+    }
+
+    public function test_method_not_found_exception_is_reported_when_debug_is_enabled()
+    {
+        config()->set('app.debug', true);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (MethodNotFoundException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new MethodNotFoundException('invalidAction'));
+
+        $this->assertCount(1, $reported);
     }
 }
 
