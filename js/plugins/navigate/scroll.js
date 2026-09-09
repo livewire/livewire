@@ -26,9 +26,34 @@ export function restoreScrollPositionOrScrollToTop() {
 
     queueMicrotask(() => {
         queueMicrotask(() => { // Double microtask here to make sure scrolling restoration is the LAST thing to happen. (Even after Alpine's x-init functions)...
+            let shouldScrollToFragment = ! document.body.hasAttribute('data-scroll-x')
+
             scroll(document.body)
 
             document.querySelectorAll(['[x-navigate\\:scroll]', '[wire\\:navigate\\:scroll]']).forEach(scroll)
+
+            if (shouldScrollToFragment) {
+                getFragmentTarget()?.scrollIntoView({ behavior: 'instant' })
+            }
         })
     })
+}
+
+function getFragmentTarget() {
+    let fragment = window.location.hash.substring(1)
+
+    if (! fragment) return
+
+    let target = document.getElementById(fragment)
+
+    if (target) return target
+
+    try {
+        fragment = decodeURIComponent(fragment)
+    } catch (e) {
+        // A malformed escape sequence can still be a valid element ID or name.
+    }
+
+    return document.getElementById(fragment)
+        || Array.from(document.getElementsByName(fragment)).find(el => el.tagName === 'A')
 }
