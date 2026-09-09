@@ -416,7 +416,11 @@ class HandleComponents extends Mechanism
         $expanded = [];
 
         foreach ($updates as $path => $value) {
-            if (is_array($value) && property_exists($component, $path) && $component->$path instanceof Form) {
+            if (is_array($value)
+                && property_exists($component, $path)
+                && ! Utils::propertyIsTypedAndUninitialized($component, $path)
+                && $component->$path instanceof Form
+            ) {
                 foreach ($value as $key => $child) {
                     $expanded["{$path}.{$key}"] = $child;
                 }
