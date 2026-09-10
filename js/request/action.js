@@ -30,7 +30,11 @@ export default class Action {
             this.promiseResolution = { resolve, reject }
         })
 
-        this.promise._livewireAction = this
+        // Livewire surfaces failed requests itself (error modal, expired-page dialog,
+        // interceptors), so a caller that discards this promise shouldn't also get an
+        // "Uncaught (in promise)". This marks it handled without hiding the rejection
+        // from callers that await it...
+        this.promise.catch(() => {})
     }
 
     cancel() {

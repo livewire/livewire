@@ -27,7 +27,7 @@ function registerListeners(component, listeners) {
                 setNextActionOrigin({ el: e.target })
             }
 
-            dispatchToComponent(component, name, e.detail)
+            component.$wire.call('__dispatch', name, e.detail || {})
         }
 
         window.addEventListener(name, handler)
@@ -46,30 +46,8 @@ function registerListeners(component, listeners) {
 
             if (e.__livewire) e.__livewire.receivedBy.push(component.id)
 
-            dispatchToComponent(component, name, e.detail)
+            component.$wire.call('__dispatch', name, e.detail || {})
         })
     })
-}
-
-// A dispatched event has no caller to hand a failed request to. The request
-// error handling (interceptors, the expired-page dialog, the error modal) has
-// already surfaced the failure, so don't let the rejected action promise escape
-// as an "Uncaught (in promise)" error on top of it...
-function dispatchToComponent(component, name, params) {
-    component.$wire.call('__dispatch', name, params || {}).catch(error => {
-        if (isRequestFailure(error)) return
-
-        throw error
-    })
-}
-
-// The value a request rejects its action promises with (see request/message.js)...
-function isRequestFailure(error) {
-    return error !== null
-        && typeof error === 'object'
-        && 'status' in error
-        && 'body' in error
-        && 'json' in error
-        && 'errors' in error
 }
 
