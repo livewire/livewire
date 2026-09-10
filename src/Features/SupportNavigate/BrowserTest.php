@@ -2009,6 +2009,71 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->mouseover('@title');
     }
 
+    public function test_invalidated_prefetch_response_does_not_complete_a_new_prefetch_for_the_same_uri()
+    {
+        Livewire::visit(PageWithPrefetchOnHover::class)
+            ->assertSee('Prefetch clear page')
+            ->tap(fn (Browser $browser) => $browser->script(<<<'JS'
+                window.__originalFetch = window.fetch
+                window.__releasePrefetch = {}
+                window.__requestCount = 0
+
+                window.fetch = function (url, options) {
+                    let pathname = new URL(url, window.location.origin).pathname
+
+                    if (pathname === '/second') {
+                        window.__requestCount++
+
+                        let request = window.__requestCount
+
+                        return new Promise((resolve, reject) => {
+                            window.__releasePrefetch[request] = () => {
+                                window.__originalFetch(url, options)
+                                    .then(resolve)
+                                    .catch(reject)
+                            }
+                        })
+                    }
+
+                    return window.__originalFetch(url, options)
+                }
+            JS))
+
+            // A.
+            ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+            ->waitUntil('window.__releasePrefetch[1] !== undefined')
+            ->mouseover('@title')
+
+            // Invalidate A.
+            ->waitForLivewire()->click('@increment')
+
+            // B.
+            ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+            ->waitUntil('window.__releasePrefetch[2] !== undefined')
+            ->mouseover('@title')
+
+            // A completes after B replaced it.
+            ->tap(fn (Browser $browser) => $browser->script(
+                'window.__releasePrefetch[1]()'
+            ))
+
+            // Start navigation. It should be waiting on B.
+            ->click('@link.to.second')
+
+            // Give A's callback time to run.
+            ->pause(250)
+
+            // We must still be on the original page.
+            ->assertSee('Prefetch clear page')
+
+            // B is the request that should unblock navigation.
+            ->tap(fn (Browser $browser) => $browser->script(
+                'window.__releasePrefetch[2]()'
+            ))
+
+            ->waitForText('On second');
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;

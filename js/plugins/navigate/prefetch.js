@@ -37,10 +37,8 @@ export function prefetchHtml(destination, callback, errorCallback) {
     prefetches[uri] = state
 
     performFetch(uri, (html, routedUri, status) => {
-        let state = prefetches[uri]
-
         // The prefetch may have been invalidated while its request was in flight.
-        if (! state) return
+        if (prefetches[uri] !== state) return
 
         storeCurrentPageStatus(status)
 
@@ -59,10 +57,8 @@ export function prefetchHtml(destination, callback, errorCallback) {
 
         callback(html, routedUri)
     }, () => {
-        let state = prefetches[uri]
-
         // The prefetch may have been invalidated while its request was in flight.
-        if (! state) return
+        if (prefetches[uri] !== state) return
 
         let whenFailed = state.whenFailed
 
