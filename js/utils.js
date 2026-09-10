@@ -622,13 +622,7 @@ export function cloneScriptTag(el) {
     script.async = el.async
 
     for (let attr of el.attributes) {
-        if (attr.name === 'nonce') {
-            // Browsers clear .nonce from DOMParser-parsed elements,
-            // so fall back to the page's original nonce...
-            script.nonce = getNonce() || el.nonce
-        } else {
-            script.setAttribute(attr.name, attr.value)
-        }
+        script.setAttribute(attr.name, attr.value)
     }
 
     return script
