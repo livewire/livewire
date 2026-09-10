@@ -87,6 +87,13 @@ export function isSameOrigin(destination) {
     return !! destination && destination.origin === window.location.origin
 }
 
+export function isSamePageFragment(destination) {
+    return isSameOrigin(destination)
+        && destination.pathname === window.location.pathname
+        && destination.search === window.location.search
+        && destination.href.includes('#')
+}
+
 export function visitNatively(destination) {
     window.location.href = destination.href
 }
