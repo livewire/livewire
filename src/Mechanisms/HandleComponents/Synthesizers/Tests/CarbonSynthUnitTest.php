@@ -79,7 +79,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    public function test_malformed_carbon_update_throws_type_error_on_debug_mode()
+    public function test_malformed_carbon_update_throws_type_error_when_debug_enabled()
     {
         config()->set('app.debug', true);
 
@@ -90,7 +90,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
             ->assertOk();
     }
 
-    public function test_malformed_synthesized_carbon_update_throws_type_error_on_debug_mode()
+    public function test_malformed_synthesized_carbon_update_throws_type_error_when_debug_enabled()
     {
         config()->set('app.debug', true);
 
@@ -101,7 +101,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
             ->assertOk();
     }
 
-    public function test_malformed_carbon_update_returns_419_on_production()
+    public function test_malformed_carbon_update_returns_419_when_debug_disabled()
     {
         config()->set('app.debug', false);
 
@@ -110,7 +110,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
             ->assertStatus(419);
     }
 
-    public function test_malformed_synthesized_carbon_update_returns_419_on_production()
+    public function test_malformed_synthesized_carbon_update_returns_419_when_debug_disabled()
     {
         config()->set('app.debug', false);
 
