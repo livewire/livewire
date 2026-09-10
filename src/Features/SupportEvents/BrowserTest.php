@@ -611,4 +611,29 @@ class BrowserTest extends BrowserTestCase
             ->click('@button')
             ->waitForTextIn('@output', 'baz');
     }
+
+    public function test_a_failed_listener_request_does_not_leave_an_unhandled_promise_rejection()
+    {
+        Livewire::visit(new class extends Component {
+            #[On('foo')]
+            public function onFoo()
+            {
+                throw new \Exception('The listener failed.');
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button dusk="button" @click="$dispatch('foo')">Dispatch</button>
+                </div>
+                HTML;
+            }
+        })
+            ->tap(fn ($browser) => $browser->script('window.unhandledRejections = 0; window.addEventListener("unhandledrejection", () => window.unhandledRejections++)'))
+            ->click('@button')
+            ->waitFor('#livewire-error')
+            ->pause(250)
+            ->assertScript('window.unhandledRejections', 0);
+    }
 }

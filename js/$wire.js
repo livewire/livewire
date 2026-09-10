@@ -197,7 +197,7 @@ wireProperty('$js', (component) => {
     })
 })
 
-wireProperty('$set', (component) => async (property, value, live = true) => {
+wireProperty('$set', (component) => (property, value, live = true) => {
     dataSet(component.reactive, property, value)
 
     // If "live", send a request, queueing the property update to happen first
@@ -261,8 +261,8 @@ wireProperty('$interceptRequest', (component) => (actionNameOrCallback, maybeCal
 
 wireProperty('$errors', (component) => getErrorsObject(component))
 
-wireProperty('$call', (component) => async (method, ...params) => {
-    return await component.$wire[method](...params)
+wireProperty('$call', (component) => (method, ...params) => {
+    return component.$wire[method](...params)
 })
 
 wireProperty('$island', (component) => (name, options = {}) => {

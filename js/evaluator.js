@@ -68,15 +68,7 @@ export function evaluateActionExpression(el, expression, options = {}) {
     let contextualExpression = contextualizeExpression(expression, el, ! isEvaluatingReactiveExpression())
 
     try {
-        let result = Alpine.evaluateRaw(el, contextualExpression, options)
-
-        // Silently catch Livewire request failures. These are handled by
-        // Livewire at the request level...
-        if (result instanceof Promise && result._livewireAction) {
-            result.catch(() => {})
-        }
-
-        return result
+        return Alpine.evaluateRaw(el, contextualExpression, options)
     } catch (error) {
         reportExpressionError(error, expression, el)
     }
