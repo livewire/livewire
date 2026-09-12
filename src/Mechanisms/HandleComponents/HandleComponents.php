@@ -330,12 +330,14 @@ class HandleComponents extends Mechanism
 
             $viewContext = new ViewContext;
 
-            $html = $view->render(function ($view) use ($viewContext) {
-                // Extract leftover slots, sections, and pushes before they get flushed...
-                $viewContext->extractFromEnvironment($view->getFactory());
-            });
-
-            $revertA(); $revertB();
+            try {
+                $html = $view->render(function ($view) use ($viewContext) {
+                    // Extract leftover slots, sections, and pushes before they get flushed...
+                    $viewContext->extractFromEnvironment($view->getFactory());
+                });
+            } finally {
+                $revertA(); $revertB();
+            }
 
             $html = Utils::insertAttributesIntoHtmlRoot($html, [
                 'wire:id' => $component->getId(),
@@ -381,9 +383,11 @@ class HandleComponents extends Mechanism
     {
         array_push(static::$renderStack, $component);
 
-        return tap($callback(), function () {
+        try {
+            return $callback();
+        } finally {
             array_pop(static::$renderStack);
-        });
+        }
     }
 
     protected function updateProperties($component, $updates, $data, $context)
