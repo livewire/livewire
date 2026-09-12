@@ -2,12 +2,15 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Stringable;
 use Livewire\Component;
+use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Form;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -266,6 +269,69 @@ class UnitTest extends \Tests\TestCase
         })
         ->call('refresh')
         ->assertSetStrict('refreshed', true);
+    }
+
+    public function test_invalid_call_method_name_returns_419_when_debug_is_disabled()
+    {
+        config()->set('app.debug', false);
+
+        $component = Livewire::test(TestComponent::class);
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                [
+                    'snapshot' => json_encode($component->snapshot),
+                    'updates' => [],
+                    'calls' => [
+                        ['method' => '|', 'params' => [], 'metadata' => []],
+                    ],
+                ],
+            ]]);
+
+        $response->assertStatus(419);
+    }
+
+    public function test_method_not_found_exception_is_not_reported_when_debug_is_disabled()
+    {
+        config()->set('app.debug', false);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (MethodNotFoundException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new MethodNotFoundException('invalidAction'));
+
+        $this->assertEmpty($reported);
+    }
+
+    public function test_invalid_call_method_name_throws_method_not_found_when_debug_is_enabled()
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(MethodNotFoundException::class);
+
+        Livewire::test(TestComponent::class)->call('missingAction');
+    }
+
+    public function test_method_not_found_exception_is_reported_when_debug_is_enabled()
+    {
+        config()->set('app.debug', true);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (MethodNotFoundException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new MethodNotFoundException('invalidAction'));
+
+        $this->assertCount(1, $reported);
     }
 }
 
