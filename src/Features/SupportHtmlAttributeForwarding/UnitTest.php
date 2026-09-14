@@ -193,6 +193,89 @@ class UnitTest extends TestCase
         $this->assertStringNotContainsString('first@example.com', $html);
         $this->assertStringNotContainsString('pageFilters', $html);
     }
+
+    public function test_non_html_attributes_are_available_to_blade_props()
+    {
+        Livewire::component('alert', AlertWithProps::class);
+
+        $html = Livewire::mount('alert', [
+            'rows' => [
+                ['id' => 1, 'name' => 'Alice'],
+                ['id' => 2, 'name' => 'Bob'],
+            ],
+            'id' => 'rows-component',
+        ]);
+
+        $this->assertStringContainsString('Alice', $html);
+        $this->assertStringContainsString('Bob', $html);
+        $this->assertStringContainsString('id="rows-component"', $html);
+        $this->assertStringNotContainsString('rows=', $html);
+    }
+
+    public function test_non_html_attributes_are_available_as_blade_props_without_default()
+    {
+        Livewire::component('alert', AlertWithPropsWithoutDefault::class);
+
+        $html = Livewire::mount('alert', [
+            'rows' => [
+                ['id' => 1, 'name' => 'Alice'],
+            ],
+            'id' => 'rows-component',
+        ]);
+
+        $this->assertStringContainsString('Alice', $html);
+        $this->assertStringContainsString('id="rows-component"', $html);
+        $this->assertStringNotContainsString('rows=', $html);
+    }
+
+    public function test_html_attributes_are_forwarded_while_non_html_attributes_are_available_as_blade_props()
+    {
+        Livewire::component('alert', AlertWithProps::class);
+
+        $html = Livewire::mount('alert', [
+            'rows' => [
+                ['id' => 1, 'name' => 'Alice'],
+            ],
+            'id' => 'rows-component',
+        ]);
+
+        $this->assertStringContainsString('Alice', $html);
+        $this->assertStringContainsString('id="rows-component"', $html);
+        $this->assertStringNotContainsString('rows="', $html);
+    }
+
+    public function test_non_html_attributes_are_available_as_blade_props_in_placeholder()
+    {
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        Livewire::component('alert', LazyAlertWithProps::class);
+
+        $html = Livewire::mount('alert', [
+            'lazy' => true,
+            'rows' => [
+                ['id' => 1, 'name' => 'Alice'],
+            ],
+            'id' => 'rows-component',
+        ]);
+
+        $this->assertStringContainsString('Alice', $html);
+        $this->assertStringContainsString('id="rows-component"', $html);
+        $this->assertStringNotContainsString('rows=', $html);
+    }
+
+    public function test_eloquent_model_are_available_as_blade_props_without_being_dehydrated()
+    {
+        Livewire::component('alert', AlertWithRecordProps::class);
+
+        $html = Livewire::mount('alert', [
+            'record' => RecordModel::first(),
+            'id' => 'rows-component',
+        ]);
+
+        $this->assertStringContainsString('First User', $html);
+        $this->assertStringContainsString('id="rows-component"', $html);
+        $this->assertStringNotContainsString('first@example.com', $html);
+    }
 }
 
 class RecordModel extends Model
@@ -236,6 +319,62 @@ class AlertWithIslandAttributes extends Component
                 <div {{ $attributes }}>Island</div>
             @endisland
         </div>
+        HTML;
+    }
+}
+
+class AlertWithProps extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        @props(['rows' => []])
+        <ul {{ $attributes }}>
+            @foreach ($rows as $row)
+                <li wire:key="{{ $row['id'] }}">{{ $row['name'] }}</li>
+            @endforeach
+        </ul>
+        HTML;
+    }
+}
+
+class AlertWithPropsWithoutDefault extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        @props(['rows'])
+        <div {{ $attributes }}>
+            {{ $rows[0]['name'] }}
+        </div>
+        HTML;
+    }
+}
+
+#[Lazy]
+class LazyAlertWithProps extends Component
+{
+    public function placeholder()
+    {
+        return <<<'HTML'
+        @props(['rows'])
+        <div {{ $attributes }}>{{ $rows[0]['name'] }}</div>
+        HTML;
+    }
+
+    public function render()
+    {
+        return '<div>Alert</div>';
+    }
+}
+
+class AlertWithRecordProps extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        @props(['record'])
+        <div {{ $attributes }}>{{ $record->name }}</div>
         HTML;
     }
 }
