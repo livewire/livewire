@@ -4,19 +4,30 @@ export function storeScrollInformationInHtmlBeforeNavigatingAway() {
     document.body.setAttribute('data-scroll-y', document.body.scrollTop)
 
     document.querySelectorAll(['[x-navigate\\:scroll]', '[wire\\:navigate\\:scroll]']).forEach(el => {
+        // Match saved scroll positions to live containers during fragment history visits.
+        if (! el.hasAttribute('data-scroll-id')) el.setAttribute('data-scroll-id', Math.random())
+
         el.setAttribute('data-scroll-x', el.scrollLeft)
         el.setAttribute('data-scroll-y', el.scrollTop)
     })
 }
 
-export function restoreScrollPositionOrScrollToTop() {
+export function restoreScrollPositionOrScrollToTop({ scrollToFragment = false, snapshotHtml = null } = {}) {
+    let savedElements = snapshotHtml
+        ? new DOMParser().parseFromString(snapshotHtml, 'text/html').querySelectorAll('[data-scroll-id]')
+        : []
+
+    let savedScroll = new Map(Array.from(savedElements, el => [el.getAttribute('data-scroll-id'), el]))
+
     let scroll = el => {
-        if (! el.hasAttribute('data-scroll-x')) {
+        let source = savedScroll.get(el.getAttribute('data-scroll-id')) || el
+
+        if (! source.hasAttribute('data-scroll-x')) {
             window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
         } else {
             el.scrollTo({
-                top: Number(el.getAttribute('data-scroll-y')),
-                left: Number(el.getAttribute('data-scroll-x')),
+                top: Number(source.getAttribute('data-scroll-y')),
+                left: Number(source.getAttribute('data-scroll-x')),
                 behavior: 'instant',
             })
             el.removeAttribute('data-scroll-x')
@@ -32,7 +43,9 @@ export function restoreScrollPositionOrScrollToTop() {
 
             document.querySelectorAll(['[x-navigate\\:scroll]', '[wire\\:navigate\\:scroll]']).forEach(scroll)
 
-            if (shouldScrollToFragment) {
+            if (scrollToFragment && ! window.location.hash) {
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+            } else if (shouldScrollToFragment || scrollToFragment) {
                 getFragmentTarget()?.scrollIntoView({ behavior: 'instant' })
             }
         })
