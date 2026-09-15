@@ -63,6 +63,8 @@ npm run build
 
 ## Contributing a Failing Test
 
+Livewire's own test suite uses PHPUnit and Laravel Dusk. The examples below follow those conventions for contributions to the framework. For testing components in your application, [Pest is recommended](/docs/4.x/testing).
+
 If you're encountering a bug and are unsure about how to solve it, especially given the complexity of the Livewire core, you might be wondering where to start. In such cases, the easiest approach is to contribute a failing test. This way, someone with more experience can assist in identifying and fixing the bug. Nonetheless, we do recommend that you also explore the core to gain a better understanding of how Livewire operates.
 
 Let's take a step-by-step approach.

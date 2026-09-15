@@ -46,10 +46,10 @@ For convenience, you may use the `make:volt` Artisan command to create a new Vol
 php artisan make:volt counter
 ```
 
-By adding the `--test` directive when generating a component, a corresponding test file will also be generated. If you want the associated test to use [Pest](https://pestphp.com/), you should use the `--pest` flag:
+Add the `--pest` flag to generate a corresponding [Pest test](/docs/4.x/testing), the recommended testing format for Livewire 4:
 
 ```bash
-php artisan make:volt counter --test --pest
+php artisan make:volt counter --pest
 ```
 
 
