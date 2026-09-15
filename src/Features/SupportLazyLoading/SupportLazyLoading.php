@@ -148,7 +148,16 @@ class SupportLazyLoading extends ComponentHook
         // Only applies while a lazy load is being resumed.
         if ($this->storeGet('isLazyLoadHydrating') !== true) return;
 
-        [ $encoded ] = $params;
+        $encoded = $params[0] ?? null;
+
+        // Probes send "|" / non-strings instead of a base64 snapshot. Quiet 419 outside debug.
+        if (! $this->lazyLoadParamLooksValid($encoded)) {
+            if (config('app.debug')) {
+                throw new CorruptComponentPayloadException;
+            }
+
+            abort(419);
+        }
 
         $mountParams = $this->resurrectMountParams($encoded);
 
@@ -229,7 +238,7 @@ class SupportLazyLoading extends ComponentHook
     // Rebuild the captured mount params from the container snapshot.
     function resurrectMountParams($encoded)
     {
-        $snapshot = json_decode(base64_decode($encoded), associative: true);
+        $snapshot = json_decode(base64_decode($encoded, strict: true), associative: true);
 
         $this->registerContainerComponent();
 
@@ -249,6 +258,21 @@ class SupportLazyLoading extends ComponentHook
         $hook->setComponent($this->component);
 
         $hook->mount($params);
+    }
+
+    protected function lazyLoadParamLooksValid(mixed $encoded): bool
+    {
+        if (! is_string($encoded) || $encoded === '') {
+            return false;
+        }
+
+        $decoded = base64_decode($encoded, strict: true);
+
+        if ($decoded === false) {
+            return false;
+        }
+
+        return is_array(json_decode($decoded, associative: true));
     }
 
     // A throwaway component used to carry mount params across the round-trip.
