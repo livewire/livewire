@@ -136,6 +136,19 @@ abstract class Component
         return $value;
     }
 
+    function __set($property, $value)
+    {
+        trigger('__set', $this, $property, $value);
+
+        if ($this->hasVirtualProperty($property)) {
+            $this->setVirtualProperty($property, $value);
+
+            return;
+        }
+
+        $this->{$property} = $value;
+    }
+
     function __unset($property)
     {
         trigger('__unset', $this, $property);
