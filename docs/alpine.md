@@ -118,7 +118,13 @@ Here is an example of using Alpine to listen for a "blur" event on an input and 
 </form>
 ```
 
-Typically, you would just use `wire:model.live.blur="title"` in this situation, however, it's helpful for demonstration purposes how you can achieve this using Alpine.
+To call `save()` on blur using a Livewire directive, replace `x-on:blur="$wire.save()"` with `wire:blur="save"`:
+
+```html
+<input wire:model="title" type="text" wire:blur="save">
+```
+
+Using `wire:model.live.blur="title"` instead synchronizes the field's value with the server when it loses focus, but does not call `save()`. See [customizing update timing](/docs/4.x/wire-model#customizing-update-timing) for more about when `wire:model` sends updates.
 
 #### Passing parameters
 
