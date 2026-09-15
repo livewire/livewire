@@ -93,7 +93,8 @@ trait InteractsWithProperties
                 $object = data_get($freshInstance, $objectName, null);
 
                 if (is_object($object)) {
-                    $isInitialized = (new \ReflectionProperty($object, (string) $propertyName))->isInitialized($object);
+                    $isInitialized = property_exists($object, (string) $propertyName)
+                        && (new \ReflectionProperty($object, (string) $propertyName))->isInitialized($object);
                 } elseif (is_array($object)) {
                     $isInitialized = Arr::has($freshInstance->{$objectName}, Utils::afterFirstDot((string) $property));
                 } else {
@@ -108,7 +109,8 @@ trait InteractsWithProperties
                     continue;
                 }
 
-                $isInitialized = (new \ReflectionProperty($freshInstance, (string) $property))->isInitialized($freshInstance);
+                $isInitialized = property_exists($freshInstance, (string) $property)
+                    && (new \ReflectionProperty($freshInstance, (string) $property))->isInitialized($freshInstance);
             }
 
             // Handle resetting properties that are not initialized by default.

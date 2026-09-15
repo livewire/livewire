@@ -183,6 +183,32 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
         $this->assertEquals('baz', $component->pullResult['foo']);
         $this->assertFalse(array_key_exists('bob', $component->pullResult));
     }
+
+    public function test_can_reset_non_existent_property_without_throwing()
+    {
+        $component = Livewire::test(ResetPropertiesComponent::class)
+            ->call('resetKeys', 'nonExistent');
+
+        $this->assertFalse(isset($component->nonExistent));
+    }
+
+    public function test_can_reset_dynamic_property()
+    {
+        $component = Livewire::test(ResetPropertiesDynamicPropertyComponent::class)
+            ->call('setDynamic', 'dynamicProp', 'hello')
+            ->assertSetStrict('dynamicProp', 'hello')
+            ->call('resetKeys', 'dynamicProp');
+
+        $this->assertFalse(isset($component->dynamicProp));
+    }
+
+    public function test_can_reset_nested_non_existent_property_on_object()
+    {
+        $component = Livewire::test(ResetPropertiesComponentWithObject::class)
+            ->call('resetKeys', 'user.nonExistent');
+
+        $this->assertFalse(isset($component->user->nonExistent));
+    }
 }
 
 class ResetPropertiesComponent extends TestComponent
@@ -224,5 +250,29 @@ class ResetPropertiesComponent extends TestComponent
     public function proxyPull(...$args)
     {
         $this->pullResult = $this->pull(...$args);
+    }
+}
+
+#[\AllowDynamicProperties]
+class ResetPropertiesDynamicPropertyComponent extends ResetPropertiesComponent
+{
+    public function setDynamic($key, $val)
+    {
+        $this->{$key} = $val;
+    }
+}
+
+class ResetPropertiesComponentWithObject extends TestComponent
+{
+    public $user;
+
+    public function mount()
+    {
+        $this->user = new \stdClass;
+    }
+
+    public function resetKeys($keys)
+    {
+        $this->reset($keys);
     }
 }
