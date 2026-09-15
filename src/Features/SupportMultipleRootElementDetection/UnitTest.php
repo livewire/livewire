@@ -171,6 +171,46 @@ class UnitTest extends TestCase
         $this->assertTrue(true);
     }
 
+    function test_null_or_empty_markup_does_not_throw_value_error_or_deprecation()
+    {
+        config()->set('app.debug', true);
+
+        set_error_handler(function ($severity, $message) {
+            throw new \ErrorException($message, 0, $severity);
+        }, E_DEPRECATED | E_WARNING);
+
+        try {
+            $count1 = (new SupportMultipleRootElementDetection)->getRootElementCount(null);
+            $count2 = (new SupportMultipleRootElementDetection)->getRootElementCount('');
+            $count3 = (new SupportMultipleRootElementDetection)->getRootElementCount('   ');
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertSame(0, $count1);
+        $this->assertSame(0, $count2);
+        $this->assertSame(0, $count3);
+    }
+
+    function test_comment_or_script_only_markup_does_not_trigger_warnings()
+    {
+        config()->set('app.debug', true);
+
+        set_error_handler(function ($severity, $message) {
+            throw new \ErrorException($message, 0, $severity);
+        }, E_WARNING);
+
+        try {
+            $commentCount = (new SupportMultipleRootElementDetection)->getRootElementCount('<!-- only a comment -->');
+            $scriptCount = (new SupportMultipleRootElementDetection)->getRootElementCount('<script>console.log("test")</script>');
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertSame(0, $commentCount);
+        $this->assertSame(0, $scriptCount);
+    }
+
     function test_dont_throw_error_in_production_so_that_there_is_no_perf_penalty()
     {
         config()->set('app.debug', false);
