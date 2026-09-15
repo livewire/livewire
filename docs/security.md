@@ -385,3 +385,11 @@ This checksum is then used on the next network request to verify that the snapsh
 If Livewire finds a checksum mismatch, it will throw a `CorruptComponentPayloadException` and the request will fail.
 
 This protects against any form of malicious tampering that would otherwise result in granting users the ability to execute or modify unrelated code.
+
+## Malformed requests and error reporting
+
+When `app.debug` is `false`, Livewire rejects malformed snapshot structures, invalid lazy-load encodings, and invalid method-name syntax with a 404 or 419 response without reporting an application exception by default. Debug mode provides descriptive exceptions for these failures.
+
+Errors that may indicate a broken application still use Laravel's normal exception handling. For example, calling a valid-looking but nonexistent method such as `saveOrder` remains reportable. A `TypeError` inside an action, lifecycle hook, or render method produces a normal server error rather than a page-expired response.
+
+These checks validate Livewire's request format. Applications must still validate and authorize action parameters and public property updates.

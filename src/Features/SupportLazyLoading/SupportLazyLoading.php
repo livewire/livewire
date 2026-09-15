@@ -148,9 +148,7 @@ class SupportLazyLoading extends ComponentHook
         // Only applies while a lazy load is being resumed.
         if ($this->storeGet('isLazyLoadHydrating') !== true) return;
 
-        [ $encoded ] = $params;
-
-        $mountParams = $this->resurrectMountParams($encoded);
+        $mountParams = $this->resurrectMountParams($params[0] ?? null);
 
         $this->callMountLifecycleMethod($mountParams);
 
@@ -229,7 +227,11 @@ class SupportLazyLoading extends ComponentHook
     // Rebuild the captured mount params from the container snapshot.
     function resurrectMountParams($encoded)
     {
-        $snapshot = json_decode(base64_decode($encoded), associative: true);
+        $decoded = is_string($encoded) ? base64_decode($encoded, strict: true) : false;
+
+        if ($decoded === false) throw new CorruptComponentPayloadException;
+
+        $snapshot = json_decode($decoded, associative: true);
 
         $this->registerContainerComponent();
 

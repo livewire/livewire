@@ -184,34 +184,30 @@ class HandleComponents extends Mechanism
 
     public function update($snapshot, $updates, $calls)
     {
-        if (! is_array($snapshot)
-            || ! is_array($snapshot['data'] ?? null)
-            || ! is_array($snapshot['memo'] ?? null)
-            || ! is_string($snapshot['checksum'] ?? null)
-            || ! is_string($snapshot['memo']['id'] ?? null)
-            || ! is_string($snapshot['memo']['name'] ?? null)
-        ) {
-            if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire snapshot structure: expected [data], [memo], [checksum], [memo.id], and [memo.name].');
-
-            abort(404);
-        }
-
         foreach ($calls as $call) {
             if (! is_array($call)
                 || ! is_string($call['method'] ?? null)
                 || ! is_array($call['params'] ?? null)
+                || ! is_array($call['metadata'] ?? [])
             ) {
-                if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire call structure: each call must contain [method] (string) and [params] (array).');
+                if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire call structure: each call must contain [method] (string), [params] (array), and optional [metadata] (array).');
 
                 abort(404);
             }
-        }
 
-        $data = $snapshot['data'];
-        $memo = $snapshot['memo'];
+            // Method names follow PHP's identifier syntax, with an optional "$" for magic actions.
+            if (! preg_match('/\A\$?[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*\z/', $call['method'])) {
+                if (config('app.debug')) throw new MethodNotFoundException($call['method']);
+
+                abort(419);
+            }
+        }
 
         if (config('app.debug')) $start = microtime(true);
         [ $component, $context ] = $this->fromSnapshot($snapshot);
+
+        $data = $snapshot['data'];
+        $memo = $snapshot['memo'];
 
         $this->pushOntoComponentStack($component);
 
@@ -245,6 +241,18 @@ class HandleComponents extends Mechanism
 
     public function fromSnapshot($snapshot)
     {
+        if (! is_array($snapshot)
+            || ! is_array($snapshot['data'] ?? null)
+            || ! is_array($snapshot['memo'] ?? null)
+            || ! is_string($snapshot['checksum'] ?? null)
+            || ! is_string($snapshot['memo']['id'] ?? null)
+            || ! is_string($snapshot['memo']['name'] ?? null)
+        ) {
+            if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire snapshot structure: expected [data], [memo], [checksum], [memo.id], and [memo.name].');
+
+            abort(404);
+        }
+
         Checksum::verify($snapshot);
 
         trigger('snapshot-verified', $snapshot);
