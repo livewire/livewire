@@ -1,6 +1,7 @@
 import { performFetch } from "@/plugins/navigate/fetch";
 import { getUriStringFromUrlObject } from "./links";
 import { storeCurrentPageStatus } from "./history";
+import { interceptRequest } from "@/request";
 
 // Warning: this could cause some memory leaks
 let prefetches = {}
@@ -8,19 +9,58 @@ let prefetches = {}
 // Default prefetch cache duration is 30 seconds...
 let cacheDuration = 30000
 
+// A Livewire request can change the application state,
+// so discard all prefetched HTML before the request is sent.
+// If a navigation is already waiting on an in-flight prefetch, fail it so it
+// falls back to a fresh navigation request.
+interceptRequest(({ onSend }) => {
+    onSend(() => {
+        Object.values(prefetches).forEach(state => {
+            if (! state.finished) state.whenFailed()
+        })
+
+        prefetches = {}
+    })
+})
+
 export function prefetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination)
 
     if (prefetches[uri]) return
 
-    prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration), whenFailed: () => {} }
+    let state = { finished: false, html: null, whenFinished: () => {}, whenFailed: () => {} }
+
+    state.whenFinished = () => setTimeout(() => {
+        if (prefetches[uri] === state) delete prefetches[uri]
+    }, cacheDuration)
+
+    prefetches[uri] = state
 
     performFetch(uri, (html, routedUri, status) => {
+        // The prefetch may have been invalidated while its request was in flight.
+        if (prefetches[uri] !== state) return
+
         storeCurrentPageStatus(status)
+
+        // Don't cache redirected responses. The prefetch is keyed by the original
+        // URL, so caching the redirected response could cause a later navigation
+        // to use stale or unauthorized HTML.
+        if (getUriStringFromUrlObject(routedUri) !== uri) {
+            let whenFailed = state.whenFailed
+
+            delete prefetches[uri]
+
+            whenFailed()
+
+            return
+        }
 
         callback(html, routedUri)
     }, () => {
-        let whenFailed = prefetches[uri].whenFailed
+        // The prefetch may have been invalidated while its request was in flight.
+        if (prefetches[uri] !== state) return
+
+        let whenFailed = state.whenFailed
 
         // If the fetch failed, remove the prefetch so it gets attempted again...
         delete prefetches[uri]
@@ -33,6 +73,10 @@ export function prefetchHtml(destination, callback, errorCallback) {
 
 export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
     let state = prefetches[getUriStringFromUrlObject(destination)]
+
+    // The prefetch may have been invalidated while its request was in flight.
+    if (! state) return
+
     state.html = html
     state.finished = true
     state.finalDestination = finalDestination
