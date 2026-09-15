@@ -418,4 +418,84 @@ class UnitTest extends \Tests\TestCase
         Assert::assertInstanceOf(Selection::class, $component->get('selected'));
         Assert::assertSame([], $component->get('selected')->keys());
     }
+
+    function test_a_virtual_property_can_be_assigned_directly_in_an_action()
+    {
+        $test = Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function items(): Collection
+            {
+                return collect(['a', 'b']);
+            }
+
+            public function replace()
+            {
+                $this->items = collect(['c', 'd']);
+            }
+        });
+
+        $test->call('replace');
+        $test->call('$refresh');
+        $test->assertSet('items', fn ($items) => $items->all() === ['c', 'd']);
+    }
+
+    function test_assigning_an_invalid_type_to_a_virtual_property_directly_throws()
+    {
+        $this->expectException(\TypeError::class);
+
+        $test = Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function items(): Collection
+            {
+                return collect(['a', 'b']);
+            }
+
+            public function invalid()
+            {
+                $this->items = 'not-a-collection';
+            }
+        });
+
+        $test->call('invalid');
+    }
+
+    function test_a_virtual_property_can_be_assigned_using_data_set()
+    {
+        $test = Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function items(): Collection
+            {
+                return collect(['a', 'b']);
+            }
+
+            public function replace()
+            {
+                data_set($this, 'items', collect(['e', 'f']));
+            }
+        });
+
+        $test->call('replace');
+        $test->call('$refresh');
+        $test->assertSet('items', fn ($items) => $items->all() === ['e', 'f']);
+    }
+
+    function test_a_snake_case_virtual_property_can_be_assigned_directly()
+    {
+        $test = Livewire::test(new class extends TestComponent {
+            #[Virtual]
+            public function selectedItems(): Collection
+            {
+                return collect(['a']);
+            }
+
+            public function replace()
+            {
+                $this->selected_items = collect(['b']);
+            }
+        });
+
+        $test->call('replace');
+        $test->call('$refresh');
+        $test->assertSet('selectedItems', fn ($items) => $items->all() === ['b']);
+    }
 }
