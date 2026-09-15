@@ -188,17 +188,19 @@ public function handleNewPost($refreshPosts = false)
 }
 ```
 
-You can also access the `refreshPosts` parameter from a JavaScript event listener from the event's `detail` property:
+Component listeners registered with `$wire.$on()` receive the event data directly as the callback argument:
 
 ```html
 <script>
-    this.$on('post-created', (event) => {
-        let refreshPosts = event.detail.refreshPosts
+    this.$on('post-created', (data) => {
+        let refreshPosts = data.refreshPosts
 
         // ...
     });
 </script>
 ```
+
+This also applies to `Livewire.on()` callbacks. When [listening with Alpine](#listening-for-livewire-events-in-alpine), use `$event.detail` to access the same data from the browser event.
 
 [Read more about using JavaScript inside your Livewire components →](/docs/4.x/javascript#using-javascript-in-livewire-components)
 
