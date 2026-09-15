@@ -733,8 +733,10 @@ class UnitTest extends \Tests\TestCase
 
     function test_form_object_validation_runs_alongside_component_validation()
     {
+        PostFormWithCountedRules::$rulesCalls = 0;
+
         Livewire::test(new class extends TestComponent {
-            public PostFormValidateStub $form;
+            public PostFormWithCountedRules $form;
 
             #[Validate('required')]
             public $username = '';
@@ -750,12 +752,15 @@ class UnitTest extends \Tests\TestCase
         ->assertHasErrors('form.content')
         ->assertHasErrors('username')
         ;
+        $this->assertSame(2, PostFormWithCountedRules::$rulesCalls);
     }
 
     function test_form_object_validation_wont_run_if_rules_are_passed_into_validate()
     {
+        PostFormWithCountedRules::$rulesCalls = 0;
+
         Livewire::test(new class extends TestComponent {
-            public PostFormValidateStub $form;
+            public PostFormWithCountedRules $form;
 
             public $username = '';
 
@@ -770,6 +775,7 @@ class UnitTest extends \Tests\TestCase
         ->assertHasNoErrors('form.content')
         ->assertHasErrors('username')
         ;
+        $this->assertSame(0, PostFormWithCountedRules::$rulesCalls);
     }
 
     function test_allows_form_object_without_rules_without_throwing_an_error()
@@ -1308,6 +1314,18 @@ class PostFormValidateStub extends Form
         'title' => 'required',
         'content' => 'required',
     ];
+}
+
+class PostFormWithCountedRules extends PostFormValidateStub
+{
+    public static $rulesCalls = 0;
+
+    public function rules()
+    {
+        static::$rulesCalls++;
+
+        return $this->rules;
+    }
 }
 
 class PostFormValidateOnUpdateStub extends Form
