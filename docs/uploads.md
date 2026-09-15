@@ -395,6 +395,44 @@ These functions exist on a JavaScript component object, which can be accessed us
 </script>
 ```
 
+### Processing images before uploading
+
+A file input with `wire:model` starts uploading as soon as a file is selected. To crop or resize an image before uploading, leave `wire:model` off the source input and let the image editor read the selected file locally:
+
+```blade
+<input type="file" accept="image/*">
+```
+
+Call `$wire.upload()` from the editor's confirmation handler with the processed image. For example, with an initialized [Cropper.js 2](https://fengyuanchen.github.io/cropperjs/v2/api/) instance named `cropper`, the confirmation handler can export and upload a square avatar:
+
+```js
+let canvas = await cropper.getCropperSelection().$toCanvas({
+    width: 256,
+    height: 256,
+})
+
+canvas.toBlob((blob) => {
+    if (! blob) {
+        alert('The cropped image could not be exported. Please try again.')
+        return
+    }
+
+    let file = new File([blob], 'avatar.png', { type: 'image/png' })
+
+    $wire.upload('photo', file, () => {
+        $wire.save()
+    }, () => {
+        alert('The upload failed. Please try again.')
+    })
+}, 'image/png')
+```
+
+This handler runs in your existing cropper integration, where `cropper` and the component's `$wire` object are available. The component still needs `WithFileUploads`, a `$photo` property, and a `save()` action that validates and stores the image, as shown [above](#storing-uploaded-files).
+
+Wrap the editor's generated markup in [`wire:ignore`](/docs/4.x/wire-ignore) so Livewire leaves it intact during updates. Disable the confirmation button while exporting and uploading to prevent duplicate uploads.
+
+The original image stays in the browser. `new File()` gives the exported blob a filename and MIME type, and only that file is uploaded. Calling `save()` from the upload's success callback ensures `$photo` has been set before validation and storage. `$wire.upload()` does not return a promise to await.
+
 ## Configuration
 
 Because Livewire stores all file uploads temporarily before the developer can validate or store them, it assumes some default handling behavior for all file uploads.
