@@ -79,6 +79,41 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
+    public function test_dispatch_callback_can_match_any_event_with_the_given_name()
+    {
+        Livewire::test(new class extends TestComponent {
+            public function dispatchFoo()
+            {
+                $this->dispatch('foo', id: 1);
+                $this->dispatch('foo', id: 2);
+                $this->dispatch('bar', id: 3);
+            }
+        })
+            ->call('dispatchFoo')
+            ->assertDispatched('bar', id: 3)
+            ->assertDispatched('foo', id: 2)
+            ->assertNotDispatched('foo', fn ($event, $params) => $params['id'] === 3)
+            ->assertNotDispatched('missing', fn () => true)
+            ->assertDispatched('foo', fn ($event, $params) => $event === 'foo' && $params['id'] === 1)
+            ->assertDispatched('foo', fn ($event, $params) => $event === 'foo' && $params['id'] === 2);
+    }
+
+    public function test_not_dispatched_callback_fails_when_a_later_event_matches()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public function dispatchFoo()
+            {
+                $this->dispatch('foo', id: 1);
+                $this->dispatch('foo', id: 2);
+            }
+        })->call('dispatchFoo');
+
+        $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
+        $this->expectExceptionMessage('Failed asserting that an event [foo] was not fired.');
+
+        $component->assertNotDispatched('foo', fn ($event, $params) => $params['id'] === 2);
+    }
+
     public function test_it_can_register_multiple_listeners_via_attribute(): void
     {
         Livewire::test(new class extends TestComponent {
