@@ -261,7 +261,9 @@ it('can create a post', function () {
 Only show PHPUnit when:
 - Demonstrating that both frameworks work
 - In a dedicated "Using PHPUnit" section
-- Converting legacy docs that were PHPUnit-only
+- In the contribution guide, which documents Livewire's own PHPUnit and Dusk test suite
+
+Convert legacy PHPUnit application examples to Pest when updating them.
 
 ### Testing Resources
 

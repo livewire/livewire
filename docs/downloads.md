@@ -70,29 +70,40 @@ public function download()
 Livewire also provides a `->assertFileDownloaded()` method to easily test that a file was downloaded with a given name:
 
 ```php
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Invoice;
+use Livewire\Livewire;
 
-public function test_can_download_invoice()
-{
-    $invoice = Invoice::factory();
+uses(RefreshDatabase::class);
 
-    Livewire::test(ShowInvoice::class)
+it('can download an invoice', function () {
+    Storage::fake('invoices');
+    Storage::disk('invoices')->put('invoice.pdf', 'Invoice contents');
+
+    $invoice = Invoice::factory()->create([
+        'file_path' => Storage::disk('invoices')->path('invoice.pdf'),
+    ]);
+
+    Livewire::test('show-invoice', ['invoice' => $invoice])
         ->call('download')
         ->assertFileDownloaded('invoice.pdf');
-}
+});
 ```
 
-You can also test to ensure a file was not downloaded using the `->assertNoFileDownloaded()` method:
+You can also use the `->assertNoFileDownloaded()` method to check that rendering the component doesn't trigger a download:
 
 ```php
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\Invoice;
+use Livewire\Livewire;
 
-public function test_does_not_download_invoice_if_unauthorised()
-{
-    $invoice = Invoice::factory();
+uses(RefreshDatabase::class);
 
-    Livewire::test(ShowInvoice::class)
-        ->call('download')
+it('does not download an invoice until requested', function () {
+    $invoice = Invoice::factory()->create();
+
+    Livewire::test('show-invoice', ['invoice' => $invoice])
         ->assertNoFileDownloaded();
-}
+});
 ```
