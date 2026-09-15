@@ -186,34 +186,26 @@ This URL is protected against showing files in directories above the temporary d
 
 You can use Laravel's existing file upload testing helpers to test file uploads.
 
-Below is a complete example of testing the `UploadPhoto` component with Livewire:
+Below is an example of testing the `upload-photo` single-file component with Livewire:
 
 ```php
 <?php
 
-namespace Tests\Feature\Livewire;
-
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use App\Livewire\UploadPhoto;
+use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
-use Tests\TestCase;
 
-class UploadPhotoTest extends TestCase
-{
-    public function test_can_upload_photo()
-    {
-        Storage::fake('avatars');
+it('can upload a photo', function () {
+    Storage::fake('avatars');
 
-        $file = UploadedFile::fake()->image('avatar.png');
+    $file = UploadedFile::fake()->image('avatar.png');
 
-        Livewire::test(UploadPhoto::class)
-            ->set('photo', $file)
-            ->call('upload', 'uploaded-avatar.png');
+    Livewire::test('upload-photo')
+        ->set('photo', $file)
+        ->call('save');
 
-        Storage::disk('avatars')->assertExists('uploaded-avatar.png');
-    }
-}
+    Storage::disk('avatars')->assertExists('uploaded-avatar.png');
+});
 ```
 
 Below is an example of the `upload-photo` component required to make the previous test pass:
@@ -229,13 +221,18 @@ new class extends Component {
 
     public $photo;
 
-    public function upload($name)
+    public function save()
     {
-        $this->photo->storeAs('/', $name, disk: 'avatars');
+        $this->photo->storeAs(path: '/', name: 'uploaded-avatar.png', options: 'avatars');
     }
-
-    // ...
 };
+?>
+
+<form wire:submit="save">
+    <input type="file" wire:model="photo">
+
+    <button type="submit">Save photo</button>
+</form>
 ```
 
 For more information on testing file uploads, please consult [Laravel's file upload testing documentation](https://laravel.com/docs/http-tests#testing-file-uploads).
