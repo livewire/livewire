@@ -11,6 +11,36 @@ trait MakesAssertions
     /**
      * @return $this
      */
+    function assertRenderSkipped()
+    {
+        $this->lastState->getResponse()->assertOk();
+
+        PHPUnit::assertTrue(
+            (bool) $this->instance()->shouldSkipRender(),
+            'Failed asserting that component rendering was skipped.'
+        );
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    function assertRenderNotSkipped()
+    {
+        $this->lastState->getResponse()->assertOk();
+
+        PHPUnit::assertFalse(
+            (bool) $this->instance()->shouldSkipRender(),
+            'Failed asserting that component rendering was not skipped.'
+        );
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
     function assertSee($values, $escape = true, $stripInitialData = true)
     {
         foreach (Arr::wrap($values) as $value) {
