@@ -1,6 +1,6 @@
 import { replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
-import { createUrlObjectFromString, extractDestinationFromLink, isSameOrigin, linkShouldBeHandledNatively, visitNatively, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
+import { createUrlObjectFromString, extractDestinationFromLink, isSameOrigin, linkShouldBeHandledNatively, visitNatively, whenThisLinkIsHoveredOrFocusedFor, whenThisLinkIsPressed } from "./links"
 import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
 import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
 import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
@@ -47,7 +47,7 @@ export default function (Alpine) {
 
         let preserveScroll = modifiers.includes('preserve-scroll')
 
-        shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
+        shouldPrefetchOnHover && whenThisLinkIsHoveredOrFocusedFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
 
             if (linkShouldBeHandledNatively(el, destination)) return

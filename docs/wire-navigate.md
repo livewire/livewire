@@ -33,7 +33,7 @@ The `data-current` attribute is added and removed automatically as users navigat
 
 ## Prefetching pages on hover
 
-By adding the `.hover` modifier, Livewire will pre-fetch a page when a user hovers over a link. This way, the page will have already been downloaded from the server when the user clicks on the link.
+By adding the `.hover` modifier, Livewire will pre-fetch a page after a user hovers over or focuses a link for 60 milliseconds. This gives both mouse and keyboard users a head start before following the link.
 
 ```blade
 <a href="/" wire:navigate.hover>Dashboard</a>
@@ -59,4 +59,4 @@ wire:navigate
 
 | Modifier | Description |
 |----------|-------------|
-| `.hover` | Prefetches the page when user hovers over the link |
+| `.hover` | Prefetches the page when the user hovers over or focuses the link |

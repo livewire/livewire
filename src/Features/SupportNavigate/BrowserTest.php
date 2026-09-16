@@ -1679,6 +1679,31 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_navigate_hover_prefetches_when_a_link_is_focused_using_the_keyboard()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNavigatePrefetchRequest()->keys('@link.to.tel', '{tab}')
+                ->assertFocused('@link.to.second')
+                ->assertPathIs('/first')
+                ->waitForNoNavigatePrefetchRequest()->mouseover('@link.to.second')
+                ->waitForNavigate()->keys('@link.to.second', '{enter}')
+                ->assertSee('On second');
+        });
+    }
+
+    public function test_navigate_hover_does_not_prefetch_when_quickly_tabbing_past_links()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNoNavigatePrefetchRequest()->keys('@link.to.tel', '{tab}', '{tab}', '{tab}', '{tab}')
+                ->assertFocused('@redirect.to.second')
+                ->assertPathIs('/first');
+        });
+    }
+
     public function test_navigate_hover_prefetches_and_caches_for_a_default_30_seconds()
     {
         $this->browse(function ($browser) {
