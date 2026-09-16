@@ -12,6 +12,8 @@ class BaseComputed extends Attribute
 {
     protected $requestCachedValue;
 
+    protected $hasRequestCachedValue = false;
+
     function __construct(
         public $persist = false,
         public $seconds = 3600, // 1 hour...
@@ -32,7 +34,7 @@ class BaseComputed extends Attribute
     {
         if ($this->persist) {
             $returnValue(
-                $this->requestCachedValue ??= $this->handlePersistedGet()
+                $this->rememberForRequest(fn () => $this->handlePersistedGet())
             );
 
             return;
@@ -40,14 +42,14 @@ class BaseComputed extends Attribute
 
         if ($this->cache) {
             $returnValue(
-                $this->requestCachedValue ??= $this->handleCachedGet()
+                $this->rememberForRequest(fn () => $this->handleCachedGet())
             );
 
             return;
         }
 
         $returnValue(
-            $this->requestCachedValue ??= $this->evaluateComputed()
+            $this->rememberForRequest(fn () => $this->evaluateComputed())
         );
     }
 
@@ -55,19 +57,38 @@ class BaseComputed extends Attribute
     {
         if ($this->persist) {
             $this->handlePersistedUnset();
-            unset($this->requestCachedValue);
+            $this->forgetForRequest();
 
             return;
         }
 
         if ($this->cache) {
             $this->handleCachedUnset();
-            unset($this->requestCachedValue);
+            $this->forgetForRequest();
 
             return;
         }
 
-        unset($this->requestCachedValue);
+        $this->forgetForRequest();
+    }
+
+    protected function rememberForRequest($resolve)
+    {
+        // Presence is tracked separately from the value so that a
+        // computed which legitimately returns null is still only
+        // evaluated once per request instead of on every read.
+        if (! $this->hasRequestCachedValue) {
+            $this->requestCachedValue = $resolve();
+            $this->hasRequestCachedValue = true;
+        }
+
+        return $this->requestCachedValue;
+    }
+
+    protected function forgetForRequest()
+    {
+        $this->requestCachedValue = null;
+        $this->hasRequestCachedValue = false;
     }
 
     protected function handlePersistedGet()

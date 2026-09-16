@@ -106,6 +106,122 @@ class UnitTest extends TestCase
             ->assertSetStrict('count', 4);
     }
 
+    function test_computed_property_returning_null_is_memoized_within_a_single_request()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed]
+            function foo() {
+                $this->count++;
+
+                return null;
+            }
+
+            function render() {
+                $noop = $this->foo;
+                $noop = $this->foo;
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo ?? 'null' }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foonull')
+            ->assertSetStrict('count', 1)
+            ->call('$refresh')
+            ->assertSetStrict('count', 2);
+    }
+
+    function test_cached_computed_property_returning_null_is_memoized_within_a_single_request()
+    {
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(cache: true)]
+            function foo() {
+                $this->count++;
+
+                return null;
+            }
+
+            function render() {
+                $noop = $this->foo;
+                $noop = $this->foo;
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo ?? 'null' }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foonull')
+            ->assertSetStrict('count', 1)
+            ->call('$refresh')
+            ->assertSetStrict('count', 2);
+    }
+
+    function test_persisted_computed_property_returning_null_is_memoized_within_a_single_request()
+    {
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(persist: true)]
+            function foo() {
+                $this->count++;
+
+                return null;
+            }
+
+            function render() {
+                $noop = $this->foo;
+                $noop = $this->foo;
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo ?? 'null' }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foonull')
+            ->assertSetStrict('count', 1)
+            ->call('$refresh')
+            ->assertSetStrict('count', 2);
+    }
+
+    function test_can_bust_computed_property_returning_null_using_unset()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed]
+            function foo() {
+                $this->count++;
+
+                return null;
+            }
+
+            function render() {
+                $noop = $this->foo;
+                unset($this->foo);
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo ?? 'null' }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foonull')
+            ->assertSetStrict('count', 2)
+            ->call('$refresh')
+            ->assertSetStrict('count', 4);
+    }
+
     function test_cached_computed_property_is_memoized_within_a_single_request()
     {
         Cache::setDefaultDriver('array');
