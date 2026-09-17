@@ -485,8 +485,19 @@ export function cloneScriptTag(el) {
     for (let attr of el.attributes) {
         if (attr.name === 'nonce') {
             // Browsers clear .nonce from DOMParser-parsed elements,
-            // so fall back to the page's original nonce...
-            script.nonce = getNonce() || el.nonce
+            // so fall back to the page's original nonce.
+            //
+            // This has to be set as an attribute rather than through the
+            // `.nonce` property. The property only fills the element's
+            // internal nonce slot, without adding a `nonce` attribute, so
+            // a page snapshot taken with `outerHTML` for the back/forward
+            // cache would serialize the clone as a plain `<script>`. When
+            // that snapshot is restored, nothing marks the script as ever
+            // having had a nonce, and it runs unnonced and gets refused.
+            // The browser blanks the attribute's value once the element is
+            // connected, but the attribute itself stays, which is enough
+            // for the next clone to know to nonce it again...
+            script.setAttribute('nonce', getNonce() || el.nonce)
         } else {
             script.setAttribute(attr.name, attr.value)
         }
