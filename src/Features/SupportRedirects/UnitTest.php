@@ -297,6 +297,148 @@ class UnitTest extends \Tests\TestCase
         $this->assertNull($component->effects['returns'][0]);
     }
 
+    public function test_redirect_attribute()
+    {
+        $component = Livewire::test(TriggersRedirectAttributeStub::class);
+
+        $component->runAction('triggerRedirectAttribute');
+
+        $this->assertEquals('/local', $component->effects['redirect']);
+        $this->assertArrayNotHasKey('redirectUsingNavigate', $component->effects);
+    }
+
+    public function test_redirect_attribute_with_navigate()
+    {
+        $component = Livewire::test(TriggersRedirectAttributeStub::class);
+
+        $component->runAction('triggerRedirectAttributeWithNavigate');
+
+        $this->assertEquals('/local', $component->effects['redirect']);
+        $this->assertTrue($component->effects['redirectUsingNavigate']);
+    }
+
+    public function test_redirect_attribute_route()
+    {
+        $this->registerNamedRoute();
+
+        $component = Livewire::test(TriggersRedirectAttributeStub::class);
+
+        $component->runAction('triggerRedirectAttributeRoute');
+
+        $this->assertEquals(route('foo'), $component->effects['redirect']);
+        $this->assertArrayNotHasKey('redirectUsingNavigate', $component->effects);
+    }
+
+    public function test_redirect_attribute_route_with_parameters()
+    {
+        Route::get('foo/{id}', fn () => true)->name('foo');
+
+        $component = Livewire::test(TriggersRedirectAttributeStub::class);
+
+        $component->runAction('triggerRedirectAttributeRouteWithParameters');
+
+        $this->assertEquals(url('foo/123'), $component->effects['redirect']);
+        $this->assertArrayNotHasKey('redirectUsingNavigate', $component->effects);
+    }
+
+    public function test_redirect_attribute_route_with_navigate()
+    {
+        $this->registerNamedRoute();
+
+        $component = Livewire::test(TriggersRedirectAttributeStub::class);
+
+        $component->runAction('triggerRedirectAttributeRouteWithNavigate');
+
+        $this->assertEquals(route('foo'), $component->effects['redirect']);
+        $this->assertTrue($component->effects['redirectUsingNavigate']);
+    }
+
+    public function test_redirect_attribute_intended()
+    {
+        $this->registerNamedRoute();
+
+        session()->put('url.intended', route('foo'));
+
+        $component = Livewire::test(TriggersRedirectAttributeStub::class);
+
+        $component->runAction('triggerRedirectAttributeIntended');
+
+        $this->assertEquals(route('foo'), $component->effects['redirect']);
+        $this->assertArrayNotHasKey('redirectUsingNavigate', $component->effects);
+    }
+
+    public function test_redirect_attribute_intended_fallback()
+    {
+        session()->forget('url.intended');
+
+        $component = Livewire::test(TriggersRedirectAttributeStub::class);
+
+        $component->runAction('triggerRedirectAttributeIntendedFallback');
+
+        $this->assertEquals('/dashboard', $component->effects['redirect']);
+        $this->assertArrayNotHasKey('redirectUsingNavigate', $component->effects);
+    }
+
+    public function test_redirect_attribute_intended_with_navigate()
+    {
+        $this->registerNamedRoute();
+
+        session()->put('url.intended', route('foo'));
+
+        $component = Livewire::test(TriggersRedirectAttributeStub::class);
+
+        $component->runAction('triggerRedirectAttributeIntendedWithNavigate');
+
+        $this->assertEquals(route('foo'), $component->effects['redirect']);
+        $this->assertTrue($component->effects['redirectUsingNavigate']);
+    }
+
+    public function test_redirect_attribute_action()
+    {
+        $this->registerAction();
+
+        $component = Livewire::test(TriggersRedirectAttributeStub::class);
+
+        $component->runAction('triggerRedirectAttributeAction');
+
+        $this->assertEquals(route('foo'), $component->effects['redirect']);
+        $this->assertArrayNotHasKey('redirectUsingNavigate', $component->effects);
+    }
+
+    public function test_redirect_attribute_action_array()
+    {
+        $this->registerAction();
+
+        $component = Livewire::test(TriggersRedirectAttributeStub::class);
+
+        $component->runAction('triggerRedirectAttributeActionArray');
+
+        $this->assertEquals(route('foo'), $component->effects['redirect']);
+        $this->assertArrayNotHasKey('redirectUsingNavigate', $component->effects);
+    }
+
+    public function test_redirect_attribute_action_with_navigate()
+    {
+        $this->registerAction();
+
+        $component = Livewire::test(TriggersRedirectAttributeStub::class);
+
+        $component->runAction('triggerRedirectAttributeActionWithNavigate');
+
+        $this->assertEquals(route('foo'), $component->effects['redirect']);
+        $this->assertTrue($component->effects['redirectUsingNavigate']);
+    }
+
+    public function test_redirect_attribute_wins_over_imperative()
+    {
+        $component = Livewire::test(TriggersRedirectAttributeStub::class);
+
+        $component->runAction('triggerRedirectAttributeOverImperative');
+
+        $this->assertEquals('/attribute', $component->effects['redirect']);
+        $this->assertArrayNotHasKey('redirectUsingNavigate', $component->effects);
+    }
+
     protected function registerNamedRoute()
     {
         Route::get('foo', function () {
@@ -425,5 +567,47 @@ class RenderOnRedirectWithSkipRenderMethod extends Component
     Render has run
 </div>
 HTML;
+    }
+}
+
+class TriggersRedirectAttributeStub extends TestComponent
+{
+    #[BaseRedirect('/local')]
+    public function triggerRedirectAttribute() {}
+
+    #[BaseRedirect('/local', navigate: true)]
+    public function triggerRedirectAttributeWithNavigate() {}
+
+    #[BaseRedirect(route: 'foo')]
+    public function triggerRedirectAttributeRoute() {}
+
+    #[BaseRedirect(route: 'foo', navigate: true)]
+    public function triggerRedirectAttributeRouteWithNavigate() {}
+
+    #[BaseRedirect(intended: true)]
+    public function triggerRedirectAttributeIntended() {}
+
+    #[BaseRedirect(intended: true, navigate: true)]
+    public function triggerRedirectAttributeIntendedWithNavigate() {}
+
+    #[BaseRedirect(action: 'HomeController@index')]
+    public function triggerRedirectAttributeAction() {}
+
+    #[BaseRedirect(action: 'HomeController@index', navigate: true)]
+    public function triggerRedirectAttributeActionWithNavigate() {}
+
+    #[BaseRedirect(route: 'foo', parameters: ['id' => 123])]
+    public function triggerRedirectAttributeRouteWithParameters() {}
+
+    #[BaseRedirect(intended: true, default: '/dashboard')]
+    public function triggerRedirectAttributeIntendedFallback() {}
+
+    #[BaseRedirect(action: ['HomeController@index'])]
+    public function triggerRedirectAttributeActionArray() {}
+
+    #[BaseRedirect('/attribute')]
+    public function triggerRedirectAttributeOverImperative()
+    {
+        $this->redirect('/imperative');
     }
 }

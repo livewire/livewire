@@ -48,6 +48,18 @@ When one of your Livewire components redirects users to another URL within your 
 return $this->redirect('/posts', navigate: true);
 ```
 
+Alternatively, you can use the `#[Redirect]` attribute on an action and pass `navigate: true`:
+
+```php
+use Livewire\Attributes\Redirect;
+
+#[Redirect('/posts', navigate: true)]
+public function save()
+{
+    // ...
+}
+```
+
 Now, instead of a full page request being used to redirect the user to the new URL, Livewire will replace the contents and URL of the current page with the new one.
 
 ## Prefetching links
