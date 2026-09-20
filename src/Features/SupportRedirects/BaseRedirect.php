@@ -4,15 +4,17 @@ namespace Livewire\Features\SupportRedirects;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
+use function Livewire\store;
+
 #[\Attribute(\Attribute::TARGET_METHOD)]
 class BaseRedirect extends LivewireAttribute
 {
     public function __construct(
         public ?string $to = null,
         public bool $navigate = false,
-        public ?string $route = null,
+        public \BackedEnum|string|null $route = null,
         public string|array|null $action = null,
-        public array $parameters = [],
+        public mixed $parameters = [],
         public bool $absolute = true,
         public bool $intended = false,
         public string $default = '/',
@@ -21,6 +23,12 @@ class BaseRedirect extends LivewireAttribute
     public function call()
     {
         return function () {
+            // Remove any existing redirect state before applying the attribute redirect.
+            if ($this->storeHas('redirect')) {
+                store($this->component)->unset('redirect');
+                store($this->component)->unset('redirectUsingNavigate');
+            }
+
             if ($this->intended) {
                 $this->component->redirectIntended($this->default, $this->navigate);
                 return;
