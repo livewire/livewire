@@ -439,18 +439,6 @@ class UnitTest extends \Tests\TestCase
         $this->assertArrayNotHasKey('redirectUsingNavigate', $component->effects);
     }
 
-    public function test_redirect_attribute_route_with_backed_enum()
-    {
-        $this->registerNamedRoute();
-
-        $component = Livewire::test(TriggersRedirectAttributeStub::class);
-
-        $component->runAction('triggerRedirectAttributeRouteWithBackedEnum');
-
-        $this->assertEquals(route('foo'), $component->effects['redirect']);
-        $this->assertArrayNotHasKey('redirectUsingNavigate', $component->effects);
-    }
-
     protected function registerNamedRoute()
     {
         Route::get('foo', function () {
@@ -622,12 +610,4 @@ class TriggersRedirectAttributeStub extends TestComponent
     {
         $this->redirect('/imperative', navigate: true);
     }
-
-    #[BaseRedirect(route: RedirectRoute::Foo)]
-    public function triggerRedirectAttributeRouteWithBackedEnum() {}
-}
-
-enum RedirectRoute: string
-{
-    case Foo = 'foo';
 }

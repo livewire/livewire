@@ -12,7 +12,7 @@ class BaseRedirect extends LivewireAttribute
     public function __construct(
         public ?string $to = null,
         public bool $navigate = false,
-        public \BackedEnum|string|null $route = null,
+        public ?string $route = null,
         public string|array|null $action = null,
         public mixed $parameters = [],
         public bool $absolute = true,
