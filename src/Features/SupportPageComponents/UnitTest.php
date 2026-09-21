@@ -138,7 +138,7 @@ class UnitTest extends \Tests\TestCase
         $this
             ->get('/configurable-layout')
             ->assertSee('foo')
-            ->assertDontSee('bar')
+            ->assertDontSeeText('bar')
             ->assertSee('baz');
     }
 
