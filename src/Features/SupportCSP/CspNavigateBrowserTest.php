@@ -24,6 +24,7 @@ class CspNavigateBrowserTest extends BrowserTestCase
             Livewire::component('csp-second-page', CspSecondPage::class);
             Livewire::component('csp-lazy-page', CspLazyPage::class);
             Livewire::component('csp-lazy-child', CspLazyChild::class);
+            Livewire::component('csp-mixed-nonce-page', CspMixedNoncePage::class);
 
             // Apply CSP middleware globally so it covers both page routes
             // and the Livewire update endpoint (needed for lazy-loaded assets)...
@@ -32,6 +33,7 @@ class CspNavigateBrowserTest extends BrowserTestCase
             Route::get('/csp-first', CspFirstPage::class)->middleware('web');
             Route::get('/csp-second', CspSecondPage::class)->middleware('web');
             Route::get('/csp-lazy', CspLazyPage::class)->middleware('web');
+            Route::get('/csp-mixed', CspMixedNoncePage::class)->middleware('web');
 
             Route::get('/csp-test-asset.js', function () {
                 return response('window.__cspLazyAssetLoaded = true;', 200, ['Content-Type' => 'application/javascript']);
@@ -66,6 +68,41 @@ class CspNavigateBrowserTest extends BrowserTestCase
                 ->back()
                 ->waitForText('On CSP first')
                 ->assertConsoleLogHasNoErrors()
+            ;
+        });
+    }
+
+    public function test_wire_navigate_only_applies_the_page_nonce_to_nonces_the_response_authorized()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/csp-first')
+                ->assertSee('On CSP first')
+                ->click('@link.to.mixed')
+                ->waitForText('On CSP mixed')
+                ->waitUntil('window.__authorizedScriptRan === true')
+                ->assertScript('window.__noscriptScriptRan === undefined')
+                ->assertScript('window.__otherNonceScriptRan === undefined')
+                ->assertScript("document.querySelector('noscript').firstChild.nodeName", '#text')
+            ;
+        });
+    }
+
+    public function test_wire_navigate_back_button_only_applies_the_page_nonce_to_nonces_the_response_authorized()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/csp-mixed')
+                ->assertSee('On CSP mixed')
+                ->assertScript('window.__noscriptScriptRan === undefined')
+                ->assertScript('window.__otherNonceScriptRan === undefined')
+                ->click('@link.to.first')
+                ->waitForText('On CSP first')
+                ->back()
+                ->waitForText('On CSP mixed')
+                ->pause(100)
+                ->assertScript('window.__noscriptScriptRan === undefined')
+                ->assertScript('window.__otherNonceScriptRan === undefined')
             ;
         });
     }
@@ -110,6 +147,27 @@ class CspFirstPage extends Component
         <div>
             <div>On CSP first</div>
             <a href="/csp-second" wire:navigate dusk="link.to.second">Go to second</a>
+            <a href="/csp-mixed" wire:navigate dusk="link.to.mixed">Go to mixed</a>
+        </div>
+        HTML;
+    }
+}
+
+#[Layout('csp-test-views::csp-layout')]
+class CspMixedNoncePage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On CSP mixed</div>
+            <a href="/csp-first" wire:navigate dusk="link.to.first">Go to first</a>
+
+            <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">window.__authorizedScriptRan = true</script>
+
+            <noscript><script nonce="some-other-nonce">window.__noscriptScriptRan = true</script></noscript>
+
+            <script nonce="some-other-nonce">window.__otherNonceScriptRan = true</script>
         </div>
         HTML;
     }

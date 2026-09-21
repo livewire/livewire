@@ -100,8 +100,11 @@ async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
 async function addAssetsToHeadTagOfPage(rawHtml) {
     // Rewrite nonces in the asset HTML to match the initial page's nonce.
     // Assets from Livewire update requests have a new nonce, but the browser
-    // still enforces the original page's CSP header...
-    rawHtml = replaceNoncesInHtml(rawHtml)
+    // still enforces the original page's CSP header. Asset HTML comes from the
+    // developer's own @assets blocks, so its first nonce is the request's nonce...
+    let nonceMatch = rawHtml.match(/nonce="([^"]+)"/)
+
+    if (nonceMatch) rawHtml = replaceNoncesInHtml(rawHtml, [nonceMatch[1]])
 
     let newDocument = (new DOMParser()).parseFromString(rawHtml, "text/html")
     let newHead = document.adoptNode(newDocument.head)
