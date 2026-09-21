@@ -67,10 +67,10 @@ If you want an even more aggressive approach to prefetching, you may use the `.h
 <a href="/posts" wire:navigate.hover>Posts</a>
 ```
 
-The `.hover` modifier will instruct Livewire to prefetch the page after a user has hovered over the link for `60` milliseconds.
+The `.hover` modifier will instruct Livewire to prefetch the page after a user has hovered over or focused the link for `60` milliseconds. This also gives keyboard users a head start when they tab to a link. Moving focus away before the delay elapses cancels the pending focus prefetch.
 
 > [!warning] Prefetching on hover increases server usage
-> Because not all users will click a link they hover over, adding `.hover` will request pages that may not be needed, though Livewire attempts to mitigate some of this overhead by waiting `60` milliseconds before prefetching the page.
+> Because not all users will follow a link they hover over or focus, adding `.hover` will request pages that may not be needed, though Livewire attempts to mitigate some of this overhead by waiting `60` milliseconds before prefetching the page.
 
 ## Persisting elements across page visits
 

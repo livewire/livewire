@@ -401,6 +401,20 @@ it('dispatches event with correct data', function () {
 });
 ```
 
+### Testing skipped rendering
+
+Use `assertRenderSkipped()` to verify that an action or event listener skipped rendering with `$this->skipRender()` or `#[Renderless]`. For example, a notification badge might skip rendering when it receives an event for another notification:
+
+```php
+it('skips rendering for unrelated notifications', function () {
+    Livewire::test('notification-badge', ['notificationId' => 1])
+        ->dispatch('notification-read', notificationId: 999)
+        ->assertRenderSkipped();
+});
+```
+
+Use `assertRenderNotSkipped()` to verify that rendering ran, even if the resulting HTML is unchanged. Both assertions check the latest request. Providing replacement HTML to `skipRender()` still counts as skipping the component's rendering.
+
 ### Testing JS evaluation
 
 Assert that a component evaluated JavaScript via `$this->js()`:
@@ -501,6 +515,8 @@ Below is a comprehensive reference of every Livewire testing method available to
 | `assertSet('title', '...')`                           | Assert that a property equals the provided value                                                                                                                        |
 | `assertNotSet('title', '...')`                        | Assert that a property does not equal the provided value                                                                                                                    |
 | `assertCount('posts', 3)`                             | Assert that a property contains 3 items                                                                                                         |
+| `assertRenderSkipped()`                              | Assert that component rendering was skipped during the latest request |
+| `assertRenderNotSkipped()`                           | Assert that component rendering was not skipped during the latest request |
 | `assertSee('...')`                             | Assert that the rendered HTML contains the provided text                                                                                                           |
 | `assertDontSee('...')`                         | Assert that the rendered HTML does not contain the provided text                                                                                                                    |
 | `assertSeeHtml('<div>...</div>')`                     | Assert that raw HTML is present in the rendered output |

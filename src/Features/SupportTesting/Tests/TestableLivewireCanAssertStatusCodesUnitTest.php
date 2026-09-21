@@ -3,6 +3,8 @@
 namespace Livewire\Features\SupportTesting\Tests;
 
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
 use Livewire\Livewire;
 use Tests\TestComponent;
@@ -56,6 +58,31 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
             ->assertStatus(200)
             ->assertSee('Hello!')
             ->assertSeeHtml('</example>');
+    }
+
+    function test_can_assert_not_found_when_an_action_cannot_find_a_model()
+    {
+        Livewire::test(MissingModelComponent::class)
+            ->call('showFullDetails', 0)
+            ->assertNotFound();
+    }
+
+    function test_missing_model_exceptions_are_rethrown_when_exception_handling_is_disabled()
+    {
+        $this->withoutExceptionHandling();
+
+        $this->expectException(ModelNotFoundException::class);
+
+        Livewire::test(MissingModelComponent::class)
+            ->call('showFullDetails', 0);
+    }
+}
+
+class MissingModelComponent extends TestComponent
+{
+    public function showFullDetails($id)
+    {
+        (new Collection)->findOrFail($id);
     }
 }
 
