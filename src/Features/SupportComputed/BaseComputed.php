@@ -30,25 +30,14 @@ class BaseComputed extends Attribute
 
     public function handleMagicGet($returnValue)
     {
-        if ($this->persist) {
-            $returnValue(
-                $this->requestCachedValue ??= $this->handlePersistedGet()
-            );
+        // The value is wrapped in an array so that "null" results are memoized too...
+        $this->requestCachedValue ??= [match (true) {
+            $this->persist => $this->handlePersistedGet(),
+            $this->cache => $this->handleCachedGet(),
+            default => $this->evaluateComputed(),
+        }];
 
-            return;
-        }
-
-        if ($this->cache) {
-            $returnValue(
-                $this->requestCachedValue ??= $this->handleCachedGet()
-            );
-
-            return;
-        }
-
-        $returnValue(
-            $this->requestCachedValue ??= $this->evaluateComputed()
-        );
+        $returnValue($this->requestCachedValue[0]);
     }
 
     public function handleMagicUnset()
