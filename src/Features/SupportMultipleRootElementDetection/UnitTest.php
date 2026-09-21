@@ -223,6 +223,20 @@ class UnitTest extends TestCase
         })->assertSuccessful();
     }
 
+    function test_root_elements_are_counted()
+    {
+        $detector = new SupportMultipleRootElementDetection;
+
+        $this->assertSame(1, $detector->getRootElementCount('<div>First element</div>'));
+        $this->assertSame(2, $detector->getRootElementCount('<div>First element</div><div>Second element</div>'));
+        $this->assertSame(1, $detector->getRootElementCount('<div>First element</div><script>let foo = "bar"</script>'));
+
+        // Markup that leaves no elements behind to count...
+        $this->assertSame(0, $detector->getRootElementCount('<script>let foo = "bar"</script>'));
+        $this->assertSame(0, $detector->getRootElementCount('<style>.foo { color: red; }</style>'));
+        $this->assertSame(0, $detector->getRootElementCount("<!--\n<div>First element</div>\n-->"));
+    }
+
     function test_dont_throw_error_in_production_so_that_there_is_no_perf_penalty()
     {
         config()->set('app.debug', false);
