@@ -171,6 +171,72 @@ class UnitTest extends TestCase
         $this->assertTrue(true);
     }
 
+    function test_allow_script_tag_as_only_element()
+    {
+        config()->set('app.debug', true);
+
+        // Once the <script> tag is stripped there is no markup left to parse...
+        Livewire::test(new class extends Component {
+            function render()
+            {
+                return <<<'HTML'
+                <script>
+                    let foo = 'bar'
+                </script>
+                HTML;
+            }
+        })->assertSuccessful();
+    }
+
+    function test_allow_style_tag_as_only_element()
+    {
+        config()->set('app.debug', true);
+
+        Livewire::test(new class extends Component {
+            function render()
+            {
+                return <<<'HTML'
+                <style>
+                    .foo { color: red; }
+                </style>
+                HTML;
+            }
+        })->assertSuccessful();
+    }
+
+    function test_allow_entirely_commented_out_template()
+    {
+        config()->set('app.debug', true);
+
+        // A document containing only a comment is parsed without a <body>...
+        Livewire::test(new class extends Component {
+            function render()
+            {
+                return <<<'HTML'
+                <!--
+                <div>
+                    First element
+                </div>
+                -->
+                HTML;
+            }
+        })->assertSuccessful();
+    }
+
+    function test_root_elements_are_counted()
+    {
+        $detector = new SupportMultipleRootElementDetection;
+
+        $this->assertSame(1, $detector->getRootElementCount('<div>First element</div>'));
+        $this->assertSame(2, $detector->getRootElementCount('<div>First element</div><div>Second element</div>'));
+        $this->assertSame(1, $detector->getRootElementCount('<div>First element</div><script>let foo = "bar"</script>'));
+
+        // Markup that leaves no elements behind to count...
+        $this->assertSame(0, $detector->getRootElementCount('<script>let foo = "bar"</script>'));
+        $this->assertSame(0, $detector->getRootElementCount('<style>.foo { color: red; }</style>'));
+        $this->assertSame(0, $detector->getRootElementCount("<!--\n<div>First element</div>\n-->"));
+    }
+
     function test_dont_throw_error_in_production_so_that_there_is_no_perf_penalty()
     {
         config()->set('app.debug', false);

@@ -35,11 +35,20 @@ class SupportMultipleRootElementDetection extends ComponentHook
         $html = preg_replace('/<script\b[^>]*>.*?<\/script>/si', '', $html);
         $html = preg_replace('/<style\b[^>]*>.*?<\/style>/si', '', $html);
 
+        // A view containing only a <script> or <style> tag leaves nothing to
+        // parse, and "loadHTML" throws a ValueError for empty strings as of
+        // PHP 8.4 (earlier versions emit a warning instead)...
+        if (trim($html) === '') return 0;
+
         $dom = new \DOMDocument();
 
         $dom->loadHTML($html, LIBXML_NOERROR);
 
         $body = $dom->getElementsByTagName('body')->item(0);
+
+        // libxml only creates a <body> when there is content to put inside it,
+        // so it's missing when the entire template is commented out...
+        if (! $body) return 0;
 
         $count = 0;
 
