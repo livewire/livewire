@@ -29,19 +29,16 @@ class SupportMultipleRootElementDetection extends ComponentHook
 
     function getRootElementCount($html)
     {
-        if (! is_string($html) || trim($html) === '') {
-            return 0;
-        }
-
         // Strip <script> and <style> tags before parsing to avoid inconsistent
         // behavior across different libxml2 versions (older versions misparse
         // these elements, producing incorrect DOM structures)...
         $html = preg_replace('/<script\b[^>]*>.*?<\/script>/si', '', $html);
         $html = preg_replace('/<style\b[^>]*>.*?<\/style>/si', '', $html);
 
-        if (trim($html) === '') {
-            return 0;
-        }
+        // A view containing only a <script> or <style> tag leaves nothing to
+        // parse, and "loadHTML" throws a ValueError for empty strings as of
+        // PHP 8.4 (earlier versions emit a warning instead)...
+        if (trim($html) === '') return 0;
 
         $dom = new \DOMDocument();
 
@@ -49,9 +46,9 @@ class SupportMultipleRootElementDetection extends ComponentHook
 
         $body = $dom->getElementsByTagName('body')->item(0);
 
-        if (! $body) {
-            return 0;
-        }
+        // libxml only creates a <body> when there is content to put inside it,
+        // so it's missing when the entire template is commented out...
+        if (! $body) return 0;
 
         $count = 0;
 
