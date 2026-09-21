@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 use Livewire\Features\SupportReleaseTokens\ReleaseToken;
@@ -22,6 +23,9 @@ class ChecksumRateLimitUnitTest extends TestCase
 
         // Clear any existing rate limits before each test
         RateLimiter::clear('livewire-checksum-failures:127.0.0.1');
+        RateLimiter::clear('livewire-checksum-failures:key:client-a');
+        RateLimiter::clear('livewire-checksum-failures:key:client-b');
+        RateLimiter::clear('livewire-checksum-failures:key:127.0.0.1');
 
         // Register a test component for use in snapshots
         Livewire::component('test-component', ChecksumRateLimitTestComponent::class);
@@ -30,6 +34,10 @@ class ChecksumRateLimitUnitTest extends TestCase
     public function tearDown(): void
     {
         Checksum::disableRateLimitingForTesting();
+
+        Livewire::setChecksumRateLimitKey(null);
+
+        request()->headers->remove('X-Client');
 
         parent::tearDown();
     }
@@ -190,6 +198,154 @@ class ChecksumRateLimitUnitTest extends TestCase
 
         // tooManyAttempts should be called twice (once per request)
         RateLimiter::shouldHaveReceived('tooManyAttempts')->twice();
+    }
+    public function test_failures_are_remembered_for_ten_minutes_by_default()
+    {
+        $this->failChecksum();
+
+        $this->assertEquals(1, RateLimiter::attempts('livewire-checksum-failures:127.0.0.1'));
+        $this->assertEqualsWithDelta(600, RateLimiter::availableIn('livewire-checksum-failures:127.0.0.1'), 1);
+    }
+
+    public function test_rate_limit_key_can_be_customized()
+    {
+        Livewire::setChecksumRateLimitKey(fn (Request $request) => $request->header('X-Client'));
+
+        request()->headers->set('X-Client', 'client-a');
+
+        $this->failChecksum(10);
+
+        $this->assertEquals(10, RateLimiter::attempts('livewire-checksum-failures:key:client-a'));
+        $this->assertEquals(0, RateLimiter::attempts('livewire-checksum-failures:127.0.0.1'));
+
+        // Another client sharing the same IP address is not blocked...
+        request()->headers->set('X-Client', 'client-b');
+
+        $this->verifyValidChecksum();
+
+        // While the client that produced the failures is...
+        request()->headers->set('X-Client', 'client-a');
+
+        $this->expectException(TooManyRequestsHttpException::class);
+
+        $this->verifyValidChecksum();
+    }
+
+    public function test_custom_rate_limit_key_falls_back_to_ip_address_when_null()
+    {
+        Livewire::setChecksumRateLimitKey(fn (Request $request) => $request->header('X-Client'));
+
+        $this->failChecksum();
+
+        $this->assertEquals(1, RateLimiter::attempts('livewire-checksum-failures:127.0.0.1'));
+    }
+
+    public function test_custom_rate_limit_key_falls_back_to_ip_address_when_empty()
+    {
+        Livewire::setChecksumRateLimitKey(fn () => '');
+
+        $this->failChecksum();
+
+        Livewire::setChecksumRateLimitKey(fn () => false);
+
+        $this->failChecksum();
+
+        $this->assertEquals(2, RateLimiter::attempts('livewire-checksum-failures:127.0.0.1'));
+        $this->assertEquals(0, RateLimiter::attempts('livewire-checksum-failures:key:'));
+    }
+
+    public function test_custom_rate_limit_key_cannot_collide_with_an_ip_address()
+    {
+        Livewire::setChecksumRateLimitKey(fn (Request $request) => $request->header('X-Client'));
+
+        request()->headers->set('X-Client', '127.0.0.1');
+
+        $this->failChecksum(10);
+
+        $this->assertEquals(0, RateLimiter::attempts('livewire-checksum-failures:127.0.0.1'));
+
+        // A client identified by that IP address is not blocked...
+        request()->headers->remove('X-Client');
+
+        $this->verifyValidChecksum();
+    }
+
+    public function test_max_failures_can_be_configured()
+    {
+        config()->set('livewire.checksum_rate_limit.max_failures', 3);
+
+        $this->failChecksum(3);
+
+        $this->expectException(TooManyRequestsHttpException::class);
+
+        $this->verifyValidChecksum();
+    }
+
+    public function test_decay_seconds_can_be_configured()
+    {
+        config()->set('livewire.checksum_rate_limit.decay_seconds', 60);
+
+        $this->failChecksum();
+
+        $this->assertEqualsWithDelta(60, RateLimiter::availableIn('livewire-checksum-failures:127.0.0.1'), 1);
+    }
+
+    public function test_rate_limiting_can_be_disabled()
+    {
+        config()->set('livewire.checksum_rate_limit.max_failures', null);
+
+        $this->failChecksum(20);
+
+        $this->assertEquals(0, RateLimiter::attempts('livewire-checksum-failures:127.0.0.1'));
+
+        $this->verifyValidChecksum();
+    }
+
+    public function test_rate_limiting_is_disabled_when_max_failures_is_zero_or_false()
+    {
+        foreach ([0, false] as $value) {
+            config()->set('livewire.checksum_rate_limit.max_failures', $value);
+
+            $this->failChecksum(3);
+
+            $this->assertEquals(0, RateLimiter::attempts('livewire-checksum-failures:127.0.0.1'));
+
+            $this->verifyValidChecksum();
+        }
+    }
+
+    protected function failChecksum($times = 1)
+    {
+        $snapshot = [
+            'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
+            'data' => ['foo' => 'bar'],
+            'checksum' => 'invalid-checksum',
+        ];
+
+        for ($i = 0; $i < $times; $i++) {
+            // Clear the flag to simulate a new request
+            request()->attributes->remove('livewire_rate_limit_checked');
+
+            try {
+                Checksum::verify($snapshot);
+            } catch (CorruptComponentPayloadException $e) {
+                // Expected
+            }
+        }
+    }
+
+    protected function verifyValidChecksum()
+    {
+        request()->attributes->remove('livewire_rate_limit_checked');
+
+        $snapshot = [
+            'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
+            'data' => ['foo' => 'bar'],
+        ];
+
+        $snapshot['checksum'] = Checksum::generate($snapshot);
+
+        Checksum::verify($snapshot);
     }
 }
 

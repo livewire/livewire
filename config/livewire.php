@@ -279,4 +279,20 @@ return [
         'max_calls' => 50,           // Maximum method calls per request
         'max_components' => 200,     // Maximum components per batch request
     ],
+
+    /*
+    |---------------------------------------------------------------------------
+    | Checksum Rate Limit
+    |---------------------------------------------------------------------------
+    |
+    | Requests with an invalid snapshot checksum are counted per client (the IP
+    | by default). Once "max_failures" is reached, further Livewire requests
+    | from that client are rejected. Set "max_failures" to null to disable.
+    |
+    */
+
+    'checksum_rate_limit' => [
+        'max_failures' => 10,   // Failed checksums allowed before requests are rejected
+        'decay_seconds' => 600, // How long (in seconds) failures are remembered
+    ],
 ];

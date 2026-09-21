@@ -385,3 +385,32 @@ This checksum is then used on the next network request to verify that the snapsh
 If Livewire finds a checksum mismatch, it will throw a `CorruptComponentPayloadException` and the request will fail.
 
 This protects against any form of malicious tampering that would otherwise result in granting users the ability to execute or modify unrelated code.
+
+### Rate limiting checksum failures
+
+Livewire also counts checksum failures per client. After 10 failures within 10 minutes, every Livewire request from that client is rejected with a `429 Too Many Requests` response until the window expires.
+
+By default, clients are identified by their IP address. If many of your users share a single public IP (behind a corporate NAT, a VPN, a school proxy, or carrier-grade NAT), one misbehaving client can lock all of them out. To identify clients differently, pass a callback to `Livewire::setChecksumRateLimitKey()` in a service provider's `boot` method:
+
+```php
+use Illuminate\Http\Request;
+use Livewire\Livewire;
+
+Livewire::setChecksumRateLimitKey(function (Request $request) {
+    return $request->user()?->getAuthIdentifier();
+});
+```
+
+When the callback returns `null` or an empty string, Livewire falls back to the IP address. Custom keys are stored separately from IP addresses, so the two can never collide.
+
+> [!warning] Keys the client can change weaken the limit
+> A key based on something the client controls, such as the session ID, can be reset by simply discarding the cookie. Prefer keys that are stable for a given client, like the authenticated user's ID.
+
+The threshold and window are configured in `config/livewire.php`. Setting `max_failures` to `null` (or `0`) disables the rate limiter entirely:
+
+```php
+'checksum_rate_limit' => [
+    'max_failures' => 10,
+    'decay_seconds' => 600,
+],
+```
