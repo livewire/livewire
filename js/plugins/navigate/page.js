@@ -1,4 +1,4 @@
-import { replaceNoncesInHtml, cloneScriptTag } from '@/utils'
+import { cloneScriptTag } from '@/utils'
 
 let oldBodyScriptTagHashes = []
 
@@ -9,11 +9,13 @@ let attributesExemptFromScriptTagHashing = [
 ]
 
 export function swapCurrentPageWithNewHtml(html, andThen) {
-    // Rewrite nonces in the fetched HTML to match the original page's nonce
-    // before parsing, so DOMParser doesn't trigger CSP violations...
-    html = replaceNoncesInHtml(html)
-
     let newDocument = (new DOMParser()).parseFromString(html, "text/html")
+
+    // DOMParser parses with scripting disabled, so <noscript> contents come back as
+    // real elements instead of the inert text a browser running JavaScript sees.
+    // Turn them back into text so they can't come alive on this page...
+    newDocument.querySelectorAll('noscript').forEach(i => i.textContent = i.innerHTML)
+
     let newHtml = newDocument.documentElement
     let newBody = document.adoptNode(newDocument.body)
     let newHead = document.adoptNode(newDocument.head)
