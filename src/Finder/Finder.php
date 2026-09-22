@@ -210,7 +210,8 @@ class Finder
             ];
 
             foreach ($paths as $filePath) {
-                if (! is_dir($filePath)
+                if (! str_contains($filePath, "\0")
+                    && ! is_dir($filePath)
                     && file_exists($filePath)
                     && $this->hasValidSingleFileComponentSource($filePath)) {
                     return $filePath;
@@ -285,7 +286,8 @@ class Finder
                 $fileBaseName = preg_replace('/' . self::ZAP . '[\x{FE0E}\x{FE0F}]?/u', '', $fileBaseName);
 
                 if (
-                    is_dir($dir)
+                    ! str_contains($dir, "\0") 
+                    && is_dir($dir)
                     && $this->hasValidMultiFileComponentSource($dir, $fileBaseName)
                 ) {
                     return $dir;
