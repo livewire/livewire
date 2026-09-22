@@ -1330,10 +1330,10 @@ class UnitTest extends \Tests\TestCase
             }
         })
             ->call('validateFirstLineProduct')
-            ->assertHasNoErrors('sections.0.lines.0.product')
-            ->assertHasNoErrors('sections.0.lines.1.product')
-            ->assertHasNoErrors('sections.1.lines.0.product')
-            ->assertHasNoErrors('sections.1.lines.1.product');
+            ->assertHasNoErrors('sections.0.lines.0.product')   // target, should passes
+            ->assertHasNoErrors('sections.0.lines.1.product')   // skip, should not validated
+            ->assertHasNoErrors('sections.1.lines.0.product')   // target, should passes
+            ->assertHasNoErrors('sections.1.lines.1.product');  // skip, should not validated
     }
 
     public function test_validate_only_on_repeater_line_still_reports_errors_on_the_targeted_line()
@@ -1362,10 +1362,10 @@ class UnitTest extends \Tests\TestCase
             }
         })
             ->call('validateFirstLineProduct')
-            ->assertHasErrors(['sections.1.lines.0.product' => 'required'])
-            ->assertHasNoErrors('sections.0.lines.0.product')
-            ->assertHasNoErrors('sections.0.lines.1.product')
-            ->assertHasNoErrors('sections.1.lines.1.product');
+            ->assertHasErrors(['sections.1.lines.0.product' => 'required']) // target, should fails
+            ->assertHasNoErrors('sections.0.lines.0.product')   // target, should passes
+            ->assertHasNoErrors('sections.0.lines.1.product')   // skip, should not validated
+            ->assertHasNoErrors('sections.1.lines.1.product');  // skip, should not validated
     }
 }
 
