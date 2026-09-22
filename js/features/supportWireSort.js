@@ -94,3 +94,22 @@ function bindSortItem(el, directive) {
         }
     })
 }
+
+export function isSortableElement(el) {
+    let item = el.closest('[wire\\:sort\\:item],[x-sort\\:item]')
+
+    if (! item) return false
+
+    // Ignored elements are never draggable...
+    if (el.closest('[wire\\:sort\\:ignore],[x-sort\\:ignore]')) return false
+
+    let handleSelector = '[wire\\:sort\\:handle],[x-sort\\:handle]'
+    let list = item.parentElement
+
+    // If the list uses a drag handle, only the handle can start a drag...
+    if (list && list.querySelector(handleSelector)) {
+        return el.closest(handleSelector) !== null
+    }
+
+    return true
+}
