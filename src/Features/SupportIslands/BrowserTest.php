@@ -12,6 +12,7 @@ class BrowserTest extends BrowserTestCase
     {
         return function () {
             app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');
+            app('view')->addLocation(__DIR__ . '/fixtures/views');
         };
     }
 
@@ -384,6 +385,71 @@ class BrowserTest extends BrowserTestCase
             ->assertPresent('@root-increment')
             ->assertDontSee('Loading...')
             ->assertSeeIn('@island-increment', 'Count: 0')
+            ;
+    }
+
+    public function test_island_renders_into_its_own_component_when_a_nested_component_renders_the_same_island()
+    {
+        // Every component includes the same view, so every island carries the
+        // same token. The markers are not direct children of the component
+        // roots, and there is a nested component on either side of the parent's
+        // island: taking the first match or the last match both miss it, only
+        // stopping at the nested components finds it...
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $label = 'parent';
+
+                public $count = 0;
+
+                public function increment()
+                {
+                    $this->count++;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <aside><livewire:child label="before" /></aside>
+
+                        <section>@include('shared-island')</section>
+
+                        <aside><livewire:child label="after" /></aside>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends \Livewire\Component {
+                public $label;
+
+                public $count = 0;
+
+                public function increment()
+                {
+                    $this->count++;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <section>@include('shared-island')</section>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertSeeIn('@before-count', 'before: 0')
+            ->assertSeeIn('@parent-count', 'parent: 0')
+            ->assertSeeIn('@after-count', 'after: 0')
+            ->waitForLivewire()->click('@parent-increment')
+            ->assertSeeIn('@before-count', 'before: 0')
+            ->assertSeeIn('@parent-count', 'parent: 1')
+            ->assertSeeIn('@after-count', 'after: 0')
+            ->waitForLivewire()->click('@after-increment')
+            ->assertSeeIn('@before-count', 'before: 0')
+            ->assertSeeIn('@parent-count', 'parent: 1')
+            ->assertSeeIn('@after-count', 'after: 1')
             ;
     }
 
