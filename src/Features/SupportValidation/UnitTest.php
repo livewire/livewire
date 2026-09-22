@@ -1331,7 +1331,9 @@ class UnitTest extends \Tests\TestCase
         })
             ->call('validateFirstLineProduct')
             ->assertHasNoErrors('sections.0.lines.0.product')
-            ->assertHasNoErrors('sections.1.lines.0.product');
+            ->assertHasNoErrors('sections.0.lines.1.product')
+            ->assertHasNoErrors('sections.1.lines.0.product')
+            ->assertHasNoErrors('sections.1.lines.1.product');
     }
 
     public function test_validate_only_on_repeater_line_still_reports_errors_on_the_targeted_line()
