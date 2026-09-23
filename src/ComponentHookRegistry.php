@@ -11,6 +11,10 @@ class ComponentHookRegistry
 
     protected static $componentHooks = [];
 
+    protected static $activeHooks = [];
+
+    protected static $emptyFinisher;
+
     static function register($hook)
     {
         if (method_exists($hook, 'provide')) $hook::provide();
@@ -18,42 +22,76 @@ class ComponentHookRegistry
         if (in_array($hook, static::$componentHooks)) return;
 
         static::$componentHooks[] = $hook;
+
+        $hasInstanceLifecycle = false;
+        $methods = ['boot', 'mount', 'hydrate', 'update', 'call', 'render', 'renderIsland', 'renderPlaceholder', 'dehydrate', 'destroy', 'exception'];
+        foreach ($methods as $m) {
+            if (method_exists($hook, $m)) {
+                $hasInstanceLifecycle = true;
+                break;
+            }
+        }
+
+        if ($hasInstanceLifecycle || method_exists($hook, 'skip') || static::hasCustomInstanceMethods($hook)) {
+            static::$activeHooks[] = $hook;
+        }
+    }
+
+    protected static function hasCustomInstanceMethods($hook): bool
+    {
+        $ref = new \ReflectionClass($hook);
+        foreach ($ref->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+            if ($method->isStatic()) continue;
+            if ($method->getDeclaringClass()->getName() === ComponentHook::class) continue;
+            return true;
+        }
+        return false;
     }
 
     static function getHook($component, $hook)
     {
-        if (! isset(static::$components[$component])) return;
+        if (! isset(static::$components[$component])) return null;
 
-        $componentHooks = static::$components[$component];
+        if (isset(static::$components[$component][$hook])) {
+            return static::$components[$component][$hook];
+        }
 
-        foreach ($componentHooks as $componentHook) {
+        foreach (static::$components[$component] as $componentHook) {
             if ($componentHook instanceof $hook) return $componentHook;
         }
+
+        return null;
     }
 
     static function boot()
     {
         static::$components = new WeakMap;
 
-        foreach (static::$componentHooks as $hook) {
-            on('mount', function ($component, $params, $key, $parent, $attributes) use ($hook) {
-                if (! $hook = static::initializeHook($hook, $component)) {
-                    return;
+        on('flush-state', function () {
+            static::$components = new WeakMap;
+        });
+
+        on('mount', function ($component, $params, $key, $parent, $attributes) {
+            foreach (static::$activeHooks as $hook) {
+                if (! $instance = static::initializeHook($hook, $component)) {
+                    continue;
                 }
 
-                $hook->callBoot();
-                $hook->callMount($params, $parent, $attributes);
-            });
+                $instance->callBoot();
+                $instance->callMount($params, $parent, $attributes);
+            }
+        });
 
-            on('hydrate', function ($component, $memo) use ($hook) {
-                if (! $hook = static::initializeHook($hook, $component)) {
-                    return;
+        on('hydrate', function ($component, $memo) {
+            foreach (static::$activeHooks as $hook) {
+                if (! $instance = static::initializeHook($hook, $component)) {
+                    continue;
                 }
 
-                $hook->callBoot();
-                $hook->callHydrate($memo);
-            });
-        }
+                $instance->callBoot();
+                $instance->callHydrate($memo);
+            }
+        });
 
         on('update', function ($component, $fullPath, $newValue) {
             $propertyName = Utils::beforeFirstDot($fullPath);
@@ -100,28 +138,34 @@ class ComponentHookRegistry
     {
         if (! isset(static::$components[$target])) static::$components[$target] = [];
 
-        $hook = new $hook;
+        $instance = new $hook;
 
-        $hook->setComponent($target);
+        $instance->setComponent($target);
 
         // If no `skip` method has been implemented, then boot the hook anyway
-        if (method_exists($hook, 'skip') && $hook->skip()) {
-            return;
+        if (method_exists($instance, 'skip') && $instance->skip()) {
+            return null;
         }
 
-        static::$components[$target][] = $hook;
-
-        return $hook;
+        return static::$components[$target][$hook] = $instance;
     }
 
     static function proxyCallToHooks($target, $method) {
         return function (...$params) use ($target, $method) {
+            if (! isset(static::$components[$target])) {
+                return static::$emptyFinisher ??= static fn () => null;
+            }
+
             $forwardCallbacks = [];
 
-            foreach (static::$components[$target] ?? [] as $hook) {
+            foreach (static::$components[$target] as $hook) {
                 if ($callback = $hook->{$method}(...$params)) {
                     $forwardCallbacks[] = $callback;
                 }
+            }
+
+            if (empty($forwardCallbacks)) {
+                return static::$emptyFinisher ??= static fn () => null;
             }
 
             return function (...$forwards) use ($forwardCallbacks) {

@@ -14,11 +14,23 @@ class SupportLifecycleHooks extends ComponentHook
     // Performance optimization: Cache method existence checks per component class...
     protected static $methodCache = [];
 
+    // Performance optimization: Cache existing trait hook method names per component class and hook...
+    protected static $traitHooksCache = [];
+
+    // Performance optimization: Cache protected methods per component class...
+    protected static $protectedMethodsCache = [];
+
+    // Performance optimization: Cache studly-cased property names...
+    protected static $studlyCache = [];
+
     public static function provide()
     {
         on('flush-state', function () {
             static::$traitCache = [];
             static::$methodCache = [];
+            static::$traitHooksCache = [];
+            static::$protectedMethodsCache = [];
+            static::$studlyCache = [];
         });
     }
 
@@ -52,7 +64,8 @@ class SupportLifecycleHooks extends ComponentHook
 
         // Call "hydrateXx" hooks for each property...
         foreach ($this->getProperties() as $property => $value) {
-            $this->callHook('hydrate'.str($property)->studly(), [$value]);
+            $studly = static::$studlyCache[$property] ??= \Illuminate\Support\Str::studly($property);
+            $this->callHook('hydrate'.$studly, [$value]);
         }
 
         $this->callHook('booted');
@@ -61,22 +74,28 @@ class SupportLifecycleHooks extends ComponentHook
 
     public function update($propertyName, $fullPath, $newValue)
     {
-        $name = str($fullPath);
+        $containsDot = str_contains($fullPath, '.');
 
-        $propertyName = $name->studly()->before('.');
-        $keyAfterFirstDot = $name->contains('.') ? $name->after('.')->__toString() : null;
-        $keyAfterLastDot = $name->contains('.') ? $name->afterLast('.')->__toString() : null;
+        if ($containsDot) {
+            $dotPos = strpos($fullPath, '.');
+            $rawProperty = substr($fullPath, 0, $dotPos);
+            $propertyName = static::$studlyCache[$rawProperty] ??= \Illuminate\Support\Str::studly($rawProperty);
+            $keyAfterFirstDot = substr($fullPath, $dotPos + 1);
+            $lastDotPos = strrpos($fullPath, '.');
+            $keyAfterLastDot = substr($fullPath, $lastDotPos + 1);
+            $studlyFullPath = \Illuminate\Support\Str::studly(str_replace('.', '_', $fullPath));
+            $beforeNestedMethod = 'updating'.$studlyFullPath;
+            $afterNestedMethod = 'updated'.$studlyFullPath;
+        } else {
+            $propertyName = static::$studlyCache[$fullPath] ??= \Illuminate\Support\Str::studly($fullPath);
+            $keyAfterFirstDot = null;
+            $keyAfterLastDot = null;
+            $beforeNestedMethod = false;
+            $afterNestedMethod = false;
+        }
 
         $beforeMethod = 'updating'.$propertyName;
         $afterMethod = 'updated'.$propertyName;
-
-        $beforeNestedMethod = $name->contains('.')
-            ? 'updating'.$name->replace('.', '_')->studly()
-            : false;
-
-        $afterNestedMethod = $name->contains('.')
-            ? 'updated'.$name->replace('.', '_')->studly()
-            : false;
 
         $this->callHook('updating', [$fullPath, $newValue]);
         $this->callTraitHook('updating', [$fullPath, $newValue]);
@@ -97,33 +116,36 @@ class SupportLifecycleHooks extends ComponentHook
 
     public function call($methodName, $params, $returnEarly, $metadata)
     {
-        $protectedMethods = [
-            'mount',
-            'boot',
-            'booted',
-            'exception',
-            'hydrate*',
-            'dehydrate*',
-            'updating*',
-            'updated*',
-            'rendering',
-            'rendered',
-            'scriptSrc',
-        ];
-
-        // Also block trait-suffixed lifecycle hooks (e.g. mountWithFileUploads, bootMyTrait)
         $class = get_class($this->component);
 
-        if (! isset(static::$traitCache[$class])) {
-            static::$traitCache[$class] = class_uses_recursive($this->component);
-        }
+        $protectedMethods = static::$protectedMethodsCache[$class] ??= (function () use ($class) {
+            $protected = [
+                'mount',
+                'boot',
+                'booted',
+                'exception',
+                'hydrate*',
+                'dehydrate*',
+                'updating*',
+                'updated*',
+                'rendering',
+                'rendered',
+                'scriptSrc',
+            ];
 
-        foreach (static::$traitCache[$class] as $trait) {
-            $traitBasename = class_basename($trait);
-            $protectedMethods[] = 'mount'.$traitBasename;
-            $protectedMethods[] = 'boot'.$traitBasename;
-            $protectedMethods[] = 'booted'.$traitBasename;
-        }
+            if (! isset(static::$traitCache[$class])) {
+                static::$traitCache[$class] = class_uses_recursive($this->component);
+            }
+
+            foreach (static::$traitCache[$class] as $trait) {
+                $traitBasename = class_basename($trait);
+                $protected[] = 'mount'.$traitBasename;
+                $protected[] = 'boot'.$traitBasename;
+                $protected[] = 'booted'.$traitBasename;
+            }
+
+            return $protected;
+        })();
 
         throw_if(
             str($methodName)->is($protectedMethods),
@@ -157,7 +179,8 @@ class SupportLifecycleHooks extends ComponentHook
 
         // Call "dehydrateXx" hooks for each property...
         foreach ($this->getProperties() as $property => $value) {
-            $this->callHook('dehydrate'.str($property)->studly(), [$value]);
+            $studly = static::$studlyCache[$property] ??= \Illuminate\Support\Str::studly($property);
+            $this->callHook('dehydrate'.$studly, [$value]);
         }
     }
 
@@ -178,40 +201,39 @@ class SupportLifecycleHooks extends ComponentHook
 
     function callTraitHook($name, $params = [])
     {
-        // Performance optimization: Cache trait lookups per component class
         $class = get_class($this->component);
 
-        if (!isset(static::$traitCache[$class])) {
-            static::$traitCache[$class] = class_uses_recursive($this->component);
+        if (! isset(static::$traitHooksCache[$class][$name])) {
+            if (! isset(static::$traitCache[$class])) {
+                static::$traitCache[$class] = class_uses_recursive($this->component);
+            }
+
+            $methods = [];
+            foreach (static::$traitCache[$class] as $trait) {
+                $method = $name.class_basename($trait);
+                if (method_exists($this->component, $method)) {
+                    $methods[] = $method;
+                }
+            }
+            static::$traitHooksCache[$class][$name] = $methods;
         }
 
-        foreach (static::$traitCache[$class] as $trait) {
-            $method = $name.class_basename($trait);
+        $methods = static::$traitHooksCache[$class][$name];
+        if (empty($methods)) return;
 
-            // Performance optimization: Cache method existence checks
-            $cacheKey = "{$class}::{$method}";
+        $paramsToSpread = $params;
+        if (! empty($params)) {
+            $keys = array_keys($params);
+            $hasStringKeys = array_filter($keys, 'is_string');
+            $hasIntKeys = array_filter($keys, 'is_int');
 
-            if (!isset(static::$methodCache[$cacheKey])) {
-                static::$methodCache[$cacheKey] = method_exists($this->component, $method);
+            if ($hasStringKeys && $hasIntKeys) {
+                $paramsToSpread = array_filter($params, 'is_string', ARRAY_FILTER_USE_KEY);
             }
+        }
 
-            if (static::$methodCache[$cacheKey]) {
-                // resolveMethodDependencies() can produce arrays with both
-                // string and integer keys (e.g. ['postId' => '123', 0 => null]).
-                // PHP forbids positional args after named args when spreading,
-                // so strip the integer-keyed entries in that case. When all keys
-                // are the same type (e.g. updating/updated hooks pass only
-                // integer-keyed [$name, $value]), leave them as-is.
-                $keys = array_keys($params);
-                $hasStringKeys = array_filter($keys, 'is_string');
-                $hasIntKeys = array_filter($keys, 'is_int');
-
-                $paramsToSpread = ($hasStringKeys && $hasIntKeys)
-                    ? array_filter($params, 'is_string', ARRAY_FILTER_USE_KEY)
-                    : $params;
-
-                wrap($this->component)->$method(...$paramsToSpread);
-            }
+        foreach ($methods as $method) {
+            wrap($this->component)->$method(...$paramsToSpread);
         }
     }
 }
