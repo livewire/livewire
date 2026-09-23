@@ -25,8 +25,14 @@ class ImplicitlyBoundMethod extends BoundMethod
             $key = "{$class}@{$method}";
 
             if (! isset(static::$methodParamCountCache[$key])) {
-                $reflector = new \ReflectionMethod($callback[0], $method);
-                static::$methodParamCountCache[$key] = $reflector->getNumberOfParameters();
+                if (method_exists($callback[0], $method)) {
+                    $reflector = new \ReflectionMethod($callback[0], $method);
+                    static::$methodParamCountCache[$key] = $reflector->isPublic()
+                        ? $reflector->getNumberOfParameters()
+                        : -1;
+                } else {
+                    static::$methodParamCountCache[$key] = -1;
+                }
             }
 
             if (static::$methodParamCountCache[$key] === 0 && empty($parameters)) {

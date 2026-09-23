@@ -270,6 +270,8 @@ class HandleSynths extends Mechanism
     {
         on('flush-state', function () {
             static::$initializable = [];
+            $this->typeCache = [];
+            $this->keyMap = [];
         });
     }
 

@@ -32,32 +32,45 @@ class ComponentHookRegistry
             }
         }
 
-        if ($hasInstanceLifecycle || method_exists($hook, 'skip') || static::hasCustomInstanceMethods($hook)) {
+        if ($hasInstanceLifecycle || method_exists($hook, 'skip') || static::hasCustomInstanceMembers($hook)) {
             static::$activeHooks[] = $hook;
         }
     }
 
-    protected static function hasCustomInstanceMethods($hook): bool
+    protected static function hasCustomInstanceMembers($hook): bool
     {
         $ref = new \ReflectionClass($hook);
-        foreach ($ref->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+
+        foreach ($ref->getMethods() as $method) {
             if ($method->isStatic()) continue;
+            if ($method->getName() === '__construct') continue;
             if ($method->getDeclaringClass()->getName() === ComponentHook::class) continue;
             return true;
         }
+
+        foreach ($ref->getProperties() as $property) {
+            if ($property->isStatic()) continue;
+            if ($property->getDeclaringClass()->getName() === ComponentHook::class) continue;
+            return true;
+        }
+
         return false;
     }
 
     static function getHook($component, $hook)
     {
-        if (! isset(static::$components[$component])) return null;
-
         if (isset(static::$components[$component][$hook])) {
             return static::$components[$component][$hook];
         }
 
-        foreach (static::$components[$component] as $componentHook) {
-            if ($componentHook instanceof $hook) return $componentHook;
+        if (isset(static::$components[$component])) {
+            foreach (static::$components[$component] as $componentHook) {
+                if ($componentHook instanceof $hook) return $componentHook;
+            }
+        }
+
+        if (in_array($hook, static::$componentHooks)) {
+            return static::initializeHook($hook, $component);
         }
 
         return null;

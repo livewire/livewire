@@ -80,32 +80,30 @@ class EventBus
             return static::$emptyFinisher ??= static fn (&$forward = null) => $forward;
         }
 
+        $before = $hasBefore ? $this->listenersBefore[$name] : [];
+        $main = $hasMain ? $this->listeners[$name] : [];
+        $after = $hasAfter ? $this->listenersAfter[$name] : [];
+
         $middlewares = [];
 
-        if ($hasBefore) {
-            foreach ($this->listenersBefore[$name] as $callback) {
-                $result = $callback(...$params);
-                if ($result !== null) {
-                    $middlewares[] = $result;
-                }
+        foreach ($before as $callback) {
+            $result = $callback(...$params);
+            if ($result !== null) {
+                $middlewares[] = $result;
             }
         }
 
-        if ($hasMain) {
-            foreach ($this->listeners[$name] as $callback) {
-                $result = $callback(...$params);
-                if ($result !== null) {
-                    $middlewares[] = $result;
-                }
+        foreach ($main as $callback) {
+            $result = $callback(...$params);
+            if ($result !== null) {
+                $middlewares[] = $result;
             }
         }
 
-        if ($hasAfter) {
-            foreach ($this->listenersAfter[$name] as $callback) {
-                $result = $callback(...$params);
-                if ($result !== null) {
-                    $middlewares[] = $result;
-                }
+        foreach ($after as $callback) {
+            $result = $callback(...$params);
+            if ($result !== null) {
+                $middlewares[] = $result;
             }
         }
 
