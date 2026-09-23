@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportJsModules;
 use Illuminate\Support\Facades\Route;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
+use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
@@ -25,16 +26,20 @@ class SupportJsModules extends ComponentHook
             $component = str_replace('---', '::', $component);
             $component = str_replace('--', '.', $component);
 
-            $instance = app('livewire')->new($component);
+            try {
+                $instance = app('livewire')->new($component);
+            } catch (ComponentNotFoundException) {
+                abort(404);
+            }
 
             if (! method_exists($instance, 'scriptModuleSrc')) {
-                throw new \Exception('Component '.$component.' does not have a script source.');
+                abort(404);
             }
 
             $path = $instance->scriptModuleSrc();
 
-            if (! file_exists($path)) {
-                throw new \Exception('Script file not found: '.$path);
+            if (! $path || ! file_exists($path)) {
+                abort(404);
             }
 
             $source = file_get_contents($path);
