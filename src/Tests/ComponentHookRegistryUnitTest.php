@@ -11,17 +11,34 @@ class ComponentHookRegistryUnitTest extends \Tests\TestCase
 {
     public function test_pure_static_provide_hooks_are_not_instantiated_per_component()
     {
-        $invocations = 0;
         CustomStaticProvideHook::$provided = false;
-        CustomStaticProvideHook::$instantiations = 0;
 
         ComponentHookRegistry::register(CustomStaticProvideHook::class);
 
         $this->assertTrue(CustomStaticProvideHook::$provided);
 
+        $component = Livewire::test(HookRegistryTestComponent::class)->instance();
+
+        $ref = new \ReflectionClass(ComponentHookRegistry::class);
+        $activeHooksProp = $ref->getProperty('activeHooks');
+        $activeHooksProp->setAccessible(true);
+        $this->assertNotContains(CustomStaticProvideHook::class, $activeHooksProp->getValue());
+
+        $componentsProp = $ref->getProperty('components');
+        $componentsProp->setAccessible(true);
+        $componentsMap = $componentsProp->getValue();
+        $this->assertArrayNotHasKey(CustomStaticProvideHook::class, $componentsMap[$component] ?? []);
+    }
+
+    public function test_hooks_with_custom_constructor_are_active_and_instantiated()
+    {
+        CustomConstructorHook::$instantiations = 0;
+
+        ComponentHookRegistry::register(CustomConstructorHook::class);
+
         Livewire::test(HookRegistryTestComponent::class);
 
-        $this->assertSame(0, CustomStaticProvideHook::$instantiations);
+        $this->assertSame(1, CustomConstructorHook::$instantiations);
     }
 
     public function test_hooks_with_lifecycle_methods_are_instantiated_and_executed()
@@ -95,12 +112,16 @@ class HookRegistryTestComponent extends Component
 class CustomStaticProvideHook extends ComponentHook
 {
     public static bool $provided = false;
-    public static int $instantiations = 0;
 
     public static function provide()
     {
         static::$provided = true;
     }
+}
+
+class CustomConstructorHook extends ComponentHook
+{
+    public static int $instantiations = 0;
 
     public function __construct()
     {

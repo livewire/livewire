@@ -43,7 +43,6 @@ class ComponentHookRegistry
 
         foreach ($ref->getMethods() as $method) {
             if ($method->isStatic()) continue;
-            if ($method->getName() === '__construct') continue;
             if ($method->getDeclaringClass()->getName() === ComponentHook::class) continue;
             return true;
         }
