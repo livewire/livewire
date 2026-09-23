@@ -99,6 +99,12 @@ class SupportRedirects extends ComponentHook
                     : app('livewire.factory')->resolveComponentClass($routeComponent);
 
                 if ($resolvedClass === $componentClass) {
+                    if (count($route->parameterNames()) > 0) {
+                        throw new \InvalidArgumentException(
+                            "Unable to resolve URL for Livewire component [{$componentClass}]. Missing required parameter for [URI: {$route->uri()}]."
+                        );
+                    }
+
                     return url($route->uri());
                 }
             }
