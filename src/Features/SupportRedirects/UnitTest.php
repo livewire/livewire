@@ -297,6 +297,22 @@ class UnitTest extends \Tests\TestCase
         $this->assertNull($component->effects['returns'][0]);
     }
 
+    public function test_redirect_to_component_with_parameterized_livewire_route_fails_clearly()
+    {
+        Route::livewire('/posts/{post}', TriggersRedirectStub::class)->name('show.post');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Missing required parameter');
+
+        Livewire::test(new class extends TestComponent {
+            function triggerRedirect()
+            {
+                $this->redirect(TriggersRedirectStub::class);
+            }
+        })
+            ->call('triggerRedirect');
+    }
+
     protected function registerNamedRoute()
     {
         Route::get('foo', function () {
