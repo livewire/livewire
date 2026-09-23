@@ -36,6 +36,8 @@ class EventBus
         return fn() => $this->off($name, $callback);
     }
 
+    protected static $emptyFinisher;
+
     public function off(string $name, callable $callback): void
     {
         if (isset($this->listeners[$name])) {
@@ -43,6 +45,7 @@ class EventBus
 
             if ($index !== false) {
                 unset($this->listeners[$name][$index]);
+                if (empty($this->listeners[$name])) unset($this->listeners[$name]);
                 return;
             }
         }
@@ -52,6 +55,7 @@ class EventBus
 
             if ($index !== false) {
                 unset($this->listenersAfter[$name][$index]);
+                if (empty($this->listenersAfter[$name])) unset($this->listenersAfter[$name]);
                 return;
             }
         }
@@ -61,34 +65,50 @@ class EventBus
 
             if ($index !== false) {
                 unset($this->listenersBefore[$name][$index]);
+                if (empty($this->listenersBefore[$name])) unset($this->listenersBefore[$name]);
             }
         }
     }
 
     public function trigger(string $name, ...$params): callable
     {
+        $hasBefore = isset($this->listenersBefore[$name]);
+        $hasMain = isset($this->listeners[$name]);
+        $hasAfter = isset($this->listenersAfter[$name]);
+
+        if (! $hasBefore && ! $hasMain && ! $hasAfter) {
+            return static::$emptyFinisher ??= static fn (&$forward = null) => $forward;
+        }
+
+        $before = $hasBefore ? $this->listenersBefore[$name] : [];
+        $main = $hasMain ? $this->listeners[$name] : [];
+        $after = $hasAfter ? $this->listenersAfter[$name] : [];
+
         $middlewares = [];
 
-        $listeners = [];
-
-        if (isset($this->listenersBefore[$name])) {
-            $listeners = $this->listenersBefore[$name];
-        }
-
-        if (isset($this->listeners[$name])) {
-            $listeners = array_merge($listeners, $this->listeners[$name]);
-        }
-
-        if (isset($this->listenersAfter[$name])) {
-            $listeners = array_merge($listeners, $this->listenersAfter[$name]);
-        }
-
-        foreach ($listeners as $callback) {
+        foreach ($before as $callback) {
             $result = $callback(...$params);
-
             if ($result !== null) {
                 $middlewares[] = $result;
             }
+        }
+
+        foreach ($main as $callback) {
+            $result = $callback(...$params);
+            if ($result !== null) {
+                $middlewares[] = $result;
+            }
+        }
+
+        foreach ($after as $callback) {
+            $result = $callback(...$params);
+            if ($result !== null) {
+                $middlewares[] = $result;
+            }
+        }
+
+        if (empty($middlewares)) {
+            return static::$emptyFinisher ??= static fn (&$forward = null) => $forward;
         }
 
         return function (&$forward = null, ...$extras) use ($middlewares) {

@@ -34,12 +34,13 @@ class Utils extends BaseUtils
 
     static function stringifyHtmlAttributes($attributes)
     {
-        return collect($attributes)
-            ->mapWithKeys(function ($value, $key) {
-                return [$key => static::escapeStringForHtml($value)];
-            })->map(function ($value, $key) {
-                return sprintf('%s="%s"', $key, $value);
-            })->implode(' ');
+        $html = [];
+
+        foreach ($attributes as $key => $value) {
+            $html[] = sprintf('%s="%s"', $key, static::escapeStringForHtml($value));
+        }
+
+        return implode(' ', $html);
     }
 
     static function escapeStringForHtml($subject)

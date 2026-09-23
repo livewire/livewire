@@ -10,6 +10,41 @@ use ReflectionNamedType;
 
 class ImplicitlyBoundMethod extends BoundMethod
 {
+    protected static array $methodParamCountCache = [];
+
+    public static function flushCache(): void
+    {
+        static::$methodParamCountCache = [];
+    }
+
+    public static function call($container, $callback, array $parameters = [], $defaultMethod = null)
+    {
+        if (is_array($callback) && is_object($callback[0]) && is_string($callback[1])) {
+            $class = get_class($callback[0]);
+            $method = $callback[1];
+            $key = "{$class}@{$method}";
+
+            if (! isset(static::$methodParamCountCache[$key])) {
+                if (method_exists($callback[0], $method)) {
+                    $reflector = new \ReflectionMethod($callback[0], $method);
+                    static::$methodParamCountCache[$key] = $reflector->isPublic()
+                        ? $reflector->getNumberOfParameters()
+                        : -1;
+                } else {
+                    static::$methodParamCountCache[$key] = -1;
+                }
+            }
+
+            if (static::$methodParamCountCache[$key] === 0 && empty($parameters)) {
+                if (! $container->hasMethodBinding($key)) {
+                    return $callback[0]->{$method}();
+                }
+            }
+        }
+
+        return parent::call($container, $callback, $parameters, $defaultMethod);
+    }
+
     protected static function getMethodDependencies($container, $callback, array $parameters = [])
     {
         return static::resolveMethodDependencies($container, $callback, $parameters)['positional'];
@@ -125,7 +160,7 @@ class ImplicitlyBoundMethod extends BoundMethod
             return null;
         }
 
-        if ((new ReflectionClass($className))->isEnum()) {
+        if (enum_exists($className)) {
             return $className::tryFrom($value);
         }
 
@@ -151,11 +186,17 @@ class ImplicitlyBoundMethod extends BoundMethod
 
     public static function implementsInterface($parameter)
     {
-        return (new ReflectionClass($parameter->getType()->getName()))->implementsInterface(ImplicitlyBindable::class);
+        $type = $parameter->getType();
+        if (! $type || ! method_exists($type, 'getName')) return false;
+
+        return is_subclass_of($type->getName(), ImplicitlyBindable::class);
     }
 
     public static function isEnum($parameter)
     {
-        return (new ReflectionClass($parameter->getType()->getName()))->isEnum();
+        $type = $parameter->getType();
+        if (! $type || ! method_exists($type, 'getName')) return false;
+
+        return enum_exists($type->getName());
     }
 }

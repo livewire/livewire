@@ -78,8 +78,15 @@ class Checksum {
         return 'livewire-checksum-failures:' . request()->ip();
     }
 
+    protected static $hashKey;
+
+    static function flushCache()
+    {
+        static::$hashKey = null;
+    }
+
     static function generate($snapshot) {
-        $hashKey = app('encrypter')->getKey();
+        $hashKey = static::$hashKey ??= app('encrypter')->getKey();
 
         // Remove the children from the memo in the snapshot, as it is actually Ok
         // if the "children" tracking is tampered with. This way JavaScript can

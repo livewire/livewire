@@ -5,10 +5,14 @@ namespace Livewire\Drawer;
 class BaseUtils
 {
     protected static $reflectionCache = [];
+    protected static $subclassMethodsCache = [];
+    protected static $attributesCache = [];
 
     public static function flushReflectionCache()
     {
         static::$reflectionCache = [];
+        static::$subclassMethodsCache = [];
+        static::$attributesCache = [];
     }
 
     static function isSyntheticTuple($payload) {
@@ -56,6 +60,7 @@ class BaseUtils
                 return [$property->getName() => [
                     'name' => $property->getName(),
                     'type' => $type,
+                    'property' => $property,
                 ]];
             })
             ->all();
@@ -64,12 +69,11 @@ class BaseUtils
     protected static function extractPropertyValuesFromInstance($target, $cachedMetadata)
     {
         $properties = [];
-        $reflection = new \ReflectionObject($target); // One reflection object for all properties
 
         foreach ($cachedMetadata as $propertyName => $meta) {
-            $property = $reflection->getProperty($propertyName);
+            $property = $meta['property'];
 
-            if (method_exists($property, 'isInitialized') && !$property->isInitialized($target)) {
+            if (! $property->isInitialized($target)) {
                 $value = ($meta['type'] === 'array') ? [] : null;
             } else {
                 $value = $property->getValue($target);
@@ -107,7 +111,13 @@ class BaseUtils
 
     static function getPublicMethodsDefinedBySubClass($target)
     {
-        $methods = array_filter((new \ReflectionObject($target))->getMethods(), function ($method) {
+        $class = is_string($target) ? $target : get_class($target);
+
+        if (isset(static::$subclassMethodsCache[$class])) {
+            return static::$subclassMethodsCache[$class];
+        }
+
+        $methods = array_filter((new \ReflectionClass($class))->getMethods(), function ($method) {
             $isInBaseComponentClass = $method->getDeclaringClass()->getName() === \Livewire\Component::class || $method->getDeclaringClass()->getName() === \Livewire\Volt\Component::class;
 
             return $method->isPublic()
@@ -115,21 +125,24 @@ class BaseUtils
                 && ! $isInBaseComponentClass;
         });
 
-        return array_map(function ($method) {
+        return static::$subclassMethodsCache[$class] = array_values(array_map(function ($method) {
             return $method->getName();
-        }, $methods);
+        }, $methods));
     }
 
     static function hasAttribute($target, $property, $attributeClass) {
-        $property = static::getProperty($target, $property);
+        $class = is_string($target) ? $target : get_class($target);
+        $key = "{$class}::{$property}::{$attributeClass}";
 
-        foreach ($property->getAttributes() as $attribute) {
-            $instance = $attribute->newInstance();
-
-            if ($instance instanceof $attributeClass) return true;
+        if (isset(static::$attributesCache[$key])) {
+            return static::$attributesCache[$key];
         }
 
-        return false;
+        $prop = static::getProperty($target, $property);
+
+        return static::$attributesCache[$key] = ! empty(
+            $prop->getAttributes($attributeClass, \ReflectionAttribute::IS_INSTANCEOF)
+        );
     }
 
     static function getProperty($target, $property) {
