@@ -1234,6 +1234,27 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.profile.name', '')
             ->assertOk();
     }
+
+    public function test_resetting_nested_form_path_restores_only_that_nested_key()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetNestedFoo()
+            {
+                $this->reset('form.content.foo');
+            }
+        })
+            ->assertSetStrict('form.content.foo', ['bar' => 'baz'])
+            ->assertSetStrict('form.content.1', true)
+            ->assertSetStrict('form.content.2', false)
+            ->set('form.content.foo', ['bar' => 'changed'])
+            ->assertSetStrict('form.content.foo', ['bar' => 'changed'])
+            ->call('resetNestedFoo')
+            ->assertSetStrict('form.content.foo', ['bar' => 'baz'])
+            ->assertSetStrict('form.content.1', true)
+            ->assertSetStrict('form.content.2', false);
+    }
 }
 
 class PostFormStub extends Form
