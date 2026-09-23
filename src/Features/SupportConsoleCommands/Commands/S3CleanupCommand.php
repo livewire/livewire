@@ -38,6 +38,7 @@ class S3CleanupCommand extends Command
         $prefix = FileUploadConfiguration::path();
 
         $rules[] = [
+            'ID' => 'livewire-cleanup-'.$prefix,
             'Filter' => [
                 'Prefix' => $prefix,
             ],
