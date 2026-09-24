@@ -92,7 +92,9 @@ class Form implements Arrayable
                 ->values()
                 ->all();
 
-            $this->getComponent()->resetErrorBag($fields);
+            if (! empty($fields)) {
+                $this->getComponent()->resetErrorBag($fields);
+            }
 
             return;
         }
