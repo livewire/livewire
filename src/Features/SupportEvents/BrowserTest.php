@@ -123,6 +123,96 @@ class BrowserTest extends BrowserTestCase
             ->waitForTextIn('@output', 'baz');
     }
 
+    public function test_can_dispatch_to_others()
+    {
+        Livewire::visit([
+            new class extends Component {
+                function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:posts name="a" />
+                        <livewire:posts name="b" />
+                    </div>
+                    HTML;
+                }
+            },
+            'posts' => new class extends Component {
+                public $name;
+
+                public $refreshes = 0;
+
+                function save()
+                {
+                    $this->refreshPosts();
+                    $this->dispatch('post-created')->others();
+                }
+
+                #[On('post-created')]
+                function refreshPosts()
+                {
+                    $this->refreshes++;
+                }
+
+                function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="save" dusk="{{ $name }}">{{ $refreshes }}</button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewire()->click('@a')
+            ->waitForTextIn('@b', '1')
+            ->pause(100)
+            ->assertSeeIn('@a', '1');
+    }
+
+    public function test_can_dispatch_to_others_with_on_in_javascript()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $received = false;
+
+                function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button x-on:click="$wire.dispatchOthers('post-created')" dusk="button">Dispatch to others</button>
+
+                        <span x-text="$wire.received" dusk="target"></span>
+
+                        <livewire:child />
+                    </div>
+
+                    @script
+                    <script>
+                        $wire.on('post-created', () => $wire.received = true)
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button x-on:click="$wire.dispatchOthers('post-created')" dusk="child-button">Dispatch to others from child</button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->click('@button')
+            ->pause(100)
+            ->assertSeeIn('@target', 'false')
+            ->click('@child-button')
+            ->waitForTextIn('@target', 'true');
+    }
+
     public function test_dispatch_from_javascript_should_only_be_called_once()
     {
         Livewire::visit(new class extends Component {

@@ -1,4 +1,4 @@
-import { dispatch, dispatchEl, dispatchRef, dispatchSelf, dispatchTo } from '@/events'
+import { dispatch, dispatchEl, dispatchOthers, dispatchRef, dispatchSelf, dispatchTo } from '@/events'
 import { on } from '@/hooks'
 import { interceptMessage } from '@/request'
 
@@ -34,11 +34,12 @@ function getDispatches(effects) {
 }
 
 function dispatchEvents(component, dispatches) {
-    dispatches.forEach(({ name, params = {}, self = false, component: componentName, ref, el }) => {
+    dispatches.forEach(({ name, params = {}, self = false, component: componentName, ref, el, others = false }) => {
         if (self) dispatchSelf(component, name, params)
         else if (componentName) dispatchTo(componentName, name, params)
         else if (ref) dispatchRef(component, ref, name, params)
         else if (el) dispatchEl(component, el, name, params)
+        else if (others) dispatchOthers(component, name, params)
         else dispatch(component, name, params)
     })
 }
