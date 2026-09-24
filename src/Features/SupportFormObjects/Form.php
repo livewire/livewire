@@ -83,11 +83,26 @@ class Form implements Arrayable
 
     public function resetErrorBag($field = null)
     {
-        $fields = (array) $field;
+        if ($field === null) {
+            $prefix = $this->propertyName . '.';
 
-        foreach ($fields as $idx => $field) {
-            $fields[$idx] = $this->propertyName . '.' . $field;
+            $fields = collect($this->getComponent()->getErrorBag()->toArray())
+                ->keys()
+                ->filter(fn ($key) => $key === $this->propertyName || str_starts_with($key, $prefix))
+                ->values()
+                ->all();
+
+            if (! empty($fields)) {
+                $this->getComponent()->resetErrorBag($fields);
+            }
+
+            return;
         }
+
+        $fields = array_map(
+            fn ($f) => $this->propertyName . '.' . $f,
+            (array) $field,
+        );
 
         $this->getComponent()->resetErrorBag($fields);
     }
