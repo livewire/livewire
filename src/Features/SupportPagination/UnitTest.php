@@ -50,6 +50,20 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('paginators.page', 2);
     }
 
+    public function test_non_numeric_value_falls_back_to_first_page()
+    {
+        Livewire::test(ComponentWithPaginationStub::class)
+            ->call('gotoPage', 'not-a-number')
+            ->assertSetStrict('paginators.page', 1);
+    }
+
+    public function test_overflow_integer_falls_back_to_first_page()
+    {
+        Livewire::test(ComponentWithPaginationStub::class)
+            ->call('gotoPage', '12123123123213123123213')
+            ->assertSetStrict('paginators.page', 1);
+    }
+
     public function test_can_set_a_custom_links_theme_in_component()
     {
         Livewire::test(new class extends Component {
