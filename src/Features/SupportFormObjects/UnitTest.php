@@ -1234,6 +1234,31 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.profile.name', '')
             ->assertOk();
     }
+
+    public function test_form_reset_error_bag_only_clears_form_prefixed_errors()
+    {
+        Livewire::test(new class extends TestComponent {
+            public string $other = '';
+
+            public PostFormStub $form;
+
+            public function addErrors()
+            {
+                $this->addError('other', 'component error');
+                $this->form->addError('title', 'form error');
+            }
+
+            public function clearFormErrors()
+            {
+                $this->form->resetErrorBag();
+            }
+        })
+            ->call('addErrors')
+            ->assertHasErrors(['other', 'form.title'])
+            ->call('clearFormErrors')
+            ->assertHasErrors(['other'])
+            ->assertHasNoErrors(['form.title']);
+    }
 }
 
 class PostFormStub extends Form
