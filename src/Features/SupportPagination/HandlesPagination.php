@@ -33,7 +33,7 @@ trait HandlesPagination
 
     public function gotoPage($page, $pageName = 'page')
     {
-        $this->setPage($page, $pageName);
+        $this->setPage(SupportPagination::resolvePageNumber($page), $pageName);
     }
 
     public function resetPage($pageName = 'page')
@@ -43,8 +43,8 @@ trait HandlesPagination
 
     public function setPage($page, $pageName = 'page')
     {
-        if (is_numeric($page)) {
-            $page = (int) ($page <= 0 ? 1 : $page);
+        if (is_int($page) || is_float($page) || (is_string($page) && is_numeric($page))) {
+            $page = SupportPagination::resolvePageNumber($page);
         }
 
         $beforePaginatorMethod = 'updatingPaginators';
