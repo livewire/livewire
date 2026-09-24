@@ -209,6 +209,17 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
 
         $this->assertEquals('sparkling', $cart->fresh()->items[0]->title);
     }
+
+    public function test_encrypted_model_attribute_is_validated_using_decrypted_value()
+    {
+        Livewire::test(ComponentWithEncryptedModelAttribute::class)
+            ->set('contact.phone', '111 111-1111') // 12 characters
+            ->call('save')
+            ->assertHasNoErrors('contact.phone')
+            ->set('contact.phone', 'too-short')
+            ->call('save')
+            ->assertHasErrors('contact.phone');
+    }
 }
 
 class Foo extends Model
@@ -364,6 +375,43 @@ class ComponentForEloquentModelNestedHydrationMiddleware extends Component
         $this->validate();
 
         $this->cart->items->each->save();
+    }
+
+    public function render()
+    {
+        return \view('dump-errors');
+    }
+}
+
+class ContactWithEncryptedPhone extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'phone' => null],
+    ];
+
+    protected $casts = [
+        'phone' => 'encrypted',
+    ];
+}
+
+class ComponentWithEncryptedModelAttribute extends Component
+{
+    public ContactWithEncryptedPhone $contact;
+
+    protected $rules = [
+        'contact.phone' => 'nullable|min:12|max:12',
+    ];
+
+    public function mount()
+    {
+        $this->contact = ContactWithEncryptedPhone::first();
+    }
+
+    public function save()
+    {
+        $this->validate();
     }
 
     public function render()

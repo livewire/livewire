@@ -104,11 +104,13 @@ class EloquentModelSynth extends Synth implements ArrayShapedSynth
 
             $casted = $values[$key];
 
-            if (
-                is_scalar($attribute)
-                && is_scalar($casted)
-                && $attribute != $casted
-            ) {
+            if (! is_scalar($attribute) || ! is_scalar($casted) || $attribute == $casted) continue;
+
+            $isNumericCoercion = is_numeric($attribute) && is_numeric($casted);
+            $isBooleanCoercion = is_bool($casted)
+                && filter_var($attribute, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) === $casted;
+
+            if ($isNumericCoercion || $isBooleanCoercion) {
                 $values[$key] = $attribute;
             }
         }
