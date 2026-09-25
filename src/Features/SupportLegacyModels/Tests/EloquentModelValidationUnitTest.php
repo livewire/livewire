@@ -218,7 +218,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             ->assertHasNoErrors('contact.phone')
             ->set('contact.phone', 'too-short')
             ->call('save')
-            ->assertHasErrors('contact.phone');
+            ->assertHasErrors(['contact.phone' => 'min:12']);
     }
 }
 
