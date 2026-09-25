@@ -1303,6 +1303,33 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame(1, ValidationUnwrappingSpyCollection::$toArrayCalls);
     }
+
+    public function test_validate_only_with_no_matching_rules_does_not_clear_existing_errors()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $email = '';
+            public $name = '';
+
+            protected $rules = [
+                'email' => 'required|email',
+                'name' => 'required',
+            ];
+
+            public function validateAll()
+            {
+                $this->validate();
+            }
+
+            public function validateTypo()
+            {
+                $this->validateOnly('emial'); // no matching rule
+            }
+        })
+            ->call('validateAll') // case: on submit
+            ->assertHasErrors(['email', 'name'])
+            ->call('validateTypo') // case: wire:model.live
+            ->assertHasErrors(['email', 'name']);
+    }
 }
 
 class ValidationUnwrappingSpyCollection extends Collection
