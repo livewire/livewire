@@ -212,13 +212,21 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
 
     public function test_encrypted_model_attribute_is_validated_using_decrypted_value()
     {
-        Livewire::test(ComponentWithEncryptedModelAttribute::class)
+        Livewire::test(ComponentWithCastedModelAttributes::class)
             ->set('contact.phone', '111 111-1111') // 12 characters
             ->call('save')
             ->assertHasNoErrors('contact.phone')
             ->set('contact.phone', 'too-short')
             ->call('save')
             ->assertHasErrors(['contact.phone' => 'min:12']);
+    }
+
+    public function test_boolean_model_attribute_uses_casted_value_for_validation()
+    {
+        Livewire::test(ComponentWithCastedModelAttributes::class)
+            ->set('contact.subscribed', 'garbage')
+            ->call('save')
+            ->assertHasNoErrors('contact.subscribed');
     }
 }
 
@@ -388,20 +396,22 @@ class ContactWithEncryptedPhone extends Model
     use Sushi;
 
     protected $rows = [
-        ['id' => 1, 'phone' => null],
+        ['id' => 1, 'phone' => null, 'subscribed' => false],
     ];
 
     protected $casts = [
         'phone' => 'encrypted',
+        'subscribed' => 'boolean'
     ];
 }
 
-class ComponentWithEncryptedModelAttribute extends Component
+class ComponentWithCastedModelAttributes extends Component
 {
     public ContactWithEncryptedPhone $contact;
 
     protected $rules = [
         'contact.phone' => 'nullable|min:12|max:12',
+        'contact.subscribed' => 'required|boolean',
     ];
 
     public function mount()
