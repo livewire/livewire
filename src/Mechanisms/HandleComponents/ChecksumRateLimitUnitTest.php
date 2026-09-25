@@ -38,6 +38,7 @@ class ChecksumRateLimitUnitTest extends TestCase
         Livewire::setChecksumRateLimitKey(null);
 
         request()->headers->remove('X-Client');
+        request()->attributes->remove('livewire_rate_limit_key');
 
         parent::tearDown();
     }
@@ -71,6 +72,7 @@ class ChecksumRateLimitUnitTest extends TestCase
         for ($i = 0; $i < 5; $i++) {
             // Clear the flag to simulate a new request
             request()->attributes->remove('livewire_rate_limit_checked');
+            request()->attributes->remove('livewire_rate_limit_key');
 
             try {
                 Checksum::verify($snapshot);
@@ -94,6 +96,7 @@ class ChecksumRateLimitUnitTest extends TestCase
         for ($i = 0; $i < 10; $i++) {
             // Clear the flag to simulate a new request
             request()->attributes->remove('livewire_rate_limit_checked');
+            request()->attributes->remove('livewire_rate_limit_key');
 
             try {
                 Checksum::verify($snapshot);
@@ -104,6 +107,7 @@ class ChecksumRateLimitUnitTest extends TestCase
 
         // Next attempt should throw TooManyRequestsHttpException
         request()->attributes->remove('livewire_rate_limit_checked');
+        request()->attributes->remove('livewire_rate_limit_key');
 
         $this->expectException(TooManyRequestsHttpException::class);
         $this->expectExceptionMessage('Too many invalid Livewire requests');
@@ -140,6 +144,7 @@ class ChecksumRateLimitUnitTest extends TestCase
         for ($i = 0; $i < 10; $i++) {
             // Clear the flag to simulate a new request
             request()->attributes->remove('livewire_rate_limit_checked');
+            request()->attributes->remove('livewire_rate_limit_key');
 
             try {
                 Checksum::verify($invalidSnapshot);
@@ -150,6 +155,7 @@ class ChecksumRateLimitUnitTest extends TestCase
 
         // Now try with a valid checksum - should still be blocked
         request()->attributes->remove('livewire_rate_limit_checked');
+        request()->attributes->remove('livewire_rate_limit_key');
 
         $validSnapshot = [
             'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
@@ -192,6 +198,7 @@ class ChecksumRateLimitUnitTest extends TestCase
 
         // Simulate a new request by clearing the flag
         request()->attributes->remove('livewire_rate_limit_checked');
+        request()->attributes->remove('livewire_rate_limit_key');
 
         // Second "request" - verify again
         Checksum::verify($snapshot);
@@ -270,6 +277,40 @@ class ChecksumRateLimitUnitTest extends TestCase
         $this->verifyValidChecksum();
     }
 
+    public function test_rate_limit_key_is_resolved_once_per_request()
+    {
+        $calls = 0;
+
+        Livewire::setChecksumRateLimitKey(function () use (&$calls) {
+            return 'client-' . ++$calls;
+        });
+
+        RateLimiter::spy();
+
+        $snapshot = $this->invalidSnapshot();
+
+        // One request, two failing components...
+        foreach ([1, 2] as $i) {
+            try {
+                Checksum::verify($snapshot);
+            } catch (CorruptComponentPayloadException $e) {
+                // Expected
+            }
+        }
+
+        $this->assertEquals(1, $calls);
+
+        RateLimiter::shouldHaveReceived('tooManyAttempts')->with('livewire-checksum-failures:key:client-1', 10)->once();
+        RateLimiter::shouldHaveReceived('hit')->with('livewire-checksum-failures:key:client-1', 600)->twice();
+
+        // A new request resolves its own key...
+        $this->failChecksum();
+
+        $this->assertEquals(2, $calls);
+
+        RateLimiter::shouldHaveReceived('hit')->with('livewire-checksum-failures:key:client-2', 600)->once();
+    }
+
     public function test_max_failures_can_be_configured()
     {
         config()->set('livewire.checksum_rate_limit.max_failures', 3);
@@ -301,6 +342,15 @@ class ChecksumRateLimitUnitTest extends TestCase
         $this->verifyValidChecksum();
     }
 
+    public function test_invalid_checksum_is_still_rejected_when_rate_limiting_is_disabled()
+    {
+        config()->set('livewire.checksum_rate_limit.max_failures', null);
+
+        $this->expectException(CorruptComponentPayloadException::class);
+
+        Checksum::verify($this->invalidSnapshot());
+    }
+
     public function test_rate_limiting_is_disabled_when_max_failures_is_zero_or_false()
     {
         foreach ([0, false] as $value) {
@@ -314,17 +364,23 @@ class ChecksumRateLimitUnitTest extends TestCase
         }
     }
 
-    protected function failChecksum($times = 1)
+    protected function invalidSnapshot()
     {
-        $snapshot = [
+        return [
             'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],
             'data' => ['foo' => 'bar'],
             'checksum' => 'invalid-checksum',
         ];
+    }
+
+    protected function failChecksum($times = 1)
+    {
+        $snapshot = $this->invalidSnapshot();
 
         for ($i = 0; $i < $times; $i++) {
             // Clear the flag to simulate a new request
             request()->attributes->remove('livewire_rate_limit_checked');
+            request()->attributes->remove('livewire_rate_limit_key');
 
             try {
                 Checksum::verify($snapshot);
@@ -337,6 +393,7 @@ class ChecksumRateLimitUnitTest extends TestCase
     protected function verifyValidChecksum()
     {
         request()->attributes->remove('livewire_rate_limit_checked');
+        request()->attributes->remove('livewire_rate_limit_key');
 
         $snapshot = [
             'memo' => ['name' => 'test-component', 'release' => ReleaseToken::generate(ChecksumRateLimitTestComponent::class)],

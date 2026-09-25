@@ -100,6 +100,18 @@ class Checksum {
     {
         $request = request();
 
+        // Resolve the key once per request so the check and the failure hit always share the same bucket...
+        if ($request->attributes->has('livewire_rate_limit_key')) {
+            return $request->attributes->get('livewire_rate_limit_key');
+        }
+
+        $request->attributes->set('livewire_rate_limit_key', $key = static::resolveRateLimitKey($request));
+
+        return $key;
+    }
+
+    protected static function resolveRateLimitKey($request): string
+    {
         $key = static::$rateLimitKeyResolver
             ? (string) (static::$rateLimitKeyResolver)($request)
             : '';

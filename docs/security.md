@@ -401,10 +401,14 @@ Livewire::setChecksumRateLimitKey(function (Request $request) {
 });
 ```
 
-When the callback returns `null` or an empty string, Livewire falls back to the IP address. Custom keys are stored separately from IP addresses, so the two can never collide.
+When the callback returns `null` or an empty string, Livewire falls back to the IP address. Custom keys are stored separately from IP addresses, so the two can never collide. The callback runs once per request, and the same key is used to check the limit and to record a failure.
 
-> [!warning] Keys the client can change weaken the limit
-> A key based on something the client controls, such as the session ID, can be reset by simply discarding the cookie. Prefer keys that are stable for a given client, like the authenticated user's ID.
+If user IDs are only unique within a guard or tenant, include that scope in the key, for example `'tenant-' . $tenant->id . ':' . $user->getAuthIdentifier()`.
+
+> [!warning] Guests can discard their key
+> For unauthenticated requests, the session ID separates guests behind a shared IP address, but a guest can start a new session at any time. Treat it as a way to reduce collateral damage, not as an abuse boundary, and keep a request rate limit (such as the `throttle` middleware) on the update route regardless. Never derive the key from an arbitrary request header or from a value generated per request.
+
+Disabling the rate limiter only stops counting failures. Livewire still rejects every request whose checksum doesn't match.
 
 The threshold and window are configured in `config/livewire.php`. Setting `max_failures` to `null` (or `0`) disables the rate limiter entirely:
 
