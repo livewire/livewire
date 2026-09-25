@@ -106,11 +106,16 @@ class EloquentModelSynth extends Synth implements ArrayShapedSynth
 
             if (! is_scalar($attribute) || ! is_scalar($casted) || $attribute == $casted) continue;
 
-            $isNumericCoercion = is_numeric($attribute) && is_numeric($casted);
-            $isBooleanCoercion = is_bool($casted)
-                && filter_var($attribute, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) === $casted;
+            // Prefer the attributes-bag value only when the public value is a
+            // PHP type-coercion of the bag value (Eloquent outbound scalar casts).
+            $coercedValue = match (true) {
+                is_int($casted) => (int) $attribute,
+                is_float($casted) => (float) $attribute,
+                is_bool($casted) => filter_var($attribute, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE),
+                default => null
+            };
 
-            if ($isNumericCoercion || $isBooleanCoercion) {
+            if ($coercedValue !== null && $coercedValue === $casted) {
                 $values[$key] = $attribute;
             }
         }
