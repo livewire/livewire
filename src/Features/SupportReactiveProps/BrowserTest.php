@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportReactiveProps;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Attributes\Renderless;
 use Livewire\Livewire;
 use Livewire\Component;
 use Sushi\Sushi;
@@ -562,6 +563,104 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewire()->click('@parent.change-name')
             ->assertSeeIn('@child.name', 'Caleb')
             ->assertSeeIn('@child.renders', 2)
+        ;
+    }
+
+    public function test_child_is_skipped_when_reactive_array_prop_unchanged()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $count = 0;
+                public $filters = ['period' => 'this_year'];
+
+                public function inc() { $this->count++; }
+                public function changeFilters() { $this->filters = ['period' => 'last_year']; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Parent count: <span dusk="parent.count">{{ $count }}</span>
+
+                        <button wire:click="inc" dusk="parent.inc">inc</button>
+                        <button wire:click="changeFilters" dusk="parent.change-filters">change filters</button>
+
+                        <livewire:child :filters="$filters" />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[BaseReactive]
+                public $filters;
+
+                public $renderCount = 0;
+
+                public function render() { $this->renderCount++; return <<<'HTML'
+                    <div>
+                        <h1>Child period: <span dusk="child.period">{{ $filters['period'] }}</span>
+                        <h1>Child renders: <span dusk="child.renders">{{ $renderCount }}</span>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertSeeIn('@child.period', 'this_year')
+            ->assertSeeIn('@child.renders', 1)
+
+            // Parent action that doesn't change the reactive array - child should be skipped
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 1)
+            ->assertSeeIn('@child.renders', 1)
+
+            // Now change the reactive array - child must re-render
+            ->waitForLivewire()->click('@parent.change-filters')
+            ->assertSeeIn('@child.period', 'last_year')
+            ->assertSeeIn('@child.renders', 2)
+        ;
+    }
+
+    public function test_child_is_skipped_when_parent_does_not_render()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $name = 'Taylor';
+
+                public $pings = 0;
+
+                #[Renderless]
+                public function ping() { $this->pings++; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <button wire:click="ping" dusk="parent.ping">ping</button>
+
+                        <livewire:child :name="$name" />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[BaseReactive]
+                public $name;
+
+                public $renderCount = 0;
+
+                public function render() { $this->renderCount++; return <<<'HTML'
+                    <div>
+                        <h1>Child name: <span dusk="child.name">{{ $name }}</span>
+                        <h1>Child renders: <span dusk="child.renders">{{ $renderCount }}</span>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertSeeIn('@child.renders', 1)
+
+            // The parent skips its render, so it cannot have passed the child anything new - child should be skipped
+            ->waitForLivewire()->click('@parent.ping')
+            ->assertSeeIn('@child.renders', 1)
+
+            ->waitForLivewire()->click('@parent.ping')
+            ->assertSeeIn('@child.renders', 1)
         ;
     }
 
