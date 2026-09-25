@@ -11,6 +11,11 @@ class CannotUpdateLockedPropertyException extends \Exception
         );
     }
 
+    public function report(): bool
+    {
+        return ! config('app.debug');
+    }
+
     // In debug mode, let Laravel render the full error page.
     // In production, return a generic 419 to avoid leaking details.
     public function render($request)
