@@ -95,7 +95,7 @@ export class InterceptorRegistry {
         this.messageInterceptorCallbacksByComponent.add(component, callback)
 
         return () => {
-            this.messageInterceptorCallbacksByComponent.delete(component, callback)
+            arrayPull(this.messageInterceptorCallbacksByComponent.get(component), callback)
         }
     }
 

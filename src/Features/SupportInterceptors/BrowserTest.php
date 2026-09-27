@@ -737,4 +737,34 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertScript('window.intercepts', ['second'])
         ;
     }
+
+    public function test_a_component_message_interceptor_can_be_unsubscribed()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$refresh" dusk="refresh">Refresh</button>
+                    </div>
+                    @script
+                    <script>
+                        window.intercepts = []
+
+                        let unsubscribe = this.interceptMessage(() => window.intercepts.push('first'))
+
+                        this.interceptMessage(() => window.intercepts.push('second'))
+
+                        unsubscribe()
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->waitForLivewire()->click('@refresh')
+        ->assertScript('window.intercepts', ['second'])
+        ;
+    }
 }
