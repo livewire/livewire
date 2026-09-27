@@ -1,4 +1,4 @@
-import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
+import { arrayPull, getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
 import { coordinateNetworkInteractions } from './interactions.js'
 import { MessageRequest, PageRequest } from './request.js'
 import { InterceptorRegistry } from './interceptor.js'
@@ -37,7 +37,7 @@ export function interceptAction(callback) {
     actionInterceptors.push(callback)
 
     return () => {
-        actionInterceptors.splice(actionInterceptors.indexOf(callback), 1)
+        arrayPull(actionInterceptors, callback)
     }
 }
 
@@ -53,7 +53,7 @@ export function interceptPartition(callback) {
     partitionInterceptors.push(callback)
 
     return () => {
-        partitionInterceptors.splice(partitionInterceptors.indexOf(callback), 1)
+        arrayPull(partitionInterceptors, callback)
     }
 }
 
