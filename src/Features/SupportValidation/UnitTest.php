@@ -1303,6 +1303,70 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame(1, ValidationUnwrappingSpyCollection::$toArrayCalls);
     }
+
+    public function test_validate_only_on_repeater_line_does_not_fail_empty_sibling_lines_on_later_sections()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $sections = [
+                [
+                    'lines' => [
+                        ['product' => 'Widget A', 'qty' => 1],
+                        ['product' => '', 'qty' => 1], // empty sibling line — must not validate
+                    ],
+                ],
+                [
+                    'lines' => [
+                        ['product' => 'Widget B', 'qty' => 2],
+                        ['product' => '', 'qty' => 1], // empty sibling line — must not validate
+                    ],
+                ],
+            ];
+
+            public function validateFirstLineProduct()
+            {
+                $this->validateOnly('sections.*.lines.0.product', [
+                    'sections.*.lines.*.product' => 'required',
+                ]);
+            }
+        })
+            ->call('validateFirstLineProduct')
+            ->assertHasNoErrors('sections.0.lines.0.product')   // target, should passes
+            ->assertHasNoErrors('sections.0.lines.1.product')   // skip, should not validated
+            ->assertHasNoErrors('sections.1.lines.0.product')   // target, should passes
+            ->assertHasNoErrors('sections.1.lines.1.product');  // skip, should not validated
+    }
+
+    public function test_validate_only_on_repeater_line_still_reports_errors_on_the_targeted_line()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $sections = [
+                [
+                    'lines' => [
+                        ['product' => 'Widget A', 'qty' => 1],
+                        ['product' => '', 'qty' => 1], // empty sibling line — must not validate
+                    ],
+                ],
+                [
+                    'lines' => [
+                        ['product' => '', 'qty' => 2], // targeted line — should fail
+                        ['product' => '', 'qty' => 1], // empty sibling line — must not validate
+                    ],
+                ],
+            ];
+
+            public function validateFirstLineProduct()
+            {
+                $this->validateOnly('sections.*.lines.0.product', [
+                    'sections.*.lines.*.product' => 'required',
+                ]);
+            }
+        })
+            ->call('validateFirstLineProduct')
+            ->assertHasErrors(['sections.1.lines.0.product' => 'required']) // target, should fails
+            ->assertHasNoErrors('sections.0.lines.0.product')   // target, should passes
+            ->assertHasNoErrors('sections.0.lines.1.product')   // skip, should not validated
+            ->assertHasNoErrors('sections.1.lines.1.product');  // skip, should not validated
+    }
 }
 
 class ValidationUnwrappingSpyCollection extends Collection
