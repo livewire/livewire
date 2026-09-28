@@ -10,6 +10,7 @@ class Event
     protected $self;
     protected $component;
     protected $el;
+    protected $others;
 
     public function __construct($name, $params)
     {
@@ -33,6 +34,11 @@ class Event
         if (isset($params['self'])) {
             $this->self();
             unset($params['self']);
+        }
+
+        if (isset($params['others'])) {
+            $this->others();
+            unset($params['others']);
         }
 
         // Handle legacy 'to' parameter for backward compatibility
@@ -72,7 +78,14 @@ class Event
         return $this;
     }
 
-    public function to($component = null, $ref = null, $el = null, $self = null)
+    public function others()
+    {
+        $this->others = true;
+
+        return $this;
+    }
+
+    public function to($component = null, $ref = null, $el = null, $self = null, $others = null)
     {
         if ($self) {
             return $this->self();
@@ -84,6 +97,10 @@ class Event
 
         if ($el) {
             return $this->el($el);
+        }
+
+        if ($others) {
+            return $this->others();
         }
 
         return $this->component($component);
@@ -100,6 +117,7 @@ class Event
         if ($this->component) $output['component'] = app('livewire.factory')->resolveComponentName($this->component);
         if ($this->ref) $output['ref'] = $this->ref;
         if ($this->el) $output['el'] = $this->el;
+        if ($this->others) $output['others'] = true;
 
         return $output;
     }
