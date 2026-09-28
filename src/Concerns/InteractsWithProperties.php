@@ -63,12 +63,12 @@ trait InteractsWithProperties
 
             // Check if the property contains a dot which means it is actually on a nested object like a FormObject
             if (str($property)->contains('.')) {
-                $propertyName = $property->after('.');
+                $propertyName = $property->afterLast('.');
                 $objectName = $property->before('.');
 
                 // form object reset
                 if (is_subclass_of($this->{$objectName}, Form::class)) {
-                    $this->{$objectName}->reset($propertyName);
+                    $this->{$objectName}->reset(Utils::afterFirstDot((string) $property));
                     continue;
                 }
 
