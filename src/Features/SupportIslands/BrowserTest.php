@@ -649,6 +649,102 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_appended_rows_are_kept_by_a_full_island_render()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $loaded = 2;
+
+            protected $addedFrom = null;
+
+            public function loadMore()
+            {
+                $this->addedFrom = $this->loaded;
+                $this->loaded += 2;
+            }
+
+            // An append renders only the new rows; every other render renders every loaded row...
+            public function rows()
+            {
+                return $this->addedFrom === null
+                    ? range(1, $this->loaded)
+                    : range($this->addedFrom + 1, $this->loaded);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <ul>
+                        @island(name: 'rows', always: true)
+                            @foreach ($this->rows() as $i)
+                                <li wire:key="row-{{ $i }}"><input dusk="row-{{ $i }}"></li>
+                            @endforeach
+                        @endisland
+                    </ul>
+
+                    <button type="button" wire:click="loadMore" wire:island.append="rows" dusk="load-more">Load more</button>
+                    <button type="button" wire:click="$refresh" dusk="refresh">Refresh</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->waitForLivewire()->click('@load-more')
+            ->assertPresent('@row-4')
+            ->type('@row-1', 'one')
+            ->type('@row-4', 'four')
+            ->waitForLivewire()->click('@refresh')
+            ->assertInputValue('@row-1', 'one')
+            ->assertInputValue('@row-4', 'four')
+            ;
+    }
+
+    public function test_prepended_rows_without_keys_are_kept_by_a_full_island_render()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $loaded = 2;
+
+            protected $addedFrom = null;
+
+            public function loadMore()
+            {
+                $this->addedFrom = $this->loaded;
+                $this->loaded += 2;
+            }
+
+            // Newest first: a prepend renders only the new rows; every other render renders every loaded row...
+            public function rows()
+            {
+                return $this->addedFrom === null
+                    ? range($this->loaded, 1)
+                    : range($this->loaded, $this->addedFrom + 1);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <ul>
+                        @island(name: 'rows', always: true)
+                            @foreach ($this->rows() as $i)
+                                <li><input dusk="row-{{ $i }}"></li>
+                            @endforeach
+                        @endisland
+                    </ul>
+
+                    <button type="button" wire:click="loadMore" wire:island.prepend="rows" dusk="load-more">Load more</button>
+                    <button type="button" wire:click="$refresh" dusk="refresh">Refresh</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->waitForLivewire()->click('@load-more')
+            ->assertPresent('@row-4')
+            ->type('@row-1', 'one')
+            ->type('@row-4', 'four')
+            ->waitForLivewire()->click('@refresh')
+            ->assertInputValue('@row-1', 'one')
+            ->assertInputValue('@row-4', 'four')
+            ;
+    }
+
     public function test_streams_append_into_island_over_time()
     {
         Livewire::visit([new class extends \Livewire\Component {
