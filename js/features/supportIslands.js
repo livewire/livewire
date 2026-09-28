@@ -83,6 +83,9 @@ export async function renderIsland(component, islandHtml) {
         isMatch: ({ type, token }) => {
             return type === metadata.type && token === metadata.token
         },
+        // A nested component rendering the same view carries the same island
+        // token, so the search must not leave this component...
+        hasReachedBoundary: ({ el }) => el.hasAttribute('wire:id'),
     })
 
     if (! fragment) return
