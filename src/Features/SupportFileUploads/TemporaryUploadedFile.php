@@ -92,6 +92,16 @@ class TemporaryUploadedFile extends UploadedFile
         try {
             // Avoid downloading the entire object when the temporary disk is remote...
             $contents = stream_get_contents($stream, 64 * 1024);
+
+            // MP3s can start with an ID3 tag (e.g. cover art) bigger than the sample, so read past it...
+            if (is_string($contents) && strlen($contents) >= 10 && str_starts_with($contents, 'ID3')) {
+                $tagSize = (ord($contents[6]) & 0x7F) << 21
+                    | (ord($contents[7]) & 0x7F) << 14
+                    | (ord($contents[8]) & 0x7F) << 7
+                    | (ord($contents[9]) & 0x7F);
+
+                $contents .= stream_get_contents($stream, $tagSize);
+            }
         } finally {
             fclose($stream);
         }
