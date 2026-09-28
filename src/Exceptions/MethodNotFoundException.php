@@ -15,7 +15,7 @@ class MethodNotFoundException extends \Exception
 
     public function report(): bool
     {
-        return ! config('app.debug');
+        return ! (config('app.debug') || config('livewire.report_rejected_requests'));
     }
 
     // In debug mode, let Laravel render the full error page.

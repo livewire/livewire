@@ -279,4 +279,17 @@ return [
         'max_calls' => 50,           // Maximum method calls per request
         'max_components' => 200,     // Maximum components per batch request
     ],
+
+    /*
+    |---------------------------------------------------------------------------
+    | Report Rejected Requests
+    |---------------------------------------------------------------------------
+    |
+    | Outside of debug mode, Livewire answers tampered or malformed requests
+    | with a quiet 419 and keeps them out of your error tracking. Enable this
+    | to report them anyway, e.g. if you rely on those reports to catch bugs.
+    |
+    */
+
+    'report_rejected_requests' => false,
 ];

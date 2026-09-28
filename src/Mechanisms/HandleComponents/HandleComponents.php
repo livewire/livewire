@@ -523,6 +523,8 @@ class HandleComponents extends Mechanism
             // reaches the top-level catch (which would report it as a real bug).
             if (config('app.debug')) throw $e;
 
+            if (config('livewire.report_rejected_requests')) report($e);
+
             abort(419);
         }
     }
