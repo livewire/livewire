@@ -164,4 +164,17 @@ class SupportPagination extends ComponentHook
 
         return $supportQueryStringHook->getQueryString();
     }
+
+    public static function resolvePageNumber(mixed $page): int
+    {
+        if (is_float($page)) {
+            $page = (int) $page;
+        }
+
+        if (filter_var($page, FILTER_VALIDATE_INT) !== false && (int) $page >= 1) {
+            return (int) $page;
+        }
+
+        return 1;
+    }
 }
