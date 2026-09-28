@@ -100,7 +100,7 @@ class TemporaryUploadedFile extends UploadedFile
                     | (ord($contents[8]) & 0x7F) << 7
                     | (ord($contents[9]) & 0x7F);
 
-                $contents .= stream_get_contents($stream, $tagSize);
+                $contents .= stream_get_contents($stream, min($tagSize, 8 * 1024 * 1024));
             }
         } finally {
             fclose($stream);

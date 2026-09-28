@@ -921,10 +921,11 @@ class UnitTest extends \Tests\TestCase
     {
         $disk = $this->useS3LikeTemporaryUploadDisk();
 
-        // A 70 KB ID3v2 tag (like one holding cover art) followed by MPEG audio frames...
-        $mp3 = "ID3\x03\x00\x00\x00\x04\x30\x00".str_repeat("\x00", 70 * 1024).str_repeat("\xFF\xFB\x90\x64".str_repeat("\x00", 413), 10);
+        // A 70 KiB ID3v2 tag (like one holding cover art) followed by MPEG audio frames...
+        $tag = "ID3\x03\x00\x00\x00\x04\x30\x00".str_repeat("\x00", 70 * 1024);
+        $frames = str_repeat("\xFF\xFB\x90\x64".str_repeat("\x00", 413), 10);
 
-        $disk->put('livewire-tmp/song.mp3', $mp3);
+        $disk->put('livewire-tmp/song.mp3', $tag.$frames);
 
         $file = TemporaryUploadedFile::createFromLivewire('song.mp3');
 
