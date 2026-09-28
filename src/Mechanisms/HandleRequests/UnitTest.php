@@ -151,6 +151,73 @@ class UnitTest extends TestCase
         $this->assertCount(1, $reported);
     }
 
+    public function test_bad_checksum_exception_is_reported_when_rejected_request_reporting_is_enabled(): void
+    {
+        config()->set('app.debug', false);
+        config()->set('livewire.report_rejected_requests', true);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (CorruptComponentPayloadException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new CorruptComponentPayloadException);
+
+        $this->assertCount(1, $reported);
+    }
+
+    public function test_type_mismatched_update_value_is_not_reported_by_default(): void
+    {
+        config()->set('app.debug', false);
+
+        $reported = $this->reportedTypeErrors();
+
+        $this->postTypeMismatchedUpdate()->assertStatus(419);
+
+        $this->assertEmpty($reported);
+    }
+
+    public function test_type_mismatched_update_value_is_reported_when_rejected_request_reporting_is_enabled(): void
+    {
+        config()->set('app.debug', false);
+        config()->set('livewire.report_rejected_requests', true);
+
+        $reported = $this->reportedTypeErrors();
+
+        $this->postTypeMismatchedUpdate()->assertStatus(419);
+
+        $this->assertCount(1, $reported);
+    }
+
+    protected function reportedTypeErrors(): \ArrayObject
+    {
+        $reported = new \ArrayObject;
+
+        app(ExceptionHandler::class)
+            ->reportable(function (\TypeError $e) use ($reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        return $reported;
+    }
+
+    protected function postTypeMismatchedUpdate()
+    {
+        $testable = Livewire::test(new class extends TestComponent {
+            public array $items = [];
+        });
+
+        return $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => json_encode($testable->snapshot), 'updates' => ['items' => 'not_an_array'], 'calls' => []],
+            ]]);
+    }
+
     public function test_type_mismatched_update_value_returns_419(): void
     {
         // Disable debug mode to test production HTTP responses (404/419)...
