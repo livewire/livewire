@@ -33,6 +33,14 @@ export class WeakBag {
     each(key, callback) { return this.get(key).forEach(callback) }
 }
 
+export function arrayPull(array, item) {
+    let index = array.indexOf(item)
+
+    if (index === -1) return undefined
+
+    return array.splice(index, 1)[0]
+}
+
 export function dispatch(target, name, detail = {}, bubbles = true) {
     target.dispatchEvent(
         new CustomEvent(name, {
