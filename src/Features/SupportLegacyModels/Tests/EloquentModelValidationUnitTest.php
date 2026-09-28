@@ -216,7 +216,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             ->set('contact.phone', '111 111-1111') // 12 characters
             ->call('save')
             ->assertHasNoErrors('contact.phone')
-            ->set('contact.phone', 'too-short')
+            ->set('contact.phone', '111')
             ->call('save')
             ->assertHasErrors(['contact.phone' => 'min:12']);
     }
@@ -224,8 +224,9 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
     public function test_boolean_model_attribute_uses_casted_value_for_validation()
     {
         Livewire::test(ComponentWithCastedModelAttributes::class)
-            ->set('contact.subscribed', 'garbage')
+            ->set('contact.subscribed', 'not-a-boolean')
             ->call('save')
+            ->assertSetStrict('contact.subscribed', true)// (bool) 'not-a-boolean' === true
             ->assertHasNoErrors('contact.subscribed');
     }
 }
