@@ -104,10 +104,14 @@ class EloquentModelSynth extends Synth implements ArrayShapedSynth
 
             $casted = $values[$key];
 
+            if (! is_scalar($attribute) || ! is_scalar($casted) || $attribute == $casted) continue;
+
+            // Prefer the attributes-bag value only when the public value is a
+            // PHP type-coercion of the bag value (Eloquent outbound scalar casts).
+            // Eloquent's (bool) cast means $attribute == $casted is always true for boolean casts
             if (
-                is_scalar($attribute)
-                && is_scalar($casted)
-                && $attribute != $casted
+                (is_int($casted) && (int) $attribute === $casted)
+                || (is_float($casted) && (float) $attribute === $casted)
             ) {
                 $values[$key] = $attribute;
             }
