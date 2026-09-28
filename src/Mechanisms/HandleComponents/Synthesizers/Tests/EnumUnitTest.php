@@ -61,6 +61,46 @@ class EnumUnitTest extends \Tests\TestCase
             ->assertSet('list', [])
         ;
     }
+
+    public function test_malformed_enum_property_update_throws_type_error_when_debug_enabled()
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(\TypeError::class);
+
+        Livewire::test(ComponentWithNullablePublicEnumCaster::class)
+            ->set('status', [])
+            ->assertOk();
+    }
+
+    public function test_malformed_synthesized_enum_update_throws_type_error_when_debug_enabled()
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(\TypeError::class);
+
+        Livewire::test(ComponentWithInitializedPublicEnumCaster::class)
+            ->set('status', [])
+            ->assertOk();
+    }
+
+    public function test_malformed_enum_property_update_returns_419_when_debug_disabled()
+    {
+        config()->set('app.debug', false);
+
+        Livewire::test(ComponentWithNullablePublicEnumCaster::class)
+            ->set('status', [])
+            ->assertStatus(419);
+    }
+
+    public function test_malformed_synthesized_enum_update_returns_419_when_debug_disabled()
+    {
+        config()->set('app.debug', false);
+
+        Livewire::test(ComponentWithInitializedPublicEnumCaster::class)
+            ->set('status', [])
+            ->assertStatus(419);
+    }
 }
 
 enum TestingEnum: string
@@ -128,5 +168,15 @@ class ComponentWithValidatedEnum extends TestComponent
         if (!($this->enum instanceof ValidatedEnum)) {
             throw new \Exception('The type of Enum has been changed.');
         }
+    }
+}
+
+class ComponentWithInitializedPublicEnumCaster extends TestComponent
+{
+    public TestingEnum $status;
+
+    public function mount()
+    {
+        $this->status = TestingEnum::TEST;
     }
 }
