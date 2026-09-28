@@ -513,7 +513,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertQueryStringHas('foo', '')
+            ->waitForQueryString('foo', '')
             ->assertSee('foo', null)
             ->waitForLivewire()->click('@button')
             ->assertQueryStringHas('foo', 'second')
@@ -556,7 +556,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertQueryStringHas('foo', '')
+            ->waitForQueryString('foo', '')
             ->assertSee('foo', null)
             ->waitForLivewire()->click('@button')
             ->assertQueryStringHas('foo', '2')
@@ -1093,7 +1093,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     }
                 }
             ])
-            ->assertScript('return window.location.search', '?foo[bar]=baz');
+            ->assertScript('return decodeURIComponent(window.location.search)', '?foo[bar]=baz');
     }
 
     public function test_it_skips_query_string_encoded_keys_not_tracked_by_livewire()
@@ -1117,7 +1117,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     }
                 }
             ])
-            ->assertScript('return window.location.search', '?foo[bar]=baz&bob%5Blob%5D=law');
+            ->assertScript('return decodeURIComponent(window.location.search)', '?foo[bar]=baz&bob[lob]=law');
     }
 
     public function test_except_does_remove_value_from_query_string_when_loaded_with_value_then_changed_to_except_value()
