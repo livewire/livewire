@@ -3,8 +3,10 @@
 namespace Livewire;
 
 use Illuminate\Container\BoundMethod;
+use Illuminate\Contracts\Container\ContextualAttribute;
 use Illuminate\Contracts\Routing\UrlRoutable as ImplicitlyBindable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionNamedType;
 
@@ -16,12 +18,24 @@ class ImplicitlyBoundMethod extends BoundMethod
         $paramIndex = 0;
 
         foreach (static::getCallReflector($callback)->getParameters() as $parameter) {
-            static::substituteNameBindingForCallParameter($parameter, $parameters, $paramIndex);
-            static::substituteImplicitBindingForCallParameter($container, $parameter, $parameters);
+            if (static::isResolvedByAttribute($parameter)) {
+                unset($parameters[$parameter->getName()]);
+            } else {
+                static::substituteNameBindingForCallParameter($parameter, $parameters, $paramIndex);
+                static::substituteImplicitBindingForCallParameter($container, $parameter, $parameters);
+            }
+
             static::addDependencyForCallParameter($container, $parameter, $parameters, $dependencies);
         }
 
         return array_values(array_merge($dependencies, $parameters));
+    }
+
+    protected static function isResolvedByAttribute($parameter)
+    {
+        if (! interface_exists(ContextualAttribute::class)) return false;
+
+        return count($parameter->getAttributes(ContextualAttribute::class, ReflectionAttribute::IS_INSTANCEOF)) > 0;
     }
 
     protected static function substituteNameBindingForCallParameter($parameter, array &$parameters, int &$paramIndex)
