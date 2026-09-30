@@ -48,6 +48,51 @@ class UnitTest extends \Tests\TestCase
         })
             ->assertSetStrict('count', 0);
     }
+
+    public function test_component_with_no_attributes_returns_empty_collection_and_uses_cache()
+    {
+        $component = new class extends TestComponent {
+            public $name = 'test';
+        };
+
+        $attrs = AttributeCollection::fromComponent($component);
+        $this->assertCount(0, $attrs);
+
+        // Repeated call should return empty collection via cached metadata
+        $attrs2 = AttributeCollection::fromComponent($component);
+        $this->assertCount(0, $attrs2);
+    }
+
+    public function test_attributes_inherited_from_parent_class_are_discovered()
+    {
+        $component = new class extends ParentWithAttributeComponent {};
+
+        $attrs = AttributeCollection::fromComponent($component);
+        $this->assertCount(1, $attrs);
+        $this->assertInstanceOf(LifecycleHookAttribute::class, $attrs->first());
+    }
+
+    public function test_attribute_collection_cache_flush()
+    {
+        $component = new class extends TestComponent {
+            #[LifecycleHookAttribute]
+            public $count = 0;
+        };
+
+        $attrs = AttributeCollection::fromComponent($component);
+        $this->assertCount(1, $attrs);
+
+        AttributeCollection::flushCache();
+
+        $attrsAfterFlush = AttributeCollection::fromComponent($component);
+        $this->assertCount(1, $attrsAfterFlush);
+    }
+}
+
+class ParentWithAttributeComponent extends TestComponent
+{
+    #[LifecycleHookAttribute]
+    public $parentCount = 0;
 }
 
 #[\Attribute]

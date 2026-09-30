@@ -29,8 +29,14 @@ class HandleSynths extends Mechanism
     // Performance optimization: Cache which synthesizer matches which type
     protected array $typeCache = [];
 
+    // Performance optimization: Cache synthesizer lookups by key
+    protected array $keyMap = [];
+
     public function registerSynth($synth)
     {
+        $this->keyMap = [];
+        $this->typeCache = [];
+
         foreach ((array) $synth as $class) {
             array_unshift($this->synthesizers, $class);
         }
@@ -63,7 +69,7 @@ class HandleSynths extends Mechanism
         [$value, $meta] = $tuple;
 
         // Nested properties get set as `__rm__` when they are removed. We don't want to hydrate these.
-        if ($this->isRemoval($value) && str($path)->contains('.')) {
+        if ($this->isRemoval($value) && str_contains($path, '.')) {
             return $value;
         }
 
@@ -86,7 +92,7 @@ class HandleSynths extends Mechanism
         [$value, $meta] = $tuple;
 
         // Nested properties get set as `__rm__` when they are removed. We don't want to hydrate these.
-        if ($this->isRemoval($value) && str($path)->contains('.')) {
+        if ($this->isRemoval($value) && str_contains($path, '.')) {
             return $value;
         }
 
@@ -154,7 +160,7 @@ class HandleSynths extends Mechanism
             // configured (closures included), while the original stays put so
             // update/updating hooks still see the old value during
             // trigger('update') — same semantics as declared/nested updates...
-            if (! str($path)->contains('.')
+            if (! str_contains($path, '.')
                 && $context->component->hasVirtualProperty($path)
                 && is_object($target = $context->component->getVirtualProperty($path))
                 && method_exists($synth = $this->resolve($meta['s'], $context, $path), 'hydrateInto')
@@ -171,11 +177,14 @@ class HandleSynths extends Mechanism
         }
 
         // If we don't, let's check to see if it's a typed property and fetch the synth that way...
-        $parent = str($path)->contains('.')
-            ? data_get($context->component, str($path)->beforeLast('.')->toString())
-            : $context->component;
-
-        $childKey = str($path)->afterLast('.');
+        if (str_contains($path, '.')) {
+            $lastDot = strrpos($path, '.');
+            $parent = data_get($context->component, substr($path, 0, $lastDot));
+            $childKey = substr($path, $lastDot + 1);
+        } else {
+            $parent = $context->component;
+            $childKey = $path;
+        }
 
         if ($parent && is_object($parent) && property_exists($parent, $childKey) && Utils::propertyIsTyped($parent, $childKey)) {
             $type = Utils::getProperty($parent, $childKey)->getType();
@@ -216,8 +225,14 @@ class HandleSynths extends Mechanism
 
     protected function findByKey($key, $context, $path)
     {
+        if (isset($this->keyMap[$key])) {
+            return new ($this->keyMap[$key])($context, $path);
+        }
+
         foreach ($this->synthesizers as $synth) {
             if ($synth::getKey() === $key) {
+                $this->keyMap[$key] = $synth;
+
                 return new $synth($context, $path);
             }
         }
@@ -255,6 +270,8 @@ class HandleSynths extends Mechanism
     {
         on('flush-state', function () {
             static::$initializable = [];
+            $this->typeCache = [];
+            $this->keyMap = [];
         });
     }
 
@@ -321,18 +338,23 @@ class HandleSynths extends Mechanism
 
     protected function getMetaForPath($raw, $path)
     {
-        $segments = explode('.', $path);
-
-        $first = array_shift($segments);
-
-        [$data, $meta] = Utils::isSyntheticTuple($raw) ? $raw : [$raw, null];
-
-        if ($path !== '') {
-            $value = $data[$first] ?? null;
-
-            return $this->getMetaForPath($value, implode('.', $segments));
+        if ($path === '' || $path === null) {
+            return Utils::isSyntheticTuple($raw) ? $raw[1] : null;
         }
 
-        return $meta;
+        $segments = explode('.', $path);
+        $current = $raw;
+
+        foreach ($segments as $segment) {
+            [$data, ] = Utils::isSyntheticTuple($current) ? $current : [$current, null];
+
+            if (! is_array($data) || ! array_key_exists($segment, $data)) {
+                return null;
+            }
+
+            $current = $data[$segment];
+        }
+
+        return Utils::isSyntheticTuple($current) ? $current[1] : null;
     }
 }

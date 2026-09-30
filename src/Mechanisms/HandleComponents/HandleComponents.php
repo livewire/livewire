@@ -21,6 +21,8 @@ class HandleComponents extends Mechanism
 {
     public static $renderStack = [];
     public static $componentStack = [];
+    protected static $mountParamsCache = [];
+    protected static $callableMethodsCache = [];
 
     public function __construct(protected HandleSynths $synths) {}
 
@@ -29,7 +31,12 @@ class HandleComponents extends Mechanism
         on('flush-state', function () {
             static::$renderStack = [];
             static::$componentStack = [];
+            static::$mountParamsCache = [];
+            static::$callableMethodsCache = [];
             Utils::flushReflectionCache();
+            Checksum::flushCache();
+            \Livewire\Features\SupportAttributes\AttributeCollection::flushCache();
+            \Livewire\ImplicitlyBoundMethod::flushCache();
         });
     }
 
@@ -99,8 +106,8 @@ class HandleComponents extends Mechanism
             $processedKey = $key;
 
             // Convert only kebab-case params to camelCase for matching...
-            if (str($processedKey)->contains('-')) {
-                $processedKey = str($processedKey)->camel()->toString();
+            if (str_contains($processedKey, '-')) {
+                $processedKey = \Illuminate\Support\Str::camel($processedKey);
             }
 
             // Check if this is a reserved param
@@ -126,26 +133,20 @@ class HandleComponents extends Mechanism
 
     protected function isReservedParam($key)
     {
-        $exact = ['lazy', 'defer', 'lazy.bundle', 'defer.bundle', 'wire:ref'];
-        $startsWith = ['@'];
-
-        // Check exact matches
-        if (in_array($key, $exact)) {
-            return true;
-        }
-
-        // Check starts_with patterns
-        foreach ($startsWith as $prefix) {
-            if (str_starts_with($key, $prefix)) {
-                return true;
-            }
-        }
-
-        return false;
+        return match ($key) {
+            'lazy', 'defer', 'lazy.bundle', 'defer.bundle', 'wire:ref' => true,
+            default => str_starts_with($key, '@'),
+        };
     }
 
     protected function getMountMethodParameters($component)
     {
+        $class = get_class($component);
+
+        if (isset(static::$mountParamsCache[$class])) {
+            return static::$mountParamsCache[$class];
+        }
+
         $parameters = [];
 
         // Get parameters from the component's own mount() method...
@@ -170,7 +171,7 @@ class HandleComponents extends Mechanism
             }
         }
 
-        return array_unique($parameters);
+        return static::$mountParamsCache[$class] = array_values(array_unique($parameters));
     }
 
     protected function shortCircuitMount($name, $params, $key, $parent, $slots, $htmlAttributes)
@@ -510,8 +511,9 @@ class HandleComponents extends Mechanism
 
         $method = ($synths->isRemoval($leafValue) && $isLastSegment) ? 'unset' : 'set';
 
-        $pathThusFar = collect([$baseProperty, ...$segments])->slice(0, $index + 1)->join('.');
-        $fullPath = collect([$baseProperty, ...$segments])->join('.');
+        $allSegments = [$baseProperty, ...$segments];
+        $pathThusFar = implode('.', array_slice($allSegments, 0, $index + 1));
+        $fullPath = implode('.', $allSegments);
 
         $synth->$method($target, $property, $toSet, $pathThusFar, $fullPath);
 
@@ -593,17 +595,18 @@ class HandleComponents extends Mechanism
                 continue;
             }
 
-            $methods = Utils::getPublicMethodsDefinedBySubClass($root);
+            $class = get_class($root);
 
-            // Remove "render" and any #[Virtual] property methods from the
-            // list — virtual methods are property constructors, never
-            // actions, regardless of their casing...
-            $methods = array_values(array_diff($methods, ['render'], $root->getVirtualPropertyMethodNames()));
+            $callableMap = static::$callableMethodsCache[$class] ??= (function () use ($root) {
+                $methods = Utils::getPublicMethodsDefinedBySubClass($root);
+                $filtered = array_diff($methods, ['render'], $root->getVirtualPropertyMethodNames());
+                $map = array_fill_keys($filtered, true);
+                $map['__dispatch'] = true;
 
-            // @todo: put this in a better place:
-            $methods[] = '__dispatch';
+                return $map;
+            })();
 
-            if (! in_array($method, $methods)) {
+            if (! isset($callableMap[$method])) {
                 throw new MethodNotFoundException($method);
             }
 
