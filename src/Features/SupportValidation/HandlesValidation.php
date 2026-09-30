@@ -415,13 +415,13 @@ trait HandlesValidation
             $messages = $e->validator->getMessageBag();
 
             invade($e->validator)->messages = $messages->merge(
-                $this->errorBagExcept($ruleKeysForField)
+                $this->errorBagExcept($field)
             );
 
             throw $e;
         }
 
-        $this->resetErrorBag($ruleKeysForField);
+        if (! empty($ruleKeysForField)) $this->resetErrorBag($field);
 
         return $result;
     }
