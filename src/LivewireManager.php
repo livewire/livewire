@@ -7,6 +7,7 @@ use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleSynths\HandleSynths;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\HandleComponents\Checksum;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Features\SupportTesting\Testable;
@@ -179,6 +180,11 @@ class LivewireManager
     function useScriptTagAttributes($attributes)
     {
         return app(FrontendAssets::class)->useScriptTagAttributes($attributes);
+    }
+
+    function setChecksumRateLimitKey($callback)
+    {
+        Checksum::setRateLimitKey($callback);
     }
 
     protected $queryParamsForTesting = [];
