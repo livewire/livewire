@@ -1309,26 +1309,55 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(new class extends TestComponent {
             public $email = '';
             public $name = '';
+            public $step = 1;
 
             protected $rules = [
                 'email' => 'required|email',
                 'name' => 'required',
             ];
 
-            public function validateAll()
+            public function save()
             {
                 $this->validate();
             }
 
-            public function validateTypo()
+            public function updated($property)
             {
-                $this->validateOnly('emial'); // no matching rule
+                $this->validateOnly($property);
             }
         })
-            ->call('validateAll') // case: on submit
+            ->call('save')
             ->assertHasErrors(['email', 'name'])
-            ->call('validateTypo') // case: wire:model.live
+            ->set('step', 2)
             ->assertHasErrors(['email', 'name']);
+    }
+
+    public function test_validate_only_specific_nested_field_preserves_sibling_errors_when_it_passes()
+    {
+        Livewire::test(ForValidation::class)
+            ->set('items', [
+                ['foo' => 'bar', 'baz' => ''],
+                ['foo' => 'bar', 'baz' => ''],
+            ])
+            ->call('runDeeplyNestedValidation')
+            ->assertHasErrors(['items.0.baz', 'items.1.baz'])
+            ->set('items.1.baz', 'fixed')
+            ->call('runDeeplyNestedValidationOnly', 'items.1.baz')
+            ->assertHasNoErrors(['items.1.baz'])
+            ->assertHasErrors(['items.0.baz']); // unrelated, should keep validation errors
+    }
+
+    public function test_validate_only_specific_nested_field_preserves_sibling_errors_when_it_fails()
+    {
+        Livewire::test(ForValidation::class)
+            ->set('items', [
+                ['foo' => 'bar', 'baz' => ''],
+                ['foo' => 'bar', 'baz' => ''],
+            ])
+            ->call('runDeeplyNestedValidation')
+            ->assertHasErrors(['items.0.baz', 'items.1.baz'])
+            ->call('runDeeplyNestedValidationOnly', 'items.1.baz')
+            ->assertHasErrors(['items.0.baz', 'items.1.baz']); // both should keep validation errors
     }
 }
 
