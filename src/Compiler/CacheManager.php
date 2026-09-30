@@ -63,47 +63,59 @@ class CacheManager
 
     public function getHash(string $sourcePath): string
     {
+        // Generated Blade views keep their logical identity for island tokens,
+        // even though their compiled files are isolated by release.
+        if (Str::startsWith($sourcePath, [$this->cacheDirectory . '/views/', $this->cacheDirectory . '/placeholders/'])) {
+            $sourcePath = preg_replace('/\/([a-f0-9]{8})-[a-f0-9]{8}\.blade\.php$/', '/$1.blade.php', $sourcePath);
+        }
+
         return substr(md5(Str::after($sourcePath, base_path())), 0, 8);
+    }
+
+    protected function getCompiledFileHash(string $sourcePath): string
+    {
+        // Unlike island tokens, compiled files must not be shared by overlapping releases.
+        return $this->getHash($sourcePath) . '-' . substr(md5($sourcePath), 0, 8);
     }
 
     public function getClassPath(string $sourcePath): string
     {
-        $hash = $this->getHash($sourcePath);
+        $hash = $this->getCompiledFileHash($sourcePath);
 
         return $this->cacheDirectory . '/classes/' . $hash . '.php';
     }
 
     public function getViewPath(string $sourcePath): string
     {
-        $hash = $this->getHash($sourcePath);
+        $hash = $this->getCompiledFileHash($sourcePath);
 
         return $this->cacheDirectory . '/views/' . $hash . '.blade.php';
     }
 
     public function getScriptPath(string $sourcePath): string
     {
-        $hash = $this->getHash($sourcePath);
+        $hash = $this->getCompiledFileHash($sourcePath);
 
         return $this->cacheDirectory . '/scripts/' . $hash . '.js';
     }
 
     public function getStylePath(string $sourcePath): string
     {
-        $hash = $this->getHash($sourcePath);
+        $hash = $this->getCompiledFileHash($sourcePath);
 
         return $this->cacheDirectory . '/styles/' . $hash . '.css';
     }
 
     public function getGlobalStylePath(string $sourcePath): string
     {
-        $hash = $this->getHash($sourcePath);
+        $hash = $this->getCompiledFileHash($sourcePath);
 
         return $this->cacheDirectory . '/styles/' . $hash . '.global.css';
     }
 
     public function getPlaceholderPath(string $sourcePath): string
     {
-        $hash = $this->getHash($sourcePath);
+        $hash = $this->getCompiledFileHash($sourcePath);
 
         return $this->cacheDirectory . '/placeholders/' . $hash . '.blade.php';
     }
