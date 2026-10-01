@@ -274,15 +274,15 @@ class MakeCommand extends Command
         $this->files->put($classPath, $classContent);
         $this->files->put($viewPath, $viewContent);
 
-        if ($this->option('test') || config('livewire.make_command.with.test')) {
+        if ($this->option('test') || $this->option('all') || config('livewire.make_command.with.test')) {
             $this->files->put($testPath, $testContent);
         }
 
-        if ($this->option('js') || config('livewire.make_command.with.js')) {
+        if ($this->option('js') || $this->option('all') || config('livewire.make_command.with.js')) {
             $this->files->put($jsPath, $jsContent);
         }
 
-        if ($this->option('css') || config('livewire.make_command.with.css')) {
+        if ($this->option('css') || $this->option('all') || config('livewire.make_command.with.css')) {
             $cssContent = $this->buildMultiFileComponentCss();
             $this->files->put($cssPath, $cssContent);
         }
@@ -600,6 +600,7 @@ class MakeCommand extends Command
             ['emoji', null, InputOption::VALUE_REQUIRED, 'Use emoji in file/directory names (true or false)'],
             ['js', null, InputOption::VALUE_NONE, 'Create a JavaScript file for multi-file components'],
             ['css', null, InputOption::VALUE_NONE, 'Create CSS files for multi-file components'],
+            ['all', null, InputOption::VALUE_NONE, 'Create all optional files (js, css, test) for multi-file components'],
         ];
     }
 }
