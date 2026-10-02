@@ -90,15 +90,10 @@ class Form implements Arrayable
                 $this->propertyName . '.*',
             ];
         } else {
-            $fields = array_filter(
-                (array) $field, 
-                fn ($f) => $f !== null && $f !== ''
-            );
-
-            $fields = array_map(
-                fn ($f) => $this->propertyName . '.' . $f,
-                $fields,
-            );
+            $fields = collect((array) $field)
+                ->filter()
+                ->map(fn ($f) => $this->propertyName . '.' . $f)
+                ->toArray();
         }
 
         if (! empty($fields)) {
