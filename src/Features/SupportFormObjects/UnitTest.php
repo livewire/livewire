@@ -1234,6 +1234,77 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.profile.name', '')
             ->assertOk();
     }
+
+    public function test_form_reset_error_bag_only_clears_form_prefixed_errors()
+    {
+        Livewire::test(new class extends TestComponent {
+            public string $other = '';
+
+            public PostFormStub $form;
+
+            public function addErrors()
+            {
+                $this->addError('other', 'component error');
+                $this->form->addError('title', 'form error');
+            }
+
+            public function clearFormErrors()
+            {
+                $this->form->resetErrorBag();
+            }
+        })
+            ->call('addErrors')
+            ->assertHasErrors(['other', 'form.title'])
+            ->call('clearFormErrors')
+            ->assertHasErrors(['other'])
+            ->assertHasNoErrors(['form.title']);
+    }
+
+    public function test_form_reset_error_bag_is_noop_when_form_has_no_errors()
+    {
+        Livewire::test(new class extends TestComponent {
+            public string $other = '';
+
+            public PostFormStub $form;
+
+            public function addComponentError()
+            {
+                $this->addError('other', 'component error');
+            }
+
+            public function clearFormErrors()
+            {
+                $this->form->resetErrorBag();
+            }
+        })
+            ->call('addComponentError')
+            ->assertHasErrors(['other'])
+            ->call('clearFormErrors')
+            ->assertHasErrors(['other']); // must survive
+    }
+
+    public function test_form_reset_error_bag_with_empty_array_is_noop()
+    {
+        Livewire::test(new class extends TestComponent {
+            public string $other = '';
+            public PostFormStub $form;
+
+            public function addErrors()
+            {
+                $this->addError('other', 'component error');
+                $this->form->addError('title', 'form error');
+            }
+
+            public function clearWithEmpty()
+            {
+                $this->form->resetErrorBag([]);
+            }
+        })
+            ->call('addErrors')
+            ->assertHasErrors(['other', 'form.title'])
+            ->call('clearWithEmpty')
+            ->assertHasErrors(['other', 'form.title']); // both must survive
+    }
 }
 
 class PostFormStub extends Form
