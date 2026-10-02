@@ -84,27 +84,26 @@ class Form implements Arrayable
     public function resetErrorBag($field = null)
     {
         if ($field === null) {
-            $prefix = $this->propertyName . '.';
+            // Clear everything that belongs to this form
+            $fields = [
+                $this->propertyName,
+                $this->propertyName . '.*',
+            ];
+        } else {
+            $fields = array_filter(
+                (array) $field, 
+                fn ($f) => $f !== null && $f !== ''
+            );
 
-            $fields = collect($this->getComponent()->getErrorBag()->toArray())
-                ->keys()
-                ->filter(fn ($key) => $key === $this->propertyName || str_starts_with($key, $prefix))
-                ->values()
-                ->all();
-
-            if (! empty($fields)) {
-                $this->getComponent()->resetErrorBag($fields);
-            }
-
-            return;
+            $fields = array_map(
+                fn ($f) => $this->propertyName . '.' . $f,
+                $fields,
+            );
         }
 
-        $fields = array_map(
-            fn ($f) => $this->propertyName . '.' . $f,
-            (array) $field,
-        );
-
-        $this->getComponent()->resetErrorBag($fields);
+        if (! empty($fields)) {
+            $this->getComponent()->resetErrorBag($fields);
+        }
     }
 
     public function all()
