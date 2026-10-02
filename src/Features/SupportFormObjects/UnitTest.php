@@ -1282,6 +1282,29 @@ class UnitTest extends \Tests\TestCase
             ->call('clearFormErrors')
             ->assertHasErrors(['other']); // must survive
     }
+
+    public function test_form_reset_error_bag_with_empty_array_is_noop()
+    {
+        Livewire::test(new class extends TestComponent {
+            public string $other = '';
+            public PostFormStub $form;
+
+            public function addErrors()
+            {
+                $this->addError('other', 'component error');
+                $this->form->addError('title', 'form error');
+            }
+
+            public function clearWithEmpty()
+            {
+                $this->form->resetErrorBag([]);
+            }
+        })
+            ->call('addErrors')
+            ->assertHasErrors(['other', 'form.title'])
+            ->call('clearWithEmpty')
+            ->assertHasErrors(['other', 'form.title']); // both must survive
+    }
 }
 
 class PostFormStub extends Form
