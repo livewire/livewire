@@ -16,7 +16,13 @@ class Test extends BrowserTestCase
             {
                 return <<<'HTML'
                     <div>
+                        <style>
+                            .offline-flex {
+                                display: flex;
+                            }
+                        </style>
                         <span wire:offline dusk="whileOffline">Offline</span>
+                        <span wire:offline class="offline-flex" dusk="offlineFlex">Offline Flex</span>
                         <span wire:offline.class="foo" dusk="addClass"></span>
                         <span class="hidden" wire:offline.class.remove="hidden" dusk="removeClass"></span>
                         <span wire:offline.attr="disabled" dusk="withAttribute"></span>
@@ -30,6 +36,16 @@ class Test extends BrowserTestCase
             ->assertSeeIn('@whileOffline', 'Offline')
             ->online()
             ->assertMissing('@whileOffline')
+
+            /**
+             * plain wire:offline preserves the element's existing display value
+             */
+            ->online()
+            ->assertMissing('@offlineFlex')
+            ->offline()
+            ->assertScript('window.getComputedStyle(document.querySelector(\'[dusk="offlineFlex"]\')).display', 'flex')
+            ->online()
+            ->assertMissing('@offlineFlex')
 
             /**
              * add element class while offline

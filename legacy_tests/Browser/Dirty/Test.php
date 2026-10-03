@@ -20,10 +20,16 @@ class Test extends BrowserTestCase
             {
                 return <<<HTML
                     <div>
+                        <style>
+                            .dirty-flex {
+                                display: flex;
+                            }
+                        </style>
                         <input wire:model.lazy="foo" wire:dirty.class="foo-dirty" dusk="foo">
                         <input wire:model.lazy="bar" wire:dirty.class.remove="bar-dirty" class="bar-dirty" dusk="bar">
                         <span wire:dirty.class="baz-dirty" wire:target="baz" dusk="baz.target"><input wire:model.lazy="baz" dusk="baz.input"></span>
                         <span wire:dirty wire:target="bob" dusk="bob.target">Dirty Indicator</span><input wire:model.lazy="bob" dusk="bob.input">
+                        <span wire:dirty wire:target="bob" class="dirty-flex" dusk="bob.flex">Dirty Flex</span>
 
                         <button type="button" dusk="dummy"></button>
                     </div>
@@ -66,12 +72,15 @@ class Test extends BrowserTestCase
              * wire:dirty without modifiers, but with wire:target
              */
             ->assertMissing('@bob.target')
+            ->assertMissing('@bob.flex')
             ->type('@bob.input', 'baz')
             ->assertVisible('@bob.target')
+            ->waitForScript('window.getComputedStyle(document.querySelector(\'[dusk="bob.flex"]\')).display', 'flex')
             ->pause(150)
             ->waitForLivewire()->click('@dummy')
             ->pause(25)
             ->assertMissing('@bob.target')
+            ->waitForScript('window.getComputedStyle(document.querySelector(\'[dusk="bob.flex"]\')).display', 'none')
         ;
     }
 }

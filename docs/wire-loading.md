@@ -173,20 +173,33 @@ The above loading indicator will now be shown for every Livewire update request 
 
 ## Customizing CSS display property
 
-When `wire:loading` is added to an element, Livewire updates the CSS `display` property of the element to show and hide the element. By default, Livewire uses `none` to hide and `inline-block` to show.
-
-If you are toggling an element that uses a display value other than `inline-block`, like `flex` in the following example, you can append `.flex` to `wire:loading`:
+Livewire hides an element carrying `wire:loading` with `display: none` and, when a request is in flight, removes that hiding rule. Because the hiding is done by a stylesheet rather than an inline `display` value, showing the element falls back to whatever display value it already has. In other words, plain `wire:loading` preserves the element's existing CSS display value:
 
 ```blade
-<div class="flex" wire:loading.flex>...</div>
+<div class="flex" wire:loading>...</div> <!-- Shown as display: flex while loading -->
+<div class="grid" wire:loading>...</div> <!-- Shown as display: grid while loading -->
+<div class="block" wire:loading>...</div> <!-- Shown as display: block while loading -->
+```
+
+> [!info] Tailwind users
+> Because the existing display value is preserved, a plain `wire:loading` on an element with Tailwind's `flex`, `grid`, or `inline-flex` class no longer needs a matching display modifier.
+
+When you want Livewire to force a specific display value while loading, append one of the display modifiers to `wire:loading`:
+
+```blade
+<div wire:loading.flex>...</div>
+<div wire:loading.grid>...</div>
+<div wire:loading.block>...</div>
 ```
 
 Below is the complete list of available display values:
 
 ```blade
+<div wire:loading.inline-block>...</div>
 <div wire:loading.inline-flex>...</div>
 <div wire:loading.inline>...</div>
 <div wire:loading.block>...</div>
+<div wire:loading.list-item>...</div>
 <div wire:loading.table>...</div>
 <div wire:loading.flex>...</div>
 <div wire:loading.grid>...</div>
@@ -300,8 +313,10 @@ wire:target.except="action"
 | `.delay.long` | Delay by 300ms |
 | `.delay.longer` | Delay by 500ms |
 | `.delay.longest` | Delay by 1000ms |
+| `.inline-block` | Use `inline-block` display value |
 | `.inline-flex` | Use `inline-flex` display value |
 | `.inline` | Use `inline` display value |
+| `.list-item` | Use `list-item` display value |
 | `.block` | Use `block` display value |
 | `.table` | Use `table` display value |
 | `.flex` | Use `flex` display value |
