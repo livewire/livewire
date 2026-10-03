@@ -142,6 +142,74 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('livewire.min.js', $response->getFile()->getFilename());
     }
 
+    public function test_use_csp_scripts_file_if_csp_safe_is_enabled()
+    {
+        config()->set('livewire.csp_safe', true);
+
+        $assets = app(FrontendAssets::class);
+
+        config()->set('app.debug', true);
+        $this->assertEquals('livewire.csp.js', $assets->returnJavaScriptAsFile()->getFile()->getFilename());
+
+        config()->set('app.debug', false);
+        $this->assertEquals('livewire.csp.min.js', $assets->returnJavaScriptAsFile()->getFile()->getFilename());
+    }
+
+    public function test_csp_safe_build_is_served_from_a_different_url_than_the_default_build()
+    {
+        // Both builds are served from the same route and cached for a year, so a
+        // shared URL would keep browsers on whichever build they fetched first...
+        config()->set('livewire.csp_safe', false);
+        $defaultUrl = $this->scriptUrl(FrontendAssets::js([]));
+
+        config()->set('livewire.csp_safe', true);
+        $cspUrl = $this->scriptUrl(FrontendAssets::js([]));
+
+        $this->assertNotEquals($defaultUrl, $cspUrl);
+        $this->assertEquals(strtok($defaultUrl, '?'), strtok($cspUrl, '?'));
+    }
+
+    public function test_csp_safe_build_is_served_from_a_different_url_when_script_route_has_been_overridden()
+    {
+        $assets = app(FrontendAssets::class);
+
+        $assets->setScriptRoute(function ($handle) {
+            return Route::get('/custom/livewire.js', $handle);
+        });
+
+        config()->set('livewire.csp_safe', false);
+        $defaultUrl = $this->scriptUrl(FrontendAssets::js([]));
+
+        config()->set('livewire.csp_safe', true);
+        $cspUrl = $this->scriptUrl(FrontendAssets::js([]));
+
+        $this->assertStringContainsString('/custom/livewire.js?id=', $cspUrl);
+        $this->assertNotEquals($defaultUrl, $cspUrl);
+    }
+
+    public function test_csp_safe_build_is_served_from_a_different_url_when_asset_url_is_configured()
+    {
+        config()->set('livewire.asset_url', 'https://cdn.example.com/livewire.js');
+
+        config()->set('livewire.csp_safe', false);
+        $defaultUrl = $this->scriptUrl(FrontendAssets::js([]));
+
+        config()->set('livewire.csp_safe', true);
+        $cspUrl = $this->scriptUrl(FrontendAssets::js([]));
+
+        $this->assertStringStartsWith('https://cdn.example.com/livewire.js?id=', $cspUrl);
+        $this->assertNotEquals($defaultUrl, $cspUrl);
+    }
+
+    public function test_script_url_of_the_default_build_is_unchanged()
+    {
+        config()->set('livewire.csp_safe', false);
+
+        $manifest = json_decode(file_get_contents(__DIR__.'/../../../dist/manifest.json'), true);
+
+        $this->assertStringEndsWith('?id='.$manifest['/livewire.js'], $this->scriptUrl(FrontendAssets::js([])));
+    }
+
     public function test_flush_state_event_resets_has_rendered()
     {
         $assets = app(FrontendAssets::class);
@@ -231,5 +299,12 @@ class UnitTest extends \Tests\TestCase
 
         // Should NOT use the default vendor path
         $this->assertStringNotContainsString('vendor/livewire', $scripts);
+    }
+
+    protected function scriptUrl(string $html): string
+    {
+        preg_match('/<script src="([^"]+)"/', $html, $matches);
+
+        return $matches[1];
     }
 }
