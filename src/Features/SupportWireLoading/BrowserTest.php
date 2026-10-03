@@ -1301,6 +1301,46 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertMissing('@island-loading')
             ;
     }
+
+    function test_wire_loading_preserves_existing_display_style()
+    {
+        Livewire::visit(new class extends Component {
+            public function slowRequest()
+            {
+                usleep(500000);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <style>
+                        .loading-flex {
+                            display: flex;
+                        }
+                    </style>
+
+                    <button wire:click="slowRequest" dusk="trigger">
+                        Trigger
+                    </button>
+
+                    <div wire:loading class="loading-flex" dusk="loading">
+                        Loading...
+                    </div>
+                </div>
+            HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->click('@trigger')
+            ->waitUntil(
+                'window.getComputedStyle(document.querySelector(\'[dusk="loading"]\')).display !== "none"'
+            )
+            ->assertScript(
+                'window.getComputedStyle(document.querySelector(\'[dusk="loading"]\')).display',
+                'flex'
+            );
+    }
 }
 
 class PostFormStub extends Form

@@ -17,17 +17,44 @@ export function toggleBooleanStateDirective(el, directive, isTruthy, cachedDispl
             el.removeAttribute(directive.expression)
         }
     } else {
-        let cache = cachedDisplay ?? window
-            .getComputedStyle(el, null)
-            .getPropertyValue('display')
+        let displayModifier = [
+            'inline',
+            'list-item',
+            'block',
+            'table',
+            'flex',
+            'grid',
+            'inline-flex',
+            // "inline-block" was never listed here because it used to fall through
+            // to the "inline-block" default. Now that the default is only used for
+            // explicitly opted-in display values, it needs to be detected too...
+            'inline-block',
+        ].find(i => directive.modifiers.includes(i))
 
-        let display = (['inline', 'list-item', 'block', 'table', 'flex', 'grid', 'inline-flex']
-            .filter(i => directive.modifiers.includes(i))[0] || 'inline-block')
+        let canPreserveDisplay = directive.value !== 'dirty' || ! el.matches('input, textarea, select')
 
-        // If element is to be removed, set display to its current value...
-        // display = (directive.modifiers.includes('remove') && ! isTruthy)
-        display = (directive.modifiers.includes('remove') && ! isTruthy)
-            ? cache : display
+        if (! displayModifier && ! directive.modifiers.includes('remove') && canPreserveDisplay) {
+            let activeAttribute = `data-livewire-${directive.value}-active`
+
+            if (isTruthy) {
+                el.setAttribute(activeAttribute, '')
+            } else {
+                el.removeAttribute(activeAttribute)
+            }
+
+            return
+        }
+
+        let cache =
+            cachedDisplay ??
+            window.getComputedStyle(el, null).getPropertyValue('display')
+
+        let display = displayModifier || 'inline-block'
+
+        display =
+            directive.modifiers.includes('remove') && ! isTruthy
+                ? cache
+                : display
 
         el.style.display = isTruthy ? display : 'none'
     }
