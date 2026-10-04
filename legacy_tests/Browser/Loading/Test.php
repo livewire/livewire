@@ -138,7 +138,7 @@ class Test extends TestCase
                 ->waitForLivewire(function ($b) {
                     $b->click('@refresh');
                     $b->pause(50);
-                    $b->assertScript('getComputedStyle(document.querySelector(\'[dusk="default"]\')).display', 'inline-block');
+                    $b->assertScript('getComputedStyle(document.querySelector(\'[dusk="default"]\')).display', 'inline');
                     $b->assertScript('getComputedStyle(document.querySelector(\'[dusk="inline-block"]\')).display', 'inline-block');
                     $b->assertScript('getComputedStyle(document.querySelector(\'[dusk="inline"]\')).display', 'inline');
                     $b->assertScript('getComputedStyle(document.querySelector(\'[dusk="block"]\')).display', 'block');

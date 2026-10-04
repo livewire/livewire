@@ -173,12 +173,12 @@ The above loading indicator will now be shown for every Livewire update request 
 
 ## Customizing CSS display property
 
-When `wire:loading` is added to an element, Livewire updates the CSS `display` property of the element to show and hide the element. By default, Livewire uses `none` to hide and `inline-block` to show.
+When `wire:loading` is added to an element, Livewire updates the CSS `display` property of the element to show and hide the element. Livewire uses `none` to hide and restores the element's own display value (for example `flex` or `grid`) to show.
 
-If you are toggling an element that uses a display value other than `inline-block`, like `flex` in the following example, you can append `.flex` to `wire:loading`:
+If you need a display value other than the element's own, like `block` in the following example, you can append `.block` to `wire:loading`:
 
 ```blade
-<div class="flex" wire:loading.flex>...</div>
+<div wire:loading.block>...</div>
 ```
 
 Below is the complete list of available display values:
