@@ -274,19 +274,23 @@ trait HandlesIslands
 
     protected function regenerateIncludedIslandCacheFiles($token)
     {
-        // Islands declared in an @include'd partial are only compiled with that partial,
+        // Islands in an @include'd partial are only compiled with that partial,
         // so find the partial whose path hash matches the token and compile it...
         $hash = Str::before($token, '-');
+        $finder = app('view')->getFinder();
+        $cacheManager = app('livewire.compiler')->cacheManager;
 
-        foreach (app('view')->getFinder()->getPaths() as $directory) {
+        foreach (array_merge($finder->getPaths(), ...array_values($finder->getHints())) as $directory) {
             if (! is_dir($directory)) continue;
 
             foreach (File::allFiles($directory) as $file) {
-                if (! str_ends_with($file->getFilename(), '.blade.php')) continue;
+                $path = $file->getPathname();
 
-                if (app('livewire.compiler')->cacheManager->getHash($file->getPathname()) !== $hash) continue;
+                if (! str_ends_with($path, '.blade.php')) continue;
 
-                app('blade.compiler')->compile($file->getPathname());
+                if ($cacheManager->getHash($path) !== $hash) continue;
+
+                app('blade.compiler')->compile($path);
 
                 return;
             }
