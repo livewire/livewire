@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component as BaseComponent;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleComponents\Checksum;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 class UnitTest extends \LegacyTests\Unit\TestCase
@@ -150,6 +151,50 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $response->assertJsonPath('components.0.snapshot', $snapshot);
     }
 
+    public function test_persistent_middleware_runs_again_when_a_route_reappears_non_consecutively_in_a_bundle()
+    {
+        Route::get('/persistent-middleware-a', fn () => 'a')
+            ->middleware(RecordPersistentMiddlewareRoute::class);
+        Route::get('/persistent-middleware-b', fn () => 'b')
+            ->middleware(RecordPersistentMiddlewareRoute::class);
+
+        Livewire::addPersistentMiddleware(RecordPersistentMiddlewareRoute::class);
+
+        RecordPersistentMiddlewareRoute::$paths = [];
+
+        $snapshotFor = function ($path) {
+            $snapshot = Livewire::test(EmptyComponent::class)->snapshot;
+
+            $snapshot['memo']['path'] = $path;
+            $snapshot['memo']['method'] = 'GET';
+            unset($snapshot['checksum']);
+            $snapshot['checksum'] = Checksum::generate($snapshot);
+
+            return json_encode($snapshot);
+        };
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), [
+                'components' => collect([
+                    'persistent-middleware-a',
+                    'persistent-middleware-b',
+                    'persistent-middleware-a',
+                ])->map(fn ($path) => [
+                    'calls' => [],
+                    'updates' => [],
+                    'snapshot' => $snapshotFor($path),
+                ])->all(),
+            ]);
+
+        $response->assertOk();
+
+        $this->assertSame([
+            'persistent-middleware-a',
+            'persistent-middleware-b',
+            'persistent-middleware-a',
+        ], RecordPersistentMiddlewareRoute::$paths);
+    }
+
 }
 
 class EmptyComponent extends BaseComponent
@@ -161,5 +206,17 @@ class EmptyComponent extends BaseComponent
 
         </div>
         HTML;
+    }
+}
+
+class RecordPersistentMiddlewareRoute
+{
+    public static $paths = [];
+
+    public function handle($request, $next)
+    {
+        static::$paths[] = $request->path();
+
+        return $next($request);
     }
 }
