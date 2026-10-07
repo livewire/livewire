@@ -121,4 +121,39 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_changing_the_poll_duration_stops_the_previous_poll()
+    {
+        Livewire::visit(new class extends Component {
+            public $pollCount = 0;
+            public $slow = false;
+
+            public function slowDown()
+            {
+                $this->slow = true;
+            }
+
+            public function poll()
+            {
+                $this->pollCount++;
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button wire:click="slowDown" dusk="slow-down">Slow down</button>
+                <span dusk="poll-count">{{ $pollCount }}</span>
+
+                <div dusk="poller" @if ($slow) wire:poll.10s="poll" @else wire:poll.250ms="poll" @endif></div>
+            </div>
+            HTML; }
+        })
+        ->waitForTextIn('@poll-count', '2')
+        ->waitForLivewire()->click('@slow-down')
+        ->assertAttribute('@poller', 'wire:poll.10s', 'poll')
+        ->tap(function ($b) {
+            $pollCount = $b->text('@poll-count');
+
+            $b->pause(1000)->assertSeeIn('@poll-count', $pollCount);
+        })
+        ;
+    }
 }
