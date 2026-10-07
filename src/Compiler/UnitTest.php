@@ -7,6 +7,7 @@ use Livewire\Compiler\Parser\SingleFileParser;
 use Livewire\Compiler\Parser\MultiFileParser;
 use Livewire\Compiler\Compiler;
 use Livewire\Compiler\CacheManager;
+use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Illuminate\Support\Facades\File;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -418,6 +419,47 @@ class UnitTest extends \Tests\TestCase
         $compiler->compile($sourcePath);
 
         $this->assertEquals($freshFileMtime, filemtime($compiledPath));
+    }
+
+    public function test_overlapping_releases_do_not_share_compiled_files()
+    {
+        $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
+
+        foreach ([1, 2] as $release) {
+            File::ensureDirectoryExists($this->tempPath . '/releases/' . $release);
+            File::put($source = $this->tempPath . '/releases/' . $release . '/dashboard.blade.php', str_replace(
+                'Hello World', 'Release ' . $release, File::get(__DIR__ . '/Fixtures/sfc-component.blade.php')
+            ));
+
+            touch($source, time() - 60);
+        }
+
+        // Release 2 is checked out, then the still-live release 1 compiles its old source...
+        app()->setBasePath($this->tempPath . '/releases/1');
+        $compiler->compile($this->tempPath . '/releases/1/dashboard.blade.php');
+
+        // Release 2 must not pick up release 1's freshly compiled files...
+        app()->setBasePath($this->tempPath . '/releases/2');
+        $class = $compiler->compile($this->tempPath . '/releases/2/dashboard.blade.php');
+
+        $this->assertSame('Release 2', (new $class)->message);
+    }
+
+    public function test_island_tokens_of_compiled_views_are_stable_across_releases()
+    {
+        $cacheManager = app('livewire.compiler')->cacheManager;
+
+        app()->setBasePath('/home/forge/releases/1');
+        $first = $cacheManager->getViewPath(base_path('resources/views/components/dashboard.blade.php'));
+
+        app()->setBasePath('/home/forge/releases/2');
+        $second = $cacheManager->getViewPath(base_path('resources/views/components/dashboard.blade.php'));
+
+        $this->assertNotSame($first, $second);
+        $this->assertSame(
+            IslandCompiler::compile($first, '@island <div>Counter</div> @endisland'),
+            IslandCompiler::compile($second, '@island <div>Counter</div> @endisland'),
+        );
     }
 
     public function test_can_hook_into_sfc_compilation()
