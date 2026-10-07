@@ -65,9 +65,9 @@ export function generateWireObject(component, state) {
         get(target, property) {
             if (property === '__instance') return component
 
-            if (property in aliases) {
+            if (Object.hasOwn(aliases, property)) {
                 return getProperty(component, aliases[property])
-            } else if (property in properties) {
+            } else if (Object.hasOwn(properties, property)) {
                 return getProperty(component, property)
             } else if (property in state) {
                 return state[property]

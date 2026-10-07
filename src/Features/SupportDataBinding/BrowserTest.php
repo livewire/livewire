@@ -1197,4 +1197,29 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@output', '{"0":"a","1":"b","1000":true}')
         ;
     }
+
+    function test_queued_set_does_not_drop_updates_to_properties_that_share_its_prefix()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = '';
+
+            public $foobar = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="foobar" wire:model="foobar" />
+
+                        <button dusk="set" wire:click="$set('foo', 'bar')">Set foo</button>
+
+                        <span dusk="output">{{ $foo }}-{{ $foobar }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->type('@foobar', 'baz')
+            ->waitForLivewire()->click('@set')
+            ->assertSeeIn('@output', 'bar-baz');
+    }
 }

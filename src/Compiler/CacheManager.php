@@ -14,8 +14,9 @@ class CacheManager
     public function hasBeenCompiled(string $sourcePath): bool
     {
         $classPath = $this->getClassPath($sourcePath);
+        $viewPath = $this->getViewPath($sourcePath);
 
-        return file_exists($classPath);
+        return file_exists($classPath) && file_exists($viewPath);
     }
 
     public function isExpired(string $sourcePath): bool

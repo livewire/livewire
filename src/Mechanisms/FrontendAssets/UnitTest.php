@@ -142,6 +142,18 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('livewire.min.js', $response->getFile()->getFilename());
     }
 
+    public function test_csp_safe_build_gets_its_own_script_url_version()
+    {
+        config()->set('livewire.csp_safe', false);
+        $default = FrontendAssets::js([]);
+
+        config()->set('livewire.csp_safe', true);
+        $csp = FrontendAssets::js([]);
+
+        $this->assertStringNotContainsString('-csp"', $default);
+        $this->assertStringContainsString('-csp"', $csp);
+    }
+
     public function test_flush_state_event_resets_has_rendered()
     {
         $assets = app(FrontendAssets::class);

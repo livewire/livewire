@@ -408,6 +408,32 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_progress_bar_stays_above_positioned_elements_while_it_fades_out()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                ->assertScript(<<<'JS'
+                    (() => {
+                        // A fixed sidebar with a z-index, like most app layouts have...
+                        let sidebar = document.createElement('div')
+                        sidebar.style.cssText = 'position: fixed; top: 0; left: 0; z-index: 20; width: 200px; height: 100px; background: #eee'
+                        document.body.prepend(sidebar)
+
+                        // The bar mid fade-out: NProgress fades it by lowering #nprogress's opacity...
+                        let progress = document.createElement('div')
+                        progress.id = 'nprogress'
+                        progress.style.cssText = 'opacity: 0.5; pointer-events: auto'
+                        progress.innerHTML = '<div class="bar"></div>'
+                        document.body.append(progress)
+
+                        return document.elementFromPoint(50, 1) === progress.querySelector('.bar')
+                    })()
+                JS);
+        });
+    }
+
     public function test_can_navigate_to_page_without_reloading()
     {
         $this->browse(function ($browser) {
