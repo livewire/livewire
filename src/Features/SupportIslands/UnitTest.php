@@ -120,6 +120,36 @@ class UnitTest extends TestCase
         File::delete($viewPath);
     }
 
+    public function test_island_in_included_partial_recovers_when_cached_file_is_deleted_between_requests()
+    {
+        app('view')->addLocation(__DIR__ . '/fixtures/views');
+
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public int $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+                $this->renderIsland('counter');
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @include('island-partial')
+                </div>
+                HTML;
+            }
+        });
+
+        // Simulate a server that has never compiled the partial...
+        $cachedPath = IslandCompiler::getCachedPathFromToken($component->instance()->getIslands()[0]['token']);
+
+        File::delete([$cachedPath, app('blade.compiler')->getCompiledPath($cachedPath)]);
+
+        $component->call('increment')->assertOk();
+    }
+
     public function test_sfc_island_can_use_imports_from_the_component_class()
     {
         app('livewire.finder')->addLocation(viewPath: __DIR__ . '/fixtures');

@@ -1407,4 +1407,41 @@ class BrowserTest extends BrowserTestCase
             ->type('@input', 'livewire')
             ->waitForTextIn('@content', 'livewire');
     }
+
+    public function test_nested_component_inside_a_parent_island_is_not_scoped_to_that_island()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'modals')
+                        <livewire:child />
+                    @endisland
+                </div>
+                HTML;
+            }
+        }, 'child' => new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'modals')
+                        <div dusk="child-island">Island</div>
+                    @endisland
+
+                    <button type="button" wire:click="increment" dusk="increment">Count: {{ $count }}</button>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertSeeIn('@increment', 'Count: 0')
+            ->waitForLivewire()->click('@increment')
+            ->assertSeeIn('@increment', 'Count: 1');
+    }
 }
