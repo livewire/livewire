@@ -1303,6 +1303,26 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame(1, ValidationUnwrappingSpyCollection::$toArrayCalls);
     }
+
+    public function test_validate_only_with_a_wildcard_field_only_validates_the_targeted_keys_in_each_item()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $sections = [
+                ['lines' => [['product' => 'Widget'], ['product' => '']]],
+                ['lines' => [['product' => ''], ['product' => '']]],
+            ];
+
+            public function validateFirstLines()
+            {
+                $this->validateOnly('sections.*.lines.0.product', [
+                    'sections.*.lines.*.product' => 'required',
+                ]);
+            }
+        })
+            ->call('validateFirstLines')
+            ->assertHasErrors('sections.1.lines.0.product')
+            ->assertHasNoErrors(['sections.0.lines.0.product', 'sections.0.lines.1.product', 'sections.1.lines.1.product']);
+    }
 }
 
 class ValidationUnwrappingSpyCollection extends Collection
