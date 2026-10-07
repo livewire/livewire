@@ -83,6 +83,7 @@ export async function renderIsland(component, islandHtml) {
         isMatch: ({ type, token }) => {
             return type === metadata.type && token === metadata.token
         },
+        hasReachedBoundary: ({ el }) => el.hasAttribute('wire:id'),
     })
 
     if (! fragment) return

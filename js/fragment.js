@@ -57,17 +57,17 @@ export function findFragment(el, { isMatch, hasReachedBoundary }) {
         }
 
         // Check all child nodes (including text and comment nodes)
-        Array.from(el.childNodes).forEach(node => {
-            if (isStartFragmentMarker(node)) {
-                let metadata = extractFragmentMetadataFromMarkerNode(node)
+        for (let node of Array.from(el.childNodes)) {
+            if (! isStartFragmentMarker(node)) continue
 
-                if (isMatch(metadata)) {
-                    startNode = node
+            let metadata = extractFragmentMetadataFromMarkerNode(node)
 
-                    stop()
-                }
+            if (isMatch(metadata)) {
+                startNode = node
+
+                return stop()
             }
-        })
+        }
     })
 
     return startNode && new Fragment(startNode)
@@ -82,18 +82,24 @@ export function isEndFragmentMarker(el) {
 }
 
 function walkElements(el, callback) {
-    let skip = false
-    let stop = false
+    // Share one flag so stop() ends the whole walk, not just the current branch...
+    let stopped = false
 
-    callback(el, { skip: () => skip = true, stop: () => stop = true })
+    let walk = (el) => {
+        let skip = false
 
-    if (skip || stop) return
+        callback(el, { skip: () => skip = true, stop: () => stopped = true })
 
-    Array.from(el.children).forEach(child => {
-        walkElements(child, callback)
+        if (skip || stopped) return
 
-        if (stop) return
-    })
+        for (let child of Array.from(el.children)) {
+            walk(child)
+
+            if (stopped) return
+        }
+    }
+
+    walk(el)
 }
 
 export class Fragment {
