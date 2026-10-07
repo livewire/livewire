@@ -36,9 +36,7 @@ export class WeakBag {
 export function arrayPull(array, item) {
     let index = array.indexOf(item)
 
-    if (index === -1) return undefined
-
-    return array.splice(index, 1)[0]
+    if (index !== -1) array.splice(index, 1)
 }
 
 export function dispatch(target, name, detail = {}, bubbles = true) {
