@@ -466,9 +466,17 @@ class HandleComponents extends Mechanism
                 ? []
                 : $component->$property;
 
-            $this->setComponentPropertyAwareOfTypes($component, $property,
-                $this->recursivelySetValue($property, $propertyValue, $value, $segments, 0, $context)
-            );
+            try {
+                $propertyValue = $this->recursivelySetValue($property, $propertyValue, $value, $segments, 0, $context);
+            } catch (\TypeError $e) {
+                // A wrong-type value for a typed property nested inside a form object
+                // or Wireable. Treat it like a top-level typed property below...
+                if (config('app.debug')) throw $e;
+
+                abort(419);
+            }
+
+            $this->setComponentPropertyAwareOfTypes($component, $property, $propertyValue);
         }
 
         return $finish;
