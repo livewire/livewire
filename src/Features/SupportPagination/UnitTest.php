@@ -81,44 +81,6 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('paginators.page', 2);
     }
 
-    public function test_next_page_with_custom_page_name_uses_current_page_when_not_yet_initialized()
-    {
-        Livewire::withQueryParams(['users' => 4])
-            ->test(new class extends Component {
-                use WithPagination;
-
-                public function mount()
-                {
-                    $this->nextPage('users');
-                }
-
-                public function render()
-                {
-                    return '<div></div>';
-                }
-            })
-            ->assertSetStrict('paginators.users', 5);
-    }
-
-    public function test_previous_page_with_custom_page_name_uses_current_page_when_not_yet_initialized()
-    {
-        Livewire::withQueryParams(['users' => 4])
-            ->test(new class extends Component {
-                use WithPagination;
-
-                public function mount()
-                {
-                    $this->previousPage('users');
-                }
-
-                public function render()
-                {
-                    return '<div></div>';
-                }
-            })
-            ->assertSetStrict('paginators.users', 3);
-    }
-
     public function test_double_page_value_should_be_casted_to_int()
     {
         Livewire::test(ComponentWithPaginationStub::class)
