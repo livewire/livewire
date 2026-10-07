@@ -1235,6 +1235,31 @@ class UnitTest extends \Tests\TestCase
             ->assertOk();
     }
 
+    public function test_resetting_a_forms_error_bag_only_clears_that_forms_errors()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $other = '';
+
+            public PostFormStub $form;
+
+            public function addErrors()
+            {
+                $this->addError('other', 'component error');
+                $this->form->addError('title', 'form error');
+            }
+
+            public function clearFormErrors()
+            {
+                $this->form->resetErrorBag();
+            }
+        })
+            ->call('addErrors')
+            ->assertHasErrors(['other', 'form.title'])
+            ->call('clearFormErrors')
+            ->assertHasErrors(['other'])
+            ->assertHasNoErrors(['form.title']);
+    }
+
     public function test_can_reset_a_nested_form_property_from_the_component()
     {
         Livewire::test(new class extends TestComponent {
