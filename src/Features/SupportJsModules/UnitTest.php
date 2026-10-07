@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportJsModules;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -132,5 +133,13 @@ class UnitTest extends \Tests\TestCase
         $component->set('count', 1);
 
         $this->assertArrayNotHasKey('childScriptModules', $component->effects);
+    }
+
+    public function test_missing_js_modules_return_404()
+    {
+        $prefix = EndpointResolver::prefix();
+
+        $this->get("{$prefix}/js/non-existent.js")->assertNotFound();
+        $this->get("{$prefix}/js/testns---no-module.js")->assertNotFound();
     }
 }

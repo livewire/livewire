@@ -40,6 +40,10 @@ function injectStyles() {
 
     #nprogress {
       pointer-events: none;
+
+      /* NProgress fades out by setting opacity here, which creates a stacking context... */
+      position: relative;
+      z-index: 1031;
     }
 
     #nprogress .bar {
