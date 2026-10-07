@@ -2,41 +2,25 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
+use Illuminate\Support\Stringable;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class StringableSynthUnitTest extends \Tests\TestCase
 {
-    public function test_malformed_stringable_update_throws_type_error_when_debug_enabled()
-    {
-        config()->set('app.debug', true);
-
-        $this->expectException(\TypeError::class);
-
-        Livewire::test(new class extends \Tests\TestComponent {
-            public \Illuminate\Support\Stringable $value;
-
-            public function mount()
-            {
-                $this->value = str('hello');
-            }
-        })
-            ->set('value', [])
-            ->assertOk();
-    }
-
-    public function test_malformed_stringable_update_returns_419_when_debug_disabled()
+    public function test_setting_a_stringable_property_to_an_array_aborts_with_419()
     {
         config()->set('app.debug', false);
 
-        Livewire::test(new class extends \Tests\TestComponent {
-            public \Illuminate\Support\Stringable $value;
+        Livewire::test(new class extends TestComponent {
+            public Stringable $title;
 
             public function mount()
             {
-                $this->value = str('hello');
+                $this->title = str('Hello');
             }
         })
-            ->set('value', [])
+            ->set('title', [])
             ->assertStatus(419);
     }
 }

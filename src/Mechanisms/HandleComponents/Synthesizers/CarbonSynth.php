@@ -41,7 +41,7 @@ class CarbonSynth extends Synth {
     static function hydrateFromType($type, $value) {
         if ($value === '' || $value === null) return null;
 
-        if (! is_string($value)) return $value;
+        if (is_array($value)) return $value;
 
         return new $type($value);
     }
@@ -49,7 +49,7 @@ class CarbonSynth extends Synth {
     function hydrate($value, $meta) {
         if ($value === '' || $value === null) return null;
 
-        if (! is_string($value)) return $value;
+        if (is_array($value)) return $value;
 
         $type = $meta['type'] ?? null;
 

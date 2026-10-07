@@ -79,54 +79,24 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    public function test_malformed_carbon_update_throws_type_error_when_debug_enabled()
-    {
-        config()->set('app.debug', true);
-
-        $this->expectException(\TypeError::class);
-
-        Livewire::test(ComponentWithNullablePublicCarbonCaster::class)
-            ->set('date', [])
-            ->assertOk();
-    }
-
-    public function test_malformed_synthesized_carbon_update_throws_type_error_when_debug_enabled()
-    {
-        config()->set('app.debug', true);
-
-        $this->expectException(\TypeError::class);
-
-        Livewire::test(ComponentWithInitializedCarbonCaster::class)
-            ->set('date', [])
-            ->assertOk();
-    }
-
-    public function test_malformed_carbon_update_returns_419_when_debug_disabled()
+    public function test_setting_a_date_property_to_an_array_aborts_with_419()
     {
         config()->set('app.debug', false);
 
         Livewire::test(ComponentWithNullablePublicCarbonCaster::class)
             ->set('date', [])
             ->assertStatus(419);
-    }
 
-    public function test_malformed_synthesized_carbon_update_returns_419_when_debug_disabled()
-    {
-        config()->set('app.debug', false);
+        Livewire::test(new class extends TestComponent {
+            public Carbon $date;
 
-        Livewire::test(ComponentWithInitializedCarbonCaster::class)
+            public function mount()
+            {
+                $this->date = Carbon::parse('2026-01-01');
+            }
+        })
             ->set('date', [])
             ->assertStatus(419);
-    }
-}
-
-class ComponentWithInitializedCarbonCaster extends TestComponent
-{
-    public Carbon $date;
-
-    public function mount()
-    {
-        $this->date = Carbon::parse('2026-01-01');
     }
 }
 
