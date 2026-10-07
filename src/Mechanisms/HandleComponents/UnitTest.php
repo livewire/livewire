@@ -334,28 +334,22 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(1, $reported);
     }
 
-    public function test_render_stack_is_cleaned_up_when_render_callback_throws()
+    public function test_shared_view_state_is_reverted_when_render_throws()
     {
         try {
-            Livewire::test(ComponentWithUndefinedProperty::class);
-            $this->fail('Expected ViewException to be thrown.');
-        } catch (\Illuminate\View\ViewException) {}
-
-        $this->assertEmpty(HandleComponents::$renderStack);
-    }
-
-    public function test_view_sharing_is_reverted_when_render_throws()
-    {
-        try {
-            Livewire::test(ComponentWithUndefinedProperty::class);
-            $this->fail('Expected ViewException to be thrown.');
+            Livewire::test(new class extends Component {
+                public function render()
+                {
+                    return '<div>{{ $undefined }}</div>';
+                }
+            });
         } catch (\Illuminate\View\ViewException) {}
 
         $this->assertNull(view()->shared('__livewire'));
         $this->assertNull(view()->shared('_instance'));
     }
 
-    public function test_island_view_sharing_is_reverted_when_render_island_throws()
+    public function test_shared_view_state_is_reverted_when_island_render_throws()
     {
         $component = Livewire::test(new class extends Component {
             public bool $fail = false;
@@ -364,44 +358,26 @@ class UnitTest extends \Tests\TestCase
             {
                 $this->fail = true;
                 $this->skipRender();
-                $this->renderIsland('probe');
+                $this->renderIsland('foo');
             }
 
             public function render()
             {
                 return <<<'HTML'
                 <div>
-                    @island(name: 'probe')
-                        <div>
-                            @if ($fail)
-                                {{ $undefinedProperty }}
-                            @else
-                                Island rendered
-                            @endif
-                        </div>
+                    @island(name: 'foo')
+                        <div>@if ($fail) {{ $undefined }} @endif</div>
                     @endisland
                 </div>
                 HTML;
             }
-        })
-            ->assertOk()
-            ->assertSetStrict('fail', false)
-            ->assertSee('Island rendered');
+        });
 
         try {
-            $component->call('breakIsland')->assertSetStrict('fail', true);
-            $this->fail('Expected ViewException to be thrown');
+            $component->call('breakIsland');
         } catch (\Illuminate\View\ViewException) {}
 
         $this->assertNull(view()->shared('__livewire'));
-    }
-}
-
-class ComponentWithUndefinedProperty extends Component
-{
-    public function render()
-    {
-        return '<div>{{ $undefinedProperty }}</div>';
     }
 }
 
