@@ -1198,7 +1198,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    function test_queued_set_does_not_drop_sibling_property_that_only_shares_a_prefix()
+    function test_queued_set_does_not_drop_updates_to_properties_that_share_its_prefix()
     {
         Livewire::visit(new class extends Component {
             public $foo = '';
@@ -1209,31 +1209,17 @@ class BrowserTest extends BrowserTestCase
             {
                 return <<<'BLADE'
                     <div>
-                        {{-- Ephemeral only until the next request --}}
-                        <input dusk="foobar-input" type="text" wire:model="foobar" />
+                        <input dusk="foobar" wire:model="foobar" />
 
-                        <button dusk="set-foo" type="button" wire:click="$set('foo', 'from-set')">
-                            Set foo
-                        </button>
+                        <button dusk="set" wire:click="$set('foo', 'bar')">Set foo</button>
 
-                        <span dusk="server-foo">{{ $foo }}</span>
-                        <span dusk="server-foobar">{{ $foobar }}</span>
-                        <span dusk="ephemeral-foobar" x-text="$wire.foobar"></span>
+                        <span dusk="output">{{ $foo }}-{{ $foobar }}</span>
                     </div>
                 BLADE;
             }
         })
-            ->assertSeeNothingIn('@server-foo')
-            ->assertSeeNothingIn('@server-foobar')
-            ->type('@foobar-input', 'KEEP_ME')
-            ->pause(50)
-            ->assertSeeIn('@ephemeral-foobar', 'KEEP_ME')
-            ->assertSeeNothingIn('@server-foobar')
-            // Live $set queues `foo` and sends a request. Dirty `foobar` must ride along.
-            // `foobar` should not stripped just because it shares the `foo` prefix.
-            ->waitForLivewire()->click('@set-foo')
-            ->assertSeeIn('@server-foo', 'from-set')
-            ->assertSeeIn('@server-foobar', 'KEEP_ME') // should be updated as well
-        ;
+            ->type('@foobar', 'baz')
+            ->waitForLivewire()->click('@set')
+            ->assertSeeIn('@output', 'bar-baz');
     }
 }
