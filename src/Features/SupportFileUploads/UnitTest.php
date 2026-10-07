@@ -917,6 +917,23 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(1, $disk->readStreamCalls);
     }
 
+    public function test_temporary_upload_mime_type_is_detected_past_an_id3_tag_larger_than_the_sample()
+    {
+        $disk = $this->useS3LikeTemporaryUploadDisk();
+
+        // A 70 KiB ID3v2 tag (like one holding cover art) followed by MPEG audio frames...
+        $tag = "ID3\x03\x00\x00\x00\x04\x30\x00".str_repeat("\x00", 70 * 1024);
+        $frames = str_repeat("\xFF\xFB\x90\x64".str_repeat("\x00", 413), 10);
+
+        $disk->put('livewire-tmp/song.mp3', $tag.$frames);
+
+        $file = TemporaryUploadedFile::createFromLivewire('song.mp3');
+
+        $this->assertSame('audio/mpeg', $file->getMimeType());
+        $this->assertTrue(validator(['file' => $file], ['file' => 'mimes:mp3'])->passes());
+        $this->assertSame(1, $disk->readStreamCalls);
+    }
+
     public function test_temporary_upload_mime_type_does_not_fall_back_to_storage_metadata_for_empty_files()
     {
         $disk = $this->useS3LikeTemporaryUploadDisk();

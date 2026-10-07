@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportCssModules;
 use Illuminate\Support\Facades\Route;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
+use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 class SupportCssModules extends ComponentHook
@@ -17,17 +18,17 @@ class SupportCssModules extends ComponentHook
             $component = str_replace('---', '::', $component);
             $component = str_replace('--', '.', $component);
 
-            $instance = app('livewire')->new($component);
-
-            if (! method_exists($instance, 'styleModuleSrc')) {
-                throw new \Exception('Component '.$component.' does not have a style source.');
+            try {
+                $instance = app('livewire')->new($component);
+            } catch (ComponentNotFoundException) {
+                abort(404);
             }
+
+            abort_unless(method_exists($instance, 'styleModuleSrc'), 404);
 
             $path = $instance->styleModuleSrc();
 
-            if (! file_exists($path)) {
-                throw new \Exception('Style file not found: '.$path);
-            }
+            abort_unless(file_exists($path), 404);
 
             $css = file_get_contents($path);
 
@@ -50,17 +51,17 @@ class SupportCssModules extends ComponentHook
             $component = str_replace('---', '::', $component);
             $component = str_replace('--', '.', $component);
 
-            $instance = app('livewire')->new($component);
-
-            if (! method_exists($instance, 'globalStyleModuleSrc')) {
-                throw new \Exception('Component '.$component.' does not have a global style source.');
+            try {
+                $instance = app('livewire')->new($component);
+            } catch (ComponentNotFoundException) {
+                abort(404);
             }
+
+            abort_unless(method_exists($instance, 'globalStyleModuleSrc'), 404);
 
             $path = $instance->globalStyleModuleSrc();
 
-            if (! file_exists($path)) {
-                throw new \Exception('Global style file not found: '.$path);
-            }
+            abort_unless(file_exists($path), 404);
 
             $css = file_get_contents($path);
 

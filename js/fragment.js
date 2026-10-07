@@ -4,7 +4,7 @@ export function closestFragment(el, { isMatch, hasReachedBoundary }) {
 
     let current = el
 
-    while (current) {
+    while (current && ! hasReachedBoundary({ el: current })) {
         // Check previous siblings
         let sibling = current.previousSibling;
 
@@ -31,13 +31,8 @@ export function closestFragment(el, { isMatch, hasReachedBoundary }) {
             sibling = sibling.previousSibling;
         }
 
-        // No start marker found at this level or found end marker
-        // Go up to parent unless we've hit the component root
+        // No start marker found at this level, so go up to the parent...
         current = current.parentElement;
-
-        if (current && hasReachedBoundary({ el: current })) {
-            break; // Stop at component root
-        }
     }
 
     return null;
