@@ -1276,6 +1276,17 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.content.foo', ['bar' => 'baz'])
             ->assertSetStrict('form.content.1', false);
     }
+
+    public function test_setting_a_typed_form_property_to_an_array_aborts_with_419()
+    {
+        config()->set('app.debug', false);
+
+        Livewire::test(new class extends TestComponent {
+            public FormWithEnumPropertyStub $form;
+        })
+            ->set('form.status', [])
+            ->assertStatus(419);
+    }
 }
 
 class PostFormStub extends Form
