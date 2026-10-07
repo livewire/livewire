@@ -1889,6 +1889,89 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_livewire_requests_discard_prefetched_pages()
+    {
+        $this->registerComponentTestRoutes([
+            '/protected' => new class extends Component {
+                public function mount()
+                {
+                    if (! session('authorized')) $this->redirect('/forbidden');
+                }
+
+                public function render()
+                {
+                    return '<div>On protected page</div>';
+                }
+            },
+            '/forbidden' => new class extends Component {
+                public function render()
+                {
+                    return '<div>On forbidden page</div>';
+                }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public function grantAccess()
+            {
+                session(['authorized' => true]);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <a href="/protected" wire:navigate.hover dusk="link">Protected</a>
+
+                    <button wire:click="grantAccess" dusk="grant">Grant access</button>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForNavigatePrefetchRequest()->mouseover('@link')
+            ->pause(250)
+            ->waitForLivewire()->click('@grant')
+            ->click('@link')
+            ->waitForText('On protected page')
+            ->assertPathIs('/protected');
+    }
+
+    public function test_polls_do_not_discard_prefetched_pages()
+    {
+        $this->registerComponentTestRoutes([
+            '/target' => new class extends Component {
+                public function render()
+                {
+                    return '<div>On target page</div>';
+                }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public $polls = 0;
+
+            public function render()
+            {
+                $this->polls++;
+
+                return <<<'HTML'
+                <div wire:poll.100ms>
+                    <a href="/target" wire:navigate.hover dusk="link">Target</a>
+
+                    <span dusk="polls">{{ $polls }}</span>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForNavigatePrefetchRequest()->mouseover('@link')
+            ->mouseover('@polls')
+            ->waitUntil('Number(document.querySelector(\'[dusk="polls"]\').textContent) > 3')
+            ->waitForNoNavigatePrefetchRequest()->mouseover('@link')
+            ->click('@link')
+            ->waitForText('On target page')
+            ->assertPathIs('/target');
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
