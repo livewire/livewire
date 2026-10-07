@@ -198,6 +198,16 @@ class UnitTest extends \Tests\TestCase
             ])
         ;
     }
+
+    public function test_nested_update_to_uninitialized_typed_property_uses_normal_type_handling()
+    {
+        $this->expectException(\TypeError::class);
+
+        Livewire::test(new class extends TestComponent {
+            public string $name;
+        })->set('name.first', 'Caleb');
+    }
+
 }
 
 class BasicComponent extends TestComponent
