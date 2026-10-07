@@ -130,6 +130,24 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertCount(1, $reported);
     }
+
+    function test_locked_property_exception_is_reported_when_rejected_request_reporting_is_enabled()
+    {
+        config()->set('app.debug', false);
+        config()->set('livewire.report_rejected_requests', true);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (CannotUpdateLockedPropertyException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new CannotUpdateLockedPropertyException('count'));
+
+        $this->assertCount(1, $reported);
+    }
 }
 
 class SomeForm extends Form {
