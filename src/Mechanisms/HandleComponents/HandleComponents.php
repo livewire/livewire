@@ -455,7 +455,12 @@ class HandleComponents extends Mechanism
         if (empty($segments)) {
             $this->setComponentPropertyAwareOfTypes($component, $property, $value);
         } else {
-            $propertyValue = $component->$property;
+            // An uninitialized typed property has no value to drill into. Start from
+            // an empty structure, like missing nested keys below, so the assignment
+            // runs through the usual typed property handling instead of throwing...
+            $propertyValue = Utils::propertyIsTypedAndUninitialized($component, $property)
+                ? []
+                : $component->$property;
 
             $this->setComponentPropertyAwareOfTypes($component, $property,
                 $this->recursivelySetValue($property, $propertyValue, $value, $segments, 0, $context)
