@@ -484,9 +484,10 @@ export function cloneScriptTag(el) {
 
     for (let attr of el.attributes) {
         if (attr.name === 'nonce') {
-            // Browsers clear .nonce from DOMParser-parsed elements,
-            // so fall back to the page's original nonce...
-            script.nonce = getNonce() || el.nonce
+            // Browsers clear .nonce from DOMParser-parsed elements, so fall back to the
+            // page's original nonce. Set it as an attribute (not via .nonce) so it
+            // survives navigate's outerHTML snapshots for back/forward...
+            script.setAttribute('nonce', getNonce() || el.nonce)
         } else {
             script.setAttribute(attr.name, attr.value)
         }
