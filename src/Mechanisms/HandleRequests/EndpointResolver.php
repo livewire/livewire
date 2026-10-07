@@ -12,8 +12,14 @@ class EndpointResolver
      */
     public static function prefix(): string
     {
-        $hash = substr(hash('sha256', config('app.key') . 'livewire-endpoint'), 0, 8);
+        $customBasePath = config('livewire.custom_base_path', null);
 
+        if ($customBasePath !== null) {
+            $customBasePath = trim($customBasePath, '/');
+
+            return $customBasePath === '' ? '' : '/' . $customBasePath;
+        }
+        $hash = substr(hash('sha256', config('app.key') . 'livewire-endpoint'), 0, 8);
         return '/livewire-' . $hash;
     }
 
