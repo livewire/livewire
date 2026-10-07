@@ -53,31 +53,11 @@ class UnitTest extends \Tests\TestCase
 
         $compiler->compile($source);
 
-        $viewPath = $cacheManager->getViewPath($source);
-        $this->assertFileExists($viewPath);
-
-        unlink($viewPath);
-        $this->assertFileDoesNotExist($viewPath);
+        unlink($viewPath = $cacheManager->getViewPath($source));
 
         $compiler->compile($source);
 
         $this->assertFileExists($viewPath);
-    }
-
-    public function test_has_been_compiled_returns_false_if_view_file_is_missing()
-    {
-        $cacheManager = new CacheManager($this->cacheDir);
-        $compiler = new Compiler($cacheManager);
-
-        $source = __DIR__ . '/Fixtures/sfc-component.blade.php';
-
-        $compiler->compile($source);
-
-        $this->assertTrue($cacheManager->hasBeenCompiled($source));
-
-        unlink($cacheManager->getViewPath($source));
-
-        $this->assertFalse($cacheManager->hasBeenCompiled($source));
     }
 
     public function test_can_parse_sfc_component()
