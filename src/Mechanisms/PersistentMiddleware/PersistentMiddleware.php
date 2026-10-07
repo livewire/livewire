@@ -26,7 +26,7 @@ class PersistentMiddleware extends Mechanism
 
     protected $path;
     protected $method;
-    protected $middlewareAppliedFor = [];
+    protected $lastMiddlewareRoute;
     protected $resolvedRouteModels = [];
 
     function boot()
@@ -51,7 +51,7 @@ class PersistentMiddleware extends Mechanism
             // Only flush these at the end of a full request, so that child components have access to this data.
             $this->path = null;
             $this->method = null;
-            $this->middlewareAppliedFor = [];
+            $this->lastMiddlewareRoute = null;
             $this->resolvedRouteModels = [];
         });
     }
@@ -101,12 +101,12 @@ class PersistentMiddleware extends Mechanism
     {
         $routeKey = $this->method . '|' . $this->path;
 
-        // If middleware has already been applied for this route in the current
-        // request cycle, skip re-applying. When multiple component snapshots
-        // share the same route (e.g. parent + lazy/reactive child), this
+        // If middleware was applied for the immediately preceding snapshot's
+        // route, skip re-applying. When consecutive component snapshots share
+        // the same route (e.g. parent + lazy/reactive child), this
         // prevents SubstituteBindings from re-resolving explicit route model
         // bindings with already-resolved model instances instead of raw strings.
-        if (isset($this->middlewareAppliedFor[$routeKey])) {
+        if ($this->lastMiddlewareRoute === $routeKey) {
             return;
         }
 
@@ -120,7 +120,7 @@ class PersistentMiddleware extends Mechanism
 
         Utils::applyMiddleware($request, $middleware);
 
-        $this->middlewareAppliedFor[$routeKey] = true;
+        $this->lastMiddlewareRoute = $routeKey;
 
         // After middleware has run (e.g. SubstituteBindings), collect any
         // resolved model instances from the route parameters so that
