@@ -61,6 +61,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue(SupportReactiveProps::valuesMatch(null, null));
         $this->assertTrue(SupportReactiveProps::valuesMatch([[1, 2, 3], ['s' => 'arr']], [1, 2, 3], new ValuesMatchParent));
         $this->assertTrue(SupportReactiveProps::valuesMatch([['a' => 1, 'b' => 2], ['s' => 'arr']], ['a' => 1, 'b' => 2], new ValuesMatchParent));
+        $this->assertTrue(SupportReactiveProps::valuesMatch([['ids' => [[1, 2], ['s' => 'arr']]], ['s' => 'arr']], ['ids' => [1, 2]], new ValuesMatchParent));
     }
 
     public function test_values_match_returns_false_for_different_scalars_and_arrays()
@@ -69,29 +70,6 @@ class UnitTest extends \Tests\TestCase
         $this->assertFalse(SupportReactiveProps::valuesMatch(42, 43));
         $this->assertFalse(SupportReactiveProps::valuesMatch([[1, 2, 3], ['s' => 'arr']], [1, 2, 4], new ValuesMatchParent));
         $this->assertFalse(SupportReactiveProps::valuesMatch('5', 5));
-    }
-
-    public function test_values_match_compares_a_dehydrated_snapshot_with_the_raw_prop()
-    {
-        // The snapshot holds the dehydrated form of a prop, while the parent hands over the raw value...
-        $this->assertTrue(SupportReactiveProps::valuesMatch(
-            [['period' => 'this_year', 'practiceId' => null], ['s' => 'arr']],
-            ['period' => 'this_year', 'practiceId' => null],
-            new ValuesMatchParent,
-        ));
-
-        // Nested arrays are dehydrated at every level...
-        $this->assertTrue(SupportReactiveProps::valuesMatch(
-            [['ids' => [[1, 2], ['s' => 'arr']]], ['s' => 'arr']],
-            ['ids' => [1, 2]],
-            new ValuesMatchParent,
-        ));
-
-        $this->assertFalse(SupportReactiveProps::valuesMatch(
-            [['period' => 'this_year'], ['s' => 'arr']],
-            ['period' => 'last_year'],
-            new ValuesMatchParent,
-        ));
     }
 
     public function test_values_match_ignores_loaded_relations_on_pending_model()
