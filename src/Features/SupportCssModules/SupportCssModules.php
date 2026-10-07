@@ -24,15 +24,11 @@ class SupportCssModules extends ComponentHook
                 abort(404);
             }
 
-            if (! method_exists($instance, 'styleModuleSrc')) {
-                abort(404);
-            }
+            abort_unless(method_exists($instance, 'styleModuleSrc'), 404);
 
             $path = $instance->styleModuleSrc();
 
-            if (! $path || ! file_exists($path)) {
-                abort(404);
-            }
+            abort_unless(file_exists($path), 404);
 
             $css = file_get_contents($path);
 
@@ -61,15 +57,11 @@ class SupportCssModules extends ComponentHook
                 abort(404);
             }
 
-            if (! method_exists($instance, 'globalStyleModuleSrc')) {
-                abort(404);
-            }
+            abort_unless(method_exists($instance, 'globalStyleModuleSrc'), 404);
 
             $path = $instance->globalStyleModuleSrc();
 
-            if (! $path || ! file_exists($path)) {
-                abort(404);
-            }
+            abort_unless(file_exists($path), 404);
 
             $css = file_get_contents($path);
 

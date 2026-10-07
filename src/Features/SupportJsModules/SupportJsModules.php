@@ -32,15 +32,11 @@ class SupportJsModules extends ComponentHook
                 abort(404);
             }
 
-            if (! method_exists($instance, 'scriptModuleSrc')) {
-                abort(404);
-            }
+            abort_unless(method_exists($instance, 'scriptModuleSrc'), 404);
 
             $path = $instance->scriptModuleSrc();
 
-            if (! $path || ! file_exists($path)) {
-                abort(404);
-            }
+            abort_unless(file_exists($path), 404);
 
             $source = file_get_contents($path);
 
