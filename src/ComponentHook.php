@@ -24,63 +24,43 @@ abstract class ComponentHook
     }
 
     function callUpdate($propertyName, $fullPath, $newValue) {
-        $callbacks = [];
+        if (! method_exists($this, 'update')) return;
 
-        if (method_exists($this, 'update')) $callbacks[] = $this->update($propertyName, $fullPath, $newValue);
+        $callback = $this->update($propertyName, $fullPath, $newValue);
 
-        return function (...$params) use ($callbacks) {
-            foreach ($callbacks as $callback) {
-                if (is_callable($callback)) $callback(...$params);
-            }
-        };
+        if (is_callable($callback)) return $callback;
     }
 
     function callCall($method, $params, $returnEarly, $metadata, $componentContext) {
-        $callbacks = [];
+        if (! method_exists($this, 'call')) return;
 
-        if (method_exists($this, 'call')) $callbacks[] = $this->call($method, $params, $returnEarly, $metadata, $componentContext);
+        $callback = $this->call($method, $params, $returnEarly, $metadata, $componentContext);
 
-        return function (...$params) use ($callbacks) {
-            foreach ($callbacks as $callback) {
-                if (is_callable($callback)) $callback(...$params);
-            }
-        };
+        if (is_callable($callback)) return $callback;
     }
 
     function callRender(...$params) {
-        $callbacks = [];
+        if (! method_exists($this, 'render')) return;
 
-        if (method_exists($this, 'render')) $callbacks[] = $this->render(...$params);
+        $callback = $this->render(...$params);
 
-        return function (...$params) use ($callbacks) {
-            foreach ($callbacks as $callback) {
-                if (is_callable($callback)) $callback(...$params);
-            }
-        };
+        if (is_callable($callback)) return $callback;
     }
 
     function callRenderIsland(...$params) {
-        $callbacks = [];
+        if (! method_exists($this, 'renderIsland')) return;
 
-        if (method_exists($this, 'renderIsland')) $callbacks[] = $this->renderIsland(...$params);
+        $callback = $this->renderIsland(...$params);
 
-        return function (...$params) use ($callbacks) {
-            foreach ($callbacks as $callback) {
-                if (is_callable($callback)) $callback(...$params);
-            }
-        };
+        if (is_callable($callback)) return $callback;
     }
 
     function callRenderPlaceholder(...$params) {
-        $callbacks = [];
+        if (! method_exists($this, 'renderPlaceholder')) return;
 
-        if (method_exists($this, 'renderPlaceholder')) $callbacks[] = $this->renderPlaceholder(...$params);
+        $callback = $this->renderPlaceholder(...$params);
 
-        return function (...$params) use ($callbacks) {
-            foreach ($callbacks as $callback) {
-                if (is_callable($callback)) $callback(...$params);
-            }
-        };
+        if (is_callable($callback)) return $callback;
     }
 
     function callDehydrate(...$params) {
