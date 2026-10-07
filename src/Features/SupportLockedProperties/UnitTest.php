@@ -43,6 +43,20 @@ class UnitTest extends \Tests\TestCase
         ->set('foo.count', 2);
     }
 
+    function test_cant_update_uninitialized_typed_locked_property_with_an_array()
+    {
+        $this->expectException(CannotUpdateLockedPropertyException::class);
+        $this->expectExceptionMessage(
+            'Cannot update locked property: [group]'
+        );
+
+        Livewire::test(new class extends TestComponent {
+            #[BaseLocked]
+            public \stdClass $group;
+        })
+        ->set('group', ['count' => 1]);
+    }
+
     function test_can_update_locked_property_with_similar_name()
     {
         Livewire::test(new class extends TestComponent {

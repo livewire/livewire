@@ -10,8 +10,8 @@ class ComponentWithLoadingDelays extends BaseComponent
 
     public function hydrate()
     {
-        // Sleep for up to 1100ms as longest is 1000ms
-        usleep(1000 * 1100);
+        // Sleep long enough to observe the 1000ms longest delay with room for browser scheduling.
+        usleep(1000 * 1500);
     }
 
     public function render()

@@ -17,6 +17,11 @@ composer require livewire/livewire
 
 That's it! Livewire uses Laravel's package auto-discovery, so no additional setup is required.
 
+> [!warning] Avoid loading Alpine twice
+> Livewire includes and initializes Alpine for you. If your application already loads Alpine through `resources/js/app.js` or a CDN, remove that separate copy from pages using Livewire to avoid initialization errors. See [removing duplicate Alpine installations](/docs/4.x/troubleshooting#multiple-instances-of-alpine) for the changes to make.
+>
+> To keep custom Alpine plugins in your JavaScript bundle, follow [manual bundling](#manually-bundling-livewire-and-alpine) to use Livewire's Alpine instance.
+
 **Ready to build your first component?** Head over to the [Quickstart guide](/docs/4.x/quickstart) to create your first Livewire component in minutes.
 
 ## Create a layout file

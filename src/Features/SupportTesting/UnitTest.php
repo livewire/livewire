@@ -16,6 +16,65 @@ use Tests\TestComponent;
 
 class UnitTest extends \LegacyTests\Unit\TestCase
 {
+    function test_render_assertions_follow_the_latest_request()
+    {
+        Livewire::test(NotificationBadgeForRenderAssertions::class)
+            ->assertRenderNotSkipped()
+            ->call('$refresh')
+            ->assertRenderNotSkipped()
+            ->dispatch('notification-read', notificationId: 999)
+            ->assertRenderSkipped()
+            ->assertSet('count', 1)
+            ->dispatch('notification-read', notificationId: 1)
+            ->assertRenderNotSkipped()
+            ->assertSet('count', 0)
+            ->call('renderlessAction')
+            ->assertRenderSkipped()
+            ->call('$refresh')
+            ->assertRenderNotSkipped()
+            ->call('replaceHtml')
+            ->assertRenderSkipped()
+            ->assertSee('Replacement');
+    }
+
+    function test_render_skipped_assertion_fails_when_rendering_was_not_skipped()
+    {
+        $this->expectException(ExpectationFailedException::class);
+        $this->expectExceptionMessage('Failed asserting that component rendering was skipped.');
+
+        Livewire::test(NotificationBadgeForRenderAssertions::class)
+            ->call('$refresh')
+            ->assertRenderSkipped();
+    }
+
+    function test_render_not_skipped_assertion_fails_when_rendering_was_skipped()
+    {
+        $this->expectException(ExpectationFailedException::class);
+        $this->expectExceptionMessage('Failed asserting that component rendering was not skipped.');
+
+        Livewire::test(NotificationBadgeForRenderAssertions::class)
+            ->dispatch('notification-read', notificationId: 999)
+            ->assertRenderNotSkipped();
+    }
+
+    function test_render_skipped_assertion_does_not_pass_for_a_failed_request()
+    {
+        $this->expectException(ExpectationFailedException::class);
+
+        Livewire::test(NotificationBadgeForRenderAssertions::class)
+            ->call('forbidden')
+            ->assertRenderSkipped();
+    }
+
+    function test_render_not_skipped_assertion_does_not_pass_for_a_failed_request()
+    {
+        $this->expectException(ExpectationFailedException::class);
+
+        Livewire::test(NotificationBadgeForRenderAssertions::class)
+            ->call('forbidden')
+            ->assertRenderNotSkipped();
+    }
+
     function test_can_assert_see_livewire_on_standard_blade_view()
     {
         Artisan::call('make:livewire', ['name' => 'foo', '--class' => true]);
@@ -875,4 +934,34 @@ enum BackedFooBarEnum : string
 {
     case FOO = 'foo';
     case BAR = 'bar';
+}
+
+class NotificationBadgeForRenderAssertions extends TestComponent
+{
+    public $notificationId = 1;
+    public $count = 1;
+
+    #[\Livewire\Attributes\On('notification-read')]
+    public function markAsRead($notificationId)
+    {
+        if ($notificationId !== $this->notificationId) {
+            $this->skipRender();
+            return;
+        }
+
+        $this->count = 0;
+    }
+
+    #[\Livewire\Attributes\Renderless]
+    public function renderlessAction() {}
+
+    public function replaceHtml()
+    {
+        $this->skipRender('<div>Replacement</div>');
+    }
+
+    public function forbidden()
+    {
+        abort(403);
+    }
 }

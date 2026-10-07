@@ -1,7 +1,7 @@
 
 Livewire allows you to build dynamic, reactive interfaces using only PHP—no JavaScript required. Instead of writing frontend code in JavaScript frameworks, you write simple PHP classes and Blade templates, and Livewire handles all the complex JavaScript behind the scenes.
 
-To demonstrate, we'll build a simple post creation form with real-time validation. You'll see how Livewire can validate inputs and update the page dynamically without writing a single line of JavaScript or manually handling AJAX requests.
+To demonstrate, we'll build a simple post creation form that validates inputs when submitted. You'll see how Livewire can validate inputs and update the page dynamically without writing a single line of JavaScript or manually handling AJAX requests.
 
 ## Prerequisites
 
@@ -125,9 +125,11 @@ Here's what's happening in the code above:
 
 **Livewire directives:**
 - `wire:submit="save"` — Calls the `save()` method when the form is submitted, preventing the default page reload
-- `wire:model="title"` — Creates two-way data binding between the input and the `$title` property. As you type, the property updates automatically
-- `wire:model="content"` — Same two-way binding for the textarea and `$content` property
+- `wire:model="title"` binds the input to the `$title` property. The entered value is sent to the server when the form is submitted
+- `wire:model="content"` binds the textarea to the `$content` property in the same way
 - `@error('title')` and `@error('content')` — Display validation error messages when validation fails
+
+Typing in these fields doesn't send network requests or run validation. Clicking "Save Post" sends both values to the server and calls `save()`, where `$this->validate()` checks them. To validate fields as users fill them out, see [real-time validation](/docs/4.x/validation#real-time-validation).
 
 > [!warning] Livewire components MUST have a single root element
 > Components must have exactly one root HTML element. In this example, the `<form>` element is the single root. Multiple root elements or HTML comments outside the root element will cause an error. When rendering [full-page components](/docs/4.x/pages), named slots for the layout can be placed outside the root element.
@@ -174,11 +176,11 @@ You should see a simple form with two fields and a submit button.
 
 **Try the following:**
 
-1. **Test validation:** Click "Save Post" without filling in any fields. You'll see red error messages appear instantly below each field—no page reload required.
+1. **Test validation:** Click "Save Post" without filling in any fields. After the server validates the form, red error messages will appear below each field without a page reload.
 
 2. **Test submission:** Fill in both fields and click "Save Post". You should see a debug screen showing the values you entered.
 
-This demonstrates Livewire's core power: reactive data binding, real-time validation, and form handling—all written in PHP without touching JavaScript.
+This demonstrates data binding, validation on submission, and form handling without a page reload, all written in PHP without touching JavaScript.
 
 ## Troubleshooting
 

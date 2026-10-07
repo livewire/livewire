@@ -22,6 +22,11 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             Livewire::component('query-page', QueryPage::class);
             Livewire::component('first-page', FirstPage::class);
+            Livewire::component('first-transition-page', FirstTransitionPage::class);
+            Livewire::component('second-transition-page', SecondTransitionPage::class);
+            Livewire::component('second-transition-opt-in-page', SecondTransitionOptInPage::class);
+            Livewire::component('first-animated-transition-page', FirstAnimatedTransitionPage::class);
+            Livewire::component('second-animated-transition-page', SecondAnimatedTransitionPage::class);
             Livewire::component('first-page-child', FirstPageChild::class);
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
@@ -62,6 +67,11 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 return (new FirstPage)();
             })->middleware('web');
+            Route::get('/first-transition', fn () => (new FirstTransitionPage)())->middleware('web');
+            Route::get('/second-transition', fn () => (new SecondTransitionPage)())->middleware('web');
+            Route::get('/second-transition-opt-in', fn () => (new SecondTransitionOptInPage)())->middleware('web');
+            Route::get('/first-animated-transition', fn () => (new FirstAnimatedTransitionPage)())->middleware('web');
+            Route::get('/second-animated-transition', fn () => (new SecondAnimatedTransitionPage)())->middleware('web');
             Route::get('/first-outside', FirstPageWithLinkOutside::class)->middleware('web');
             Route::get('/redirect-to-second', fn () => redirect()->to('/second'));
             Route::get('/second', SecondPage::class)->middleware('web');
@@ -417,6 +427,150 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_wire_navigate_does_not_use_view_transitions_by_default()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-transition')
+                ->assertSee('On first transition page')
+                // Intercept document.startViewTransition to track if it gets called...
+                ->tap(fn ($b) => $b->script("
+                    window.__viewTransitionCount = 0;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__viewTransitionCount++;
+                        return orig.apply(document, arguments);
+                    };
+                "))
+                ->waitForNavigate()->click('@link.plain')
+                ->assertSee('On second transition page')
+                ->assertScript('window.__viewTransitionCount', 0);
+        });
+    }
+
+    public function test_the_html_element_can_opt_into_a_full_page_transition()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-transition')
+                ->assertSee('On first transition page')
+                ->tap(fn ($b) => $b->script("
+                    window.__viewTransitionCount = 0;
+                    window.__rootTransitionWasDisabled = null;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__viewTransitionCount++;
+                        window.__rootTransitionWasDisabled = !! document.querySelector('[data-livewire-navigate-transition]');
+                        return orig.apply(document, arguments);
+                    };
+
+                    document.documentElement.setAttribute('wire:transition.navigate', '');
+                "))
+                ->waitForNavigate()->click('@link.plain')
+                ->assertSee('On second transition page')
+                ->assertScript('window.__viewTransitionCount', 1)
+                // The document root keeps the browser's native full-page transition...
+                ->assertScript('window.__rootTransitionWasDisabled', false)
+                ->waitForNavigate()->back()
+                ->assertSee('On first transition page')
+                ->assertScript('window.__viewTransitionCount', 2);
+        });
+    }
+
+    public function test_the_body_element_can_be_the_transition_region()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-transition')
+                ->tap(fn ($b) => $b->script("
+                    window.__outgoingBodyTransitionName = null;
+                    window.__rootTransitionWasDisabled = null;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__outgoingBodyTransitionName = document.body.style.viewTransitionName;
+                        window.__rootTransitionWasDisabled = !! document.querySelector('[data-livewire-navigate-transition]');
+                        return orig.apply(document, arguments);
+                    };
+
+                    document.body.setAttribute('wire:transition.navigate', '');
+                "))
+                ->waitForNavigate()->click('@link.plain')
+                ->assertSee('On second transition page')
+                ->assertScript('window.__outgoingBodyTransitionName', 'livewire-navigate')
+                ->assertScript('window.__rootTransitionWasDisabled', true);
+        });
+    }
+
+    public function test_a_page_can_opt_into_view_transitions_in_both_directions()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-transition')
+                ->tap(fn ($b) => $b->script("
+                    window.__viewTransitionCount = 0;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__viewTransitionCount++;
+                        return orig.apply(document, arguments);
+                    };
+                "))
+                // The incoming page opts this navigation in...
+                ->waitForNavigate()->click('@link.opt-in')
+                ->assertSee('On opted-in transition page')
+                ->assertScript('window.__viewTransitionCount', 1)
+                // The outgoing page opts the cached back navigation in as well...
+                ->waitForNavigate()->back()
+                ->assertSee('On first transition page')
+                ->assertScript('window.__viewTransitionCount', 2);
+        });
+    }
+
+    public function test_named_elements_visibly_transition_between_pages()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-animated-transition')
+                ->click('@link.animated')
+                // Prove a transition is genuinely running, rather than merely counting API calls...
+                ->waitUntil("document.documentElement.matches(':active-view-transition')")
+                ->assertScript("document.documentElement.matches(':active-view-transition-type(navigate)')", true)
+                // The unnamed region gets the one implicit page-region name...
+                ->assertScript("document.querySelector('[dusk=navigate-region]').style.viewTransitionName", 'livewire-navigate')
+                ->assertScript("document.querySelector('[dusk=hero-detail]').style.viewTransitionName", 'hero')
+                // Ordinary component transitions and unmarked siblings stay separate...
+                ->assertScript("document.querySelector('[dusk=component-transition]').style.viewTransitionName", '')
+                ->assertScript("document.querySelector('[dusk=sidebar]').style.viewTransitionName", '')
+                ->assertScript("!! document.querySelector('style[data-livewire-navigate-transition]')", true)
+                ->waitUntil("! document.documentElement.matches(':active-view-transition')")
+                // Names don't leave permanent stacking contexts behind...
+                ->waitUntil("document.querySelector('[dusk=navigate-region]').style.viewTransitionName === ''")
+                ->waitUntil("document.querySelector('[dusk=hero-detail]').style.viewTransitionName === ''")
+                ->assertScript("!! document.querySelector('style[data-livewire-navigate-transition]')", false)
+                ->assertSee('On second animated page');
+        });
+    }
+
+    public function test_view_transitions_are_skipped_behind_an_open_dialog()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-animated-transition')
+                ->tap(fn ($b) => $b->script("
+                    window.__viewTransitionCount = 0;
+                    let orig = document.startViewTransition.bind(document);
+                    document.startViewTransition = function() {
+                        window.__viewTransitionCount++;
+                        return orig.apply(document, arguments);
+                    };
+
+                    document.querySelector('[dusk=transition-modal]').showModal();
+                    Livewire.navigate('/second-animated-transition');
+                "))
+                ->waitForText('On second animated page')
+                ->assertScript('window.__viewTransitionCount', 0);
+        });
+    }
+
     public function test_wire_navigate_focuses_autofocus_element_when_previous_page_also_has_autofocus(): void
     {
         $this->browse(function (Browser $browser) {
@@ -686,6 +840,60 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSee('Query: 1')
                 ->waitForNavigate()->click('@link.with.query.2')
                 ->assertSee('Query: 2');
+        });
+    }
+
+    public function test_navigate_scrolls_to_fragment_targets()
+    {
+        $this->browse(function ($browser) {
+            foreach (['comments', 'comments%3Areplies', '100%', 'legacy-comments'] as $index => $fragment) {
+                $browser
+                    ->visit('/first-scroll')
+                    ->waitForNavigate()->click('@link.to.fragment.'.$index)
+                    ->assertFragmentIs($fragment)
+                    ->assertInViewPort('@second-target');
+            }
+        });
+    }
+
+    public function test_navigate_with_an_unknown_fragment_scrolls_to_top()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->waitForNavigate()->click('@link.to.fragment.4')
+                ->assertFragmentIs('missing')
+                ->assertScript('window.scrollY', 0);
+        });
+    }
+
+    public function test_navigate_fragment_does_not_override_history_scroll_restoration()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->waitForNavigate()->click('@link.to.fragment.0')
+                ->assertInViewPort('@second-target');
+
+            $browser->script('window.scrollTo(0, 0)');
+
+            $browser
+                ->assertScript('window.scrollY', 0)
+                ->waitForNavigate()->back()
+                ->waitForNavigate()->forward()
+                ->assertFragmentIs('comments')
+                ->assertScript('window.scrollY', 0);
+        });
+    }
+
+    public function test_navigate_fragment_respects_preserve_scroll()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->waitForNavigate()->click('@link.to.fragment.with.preserve.scroll')
+                ->assertFragmentIs('comments')
+                ->assertScript('window.scrollY', 0);
         });
     }
 
@@ -1471,6 +1679,31 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_navigate_hover_prefetches_when_a_link_is_focused_using_the_keyboard()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNavigatePrefetchRequest()->keys('@link.to.tel', '{tab}')
+                ->assertFocused('@link.to.second')
+                ->assertPathIs('/first')
+                ->waitForNoNavigatePrefetchRequest()->mouseover('@link.to.second')
+                ->waitForNavigate()->keys('@link.to.second', '{enter}')
+                ->assertSee('On second');
+        });
+    }
+
+    public function test_navigate_hover_does_not_prefetch_when_quickly_tabbing_past_links()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNoNavigatePrefetchRequest()->keys('@link.to.tel', '{tab}', '{tab}', '{tab}', '{tab}')
+                ->assertFocused('@redirect.to.second')
+                ->assertPathIs('/first');
+        });
+    }
+
     public function test_navigate_hover_prefetches_and_caches_for_a_default_30_seconds()
     {
         $this->browse(function ($browser) {
@@ -1643,6 +1876,101 @@ class BrowserTest extends \Tests\BrowserTestCase
                 return app('livewire')->new($name)();
             })->middleware('web');
         }
+    }
+}
+
+class FirstTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first transition page</div>
+
+            <a href="/second-transition" wire:navigate dusk="link.plain">Plain link</a>
+            <a href="/second-transition-opt-in" wire:navigate dusk="link.opt-in">Opt-in page</a>
+        </div>
+        HTML;
+    }
+}
+
+class SecondTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On second transition page</div>
+
+            <script type="application/json">{"note":"wire:transition.navigate is documentation, not an attribute"}</script>
+        </div>
+        HTML;
+    }
+}
+
+class SecondTransitionOptInPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div wire:transition.navigate>
+            <div>On opted-in transition page</div>
+        </div>
+        HTML;
+    }
+}
+
+class FirstAnimatedTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <aside dusk="sidebar">Stable sidebar</aside>
+
+            <main wire:transition.navigate dusk="navigate-region">
+                <div>On first animated page</div>
+
+                <style>
+                    ::view-transition-group(*) {
+                        animation-duration: 1.5s;
+                    }
+                </style>
+
+                <h2 wire:transition.navigate="hero" dusk="hero">Hero title</h2>
+                <div wire:transition="component-only" dusk="component-transition">Component-only transition</div>
+
+                <a href="/second-animated-transition" wire:navigate dusk="link.animated">Go to second animated page</a>
+
+                <dialog dusk="transition-modal">Modal</dialog>
+            </main>
+        </div>
+        HTML;
+    }
+}
+
+class SecondAnimatedTransitionPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <aside dusk="sidebar">Stable sidebar</aside>
+
+            <main wire:transition.navigate dusk="navigate-region">
+                <div>On second animated page</div>
+
+                <style>
+                    ::view-transition-group(*) {
+                        animation-duration: 1.5s;
+                    }
+                </style>
+
+                <h1 wire:transition.navigate="hero" dusk="hero-detail">Hero title</h1>
+                <div wire:transition="component-only" dusk="component-transition">Component-only transition</div>
+            </main>
+        </div>
+        HTML;
     }
 }
 
@@ -1972,6 +2300,14 @@ class FirstScrollPage extends Component
         <div>
             <div>On first</div>
 
+            <div style="position: fixed; top: 0; right: 0;">
+                <a href="/second-scroll#comments" wire:navigate.preserve-scroll dusk="link.to.fragment.with.preserve.scroll">Preserve scroll</a>
+
+                @foreach (['comments', 'comments%3Areplies', '100%', 'legacy-comments', 'missing'] as $fragment)
+                    <a href="/second-scroll#{{ $fragment }}" wire:navigate dusk="link.to.fragment.{{ $loop->index }}">Go to fragment</a>
+                @endforeach
+            </div>
+
             <div style="height: 100vh;">spacer</div>
 
             <div dusk="first-target">below the fold</div>
@@ -2083,7 +2419,12 @@ class SecondScrollPage extends Component
 
             <div style="height: 100vh;">spacer</div>
 
-            <div dusk="second-target">below the fold</div>
+            <div id="comments" dusk="second-target">
+                <span id="comments:replies">Replies</span>
+                <span id="100%">Percentage</span>
+                <a name="legacy-comments">Legacy comments</a>
+                below the fold
+            </div>
 
             <div style="height: 100vh;">spacer</div>
         </div>

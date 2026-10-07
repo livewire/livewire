@@ -188,17 +188,19 @@ public function handleNewPost($refreshPosts = false)
 }
 ```
 
-You can also access the `refreshPosts` parameter from a JavaScript event listener from the event's `detail` property:
+Component listeners registered with `$wire.$on()` receive the event data directly as the callback argument:
 
 ```html
 <script>
-    this.$on('post-created', (event) => {
-        let refreshPosts = event.detail.refreshPosts
+    this.$on('post-created', (data) => {
+        let refreshPosts = data.refreshPosts
 
         // ...
     });
 </script>
 ```
+
+This also applies to `Livewire.on()` callbacks. When [listening with Alpine](#listening-for-livewire-events-in-alpine), use `$event.detail` to access the same data from the browser event.
 
 [Read more about using JavaScript inside your Livewire components →](/docs/4.x/javascript#using-javascript-in-livewire-components)
 
@@ -357,23 +359,16 @@ To test events dispatched by your component, use the `assertDispatched()` method
 ```php
 <?php
 
-namespace Tests\Feature;
-
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Livewire\CreatePost;
 use Livewire\Livewire;
 
-class CreatePostTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_it_dispatches_post_created_event()
-    {
-        Livewire::test(CreatePost::class)
-            ->call('save')
-            ->assertDispatched('post-created');
-    }
-}
+it('dispatches the post-created event', function () {
+    Livewire::test('post.create')
+        ->call('save')
+        ->assertDispatched('post-created');
+});
 ```
 
 In this example, the test ensures that the `post-created` event is dispatched with the specified data when the `save()` method is called on the `post.create` component.
@@ -385,24 +380,17 @@ To test event listeners, you can dispatch events from the test environment and a
 ```php
 <?php
 
-namespace Tests\Feature;
-
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Livewire\Dashboard;
 use Livewire\Livewire;
 
-class DashboardTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_it_updates_post_count_when_a_post_is_created()
-    {
-        Livewire::test(Dashboard::class)
-            ->assertSee('Posts created: 0')
-            ->dispatch('post-created')
-            ->assertSee('Posts created: 1');
-    }
-}
+it('updates the post count when a post is created', function () {
+    Livewire::test('dashboard')
+        ->assertSee('Posts created: 0')
+        ->dispatch('post-created')
+        ->assertSee('Posts created: 1');
+});
 ```
 
 In this example, the test dispatches the `post-created` event, then checks that the `dashboard` component properly handles the event and displays the updated count.
