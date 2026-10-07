@@ -1,4 +1,4 @@
-import { dataSet, deepClone, diff, diffAndConsolidate, diffAndPatchRecursive, extractData} from '@/utils'
+import { arrayPull, dataSet, deepClone, diff, diffAndConsolidate, diffAndPatchRecursive, extractData} from '@/utils'
 import { dehydrateTree } from '@/synths'
 import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
@@ -327,11 +327,7 @@ export class Component {
         this.cleanups.push(cleanup)
 
         return () => {
-            let index = this.cleanups.indexOf(cleanup)
-
-            if (index === -1) return
-
-            this.cleanups.splice(index, 1)
+            arrayPull(this.cleanups, cleanup)
         }
     }
 
