@@ -99,7 +99,7 @@ class SupportRedirects extends ComponentHook
                     : app('livewire.factory')->resolveComponentClass($routeComponent);
 
                 if ($resolvedClass === $componentClass) {
-                    return url($route->uri());
+                    return url()->toRoute($route, [], true);
                 }
             }
         }
