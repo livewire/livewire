@@ -437,7 +437,7 @@ trait HandlesValidation
             if ($fieldKey == '*') {
                 // If the specified field has a '*', then loop through the collection and keep the whole collection intact.
                 foreach ($data as $key => $value) {
-                    $data[$key] = $this->filterCollectionDataDownToSpecificKeys($value, $ruleKeys, $fieldKeys);
+                    $data[$key] = $this->filterCollectionDataDownToSpecificKeys($value, clone $ruleKeys, clone $fieldKeys);
                 }
             } else {
                 // Otherwise filter collection down to a specific key
