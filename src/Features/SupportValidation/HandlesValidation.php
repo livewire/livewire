@@ -371,8 +371,6 @@ trait HandlesValidation
 
         $rulesForField = $rulesForField->toArray();
 
-        $ruleKeysForField = array_keys($rulesForField);
-
         $data = array_merge($this->getDataForValidation($rules), $dataOverrides);
 
         $data = $this->prepareForValidation($data);
@@ -421,7 +419,7 @@ trait HandlesValidation
             throw $e;
         }
 
-        if (! empty($ruleKeysForField)) $this->resetErrorBag($field);
+        $this->resetErrorBag($field);
 
         return $result;
     }

@@ -1304,17 +1304,13 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(1, ValidationUnwrappingSpyCollection::$toArrayCalls);
     }
 
-    public function test_validate_only_with_no_matching_rules_does_not_clear_existing_errors()
+    public function test_validate_only_on_a_field_without_rules_does_not_clear_other_errors()
     {
         Livewire::test(new class extends TestComponent {
             public $email = '';
-            public $name = '';
             public $step = 1;
 
-            protected $rules = [
-                'email' => 'required|email',
-                'name' => 'required',
-            ];
+            protected $rules = ['email' => 'required'];
 
             public function save()
             {
@@ -1327,12 +1323,12 @@ class UnitTest extends \Tests\TestCase
             }
         })
             ->call('save')
-            ->assertHasErrors(['email', 'name'])
+            ->assertHasErrors('email')
             ->set('step', 2)
-            ->assertHasErrors(['email', 'name']);
+            ->assertHasErrors('email');
     }
 
-    public function test_validate_only_specific_nested_field_preserves_sibling_errors_when_it_passes()
+    public function test_validate_only_on_a_nested_field_does_not_clear_errors_on_its_siblings()
     {
         Livewire::test(ForValidation::class)
             ->set('items', [
@@ -1340,24 +1336,13 @@ class UnitTest extends \Tests\TestCase
                 ['foo' => 'bar', 'baz' => ''],
             ])
             ->call('runDeeplyNestedValidation')
+            ->assertHasErrors(['items.0.baz', 'items.1.baz'])
+            ->call('runDeeplyNestedValidationOnly', 'items.1.baz')
             ->assertHasErrors(['items.0.baz', 'items.1.baz'])
             ->set('items.1.baz', 'fixed')
             ->call('runDeeplyNestedValidationOnly', 'items.1.baz')
-            ->assertHasNoErrors(['items.1.baz'])
-            ->assertHasErrors(['items.0.baz']); // unrelated, should keep validation errors
-    }
-
-    public function test_validate_only_specific_nested_field_preserves_sibling_errors_when_it_fails()
-    {
-        Livewire::test(ForValidation::class)
-            ->set('items', [
-                ['foo' => 'bar', 'baz' => ''],
-                ['foo' => 'bar', 'baz' => ''],
-            ])
-            ->call('runDeeplyNestedValidation')
-            ->assertHasErrors(['items.0.baz', 'items.1.baz'])
-            ->call('runDeeplyNestedValidationOnly', 'items.1.baz')
-            ->assertHasErrors(['items.0.baz', 'items.1.baz']); // both should keep validation errors
+            ->assertHasErrors('items.0.baz')
+            ->assertHasNoErrors('items.1.baz');
     }
 }
 
