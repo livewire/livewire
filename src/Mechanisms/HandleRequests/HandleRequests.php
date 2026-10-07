@@ -208,6 +208,9 @@ class HandleRequests extends Mechanism
             // If this is a reactive child whose props didn't change,
             // skip its entire lifecycle (hydrate, render, dehydrate)...
             if (empty($updates) && SupportReactiveProps::shouldSkipUpdate($snapshot, $calls)) {
+                // Its own children weren't re-rendered either...
+                SupportReactiveProps::markChildrenAsUnchanged($snapshot);
+
                 $componentResponses[] = [
                     'skip' => true,
                     'id' => $snapshot['memo']['id'],
@@ -224,6 +227,11 @@ class HandleRequests extends Mechanism
                 if (config('app.debug') || $this->shouldPropagateExceptions) throw $e;
 
                 abort(419);
+            }
+
+            // A component that skipped its render passed nothing new to its children...
+            if (! isset($effects['html'])) {
+                SupportReactiveProps::markChildrenAsUnchanged($snapshot);
             }
 
             $componentResponses[] = [

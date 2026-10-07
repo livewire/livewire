@@ -7,7 +7,10 @@ use function Livewire\after;
 use function Livewire\trigger;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Livewire\Component;
 use Livewire\ComponentHook;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\HandleSynths\HandleSynths;
 
 class SupportReactiveProps extends ComponentHook
 {
@@ -15,15 +18,22 @@ class SupportReactiveProps extends ComponentHook
 
     public static $pendingUpdates = [];
 
+    public static $pendingChildParents = [];
+
+    public static $childrenOfUnrenderedParents = [];
+
     static function provide()
     {
         on('flush-state', function () {
             static::$pendingChildParams = [];
             static::$pendingUpdates = [];
+            static::$pendingChildParents = [];
+            static::$childrenOfUnrenderedParents = [];
         });
 
         on('mount.stub', function ($tag, $id, $params, $parent, $key) {
             static::$pendingChildParams[$id] = $params;
+            static::$pendingChildParents[$id] = $parent;
         });
 
         // Fire updating*/updated* hooks after all hooks have hydrated
@@ -96,9 +106,6 @@ class SupportReactiveProps extends ComponentHook
         // Only applies to components with #[Reactive] properties...
         if (empty($reactiveProps)) return false;
 
-        // Only if parent already rendered and stored pending params...
-        if (! isset(static::$pendingChildParams[$id])) return false;
-
         // Don't skip if component also has wire:model bindings...
         if (! empty($snapshot['memo']['bindings'] ?? [])) return false;
 
@@ -107,13 +114,18 @@ class SupportReactiveProps extends ComponentHook
             if (($call['method'] ?? '') !== '$commit') return false;
         }
 
+        // A parent that didn't render at all (not even an island holding this child) can't have passed anything new...
+        if (! isset(static::$pendingChildParams[$id])) {
+            return isset(static::$childrenOfUnrenderedParents[$id]);
+        }
+
         $pendingParams = static::$pendingChildParams[$id];
 
         foreach ($reactiveProps as $propName) {
             $currentValue = $snapshot['data'][$propName] ?? null;
             $newValue = $pendingParams[$propName] ?? null;
 
-            if (! static::valuesMatch($currentValue, $newValue)) {
+            if (! static::valuesMatch($currentValue, $newValue, static::$pendingChildParents[$id] ?? null, $propName)) {
                 return false;
             }
         }
@@ -121,10 +133,19 @@ class SupportReactiveProps extends ComponentHook
         return true;
     }
 
-    public static function valuesMatch($snapshotValue, $pendingValue): bool
+    public static function valuesMatch($snapshotValue, $pendingValue, ?Component $parent = null, ?string $path = null): bool
     {
         if ($pendingValue instanceof Model) {
             return static::modelMatchesSnapshot($snapshotValue, $pendingValue);
+        }
+
+        // The snapshot holds the dehydrated value, so dehydrate the parent's raw value the same way...
+        try {
+            $pendingValue = app(HandleSynths::class)->dehydrate(
+                $pendingValue, $parent ? new ComponentContext($parent) : null, $path
+            );
+        } catch (\Throwable $e) {
+            return false;
         }
 
         $snapshotJson = json_encode($snapshotValue);
@@ -135,6 +156,13 @@ class SupportReactiveProps extends ComponentHook
         if ($snapshotJson === false || $pendingJson === false) return false;
 
         return crc32($snapshotJson) === crc32($pendingJson);
+    }
+
+    static function markChildrenAsUnchanged(array $snapshot): void
+    {
+        foreach ($snapshot['memo']['children'] ?? [] as [$tag, $id]) {
+            static::$childrenOfUnrenderedParents[$id] = true;
+        }
     }
 
     protected static function modelMatchesSnapshot($snapshotValue, Model $model): bool
