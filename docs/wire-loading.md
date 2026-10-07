@@ -173,23 +173,16 @@ The above loading indicator will now be shown for every Livewire update request 
 
 ## Customizing CSS display property
 
-Livewire hides an element carrying `wire:loading` with `display: none` and, when a request is in flight, removes that hiding rule. Because the hiding is done by a stylesheet rather than an inline `display` value, showing the element falls back to whatever display value it already has. In other words, plain `wire:loading` preserves the element's existing CSS display value:
+When `wire:loading` is added to an element, Livewire hides it with `display: none` and, while loading, shows it using the element's own display value. So an element with a `flex` or `grid` class is shown as `flex` or `grid`:
 
 ```blade
-<div class="flex" wire:loading>...</div> <!-- Shown as display: flex while loading -->
-<div class="grid" wire:loading>...</div> <!-- Shown as display: grid while loading -->
-<div class="block" wire:loading>...</div> <!-- Shown as display: block while loading -->
+<div class="flex" wire:loading>...</div>
 ```
 
-> [!info] Tailwind users
-> Because the existing display value is preserved, a plain `wire:loading` on an element with Tailwind's `flex`, `grid`, or `inline-flex` class no longer needs a matching display modifier.
-
-When you want Livewire to force a specific display value while loading, append one of the display modifiers to `wire:loading`:
+If you want to force a specific display value while loading, append it as a modifier:
 
 ```blade
 <div wire:loading.flex>...</div>
-<div wire:loading.grid>...</div>
-<div wire:loading.block>...</div>
 ```
 
 Below is the complete list of available display values:

@@ -1302,7 +1302,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ;
     }
 
-    function test_wire_loading_preserves_existing_display_style()
+    function test_wire_loading_shows_element_with_its_own_display()
     {
         Livewire::visit(new class extends Component {
             public function slowRequest()
@@ -1314,32 +1314,20 @@ class BrowserTest extends \Tests\BrowserTestCase
             {
                 return <<<'HTML'
                 <div>
-                    <style>
-                        .loading-flex {
-                            display: flex;
-                        }
-                    </style>
+                    <style>.loading-flex { display: flex; }</style>
 
-                    <button wire:click="slowRequest" dusk="trigger">
-                        Trigger
-                    </button>
+                    <button wire:click="slowRequest" dusk="trigger">Trigger</button>
 
-                    <div wire:loading class="loading-flex" dusk="loading">
-                        Loading...
-                    </div>
+                    <div wire:loading class="loading-flex" dusk="loading">Loading...</div>
                 </div>
-            HTML;
+                HTML;
             }
         })
-            ->waitForLivewireToLoad()
+            ->assertMissing('@loading')
             ->click('@trigger')
-            ->waitUntil(
-                'window.getComputedStyle(document.querySelector(\'[dusk="loading"]\')).display !== "none"'
-            )
-            ->assertScript(
-                'window.getComputedStyle(document.querySelector(\'[dusk="loading"]\')).display',
-                'flex'
-            );
+            ->waitForScript('getComputedStyle(document.querySelector(\'[dusk="loading"]\')).display', 'flex')
+            ->waitUntilMissing('@loading')
+            ;
     }
 }
 
