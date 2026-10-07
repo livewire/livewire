@@ -23,12 +23,12 @@ trait HandlesPagination
 
     public function previousPage($pageName = 'page')
     {
-        $this->setPage(max(($this->paginators[$pageName] ?? 1) - 1, 1), $pageName);
+        $this->setPage(max($this->getPage($pageName) - 1, 1), $pageName);
     }
 
     public function nextPage($pageName = 'page')
     {
-        $this->setPage(($this->paginators[$pageName] ?? 1) + 1, $pageName);
+        $this->setPage($this->getPage($pageName) + 1, $pageName);
     }
 
     public function gotoPage($page, $pageName = 'page')
