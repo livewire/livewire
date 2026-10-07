@@ -123,7 +123,7 @@ export function fireAction(component, method, params = [], metadata = {}) {
 
     let action = constructAction(component, method, params, metadata)
 
-    actionInterceptors.forEach(callback => {
+    Array.from(actionInterceptors).forEach(callback => {
         callback({
             action,
             onSend: (cb) => action.onSendCallbacks.push(cb),
@@ -191,7 +191,7 @@ function sendMessages() {
     let requests = new Set()
 
     messageBus.eachPendingMessage(message => {
-        partitionInterceptors.forEach(callback => {
+        Array.from(partitionInterceptors).forEach(callback => {
             callback({
                 message,
                 compileRequest: (messages) => {

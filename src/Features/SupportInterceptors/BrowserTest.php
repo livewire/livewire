@@ -135,6 +135,52 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_action_and_request_interceptors_unsubscribing_do_not_skip_the_next_one()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$refresh" dusk="refresh">Refresh</button>
+                    </div>
+                    @script
+                    <script>
+                        window.intercepts = []
+
+                        let unsubscribeAction = this.intercept(() => {
+                            window.intercepts.push('action once')
+
+                            unsubscribeAction()
+                        })
+
+                        this.intercept(() => window.intercepts.push('action'))
+
+                        let unsubscribeRequest = this.interceptRequest(() => {
+                            window.intercepts.push('request once')
+
+                            unsubscribeRequest()
+                        })
+
+                        this.interceptRequest(() => window.intercepts.push('request'))
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->waitForLivewire()->click('@refresh')
+        ->assertScript('window.intercepts', ['action once', 'action', 'request once', 'request'])
+
+        // Reset...
+        ->tap(fn ($browser) => $browser->script('window.intercepts = []'))
+
+        ->waitForLivewire()->click('@refresh')
+        ->assertScript('window.intercepts', ['action', 'request'])
+        ;
+    }
+
     public function test_an_interceptor_can_have_multiple_callbacks()
     {
         Livewire::visit([

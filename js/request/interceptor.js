@@ -127,7 +127,7 @@ export class InterceptorRegistry {
     }
 
     getRequestInterceptors(request) {
-        return this.requestInterceptorCallbacks.map(callback => {
+        return Array.from(this.requestInterceptorCallbacks).map(callback => {
             return new RequestInterceptor(request, callback)
         })
     }
