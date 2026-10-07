@@ -390,11 +390,7 @@ class BrowserTest extends BrowserTestCase
 
     public function test_island_renders_into_its_own_component_when_a_nested_component_renders_the_same_island()
     {
-        // Every component includes the same view, so every island carries the
-        // same token. The markers are not direct children of the component
-        // roots, and there is a nested component on either side of the parent's
-        // island: taking the first match or the last match both miss it, only
-        // stopping at the nested components finds it...
+        // Every component includes the same view, so every island shares a token...
         Livewire::visit([
             new class extends \Livewire\Component {
                 public $label = 'parent';

@@ -82,8 +82,7 @@ export function isEndFragmentMarker(el) {
 }
 
 function walkElements(el, callback) {
-    // One flag for the whole walk: stopping inside a child has to stop its
-    // siblings and every ancestor's remaining siblings too, not just the child...
+    // Share one flag so stop() ends the whole walk, not just the current branch...
     let stopped = false
 
     let walk = (el) => {
