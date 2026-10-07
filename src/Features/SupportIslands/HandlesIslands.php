@@ -224,9 +224,11 @@ trait HandlesIslands
 
         $finish = trigger('renderIsland', $this, $name, $view, $properties);
 
-        $html = $view->render();
-
-        $revertShare();
+        try {
+            $html = $view->render();
+        } finally {
+            $revertShare();
+        }
 
         $replaceHtml = function ($newHtml) use (&$html) {
             $html = $newHtml;
