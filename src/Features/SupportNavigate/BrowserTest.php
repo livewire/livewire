@@ -1936,6 +1936,42 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertPathIs('/protected');
     }
 
+    public function test_polls_do_not_discard_prefetched_pages()
+    {
+        $this->registerComponentTestRoutes([
+            '/target' => new class extends Component {
+                public function render()
+                {
+                    return '<div>On target page</div>';
+                }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public $polls = 0;
+
+            public function render()
+            {
+                $this->polls++;
+
+                return <<<'HTML'
+                <div wire:poll.100ms>
+                    <a href="/target" wire:navigate.hover dusk="link">Target</a>
+
+                    <span dusk="polls">{{ $polls }}</span>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForNavigatePrefetchRequest()->mouseover('@link')
+            ->mouseover('@polls')
+            ->waitUntil('Number(document.querySelector(\'[dusk="polls"]\').textContent) > 3')
+            ->waitForNoNavigatePrefetchRequest()->mouseover('@link')
+            ->click('@link')
+            ->waitForText('On target page')
+            ->assertPathIs('/target');
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;

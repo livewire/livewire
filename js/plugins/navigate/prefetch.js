@@ -11,9 +11,14 @@ let cacheDuration = 30000
 
 // A Livewire request can change what a page renders (auth, session, etc.), so
 // throw out anything prefetched before it. Navigations that are waiting on
-// an in-flight prefetch are sent down the normal request path instead...
-interceptRequest(({ onSend }) => {
+// an in-flight prefetch are sent down the normal request path instead.
+// Polls are background refreshes, so they leave prefetches alone...
+interceptRequest(({ request, onSend }) => {
     onSend(() => {
+        let actions = Array.from(request.messages).flatMap(message => Array.from(message.actions))
+
+        if (actions.length && actions.every(action => action.metadata.type === 'poll')) return
+
         Object.values(prefetches).forEach(prefetch => prefetch.finished || prefetch.whenFailed())
 
         prefetches = {}
