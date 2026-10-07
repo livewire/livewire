@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Facade;
  * @method static string getUpdateUri()
  * @method static void setScriptRoute($callback)
  * @method static void useScriptTagAttributes($attributes)
- * @method static void setChecksumRateLimitKey($callback)
  * @method static \Livewire\LivewireManager withUrlParams($params)
  * @method static \Livewire\LivewireManager withQueryParams($params)
  * @method static \Livewire\Features\SupportTesting\Testable test($name, $params = [])

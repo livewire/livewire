@@ -11,10 +11,9 @@ class Checksum {
     protected static $maxFailures = 10;
     protected static $decaySeconds = 600; // 10 minutes
     protected static $rateLimitingEnabledForTesting = false;
-    protected static $rateLimitKeyResolver = null;
 
     static function verify($snapshot) {
-        // Check if this client is already blocked due to too many failures
+        // Check if this user or IP is already blocked due to too many failures
         static::enforceRateLimit();
 
         $checksum = $snapshot['checksum'];
@@ -42,14 +41,9 @@ class Checksum {
         static::$rateLimitingEnabledForTesting = false;
     }
 
-    static function setRateLimitKey($callback)
-    {
-        static::$rateLimitKeyResolver = $callback;
-    }
-
     protected static function enforceRateLimit()
     {
-        if (! static::rateLimitingEnabled()) return;
+        if (app()->runningUnitTests() && ! static::$rateLimitingEnabledForTesting) return;
 
         $request = request();
 
@@ -60,7 +54,7 @@ class Checksum {
 
         $key = static::rateLimitKey();
 
-        if (RateLimiter::tooManyAttempts($key, static::maxFailures())) {
+        if (RateLimiter::tooManyAttempts($key, static::$maxFailures)) {
             $seconds = RateLimiter::availableIn($key);
 
             throw new TooManyRequestsHttpException(
@@ -74,52 +68,20 @@ class Checksum {
 
     protected static function recordFailure()
     {
-        if (! static::rateLimitingEnabled()) return;
+        if (app()->runningUnitTests() && ! static::$rateLimitingEnabledForTesting) return;
 
-        RateLimiter::hit(static::rateLimitKey(), static::decaySeconds());
-    }
-
-    protected static function rateLimitingEnabled(): bool
-    {
-        if (app()->runningUnitTests() && ! static::$rateLimitingEnabledForTesting) return false;
-
-        return static::maxFailures() > 0;
-    }
-
-    protected static function maxFailures(): ?int
-    {
-        return config('livewire.checksum_rate_limit.max_failures', static::$maxFailures);
-    }
-
-    protected static function decaySeconds(): int
-    {
-        return config('livewire.checksum_rate_limit.decay_seconds') ?? static::$decaySeconds;
+        RateLimiter::hit(static::rateLimitKey(), static::$decaySeconds);
     }
 
     protected static function rateLimitKey(): string
     {
-        $request = request();
-
-        // Resolve the key once per request so the check and the failure hit always share the same bucket...
-        if ($request->attributes->has('livewire_rate_limit_key')) {
-            return $request->attributes->get('livewire_rate_limit_key');
+        // Key by the authenticated user when there is one, so a single bad client
+        // can't lock out everyone sharing its IP address (NAT, VPN, CGNAT)...
+        if ($user = request()->user()) {
+            return 'livewire-checksum-failures:user:' . $user->getAuthIdentifier();
         }
 
-        $request->attributes->set('livewire_rate_limit_key', $key = static::resolveRateLimitKey($request));
-
-        return $key;
-    }
-
-    protected static function resolveRateLimitKey($request): string
-    {
-        $key = static::$rateLimitKeyResolver
-            ? (string) (static::$rateLimitKeyResolver)($request)
-            : '';
-
-        // Custom keys are namespaced so they can never collide with an IP address...
-        return $key === ''
-            ? 'livewire-checksum-failures:' . $request->ip()
-            : 'livewire-checksum-failures:key:' . $key;
+        return 'livewire-checksum-failures:' . request()->ip();
     }
 
     static function generate($snapshot) {
