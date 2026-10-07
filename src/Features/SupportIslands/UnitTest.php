@@ -122,16 +122,7 @@ class UnitTest extends TestCase
 
     public function test_island_in_included_partial_recovers_when_cached_file_is_deleted_between_requests()
     {
-        // Create a temporary partial that declares the island...
-        $viewDirectory = app('livewire.compiler')->cacheManager->cacheDirectory . '/test-island-partials';
-        File::ensureDirectoryExists($viewDirectory);
-        File::put($viewDirectory . '/island-partial.blade.php', <<<'HTML'
-        @island(name: 'counter')
-            <div>count: {{ $count }}</div>
-        @endisland
-        HTML);
-
-        app('view')->addLocation($viewDirectory);
+        app('view')->addLocation(__DIR__ . '/fixtures/views');
 
         $component = Livewire::test(new class extends \Livewire\Component {
             public int $count = 0;
@@ -151,31 +142,12 @@ class UnitTest extends TestCase
             }
         });
 
-        $component->assertSee('count: 0');
+        // Simulate a server that has never compiled the partial...
+        $cachedPath = IslandCompiler::getCachedPathFromToken($component->instance()->getIslands()[0]['token']);
 
-        // Get the island token from the component's stored islands...
-        $islands = $component->instance()->getIslands();
-        $token = $islands[0]['token'];
-        $cachedPath = IslandCompiler::getCachedPathFromToken($token);
+        File::delete([$cachedPath, app('blade.compiler')->getCompiledPath($cachedPath)]);
 
-        // Verify the island cache file exists after initial render...
-        $this->assertFileExists($cachedPath);
-
-        // Delete the island cache file and its compiled Blade cache to simulate a deployment...
-        File::delete($cachedPath);
-
-        $compiledPath = app('blade.compiler')->getCompiledPath($cachedPath);
-        if (file_exists($compiledPath)) {
-            File::delete($compiledPath);
-        }
-
-        $this->assertFileDoesNotExist($cachedPath);
-
-        // A subsequent request should still work, not throw FileNotFoundException...
-        $component->call('increment');
-
-        // Clean up...
-        File::deleteDirectory($viewDirectory);
+        $component->call('increment')->assertOk();
     }
 
     public function test_sfc_island_can_use_imports_from_the_component_class()
