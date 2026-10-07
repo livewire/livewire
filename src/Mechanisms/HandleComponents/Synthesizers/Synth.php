@@ -11,10 +11,9 @@ abstract class Synth {
     ) {}
 
     public static function getKey() {
-        throw_unless(
-            property_exists(static::class, 'key'),
-            new \Exception('You need to define static $key property on: '.static::class)
-        );
+        if (! property_exists(static::class, 'key')) {
+            throw new \Exception('You need to define static $key property on: '.static::class);
+        }
 
         return static::$key;
     }

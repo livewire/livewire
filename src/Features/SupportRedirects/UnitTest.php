@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportRedirects;
 
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Exceptions\UrlGenerationException;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -295,6 +296,20 @@ class UnitTest extends \Tests\TestCase
         $component->runAction('triggerRedirectHelper');
 
         $this->assertNull($component->effects['returns'][0]);
+    }
+
+    public function test_redirect_to_component_with_parameterized_livewire_route_throws_missing_parameter_exception()
+    {
+        Route::livewire('/posts/{post}', TriggersRedirectStub::class);
+
+        $this->expectException(UrlGenerationException::class);
+
+        Livewire::test(new class extends TestComponent {
+            function triggerRedirect()
+            {
+                $this->redirect(TriggersRedirectStub::class);
+            }
+        })->call('triggerRedirect');
     }
 
     protected function registerNamedRoute()
