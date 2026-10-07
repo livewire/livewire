@@ -41,7 +41,7 @@ function injectStyles() {
     #nprogress {
       pointer-events: none;
 
-      /* Fading out sets opacity here, which makes this a stacking context: rank it so the bar stays above positioned elements */
+      /* NProgress fades out by setting opacity here, which creates a stacking context... */
       position: relative;
       z-index: 1031;
     }
