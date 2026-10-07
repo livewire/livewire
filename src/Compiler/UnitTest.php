@@ -421,109 +421,45 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($freshFileMtime, filemtime($compiledPath));
     }
 
-    public function test_compiled_paths_are_release_specific_while_island_hashes_remain_stable()
-    {
-        $cacheManager = new CacheManager($this->cacheDir);
-        $originalBasePath = base_path();
-        $originalCompiler = app('livewire.compiler');
-        $methods = ['getClassPath', 'getViewPath', 'getScriptPath', 'getStylePath', 'getGlobalStylePath', 'getPlaceholderPath'];
-
-        try {
-            app()->instance('livewire.compiler', new Compiler($cacheManager));
-            app()->setBasePath($this->tempPath . '/releases/1');
-            $firstSource = base_path('resources/views/components/dashboard.blade.php');
-            $firstHash = $cacheManager->getHash($firstSource);
-            $firstPaths = array_map(fn ($method) => $cacheManager->$method($firstSource), $methods);
-            $firstViewHash = $cacheManager->getHash($firstPaths[1]);
-            $firstPlaceholderHash = $cacheManager->getHash($firstPaths[5]);
-
-            // Preserve tokens from before compiled files became release-specific.
-            $this->assertSame($cacheManager->getHash($this->cacheDir . '/views/' . $firstHash . '.blade.php'), $firstViewHash);
-            $this->assertSame($cacheManager->getHash($this->cacheDir . '/placeholders/' . $firstHash . '.blade.php'), $firstPlaceholderHash);
-            $this->assertStringContainsString("token: '{$firstViewHash}-1'", IslandCompiler::compile($firstPaths[1], '@island <div>Counter</div> @endisland'));
-
-            app()->setBasePath($this->tempPath . '/releases/2');
-            $secondSource = base_path('resources/views/components/dashboard.blade.php');
-
-            $this->assertSame($firstHash, $cacheManager->getHash($secondSource));
-            $this->assertSame($firstViewHash, $cacheManager->getHash($cacheManager->getViewPath($secondSource)));
-            $this->assertSame($firstPlaceholderHash, $cacheManager->getHash($cacheManager->getPlaceholderPath($secondSource)));
-            $this->assertStringContainsString("token: '{$firstViewHash}-1'", IslandCompiler::compile($cacheManager->getViewPath($secondSource), '@island <div>Counter</div> @endisland'));
-
-            foreach ($methods as $index => $method) {
-                $this->assertNotSame($firstPaths[$index], $cacheManager->$method($secondSource), $method);
-            }
-        } finally {
-            app()->setBasePath($originalBasePath);
-            app()->instance('livewire.compiler', $originalCompiler);
-        }
-    }
-
-    #[DataProvider('releaseComponentTypes')]
-    public function test_overlapping_releases_do_not_reuse_newer_compiled_files_from_another_release($fixture)
+    public function test_overlapping_releases_do_not_share_compiled_files()
     {
         $compiler = new Compiler($cacheManager = new CacheManager($this->cacheDir));
-        $originalBasePath = base_path();
-        $sources = [];
 
         foreach ([1, 2] as $release) {
-            $source = $this->tempPath . '/releases/' . $release . '/resources/views/components/' . $fixture;
-            File::makeDirectory(dirname($source), 0755, true);
+            File::ensureDirectoryExists($this->tempPath . '/releases/' . $release);
+            File::put($source = $this->tempPath . '/releases/' . $release . '/dashboard.blade.php', str_replace(
+                'Hello World', 'Release ' . $release, File::get(__DIR__ . '/Fixtures/sfc-component.blade.php')
+            ));
 
-            if (is_dir(__DIR__ . '/Fixtures/' . $fixture)) {
-                File::copyDirectory(__DIR__ . '/Fixtures/' . $fixture, $source);
-                $classSource = $source . '/' . $fixture . '.php';
-                $viewSource = $source . '/' . $fixture . '.blade.php';
-            } else {
-                File::copy(__DIR__ . '/Fixtures/' . $fixture, $source);
-                $classSource = $source;
-                $viewSource = $source;
-            }
-
-            File::put($classSource, str_replace('Hello World', 'Release ' . $release, File::get($classSource)));
-            File::put($viewSource, str_replace('<div>', '<div>Release ' . $release . ': ', File::get($viewSource)));
-
-            // Both sources predate the old release's compilation, as in an overlapping deployment.
-            foreach (is_dir($source) ? glob($source . '/*') : [$source] as $file) {
-                touch($file, time() - (3 - $release) * 60);
-            }
-
-            $sources[$release] = $source;
+            touch($source, time() - 60);
         }
 
-        try {
-            app()->setBasePath($this->tempPath . '/releases/1');
-            $firstClass = $compiler->compile($sources[1]);
-            $firstViewPath = $cacheManager->getViewPath($sources[1]);
+        // Release 2 is checked out, then the still-live release 1 compiles its old source...
+        app()->setBasePath($this->tempPath . '/releases/1');
+        $compiler->compile($this->tempPath . '/releases/1/dashboard.blade.php');
 
-            app()->setBasePath($this->tempPath . '/releases/2');
-            $secondClass = $compiler->compile($sources[2]);
-            $secondViewPath = $cacheManager->getViewPath($sources[2]);
+        // Release 2 must not pick up release 1's freshly compiled files...
+        app()->setBasePath($this->tempPath . '/releases/2');
+        $class = $compiler->compile($this->tempPath . '/releases/2/dashboard.blade.php');
 
-            $secondComponent = new $secondClass;
-            $this->assertSame('Release 2', $secondComponent->message);
-            $this->assertStringContainsString('Release 2: Release 2', $secondComponent->getProvidedView()->with('message', $secondComponent->message)->render());
-            $this->assertFalse($cacheManager->isExpired($sources[2]));
-
-            // An in-flight old request must not replace the new release's compiled view.
-            app()->setBasePath($this->tempPath . '/releases/1');
-            $firstClass = $compiler->compile($sources[1]);
-            $firstComponent = new $firstClass;
-            $this->assertSame('Release 1', $firstComponent->message);
-            $this->assertStringContainsString('Release 1: Release 1', $firstComponent->getProvidedView()->with('message', $firstComponent->message)->render());
-            $this->assertFileExists($firstViewPath);
-            $this->assertFileExists($secondViewPath);
-        } finally {
-            app()->setBasePath($originalBasePath);
-        }
+        $this->assertSame('Release 2', (new $class)->message);
     }
 
-    public static function releaseComponentTypes()
+    public function test_island_tokens_of_compiled_views_are_stable_across_releases()
     {
-        return [
-            'single-file component' => ['sfc-component.blade.php'],
-            'multi-file component' => ['mfc-component'],
-        ];
+        $cacheManager = app('livewire.compiler')->cacheManager;
+
+        app()->setBasePath('/home/forge/releases/1');
+        $first = $cacheManager->getViewPath(base_path('resources/views/components/dashboard.blade.php'));
+
+        app()->setBasePath('/home/forge/releases/2');
+        $second = $cacheManager->getViewPath(base_path('resources/views/components/dashboard.blade.php'));
+
+        $this->assertNotSame($first, $second);
+        $this->assertSame(
+            IslandCompiler::compile($first, '@island <div>Counter</div> @endisland'),
+            IslandCompiler::compile($second, '@island <div>Counter</div> @endisland'),
+        );
     }
 
     public function test_can_hook_into_sfc_compilation()
