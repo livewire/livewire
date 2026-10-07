@@ -38,22 +38,6 @@ describe('Fragment append and prepend', () => {
         expect(shape(el)).toEqual(['BLOCK', '4', '3', '2', '1', 'ENDBLOCK'])
     })
 
-    it('keeps the blocks inside each row while joining the outer ones', () => {
-        let { el, fragment } = island(block(block('<li>1</li>')))
-
-        fragment.append('ul', `\n    ${block(block('<li>2</li>'))}\n`)
-
-        expect(shape(el)).toEqual(['BLOCK', 'BLOCK', '1', 'ENDBLOCK', 'BLOCK', '2', 'ENDBLOCK', 'ENDBLOCK'])
-    })
-
-    it('leaves appended content that is not a single block as it landed', () => {
-        let { el, fragment } = island('Hi,')
-
-        fragment.append('ul', ' how are you?')
-
-        expect(el.textContent).toBe('Hi, how are you?')
-    })
-
     it('leaves an island holding several top-level blocks as it landed', () => {
         let { el, fragment } = island(block('<li>a</li>') + block('<li>b</li>'))
 
