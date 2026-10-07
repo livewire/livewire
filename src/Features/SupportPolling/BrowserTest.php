@@ -156,4 +156,169 @@ class BrowserTest extends BrowserTestCase
         })
         ;
     }
+
+    public function test_backoff_slows_a_poll_down_while_nothing_changes()
+    {
+        Livewire::visit(new class extends Component {
+            public function render() { return <<<'HTML'
+            <div wire:poll.200ms.backoff>
+                Nothing new
+            </div>
+
+            @script
+            <script>
+                window.requestCount = 0
+
+                this.interceptMessage(({ onSend }) => onSend(() => window.requestCount++))
+            </script>
+            @endscript
+            HTML; }
+        })
+        ->waitForLivewireToLoad()
+        ->pause(3000)
+        ->tap(function ($b) {
+            // Every 200ms is 15 polls in three seconds. Backing off, they go out at 0.2s, 0.4s, 0.8s, and 1.6s...
+            $requestCount = $b->script('return window.requestCount')[0];
+
+            $this->assertGreaterThanOrEqual(3, $requestCount);
+            $this->assertLessThan(8, $requestCount);
+        })
+        ;
+    }
+
+    public function test_backoff_returns_to_the_interval_when_a_poll_brings_something_new()
+    {
+        Livewire::visit(new class extends Component {
+            public $newsArrivesAt;
+
+            public function mount()
+            {
+                $this->newsArrivesAt = microtime(true) + 2.5;
+            }
+
+            public function render() { return <<<'HTML'
+            <div wire:poll.200ms.backoff dusk="news">
+                {{ microtime(true) < $newsArrivesAt ? 'Nothing new' : 'Something new' }}
+            </div>
+
+            @script
+            <script>
+                window.requestCount = 0
+
+                this.interceptMessage(({ onSend }) => onSend(() => window.requestCount++))
+            </script>
+            @endscript
+            HTML; }
+        })
+        ->waitForTextIn('@news', 'Something new')
+        ->tap(function ($b) {
+            $requestCount = $b->script('return window.requestCount')[0];
+
+            $this->assertLessThan(8, $requestCount);
+
+            // Back at 200ms, at least two polls go out within 1.5 seconds. Still backed off, at most one would...
+            $b->pause(1500);
+
+            $this->assertGreaterThanOrEqual($requestCount + 2, $b->script('return window.requestCount')[0]);
+        })
+        ;
+    }
+
+    public function test_backoff_returns_to_the_interval_when_the_component_is_used()
+    {
+        Livewire::visit(new class extends Component {
+            public function render() { return <<<'HTML'
+            <div wire:poll.200ms.backoff>
+                <button wire:click="$refresh" dusk="refresh">Refresh</button>
+            </div>
+
+            @script
+            <script>
+                window.requestCount = 0
+
+                this.interceptMessage(({ onSend }) => onSend(() => window.requestCount++))
+            </script>
+            @endscript
+            HTML; }
+        })
+        ->waitForLivewireToLoad()
+        ->pause(2500)
+        ->tap(fn ($b) => $this->assertLessThan(8, $b->script('return window.requestCount')[0]))
+        ->waitForLivewire()->click('@refresh')
+        ->tap(function ($b) {
+            $requestCount = $b->script('return window.requestCount')[0];
+
+            // Back at 200ms, at least two polls go out within 1.5 seconds. Still backed off, at most one would...
+            $b->pause(1500);
+
+            $this->assertGreaterThanOrEqual($requestCount + 2, $b->script('return window.requestCount')[0]);
+        })
+        ;
+    }
+
+    public function test_backoff_slows_a_failing_poll_down()
+    {
+        Livewire::visit(new class extends Component {
+            public function check()
+            {
+                throw new \Exception('The server is down');
+            }
+
+            public function render() { return <<<'HTML'
+            <div wire:poll.200ms.backoff="check"></div>
+
+            @script
+            <script>
+                window.requestCount = 0
+
+                this.interceptMessage(({ onSend }) => onSend(() => window.requestCount++))
+            </script>
+            @endscript
+            HTML; }
+        })
+        ->waitForLivewireToLoad()
+        ->pause(3000)
+        ->tap(function ($b) {
+            // Every 200ms is 15 polls in three seconds. Backing off, they go out at 0.2s, 0.6s, 1.4s, and 3s...
+            $requestCount = $b->script('return window.requestCount')[0];
+
+            $this->assertGreaterThanOrEqual(3, $requestCount);
+            $this->assertLessThan(8, $requestCount);
+        })
+        ;
+    }
+
+    public function test_the_duration_after_backoff_is_the_limit_and_not_the_interval()
+    {
+        Livewire::visit(new class extends Component {
+            public $polling = false;
+
+            public function startPolling()
+            {
+                $this->polling = true;
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button wire:click="startPolling" dusk="start-polling">Start polling</button>
+
+                @if ($polling)
+                    <div wire:poll.backoff.1m></div>
+                @endif
+            </div>
+            HTML; }
+        })
+        ->tap(fn ($b) => $b->script(<<<'JS'
+            window.originalSetInterval = window.setInterval
+            window.setInterval = (callback, duration) => {
+                window.pollDuration = duration
+                window.setInterval = window.originalSetInterval
+
+                return window.originalSetInterval(callback, duration)
+            }
+            JS))
+        ->waitForLivewire()->click('@start-polling')
+        ->assertScript('window.pollDuration', 2000)
+        ;
+    }
 }
