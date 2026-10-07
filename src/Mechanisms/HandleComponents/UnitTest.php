@@ -365,6 +365,52 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertCount(1, $reported);
     }
+
+    public function test_shared_view_state_is_reverted_when_render_throws()
+    {
+        try {
+            Livewire::test(new class extends Component {
+                public function render()
+                {
+                    return '<div>{{ $undefined }}</div>';
+                }
+            });
+        } catch (\Illuminate\View\ViewException) {}
+
+        $this->assertNull(view()->shared('__livewire'));
+        $this->assertNull(view()->shared('_instance'));
+    }
+
+    public function test_shared_view_state_is_reverted_when_island_render_throws()
+    {
+        $component = Livewire::test(new class extends Component {
+            public bool $fail = false;
+
+            public function breakIsland()
+            {
+                $this->fail = true;
+                $this->skipRender();
+                $this->renderIsland('foo');
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo')
+                        <div>@if ($fail) {{ $undefined }} @endif</div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        try {
+            $component->call('breakIsland');
+        } catch (\Illuminate\View\ViewException) {}
+
+        $this->assertNull(view()->shared('__livewire'));
+    }
 }
 
 class BasicComponent extends TestComponent
