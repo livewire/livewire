@@ -2,12 +2,14 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 use Livewire\Features\SupportReleaseTokens\ReleaseToken;
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\Checksum;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Tests\TestCase;
 
@@ -22,6 +24,7 @@ class ChecksumRateLimitUnitTest extends TestCase
 
         // Clear any existing rate limits before each test
         RateLimiter::clear('livewire-checksum-failures:127.0.0.1');
+        RateLimiter::clear('livewire-checksum-failures:user:1');
 
         // Register a test component for use in snapshots
         Livewire::component('test-component', ChecksumRateLimitTestComponent::class);
@@ -152,6 +155,29 @@ class ChecksumRateLimitUnitTest extends TestCase
         $this->expectException(TooManyRequestsHttpException::class);
 
         Checksum::verify($validSnapshot);
+    }
+
+    public function test_failures_are_tracked_per_user_when_authenticated()
+    {
+        $snapshot = Livewire::test(ChecksumRateLimitTestComponent::class)->snapshot;
+
+        $update = fn ($user, $checksum) => $this->actingAs($user)
+            ->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [[
+                'snapshot' => json_encode(['checksum' => $checksum] + $snapshot),
+                'updates' => [],
+                'calls' => [],
+            ]]]);
+
+        // One user behind a shared IP sends ten tampered snapshots...
+        for ($i = 0; $i < 10; $i++) {
+            $update(new GenericUser(['id' => 1]), 'invalid-checksum')->assertStatus(419);
+        }
+
+        $update(new GenericUser(['id' => 1]), $snapshot['checksum'])->assertStatus(429);
+
+        // Another user on the same IP is unaffected...
+        $update(new GenericUser(['id' => 2]), $snapshot['checksum'])->assertOk();
     }
 
     public function test_rate_limit_is_only_checked_once_per_request()
