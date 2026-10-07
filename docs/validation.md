@@ -602,46 +602,37 @@ Below is a basic test case that ensures validation errors are thrown if no input
 ```php
 <?php
 
-namespace Tests\Feature\Livewire;
-
 use App\Livewire\CreatePost;
 use Livewire\Livewire;
-use Tests\TestCase;
 
-class CreatePostTest extends TestCase
-{
-    public function test_cant_create_post_without_title()
-    {
-        Livewire::test(CreatePost::class)
-            ->set('content', 'Sample content...')
-            ->call('save')
-            ->assertHasErrors('title');
-    }
-}
+it('cannot create a post without a title', function () {
+    Livewire::test(CreatePost::class)
+        ->set('content', 'Sample content...')
+        ->call('save')
+        ->assertHasErrors('title');
+});
 ```
 
 In addition to testing the presence of errors, `assertHasErrors` allows you to also narrow down the assertion to specific rules by passing the rules to assert against as the second argument to the method:
 
 ```php
-public function test_cant_create_post_with_title_shorter_than_3_characters()
-{
+it('cannot create a post with a title shorter than 3 characters', function () {
     Livewire::test(CreatePost::class)
         ->set('title', 'Sa')
         ->set('content', 'Sample content...')
         ->call('save')
         ->assertHasErrors(['title' => ['min:3']]);
-}
+});
 ```
 
 You can also assert the presence of validation errors for multiple properties at the same time:
 
 ```php
-public function test_cant_create_post_without_title_and_content()
-{
+it('cannot create a post without a title and content', function () {
     Livewire::test(CreatePost::class)
         ->call('save')
         ->assertHasErrors(['title', 'content']);
-}
+});
 ```
 
 For more information on other testing utilities provided by Livewire, check out the [testing documentation](/docs/4.x/testing).

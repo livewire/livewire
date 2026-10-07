@@ -400,24 +400,16 @@ You can easily disable lazy loading using the `Livewire::withoutLazyLoading()` t
 ```php
 <?php
 
-namespace Tests\Feature\Livewire;
-
-use App\Livewire\Dashboard;
 use Livewire\Livewire;
-use Tests\TestCase;
 
-class DashboardTest extends TestCase
-{
-    public function test_renders_successfully()
-    {
-        Livewire::withoutLazyLoading() // [tl! highlight]
-            ->test(Dashboard::class)
-            ->assertSee(...);
-    }
-}
+it('renders the revenue component without lazy loading', function () {
+    Livewire::withoutLazyLoading() // [tl! highlight]
+        ->test('revenue')
+        ->assertSee('Revenue this month:');
+});
 ```
 
-Now, when the dashboard component is rendered for this test, it will skip rendering the `placeholder()` and instead render the full component as if lazy loading wasn't applied at all.
+Now, when the `revenue` component is rendered for this test, it will skip rendering the `placeholder()` and instead render the full component as if lazy loading wasn't applied at all.
 
 ## See also
 

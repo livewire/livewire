@@ -9,6 +9,7 @@ class Snapshot {
 
 let snapshotCache = {
     currentKey: null,
+    currentDocumentId: Math.random(),
     currentUrl: null,
     keys: [],
     lookup: {},
@@ -81,7 +82,8 @@ export function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key
 
 export function whenTheBackOrForwardButtonIsClicked(
     registerFallback,
-    handleHtml
+    handleHtml,
+    handleFragment
 ) {
     let fallback
 
@@ -103,6 +105,19 @@ export function whenTheBackOrForwardButtonIsClicked(
 
         if (! alpine.snapshotIdx) return
 
+        // Fragment entries belong to the same live page. Let the browser restore
+        // their scroll position without reconstructing the page from a snapshot.
+        if (alpine.documentId && alpine.documentId === snapshotCache.currentDocumentId) {
+            let snapshot = snapshotCache.has(alpine.snapshotIdx) && snapshotCache.retrieve(alpine.snapshotIdx)
+
+            handleFragment(new URL(window.location.href), snapshot?.html, snapshotCache.currentUrl, snapshotCache.currentKey)
+
+            snapshotCache.currentKey = alpine.snapshotIdx
+            snapshotCache.currentUrl = new URL(window.location.href)
+
+            return
+        }
+
         if (snapshotCache.has(alpine.snapshotIdx)) {
             let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
 
@@ -110,9 +125,11 @@ export function whenTheBackOrForwardButtonIsClicked(
 
             snapshotCache.currentKey = alpine.snapshotIdx
             snapshotCache.currentUrl = snapshot.url
+            snapshotCache.currentDocumentId = alpine.documentId ?? Math.random()
         } else {
             snapshotCache.currentKey = null
             snapshotCache.currentUrl = null
+            snapshotCache.currentDocumentId = alpine.documentId ?? Math.random()
 
             fallback(alpine.url)
         }
@@ -126,15 +143,17 @@ export function updateUrlAndStoreLatestHtmlForFutureBackButtons(
     pushUrl(destination, html)
 }
 
-export function pushUrl(url, html) {
-    updateUrl('pushState', url, html)
+export function pushUrl(url, html, { sameDocument = false } = {}) {
+    updateUrl('pushState', url, html, { sameDocument })
 }
 
 export function replaceUrl(url, html) {
     updateUrl('replaceState', url, html)
 }
 
-function updateUrl(method, url, html) {
+function updateUrl(method, url, html, { sameDocument = false } = {}) {
+    if (method === 'pushState' && ! sameDocument) snapshotCache.currentDocumentId = Math.random()
+
     let key = url.toString() + '-' + Math.random()
 
     method === 'pushState'
@@ -150,7 +169,7 @@ function updateUrl(method, url, html) {
         }
     })
 
-    historyCoordinator[method](url, { snapshotIdx: key, url: url.toString() })
+    historyCoordinator[method](url, { snapshotIdx: key, url: url.toString(), documentId: snapshotCache.currentDocumentId })
 
     snapshotCache.currentKey = key
     snapshotCache.currentUrl = url
