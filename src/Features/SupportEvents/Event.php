@@ -36,11 +36,6 @@ class Event
             unset($params['self']);
         }
 
-        if (isset($params['others'])) {
-            $this->others();
-            unset($params['others']);
-        }
-
         // Handle legacy 'to' parameter for backward compatibility
         if (isset($params['to'])) {
             $this->component($params['to']);
